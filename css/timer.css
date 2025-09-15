@@ -1,0 +1,19 @@
+/* ========== TIMER ========== */
+#time {
+  transition: color 0.3s;
+}
+
+.time-warning {
+  color: #ff5252;
+  animation: blink 1s infinite alternate;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
+}

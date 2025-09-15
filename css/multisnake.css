@@ -1,0 +1,222 @@
+/* Styles de base pour le jeu Snake, identiques à Pacman */
+
+body,
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#game {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fond spécifique pour Snake seulement quand actif */
+.game-mode-multisnake .arcade-container,
+.game-mode-multisnake .game-content-arcade {
+  background: #001a66;
+}
+
+/* Canvas Snake: pas de padding; bordure décorative comme les autres jeux */
+#multisnake-canvas,
+canvas#multisnake-canvas,
+.arcade-game-ui > canvas.multisnake-canvas,
+.arcade-canvas.multisnake-canvas {
+  background: #000 !important;
+  border: 2px solid #fffbe6 !important;
+  box-shadow:
+    0 4px 32px rgb(0 0 0 / 0.28),
+    0 0 0 4px #ffe066 !important;
+  border-radius: 12px;
+  padding: 0 !important;
+  margin: 18px auto;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+
+  /* Laisser le JS gérer les dimensions précises; éviter le letterboxing CSS */
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+}
+
+/* Desktop Snake UI */
+@media (min-width: 768px) {
+  .arcade-game-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 650px;
+    max-width: 1220px;
+    min-height: 380px;
+    padding: 24px 0;
+    margin: 0 auto;
+    gap: 16px;
+  }
+}
+
+/* Mobile first Snake UI */
+.arcade-game-ui {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 16px 8px;
+  margin: 0 auto;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.arcade-canvas.multisnake-canvas,
+#multisnake-canvas {
+  display: block;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.arcade-container-wide {
+  width: 100%;
+  max-width: 100vw;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.arcade-game-ui,
+.arcade-mult-row,
+.arcade-score-bar {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Ne pas réappliquer des styles génériques aux autres canvas ici */
+#multisnake-canvas,
+canvas#multisnake-canvas,
+.arcade-game-ui > canvas.multisnake-canvas {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  background: #000 !important;
+  padding: 0 !important;
+  aspect-ratio: auto !important;
+  object-fit: fill !important;
+}
+
+@media (max-width: 700px) {
+  .arcade-container-wide {
+    max-width: 98vw;
+  }
+}
+
+/* MULTISNAKE MOBILE PORTRAIT */
+@media (max-width: 600px) and (orientation: portrait) {
+  /* Nombres plus grands et centrés sur mobile */
+  #multisnake-mult-display {
+    font-size: 1.8em;
+    text-align: center;
+    width: 90%;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  /* Canvas Snake mobile portrait - sécurisé */
+  #multisnake-canvas,
+  canvas#multisnake-canvas,
+  .arcade-canvas.multisnake-canvas,
+  .arcade-game-ui > canvas.multisnake-canvas {
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+    height: auto;
+    max-height: 50vh;
+    aspect-ratio: auto !important;
+    margin: 8px auto;
+    box-sizing: border-box;
+
+    /* Rendu pixel parfait */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    image-rendering: crisp-edges;
+    object-fit: contain !important;
+  }
+
+  /* Zones de contrôle tactiles */
+  .multisnake-control-zones {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .multisnake-control-zone {
+    pointer-events: auto;
+    opacity: 0;
+  }
+}
+
+/* MULTISNAKE MOBILE PAYSAGE */
+@media (max-width: 896px) and (orientation: landscape) {
+  /* Canvas Snake paysage - carré optimal sécurisé */
+  #multisnake-canvas,
+  canvas#multisnake-canvas,
+  .arcade-canvas.multisnake-canvas,
+  .arcade-game-ui > canvas.multisnake-canvas {
+    width: 65vh;
+    max-width: 65vh;
+    height: 65vh;
+    max-height: 65vh;
+    aspect-ratio: auto !important;
+    margin: 0;
+    box-sizing: border-box;
+
+    /* Rendu pixel parfait */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    image-rendering: crisp-edges;
+    object-fit: contain !important;
+  }
+
+  /* Affichage opération en paysage */
+  #multisnake-mult-display {
+    font-size: 1.3em;
+    text-align: center;
+    width: 100%;
+    margin: 0 auto 6px;
+    padding: 4px 6px;
+    box-sizing: border-box;
+  }
+
+  /* Contrôles tactiles paysage */
+  .multisnake-control-zones {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 65vh;
+    height: 65vh;
+    z-index: 10;
+  }
+}

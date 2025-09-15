@@ -1,0 +1,416 @@
+/* ========== THÈMES DE COULEURS ========== */
+:root {
+  /* Thème par défaut (bleu) */
+  --primary-color: #3498db;
+  --primary-dark: #2980b9;
+  --secondary-color: #2ecc71;
+  --secondary-dark: #27ae60;
+  --accent-color: #f39c12;
+  --accent-dark: #e67e22;
+  --danger-color: #e74c3c;
+  --danger-dark: #c0392b;
+  --bg-color: #e6f7ff;
+  --bg-gradient: linear-gradient(45deg, #e6f7ff 0%, #f0f8ff 100%);
+  --text-color: #2c3e50;
+  --heading-color: #3498db;
+  --neutral-light: #ecf0f1;
+  --neutral-medium: #bdc3c7;
+  --neutral-dark: #7f8c8d;
+}
+
+/* Thème Rose */
+.theme-pink {
+  --primary-color: #ff85a2;
+  --primary-dark: #ff6b88;
+  --secondary-color: #a58fd8;
+  --secondary-dark: #8c6bac;
+  --accent-color: #ffcd00;
+  --accent-dark: #ffb400;
+  --danger-color: #ff4757;
+  --danger-dark: #ff2c40;
+  --bg-color: #fff0f5;
+  --bg-gradient: linear-gradient(45deg, #fff0f5 0%, #ffefd5 100%);
+  --text-color: #5a3d5c;
+  --heading-color: #ff6b88;
+  --neutral-light: #fff0f5;
+  --neutral-medium: #ffc6dd;
+  --neutral-dark: #ff9eb5;
+}
+
+/* Thème Bleu Spatial */
+.theme-blue {
+  --primary-color: #3f51b5;
+  --primary-dark: #303f9f;
+  --secondary-color: #00bcd4;
+  --secondary-dark: #0097a7;
+  --accent-color: #ff5722;
+  --accent-dark: #e64a19;
+  --danger-color: #f44336;
+  --danger-dark: #d32f2f;
+  --bg-color: #1a237e;
+  --bg-gradient: linear-gradient(45deg, #1a237e 0%, #283593 100%);
+  --text-color: #e8eaf6;
+  --heading-color: var(--text-color);
+
+  /* Utiliser texte clair pour contraste */
+  --neutral-light: #c5cae9;
+  --neutral-medium: #7986cb;
+  --neutral-dark: #3949ab;
+}
+
+/* Correction contraste pour theme-blue sur content-card */
+.theme-blue .content-card {
+  color: #1a237e;
+
+  /* Utiliser une couleur foncée du thème pour le texte */
+}
+
+/* Assurer que les titres restent lisibles aussi */
+.theme-blue .content-card h1,
+.theme-blue .content-card h2,
+.theme-blue .content-card h3 {
+  color: #303f9f;
+
+  /* Utiliser primary-dark pour les titres */
+}
+
+/* Thème Nature */
+.theme-green {
+  --primary-color: #4caf50;
+  --primary-dark: #388e3c;
+  --secondary-color: #8bc34a;
+  --secondary-dark: #689f38;
+  --accent-color: #ffc107;
+  --accent-dark: #ffa000;
+  --danger-color: #ff5722;
+  --danger-dark: #e64a19;
+  --bg-color: #e8f5e9;
+  --bg-gradient: linear-gradient(45deg, #e8f5e9 0%, #c8e6c9 100%);
+  --text-color: #33691e;
+  --heading-color: #2e7d32;
+  --neutral-light: #dcedc8;
+  --neutral-medium: #aed581;
+  --neutral-dark: #7cb342;
+}
+
+/* Thème Orangé */
+.theme-orange {
+  --primary-color: #ff9800;
+  --primary-dark: #f57c00;
+  --secondary-color: #ff5722;
+  --secondary-dark: #e64a19;
+  --accent-color: #ffeb3b;
+  --accent-dark: #fdd835;
+  --danger-color: #f44336;
+  --danger-dark: #d32f2f;
+  --bg-color: #fff3e0;
+  --bg-gradient: linear-gradient(45deg, #fff3e0 0%, #ffe0b2 100%);
+  --text-color: #5d4037;
+  --heading-color: #ef6c00;
+  --neutral-light: #ffecb3;
+  --neutral-medium: #ffd54f;
+
+  /* Correction typo 'p' -> 'f' */
+  --neutral-dark: #ffb300;
+}
+
+/* Thème Nuit */
+.theme-dark {
+  --primary-color: #3498db;
+  --primary-dark: #2980b9;
+  --secondary-color: #2ecc71;
+  --secondary-dark: #27ae60;
+  --accent-color: #f1c40f;
+  --accent-dark: #f39c12;
+  --danger-color: #e74c3c;
+  --danger-dark: #c0392b;
+  --bg-color: #2c3e50;
+  --bg-gradient: linear-gradient(45deg, #2c3e50 0%, #34495e 100%);
+  --text-color: #ecf0f1;
+  --heading-color: #3498db;
+  --neutral-light: #34495e;
+  --neutral-medium: #2c3e50;
+  --neutral-dark: #1a242f;
+}
+
+/* Ajustements spécifiques pour le thème sombre */
+.theme-dark .question-box,
+.theme-dark .quiz-container,
+.theme-dark .challenge-container,
+.theme-dark .customization-section,
+.theme-dark .dashboard-container,
+.theme-dark .victory-screen,
+.theme-dark #game,
+.theme-dark .grid-item,
+.theme-dark .visual-row,
+.theme-dark .star-cell,
+.theme-dark .stat-box,
+.theme-dark .result-stat,
+.theme-dark .level-card,
+.theme-dark .level-info,
+.theme-dark .level-description,
+.theme-dark .adventure-scene,
+.theme-dark .adventure-controls,
+.theme-dark .progress-dashboard,
+.theme-dark .review-list li,
+.theme-dark .success-list li,
+.theme-dark .message-box,
+.theme-dark .challenge-stats,
+.theme-dark .quiz-stats,
+.theme-dark .results-container,
+.theme-dark .difficulty-selector {
+  background-color: #34495e;
+  color: #ecf0f1;
+  border-color: #3498db;
+  background-image: none !important;
+}
+
+.theme-dark h1,
+.theme-dark h2,
+.theme-dark h3,
+.theme-dark h4,
+.theme-dark h5,
+.theme-dark .difficulty-selector h3 {
+  color: #3498db;
+}
+
+.theme-dark .challenge-container {
+  border-color: #3498db;
+}
+
+.theme-dark .option,
+.theme-dark .numpad-btn,
+.theme-dark .keyboard-key,
+.theme-dark #answer-display,
+.theme-dark #nickname-input,
+.theme-dark #new-user-name,
+.theme-dark .difficulty-selector button {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  border-color: #3498db;
+}
+
+.theme-dark .grid-item,
+.theme-dark .mnemonic,
+.theme-dark .interaction-instructions {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+}
+
+.theme-dark .grid-item:hover {
+  background-color: #3498db;
+}
+
+.theme-dark .drop-zone {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  border-color: #3498db;
+}
+
+.theme-dark .drop-zone.show-result {
+  background-color: #2c3e50;
+  color: #2ecc71;
+  border-color: #2ecc71;
+}
+
+.theme-dark .option:hover,
+.theme-dark .numpad-btn:hover,
+.theme-dark .keyboard-key:hover,
+.theme-dark .difficulty-selector button:hover {
+  background-color: #3498db;
+}
+
+.theme-dark .visual-objects .object-group {
+  border-color: #3498db;
+}
+
+.theme-dark .grid-cell {
+  color: #2c3e50;
+  border-color: #3498db;
+}
+
+.theme-dark .voice-control {
+  color: #ecf0f1;
+}
+
+.theme-dark .instruction-arrow {
+  color: #3498db;
+}
+
+/* Amélioration contraste Mode Découverte en thème sombre */
+.theme-dark .lab-item {
+  background-color: var(--neutral-medium);
+
+  /* Utiliser le fond le plus sombre */
+  border-color: var(--primary-color);
+}
+
+.theme-dark .lab-name {
+  color: var(--primary-color);
+
+  /* Utiliser couleur primaire pour contraste */
+}
+
+.theme-dark .lab-icon {
+  /* L'icône peut rester claire ou prendre la couleur primaire */
+  color: var(--text-color);
+}
+
+/* Tâche 4.1: Ajustements de contraste pour les boutons .btn */
+.theme-pink .btn,
+.theme-orange .btn {
+  color: var(--text-color);
+
+  /* Utiliser texte foncé sur fond clair/moyen */
+}
+
+.theme-blue .btn {
+  color: #fff;
+
+  /* Forcer blanc pur pour meilleur contraste sur bleu moyen */
+}
+
+.theme-dark .btn {
+  color: var(--text-color);
+
+  /* OK pour thème Nuit */
+}
+
+/* Tâche 4.1: Mode Contraste Élevé */
+.high-contrast {
+  --bg-color: #000;
+
+  /* Fond noir */
+  --bg-gradient: none;
+
+  /* Pas de gradient */
+  --text-color: #fff;
+
+  /* Texte blanc */
+  --heading-color: #ff0;
+
+  /* Titres jaunes */
+  --primary-color: #ff0;
+
+  /* Boutons/éléments primaires jaunes */
+  --primary-dark: #e6e600;
+  --secondary-color: #0f0;
+
+  /* Éléments secondaires verts vifs */
+  --secondary-dark: #0c0;
+  --accent-color: #f0f;
+
+  /* Accent magenta */
+  --accent-dark: #c0c;
+  --danger-color: #ff4d4d;
+
+  /* Rouge clair */
+  --danger-dark: #ff1a1a;
+  --neutral-light: #333;
+
+  /* Gris très foncé pour fonds clairs */
+  --neutral-medium: #666;
+
+  /* Gris moyen pour bordures */
+  --neutral-dark: #ddd;
+
+  /* Gris clair pour texte sur fond sombre */
+}
+
+/* Ajustements spécifiques pour le mode contraste élevé */
+.high-contrast .btn,
+.high-contrast .option,
+.high-contrast .numpad-btn,
+.high-contrast .keyboard-key,
+.high-contrast .difficulty-selector button {
+  background-color: var(--primary-color);
+  color: #000;
+
+  /* Texte noir sur fond jaune/vif */
+  border: 2px solid #fff;
+
+  /* Bordure blanche */
+}
+
+.high-contrast .btn:hover,
+.high-contrast .option:hover,
+.high-contrast .numpad-btn:hover,
+.high-contrast .keyboard-key:hover,
+.high-contrast .difficulty-selector button:hover {
+  background-color: var(--primary-dark);
+  border-color: #ff0;
+
+  /* Bordure jaune au survol */
+}
+
+.high-contrast .question-box,
+.high-contrast .quiz-container,
+.high-contrast .challenge-container,
+.high-contrast .customization-section,
+.high-contrast .dashboard-container,
+.high-contrast .victory-screen,
+.high-contrast #game,
+.high-contrast .grid-item,
+.high-contrast .visual-row,
+.high-contrast .star-cell,
+.high-contrast .stat-box,
+.high-contrast .result-stat,
+.high-contrast .level-card,
+.high-contrast .level-info,
+.high-contrast .level-description,
+.high-contrast .adventure-scene,
+.high-contrast .adventure-controls,
+.high-contrast .progress-dashboard,
+.high-contrast .review-list li,
+.high-contrast .success-list li,
+.high-contrast .message-box,
+.high-contrast .challenge-stats,
+.high-contrast .quiz-stats,
+.high-contrast .results-container,
+.high-contrast .difficulty-selector,
+.high-contrast .virtual-keyboard,
+.high-contrast #answer-display,
+.high-contrast #nickname-input,
+.high-contrast #new-user-name {
+  background-color: #000 !important;
+
+  /* Forcer fond noir */
+  color: #fff !important;
+
+  /* Forcer texte blanc */
+  border: 1px solid #fff !important;
+
+  /* Bordure blanche */
+  background-image: none !important;
+}
+
+.high-contrast h1,
+.high-contrast h2,
+.high-contrast h3,
+.high-contrast h4,
+.high-contrast h5 {
+  color: var(--heading-color) !important;
+
+  /* Utiliser jaune */
+}
+
+.high-contrast .feedback-success {
+  color: #0f0;
+}
+
+/* Vert vif */
+.high-contrast .feedback-error {
+  color: #ff4d4d;
+}
+
+/* Rouge clair */
+.high-contrast .star.earned {
+  color: #ff0;
+}
+
+/* Étoiles jaunes */
+.high-contrast .star {
+  color: #fff;
+}
+
+/* Étoiles vides blanches */

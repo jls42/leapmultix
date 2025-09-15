@@ -1,0 +1,29 @@
+# Dynamic i18n keys or placeholders to ignore in static scans
+${customItem.labelKey}
+${labelKey}
+' + endMessageKey + '
+
+# Daily challenge dynamic texts
+daily_challenge_table_of_day
+daily_challenge_objective
+daily_challenge_progress
+
+# Welcome message (with HTML interpolation)
+welcome_user
+
+# Discovery mode dynamic mnemonics
+mnemonic_*
+# Discovery lab headers
+discovery_lab_title
+discovery_explore_intro
+
+# InfoBar and feedback dynamic keys
+info_*
+feedback_*
+
+# Arcade controls helper texts
+arcade.controls.*
+# Adventure level names
+level_*_name
+# Challenge feedback texts
+challenge_feedback_*

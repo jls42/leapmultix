@@ -1,0 +1,202 @@
+/* ========== CHALLENGE MODE ========== */
+.challenge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.timer {
+  text-align: center;
+}
+
+.timer-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.timer-value {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.time-critical {
+  color: red;
+  animation: blink 0.5s infinite alternate;
+}
+
+.timer-progress {
+  width: 100%;
+  height: 8px;
+  background-color: #eee;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.timer-bar {
+  height: 100%;
+  background-color: #4caf50;
+  border-radius: 4px;
+  transition: width 1s linear;
+}
+
+.challenge-stats {
+  display: flex;
+  gap: 15px;
+}
+
+.challenge-question {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.challenge-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.challenge-feedback {
+  min-height: 30px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.difficulty-selector {
+  margin: 20px 0;
+}
+
+.results-container {
+  /* Styles existants pour le conteneur principal des résultats */
+
+  /* La classe .content-card ajoutée en JS gère le fond/padding/ombre */
+
+  /* text-align: center; est hérité de .content-card */
+}
+
+/* Styles pour la grille de statistiques dans les résultats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+
+  /* Grille responsive */
+  gap: 15px;
+  max-width: 500px;
+
+  /* Limiter la largeur pour centrage */
+  margin: 20px auto;
+
+  /* Centrer horizontalement avec marges verticales */
+}
+
+.stat-box {
+  background-color: rgb(255 255 255 / 0.6);
+
+  /* Fond légèrement transparent */
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.05);
+}
+
+.stat-value {
+  font-size: 2em;
+
+  /* Taille augmentée */
+  font-weight: bold;
+  color: var(--primary-dark);
+
+  /* Utiliser couleur thème */
+  display: block;
+
+  /* Assurer qu'il prend sa ligne */
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.9em;
+
+  /* Taille réduite */
+  color: var(--text-color);
+}
+
+.message-box {
+  background-color: rgb(232 245 233 / 0.7);
+
+  /* Fond vert clair semi-transparent */
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  color: #1b5e20;
+
+  /* Texte vert foncé */
+  font-weight: bold;
+}
+
+/* Styles pour la ligne de boutons dans les résultats */
+.button-row {
+  margin-top: 25px;
+
+  /* Espace au-dessus des boutons */
+
+  /* Le centrage est géré par text-align: center du parent .content-card */
+}
+
+/* Challenge mode specific */
+.timer-container {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.timer-bar-container {
+  height: 10px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+/* Espacer le bouton Abandonner des éléments de jeu */
+#challenge-back {
+  /* Marge supérieure augmentée */
+  margin-top: 5px;
+  overflow: hidden;
+}
+
+.timer-bar {
+  height: 100%;
+  background-color: #ff85a2;
+  background-image: linear-gradient(45deg, #ff85a2, #ff6b88);
+  width: 100%;
+  transition:
+    width 1s linear,
+    background-color 0.3s;
+  box-shadow: 0 0 10px rgb(255 107 136 / 0.5);
+  border-radius: 5px;
+}
+
+/* Styles pour le thème sombre */
+.theme-dark .stat-box {
+  background-color: rgb(44 62 80 / 0.6);
+
+  /* Fond sombre semi-transparent */
+  color: var(--text-color);
+}
+
+.theme-dark .stat-value {
+  color: var(--primary-color);
+
+  /* Couleur primaire du thème sombre */
+}
+
+.theme-dark .stat-label {
+  color: var(--neutral-light);
+}
+
+.theme-dark .message-box {
+  background-color: rgb(39 174 96 / 0.3);
+
+  /* Fond vert sombre semi-transparent */
+  color: #e8f5e9;
+
+  /* Texte clair */
+}

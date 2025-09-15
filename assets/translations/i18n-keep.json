@@ -1,0 +1,17 @@
+{
+  "keys": ["fox", "panda", "unicorn", "dragon", "astronaut", "voice_toggle_on", "voice_toggle_off"],
+  "prefixes": [
+    "character_intro_",
+    "mnemonic_",
+    "badge_",
+    "arcade.controls.",
+    "arcade.multiMemory.",
+    "arcade.multiMiam."
+  ],
+  "regexes": [
+    "^level_\\d+_(name|desc)$",
+    "^(discovery|quiz|challenge|adventure|arcade)_info_bar_label$",
+    "^(discovery|quiz|challenge|adventure|arcade)_mode$",
+    "^color_theme_.*$"
+  ]
+}

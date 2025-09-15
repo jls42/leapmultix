@@ -1,0 +1,36 @@
+/* ========== CÉLÉBRATION ========== */
+.celebration {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+  display: none;
+}
+
+.confetti {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgb(255 255 255 / 0.8);
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-100px) rotate(0deg) scale(0.8);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(50vh) rotate(180deg) scale(1.2);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(100vh) rotate(360deg) scale(0.5);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,22 @@
+/* ========== POWER-UPS ========== */
+.power-up {
+  position: absolute;
+  font-size: 30px;
+  cursor: pointer;
+  animation: float 2s infinite alternate;
+  transition: transform 0.2s;
+}
+
+.power-up:hover {
+  transform: scale(1.2);
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-10px);
+  }
+}

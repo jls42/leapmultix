@@ -1,0 +1,250 @@
+/* ========== MODE PACMAN ========== */
+
+.multimiam-ui {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.multimiam-info-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 15px;
+  padding: 10px 20px;
+  background-color: rgb(255 255 255 / 0.9);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+
+.multimiam-op-display {
+  font-size: 1.2em;
+  font-weight: bold;
+  padding: 8px 16px;
+  background-color: rgb(255 255 255 / 0.9);
+  border-radius: 8px;
+  margin: 8px 0;
+  display: inline-block;
+}
+
+.multimiam-score,
+.multimiam-lives {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #333;
+}
+
+#multimiam-canvas,
+.arcade-game-ui > canvas.multimiam-canvas {
+  display: block;
+  background: #000;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 32px rgb(0 0 0 / 0.28),
+    0 0 0 4px #ffe066;
+  border: 2px solid #fffbe6;
+  padding: 18px;
+  margin: 18px auto;
+  max-width: 100%;
+  height: auto;
+  box-sizing: border-box !important;
+}
+
+.multimiam-mobile-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 15px;
+  gap: 10px;
+}
+
+.multimiam-control-row {
+  display: flex;
+  gap: 10px;
+}
+
+.multimiam-control-btn {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  background-color: rgb(255 215 0 / 0.8);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+  transition:
+    transform 0.1s,
+    background-color 0.1s;
+}
+
+.multimiam-control-btn:active {
+  transform: scale(0.95);
+  background-color: rgb(255 215 0 / 1);
+}
+
+.multimiam-restart-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 1.1em;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+}
+
+/* MULTIMIAM MOBILE PORTRAIT */
+@media (max-width: 600px) and (orientation: portrait) {
+  .multimiam-info-bar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  /* Affichage opération portrait */
+  .multimiam-op-display {
+    font-size: 1.8em;
+    text-align: center;
+    width: 90%;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  .multimiam-score,
+  .multimiam-lives {
+    font-size: 1.3em;
+  }
+
+  /* Canvas Pacman portrait - sécurisé */
+  #multimiam-canvas,
+  .arcade-game-ui > canvas.multimiam-canvas {
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+    height: auto;
+    max-height: 50vh;
+    padding: 4px;
+    border-width: 1px;
+    border-radius: 8px;
+    margin: 0 auto 8px;
+    object-fit: contain;
+    box-sizing: border-box;
+  }
+
+  .multimiam-control-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+  }
+}
+
+/* Tablet portrait intermédiaire */
+@media (min-width: 601px) and (max-width: 768px) and (orientation: portrait) {
+  .multimiam-info-bar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .multimiam-op-display {
+    font-size: 1.5em;
+    width: 100%;
+    text-align: center;
+  }
+
+  .multimiam-score,
+  .multimiam-lives {
+    font-size: 1.3em;
+  }
+
+  #multimiam-canvas,
+  .arcade-game-ui > canvas.multimiam-canvas {
+    padding: 10px;
+    border-radius: 8px;
+    width: calc(100% - 16px) !important;
+    max-width: calc(100% - 16px) !important;
+    margin: 0 auto 8px !important;
+  }
+
+  .multimiam-control-btn {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* MULTIMIAM MOBILE PAYSAGE */
+@media (max-width: 896px) and (orientation: landscape) {
+  /* Interface info compacte pour paysage */
+  .multimiam-info-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 12px;
+    width: 100%;
+    font-size: 0.9em;
+    box-sizing: border-box;
+  }
+
+  /* Canvas Pacman paysage - carré optimal sécurisé */
+  #multimiam-canvas,
+  .arcade-game-ui > canvas.multimiam-canvas {
+    width: 65vh;
+    max-width: 65vh;
+    height: 65vh;
+    max-height: 65vh;
+    padding: 6px;
+    border-width: 2px;
+    border-radius: 12px;
+    margin: 0;
+    object-fit: contain;
+    aspect-ratio: 1;
+    box-sizing: border-box;
+  }
+
+  /* Affichage opération en paysage */
+  .multimiam-op-display {
+    font-size: 1.3em;
+    width: 100%;
+    text-align: center;
+    margin: 0 auto 6px;
+    padding: 4px 6px;
+    box-sizing: border-box;
+  }
+
+  /* Contrôles tactiles paysage */
+  .multimiam-control-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    margin: 2px;
+  }
+
+  .multimiam-mobile-controls {
+    margin-top: 8px;
+    gap: 6px;
+  }
+
+  .multimiam-control-row {
+    gap: 6px;
+  }
+
+  /* Score et vies compacts */
+  .multimiam-score,
+  .multimiam-lives {
+    font-size: 1.1em;
+  }
+}

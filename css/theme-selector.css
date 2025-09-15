@@ -1,0 +1,79 @@
+/* ========== THEME SELECTOR ========== */
+.theme-selector,
+.level-selector,
+.color-theme-selector {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.theme-btn,
+.level-btn,
+.color-theme-btn {
+  background-color: #f1f1f1;
+  color: #333;
+  border: 2px solid #ddd;
+  border-radius: 15px;
+  padding: 10px 15px;
+  font-family: 'Comic Sans MS', 'Bubblegum Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.theme-btn.active,
+.level-btn.active {
+  background-color: #4caf50;
+  color: white;
+  border-color: #45a049;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgb(0 0 0 / 0.2);
+}
+
+.color-theme-btn {
+  padding: 12px 20px;
+  font-size: 16px;
+}
+
+.color-theme-btn.active {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgb(0 0 0 / 0.2);
+}
+
+/* Styles spécifiques des boutons de thèmes de couleurs */
+.color-theme-btn[data-color-theme='default'] {
+  background-color: #3498db;
+  color: white;
+  border-color: #2980b9;
+}
+
+.color-theme-btn[data-color-theme='pink'] {
+  background-color: #ff85a2;
+  color: white;
+  border-color: #ff6b88;
+}
+
+.color-theme-btn[data-color-theme='blue'] {
+  background-color: #3f51b5;
+  color: white;
+  border-color: #303f9f;
+}
+
+.color-theme-btn[data-color-theme='green'] {
+  background-color: #4caf50;
+  color: white;
+  border-color: #388e3c;
+}
+
+.color-theme-btn[data-color-theme='orange'] {
+  background-color: #ff9800;
+  color: white;
+  border-color: #f57c00;
+}
+
+.color-theme-btn[data-color-theme='dark'] {
+  background-color: #34495e;
+  color: white;
+  border-color: #2c3e50;
+}

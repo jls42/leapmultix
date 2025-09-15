@@ -1,0 +1,339 @@
+/* ========== MODAL VIDÉO PERSONNAGE ========== */
+
+.video-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  font-family: inherit;
+}
+
+.video-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgb(0 0 0 / 0.85);
+  backdrop-filter: blur(5px);
+}
+
+.video-container {
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.3);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 600px;
+  z-index: 10001;
+  border: 2px solid rgb(255 255 255 / 0.1);
+}
+
+.video-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 15px;
+  color: white;
+}
+
+.video-close-btn {
+  background: rgb(255 255 255 / 0.2);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-close-btn:hover {
+  background: rgb(255 255 255 / 0.3);
+  transform: scale(1.1);
+}
+
+#character-intro-video {
+  width: 100%;
+  height: auto;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.3);
+  background: #000;
+}
+
+.video-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 15px;
+  gap: 15px;
+}
+
+.skip-btn {
+  background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgb(255 107 107 / 0.3);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.skip-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgb(255 107 107 / 0.4);
+}
+
+.skip-btn:active {
+  transform: translateY(0);
+}
+
+.video-progress {
+  flex: 1;
+  height: 6px;
+  background: rgb(255 255 255 / 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 10px;
+}
+
+.video-progress-fill {
+  height: 100%;
+  background: linear-gradient(45deg, #4ecdc4, #44a08d);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.1s ease;
+  box-shadow: 0 0 10px rgb(78 205 196 / 0.5);
+}
+
+.video-info {
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  min-width: 35px;
+  text-align: center;
+}
+
+/* ========== RESPONSIVE ========== */
+
+/* Tablettes */
+@media (max-width: 768px) {
+  .video-container {
+    width: 95vw;
+    padding: 15px;
+    border-radius: 15px;
+  }
+
+  .video-close-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+
+  .skip-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .video-controls {
+    gap: 10px;
+  }
+}
+
+/* Mobiles */
+@media (max-width: 480px) {
+  .video-container {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    padding: 20px 15px;
+  }
+
+  .video-header {
+    margin-bottom: 10px;
+  }
+
+  .video-close-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .video-welcome-message {
+    font-size: 1em;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .skip-btn {
+    padding: 10px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+  }
+
+  .video-info {
+    font-size: 12px;
+    min-width: 30px;
+  }
+
+  .video-progress {
+    margin: 0 8px;
+  }
+}
+
+/* Mode paysage mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .video-container {
+    padding: 10px;
+  }
+
+  .video-header {
+    margin-bottom: 8px;
+  }
+
+  .video-controls {
+    margin-top: 8px;
+  }
+}
+
+/* ========== ANIMATIONS ========== */
+
+@keyframes video-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes progress-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgb(78 205 196 / 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgb(78 205 196 / 0.8);
+  }
+}
+
+.video-container {
+  animation: video-fade-in 0.3s ease-out;
+}
+
+.video-progress-fill {
+  animation: progress-pulse 2s infinite;
+}
+
+/* ========== ÉTATS SPÉCIAUX ========== */
+
+/* Vidéo en cours de chargement */
+.video-loading #character-intro-video {
+  background: linear-gradient(45deg, #333, #555);
+  background-size: 200% 200%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Mode sombre automatique */
+@media (prefers-color-scheme: dark) {
+  .video-container {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  }
+}
+
+/* Réduction de mouvement pour accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  .video-container,
+  .skip-btn,
+  .video-close-btn,
+  .video-progress-fill {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* ========== FOCUS ET ACCESSIBILITÉ ========== */
+
+.skip-btn:focus,
+.video-close-btn:focus {
+  outline: 3px solid #4ecdc4;
+  outline-offset: 2px;
+}
+
+.video-modal[aria-hidden='true'] {
+  display: none;
+}
+
+/* Contraste élevé */
+@media (prefers-contrast: more) {
+  .video-container {
+    border: 3px solid #fff;
+    background: #000;
+  }
+
+  .skip-btn {
+    background: #fff;
+    color: #000;
+    border: 2px solid #000;
+  }
+}
+
+.video-welcome-message {
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.15), rgb(255 255 255 / 0.05));
+  border-radius: 15px;
+  padding: 15px;
+  margin-bottom: 15px;
+  color: white;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgb(0 0 0 / 0.3);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
+  animation: welcome-message-fade-in 0.6s ease-out 0.3s both;
+}
+
+@keyframes welcome-message-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

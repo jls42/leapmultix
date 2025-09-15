@@ -1,0 +1,9 @@
+/* ========== STREAK COUNTER ========== */
+.streak-counter {
+  font-weight: bold;
+}
+
+.high-streak {
+  color: #ff4d00;
+  animation: pulse 0.5s infinite alternate;
+}

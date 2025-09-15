@@ -1,0 +1,69 @@
+/* Responsive styling */
+@media (max-width: 768px) {
+  .visual-grid,
+  .patterns-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .animation-step {
+    padding: 15px;
+  }
+
+  .lab-selector {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .visual-grid,
+  .patterns-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lab-selector {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .equation-card {
+    min-width: 100px;
+    padding: 15px;
+  }
+
+  .dropzone-content {
+    font-size: 18px;
+  }
+
+  /* Bouton de retour fixé en haut pour améliorer l'ergonomie */
+  .return-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+    transition: all 0.3s;
+  }
+}
+
+/* Ajout du style spécifique pour le bouton retour dans le mode découverte */
+#game #back-btn.discovery-return-btn {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+}
+
+/* Allow .dev-note to wrap on mobile */
+@media (max-width: 600px) {
+  .dev-note {
+    white-space: normal;
+    max-width: 90vw;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+}

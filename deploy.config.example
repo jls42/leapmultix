@@ -1,0 +1,17 @@
+# Configuration de déploiement pour LeapMultix
+# Copiez ce fichier vers deploy.config et ajustez les valeurs
+
+# Domaine pour Plausible Analytics
+PLAUSIBLE_DOMAIN="your-domain.com"
+
+# Bucket S3 pour le déploiement
+S3_BUCKET="your-s3-bucket-name"
+
+# CloudFront Distribution ID pour invalidation du cache
+CLOUDFRONT_DISTRIB="E1234567890ABC"
+
+# Région AWS (optionnel)
+AWS_REGION="eu-west-1"
+
+# Variables d'environnement Terraform (optionnel)
+TF_VAR_leapmultixs3bucket="your-terraform-bucket-name"

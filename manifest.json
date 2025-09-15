@@ -1,0 +1,43 @@
+{
+  "name": "LeapMultix - Tables de Multiplication Interactives",
+  "short_name": "LeapMultix",
+  "description": "Application web éducative interactive pour apprendre les tables de multiplication avec des jeux, des défis et du suivi de progression.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "categories": ["education", "games", "kids"],
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/assets/images/arcade/fox_head_avatar_128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/images/arcade/fox_head_avatar_128x128.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/images/arcade/fox_head_avatar_128x128.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

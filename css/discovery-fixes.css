@@ -1,0 +1,188 @@
+/* Discovery mode supplemental styles (fallbacks and visibility fixes) */
+
+/* Number line */
+.number-line-section {
+  margin: 20px 0;
+  padding: 10px 0;
+  text-align: center;
+}
+
+.number-line-container {
+  position: relative;
+  margin: 0 auto;
+  max-width: 800px;
+  padding: 10px;
+}
+
+.number-line {
+  position: relative;
+  height: 40px;
+  border-bottom: 3px solid var(--primary-color);
+  margin: 10px 20px;
+}
+
+.number-point {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.number-point .point-marker {
+  width: 2px;
+  height: 10px;
+  background: var(--primary-dark);
+  margin: 0 auto;
+}
+
+.number-point .point-label {
+  font-size: 0.85em;
+  color: var(--text-color);
+}
+
+.number-point .point-equation {
+  font-size: 0.8em;
+  color: var(--neutral-dark);
+}
+
+/* Visual exploration */
+.visual-item {
+  display: inline-block;
+  background: #fff;
+  border: 2px solid var(--neutral-medium);
+  border-radius: 12px;
+  padding: 12px;
+  min-width: 140px;
+}
+
+.visual-item.highlighted {
+  border-color: var(--accent-color);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+
+.visual-representation .visual-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.visual-group {
+  display: flex;
+  gap: 4px;
+}
+
+.visual-object {
+  font-size: 18px;
+}
+
+/* Drag and drop zone */
+.lab-dropzone {
+  margin-top: 16px;
+  border: 2px dashed var(--primary-color);
+  border-radius: 12px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+}
+
+.lab-dropzone.drag-over {
+  background: rgb(0 0 0 / 0.03);
+}
+
+.lab-dropzone.success {
+  border-color: var(--accent-color);
+}
+
+.dropzone-content {
+  font-weight: 600;
+}
+
+/* Touch clone for DnD */
+.touch-clone {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Ensure animation content becomes visible when animated */
+.animated-equation.animate {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+.animation-step.animate {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+}
+
+.animation-result.animate {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* ===== Mobile widening for Discovery mode ===== */
+@media (max-width: 768px) {
+  /* Let Discovery use nearly full width inside the card */
+  .content-card:has(.discovery-container) {
+    width: 98vw !important;
+    max-width: 98vw !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Remove inner max-width bottlenecks */
+  .discovery-container,
+  .lab-selector,
+  .lab-experiment,
+  .number-line-container,
+  .visual-exploration,
+  .visual-grid,
+  .optional-interaction {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Carousel: grow cards to use horizontal space */
+  .multiplication-carousel {
+    justify-content: space-between !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    gap: 12px !important;
+  }
+
+  .multiplication-carousel .carousel-item {
+    width: calc(50% - 8px) !important;
+    max-width: none !important;
+  }
+
+  .multiplication-carousel .equation-card {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Visual items: two columns on mobile landscape/large phones */
+  .visual-grid {
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+
+  .visual-grid .visual-item {
+    width: calc(50% - 8px) !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Very small phones: stack items full-width */
+@media (max-width: 480px) {
+  .multiplication-carousel .carousel-item {
+    width: 100% !important;
+  }
+  .visual-grid .visual-item {
+    width: 100% !important;
+  }
+}
