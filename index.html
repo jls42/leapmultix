@@ -53,6 +53,8 @@
     Suppressing static analysis warnings:
     sonarjs:S5725 - External scripts without integrity is acceptable for analytics services that auto-update
     -->
+    <!-- Plausible Analytics initialization -->
+    <script src="js/plausible-init.js"></script>
     <!-- eslint-disable-next-line sonarjs/no-script-without-integrity -- Analytics script auto-updates, integrity would break functionality -->
     <script
       defer
@@ -60,15 +62,6 @@
       src="https://plausible.io/js/script.js"
       crossorigin="anonymous"
     ></script>
-    <script>
-      window.plausible =
-        window.plausible ||
-        function () {
-          var queue = window.plausible.q || [];
-          window.plausible.q = queue;
-          queue.push(arguments);
-        };
-    </script>
   </head>
 
   <body>
