@@ -50,10 +50,7 @@
   will-change: transform;
   content: '';
   position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
+  inset: -4px;
   border: 2px solid var(--primary-color, #3f51b5);
   border-radius: 30px;
   animation: pulse 1.5s infinite;
@@ -177,8 +174,7 @@
 
   /* Conteneur d'interface de jeu - corrections supplémentaires */
   .arcade-game-ui {
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    overflow: hidden auto !important;
   }
 
   /* Correction globale tous éléments arcade sur mobile */
@@ -1050,7 +1046,7 @@ body.night .arcade-dev-banner,
   text-align: center;
 }
 
-.arcade-game-card .arcade-controls-help li:before {
+.arcade-game-card .arcade-controls-help li::before {
   content: '🎮 ';
   color: #4caf50;
   font-size: 1em;
@@ -1192,7 +1188,6 @@ body.night .arcade-dev-banner,
     min-height: auto !important;
     -webkit-line-clamp: unset !important;
     display: block !important;
-    -webkit-box-orient: unset !important;
     height: auto !important;
   }
 }
