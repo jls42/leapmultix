@@ -6,7 +6,7 @@
 window.plausible =
   window.plausible ||
   function () {
-    var queue = window.plausible.q || [];
+    const queue = window.plausible.q || [];
     window.plausible.q = queue;
     queue.push(arguments);
   };
