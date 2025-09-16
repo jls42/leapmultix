@@ -201,8 +201,7 @@ img {
 
   /* Cartes en 2 colonnes avec meilleure gestion hauteur */
   .card-stack {
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-flow: row wrap;
     align-items: flex-start;
   }
 
@@ -675,6 +674,6 @@ img {
   .dev-note {
     white-space: normal;
     max-width: 90vw;
-    word-break: break-word;
+    overflow-wrap: break-word;
   }
 }
