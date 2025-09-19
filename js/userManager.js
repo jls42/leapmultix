@@ -572,10 +572,7 @@ export const UserManager = {
 
         // 🎬 Ne sélectionner l'utilisateur que si aucune vidéo ne va être jouée
         // (createUser gère déjà la sélection via le callback vidéo)
-        if (
-          typeof VideoManager === 'undefined' ||
-          !VideoManager.CHARACTER_VIDEOS.has(selectedAvatar)
-        ) {
+        if (!VideoManager?.CHARACTER_VIDEOS?.has(selectedAvatar)) {
           this.selectUser(newName);
         }
       } else {
