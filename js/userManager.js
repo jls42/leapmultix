@@ -335,7 +335,7 @@ export const UserManager = {
     if (
       typeof VideoManager !== 'undefined' &&
       VideoManager.CHARACTER_VIDEOS &&
-      Object.prototype.hasOwnProperty.call(VideoManager.CHARACTER_VIDEOS, avatar)
+      VideoManager.CHARACTER_VIDEOS.has(avatar)
     ) {
       console.log(`🎬 Lancement vidéo d'introduction: ${avatar}`);
       // Callback pour sélectionner l'utilisateur après la vidéo
@@ -572,7 +572,7 @@ export const UserManager = {
 
         // 🎬 Ne sélectionner l'utilisateur que si aucune vidéo ne va être jouée
         // (createUser gère déjà la sélection via le callback vidéo)
-        if (typeof VideoManager === 'undefined' || !VideoManager.CHARACTER_VIDEOS[selectedAvatar]) {
+        if (!VideoManager?.CHARACTER_VIDEOS?.has(selectedAvatar)) {
           this.selectUser(newName);
         }
       } else {
