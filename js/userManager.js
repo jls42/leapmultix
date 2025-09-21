@@ -17,8 +17,7 @@ import { VideoManager } from './VideoManager.js';
 import { AudioManager } from './core/audio.js';
 import { createVirtualKeyboard } from './virtual-keyboard.js';
 import { goToSlide } from './slides.js';
-import { gameState } from './game.js';
-import { displayDailyChallenge } from './game.js';
+import { gameState, displayDailyChallenge } from './game.js';
 
 /**
  * Gestionnaire principal des utilisateurs
