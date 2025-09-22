@@ -25,6 +25,29 @@ export function initThemes() {
   applyFontSize(localStorage.getItem('fontSize') || 'medium');
 }
 
+function updateMuteButtons(newVolume) {
+  const isMuted = Number(newVolume) === 0;
+  for (const btn of document.querySelectorAll('.mute-btn')) {
+    btn.textContent = isMuted ? '🔇' : '🔊';
+    const key = isMuted ? 'mute_button_label_off' : 'mute_button_label_on';
+    const translation = getTranslation(key);
+    const isMissingTranslation =
+      typeof translation === 'string' && translation.startsWith('[') && translation.endsWith(']');
+    btn.title = isMissingTranslation ? (isMuted ? 'Activer le son' : 'Couper le son') : translation;
+  }
+}
+
+function updateVolumeSliders(newVolume) {
+  for (const slider of document.querySelectorAll('.volume-slider')) {
+    slider.value = newVolume;
+  }
+}
+
+function updateVolumeControlsFallback(newVolume) {
+  updateMuteButtons(newVolume);
+  updateVolumeSliders(newVolume);
+}
+
 export function updateVolume(newVolume) {
   gameState.volume = newVolume;
   gameState.muted = newVolume === 0;
@@ -39,16 +62,7 @@ export function updateVolume(newVolume) {
     TopBar.updateVolumeControls(newVolume, newVolume === 0);
   } catch (e) {
     void e;
-    for (const btn of document.querySelectorAll('.mute-btn')) {
-      btn.textContent = newVolume > 0 ? '🔊' : '🔇';
-      const key = newVolume > 0 ? 'mute_button_label_on' : 'mute_button_label_off';
-      const t = getTranslation(key);
-      const missing = typeof t === 'string' && t.startsWith('[') && t.endsWith(']');
-      btn.title = missing ? (newVolume > 0 ? 'Couper le son' : 'Activer le son') : t;
-    }
-    for (const slider of document.querySelectorAll('.volume-slider')) {
-      slider.value = newVolume;
-    }
+    updateVolumeControlsFallback(newVolume);
   }
 
   localStorage.setItem('volume', newVolume);
