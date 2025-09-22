@@ -25,6 +25,15 @@ export function initThemes() {
   applyFontSize(localStorage.getItem('fontSize') || 'medium');
 }
 
+function getMuteButtonTitle(isMuted, translation) {
+  const isMissingTranslation =
+    typeof translation === 'string' && translation.startsWith('[') && translation.endsWith(']');
+  if (isMissingTranslation) {
+    return isMuted ? 'Activer le son' : 'Couper le son';
+  }
+  return translation;
+}
+
 function updateMuteButtons(newVolume) {
   const numericVolume = Number(newVolume);
   const isMuted = Number.isNaN(numericVolume) ? false : numericVolume === 0;
@@ -32,13 +41,7 @@ function updateMuteButtons(newVolume) {
     btn.textContent = isMuted ? '🔇' : '🔊';
     const key = isMuted ? 'mute_button_label_off' : 'mute_button_label_on';
     const translation = getTranslation(key);
-    const isMissingTranslation =
-      typeof translation === 'string' && translation.startsWith('[') && translation.endsWith(']');
-    let fallbackTitle = 'Couper le son';
-    if (isMuted) {
-      fallbackTitle = 'Activer le son';
-    }
-    btn.title = isMissingTranslation ? fallbackTitle : translation;
+    btn.title = getMuteButtonTitle(isMuted, translation);
   }
 }
 
