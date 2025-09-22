@@ -16,16 +16,52 @@ export function initThemes() {
   if (savedColorTheme !== 'default') {
     document.body.classList.add('theme-' + savedColorTheme);
   }
-  document.querySelectorAll('.color-theme-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.colorTheme === savedColorTheme);
-  });
+  for (const btn of document.querySelectorAll('.color-theme-btn')) {
+    const isActive = btn.dataset.colorTheme === savedColorTheme;
+    btn.classList.toggle('active', isActive);
+    btn.ariaPressed = isActive ? 'true' : 'false';
+  }
   applyHighContrastMode(localStorage.getItem('highContrastEnabled') === 'true');
   applyFontSize(localStorage.getItem('fontSize') || 'medium');
 }
 
+function getMuteButtonTitle(isMuted, translation) {
+  const isMissingTranslation =
+    typeof translation === 'string' && translation.startsWith('[') && translation.endsWith(']');
+  if (isMissingTranslation) {
+    return isMuted ? 'Activer le son' : 'Couper le son';
+  }
+  return translation;
+}
+
+function updateMuteButtons(newVolume) {
+  const numericVolume = Number(newVolume);
+  const isMuted = Number.isNaN(numericVolume) ? false : numericVolume === 0;
+  for (const btn of document.querySelectorAll('.mute-btn')) {
+    btn.textContent = isMuted ? '🔇' : '🔊';
+    const key = isMuted ? 'mute_button_label_off' : 'mute_button_label_on';
+    const translation = getTranslation(key);
+    btn.title = getMuteButtonTitle(isMuted, translation);
+  }
+}
+
+function updateVolumeSliders(newVolume) {
+  for (const slider of document.querySelectorAll('.volume-slider')) {
+    slider.value = newVolume;
+  }
+}
+
+function updateVolumeControlsFallback(newVolume) {
+  updateMuteButtons(newVolume);
+  updateVolumeSliders(newVolume);
+}
+
 export function updateVolume(newVolume) {
+  const numericVolume = Number(newVolume);
+  const isMuted = Number.isNaN(numericVolume) ? newVolume === 0 : numericVolume === 0;
+
   gameState.volume = newVolume;
-  gameState.muted = newVolume === 0;
+  gameState.muted = isMuted;
 
   try {
     AudioManager.setVolume(newVolume);
@@ -34,17 +70,10 @@ export function updateVolume(newVolume) {
   }
 
   try {
-    TopBar.updateVolumeControls(newVolume, newVolume === 0);
+    TopBar.updateVolumeControls(newVolume, isMuted);
   } catch (e) {
     void e;
-    document.querySelectorAll('.mute-btn').forEach(btn => {
-      btn.textContent = newVolume > 0 ? '🔊' : '🔇';
-      const key = newVolume > 0 ? 'mute_button_label_on' : 'mute_button_label_off';
-      const t = getTranslation(key);
-      const missing = typeof t === 'string' && t.startsWith('[') && t.endsWith(']');
-      btn.title = missing ? (newVolume > 0 ? 'Couper le son' : 'Activer le son') : t;
-    });
-    document.querySelectorAll('.volume-slider').forEach(slider => (slider.value = newVolume));
+    updateVolumeControlsFallback(newVolume);
   }
 
   localStorage.setItem('volume', newVolume);
@@ -65,15 +94,15 @@ export function applyFontSize(size) {
   if (['small', 'medium', 'large'].includes(size)) {
     document.body.classList.add(`font-size-${size}`);
     localStorage.setItem('fontSize', size);
-    document.querySelectorAll('.font-size-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.font-size-btn')) {
       btn.classList.toggle('active', btn.dataset.size === size);
-    });
+    }
   } else {
     document.body.classList.add('font-size-medium');
     localStorage.setItem('fontSize', 'medium');
-    document.querySelectorAll('.font-size-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.font-size-btn')) {
       btn.classList.toggle('active', btn.dataset.size === 'medium');
-    });
+    }
   }
 }
 

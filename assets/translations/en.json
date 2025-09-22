@@ -93,6 +93,7 @@
   "clear_cache_confirm": "Clear cache and reload?",
   "clearing_cache_message": "Clearing cache...",
   "color_theme_applied": "{{themeName}} theme applied!",
+  "color_theme_default": "Classic",
   "color_theme_blue": "Space Blue",
   "color_theme_dark": "Night",
   "color_theme_green": "Nature",
