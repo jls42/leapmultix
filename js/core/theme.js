@@ -26,14 +26,19 @@ export function initThemes() {
 }
 
 function updateMuteButtons(newVolume) {
-  const isMuted = Number(newVolume) === 0;
+  const numericVolume = Number(newVolume);
+  const isMuted = !Number.isNaN(numericVolume) ? numericVolume === 0 : false;
   for (const btn of document.querySelectorAll('.mute-btn')) {
     btn.textContent = isMuted ? '🔇' : '🔊';
     const key = isMuted ? 'mute_button_label_off' : 'mute_button_label_on';
     const translation = getTranslation(key);
     const isMissingTranslation =
       typeof translation === 'string' && translation.startsWith('[') && translation.endsWith(']');
-    btn.title = isMissingTranslation ? (isMuted ? 'Activer le son' : 'Couper le son') : translation;
+    let fallbackTitle = 'Couper le son';
+    if (isMuted) {
+      fallbackTitle = 'Activer le son';
+    }
+    btn.title = isMissingTranslation ? fallbackTitle : translation;
   }
 }
 
@@ -49,8 +54,11 @@ function updateVolumeControlsFallback(newVolume) {
 }
 
 export function updateVolume(newVolume) {
+  const numericVolume = Number(newVolume);
+  const isMuted = !Number.isNaN(numericVolume) ? numericVolume === 0 : newVolume === 0;
+
   gameState.volume = newVolume;
-  gameState.muted = newVolume === 0;
+  gameState.muted = isMuted;
 
   try {
     AudioManager.setVolume(newVolume);
@@ -59,7 +67,7 @@ export function updateVolume(newVolume) {
   }
 
   try {
-    TopBar.updateVolumeControls(newVolume, newVolume === 0);
+    TopBar.updateVolumeControls(newVolume, isMuted);
   } catch (e) {
     void e;
     updateVolumeControlsFallback(newVolume);
