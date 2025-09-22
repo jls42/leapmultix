@@ -93,6 +93,7 @@
   "clear_cache_confirm": "¿Vaciar la caché y recargar?",
   "clearing_cache_message": "Limpiando la caché...",
   "color_theme_applied": "¡Tema {{themeName}} aplicado!",
+  "color_theme_default": "Clásico",
   "color_theme_blue": "Azul Espacial",
   "color_theme_dark": "Noche",
   "color_theme_green": "Naturaleza",

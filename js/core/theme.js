@@ -17,7 +17,9 @@ export function initThemes() {
     document.body.classList.add('theme-' + savedColorTheme);
   }
   document.querySelectorAll('.color-theme-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.colorTheme === savedColorTheme);
+    const isActive = btn.dataset.colorTheme === savedColorTheme;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   });
   applyHighContrastMode(localStorage.getItem('highContrastEnabled') === 'true');
   applyFontSize(localStorage.getItem('fontSize') || 'medium');

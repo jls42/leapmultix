@@ -300,6 +300,12 @@ export const Customization = {
     gameState.colorTheme = themeName;
     localStorage.setItem('colorTheme', themeName);
 
+    document.querySelectorAll('.color-theme-btn').forEach(btn => {
+      const isActive = btn.dataset.colorTheme === themeName;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+
     // Retirer toutes les classes de thème de couleur
     document.body.classList.remove(
       'theme-pink',
