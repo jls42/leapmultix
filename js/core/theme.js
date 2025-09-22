@@ -27,7 +27,7 @@ export function initThemes() {
 
 function updateMuteButtons(newVolume) {
   const numericVolume = Number(newVolume);
-  const isMuted = !Number.isNaN(numericVolume) ? numericVolume === 0 : false;
+  const isMuted = Number.isNaN(numericVolume) ? false : numericVolume === 0;
   for (const btn of document.querySelectorAll('.mute-btn')) {
     btn.textContent = isMuted ? '🔇' : '🔊';
     const key = isMuted ? 'mute_button_label_off' : 'mute_button_label_on';
@@ -55,7 +55,7 @@ function updateVolumeControlsFallback(newVolume) {
 
 export function updateVolume(newVolume) {
   const numericVolume = Number(newVolume);
-  const isMuted = !Number.isNaN(numericVolume) ? numericVolume === 0 : newVolume === 0;
+  const isMuted = Number.isNaN(numericVolume) ? newVolume === 0 : numericVolume === 0;
 
   gameState.volume = newVolume;
   gameState.muted = isMuted;
