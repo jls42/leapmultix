@@ -46,9 +46,9 @@ export const Customization = {
       currentImg.src = `assets/images/arcade/${current}_head_avatar_128x128.png`;
       currentImg.alt = current;
     }
-    document.querySelectorAll('.avatar-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.avatar-btn')) {
       btn.classList.toggle('active', btn.dataset.avatar === (gameState.avatar || 'fox'));
-    });
+    }
 
     // Mettre à jour le champ de surnom
     const nicknameInput = document.getElementById('nickname-input');
@@ -82,7 +82,7 @@ export const Customization = {
         const btn = document.createElement('button');
         btn.id = 'clear-cache-btn';
         btn.className = 'btn btn-sm-desktop clear-cache-btn';
-        btn.setAttribute('data-translate', 'clear_cache_button');
+        btn.dataset.translate = 'clear_cache_button';
         btn.title = getTranslation('clear_cache_button') || 'Vider le cache';
         btn.style.marginLeft = '8px';
         btn.style.opacity = '0.75';
@@ -102,7 +102,7 @@ export const Customization = {
     document.querySelectorAll('.avatar-btn');
 
     // Sélection d'avatar
-    document.querySelectorAll('.avatar-btn:not(.locked)').forEach(btn => {
+    for (const btn of document.querySelectorAll('.avatar-btn:not(.locked)')) {
       // Supprimer l'ancien écouteur s'il existe pour éviter les doublons
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
@@ -113,9 +113,9 @@ export const Customization = {
         startBackgroundRotation(avatarName); // Rotation auto après changement d'avatar
 
         // Mettre à jour la sélection visuelle
-        document.querySelectorAll('.avatar-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.avatar === avatarName);
-        });
+        for (const avatarBtn of document.querySelectorAll('.avatar-btn')) {
+          avatarBtn.classList.toggle('active', avatarBtn.dataset.avatar === avatarName);
+        }
 
         // Mettre à jour l'image d'avatar actuel
         const currentImg = document.getElementById('current-avatar-img');
@@ -130,7 +130,7 @@ export const Customization = {
         UserState.updateUserData(userData);
         console.log(`🎨 Avatar "${avatarName}" sauvegardé automatiquement`);
       });
-    });
+    }
 
     // Ajouter le clavier virtuel pour le surnom
     const nicknameInput = document.getElementById('nickname-input');
@@ -192,7 +192,7 @@ export const Customization = {
     }
 
     // Sélection thème d'aventure
-    document.querySelectorAll('.theme-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.theme-btn')) {
       // Supprimer l'ancien écouteur s'il existe
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
@@ -201,22 +201,22 @@ export const Customization = {
         // Mettre à jour l'état global
         gameState.theme = themeName;
         // Mettre à jour la sélection visuelle
-        document.querySelectorAll('.theme-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.theme === themeName);
-        });
+        for (const themeBtn of document.querySelectorAll('.theme-btn')) {
+          themeBtn.classList.toggle('active', themeBtn.dataset.theme === themeName);
+        }
         // Note: updateTheme n'existe pas, la sauvegarde se fait dans saveCustomization
       });
-    });
+    }
 
     // Sélection thème de couleurs
-    document.querySelectorAll('.color-theme-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.color-theme-btn')) {
       // Supprimer l'ancien écouteur s'il existe
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
       newBtn.addEventListener('click', () => {
         this.updateColorTheme(newBtn.dataset.colorTheme);
       });
-    });
+    }
 
     // Tâche 4.2: Ajouter navigation clavier par flèches aux sélecteurs
     addArrowKeyNavigation(document.querySelector('.avatar-selector'), '.avatar-btn:not(.locked)');
@@ -300,11 +300,11 @@ export const Customization = {
     gameState.colorTheme = themeName;
     localStorage.setItem('colorTheme', themeName);
 
-    document.querySelectorAll('.color-theme-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.color-theme-btn')) {
       const isActive = btn.dataset.colorTheme === themeName;
       btn.classList.toggle('active', isActive);
-      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
+      btn.ariaPressed = isActive ? 'true' : 'false';
+    }
 
     // Retirer toutes les classes de thème de couleur
     document.body.classList.remove(
