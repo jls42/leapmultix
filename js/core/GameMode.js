@@ -18,6 +18,7 @@ import {
   addArrowKeyNavigation as _addArrowKeyNavigation,
 } from '../utils-es6.js';
 import { recordMultiplicationResult } from './mult-stats.js';
+import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
@@ -441,6 +442,17 @@ export class GameMode {
       this.state.streak++;
       try {
         gameState.streak = this.state.streak;
+      } catch (e) {
+        void e;
+      }
+
+      try {
+        const userData = UserState.getCurrentUserData();
+        const currentBest = Number(userData.bestStreak) || 0;
+        if (this.state.streak > currentBest) {
+          userData.bestStreak = this.state.streak;
+          UserState.updateUserData(userData);
+        }
       } catch (e) {
         void e;
       }

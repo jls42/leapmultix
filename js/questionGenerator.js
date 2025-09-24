@@ -14,7 +14,7 @@ export function generateQuestion(options = {}) {
   // Options par défaut
   const {
     type = 'auto', // 'classic', 'gap', 'mcq', 'true_false', 'problem', ou 'auto'
-    // weakTables = [], // Array<number> - unused
+    weakTables = [],
     excludeTables = [], // Array<number>
     tables = [], // Nouvel argument : liste des tables à piocher
     minTable = 1,
@@ -34,7 +34,7 @@ export function generateQuestion(options = {}) {
     maxTable,
   });
   const eligibleNums = getEligibleNums({ forceNum, minNum, maxNum });
-  const { t: table, n: num } = pickWeightedPair(eligibleTables, eligibleNums);
+  const { t: table, n: num } = pickWeightedPair(eligibleTables, eligibleNums, weakTables);
 
   // Déterminer le type de question
   let chosenType = type;
@@ -103,7 +103,7 @@ function getEligibleNums({ forceNum, minNum, maxNum }) {
   return Array.from({ length: maxNum - minNum + 1 }, (_, i) => i + minNum);
 }
 
-function pickWeightedPair(eligibleTables, eligibleNums) {
+function pickWeightedPair(eligibleTables, eligibleNums, weakTables = []) {
   const pairs = [];
   for (const t of eligibleTables) {
     for (const n of eligibleNums) {
@@ -118,7 +118,9 @@ function pickWeightedPair(eligibleTables, eligibleNums) {
         // Pas de stats disponibles
       }
       const errRate = attempts > 0 ? errors / attempts : 0;
-      pairs.push({ t, n, weight: 1 + errRate });
+      let weight = 1 + errRate;
+      if (weakTables.includes(t)) weight += 1;
+      pairs.push({ t, n, weight });
     }
   }
   const totalWeight = pairs.reduce((sum, p) => sum + p.weight, 0);

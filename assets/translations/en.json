@@ -16,7 +16,10 @@
   "adventure_scene_label": "Adventure scene",
   "adventure_story_intro": "The ancient Multiplication Tables have been scattered throughout the kingdom! Only an adventurer skilled in calculations can find them. Explore each region, solve the puzzles, and become a math legend!",
   "adventure_title": "The Adventure of the Lost Tables",
+  "about_button_label": "About",
   "app_title": "LeapMultix",
+  "legal_title": "Legal Notice",
+  "privacy_title": "Privacy Policy",
   "arcade": {
     "multiMemory": {
       "title": "MultiMemory",

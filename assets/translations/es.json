@@ -16,7 +16,10 @@
   "adventure_scene_label": "Escena de aventura",
   "adventure_story_intro": "¡Las antiguas Tablas de Multiplicar han sido esparcidas por todo el reino! Solo un aventurero o aventurera hábil con los cálculos puede encontrarlas. ¡Explora cada región, resuelve los enigmas y conviértete en una leyenda de las matemáticas!",
   "adventure_title": "La Aventura de las Tablas Perdidas",
+  "about_button_label": "Acerca de",
   "app_title": "LeapMultix",
+  "legal_title": "Aviso legal",
+  "privacy_title": "Política de privacidad",
   "arcade": {
     "multiMemory": {
       "title": "MultiMemory",

@@ -16,7 +16,10 @@
   "adventure_scene_label": "Scène d'aventure",
   "adventure_story_intro": "Les anciennes Tables de Multiplication ont été éparpillées à travers le royaume ! Seul un aventurier ou une aventurière maîtrisant les calculs peut les retrouver. Explore chaque région, résous les énigmes et deviens une légende des maths !",
   "adventure_title": "L'Aventure des Tables Perdues",
+  "about_button_label": "À propos",
   "app_title": "LeapMultix",
+  "legal_title": "Mentions légales",
+  "privacy_title": "Politique de confidentialité",
   "arcade": {
     "multiMemory": {
       "title": "MultiMemory",
