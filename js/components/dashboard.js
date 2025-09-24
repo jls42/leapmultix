@@ -563,7 +563,7 @@ export const Dashboard = {
       Object.entries(userData.starsByTable ?? {}).map(([tableKey, value]) => [
         String(tableKey),
         Number(value) || 0,
-      ]),
+      ])
     );
 
     if (userData.adventureProgress) {
@@ -574,7 +574,8 @@ export const Dashboard = {
 
         const normalizedTable = (() => {
           const normalize = candidate => {
-            if (typeof candidate === 'number' && Number.isFinite(candidate)) return String(candidate);
+            if (typeof candidate === 'number' && Number.isFinite(candidate))
+              return String(candidate);
             if (typeof candidate === 'string' && /^\d+$/.test(candidate.trim())) {
               return String(Number(candidate.trim()));
             }
