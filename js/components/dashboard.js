@@ -568,10 +568,8 @@ export const Dashboard = {
         const tableFromProgress = progress?.table;
         const table = tableFromProgress || levelInfo?.table;
         if (!table) continue;
-        // eslint-disable-next-line security/detect-object-injection, sonarjs/no-unsafe-string-usage -- Safe: table is controlled multiplication table (1-10) from ADVENTURE_LEVELS
         const current = Number(starsByTable[table]) || 0;
         const best = Number(progress?.stars) || 0;
-        // eslint-disable-next-line security/detect-object-injection, sonarjs/no-object-injection -- Safe: table is validated multiplication table number from internal data
         if (best > current) starsByTable[table] = best;
       }
     }
