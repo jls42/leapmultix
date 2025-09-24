@@ -642,6 +642,8 @@ export class QuizMode extends GameMode {
     userData.quizStats.bestScore = Math.max(userData.quizStats.bestScore || 0, this.state.score);
     userData.quizStats.totalQuizzes = (userData.quizStats.totalQuizzes || 0) + 1;
 
+    userData.bestStreak = Math.max(userData.bestStreak || 0, this.state.streak);
+
     // Vérifier les badges
     checkAndUnlockBadge('quiz_starter');
     if (successRate === 100 && this.state.questionCount >= 10) {

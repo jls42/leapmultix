@@ -18,6 +18,7 @@ import {
 } from '../utils-es6.js';
 import { getChallengeTopScores } from '../core/challenge-stats.js';
 import { setSafeContentWithImage, createSafeElement } from '../security-utils.js';
+import { ADVENTURE_LEVELS } from '../core/adventure-data.js';
 
 export const Dashboard = {
   // DOM builders (avoid innerHTML injection and ensure consistent rendering)
@@ -160,7 +161,7 @@ export const Dashboard = {
 
     dashboardStars.textContent = '';
     const userData = UserState.getCurrentUserData();
-    const starsByTable = userData.starsByTable || {};
+    const starsByTable = this._getStarsByTable(userData);
     const weakTables = getWeakTables();
 
     /**
@@ -349,14 +350,14 @@ export const Dashboard = {
     const userData = UserState.getCurrentUserData();
     // Quiz
     const qStats = (function () {
-      let total = 0,
-        correct = 0;
-      if (userData.quizStats) {
-        Object.values(userData.quizStats).forEach(s => {
-          total += s.total;
-          correct += s.correct;
-        });
+      const history = userData.quizStats?.history || [];
+      let total = 0;
+      let correct = 0;
+      for (const entry of history) {
+        total += Number(entry.total) || 0;
+        correct += Number(entry.correct) || 0;
       }
+
       const rate = total ? Math.round((correct / total) * 100) : 0;
       return { total, correct, rate };
     })();
@@ -554,18 +555,43 @@ export const Dashboard = {
    */
   calculateTotalStars() {
     const userData = UserState.getCurrentUserData();
-    let totalStars = 0;
-    /**
-     * Fonction if
-     * @param {*} userData.starsByTable - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (userData.starsByTable) {
-      Object.values(userData.starsByTable).forEach(stars => {
-        totalStars += stars;
-      });
+    const starsByTable = this._getStarsByTable(userData);
+    return Object.values(starsByTable).reduce((sum, stars) => sum + stars, 0);
+  },
+  _getStarsByTable(userData) {
+    const starsByTable = new Map(
+      Object.entries(userData.starsByTable ?? {}).map(([tableKey, value]) => [
+        String(tableKey),
+        Number(value) || 0,
+      ])
+    );
+
+    if (userData.adventureProgress) {
+      const levelById = new Map(ADVENTURE_LEVELS.map(level => [level.id, level]));
+      for (const [levelId, progress] of Object.entries(userData.adventureProgress)) {
+        const levelInfo = levelById.get(Number(levelId));
+        const tableFromProgress = progress?.table;
+
+        const normalizedTable = (() => {
+          const normalize = candidate => {
+            if (typeof candidate === 'number' && Number.isFinite(candidate))
+              return String(candidate);
+            if (typeof candidate === 'string' && /^\d+$/.test(candidate.trim())) {
+              return String(Number(candidate.trim()));
+            }
+            return null;
+          };
+          return normalize(tableFromProgress) ?? normalize(levelInfo?.table);
+        })();
+
+        if (!normalizedTable) continue;
+        const current = starsByTable.get(normalizedTable) ?? 0;
+        const best = Number(progress?.stars) || 0;
+        if (best > current) starsByTable.set(normalizedTable, best);
+      }
     }
-    return totalStars;
+
+    return Object.fromEntries(starsByTable);
   },
 };
 

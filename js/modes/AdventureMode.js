@@ -10,6 +10,7 @@
  */
 
 import { GameMode } from '../core/GameMode.js';
+import { ADVENTURE_LEVELS } from '../core/adventure-data.js';
 import { createSafeImage, createSafeElement } from '../security-utils.js';
 import {
   getTranslation,
@@ -41,98 +42,7 @@ export class AdventureMode extends GameMode {
     });
 
     // Définition des niveaux d'aventure
-    this.adventureLevels = [
-      {
-        id: 1,
-        table: 1,
-        nameKey: 'level_1_name',
-        descKey: 'level_1_desc',
-        image: 'forest.png',
-        requiredStars: 0,
-        completed: false,
-      },
-      {
-        id: 2,
-        table: 2,
-        nameKey: 'level_2_name',
-        descKey: 'level_2_desc',
-        image: 'river.png',
-        requiredStars: 2,
-        completed: false,
-      },
-      {
-        id: 3,
-        table: 5,
-        nameKey: 'level_3_name',
-        descKey: 'level_3_desc',
-        image: 'forest.png',
-        requiredStars: 4,
-        completed: false,
-      },
-      {
-        id: 4,
-        table: 10,
-        nameKey: 'level_4_name',
-        descKey: 'level_4_desc',
-        image: 'river.png',
-        requiredStars: 6,
-        completed: false,
-      },
-      {
-        id: 5,
-        table: 3,
-        nameKey: 'level_5_name',
-        descKey: 'level_5_desc',
-        image: 'forest.png',
-        requiredStars: 8,
-        completed: false,
-      },
-      {
-        id: 6,
-        table: 4,
-        nameKey: 'level_6_name',
-        descKey: 'level_6_desc',
-        image: 'river.png',
-        requiredStars: 10,
-        completed: false,
-      },
-      {
-        id: 7,
-        table: 6,
-        nameKey: 'level_7_name',
-        descKey: 'level_7_desc',
-        image: 'forest.png',
-        requiredStars: 12,
-        completed: false,
-      },
-      {
-        id: 8,
-        table: 7,
-        nameKey: 'level_8_name',
-        descKey: 'level_8_desc',
-        image: 'river.png',
-        requiredStars: 14,
-        completed: false,
-      },
-      {
-        id: 9,
-        table: 8,
-        nameKey: 'level_9_name',
-        descKey: 'level_9_desc',
-        image: 'forest.png',
-        requiredStars: 16,
-        completed: false,
-      },
-      {
-        id: 10,
-        table: 9,
-        nameKey: 'level_10_name',
-        descKey: 'level_10_desc',
-        image: 'river.png',
-        requiredStars: 18,
-        completed: false,
-      },
-    ];
+    this.adventureLevels = ADVENTURE_LEVELS.map(level => ({ ...level, completed: false }));
 
     // État spécifique à l'Adventure
     this.currentLevel = null;
@@ -494,6 +404,9 @@ export class AdventureMode extends GameMode {
    * Logique spécifique après soumission de réponse
    */
   onAnswerSubmitted(isCorrect, userAnswer) {
+    // Enregistrer l'essai dans l'historique quel que soit le résultat
+    this.recordProgressHistory(isCorrect, userAnswer);
+
     if (isCorrect) {
       // Attribuer des pièces
       const userData = UserState.getCurrentUserData();
@@ -510,9 +423,6 @@ export class AdventureMode extends GameMode {
       const { table, num } = this.state.currentQuestion;
       updateDailyChallengeProgress(table, num);
 
-      // Enregistrer dans l'historique
-      this.recordProgressHistory(isCorrect, userAnswer);
-
       // Vérifier si le niveau est terminé
       if (this.state.questionCount >= this.config.maxQuestions) {
         // Empêcher la planification automatique d'une prochaine question
@@ -521,17 +431,13 @@ export class AdventureMode extends GameMode {
         setTimeout(() => this.completeLevel(), 800);
         return;
       }
-    } else {
-      // Réponse incorrecte - gérer les vies
-      this.state.lives--;
-
-      if (this.state.lives <= 0) {
-        // Empêcher la planification automatique d'une prochaine question
-        this._autoWas = this.config.autoProgress;
-        this.config.autoProgress = false;
-        setTimeout(() => this.failLevel(), 600);
-        return;
-      }
+    } else if (this.state.lives <= 0) {
+      // Réponse incorrecte - les vies sont déjà décrémentées par GameMode.updateStats()
+      // Empêcher la planification automatique d'une prochaine question
+      this._autoWas = this.config.autoProgress;
+      this.config.autoProgress = false;
+      setTimeout(() => this.failLevel(), 600);
+      return;
     }
   }
 
@@ -663,9 +569,16 @@ export class AdventureMode extends GameMode {
     userData.adventureProgress[this.currentLevel.id] = {
       completed: stars > 0,
       stars: bestStars,
+      table: this.currentLevel.table,
       lastPlayed: Date.now(),
       attempts: (existingProgress?.attempts || 0) + 1,
     };
+
+    if (!userData.starsByTable) userData.starsByTable = {};
+    const currentTableStars = Number(userData.starsByTable[this.currentLevel.table]) || 0;
+    if (bestStars > currentTableStars) {
+      userData.starsByTable[this.currentLevel.table] = bestStars;
+    }
 
     // Marquer le niveau comme complété dans la liste
     this.currentLevel.completed = stars > 0;

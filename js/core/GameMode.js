@@ -18,6 +18,7 @@ import {
   addArrowKeyNavigation as _addArrowKeyNavigation,
 } from '../utils-es6.js';
 import { recordMultiplicationResult } from './mult-stats.js';
+import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
@@ -441,8 +442,19 @@ export class GameMode {
       this.state.streak++;
       try {
         gameState.streak = this.state.streak;
-      } catch (e) {
-        void e;
+      } catch {
+        // Ignore gameState update errors
+      }
+
+      try {
+        const userData = UserState.getCurrentUserData();
+        const currentBest = Number(userData.bestStreak) || 0;
+        if (this.state.streak > currentBest) {
+          userData.bestStreak = this.state.streak;
+          UserState.updateUserData(userData);
+        }
+      } catch {
+        // Ignore gameState update errors
       }
 
       // Calcul du score
@@ -452,8 +464,8 @@ export class GameMode {
       this.state.streak = 0;
       try {
         gameState.streak = 0;
-      } catch (e) {
-        void e;
+      } catch {
+        // Ignore gameState update errors
       }
 
       // Gestion des vies
@@ -501,8 +513,8 @@ export class GameMode {
       // Effet sonore de réussite
       try {
         AudioManager.playSound('good');
-      } catch (e) {
-        void e;
+      } catch {
+        // Ignore gameState update errors
       }
       const points = this.calculatePoints();
       const message =
@@ -515,8 +527,8 @@ export class GameMode {
       // Effet sonore d'erreur
       try {
         AudioManager.playSound('bad');
-      } catch (e) {
-        void e;
+      } catch {
+        // Ignore gameState update errors
       }
       const message = getTranslation('feedback_incorrect', { correctAnswer });
       showFeedback(this.feedbackElement.id, message, 'error', true);
