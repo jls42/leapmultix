@@ -353,10 +353,10 @@ export const Dashboard = {
       const history = userData.quizStats?.history || [];
       let total = 0;
       let correct = 0;
-      history.forEach(entry => {
+      for (const entry of history) {
         total += Number(entry.total) || 0;
         correct += Number(entry.correct) || 0;
-      });
+      }
 
       const rate = total ? Math.round((correct / total) * 100) : 0;
       return { total, correct, rate };
@@ -559,19 +559,19 @@ export const Dashboard = {
     return Object.values(starsByTable).reduce((sum, stars) => sum + stars, 0);
   },
   _getStarsByTable(userData) {
-    const starsByTable = { ...(userData.starsByTable || {}) };
+    const starsByTable = userData.starsByTable ? { ...userData.starsByTable } : {};
 
     if (userData.adventureProgress) {
       const levelById = new Map(ADVENTURE_LEVELS.map(level => [level.id, level]));
-      Object.entries(userData.adventureProgress).forEach(([levelId, progress]) => {
+      for (const [levelId, progress] of Object.entries(userData.adventureProgress)) {
         const levelInfo = levelById.get(Number(levelId));
         const tableFromProgress = progress?.table;
         const table = tableFromProgress || levelInfo?.table;
-        if (!table) return;
+        if (!table) continue;
         const current = Number(starsByTable[table]) || 0;
         const best = Number(progress?.stars) || 0;
         if (best > current) starsByTable[table] = best;
-      });
+      }
     }
 
     return starsByTable;

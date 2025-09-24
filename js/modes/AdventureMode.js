@@ -431,15 +431,13 @@ export class AdventureMode extends GameMode {
         setTimeout(() => this.completeLevel(), 800);
         return;
       }
-    } else {
+    } else if (this.state.lives <= 0) {
       // Réponse incorrecte - les vies sont déjà décrémentées par GameMode.updateStats()
-      if (this.state.lives <= 0) {
-        // Empêcher la planification automatique d'une prochaine question
-        this._autoWas = this.config.autoProgress;
-        this.config.autoProgress = false;
-        setTimeout(() => this.failLevel(), 600);
-        return;
-      }
+      // Empêcher la planification automatique d'une prochaine question
+      this._autoWas = this.config.autoProgress;
+      this.config.autoProgress = false;
+      setTimeout(() => this.failLevel(), 600);
+      return;
     }
   }
 

@@ -103,26 +103,39 @@ function getEligibleNums({ forceNum, minNum, maxNum }) {
   return Array.from({ length: maxNum - minNum + 1 }, (_, i) => i + minNum);
 }
 
-function pickWeightedPair(eligibleTables, eligibleNums, weakTables = []) {
+function getMultiplicationStats(table, num) {
+  try {
+    const allStats = Storage.loadMultiplicationStats();
+    const stats = allStats?.[`${table}x${num}`] || { attempts: 0, errors: 0 };
+    return {
+      attempts: Number(stats.attempts) || 0,
+      errors: Number(stats.errors) || 0,
+    };
+  } catch {
+    return { attempts: 0, errors: 0 };
+  }
+}
+
+function calculateWeight(table, num, weakTables) {
+  const { attempts, errors } = getMultiplicationStats(table, num);
+  const errRate = attempts > 0 ? errors / attempts : 0;
+  let weight = 1 + errRate;
+  if (weakTables.includes(table)) weight += 1;
+  return weight;
+}
+
+function buildWeightedPairs(eligibleTables, eligibleNums, weakTables) {
   const pairs = [];
   for (const t of eligibleTables) {
     for (const n of eligibleNums) {
-      let attempts = 0,
-        errors = 0;
-      try {
-        const allStats = Storage.loadMultiplicationStats();
-        const stats = allStats?.[`${t}x${n}`] || { attempts: 0, errors: 0 };
-        attempts = Number(stats.attempts) || 0;
-        errors = Number(stats.errors) || 0;
-      } catch {
-        // Pas de stats disponibles
-      }
-      const errRate = attempts > 0 ? errors / attempts : 0;
-      let weight = 1 + errRate;
-      if (weakTables.includes(t)) weight += 1;
+      const weight = calculateWeight(t, n, weakTables);
       pairs.push({ t, n, weight });
     }
   }
+  return pairs;
+}
+
+function selectRandomPair(pairs) {
   const totalWeight = pairs.reduce((sum, p) => sum + p.weight, 0);
   let r = Math.random() * totalWeight;
   for (const p of pairs) {
@@ -130,4 +143,9 @@ function pickWeightedPair(eligibleTables, eligibleNums, weakTables = []) {
     if (r <= 0) return p;
   }
   return pairs[0];
+}
+
+function pickWeightedPair(eligibleTables, eligibleNums, weakTables = []) {
+  const pairs = buildWeightedPairs(eligibleTables, eligibleNums, weakTables);
+  return selectRandomPair(pairs);
 }
