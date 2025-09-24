@@ -432,9 +432,7 @@ export class AdventureMode extends GameMode {
         return;
       }
     } else {
-      // Réponse incorrecte - gérer les vies
-      this.state.lives--;
-
+      // Réponse incorrecte - les vies sont déjà décrémentées par GameMode.updateStats()
       if (this.state.lives <= 0) {
         // Empêcher la planification automatique d'une prochaine question
         this._autoWas = this.config.autoProgress;
