@@ -559,22 +559,38 @@ export const Dashboard = {
     return Object.values(starsByTable).reduce((sum, stars) => sum + stars, 0);
   },
   _getStarsByTable(userData) {
-    const starsByTable = userData.starsByTable ? { ...userData.starsByTable } : {};
+    const starsByTable = new Map(
+      Object.entries(userData.starsByTable ?? {}).map(([tableKey, value]) => [
+        String(tableKey),
+        Number(value) || 0,
+      ]),
+    );
 
     if (userData.adventureProgress) {
       const levelById = new Map(ADVENTURE_LEVELS.map(level => [level.id, level]));
       for (const [levelId, progress] of Object.entries(userData.adventureProgress)) {
         const levelInfo = levelById.get(Number(levelId));
         const tableFromProgress = progress?.table;
-        const table = tableFromProgress || levelInfo?.table;
-        if (!table) continue;
-        const current = Number(starsByTable[table]) || 0;
+
+        const normalizedTable = (() => {
+          const normalize = candidate => {
+            if (typeof candidate === 'number' && Number.isFinite(candidate)) return String(candidate);
+            if (typeof candidate === 'string' && /^\d+$/.test(candidate.trim())) {
+              return String(Number(candidate.trim()));
+            }
+            return null;
+          };
+          return normalize(tableFromProgress) ?? normalize(levelInfo?.table);
+        })();
+
+        if (!normalizedTable) continue;
+        const current = starsByTable.get(normalizedTable) ?? 0;
         const best = Number(progress?.stars) || 0;
-        if (best > current) starsByTable[table] = best;
+        if (best > current) starsByTable.set(normalizedTable, best);
       }
     }
 
-    return starsByTable;
+    return Object.fromEntries(starsByTable);
   },
 };
 

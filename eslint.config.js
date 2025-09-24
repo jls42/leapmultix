@@ -1,4 +1,6 @@
 import js from '@eslint/js';
+import security from 'eslint-plugin-security';
+import sonarjs from 'eslint-plugin-sonarjs';
 
 export default [
   js.configs.recommended,
@@ -39,6 +41,10 @@ export default [
         self: 'readonly',
         caches: 'readonly',
       },
+    },
+    plugins: {
+      security,
+      sonarjs,
     },
     rules: {
       'no-unused-vars': 'warn',
