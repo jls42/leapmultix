@@ -91,82 +91,74 @@ img {
 /* Optimisation générale layout mobile */
 @media (max-width: 768px) {
   body {
-    padding: 0 !important;
-    margin: 0 !important;
+    padding: 0;
+    margin: 0;
   }
 
   .slide {
-    padding: var(--padding-mobile) !important;
-    min-height: auto !important;
-    max-height: 100vh !important;
-    overflow-y: auto !important;
+    padding: var(--padding-mobile);
+    min-height: auto;
+    max-height: 100vh;
+    overflow-y: auto;
   }
 
   /* Containers adaptables mobile */
   .game-card,
   .challenge-card,
   .discovery-card {
-    width: 95% !important;
-    max-width: 95vw !important;
-    margin: 8px auto !important;
-    padding: 15px !important;
-    box-sizing: border-box !important;
-    min-height: auto !important;
-    max-height: 85vh !important;
-    overflow-y: auto !important;
+    width: 100%;
+    margin: 8px 0;
+    padding: 15px;
+    box-sizing: border-box;
+    min-height: auto;
+    max-height: 85vh;
+    overflow-y: auto;
   }
 
   /* Boutons mobiles optimisés */
-  .btn-mobile-optimized {
-    width: 90% !important;
-    max-width: 280px !important;
-    margin: 8px auto !important;
-    padding: 12px 16px !important;
-    font-size: 16px !important;
-    min-height: var(--touch-target) !important;
+  .btn.btn-mobile-optimized {
+    width: 90%;
+    max-width: 280px;
+    margin: 8px auto;
+    padding: 12px 16px;
+    font-size: 16px;
+    min-height: var(--touch-target);
   }
 }
 
 /* Navigation mobile - Bandeau compact */
-.top-bar {
-  flex-direction: row !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  padding: 5px 10px !important;
-  margin-bottom: 10px !important;
-  gap: 5px !important;
-  min-height: 50px !important;
-}
-
-/* Éléments top-bar plus compacts en mobile */
 @media (max-width: 768px) {
   .top-bar {
-    padding: 3px 8px !important;
-    margin-bottom: 8px !important;
-    min-height: 40px !important;
-    border-radius: 10px !important;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 8px;
+    margin-bottom: 8px;
+    gap: 3px;
+    min-height: 40px;
+    border-radius: 10px;
   }
 
   .top-bar .language-selector,
   .top-bar .global-volume-controls {
-    gap: 3px !important;
+    gap: 3px;
   }
 
   .top-bar .btn {
-    padding: 4px 8px !important;
-    font-size: 0.9em !important;
-    min-height: 32px !important;
-    margin: 2px !important;
+    padding: 4px 8px;
+    font-size: 0.9em;
+    min-height: 32px;
+    margin: 2px;
   }
 
   .top-bar .mute-btn {
-    padding: 2px 4px !important;
-    font-size: 1em !important;
-    min-height: 24px !important;
+    padding: 2px 4px;
+    font-size: 1em;
+    min-height: 24px;
   }
 
   .top-bar .volume-slider {
-    width: 60px !important;
+    width: 60px;
   }
 }
 
@@ -212,10 +204,12 @@ img {
   }
 
   /* Arcade cards plus compactes */
-  .arcade-game-card {
-    max-height: none !important;
-    overflow-y: visible !important;
-    height: auto !important;
+  #multimiam-arcade-card,
+  #multimemory-arcade-card,
+  #multisnake-arcade-card {
+    min-height: auto;
+    max-height: none;
+    overflow-y: visible;
   }
 }
 
@@ -302,40 +296,40 @@ img {
   .arcade-game-ui > canvas,
   #arcade-canvas,
   #multimiam-canvas {
-    width: 95% !important;
-    height: auto !important;
-    max-width: 400px !important;
-    max-height: 50vh !important;
-    margin: 10px auto !important;
-    padding: 0 !important;
-    border: 1px solid #ddd !important;
-    border-radius: 8px !important;
+    width: 95%;
+    height: auto;
+    max-width: 400px;
+    max-height: 50vh;
+    margin: 10px auto;
+    padding: 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     /* Anti-aliasing pour éviter le flou */
-    image-rendering: -webkit-optimize-contrast !important;
-    image-rendering: crisp-edges !important;
-    image-rendering: pixelated !important;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
   }
 
   /* Snake canvas - Résolution fixe pour éviter l'effet ratatiné */
   #multisnake-canvas,
   canvas#multisnake-canvas,
   .arcade-game-ui > canvas.multisnake-canvas {
-    width: 90% !important;
-    height: auto !important;
-    max-width: 380px !important;
-    max-height: 380px !important; /* Carré pour le Snake */
-    min-height: 280px !important; /* Minimum pour être lisible */
-    aspect-ratio: 1 !important; /* Force aspect ratio carré */
-    margin: 10px auto !important;
-    padding: 0 !important;
+    width: 90%;
+    height: auto;
+    max-width: 380px;
+    max-height: 380px; /* Carré pour le Snake */
+    min-height: 280px; /* Minimum pour être lisible */
+    aspect-ratio: 1; /* Force aspect ratio carré */
+    margin: 10px auto;
+    padding: 0;
     /* Rendu pixel parfait pour Snake */
-    image-rendering: pixelated !important;
-    image-rendering: -moz-crisp-edges !important;
-    image-rendering: crisp-edges !important;
-    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
     /* Éviter l'anti-aliasing qui fait flou */
-    -webkit-font-smoothing: none !important;
-    -moz-osx-font-smoothing: unset !important;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
   }
 }
 
@@ -353,17 +347,17 @@ img {
 
 /* Boutons arcade game over gardent leur taille normale */
 .arcade-gameover .btn {
-  width: auto !important;
-  margin: 5px !important;
-  display: inline-block !important;
+  width: auto;
+  margin: 5px;
+  display: inline-block;
 }
 
 /* Portrait mobile/tablette */
 @media (max-width: 1024px) and (orientation: portrait) {
   .arcade-canvas,
   .arcade-game-ui > canvas {
-    max-height: 50vh !important;
-    width: 90% !important;
+    max-height: 50vh;
+    width: 90%;
   }
 }
 
@@ -371,8 +365,8 @@ img {
 @media (max-width: 768px) and (orientation: landscape) {
   .arcade-canvas,
   .arcade-game-ui > canvas {
-    max-height: 60vh !important;
-    width: 70% !important;
+    max-height: 60vh;
+    width: 70%;
   }
 
   .slide {
@@ -411,68 +405,64 @@ img {
 
 /* Cartes arcade responsive - Fix overflow boutons difficulté */
 .arcade-game-card {
-  width: 100% !important;
-  max-width: 95vw !important;
-  margin: 10px auto !important;
-  overflow-x: hidden !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  margin: 10px 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .arcade-game-card .improved-difficulty-select {
-  width: 95% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  padding: 8px !important;
-  margin: 5px auto 10px auto !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
+  width: 95%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  margin: 5px auto 10px auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .arcade-game-card .difficulty-buttons-row {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  width: 100% !important;
-  max-width: 100% !important;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .arcade-game-card .difficulty-btn {
-  flex: 0 0 auto !important;
-  min-width: 85px !important;
-  max-width: 120px !important;
-  padding: 8px 12px !important;
-  margin: 2px !important;
-  font-size: 0.9em !important;
-  white-space: nowrap !important;
-  text-align: center !important;
+  flex: 0 0 auto;
+  min-width: 85px;
+  max-width: 120px;
+  padding: 8px 12px;
+  margin: 2px;
+  font-size: 0.9em;
+  white-space: nowrap;
+  text-align: center;
 }
 
 @media (max-width: 480px) {
   .arcade-game-card .difficulty-btn {
-    min-width: 75px !important;
-    padding: 6px 10px !important;
-    font-size: 0.85em !important;
-    margin: 1px !important;
+    min-width: 75px;
+    padding: 6px 10px;
+    font-size: 0.85em;
+    margin: 1px;
   }
 
   .arcade-game-card .improved-difficulty-select {
-    padding: 6px !important;
-    margin: 3px auto 8px auto !important;
+    padding: 6px;
+    margin: 3px auto 8px auto;
   }
 
   /* Réduction hauteur cartes mobile */
   #multimiam-arcade-card,
   #multimemory-arcade-card,
   #multisnake-arcade-card {
-    min-height: 280px !important;
+    min-height: 280px;
   }
 
-  .arcade-game-card {
-    max-width: 98vw !important;
-  }
 }
 
 /* Discovery Mode responsive */
