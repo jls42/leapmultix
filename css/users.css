@@ -27,8 +27,10 @@
   transition: all 0.3s;
 
   /* Tâche 1.5: Augmenter la zone tactile */
-  min-width: 30px;
-  min-height: 30px;
+  inline-size: var(--touch-target, 44px);
+  block-size: var(--touch-target, 44px);
+  min-width: var(--touch-target, 44px);
+  min-height: var(--touch-target, 44px);
   display: inline-flex;
 
   /* Pour centrer l'icône */

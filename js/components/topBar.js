@@ -57,7 +57,6 @@ export const TopBar = {
       showHomeButton: slideNumber !== '0' && slideNumber !== '1', // Pas de bouton home sur sélection utilisateur ET accueil
       showCoinDisplay: slideNumber !== '0', // Pas de pièces sur sélection utilisateur
       showChangeUserButton: slideNumber !== '0', // Pas de changement utilisateur sur sélection
-      showDevNote: false, // Note développeur désactivée
       ...options,
     };
 
@@ -65,11 +64,6 @@ export const TopBar = {
     const homeButton = config.showHomeButton
       ? `<button id="home-button-${slideId}" class="btn home-btn" title="Accueil" data-translate-title="home_button_label">🏠</button>`
       : `<button id="home-button-${slideId}" class="btn home-btn" style="visibility: hidden;" title="Accueil" data-translate-title="home_button_label">🏠</button>`;
-
-    // Note développeur (slide 0 uniquement)
-    const devNote = config.showDevNote
-      ? `<span class="dev-note" data-translate="user_selection_dev_note">Ce jeu est encore en construction : il peut y avoir des bugs ou des surprises !</span>`
-      : '';
 
     // Sélecteur de langue
     const languageSelector = `
@@ -122,7 +116,6 @@ export const TopBar = {
 
     return `
             <div class="top-bar ${slideNumber === '0' ? 'top-bar--slide0' : ''}" style="${topBarStyle}">
-                ${devNote}
                 ${homeButton}
                 ${aboutButton}
                 ${languageSelector}
@@ -142,23 +135,12 @@ export const TopBar = {
       showHomeButton: slideNumber !== '0' && slideNumber !== '1',
       showCoinDisplay: slideNumber !== '0',
       showChangeUserButton: slideNumber !== '0',
-      showDevNote: false,
       ...options,
     };
 
     const top = document.createElement('div');
     top.className = `top-bar ${slideNumber === '0' ? 'top-bar--slide0' : ''}`.trim();
     if (slideNumber === '0') top.style.position = 'relative';
-
-    // Dev note
-    if (config.showDevNote) {
-      const dev = document.createElement('span');
-      dev.className = 'dev-note';
-      dev.setAttribute('data-translate', 'user_selection_dev_note');
-      dev.textContent =
-        'Ce jeu est encore en construction : il peut y avoir des bugs ou des surprises !';
-      top.appendChild(dev);
-    }
 
     // Home button
     const home = document.createElement('button');
@@ -423,52 +405,11 @@ export const TopBar = {
     console.log('🔄 Mise à jour des traductions TopBar');
     applyStaticTranslations();
 
-    // Fallback: vérifier spécifiquement le dev note
-    const devNotes = document.querySelectorAll(
-      '.dev-note[data-translate="user_selection_dev_note"]'
-    );
-    devNotes.forEach(note => {
-      if (!note.textContent.trim() || note.textContent === 'user_selection_dev_note') {
-        note.textContent =
-          'Ce jeu est encore en construction : il peut y avoir des bugs ou des surprises !';
-        console.log('🔧 Fallback dev note appliqué');
-      }
-    });
-
     // Mettre à jour le toggle voix avec libellé traduit
     try {
       this.updateVoiceToggleUI(_isVoiceEnabled());
     } catch (e) {
       void e;
-    }
-  },
-
-  /**
-   * Forcer l'affichage du message développeur sur slide0
-   * Méthode publique appelable depuis l'extérieur
-   */
-  ensureDevNoteVisible() {
-    const slide0 = document.getElementById('slide0');
-    if (!slide0) return;
-
-    let devNote = slide0.querySelector('.dev-note');
-    if (!devNote) {
-      // Créer le dev note s'il n'existe pas
-      const topBar = slide0.querySelector('.top-bar');
-      if (topBar) {
-        devNote = document.createElement('span');
-        devNote.className = 'dev-note';
-        devNote.setAttribute('data-translate', 'user_selection_dev_note');
-        devNote.textContent =
-          'Ce jeu est encore en construction : il peut y avoir des bugs ou des surprises !';
-        topBar.insertBefore(devNote, topBar.firstChild);
-        console.log('🔧 Dev note créé manuellement');
-      }
-    } else if (!devNote.textContent.trim() || devNote.textContent === 'user_selection_dev_note') {
-      // Assurer que le dev note a du contenu
-      devNote.textContent =
-        'Ce jeu est encore en construction : il peut y avoir des bugs ou des surprises !';
-      console.log("🔧 Dev note forcé à s'afficher");
     }
   },
 };
