@@ -54,17 +54,6 @@ function goToSlide(n) {
   }
   const slideId = typeof n === 'number' ? 'slide' + n : n;
   showSlide(slideId);
-
-  // S'assurer que le message dev apparaît sur slide0
-  if (slideId === 'slide0') {
-    setTimeout(() => {
-      try {
-        TopBar.ensureDevNoteVisible();
-      } catch (e) {
-        void e;
-      }
-    }, 50);
-  }
 }
 
 function nextSlide() {

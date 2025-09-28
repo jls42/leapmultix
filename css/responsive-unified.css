@@ -663,12 +663,3 @@ img {
 .m-responsive {
   margin: clamp(5px, 2vw, 20px);
 }
-
-/* Dev notes responsives */
-@media (max-width: 600px) {
-  .dev-note {
-    white-space: normal;
-    max-width: 90vw;
-    overflow-wrap: break-word;
-  }
-}

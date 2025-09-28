@@ -1698,30 +1698,3 @@ button:hover,
 .top-bar--slide0 .home-btn {
   display: none !important;
 }
-
-.top-bar--slide0 .dev-note {
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 5 !important;
-  font-size: 16px !important;
-  font-weight: bold !important;
-  text-align: center !important;
-  white-space: nowrap !important;
-  max-width: 90vw !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  background: linear-gradient(to right, #2a7cff, #ff2a2a) !important;
-  background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  opacity: 0.92 !important;
-}
-
-@media (max-width: 768px) {
-  .top-bar--slide0 .dev-note {
-    font-size: 14px !important;
-    white-space: normal !important;
-    overflow-wrap: break-word !important;
-  }
-}
