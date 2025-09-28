@@ -7,7 +7,6 @@ import { getStartingMode } from './mode-orchestrator.js';
 // and avoid security tool false-positives on import(). Cache-busting is handled elsewhere.
 // import { VERSION_PARAM } from './cache-updater.js';
 import Dashboard from './components/dashboard.js';
-import { TopBar } from './components/topBar.js';
 
 // Arrêt non bloquant des modes actifs sans créer de dépendances fortes.
 function stopActiveModes() {
