@@ -123,15 +123,15 @@ export function clearCacheAndReload() {
         // que le cache a été vidé et qu'il faut forcer le rechargement de toutes les images
         localStorage.setItem('cache_cleared_timestamp', APP_VERSION);
 
-        // Ajouter un paramètre unique pour contourner le cache du navigateur
+        // Ajouter un paramètre versionné (utilise la whitelist CDN)
         const loc = typeof globalThis !== 'undefined' ? globalThis.location : window.location;
-        loc.href = loc.pathname + '?fresh=' + APP_VERSION;
+        loc.href = `${loc.pathname}?${VERSION_PARAM}`;
       });
   } else {
     // Pour les navigateurs qui ne supportent pas l'API Cache
     localStorage.setItem('cache_cleared_timestamp', APP_VERSION);
     const loc = typeof globalThis !== 'undefined' ? globalThis.location : window.location;
-    loc.href = loc.pathname + '?fresh=' + APP_VERSION;
+    loc.href = `${loc.pathname}?${VERSION_PARAM}`;
   }
 }
 
