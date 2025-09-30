@@ -29,14 +29,33 @@ npm run verify      # Run lint + test + coverage (quality gate)
 ### Analysis and Maintenance Commands
 
 - `npm run analyze:dependencies` - Check dependency usage
-- `npm run verify:dead-code` - Detect unused code
-- `npm run improved:dead-code` - Enhanced dead code analysis
+- `npm run dead-code` - Detect unused code
 - `npm run analyze:globals` - Analyze global variables
-- `npm run css:analyze` - CSS analysis and optimization tools
-- `npm run css:optimize` - Optimize CSS assets (use before adding large media)
 - `npm run i18n:verify` - Verify internationalization keys
+- `npm run i18n:unused` - Generate unused i18n keys report
 - `npm run analyze:assets` - Asset analysis and optimization
+- `npm run analyze:jsdoc` - Analyze JSDoc coverage
+- `npm run improve:jsdoc` - Improve JSDoc coverage
 - `npm run verify:cleanup` - Run dead code and globals analysis
+
+### Build and Asset Management
+
+- `npm run build` - Build production bundle with Rollup
+- `npm run serve:dist` - Serve production build from dist/
+- `npm run assets:generate` - Generate responsive image assets
+- `npm run assets:analyze` - Analyze responsive asset usage
+- `npm run assets:diff` - Compare asset changes
+
+### Audit and Quality Checks
+
+- `npm run audit:accessibility` - Accessibility audit
+- `npm run audit:mobile` - Mobile responsive audit
+- `npm run test:pwa-offline` - Test PWA offline functionality
+
+### Service Worker Management
+
+- `npm run sw:disable` - Disable service worker
+- `npm run sw:fix` - Fix service worker issues
 
 ### Code Quality and Formatting
 
@@ -196,8 +215,14 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `audio.js` - Audio manager with volume controls
 - `eventBus.js` - Event-driven communication between components
 - `mainInit.js` - DOM-ready initialization logic
-- `navigation.js` - Slide navigation system
 - `parental.js` - Parental control features
+- `theme.js` - Theme and color customization system
+- `userUi.js` - User interface utilities
+- `adventure-data.js` - Adventure mode data structures
+- `mult-stats.js` - Multiplication statistics tracking
+- `challenge-stats.js` - Challenge mode statistics
+- `daily-challenge.js` - Daily challenge management
+- `utils.js` - Core utility functions (canonical source)
 
 #### Game Modes (`js/modes/`)
 
@@ -216,10 +241,88 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 
 #### Specialized Modules
 
-- **Arcade Games**: `arcade-*.js`, `multimiam*.js`, `multisnake.js` - Individual mini-games
-- **Utilities**: `utils-es6.js` (main utils), `core/utils.js` (canonical source)
-- **I18n**: `i18n.js`, `i18n-store.js` - Internationalization system
-- **Storage**: `userManager.js` - Multi-user profile management
+**Navigation and Slides:**
+
+- `slides.js` - Slide-based navigation system (goToSlide, showSlide)
+- `keyboard-navigation.js` - Keyboard navigation support
+
+**Arcade Games:**
+
+- `arcade.js` - Main arcade mode orchestrator
+- `arcade-invasion.js` - Space Invaders-style game (31 KB)
+- `arcade-multimemory.js` - Memory matching game (31 KB)
+- `arcade-multimiam.js` - Multimiam arcade integration
+- `arcade-multisnake.js` - Snake game integration
+- `arcade-common.js`, `arcade-utils.js` - Shared arcade utilities
+- `arcade-message.js`, `arcade-points.js`, `arcade-scores.js` - Arcade UI components
+
+**Multimiam (Decomposed Architecture):**
+
+- `multimiam.js` - Main Multimiam game controller
+- `multimiam-engine.js` - Game engine and logic (15 KB)
+- `multimiam-renderer.js` - Rendering system (9 KB)
+- `multimiam-controls.js` - Input handling (7 KB)
+- `multimiam-questions.js` - Question generation (6 KB)
+- `multimiam-ui.js` - UI elements
+- `multisnake.js` - Snake game implementation (38 KB)
+
+**User Interface and Feedback:**
+
+- `uiUtils.js` - UI utility functions
+- `ui-feedback.js` - User feedback mechanisms
+- `touch-support.js` - Touch and mobile support (7 KB)
+- `virtual-keyboard.js` - Virtual keyboard implementation
+- `coin-display.js`, `coin-effects.js` - Coin/currency system
+- `notifications.js` - Notification system
+- `badges.js` - Achievement badges system
+
+**Video and Media:**
+
+- `VideoManager.js` - Video playback management (12 KB)
+- `responsive-image-loader.js` - Responsive image loading (9 KB)
+
+**Game Orchestration:**
+
+- `mode-orchestrator.js` - Mode switching orchestration
+- `lazy-loader.js` - Dynamic module loading (10 KB)
+- `game-cleanup.js` - Game state cleanup utilities
+
+**Utilities:**
+
+- `utils-es6.js` - Main utilities aggregator (5 KB)
+- `core/utils.js` - Core utility functions (canonical source, 10 KB)
+- `main-helpers.js` - Main application helpers
+- `helpers.js` - Legacy helper functions
+- `stats-utils.js` - Statistics utilities
+- `difficulty.js` - Difficulty level management
+- `questionGenerator.js` - Question generation system
+
+**Storage and State:**
+
+- `storage.js` - Legacy storage wrapper
+- `userManager.js` - Multi-user profile management (19 KB)
+
+**Internationalization:**
+
+- `i18n.js` - Internationalization system
+- `i18n-store.js` - Translation storage
+
+**Security and Error Handling:**
+
+- `security-utils.js` - Security utilities (XSS protection, sanitization)
+- `error-handlers.js` - Global error handling
+- `logger.js` - Logging system
+
+**Accessibility and Input:**
+
+- `accessibility.js` - Accessibility features
+- `speech.js` - Speech synthesis support
+
+**Integration and Analytics:**
+
+- `plausible-init.js` - Plausible analytics initialization
+- `cache-updater.js` - Cache management and version control (10 KB)
+- `imports.js` - Module import utilities
 
 ### Module Import Patterns
 
@@ -242,8 +345,8 @@ import { TopBar } from './components/topBar.js'; // UI components
 - **ES Modules**: All code uses `import/export` syntax (type: "module")
 - **Naming**: camelCase for functions/variables, PascalCase for classes
 - **Event System**: Components communicate via `eventBus` rather than direct coupling
-- **Lazy Loading**: Game modes are dynamically loaded to improve initial page load
-- **Slide Navigation**: UI uses numbered slides (slide0, slide1, etc.) with `goToSlide()`
+- **Lazy Loading**: Game modes are dynamically loaded via `lazy-loader.js` to improve initial page load
+- **Slide Navigation**: UI uses numbered slides (slide0, slide1, etc.) with `goToSlide()` from `slides.js`
 
 ### Game State Management
 
