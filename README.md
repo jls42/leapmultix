@@ -243,7 +243,7 @@ npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 
 - **Rollup** : Bundle `js/main-es6.js` en ESM avec code-splitting et sourcemaps
 - **Terser** : Minification automatique pour optimisation
-- **Post-build** : Copie `css/` et `assets/`, `favicon.svg`, `sw.js`, et réécriture de `dist/index.html` vers le fichier d'entrée hashé (ex: `main-es6-*.js`)
+- **Post-build** : Copie `css/` et `assets/`, les favicons (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, et réécriture de `dist/index.html` vers le fichier d'entrée hashé (ex: `main-es6-*.js`)
 - **Dossier final** : `dist/` prêt à être servi statiquement
 
 ```bash

@@ -124,6 +124,8 @@ rsync -av \
   --include='sw.js' \
   --include='manifest.json' \
   --include='favicon.svg' \
+  --include='favicon.ico' \
+  --include='favicon.png' \
   --include='assets/***' \
   --include='css/***' \
   --include='js/***' \
@@ -164,6 +166,8 @@ SYNC_CMD="aws s3 sync --size-only --delete \
   --include \"sw.js\" \
   --include \"manifest.json\" \
   --include \"favicon.svg\" \
+  --include \"favicon.ico\" \
+  --include \"favicon.png\" \
   --include \"assets/*\" \
   --include \"css/*\" \
   --include \"js/*\" \
