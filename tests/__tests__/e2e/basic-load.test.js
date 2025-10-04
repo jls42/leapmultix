@@ -4,13 +4,20 @@
  */
 
 const puppeteer = require('puppeteer');
+const { startStaticServer } = require('../../utils/static-server.cjs');
 
 describe('Basic Application Load E2E', () => {
   let browser;
   let page;
-  const BASE_URL = 'http://localhost:8080/index.html';
+  let server;
+  let baseUrl;
+  let gotoOptions;
 
   beforeAll(async () => {
+    server = await startStaticServer('networkidle2');
+    baseUrl = server.url;
+    gotoOptions = server.gotoOptions;
+
     browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -20,6 +27,10 @@ describe('Basic Application Load E2E', () => {
   afterAll(async () => {
     if (browser) {
       await browser.close();
+    }
+
+    if (server) {
+      await server.stop();
     }
   });
 
@@ -34,20 +45,19 @@ describe('Basic Application Load E2E', () => {
   });
 
   test('Application loads successfully', async () => {
-    await page.goto(BASE_URL, { waitUntil: 'networkidle2', timeout: 15000 });
+    await page.goto(baseUrl, gotoOptions);
     const title = await page.title();
     expect(title).toContain('LeapMultix');
   }, 20000);
 
   test('No JavaScript errors on load', async () => {
     const errors = [];
-    page.on('pageerror', error => {
-      errors.push(error.message);
+    page.on('pageerror', err => {
+      errors.push(err.message);
     });
 
-    await page.goto(BASE_URL, { waitUntil: 'networkidle2', timeout: 15000 });
+    await page.goto(baseUrl, gotoOptions);
 
-    // Vérifier qu'il n'y a pas d'erreurs JS critiques
     const hasCriticalErrors = errors.some(
       msg => msg.includes('TypeError') || msg.includes('ReferenceError') || msg.includes('is not')
     );
@@ -55,15 +65,13 @@ describe('Basic Application Load E2E', () => {
   }, 20000);
 
   test('Speech synthesis is available', async () => {
-    await page.goto(BASE_URL, { waitUntil: 'networkidle2', timeout: 15000 });
-    const hasSpeechSynthesis = await page.evaluate(() => {
-      return 'speechSynthesis' in window;
-    });
+    await page.goto(baseUrl, gotoOptions);
+    const hasSpeechSynthesis = await page.evaluate(() => 'speechSynthesis' in globalThis);
     expect(hasSpeechSynthesis).toBe(true);
   }, 20000);
 
   test('Main game elements are present', async () => {
-    await page.goto(BASE_URL, { waitUntil: 'networkidle2', timeout: 15000 });
+    await page.goto(baseUrl, gotoOptions);
 
     const slide0Exists = await page.$('#slide0');
     const modeButtons = await page.$$eval('.mode-btn', buttons =>

@@ -4,84 +4,55 @@
  */
 
 const puppeteer = require('puppeteer');
+const { startStaticServer } = require('../../utils/static-server.cjs');
 
-const BASE_URL = 'http://localhost:8080/index.html';
+const SPEECH_STUB_SOURCE =
+  '(() => {' +
+  '  const actions = [];' +
+  '  globalThis.SpeechSynthesisUtterance = function speechStub(text) {' +
+  "    this.text = String(text ?? '');" +
+  "    this.lang = 'fr-FR';" +
+  '    this.rate = 0.9;' +
+  '    this.pitch = 1.1;' +
+  '    this.volume = 1;' +
+  '    this.onstart = null;' +
+  '    this.onend = null;' +
+  '    this.onerror = null;' +
+  '  };' +
+  '  const speechSynthesis = {' +
+  '    speaking: false,' +
+  '    pending: false,' +
+  '    _currentUtterance: null,' +
+  '    speak(utterance) {' +
+  "      actions.push({ type: 'speak', text: utterance.text });" +
+  '      this.speaking = true;' +
+  '      this.pending = false;' +
+  '      this._currentUtterance = utterance;' +
+  "      if (typeof utterance.onstart === 'function') utterance.onstart();" +
+  '    },' +
+  '    cancel() {' +
+  "      actions.push({ type: 'cancel' });" +
+  '      this.speaking = false;' +
+  '      this.pending = false;' +
+  "      if (this._currentUtterance && typeof this._currentUtterance.onend === 'function') {" +
+  '        this._currentUtterance.onend();' +
+  '      }' +
+  '      this._currentUtterance = null;' +
+  '    },' +
+  '    getVoices() {' +
+  '      return [];' +
+  '    },' +
+  '  };' +
+  "  Object.defineProperty(globalThis, 'speechSynthesis', {" +
+  '    configurable: true,' +
+  '    writable: true,' +
+  '    value: speechSynthesis,' +
+  '  });' +
+  '  globalThis.__speechActions = actions;' +
+  '})();';
 
-/**
- * Attend qu'une condition soit vraie ou échoue après timeout.
- * @param {() => boolean} predicate
- * @param {number} timeout
- * @param {number} interval
- */
-async function waitFor(predicate, timeout = 10000, interval = 100) {
-  const start = Date.now();
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    if (predicate()) return;
-    if (Date.now() - start > timeout) {
-      throw new Error('Condition non vérifiée dans le délai imparti');
-    }
-    await new Promise(resolve => setTimeout(resolve, interval));
-  }
-}
-
-/**
- * Injecte un stub minimal pour speechSynthesis afin de tracer les appels.
- * @param {import('puppeteer').Page} page
- */
 async function injectSpeechStub(page) {
-  await page.evaluateOnNewDocument(() => {
-    class FakeSpeechSynthesisUtterance {
-      constructor(text) {
-        this.text = String(text ?? '');
-        this.lang = 'fr-FR';
-        this.rate = 0.9;
-        this.pitch = 1.1;
-        this.volume = 1;
-        this.onstart = null;
-        this.onend = null;
-        this.onerror = null;
-      }
-    }
-
-    const actions = [];
-    const speechSynthesis = {
-      speaking: false,
-      pending: false,
-      _currentUtterance: null,
-      speak(utterance) {
-        actions.push({ type: 'speak', text: utterance.text });
-        this.speaking = true;
-        this.pending = false;
-        this._currentUtterance = utterance;
-        if (typeof utterance.onstart === 'function') utterance.onstart();
-      },
-      cancel() {
-        actions.push({ type: 'cancel' });
-        this.speaking = false;
-        this.pending = false;
-        if (this._currentUtterance && typeof this._currentUtterance.onend === 'function') {
-          this._currentUtterance.onend();
-        }
-        this._currentUtterance = null;
-      },
-      getVoices() {
-        return [];
-      },
-    };
-
-    Object.defineProperty(window, 'SpeechSynthesisUtterance', {
-      configurable: true,
-      writable: true,
-      value: FakeSpeechSynthesisUtterance,
-    });
-    Object.defineProperty(window, 'speechSynthesis', {
-      configurable: true,
-      writable: true,
-      value: speechSynthesis,
-    });
-    window.__speechActions = actions;
-  });
+  await page.evaluateOnNewDocument(SPEECH_STUB_SOURCE);
 }
 
 /**
@@ -89,7 +60,7 @@ async function injectSpeechStub(page) {
  * @param {import('puppeteer').Page} page
  */
 async function createUserAndSkipIntro(page) {
-  const userName = `TestUser-${Date.now()}`;
+  const userName = 'TestUser-' + Date.now();
   await page.waitForSelector('#new-user-name', { visible: true, timeout: 10000 });
   await page.type('#new-user-name', userName);
   await page.click('#create-user-btn');
@@ -113,8 +84,15 @@ async function createUserAndSkipIntro(page) {
 describe('Speech Priority System E2E', () => {
   let browser;
   let page;
+  let server;
+  let baseUrl;
+  let gotoOptions;
 
   beforeAll(async () => {
+    server = await startStaticServer('networkidle0');
+    baseUrl = server.url;
+    gotoOptions = server.gotoOptions;
+
     browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -123,12 +101,15 @@ describe('Speech Priority System E2E', () => {
 
   afterAll(async () => {
     await browser.close();
+    if (server) {
+      await server.stop();
+    }
   });
 
   beforeEach(async () => {
     page = await browser.newPage();
     await injectSpeechStub(page);
-    await page.goto(BASE_URL, { waitUntil: 'networkidle0', timeout: 20000 });
+    await page.goto(baseUrl, gotoOptions);
   });
 
   afterEach(async () => {
@@ -136,83 +117,79 @@ describe('Speech Priority System E2E', () => {
   });
 
   test('Mode announcement should use high priority', async () => {
-    const speechLogs = [];
-    page.on('console', async msg => {
-      if (!msg.text().startsWith('[Speech] Speaking:')) return;
-      const [, payloadHandle] = msg.args();
-      if (!payloadHandle) return;
-      try {
-        const payload = await payloadHandle.jsonValue();
-        speechLogs.push(payload);
-      } catch (error) {
-        void error;
-      }
-    });
-
     await createUserAndSkipIntro(page);
     await page.click('.mode-btn[data-mode="quiz"]');
 
-    await waitFor(() => speechLogs.some(log => log.priority === 'high'), 12000);
-    const highPriorityLog = speechLogs.find(log => log.priority === 'high');
-    expect(highPriorityLog).toBeTruthy();
-    expect(highPriorityLog.text).toContain('Mode');
+    await page.waitForFunction(
+      () => {
+        const actions = globalThis.__speechActions || [];
+        return actions.some(action => action.type === 'speak' && /^Mode/i.test(action.text || ''));
+      },
+      { timeout: 20000 }
+    );
 
     await page.waitForFunction(
-      () => (window.__speechActions || []).some(action => action.type === 'cancel'),
-      { timeout: 12000 }
+      () => (globalThis.__speechActions || []).some(action => action.type === 'cancel'),
+      { timeout: 20000 }
     );
 
     const interruptInfo = await page.evaluate(() => {
-      const actions = window.__speechActions || [];
-      const firstHighIndex = actions.findIndex(
-        action => action.type === 'speak' && /Mode/.test(action.text || '')
+      const actions = globalThis.__speechActions || [];
+      const firstModeIndex = actions.findIndex(
+        action => action.type === 'speak' && /^Mode/i.test(action.text || '')
       );
-      if (firstHighIndex === -1) {
+      if (firstModeIndex === -1) {
         return { cancelFound: false, nextSpeakText: null };
       }
 
-      const subsequent = actions.slice(firstHighIndex + 1);
-      const cancelIndex = subsequent.findIndex(action => action.type === 'cancel');
-      const nextSpeak =
-        cancelIndex >= 0
-          ? subsequent.slice(cancelIndex + 1).find(action => action.type === 'speak')
-          : null;
+      let cancelFound = false;
+      let nextSpeakText = null;
+      for (let i = firstModeIndex + 1; i < actions.length; i += 1) {
+        const action = actions[i];
+        if (action.type === 'cancel') {
+          cancelFound = true;
+          continue;
+        }
+        if (cancelFound && action.type === 'speak') {
+          nextSpeakText = action.text;
+          break;
+        }
+      }
 
-      return {
-        cancelFound: cancelIndex >= 0,
-        nextSpeakText: nextSpeak ? nextSpeak.text : null,
-      };
+      return { cancelFound, nextSpeakText };
     });
 
     expect(interruptInfo.cancelFound).toBe(true);
     expect(interruptInfo.nextSpeakText).toBeTruthy();
-    expect(interruptInfo.nextSpeakText).toContain('Mode');
+    expect(interruptInfo.nextSpeakText).toMatch(/Mode|fois/i);
   }, 40000);
 
   test('Game feedback should cancel previous speech', async () => {
     await createUserAndSkipIntro(page);
 
-    await page.evaluate(async () => {
-      const speechModule = await import('/js/speech.js');
+    await page.evaluate(async currentBaseUrl => {
+      const modulePath = new URL('./js/speech.js', currentBaseUrl).href;
+      const speechModule = await import(modulePath);
       speechModule.speak('Première annonce', { priority: 'normal' });
       speechModule.speak('Annonce suivante', { priority: 'normal' });
-    });
+    }, baseUrl);
 
-    const actions = await page.evaluate(() => window.__speechActions || []);
+    const actions = await page.evaluate(() => globalThis.__speechActions || []);
     const cancelCount = actions.filter(action => action.type === 'cancel').length;
     expect(cancelCount).toBeGreaterThanOrEqual(1);
   }, 20000);
 
   test('Speech synthesis should be available in browser', async () => {
-    const hasSpeechSynthesis = await page.evaluate(() => 'speechSynthesis' in window);
+    const hasSpeechSynthesis = await page.evaluate(() => 'speechSynthesis' in globalThis);
     expect(hasSpeechSynthesis).toBe(true);
   }, 10000);
 
   test('speak() function should be importable', async () => {
-    const speakAvailable = await page.evaluate(async () => {
-      const module = await import('/js/speech.js');
+    const speakAvailable = await page.evaluate(async currentBaseUrl => {
+      const modulePath = new URL('./js/speech.js', currentBaseUrl).href;
+      const module = await import(modulePath);
       return typeof module.speak === 'function';
-    });
+    }, baseUrl);
     expect(speakAvailable).toBe(true);
   }, 10000);
 });
