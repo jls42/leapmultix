@@ -56,7 +56,7 @@ async function run() {
   try {
     await copyDir(assetsSrc, assetsDest);
   } catch (e) {}
-  for (const file of ['favicon.svg', 'sw.js']) {
+  for (const file of ['favicon.ico', 'favicon.png', 'favicon.svg', 'sw.js']) {
     try {
       await fsp.copyFile(path.join(root, file), path.join(dist, file));
     } catch (e) {}

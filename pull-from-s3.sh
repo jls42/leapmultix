@@ -125,7 +125,7 @@ if [[ "$BACKUP" == "true" ]]; then
         fi
     done
 
-    for file in index.html offline.html sw.js manifest.json favicon.svg; do
+    for file in index.html offline.html sw.js manifest.json favicon.svg favicon.ico favicon.png; do
         if [[ -f "$file" ]]; then
             cp "$file" "$BACKUP_DIR/"
         fi
@@ -148,6 +148,8 @@ SYNC_CMD="aws s3 sync s3://$S3_BUCKET \"$TEMP_DIR/\" \
   --include \"sw.js\" \
   --include \"manifest.json\" \
   --include \"favicon.svg\" \
+  --include \"favicon.ico\" \
+  --include \"favicon.png\" \
   --include \"assets/*\" \
   --include \"css/*\" \
   --include \"js/*\" \
@@ -207,7 +209,7 @@ for dir in assets css js img; do
 done
 
 # Copier les fichiers racine
-for file in index.html offline.html sw.js manifest.json favicon.svg; do
+for file in index.html offline.html sw.js manifest.json favicon.svg favicon.ico favicon.png; do
     if [[ -f "$TEMP_DIR/$file" ]]; then
         cp "$TEMP_DIR/$file" .
         echo -e "${GREEN}   ✅ $file${NC}"

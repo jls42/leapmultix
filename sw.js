@@ -15,7 +15,9 @@ const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.svg',
+  '/favicon.ico',
+  '/assets/icons/panda-192.png',
+  '/assets/icons/panda-512.png',
   // Minimal CSS for structure
   '/css/general.css',
   '/css/responsive-unified.css',
