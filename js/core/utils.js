@@ -76,11 +76,6 @@ export const Utils = {
     const filledStar = colored ? '⭐' : '★';
     const emptyStar = '☆';
     let html = '';
-    /**
-     * Fonction for
-     * @param {*} let - Description du paramètre
-     * @returns {*} Description du retour
-     */
     for (let i = 1; i <= 3; i++) {
       html += i <= count ? filledStar : emptyStar;
     }
@@ -123,11 +118,6 @@ export const Utils = {
 
     if (num < 10) return units[num];
     if (num < 20) return teens[num - 10];
-    /**
-     * Fonction if
-     * @param {*} num - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (num < 100) {
       const ten = Math.floor(num / 10);
       const unit = num % 10;
@@ -151,11 +141,6 @@ export const Utils = {
     const options = [correctAnswer];
     let attempts = 0;
 
-    /**
-     * Fonction while
-     * @param {*} options.length - Description du paramètre
-     * @returns {*} Description du retour
-     */
     while (options.length < count && attempts < maxAttempts) {
       const wrong = wrongGenerator();
       if (wrong !== correctAnswer && !options.includes(wrong)) {
@@ -189,10 +174,6 @@ export const Utils = {
 
     let currentIndex = 0;
 
-    /**
-     * Mettre à jour
-     * @returns {*} Description du retour
-     */
     function updateFocus() {
       const items = containerEl.querySelectorAll(itemSelector);
       if (items.length === 0) return;
@@ -201,11 +182,6 @@ export const Utils = {
       items.forEach(item => item.classList.remove('focused'));
 
       // Ajouter focus actuel
-      /**
-       * Fonction if
-       * @param {*} currentIndex - Description du paramètre
-       * @returns {*} Description du retour
-       */
       if (currentIndex >= 0 && currentIndex < items.length) {
         items[currentIndex].classList.add('focused');
 
@@ -213,30 +189,15 @@ export const Utils = {
       }
     }
 
-    /**
-     * Gérer un événement
-     * @param {*} e - Description du paramètre
-     * @returns {*} Description du retour
-     */
     function handleKeydown(e) {
       const items = containerEl.querySelectorAll(itemSelector);
       if (items.length === 0) return;
 
-      /**
-       * Fonction switch
-       * @param {*} e.key - Description du paramètre
-       * @returns {*} Description du retour
-       */
       switch (e.key) {
         case 'ArrowUp':
         case 'ArrowLeft':
           e.preventDefault();
           currentIndex--;
-          /**
-           * Fonction if
-           * @param {*} currentIndex - Description du paramètre
-           * @returns {*} Description du retour
-           */
           if (currentIndex < 0) {
             currentIndex = opts.loop ? items.length - 1 : 0;
           }
@@ -247,11 +208,6 @@ export const Utils = {
         case 'ArrowRight':
           e.preventDefault();
           currentIndex++;
-          /**
-           * Fonction if
-           * @param {*} currentIndex - Description du paramètre
-           * @returns {*} Description du retour
-           */
           if (currentIndex >= items.length) {
             currentIndex = opts.loop ? 0 : items.length - 1;
           }
@@ -261,18 +217,7 @@ export const Utils = {
         case 'Enter':
         case ' ':
           e.preventDefault();
-          /**
-           * Fonction if
-           * @param {*} items[currentIndex] - Description du paramètre
-           * @returns {*} Description du retour
-           */
-
           if (items[currentIndex]) {
-            /**
-             * Fonction if
-             * @param {*} opts.onClick - Description du paramètre
-             * @returns {*} Description du retour
-             */
             if (opts.onClick) {
               opts.onClick(items[currentIndex], currentIndex);
             } else {
@@ -287,11 +232,6 @@ export const Utils = {
     containerEl.addEventListener('keydown', handleKeydown);
 
     // Focus initial si demandé
-    /**
-     * Fonction if
-     * @param {*} opts.autoFocus - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (opts.autoFocus) {
       setTimeout(updateFocus, 0);
     }

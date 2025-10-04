@@ -1,45 +1,18 @@
 import js from '@eslint/js';
 import security from 'eslint-plugin-security';
 import sonarjs from 'eslint-plugin-sonarjs';
+import globals from 'globals';
+import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default [
   js.configs.recommended,
   {
     languageOptions: {
-      ecmaVersion: 2022,
+      ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
-        window: 'readonly',
-        console: 'readonly',
-        document: 'readonly',
-        navigator: 'readonly',
-        performance: 'readonly',
-        Event: 'readonly',
-        confirm: 'readonly',
-        alert: 'readonly',
-        AbortController: 'readonly',
-        KeyboardEvent: 'readonly',
-        process: 'readonly',
-        MutationObserver: 'readonly',
-        EventTarget: 'readonly',
-        CustomEvent: 'readonly',
-        localStorage: 'readonly',
-        sessionStorage: 'readonly',
-        setTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearTimeout: 'readonly',
-        clearInterval: 'readonly',
-        requestAnimationFrame: 'readonly',
-        cancelAnimationFrame: 'readonly',
-        Image: 'readonly',
-        Audio: 'readonly',
-        XMLHttpRequest: 'readonly',
-        fetch: 'readonly',
-        Promise: 'readonly',
-        URL: 'readonly',
-        URLSearchParams: 'readonly',
-        self: 'readonly',
-        caches: 'readonly',
+        ...globals.browser,
+        ...globals.node,
       },
     },
     plugins: {
@@ -105,19 +78,7 @@ export default [
     files: ['tests/**/*.js', 'tests-esm/**/*.mjs'],
     languageOptions: {
       globals: {
-        describe: 'readonly',
-        test: 'readonly',
-        it: 'readonly',
-        expect: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        beforeAll: 'readonly',
-        afterAll: 'readonly',
-        jest: 'readonly',
-        global: 'readonly',
-        __dirname: 'readonly',
-        module: 'readonly',
-        require: 'readonly',
+        ...globals.jest,
       },
     },
     rules: {
@@ -125,4 +86,5 @@ export default [
       'no-restricted-properties': 'off',
     },
   },
+  eslintConfigPrettier,
 ];

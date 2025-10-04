@@ -82,7 +82,12 @@ export class GameMode {
       this.resetState();
 
       // Annonce vocale
-      speak(getTranslation(this.modeName + '_mode'));
+      const translationKey = this.modeName + '_mode';
+      const translatedText = getTranslation(translationKey);
+      console.log(
+        `[GameMode] Calling speak() with key="${translationKey}", text="${translatedText}"`
+      );
+      speak(translatedText, { priority: 'high' });
 
       // Initialiser l'interface
       await this.initializeUI();
