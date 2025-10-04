@@ -13,6 +13,9 @@ export function isVoiceEnabled() {
 }
 
 let speechSettings = { lang: 'fr-FR', rate: 0.9, pitch: 1.1 };
+let currentSpeechPriority = null; // Track priority of current speech
+let lastHighText = '';
+let pendingHighReplay = null;
 
 function getGlobalRoot() {
   if (typeof globalThis !== 'undefined') return globalThis;
@@ -34,24 +37,183 @@ function getVolumeLevel() {
   return gameState.volume;
 }
 
-export function speak(text) {
-  const Root = getGlobalRoot();
-  if (!Root || !('speechSynthesis' in Root) || !isVoiceEnabled()) return;
+function logSpeechDebug(Root, text, priority) {
+  console.log('[Speech Debug] speak() called with:', text, 'priority:', priority);
+  console.log('[Speech Debug] Root available:', !!Root);
+  console.log('[Speech Debug] speechSynthesis available:', Root && 'speechSynthesis' in Root);
+  console.log('[Speech Debug] isVoiceEnabled():', isVoiceEnabled());
+  console.log('[Speech Debug] gameState.volume:', gameState?.volume);
+}
 
+function ensureSpeechReady(Root) {
+  if (!Root || !('speechSynthesis' in Root)) {
+    console.warn('[Speech] speechSynthesis API not available');
+    return false;
+  }
+
+  if (!isVoiceEnabled()) {
+    console.warn('[Speech] Voice is disabled (check 🗣️ button in top bar)');
+    return false;
+  }
+
+  return true;
+}
+
+function logVoiceAvailability(Root) {
+  const voices = Root.speechSynthesis.getVoices();
+  console.log(
+    '[Speech Debug] Available voices:',
+    voices.length,
+    voices.map(voice => `${voice.name} (${voice.lang})`)
+  );
+}
+
+function handleHighPriority(text, isActive) {
+  currentSpeechPriority = 'high';
+  lastHighText = String(text || '');
+
+  if (isActive) {
+    console.log('[Speech] HIGH priority - queueing after current speech:', text);
+  }
+}
+
+function cancelNormalSpeech(Root, text) {
+  console.log('[Speech] NORMAL priority - cancelling previous NORMAL speech:', text);
   try {
-    // Stop any ongoing utterance to improve reliability across browsers
-    try {
-      Root.speechSynthesis.cancel();
-    } catch (e) {
-      void e;
+    Root.speechSynthesis.cancel();
+  } catch (error) {
+    console.warn('[Speech] Error cancelling:', error);
+  }
+  currentSpeechPriority = null;
+}
+
+function interruptHighSpeech(Root, text) {
+  console.log('[Speech] NORMAL priority - interrupting HIGH priority speech:', text);
+  try {
+    Root.speechSynthesis.cancel();
+  } catch (error) {
+    console.warn('[Speech] Error cancelling HIGH speech:', error);
+  }
+  currentSpeechPriority = null;
+  pendingHighReplay = lastHighText;
+}
+
+function handleNormalPriority({ Root, allowInterruptHigh, text, isActive }) {
+  if (!isActive) {
+    currentSpeechPriority = 'normal';
+    return;
+  }
+
+  if (currentSpeechPriority === 'high') {
+    if (!allowInterruptHigh) {
+      console.log(
+        '[Speech] NORMAL priority - NOT cancelling HIGH priority speech, queueing:',
+        text
+      );
+      return;
     }
 
-    const utterance = setupUtterance(text, speechSettings);
-    const vol = getVolumeLevel();
-    utterance.volume = Math.max(0.1, Math.min(1, Number(vol || 1)));
+    interruptHighSpeech(Root, text);
+    return;
+  }
+
+  cancelNormalSpeech(Root, text);
+}
+
+function preparePriorityQueue({ Root, priority, allowInterruptHigh, text }) {
+  const isActive = Root.speechSynthesis.speaking || Root.speechSynthesis.pending;
+
+  if (priority === 'high') {
+    handleHighPriority(text, isActive);
+    return;
+  }
+
+  handleNormalPriority({ Root, allowInterruptHigh, text, isActive });
+}
+
+function buildFinalText(priority, rawText) {
+  const baseText = String(rawText || '');
+
+  if (priority === 'high') {
+    pendingHighReplay = null;
+    return baseText;
+  }
+
+  if (!pendingHighReplay) {
+    return baseText;
+  }
+
+  const combined = `${pendingHighReplay}. ${baseText}`.trim();
+  pendingHighReplay = null;
+  return combined;
+}
+
+function logSpeechIntent(spokenText, utterance, priority) {
+  console.log('[Speech] Speaking:', {
+    text: spokenText,
+    lang: utterance.lang,
+    volume: utterance.volume,
+    rate: utterance.rate,
+    pitch: utterance.pitch,
+    priority,
+  });
+}
+
+function attachUtteranceEvents(utterance, priority, spokenText) {
+  utterance.onstart = () => {
+    currentSpeechPriority = priority;
+    if (priority === 'high') {
+      pendingHighReplay = null;
+    }
+    console.log('[Speech] ✅ Started speaking:', spokenText, `(priority: ${priority})`);
+  };
+
+  utterance.onend = () => {
+    currentSpeechPriority = null;
+    if (priority === 'high') {
+      pendingHighReplay = null;
+    }
+    console.log('[Speech] ✅ Finished speaking:', spokenText);
+  };
+
+  utterance.onerror = error => {
+    currentSpeechPriority = null;
+    if (priority === 'high') {
+      pendingHighReplay = null;
+    }
+    console.error('[Speech] ❌ Error:', error);
+  };
+}
+
+export function speak(text, options = {}) {
+  const {
+    priority = 'normal', // 'high' (mode announcements) or 'normal' (game feedback)
+    allowInterruptHigh = true,
+  } = options;
+  const Root = getGlobalRoot();
+
+  logSpeechDebug(Root, text, priority);
+
+  if (!ensureSpeechReady(Root)) {
+    return;
+  }
+
+  logVoiceAvailability(Root);
+
+  try {
+    preparePriorityQueue({ Root, priority, allowInterruptHigh, text });
+
+    const spokenText = buildFinalText(priority, text);
+    const utterance = setupUtterance(spokenText, speechSettings);
+    const volume = getVolumeLevel();
+    utterance.volume = Math.max(0.1, Math.min(1, Number(volume || 1)));
+
+    logSpeechIntent(spokenText, utterance, priority);
+    attachUtteranceEvents(utterance, priority, spokenText);
+
     Root.speechSynthesis.speak(utterance);
-  } catch (e) {
-    void e;
+  } catch (error) {
+    console.error('[Speech] Exception:', error);
   }
 }
 
