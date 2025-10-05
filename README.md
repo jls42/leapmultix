@@ -1,3 +1,5 @@
+Ce README est également disponible en [Anglais](./README.en.md) et en [Espagnol](./README.es.md).
+
 # LeapMultix
 
 <!-- Badges (mettre à jour <owner>/<repo> après migration GitHub) -->
