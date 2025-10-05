@@ -833,10 +833,10 @@ export class AdventureMode extends GameMode {
   /**
    * Obtenir l'avatar du joueur
    */
-     getPlayerAvatar() {
-       const avatar = gameState?.avatar || 'fox';
-      return `<img src="assets/images/arcade/${avatar}_right_128x128.png" width="40" height="40" alt="${getTranslation(avatar)}" />`;
-    }
+  getPlayerAvatar() {
+    const avatar = gameState?.avatar || 'fox';
+    return `<img src="assets/images/arcade/${avatar}_right_128x128.png" width="40" height="40" alt="${getTranslation(avatar)}" />`;
+  }
   /**
    * Vérifier les nouvelles récompenses
    */
