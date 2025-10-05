@@ -1,3 +1,23 @@
+<details>
+<summary>Ce document est également disponible dans d'autres langues</summary>
+
+- [English](./README.en.md)
+- [Español](./README.es.md)
+- [Português](./README.pt.md)
+- [Deutsch](./README.de.md)
+- [中文](./README.zh.md)
+- [हिन्दी](./README.hi.md)
+- [العربية](./README.ar.md)
+- [Italiano](./README.it.md)
+- [Svenska](./README.sv.md)
+- [Polski](./README.pl.md)
+- [Nederlands](./README.nl.md)
+- [Română](./README.ro.md)
+- [日本語](./README.ja.md)
+- [한국어](./README.ko.md)
+
+</details>
+
 # LeapMultix
 
 <!-- Badges (mettre à jour <owner>/<repo> après migration GitHub) -->
