@@ -7,19 +7,31 @@ import { UserManager } from './userManager.js';
 
 // Fonctions d'avatar et monstres
 
-// Fonction pour charger un seul avatar (optimisé pour Pacman)
+// Fonction pour charger un avatar et ses deux directions (optimisé pour Pacman)
 export function loadSingleAvatar(name) {
-  const img = new Image();
-  const imgPath = `/assets/images/arcade/${name}_128x128.png`;
-  img.src = imgPath;
-  img.onload = function () {
-    img.loadSuccess = true;
+  const imgRight = new Image();
+  const imgLeft = new Image();
+
+  const rightPath = `/assets/images/arcade/${name}_right_128x128.png`;
+  const leftPath = `/assets/images/arcade/${name}_left_128x128.png`;
+
+  imgRight.src = rightPath;
+  imgLeft.src = leftPath;
+
+  // Gérer le chargement et les erreurs pour une meilleure robustesse
+  imgRight.onload = () => (imgRight.loadSuccess = true);
+  imgLeft.onload = () => (imgLeft.loadSuccess = true);
+  imgRight.onerror = () => {
+    console.error(`Impossible de charger l'image droite : ${rightPath}`);
+    imgRight.loadFailed = true;
   };
-  img.onerror = function () {
-    console.error(`Impossible de charger l'image ${name}_128x128.png depuis ${imgPath}`);
-    img.loadFailed = true;
+  imgLeft.onerror = () => {
+    console.error(`Impossible de charger l'image gauche : ${leftPath}`);
+    imgLeft.loadFailed = true;
   };
-  return { name, image: img };
+
+  // Retourner un objet avec les deux images
+  return { name, image_right: imgRight, image_left: imgLeft };
 }
 
 // Fonction pour obtenir des avatars aléatoirement

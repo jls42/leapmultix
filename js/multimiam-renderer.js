@@ -177,15 +177,34 @@ export default class PacmanRenderer {
     // Avatar personnalisé ?
     if (
       g.avatar &&
-      g.avatar.image &&
-      g.avatar.image.complete &&
-      g.avatar.image.naturalHeight !== 0
+      g.avatar.image_left &&
+      g.avatar.image_left.complete &&
+      g.avatar.image_right &&
+      g.avatar.image_right.complete
     ) {
-      const size = g.cellSize * 1.5;
-      ctx.save();
-      ctx.translate(pixelX, pixelY);
-      ctx.drawImage(g.avatar.image, -size / 2, -size / 2, size, size);
-      ctx.restore();
+      // Sélectionne l'image en fonction de la direction (logique corrigée)
+      let imageToDraw;
+      if (g.multimiam.direction === 'LEFT') {
+        imageToDraw = g.avatar.image_left;
+      } else if (g.multimiam.direction === 'RIGHT') {
+        imageToDraw = g.avatar.image_right;
+      } else {
+        // Pour HAUT et BAS, on garde la dernière orientation horizontale
+        // Si on ne l'a pas, on utilise l'image de droite par défaut
+        imageToDraw = g.avatar.lastDirection === 'LEFT' ? g.avatar.image_left : g.avatar.image_right;
+      }
+
+      // Vérifie si l'image choisie est bien chargée
+      if (imageToDraw.naturalHeight !== 0) {
+        const size = g.cellSize * 1.5;
+        ctx.save();
+        ctx.translate(pixelX, pixelY);
+        ctx.drawImage(imageToDraw, -size / 2, -size / 2, size, size);
+        ctx.restore();
+      } else {
+        // Fallback au Pacman classique si l'image n'est pas prête
+        this.drawClassicPacman(pixelX, pixelY);
+      }
     } else {
       this.drawClassicPacman(pixelX, pixelY);
     }
