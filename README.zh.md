@@ -124,6 +124,7 @@ npm run analyze:globals # 全局变量分析
 npm run analyze:dependencies # 依赖使用情况分析
 npm run assets:analyze # 响应式资产分析
 npm run assets:diff    # 资产比较
+npm run i18n:compare   # 比较翻译 (en/es) 与 fr.json (参考)
 
 # 构建与交付
 npm run build          # 生产构建 (Rollup) + 构建后处理 (完整的 dist/)
@@ -346,6 +347,7 @@ npm run serve:dist # 部署 dist/ (端口 5000)
 ```bash
 npm run i18n:verify  # 检查缺失/不一致的键
 npm run i18n:unused  # 列出未使用的键
+npm run i18n:compare   # 比较翻译 (en/es) 与 fr.json (参考)
 ```
 
 **翻译覆盖范围：**

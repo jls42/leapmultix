@@ -124,6 +124,7 @@ npm run analyze:globals # グローバル変数の分析
 npm run analyze:dependencies # 依存関係の使用状況分析
 npm run assets:analyze # レスポンシブアセットの分析
 npm run assets:diff    # アセットの比較
+npm run i18n:compare   # 翻訳 (en/es) を fr.json (参照) と比較
 
 # ビルドと配信
 npm run build          # 本番ビルド（Rollup）+ ポストビルド（完全なdist/）
@@ -346,6 +347,7 @@ npm run serve:dist # dist/を提供（ポート5000）
 ```bash
 npm run i18n:verify  # 不足/不整合なキーを確認
 npm run i18n:unused  # 未使用のキーをリストアップ
+npm run i18n:compare   # 翻訳 (en/es) を fr.json (参照) と比較
 ```
 
 **翻訳カバレッジ：**

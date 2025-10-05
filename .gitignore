@@ -62,3 +62,6 @@ pnpm-lock.yaml
 # Editor backup files
 *~
 *.bak
+
+# Translation artifacts
+assets/translations/unused_keys.txt

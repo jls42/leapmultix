@@ -124,6 +124,7 @@ npm run analyze:globals # 전역 변수 분석
 npm run analyze:dependencies # 종속성 사용 분석
 npm run assets:analyze # 반응형 자산 분석
 npm run assets:diff    # 자산 비교
+npm run i18n:compare   # 번역 (en/es)을 fr.json (참조)과 비교
 
 # 빌드 및 배포
 npm run build          # 프로덕션 빌드 (Rollup) + 포스트 빌드 (전체 dist/)
@@ -346,6 +347,7 @@ npm run serve:dist # dist/ 제공 (포트 5000)
 ```bash
 npm run i18n:verify  # 누락/불일치 키 확인
 npm run i18n:unused  # 사용하지 않는 키 나열
+npm run i18n:compare   # 번역 (en/es)을 fr.json (참조)과 비교
 ```
 
 **번역 범위:**

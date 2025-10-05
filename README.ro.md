@@ -124,6 +124,7 @@ npm run analyze:globals # Analiza variabilelor globale
 npm run analyze:dependencies # Analiza utilizării dependențelor
 npm run assets:analyze # Analiza activelor responsive
 npm run assets:diff    # Comparația activelor
+npm run i18n:compare   # Comparați traducerile (en/es) cu fr.json (referință)
 
 # Build & livrare
 npm run build          # Build de producție (Rollup) + post-build (dist/ complet)
@@ -346,6 +347,7 @@ Suport multilingv complet:
 ```bash
 npm run i18n:verify  # Verifică cheile lipsă/inconsistente
 npm run i18n:unused  # Listează cheile neutilizate
+npm run i18n:compare   # Comparați traducerile (en/es) cu fr.json (referință)
 ```
 
 **Acoperirea Traducerilor:**
