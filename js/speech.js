@@ -75,7 +75,7 @@ function interruptHighSpeech(Root) {
   pendingHighReplay = lastHighText;
 }
 
-function handleNormalPriority({ Root, allowInterruptHigh, text, isActive }) {
+function handleNormalPriority({ Root, allowInterruptHigh, isActive }) {
   if (!isActive) {
     currentSpeechPriority = 'normal';
     return;
@@ -101,7 +101,7 @@ function preparePriorityQueue({ Root, priority, allowInterruptHigh, text }) {
     return;
   }
 
-  handleNormalPriority({ Root, allowInterruptHigh, text, isActive });
+  handleNormalPriority({ Root, allowInterruptHigh, isActive });
 }
 
 function buildFinalText(priority, rawText) {
