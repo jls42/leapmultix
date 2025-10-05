@@ -92,5 +92,3 @@ export async function setGameMode(mode) {
 }
 
 // Plus d'exposition globale: utiliser les imports ESM
-
-console.log('🎛️ Orchestrateur de modes chargé');

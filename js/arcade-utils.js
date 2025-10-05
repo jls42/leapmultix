@@ -13,7 +13,6 @@ export function loadSingleAvatar(name) {
   const imgPath = `/assets/images/arcade/${name}_128x128.png`;
   img.src = imgPath;
   img.onload = function () {
-    console.log(`Image ${name}_128x128.png chargée avec succès`);
     img.loadSuccess = true;
   };
   img.onerror = function () {
@@ -39,22 +38,18 @@ export function getPlayerAvatar(avatars) {
 
   // Vérifier si gameState est disponible
   if (!gameState) {
-    console.log('gameState non disponible');
     return avatars[0]; // Retourner le premier avatar disponible
   }
 
   // Récupérer le nom de l'avatar sélectionné
   const avatarName = gameState.avatar || 'unicorn'; // Licorne par défaut
-  console.log("Nom de l'avatar sélectionné:", avatarName);
 
   // Trouver l'avatar correspondant dans la liste des avatars disponibles
   const playerAvatar = avatars.find(avatar => avatar.name === avatarName);
 
   if (playerAvatar) {
-    console.log('Avatar trouvé:', playerAvatar.name);
     return playerAvatar;
   } else {
-    console.log('Avatar non trouvé, utilisation du premier disponible');
     return avatars[0]; // Retourner le premier avatar disponible
   }
 }
@@ -124,5 +119,3 @@ export const arcadeUtils = {
 };
 
 export default arcadeUtils;
-
-console.log('🎮 Module arcade-utils chargé avec succès');

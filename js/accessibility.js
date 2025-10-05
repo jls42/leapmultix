@@ -21,8 +21,6 @@ export class AccessibilityManager {
 
     // Ajouter les raccourcis clavier
     this.setupKeyboardShortcuts();
-
-    console.log('♿ AccessibilityManager initialisé');
   }
 
   // Annoncer un message aux lecteurs d'écran
@@ -65,7 +63,6 @@ export class AccessibilityManager {
     });
 
     this.keyboardNavigationEnabled = true;
-    console.log('⌨️ Navigation clavier activée');
   }
 
   // Gestion navigation par flèches
@@ -129,7 +126,6 @@ export class AccessibilityManager {
 - Ctrl+H: Cette aide`;
 
     this.alert(helpMessage);
-    console.log('💡 Aide accessibilité affichée');
   }
 
   // Améliorer le focus sur un élément

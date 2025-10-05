@@ -20,7 +20,6 @@ export const TopBar = {
    * Initialiser le composant TopBar
    */
   init() {
-    console.log('🔝 Initialisation du composant TopBar');
     this.injectTopBarIntoSlides();
     this.setupEventListeners();
 
@@ -266,10 +265,8 @@ export const TopBar = {
       const existingTopBar = slide.querySelector('.top-bar');
       if (existingTopBar) {
         existingTopBar.replaceWith(replacement);
-        console.log(`🔄 Top-bar remplacée pour ${slideId}`);
       } else {
         slide.insertBefore(replacement, slide.firstChild);
-        console.log(`➕ Top-bar ajoutée pour ${slideId}`);
       }
     });
   },
@@ -364,8 +361,6 @@ export const TopBar = {
         }
       }
     });
-
-    console.log('🎧 Écouteurs TopBar configurés');
   },
 
   /**
@@ -436,7 +431,6 @@ export const TopBar = {
    */
   updateTranslations() {
     // Appliquer les traductions statiques via ESM
-    console.log('🔄 Mise à jour des traductions TopBar');
     applyStaticTranslations();
 
     // Mettre à jour le toggle voix avec libellé traduit
@@ -447,5 +441,3 @@ export const TopBar = {
     }
   },
 };
-
-console.log('🔝 Module TopBar chargé');

@@ -47,5 +47,3 @@ import './main.js';
 import './bootstrap.js';
 // === RUNTIME ERROR FILTERS (moved from inline to satisfy CSP) ===
 import './error-handlers.js';
-
-console.log('🚀 LeapMultix ES6 - Application initialisée');

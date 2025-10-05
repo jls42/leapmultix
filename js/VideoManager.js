@@ -29,7 +29,6 @@ export const VideoManager = {
     this.detectDevice();
     this.createVideoModal();
     this.setupEventListeners();
-    console.log('🎬 VideoManager initialisé');
   },
 
   /**
@@ -47,8 +46,6 @@ export const VideoManager = {
       );
       this._isMobile = this._isMobile || slowConnection;
     }
-
-    console.log(`📱 Détection appareil: ${this._isMobile ? 'Mobile/Lent' : 'Desktop'}`);
   },
 
   /**
@@ -196,8 +193,6 @@ export const VideoManager = {
 
     // Afficher la modal
     this.showModal();
-
-    console.log(`🎬 Lecture vidéo: ${avatar} (${this._isMobile ? 'mobile' : 'desktop'})`);
   },
 
   /**
@@ -282,7 +277,6 @@ export const VideoManager = {
    * Passer la vidéo
    */
   skipVideo() {
-    console.log("⏭️ Vidéo passée par l'utilisateur");
     this.hideModal();
 
     if (this._skipCallback) {
@@ -295,7 +289,6 @@ export const VideoManager = {
    * Vidéo terminée naturellement
    */
   onVideoEnded() {
-    console.log('✅ Vidéo terminée');
     this.hideModal();
 
     if (this._skipCallback) {
@@ -312,7 +305,6 @@ export const VideoManager = {
 
     // Essayer la version alternative si échec
     if (!this._isMobile) {
-      console.log('🔄 Tentative version mobile...');
       this._isMobile = true;
       const avatar = this.getCurrentAvatar();
       if (avatar) {
@@ -336,7 +328,6 @@ export const VideoManager = {
    * Vidéo commence à charger
    */
   onVideoLoadStart() {
-    console.log('📥 Chargement vidéo...');
     // Optionnel: afficher un loader
   },
 
@@ -344,7 +335,6 @@ export const VideoManager = {
    * Vidéo prête à être lue
    */
   onVideoCanPlay() {
-    console.log('▶️ Vidéo prête');
     // La lecture commence automatiquement grâce à autoplay
   },
 
@@ -389,9 +379,6 @@ export const VideoManager = {
    * @param {string} avatar - Nom de l'avatar à rejouer
    */
   replayCharacterIntro(avatar) {
-    console.log(`🔄 Replay vidéo demandé: ${avatar}`);
     this.playCharacterIntro(avatar);
   },
 };
-
-console.log('🎬 Module VideoManager chargé');

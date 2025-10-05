@@ -38,8 +38,6 @@ const AudioManager = {
 
     // Initialiser les contrôles UI
     this.initSoundControls();
-
-    console.log('🔊 AudioManager initialisé');
   },
 
   /**
@@ -59,9 +57,6 @@ const AudioManager = {
       if (currentUserData.volume !== undefined) {
         this._volume = Math.max(0, Math.min(1, currentUserData.volume));
         volumeLoaded = true;
-        console.log(
-          `🔊 Volume chargé depuis l'utilisateur ${UserManager.getCurrentUser()}: ${this._volume}`
-        );
       }
     }
 
@@ -73,7 +68,6 @@ const AudioManager = {
         const savedVolume = localStorage.getItem('volume');
         this._volume = savedVolume !== null ? parseFloat(savedVolume) : 1;
       }
-      console.log(`🔊 Volume chargé globalement: ${this._volume}`);
     }
 
     this._muted = this._volume === 0;
@@ -120,10 +114,6 @@ const AudioManager = {
       this._gameState.volume = this._volume;
       this._gameState.muted = this._muted;
     }
-
-    console.log(
-      `🔊 Volume sauvegardé: ${this._volume} (utilisateur: ${UserManager?.getCurrentUser() || 'global'})`
-    );
   },
 
   /**
@@ -370,7 +360,5 @@ try {
     }
   });
 }
-
-console.log('🔊 Module Audio centralisé chargé');
 
 export { AudioManager };

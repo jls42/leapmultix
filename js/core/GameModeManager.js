@@ -56,8 +56,6 @@ export class GameModeManager {
 
     // 🎉 TOUS LES MODES SONT MAINTENANT REFACTORISÉS ! 🎉
     // Phase 5 terminée avec succès
-
-    console.log('🎮 GameModeManager initialisé');
   }
 
   /**
@@ -65,8 +63,6 @@ export class GameModeManager {
    */
   async startMode(modeName) {
     try {
-      console.log(`🚀 Démarrage du mode: ${modeName}`);
-
       /**
        * Fonction if
        * @param {*} this.isTransitioning - Description du paramètre
@@ -108,7 +104,6 @@ export class GameModeManager {
       }
 
       this.isTransitioning = false;
-      console.log(`✅ Mode ${modeName} démarré avec succès`);
     } catch (error) {
       this.isTransitioning = false;
       console.error(`❌ Erreur lors du démarrage de ${modeName}:`, error);
@@ -120,8 +115,6 @@ export class GameModeManager {
    * Démarrer un mode refactorisé
    */
   async startRefactoredMode(modeName, config) {
-    console.log(`📦 Chargement du mode refactorisé: ${modeName}`);
-
     // Charger dynamiquement le module
     if (!this.modes.has(modeName)) {
       // Mapping explicite des loaders, sans indexation d'objet dynamique
@@ -170,8 +163,6 @@ export class GameModeManager {
    * Démarrer un mode legacy
    */
   async startLegacyMode(modeName, config) {
-    console.log(`🔧 Démarrage du mode legacy: ${modeName}`);
-
     // Vérifier que la fonction existe
     /**
      * Fonction if
@@ -198,8 +189,6 @@ export class GameModeManager {
    */
   async stopCurrentMode() {
     if (!this.currentMode) return;
-
-    console.log(`🛑 Arrêt du mode actuel: ${this.currentMode.name}`);
 
     // Annuler toute narration et sons restants
     {
@@ -333,7 +322,6 @@ export class GameModeManager {
     }
 
     try {
-      console.log(`📦 Préchargement du mode: ${modeName}`);
       const LOADERS = new Map([
         ['quiz', () => import('../modes/QuizMode.js')],
         ['challenge', () => import('../modes/ChallengeMode.js')],
@@ -353,7 +341,6 @@ export class GameModeManager {
        */
       if (ModeClass) {
         this.modes.set(modeName, ModeClass);
-        console.log(`✅ Mode ${modeName} préchargé`);
       }
     } catch (error) {
       console.error(`❌ Erreur lors du préchargement de ${modeName}:`, error);
@@ -368,12 +355,8 @@ export class GameModeManager {
       name => this.modeConfig[name].type === 'refactored'
     );
 
-    console.log(`📦 Préchargement des modes refactorisés: ${refactoredModes.join(', ')}`);
-
     const promises = refactoredModes.map(mode => this.preloadMode(mode));
     await Promise.allSettled(promises);
-
-    console.log(`✅ Préchargement terminé`);
   }
 
   /**
@@ -414,8 +397,6 @@ export class GameModeManager {
    * Nettoyer toutes les ressources
    */
   cleanup() {
-    console.log('🧹 Nettoyage GameModeManager');
-
     // Arrêter le mode actuel
     this.stopCurrentMode();
 

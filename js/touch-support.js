@@ -23,8 +23,6 @@ export class TouchSupportManager {
 
     // Support gestes pour jeux arcade
     this.initArcadeTouchSupport();
-
-    console.log('👆 TouchSupportManager initialisé');
   }
 
   initTouchEvents() {

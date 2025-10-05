@@ -105,5 +105,3 @@ export function applyFontSize(size) {
     }
   }
 }
-
-console.log('🎨 Theme helpers loaded');

@@ -287,19 +287,4 @@ export const Utils = {
   },
 };
 
-try {
-  const Root =
-    typeof globalThis !== 'undefined'
-      ? globalThis
-      : typeof window !== 'undefined'
-        ? window
-        : undefined;
-  if (Root && !Root.__LM_UTILS_LOGGED) {
-    console.log('🛠️ Module Utils centralisé chargé');
-    Root.__LM_UTILS_LOGGED = true;
-  }
-} catch {
-  // noop
-}
-
 export default Utils;

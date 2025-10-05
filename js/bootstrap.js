@@ -107,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     obs.observe(document.body, { childList: true, subtree: true });
     // observer kept module-local; no global exposure
-    console.log('🚀 Bootstrap wired UI handlers (data-* and legacy inline)');
 
     // Refresh active mode texts on language change (ESM wrappers)
     const handler = e => {

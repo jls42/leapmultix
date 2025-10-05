@@ -37,14 +37,6 @@ function getVolumeLevel() {
   return gameState.volume;
 }
 
-function logSpeechDebug(Root, text, priority) {
-  console.log('[Speech Debug] speak() called with:', text, 'priority:', priority);
-  console.log('[Speech Debug] Root available:', !!Root);
-  console.log('[Speech Debug] speechSynthesis available:', Root && 'speechSynthesis' in Root);
-  console.log('[Speech Debug] isVoiceEnabled():', isVoiceEnabled());
-  console.log('[Speech Debug] gameState.volume:', gameState?.volume);
-}
-
 function ensureSpeechReady(Root) {
   if (!Root || !('speechSynthesis' in Root)) {
     console.warn('[Speech] speechSynthesis API not available');
@@ -59,26 +51,12 @@ function ensureSpeechReady(Root) {
   return true;
 }
 
-function logVoiceAvailability(Root) {
-  const voices = Root.speechSynthesis.getVoices();
-  console.log(
-    '[Speech Debug] Available voices:',
-    voices.length,
-    voices.map(voice => `${voice.name} (${voice.lang})`)
-  );
-}
-
 function handleHighPriority(text, isActive) {
   currentSpeechPriority = 'high';
   lastHighText = String(text || '');
-
-  if (isActive) {
-    console.log('[Speech] HIGH priority - queueing after current speech:', text);
-  }
 }
 
 function cancelNormalSpeech(Root, text) {
-  console.log('[Speech] NORMAL priority - cancelling previous NORMAL speech:', text);
   try {
     Root.speechSynthesis.cancel();
   } catch (error) {
@@ -88,7 +66,6 @@ function cancelNormalSpeech(Root, text) {
 }
 
 function interruptHighSpeech(Root, text) {
-  console.log('[Speech] NORMAL priority - interrupting HIGH priority speech:', text);
   try {
     Root.speechSynthesis.cancel();
   } catch (error) {
@@ -106,10 +83,6 @@ function handleNormalPriority({ Root, allowInterruptHigh, text, isActive }) {
 
   if (currentSpeechPriority === 'high') {
     if (!allowInterruptHigh) {
-      console.log(
-        '[Speech] NORMAL priority - NOT cancelling HIGH priority speech, queueing:',
-        text
-      );
       return;
     }
 
@@ -148,24 +121,12 @@ function buildFinalText(priority, rawText) {
   return combined;
 }
 
-function logSpeechIntent(spokenText, utterance, priority) {
-  console.log('[Speech] Speaking:', {
-    text: spokenText,
-    lang: utterance.lang,
-    volume: utterance.volume,
-    rate: utterance.rate,
-    pitch: utterance.pitch,
-    priority,
-  });
-}
-
 function attachUtteranceEvents(utterance, priority, spokenText) {
   utterance.onstart = () => {
     currentSpeechPriority = priority;
     if (priority === 'high') {
       pendingHighReplay = null;
     }
-    console.log('[Speech] ✅ Started speaking:', spokenText, `(priority: ${priority})`);
   };
 
   utterance.onend = () => {
@@ -173,13 +134,11 @@ function attachUtteranceEvents(utterance, priority, spokenText) {
     if (priority === 'high') {
       pendingHighReplay = null;
     }
-    console.log('[Speech] ✅ Finished speaking:', spokenText);
   };
 
   utterance.onerror = event => {
     // Les erreurs 'interrupted' sont normales quand un message en coupe un autre.
     if (event.error === 'interrupted') {
-      console.log(`[Speech] 🗣️ Interrupted: "${spokenText}"`);
       return; // On ne traite pas cela comme une erreur.
     }
 
@@ -198,13 +157,9 @@ export function speak(text, options = {}) {
   } = options;
   const Root = getGlobalRoot();
 
-  logSpeechDebug(Root, text, priority);
-
   if (!ensureSpeechReady(Root)) {
     return;
   }
-
-  logVoiceAvailability(Root);
 
   try {
     preparePriorityQueue({ Root, priority, allowInterruptHigh, text });
@@ -213,8 +168,6 @@ export function speak(text, options = {}) {
     const utterance = setupUtterance(spokenText, speechSettings);
     const volume = getVolumeLevel();
     utterance.volume = Math.max(0.1, Math.min(1, Number(volume || 1)));
-
-    logSpeechIntent(spokenText, utterance, priority);
     attachUtteranceEvents(utterance, priority, spokenText);
 
     Root.speechSynthesis.speak(utterance);

@@ -54,9 +54,6 @@ export class LazyLoader {
         category: 'multimiam',
       },
     };
-
-    console.log('🔄 LazyLoader initialisé');
-    this.logSavings();
   }
 
   /**
@@ -67,13 +64,11 @@ export class LazyLoader {
   async loadModule(moduleId) {
     // Si déjà chargé, retourner immédiatement
     if (this.loadedModules.has(moduleId)) {
-      console.log(`✅ Module ${moduleId} déjà chargé`);
       return Promise.resolve();
     }
 
     // Si en cours de chargement, retourner la promesse existante
     if (this.loadingPromises.has(moduleId)) {
-      console.log(`⏳ Module ${moduleId} en cours de chargement...`);
       return this.loadingPromises.get(moduleId);
     }
 
@@ -82,14 +77,11 @@ export class LazyLoader {
       throw new Error(`Module ${moduleId} non configuré`);
     }
 
-    console.log(`🔄 Chargement lazy du module ${moduleId} (${config.size} KB)...`);
-
     // Créer la promesse de chargement
     const loadingPromise = this.loadScripts(config.scripts)
       .then(() => {
         this.loadedModules.add(moduleId);
         this.loadingPromises.delete(moduleId);
-        console.log(`✅ Module ${moduleId} chargé avec succès`);
 
         // Déclencher des événements (EventBus + window fallback)
         try {
@@ -182,13 +174,9 @@ export class LazyLoader {
 
       if (isES6Module) {
         script.type = 'module';
-        console.log(`📦 Chargement ES6 module: ${scriptPath}`);
-      } else {
-        console.log(`📜 Chargement script legacy: ${scriptPath}`);
       }
 
       script.onload = () => {
-        console.log(`${isES6Module ? '📦' : '📜'} Script chargé: ${scriptPath}`);
         resolve();
       };
 
@@ -207,7 +195,6 @@ export class LazyLoader {
    */
   preloadModule(moduleId) {
     if (!this.loadedModules.has(moduleId) && !this.loadingPromises.has(moduleId)) {
-      console.log(`🔮 Préchargement du module ${moduleId}...`);
       this.loadModule(moduleId).catch(error => {
         console.warn(`⚠️ Échec préchargement ${moduleId}:`, error);
       });
@@ -253,7 +240,6 @@ export class LazyLoader {
             ? window.location
             : null;
       if (loc && (loc.hash === '' || loc.hash === '#slide1')) {
-        console.log('🧠 Préchargement intelligent des jeux...');
         this.preloadModule('games');
       }
     }, 2000);
@@ -295,16 +281,6 @@ export class LazyLoader {
   }
 
   /**
-   * Afficher les économies réalisées
-   */
-  logSavings() {
-    const stats = this.getStats();
-    console.log(
-      `💾 Lazy Loading - Économie potentielle: ${stats.totalSize} KB (${stats.savedPercentage}% non chargé au démarrage)`
-    );
-  }
-
-  /**
    * Vérifier si un module est chargé
    * @param {string} moduleId - ID du module
    * @returns {boolean} - True si chargé
@@ -333,7 +309,5 @@ document.addEventListener('DOMContentLoaded', () => {
     lazyLoader.smartPreload();
   }, 1000);
 });
-
-console.log('🔄 Module LazyLoader chargé');
 
 export default lazyLoader;
