@@ -177,14 +177,6 @@
     overflow: hidden auto !important;
   }
 
-  /* Correction globale tous éléments arcade sur mobile */
-  .arcade-container *,
-  .arcade-game-ui *,
-  .arcade-games-list * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
   /* Force override pour les jeux en cours sur mobile */
   body.game-active .arcade-game-ui,
   .slide.active-slide .arcade-game-ui,
@@ -334,30 +326,6 @@ body.night .arcade-dev-banner,
   box-sizing: border-box;
 }
 
-/* Supprimé - fusionné dans le bloc consolidé @media (max-width: 600px) ligne ~80 */
-.arcade-container {
-  max-width: 1500px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 16px;
-  text-align: center;
-}
-
-/* Supprimé - définition dupliquée, voir ligne ~268 pour la version complète */
-.arcade-game-ui > canvas {
-  background: #181818;
-  border-radius: 22px;
-  box-shadow:
-    0 4px 32px rgb(0 0 0 / 0.28),
-    0 0 0 4px #ffe066;
-  border: 2px solid #fffbe6;
-  padding: 18px;
-  margin: 18px auto;
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
 .arcade-icon {
   font-size: 2.2em;
   margin-right: 8px;
@@ -407,12 +375,6 @@ body.night .arcade-dev-banner,
   margin-right: auto;
   position: relative;
   overflow: visible;
-}
-
-/* Supprimé - effet hover dupliqué, voir version plus complète ligne ~908 */
-.game-thumb {
-  font-size: 3em;
-  margin-bottom: 8px;
 }
 
 .game-title {
@@ -625,8 +587,6 @@ body.night .arcade-dev-banner,
   display: block;
 }
 
-/* Supprimé - règles basiques collapsed/expanded, voir versions plus complètes ligne ~823+ */
-/* Duplicate collapsed/expanded block removed (kept later occurrence) */
 /* Taille intermédiaire entre desktop et tablet */
 @media (min-width: 768px) and (max-width: 900px) {
   .arcade-games-list {
@@ -1219,12 +1179,4 @@ body.night .arcade-game-card {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgb(0 0 0 / 0.25);
   transition: all 0.3s ease-in-out;
-}
-
-/* Supprimé - redéfinition inutile du background, déjà défini dans la règle principale */
-.play-arcade-btn {
-  font-size: 1.1em;
-  padding: 10px 28px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.08);
 }

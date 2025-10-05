@@ -142,7 +142,7 @@ export const TopBar = {
     top.className = `top-bar ${slideNumber === '0' ? 'top-bar--slide0' : ''}`.trim();
     if (slideNumber === '0') top.style.position = 'relative';
 
-    // Home button
+    // --- Always Visible Elements ---
     const home = document.createElement('button');
     home.id = `home-button-${slideId}`;
     home.className = 'btn home-btn';
@@ -152,7 +152,6 @@ export const TopBar = {
     if (!config.showHomeButton) home.style.visibility = 'hidden';
     top.appendChild(home);
 
-    // About button
     if (config.showAboutButton !== false) {
       const about = document.createElement('button');
       about.className = 'btn btn-sm about-btn';
@@ -163,7 +162,30 @@ export const TopBar = {
       top.appendChild(about);
     }
 
-    // Language selector
+    if (config.showCoinDisplay) {
+      const coins = document.createElement('span');
+      coins.className = 'coin-display';
+      coins.append('🪙 ');
+      const count = document.createElement('span');
+      count.className = 'coin-count';
+      count.textContent = '0';
+      coins.appendChild(count);
+      top.appendChild(coins);
+    }
+
+    // --- Burger Menu Button (Mobile only) ---
+    const burgerBtn = document.createElement('button');
+    burgerBtn.className = 'burger-menu-btn';
+    burgerBtn.textContent = '☰'; // Burger icon
+    burgerBtn.setAttribute('aria-label', 'Toggle menu');
+    top.appendChild(burgerBtn);
+
+    // --- Navigation Container (for Burger Menu) ---
+    const navContainer = document.createElement('div');
+    navContainer.className = 'top-bar-nav';
+    top.appendChild(navContainer);
+
+    // --- Elements inside Nav Container ---
     const langWrap = document.createElement('div');
     langWrap.className = 'language-selector';
     [
@@ -177,9 +199,8 @@ export const TopBar = {
       btn.textContent = flag;
       langWrap.appendChild(btn);
     });
-    top.appendChild(langWrap);
+    navContainer.appendChild(langWrap);
 
-    // Volume controls
     const volWrap = document.createElement('div');
     volWrap.className = 'global-volume-controls';
     const mute = document.createElement('button');
@@ -198,9 +219,8 @@ export const TopBar = {
     slider.className = 'volume-slider';
     volWrap.appendChild(mute);
     volWrap.appendChild(slider);
-    top.appendChild(volWrap);
+    navContainer.appendChild(volWrap);
 
-    // Voice toggle
     const voiceWrap = document.createElement('div');
     voiceWrap.className = 'voice-toggle-controls';
     const voiceBtn = document.createElement('button');
@@ -218,28 +238,15 @@ export const TopBar = {
       (voiceEnabled ? 'Désactiver la voix' : 'Activer la voix');
     voiceBtn.textContent = voiceEnabled ? '🗣️' : '🤐';
     voiceWrap.appendChild(voiceBtn);
-    top.appendChild(voiceWrap);
+    navContainer.appendChild(voiceWrap);
 
-    // Coin display
-    if (config.showCoinDisplay) {
-      const coins = document.createElement('span');
-      coins.className = 'coin-display';
-      coins.append('🪙 ');
-      const count = document.createElement('span');
-      count.className = 'coin-count';
-      count.textContent = '0';
-      coins.appendChild(count);
-      top.appendChild(coins);
-    }
-
-    // Change user
     if (config.showChangeUserButton) {
       const change = document.createElement('button');
       change.className = 'btn change-user-btn';
       change.dataset.slide = '0';
       change.setAttribute('data-translate', 'change_user');
       change.textContent = "Changer d'utilisateur";
-      top.appendChild(change);
+      navContainer.appendChild(change);
     }
 
     return top;
@@ -272,22 +279,22 @@ export const TopBar = {
    */
   setupEventListeners() {
     // Écouteurs pour les boutons Home
-    document.querySelectorAll('.home-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.home-btn')) {
       btn.addEventListener('click', () => {
         goToSlide(1);
       });
-    });
+    }
 
     // Écouteurs pour les boutons de langue
-    document.querySelectorAll('.lang-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.lang-btn')) {
       btn.addEventListener('click', e => {
         const lang = e.target.dataset.lang;
         changeLanguage(lang);
       });
-    });
+    }
 
     // Écouteurs pour les contrôles de volume
-    document.querySelectorAll('.mute-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.mute-btn')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
           const current = AudioManager.getVolume();
@@ -295,9 +302,9 @@ export const TopBar = {
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
 
-    document.querySelectorAll('.volume-slider').forEach(slider => {
+    for (const slider of document.querySelectorAll('.volume-slider')) {
       if (!slider.dataset.topBarListenerAttached) {
         slider.addEventListener('input', e => {
           const newVolume = parseFloat(e.target.value);
@@ -305,10 +312,10 @@ export const TopBar = {
         });
         slider.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
 
     // Écouteur pour le toggle voix
-    document.querySelectorAll('.voice-toggle').forEach(btn => {
+    for (const btn of document.querySelectorAll('.voice-toggle')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
           try {
@@ -328,6 +335,33 @@ export const TopBar = {
           }
         });
         btn.dataset.topBarListenerAttached = 'true';
+      }
+    }
+
+    // Écouteur pour le menu burger
+    for (const btn of document.querySelectorAll('.burger-menu-btn')) {
+      if (!btn.dataset.topBarListenerAttached) {
+        btn.addEventListener('click', e => {
+          const topBar = e.target.closest('.top-bar');
+          if (topBar) {
+            const nav = topBar.querySelector('.top-bar-nav');
+            if (nav) {
+              nav.classList.toggle('is-open');
+            }
+          }
+          e.stopPropagation();
+        });
+        btn.dataset.topBarListenerAttached = 'true';
+      }
+    }
+
+    // Fermer le menu si on clique ailleurs
+    document.addEventListener('click', e => {
+      for (const nav of document.querySelectorAll('.top-bar-nav.is-open')) {
+        const topBar = nav.closest('.top-bar');
+        if (topBar && !topBar.contains(e.target)) {
+          nav.classList.remove('is-open');
+        }
       }
     });
 

@@ -158,3 +158,68 @@
     transform: scale(1.05);
   }
 }
+
+/* --- Responsive Game --- */
+@media (max-width: 768px) {
+  .stats {
+    flex-wrap: wrap; /* Allow stats to wrap */
+    gap: 10px;
+  }
+
+  .scene {
+    height: 150px;
+    width: 90%;
+  }
+
+  .question {
+    font-size: 20px;
+  }
+
+  .options {
+    grid-template-columns: 1fr; /* Single column layout */
+  }
+
+  .option {
+    padding: 12px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-container {
+    gap: 10px;
+  }
+
+  .stats {
+    padding: 8px;
+    border-radius: 10px;
+  }
+
+  .scene {
+    height: 120px;
+    width: 95%;
+  }
+
+  .character,
+  .treasure {
+    font-size: 30px;
+    bottom: 10px;
+  }
+
+  .character {
+    left: 20px;
+  }
+
+  .treasure {
+    right: 20px;
+  }
+
+  .question-box {
+    padding: 15px;
+    margin-bottom: 10px;
+  }
+
+  .question {
+    font-size: 18px;
+  }
+}

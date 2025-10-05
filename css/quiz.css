@@ -370,3 +370,56 @@
 .quiz-actions .btn {
   flex: 1;
 }
+
+/* --- Responsive Quiz --- */
+@media (max-width: 768px) {
+  .quiz-container,
+  .challenge-container {
+    padding: 15px;
+    border-width: 2px;
+  }
+
+  .question {
+    font-size: 1.3em;
+    margin: 15px auto;
+  }
+
+  .options {
+    grid-template-columns: 1fr; /* Single column layout for options */
+    gap: 8px;
+  }
+
+  .option {
+    padding: 12px;
+    font-size: 1em;
+  }
+
+  .quiz-stats,
+  .challenge-stats {
+    flex-direction: column; /* Stack stats vertically */
+    gap: 8px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .quiz-container,
+  .challenge-container {
+    padding: 10px;
+    margin: 10px;
+  }
+
+  .question {
+    font-size: 1.1em;
+    padding: 10px;
+  }
+
+  .feedback {
+    margin: 10px 0;
+    padding: 8px;
+  }
+
+  .quiz-actions {
+    flex-direction: column;
+  }
+}

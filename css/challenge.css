@@ -200,3 +200,48 @@
 
   /* Texte clair */
 }
+
+/* --- Responsive Challenge Mode --- */
+@media (max-width: 768px) {
+  .challenge-header {
+    flex-direction: column; /* Stack header items */
+    gap: 15px;
+    align-items: center;
+  }
+
+  .challenge-question {
+    font-size: 20px;
+  }
+
+  .challenge-options {
+    grid-template-columns: 1fr; /* Single column layout */
+  }
+
+  .stat-value {
+    font-size: 1.5em;
+  }
+}
+
+@media (max-width: 480px) {
+  .timer-value {
+    font-size: 24px;
+  }
+
+  .challenge-question {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .challenge-options {
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  .stat-box {
+    padding: 10px;
+  }
+
+  .stat-value {
+    font-size: 1.3em;
+  }
+}

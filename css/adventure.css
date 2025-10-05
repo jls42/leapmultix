@@ -383,3 +383,84 @@
 .continue-btn {
   margin-top: 10px;
 }
+
+/* --- Responsive Adventure Mode --- */
+
+@media (max-width: 768px) {
+  .adventure-header {
+    flex-direction: column; /* Stack avatar and info */
+    align-items: center;
+    text-align: center;
+  }
+
+  .adventure-avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+  }
+
+  .adventure-levels {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .level-image {
+    height: 100px;
+  }
+
+  .adventure-question {
+    font-size: 20px;
+  }
+
+  .adventure-options {
+    grid-template-columns: 1fr; /* Single column for options */
+  }
+
+  .option-btn {
+    padding: 12px;
+    font-size: 16px;
+    min-height: 60px;
+  }
+
+  .victory-stars {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adventure-container,
+  .adventure-controls,
+  .victory-screen {
+    padding: 15px;
+  }
+
+  .adventure-levels {
+    grid-template-columns: 1fr; /* Force single column on very small screens */
+  }
+
+  .adventure-stats {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .adventure-question {
+    font-size: 18px;
+    padding: 10px;
+  }
+
+  .adventure-scene {
+    height: 120px;
+  }
+
+  .adventure-character,
+  .adventure-treasure {
+    width: 60px;
+    height: 60px;
+  }
+
+  .victory-stars {
+    font-size: 28px;
+    letter-spacing: 5px;
+  }
+}
