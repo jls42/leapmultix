@@ -4,20 +4,16 @@
  */
 
 // Version globale de l'application - doit correspondre à sw.js
-export const APP_VERSION = 'v5';
+export const APP_VERSION = 'v7';
 export const VERSION_PARAM = `v=${APP_VERSION}`;
 
 // Fonction de développement pour forcer le nettoyage complet
 export function forceDevCacheClear() {
-  console.log('🔧 Nettoyage cache demandé');
-
   // Unregister service worker
   if (globalThis.navigator && 'serviceWorker' in globalThis.navigator) {
     globalThis.navigator.serviceWorker.getRegistrations().then(registrations => {
       registrations.forEach(registration => {
-        registration.unregister().then(() => {
-          console.log('🔧 Service Worker désenregistré');
-        });
+        registration.unregister();
       });
     });
   }
@@ -25,26 +21,19 @@ export function forceDevCacheClear() {
   // Clear all caches
   const g = typeof globalThis !== 'undefined' ? globalThis : window;
   if (g && g.caches) {
-    g.caches
-      .keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            console.log('🔧 Suppression du cache:', cacheName);
-            return g.caches.delete(cacheName);
-          })
-        );
-      })
-      .then(() => {
-        console.log('🔧 Tous les caches supprimés');
-      });
+    g.caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          return g.caches.delete(cacheName);
+        })
+      );
+    });
   }
 
   // Clear localStorage/sessionStorage cache-related data
   Object.keys(localStorage).forEach(key => {
     if (key.includes('cache') || key.includes('version')) {
       localStorage.removeItem(key);
-      console.log('🔧 Suppression localStorage:', key);
     }
   });
 }
@@ -63,8 +52,6 @@ export function registerServiceWorker() {
       globalThis.navigator.serviceWorker
         .register(swUrl)
         .then(registration => {
-          console.log('Service Worker enregistré avec succès:', registration.scope);
-
           // Vérifier les mises à jour automatiquement
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
@@ -83,7 +70,7 @@ export function registerServiceWorker() {
           });
         })
         .catch(error => {
-          console.log("Échec d'enregistrement du Service Worker:", error);
+          console.error("Échec d'enregistrement du Service Worker:", error);
         });
     });
   }
@@ -117,8 +104,6 @@ export function clearCacheAndReload() {
         );
       })
       .then(() => {
-        console.log('Tous les caches ont été supprimés');
-
         // Stocker l'information de nettoyage dans localStorage pour indiquer au prochain chargement
         // que le cache a été vidé et qu'il faut forcer le rechargement de toutes les images
         localStorage.setItem('cache_cleared_timestamp', APP_VERSION);
@@ -149,7 +134,7 @@ function autoDetectCacheIssues() {
 
   // Si on a un mélange de scripts versionnés et non-versionnés, nettoyer
   if (hasVersionedScripts && hasUnversionedScripts) {
-    console.log('🔧 Détection de problème de cache - Nettoyage automatique');
+    console.warn('🔧 Détection de problème de cache - Nettoyage automatique');
     forceDevCacheClear();
   }
 }

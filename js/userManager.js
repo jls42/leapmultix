@@ -36,8 +36,6 @@ export const UserManager = {
 
     // Initialiser l'interface utilisateur
     this.initUI();
-
-    console.log('👤 UserManager initialisé');
   },
 
   /**
@@ -263,8 +261,6 @@ export const UserManager = {
 
     // Émettre un événement pour notifier le changement d'utilisateur
     this.emitUserChanged(userData);
-
-    console.log(`👤 Utilisateur "${key}" sélectionné`);
     return userData;
   },
 
@@ -328,15 +324,12 @@ export const UserManager = {
     // Sauvegarder
     this.savePlayers();
 
-    console.log(`👤 Utilisateur "${sanitized}" créé avec succès`);
-
     // 🎬 Jouer la vidéo d'introduction de l'avatar si VideoManager est disponible
     if (
       typeof VideoManager !== 'undefined' &&
       VideoManager.CHARACTER_VIDEOS &&
       VideoManager.CHARACTER_VIDEOS.has(avatar)
     ) {
-      console.log(`🎬 Lancement vidéo d'introduction: ${avatar}`);
       // Callback pour sélectionner l'utilisateur après la vidéo
       VideoManager.playCharacterIntro(avatar, () => {
         this.selectUser(sanitized);
@@ -373,8 +366,6 @@ export const UserManager = {
       Reflect.deleteProperty(this._players, key);
     }
     this.savePlayers();
-
-    console.log(`👤 Utilisateur "${key}" supprimé`);
     return true;
   },
 
@@ -623,5 +614,4 @@ export const UserManager = {
 
 // Export global pour compatibilité
 
-console.log('👤 Module UserManager chargé');
 export default UserManager;

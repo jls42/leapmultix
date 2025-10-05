@@ -22,7 +22,7 @@ export const Customization = {
    * Initialiser le composant Customization
    */
   init() {
-    console.log('🎨 Initialisation du composant Customization');
+    // No initialization needed - events are set up on-demand in show()
   },
 
   /**
@@ -128,7 +128,6 @@ export const Customization = {
         const userData = UserState.getCurrentUserData();
         userData.avatar = avatarName;
         UserState.updateUserData(userData);
-        console.log(`🎨 Avatar "${avatarName}" sauvegardé automatiquement`);
       });
     }
 
@@ -367,5 +366,3 @@ export const showCustomizationScreen = Customization.show.bind(Customization);
 export const setupCustomizationEvents = Customization.setupEvents.bind(Customization);
 export const updateColorTheme = Customization.updateColorTheme.bind(Customization);
 export const saveCustomization = Customization.save.bind(Customization);
-
-console.log('🎨 Module Customization chargé');

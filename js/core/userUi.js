@@ -58,5 +58,3 @@ export function selectUser(name) {
   localStorage.removeItem('arcadeScores_multimiam_default');
   goToSlide(1);
 }
-
-console.log('👤 User UI helpers loaded');

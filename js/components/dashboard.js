@@ -80,7 +80,6 @@ export const Dashboard = {
    * Initialiser le composant Dashboard
    */
   init() {
-    console.log('📊 Initialisation du composant Dashboard');
     this.initReplayVideoButton();
   },
 
@@ -110,8 +109,6 @@ export const Dashboard = {
     // Obtenir l'avatar actuel de l'utilisateur
     const userData = UserState.getCurrentUserData();
     const currentAvatar = userData.avatar || 'fox';
-
-    console.log(`🎬 Replay vidéo demandé depuis Dashboard: ${currentAvatar}`);
 
     // Jouer la vidéo (sans callback car on reste sur le dashboard)
     VideoManager.playCharacterIntro(currentAvatar);
@@ -547,7 +544,6 @@ export const Dashboard = {
       .catch(() => {
         /* no-op */
       });
-    console.log('📊 Dashboard: section Scores rendue');
   },
 
   /**
@@ -611,5 +607,4 @@ try {
   void e; /* no-op: eventBus optional */
 }
 
-console.log('📊 Module Dashboard chargé');
 export default Dashboard;

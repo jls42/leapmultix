@@ -72,8 +72,6 @@ export class GameMode {
    */
   async start() {
     try {
-      console.log(`🎮 Démarrage du mode ${this.modeName}`);
-
       // Navigation vers l'écran de jeu
       goToSlide(4);
       gameState.gameMode = this.modeName;
@@ -84,9 +82,6 @@ export class GameMode {
       // Annonce vocale
       const translationKey = this.modeName + '_mode';
       const translatedText = getTranslation(translationKey);
-      console.log(
-        `[GameMode] Calling speak() with key="${translationKey}", text="${translatedText}"`
-      );
       speak(translatedText, { priority: 'high' });
 
       // Initialiser l'interface
@@ -97,8 +92,6 @@ export class GameMode {
 
       // Démarrer la logique spécifique
       await this.onStart();
-
-      console.log(`✅ Mode ${this.modeName} démarré avec succès`);
     } catch (error) {
       console.error(`❌ Erreur lors du démarrage de ${this.modeName}:`, error);
       this.handleError(error);
@@ -109,8 +102,6 @@ export class GameMode {
    * Arrêter le mode de jeu
    */
   stop() {
-    console.log(`🛑 Arrêt du mode ${this.modeName}`);
-
     this.state.isActive = false;
 
     // Arrêter la synthèse vocale et les sons en cours
@@ -132,8 +123,6 @@ export class GameMode {
 
     // Logique spécifique d'arrêt
     this.onStop();
-
-    console.log(`✅ Mode ${this.modeName} arrêté`);
   }
 
   /**
@@ -595,8 +584,6 @@ export class GameMode {
    * Terminer le mode de jeu
    */
   finish() {
-    console.log(`🏁 Fin du mode ${this.modeName}`);
-
     this.state.isActive = false;
 
     // Sauvegarder les résultats
@@ -786,14 +773,13 @@ export class GameMode {
    * Sauvegarder les résultats (à surcharger)
    */
   saveResults() {
-    console.log(`💾 Sauvegarde des résultats ${this.modeName}:`, this.state);
+    // Abstract method - override in subclass to save game results
   }
 
   /**
    * Afficher les résultats (à surcharger)
    */
   showResults() {
-    console.log(`📊 Affichage des résultats ${this.modeName}`);
     goToSlide(5); // Slide de résultats par défaut
   }
 

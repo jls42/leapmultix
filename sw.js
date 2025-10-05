@@ -5,12 +5,10 @@
 // - Translations JSON: stale-while-revalidate
 // - JS/CSS: network-first with cache fallback (updates take precedence)
 
-const VERSION = 'v6'; // bump (add service worker logging)
+const VERSION = 'v7'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
-
-console.log(`[SW ${VERSION}] Service Worker loading...`);
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -24,24 +22,17 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  console.log(`[SW ${VERSION}] Installing...`);
-
   event.waitUntil(
     (async () => {
       const cache = await caches.open(OFFLINE_CACHE);
       await cache.addAll([OFFLINE_URL, ...APP_SHELL]);
-
-      console.log(`[SW ${VERSION}] Cached ${APP_SHELL.length + 1} assets`);
     })()
   );
 
   self.skipWaiting();
-  console.log(`[SW ${VERSION}] Skip waiting - will activate immediately`);
 });
 
 self.addEventListener('activate', event => {
-  console.log(`[SW ${VERSION}] Activating...`);
-
   event.waitUntil(
     (async () => {
       // Clean up old caches
@@ -52,15 +43,9 @@ self.addEventListener('activate', event => {
           !k.endsWith(VERSION)
       );
 
-      console.log(`[SW ${VERSION}] Found ${oldCaches.length} old cache(s) to delete:`, oldCaches);
-
       await Promise.all(oldCaches.map(k => caches.delete(k)));
 
-      console.log(`[SW ${VERSION}] Cleaned up old caches`);
-
       await self.clients.claim();
-
-      console.log(`[SW ${VERSION}] Activated and claimed all clients`);
     })()
   );
 });

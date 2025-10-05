@@ -151,7 +151,7 @@ export const InfoBar = {
    * Initialiser le composant InfoBar
    */
   init() {
-    console.log('📊 Initialisation du composant InfoBar');
+    // No initialization needed - InfoBar is created on-demand when injected
   },
 
   /**
@@ -281,8 +281,6 @@ export const InfoBar = {
     // Injecter une structure DOM sécurisée au début du conteneur
     const el = this.createElement(mode, values, options);
     container.insertBefore(el, container.firstChild);
-
-    console.log(`📊 InfoBar injectée dans "${containerId}" (mode: ${mode})`);
   },
 
   /**
@@ -414,7 +412,6 @@ export const InfoBar = {
        */
       if (infoBar) {
         infoBar.remove();
-        console.log(`📊 InfoBar supprimée de "${containerId}"`);
       }
     }
   },
@@ -509,5 +506,3 @@ export const InfoBar = {
 const createInfoBarHTML = InfoBar.createHTML.bind(InfoBar);
 const updateInfoBar = InfoBar.update.bind(InfoBar);
 export { createInfoBarHTML, updateInfoBar };
-
-console.log('📊 Module InfoBar chargé');
