@@ -1698,3 +1698,68 @@ button:hover,
 .top-bar--slide0 .home-btn {
   display: none !important;
 }
+
+/* --- Responsive Touch Targets --- */
+@media (max-width: 992px) {
+  .btn-sm {
+    min-height: 44px;
+    padding: 10px 12px; /* Increase padding for a larger touch area */
+  }
+}
+
+/* --- Burger Menu --- */
+.burger-menu-btn {
+  display: none; /* Hidden by default */
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  order: 99; /* Make sure it's at the end */
+  margin-left: auto;
+}
+
+.top-bar-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 992px) {
+  .top-bar-nav {
+    display: none; /* Hide nav items on mobile */
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: rgb(255 255 255 / 0.95);
+    flex-direction: column;
+    padding: 10px;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 8px 16px rgb(0 0 0 / 0.1);
+    z-index: 100;
+    width: 250px;
+    align-items: stretch;
+  }
+
+  .theme-dark .top-bar-nav {
+     background-color: rgb(44 62 80 / 0.95);
+  }
+
+  .top-bar-nav.is-open {
+    display: flex; /* Show when burger is clicked */
+  }
+
+  .burger-menu-btn {
+    display: block; /* Show burger button on mobile */
+  }
+
+  /* Adjust items for vertical layout */
+  .top-bar-nav .language-selector,
+  .top-bar-nav .global-volume-controls,
+  .top-bar-nav .voice-toggle-controls {
+    justify-content: space-between;
+  }
+  .top-bar-nav .btn {
+    width: 100%;
+    text-align: left;
+  }
+}

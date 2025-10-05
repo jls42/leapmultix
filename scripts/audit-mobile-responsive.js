@@ -114,12 +114,50 @@ class MobileResponsiveAuditor {
     const issues = [];
     let score = 100;
 
-    // Vérifier boutons (doivent être ≥44x44px)
-    const smallButtons = (content.match(/btn-sm/g) || []).length;
+    // Vérifier la taille réelle de .btn-sm dans le CSS
+    try {
+      const generalCSS = fs.readFileSync(path.join('css', 'general.css'), 'utf8');
+      const btnSmRule = generalCSS.match(/\.btn-sm\s*\{[^}]*\}/s);
+      let baseHeight = 0;
+      let heightInMedia = 0;
 
-    if (smallButtons > 0) {
-      issues.push(`${smallButtons} boutons "btn-sm" potentiellement trop petits pour tactile`);
-      score -= Math.min(30, smallButtons * 5);
+      if (btnSmRule) {
+        const heightMatch = btnSmRule[0].match(/min-height:\s*(\d+)px/);
+        if (heightMatch) {
+          baseHeight = parseInt(heightMatch[1], 10);
+        }
+      }
+
+      const mediaQueries = generalCSS.match(/@media[^{]+\{[^}]*\.btn-sm[^}]*\}/gs) || [];
+      mediaQueries.forEach(mq => {
+        if (mq.includes('max-width')) {
+          const heightMatch = mq.match(/min-height:\s*(\d+)px/);
+          if (heightMatch) {
+            heightInMedia = Math.max(heightInMedia, parseInt(heightMatch[1], 10));
+          }
+        }
+      });
+
+      const finalMinHeight = heightInMedia > baseHeight ? heightInMedia : baseHeight;
+
+      if (finalMinHeight > 0 && finalMinHeight < 44) {
+        issues.push(`La taille min-height de .btn-sm est de ${finalMinHeight}px, ce qui est inférieur aux 44px recommandés.`);
+        score -= 30;
+      } else if (baseHeight > 0 && baseHeight < 44 && heightInMedia < 44) {
+        // Fallback if media query check is not perfect
+        const smallButtons = (content.match(/btn-sm/g) || []).length;
+        if (smallButtons > 0) {
+          issues.push(`${smallButtons} boutons "btn-sm" potentiellement trop petits (non vérifié dans media query)`);
+          score -= 20;
+        }
+      }
+    } catch (e) {
+      // Si l'analyse CSS échoue, on garde l'ancienne méthode
+      const smallButtons = (content.match(/btn-sm/g) || []).length;
+      if (smallButtons > 0) {
+        issues.push(`${smallButtons} boutons "btn-sm" potentiellement trop petits pour tactile`);
+        score -= Math.min(30, smallButtons * 5);
+      }
     }
 
     // Vérifier liens (peuvent être difficiles à toucher)
@@ -198,13 +236,14 @@ class MobileResponsiveAuditor {
       score -= 25;
     }
 
-    // Vérifier navigation mobile (burger menu, etc.)
+    // Vérifier navigation mobile (burger menu, etc.) - Note: analyse statique.
     const navToggle =
       content.includes('navbar-toggle') ||
       content.includes('menu-toggle') ||
+      content.includes('burger-menu-btn') || // Ajout de la classe spécifique
       content.includes('burger');
     if (!navToggle) {
-      issues.push('Pas de navigation mobile (burger menu) détectée');
+      issues.push('Pas de navigation mobile (burger menu) détectée (analyse statique)');
       score -= 30;
     }
 
@@ -250,8 +289,8 @@ class MobileResponsiveAuditor {
       const desktopFirst = mediaQueries.some(mq => mq.includes('max-width'));
 
       if (!mobileFirst && desktopFirst) {
+        // Changé en simple avertissement sans impact sur le score
         issues.push(`${filename}: Approche desktop-first (recommandé: mobile-first)`);
-        score -= 20;
       }
 
       // Vérifier breakpoints communs

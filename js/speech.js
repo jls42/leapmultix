@@ -176,12 +176,18 @@ function attachUtteranceEvents(utterance, priority, spokenText) {
     console.log('[Speech] ✅ Finished speaking:', spokenText);
   };
 
-  utterance.onerror = error => {
+  utterance.onerror = event => {
+    // Les erreurs 'interrupted' sont normales quand un message en coupe un autre.
+    if (event.error === 'interrupted') {
+      console.log(`[Speech] 🗣️ Interrupted: "${spokenText}"`);
+      return; // On ne traite pas cela comme une erreur.
+    }
+
     currentSpeechPriority = null;
     if (priority === 'high') {
       pendingHighReplay = null;
     }
-    console.error('[Speech] ❌ Error:', error);
+    console.error('[Speech] ❌ Error:', event);
   };
 }
 

@@ -145,10 +145,10 @@
   background: linear-gradient(45deg, #ff6b6b, #ff8e53);
   color: white;
   border: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 3px 10px rgb(255 107 107 / 0.3);
@@ -181,4 +181,19 @@
 
 .theme-dark .replay-video-btn:hover {
   box-shadow: 0 5px 15px rgb(52 152 219 / 0.4);
+}
+
+/* --- Responsive Progress Dashboard --- */
+@media (max-width: 480px) {
+  .star-grid {
+    gap: 8px; /* Reduce gap on small screens */
+  }
+
+  .star-cell {
+    padding: 10px; /* Reduce padding */
+  }
+
+  .star-count .star {
+    font-size: 16px; /* Make stars slightly smaller */
+  }
 }
