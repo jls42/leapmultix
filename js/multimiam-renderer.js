@@ -119,76 +119,97 @@ export default class PacmanRenderer {
   /* === PACMAN =================================== */
   drawPacman() {
     const g = this.game;
-    const ctx = g.ctx;
     if (!g.multimiam) return;
 
     g.updatePlayerAvatar();
+    const { x, y } = this.getInterpolatedPacmanPosition();
+    const { pixelX, pixelY } = this.getPacmanPixelCoordinates(x, y);
 
-    // Animation fluide: interpolation entre la position précédente et la position actuelle
-    let x, y;
+    if (!this.shouldRenderPacman()) return;
 
-    if (g.lastPacmanPosition && g.animationProgress < 1) {
-      // Détecter si on a traversé un bord (téléportation)
-      const dx = g.multimiam.x - g.lastPacmanPosition.x;
-      const dy = g.multimiam.y - g.lastPacmanPosition.y;
-      const teleportX = Math.abs(dx) > 1;
-      const teleportY = Math.abs(dy) > 1;
+    this.updatePacmanAnimationState();
 
-      // Calcul de la position interpolée
-      if (teleportX) {
-        // Gestion du wrapped-around (téléportation d'un bord à l'autre)
-        x = g.lastPacmanPosition.x;
-      } else {
-        x = g.lastPacmanPosition.x + dx * g.animationProgress;
-      }
+    if (!this.drawAvatarSprite(pixelX, pixelY)) {
+      this.drawClassicPacman(pixelX, pixelY);
+    }
+  }
 
-      if (teleportY) {
-        // Gestion du wrapped-around (téléportation d'un bord à l'autre)
-        y = g.lastPacmanPosition.y;
-      } else {
-        y = g.lastPacmanPosition.y + dy * g.animationProgress;
-      }
-    } else {
-      // Pas d'animation ou animation terminée
-      x = g.multimiam.x;
-      y = g.multimiam.y;
+  getInterpolatedPacmanPosition() {
+    const g = this.game;
+    const defaultPosition = { x: g.multimiam.x, y: g.multimiam.y };
+
+    if (!g.lastPacmanPosition || g.animationProgress >= 1) {
+      return defaultPosition;
     }
 
-    // Convertir les coordonnées de la grille en pixels
-    const pixelX = (x + 0.5) * g.cellSize;
-    const pixelY = (y + 0.5) * g.cellSize;
+    const dx = g.multimiam.x - g.lastPacmanPosition.x;
+    const dy = g.multimiam.y - g.lastPacmanPosition.y;
+    const teleportX = Math.abs(dx) > 1;
+    const teleportY = Math.abs(dy) > 1;
 
-    // Gestion clignotement invincibilité
-    if (g.isInvincible) {
-      const t = Date.now();
-      g.isVisible =
-        Math.floor((t - (g.invincibilityEndTime - g.invincibilityDuration)) / g.blinkInterval) %
-          2 ===
-        0;
-      if (!g.isVisible) return;
+    const interpolatedX = teleportX
+      ? g.lastPacmanPosition.x
+      : g.lastPacmanPosition.x + dx * g.animationProgress;
+    const interpolatedY = teleportY
+      ? g.lastPacmanPosition.y
+      : g.lastPacmanPosition.y + dy * g.animationProgress;
+
+    return { x: interpolatedX, y: interpolatedY };
+  }
+
+  getPacmanPixelCoordinates(x, y) {
+    const g = this.game;
+    return {
+      pixelX: (x + 0.5) * g.cellSize,
+      pixelY: (y + 0.5) * g.cellSize,
+    };
+  }
+
+  shouldRenderPacman() {
+    const g = this.game;
+    if (!g.isInvincible) return true;
+
+    const blinkStart = g.invincibilityEndTime - g.invincibilityDuration;
+    const elapsed = Date.now() - blinkStart;
+    const visible = Math.floor(elapsed / g.blinkInterval) % 2 === 0;
+    g.isVisible = visible;
+
+    return visible;
+  }
+
+  updatePacmanAnimationState() {
+    const g = this.game;
+    if (!g.multimiam.animationStartTime) {
+      g.multimiam.animationStartTime = Date.now();
     }
 
-    // Animation bouche
-    if (!g.multimiam.animationStartTime) g.multimiam.animationStartTime = Date.now();
     const animTime = Date.now() - g.multimiam.animationStartTime;
     const cycle = (animTime % 300) / 300;
     g.multimiam.mouthAngle = 0.05 + 0.3 * Math.abs(Math.sin(cycle * Math.PI * 2));
+  }
 
-    // Avatar personnalisé ?
-    if (
-      g.avatar &&
-      g.avatar.image &&
-      g.avatar.image.complete &&
-      g.avatar.image.naturalHeight !== 0
-    ) {
+  drawAvatarSprite(pixelX, pixelY) {
+    const g = this.game;
+    const leftImage = g.avatar?.image_left;
+    const rightImage = g.avatar?.image_right;
+
+    if (leftImage?.complete && rightImage?.complete) {
+      const imageToDraw = g.multimiam.direction === 'LEFT' ? leftImage : rightImage;
+      if (imageToDraw.naturalHeight === 0) {
+        return false;
+      }
+
       const size = g.cellSize * 1.5;
+      const ctx = g.ctx;
       ctx.save();
       ctx.translate(pixelX, pixelY);
-      ctx.drawImage(g.avatar.image, -size / 2, -size / 2, size, size);
+      ctx.drawImage(imageToDraw, -size / 2, -size / 2, size, size);
       ctx.restore();
-    } else {
-      this.drawClassicPacman(pixelX, pixelY);
+
+      return true;
     }
+
+    return false;
   }
 
   drawClassicPacman(px, py) {
