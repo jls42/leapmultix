@@ -119,7 +119,6 @@ export default class PacmanRenderer {
   /* === PACMAN =================================== */
   drawPacman() {
     const g = this.game;
-    const ctx = g.ctx;
     if (!g.multimiam) return;
 
     g.updatePlayerAvatar();
