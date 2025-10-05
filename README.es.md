@@ -124,6 +124,7 @@ npm run analyze:globals # Análisis de variables globales
 npm run analyze:dependencies # Análisis del uso de dependencias
 npm run assets:analyze # Análisis de los assets responsivos
 npm run assets:diff    # Comparación de los assets
+npm run i18n:compare   # Comparar traducciones (en/es) con fr.json (referencia)
 
 # Build y entrega
 npm run build          # Build de producción (Rollup) + postbuild (dist/ completo)
@@ -346,6 +347,7 @@ Soporte multilingüe completo:
 ```bash
 npm run i18n:verify  # Verificar claves faltantes/inconsistentes
 npm run i18n:unused  # Listar claves no utilizadas
+npm run i18n:compare # Comparar traducciones (en/es) con fr.json (referencia)
 ```
 
 **Cobertura de las traducciones:**

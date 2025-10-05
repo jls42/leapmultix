@@ -124,6 +124,7 @@ npm run analyze:globals # वैश्विक चर विश्लेषण
 npm run analyze:dependencies # निर्भरता उपयोग विश्लेषण
 npm run assets:analyze # उत्तरदायी संपत्ति विश्लेषण
 npm run assets:diff    # संपत्ति तुलना
+npm run i18n:compare   # अनुवादों (en/es) की तुलना fr.json (संदर्भ) से करें
 
 # बिल्ड और डिलीवरी
 npm run build          # उत्पादन बिल्ड (रोलअप) + पोस्टबिल्ड (पूर्ण dist/)
@@ -346,6 +347,7 @@ npm run serve:dist # dist/ परोसता है (पोर्ट 5000)
 ```bash
 npm run i18n:verify  # गुम/असंगत कुंजियों की जाँच करें
 npm run i18n:unused  # अप्रयुक्त कुंजियों की सूची बनाएँ
+npm run i18n:compare   # अनुवादों (en/es) की तुलना fr.json (संदर्भ) से करें
 ```
 
 **अनुवाद कवरेज:**

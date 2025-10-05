@@ -124,6 +124,7 @@ npm run analyze:globals # تحليل المتغيرات العامة
 npm run analyze:dependencies # تحليل استخدام التبعيات
 npm run assets:analyze # تحليل الأصول المتجاوبة
 npm run assets:diff    # مقارنة الأصول
+npm run i18n:compare   # مقارنة الترجمات (en/es) مع fr.json (المرجع)
 
 # البناء والتسليم
 npm run build          # بناء الإنتاج (Rollup) + ما بعد البناء (dist/ كامل)
@@ -346,6 +347,7 @@ npm run serve:dist # يخدم dist/ (المنفذ 5000)
 ```bash
 npm run i18n:verify  # التحقق من المفاتيح المفقودة/غير المتسقة
 npm run i18n:unused  # سرد المفاتيح غير المستخدمة
+npm run i18n:compare   # مقارنة الترجمات (en/es) مع fr.json (المرجع)
 ```
 
 **تغطية الترجمات:**
