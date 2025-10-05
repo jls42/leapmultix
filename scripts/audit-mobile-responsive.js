@@ -110,49 +110,51 @@ class MobileResponsiveAuditor {
     this.results.responsive.viewport = { score: Math.max(0, score), issues };
   }
 
+  // --- Fonctions d'aide pour l'audit ---
+
+  _getBtnSmHeight(cssContent) {
+    const btnSmRule = cssContent.match(/\.btn-sm\s*\{[^}]*\}/s);
+    let baseHeight = 0;
+    if (btnSmRule) {
+      const heightMatch = btnSmRule[0].match(/min-height:\s*(\d+)px/);
+      if (heightMatch) {
+        baseHeight = Number.parseInt(heightMatch[1], 10);
+      }
+    }
+
+    let heightInMedia = 0;
+    const mediaQueries = cssContent.match(/@media[^{]+\{[^}]*\.btn-sm[^}]*\}/gs) || [];
+    for (const mq of mediaQueries) {
+      if (mq.includes('max-width')) {
+        const heightMatch = mq.match(/min-height:\s*(\d+)px/);
+        if (heightMatch) {
+          heightInMedia = Math.max(heightInMedia, Number.parseInt(heightMatch[1], 10));
+        }
+      }
+    }
+    return Math.max(baseHeight, heightInMedia);
+  }
+
   checkTouchTargets(content) {
     const issues = [];
     let score = 100;
 
-    // Vérifier la taille réelle de .btn-sm dans le CSS
+    // 1. Vérifier la taille de .btn-sm via analyse CSS
     try {
       const generalCSS = fs.readFileSync(path.join('css', 'general.css'), 'utf8');
-      const btnSmRule = generalCSS.match(/\.btn-sm\s*\{[^}]*\}/s);
-      let baseHeight = 0;
-      let heightInMedia = 0;
-
-      if (btnSmRule) {
-        const heightMatch = btnSmRule[0].match(/min-height:\s*(\d+)px/);
-        if (heightMatch) {
-          baseHeight = parseInt(heightMatch[1], 10);
-        }
-      }
-
-      const mediaQueries = generalCSS.match(/@media[^{]+\{[^}]*\.btn-sm[^}]*\}/gs) || [];
-      mediaQueries.forEach(mq => {
-        if (mq.includes('max-width')) {
-          const heightMatch = mq.match(/min-height:\s*(\d+)px/);
-          if (heightMatch) {
-            heightInMedia = Math.max(heightInMedia, parseInt(heightMatch[1], 10));
-          }
-        }
-      });
-
-      const finalMinHeight = heightInMedia > baseHeight ? heightInMedia : baseHeight;
+      const finalMinHeight = this._getBtnSmHeight(generalCSS);
 
       if (finalMinHeight > 0 && finalMinHeight < 44) {
-        issues.push(`La taille min-height de .btn-sm est de ${finalMinHeight}px, ce qui est inférieur aux 44px recommandés.`);
+        issues.push(
+          `La taille min-height de .btn-sm est de ${finalMinHeight}px, ce qui est inférieur aux 44px recommandés.`
+        );
         score -= 30;
-      } else if (baseHeight > 0 && baseHeight < 44 && heightInMedia < 44) {
-        // Fallback if media query check is not perfect
-        const smallButtons = (content.match(/btn-sm/g) || []).length;
-        if (smallButtons > 0) {
-          issues.push(`${smallButtons} boutons "btn-sm" potentiellement trop petits (non vérifié dans media query)`);
-          score -= 20;
-        }
       }
-    } catch (e) {
-      // Si l'analyse CSS échoue, on garde l'ancienne méthode
+    } catch (error) {
+      console.warn(
+        'Audit CSS pour .btn-sm a échoué, fallback sur la méthode de base:',
+        error.message
+      );
       const smallButtons = (content.match(/btn-sm/g) || []).length;
       if (smallButtons > 0) {
         issues.push(`${smallButtons} boutons "btn-sm" potentiellement trop petits pour tactile`);
@@ -160,18 +162,16 @@ class MobileResponsiveAuditor {
       }
     }
 
-    // Vérifier liens (peuvent être difficiles à toucher)
+    // 2. Vérifier les liens courts
     const inlineLinks = (content.match(/<a[^>]*>[^<]{1,10}<\/a>/g) || []).length;
-
     if (inlineLinks > 5) {
       issues.push(`${inlineLinks} liens courts potentiellement difficiles à toucher`);
       score -= 15;
     }
 
-    // Vérifier inputs
+    // 3. Vérifier les types d'input tactiles
     const inputs = (content.match(/<input[^>]*>/g) || []).length;
     if (inputs > 0) {
-      // Vérifier types tactiles appropriés
       const emailInputs = (content.match(/type="email"/g) || []).length;
       const numberInputs = (content.match(/type="number"/g) || []).length;
       const telInputs = (content.match(/type="tel"/g) || []).length;

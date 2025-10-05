@@ -1741,7 +1741,7 @@ button:hover,
   }
 
   .theme-dark .top-bar-nav {
-     background-color: rgb(44 62 80 / 0.95);
+    background-color: rgb(44 62 80 / 0.95);
   }
 
   .top-bar-nav.is-open {

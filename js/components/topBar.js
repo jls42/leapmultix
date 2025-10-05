@@ -176,7 +176,7 @@ export const TopBar = {
     // --- Burger Menu Button (Mobile only) ---
     const burgerBtn = document.createElement('button');
     burgerBtn.className = 'burger-menu-btn';
-    burgerBtn.innerHTML = '&#9776;'; // Burger icon
+    burgerBtn.textContent = '☰'; // Burger icon
     burgerBtn.setAttribute('aria-label', 'Toggle menu');
     top.appendChild(burgerBtn);
 
@@ -279,22 +279,22 @@ export const TopBar = {
    */
   setupEventListeners() {
     // Écouteurs pour les boutons Home
-    document.querySelectorAll('.home-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.home-btn')) {
       btn.addEventListener('click', () => {
         goToSlide(1);
       });
-    });
+    }
 
     // Écouteurs pour les boutons de langue
-    document.querySelectorAll('.lang-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.lang-btn')) {
       btn.addEventListener('click', e => {
         const lang = e.target.dataset.lang;
         changeLanguage(lang);
       });
-    });
+    }
 
     // Écouteurs pour les contrôles de volume
-    document.querySelectorAll('.mute-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.mute-btn')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
           const current = AudioManager.getVolume();
@@ -302,9 +302,9 @@ export const TopBar = {
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
 
-    document.querySelectorAll('.volume-slider').forEach(slider => {
+    for (const slider of document.querySelectorAll('.volume-slider')) {
       if (!slider.dataset.topBarListenerAttached) {
         slider.addEventListener('input', e => {
           const newVolume = parseFloat(e.target.value);
@@ -312,10 +312,10 @@ export const TopBar = {
         });
         slider.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
 
     // Écouteur pour le toggle voix
-    document.querySelectorAll('.voice-toggle').forEach(btn => {
+    for (const btn of document.querySelectorAll('.voice-toggle')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
           try {
@@ -336,12 +336,12 @@ export const TopBar = {
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
 
     // Écouteur pour le menu burger
-    document.querySelectorAll('.burger-menu-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.burger-menu-btn')) {
       if (!btn.dataset.topBarListenerAttached) {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', e => {
           const topBar = e.target.closest('.top-bar');
           if (topBar) {
             const nav = topBar.querySelector('.top-bar-nav');
@@ -353,16 +353,16 @@ export const TopBar = {
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
 
     // Fermer le menu si on clique ailleurs
-    document.addEventListener('click', (e) => {
-      document.querySelectorAll('.top-bar-nav.is-open').forEach(nav => {
+    document.addEventListener('click', e => {
+      for (const nav of document.querySelectorAll('.top-bar-nav.is-open')) {
         const topBar = nav.closest('.top-bar');
         if (topBar && !topBar.contains(e.target)) {
           nav.classList.remove('is-open');
         }
-      });
+      }
     });
 
     console.log('🎧 Écouteurs TopBar configurés');
