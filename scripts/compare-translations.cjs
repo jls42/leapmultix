@@ -12,6 +12,9 @@ const translationsDir = path.join(__dirname, '..', 'assets', 'translations');
 const refLang = 'fr';
 const otherLangs = ['en', 'es'];
 
+// Ensure predictable alphabetical ordering regardless of runtime locale settings
+const alphabeticalCompare = (a, b) => a.localeCompare(b);
+
 /**
  * Flatten nested JSON to dot notation
  * Example: { arcade: { multiMemory: { title: "X" } } } => { "arcade.multiMemory.title": "X" }
@@ -25,11 +28,7 @@ function flattenObject(obj, prefix = '') {
     const value = obj[key];
     const newKey = prefix ? `${prefix}.${key}` : key;
 
-    if (
-      value !== null &&
-      typeof value === 'object' &&
-      !Array.isArray(value)
-    ) {
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
       // Recursively flatten nested objects
       Object.assign(flattened, flattenObject(value, newKey));
     } else {
@@ -60,7 +59,7 @@ function main() {
 
   // Load reference translations
   const refTranslations = loadTranslations(refLang);
-  const refKeys = Object.keys(refTranslations).sort();
+  const refKeys = Object.keys(refTranslations).sort(alphabeticalCompare);
 
   console.log(`✅ ${refLang}.json: ${refKeys.length} clés\n`);
 
@@ -81,20 +80,20 @@ function main() {
     console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
 
     const langTranslations = loadTranslations(lang);
-    const langKeys = Object.keys(langTranslations).sort();
+    const langKeys = Object.keys(langTranslations).sort(alphabeticalCompare);
 
     results.summary[lang] = langKeys.length;
 
     // Find missing keys (in ref but not in lang)
-    const missingInLang = refKeys.filter((key) => !(key in langTranslations));
+    const missingInLang = refKeys.filter(key => !(key in langTranslations));
     results.missingKeys[lang] = missingInLang;
 
     // Find extra keys (in lang but not in ref)
-    const extraInLang = langKeys.filter((key) => !(key in refTranslations));
+    const extraInLang = langKeys.filter(key => !(key in refTranslations));
     results.extraKeys[lang] = extraInLang;
 
     // Find empty values
-    const emptyInLang = langKeys.filter((key) => {
+    const emptyInLang = langKeys.filter(key => {
       const value = langTranslations[key];
       return (
         value === '' ||
@@ -110,7 +109,7 @@ function main() {
 
     if (missingInLang.length > 0) {
       console.log(`\n❌ Clés manquantes (${missingInLang.length}):`);
-      missingInLang.forEach((key) => {
+      missingInLang.forEach(key => {
         const refValue = refTranslations[key];
         const preview =
           typeof refValue === 'string'
@@ -125,16 +124,14 @@ function main() {
 
     if (extraInLang.length > 0) {
       console.log(`\n⚠️  Clés supplémentaires (${extraInLang.length}):`);
-      extraInLang.forEach((key) => {
+      extraInLang.forEach(key => {
         const langValue = langTranslations[key];
         const preview =
           typeof langValue === 'string'
             ? langValue.substring(0, 50)
             : JSON.stringify(langValue).substring(0, 50);
         console.log(`  • ${key}`);
-        console.log(
-          `    ${lang}: "${preview}${preview.length >= 50 ? '...' : ''}"`
-        );
+        console.log(`    ${lang}: "${preview}${preview.length >= 50 ? '...' : ''}"`);
       });
     } else {
       console.log(`\n✅ Aucune clé supplémentaire`);
@@ -142,7 +139,7 @@ function main() {
 
     if (emptyInLang.length > 0) {
       console.log(`\n⚠️  Valeurs vides (${emptyInLang.length}):`);
-      emptyInLang.forEach((key) => {
+      emptyInLang.forEach(key => {
         console.log(`  • ${key} = ${JSON.stringify(langTranslations[key])}`);
       });
     } else {
@@ -166,20 +163,16 @@ function main() {
           refType,
           langType,
           refValue:
-            typeof refValue === 'string'
-              ? refValue.substring(0, 30)
-              : JSON.stringify(refValue),
+            typeof refValue === 'string' ? refValue.substring(0, 30) : JSON.stringify(refValue),
           langValue:
-            typeof langValue === 'string'
-              ? langValue.substring(0, 30)
-              : JSON.stringify(langValue),
+            typeof langValue === 'string' ? langValue.substring(0, 30) : JSON.stringify(langValue),
         });
       }
     }
 
     if (typeMismatches.length > 0) {
       console.log(`\n⚠️  Incompatibilités de types (${typeMismatches.length}):`);
-      typeMismatches.forEach((mismatch) => {
+      typeMismatches.forEach(mismatch => {
         console.log(`  • ${mismatch.key}`);
         console.log(`    fr (${mismatch.refType}): ${mismatch.refValue}`);
         console.log(`    ${lang} (${mismatch.langType}): ${mismatch.langValue}`);
@@ -230,30 +223,17 @@ function main() {
 
   console.log(`\n\n💡 Conclusion:`);
   if (totalIssues === 0) {
-    console.log(
-      `✅ Tous les fichiers de traduction sont parfaitement synchronisés !`
-    );
+    console.log(`✅ Tous les fichiers de traduction sont parfaitement synchronisés !`);
   } else {
-    console.log(
-      `⚠️  ${totalIssues} problème(s) détecté(s) nécessitant une correction.`
-    );
-    console.log(
-      `\n📝 Prochaines étapes recommandées:`
-    );
-    console.log(
-      `  1. Corriger les clés manquantes dans en.json et es.json`
-    );
+    console.log(`⚠️  ${totalIssues} problème(s) détecté(s) nécessitant une correction.`);
+    console.log(`\n📝 Prochaines étapes recommandées:`);
+    console.log(`  1. Corriger les clés manquantes dans en.json et es.json`);
     console.log(`  2. Supprimer les clés supplémentaires non nécessaires`);
     console.log(`  3. Vérifier et compléter les valeurs vides`);
   }
 
   // Write detailed report to file
-  const reportPath = path.join(
-    __dirname,
-    '..',
-    'docs',
-    'translations-comparison-report.json'
-  );
+  const reportPath = path.join(__dirname, '..', 'docs', 'translations-comparison-report.json');
   fs.writeFileSync(reportPath, JSON.stringify(results, null, 2), 'utf8');
   console.log(`\n📄 Rapport détaillé sauvegardé: ${reportPath}`);
 }

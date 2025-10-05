@@ -10,11 +10,11 @@
 
 Après analyse croisée de 3 IAs indépendantes + vérifications manuelles, voici le résultat final :
 
-| Catégorie | Nombre | Confiance |
-|-----------|--------|-----------|
-| **Clés utilisées** | 365 | ✅ Confirmées |
-| **Clés inutilisées** | 19 | ✅ Consensus |
-| **Taux d'utilisation** | **95.1%** | Excellent |
+| Catégorie              | Nombre    | Confiance     |
+| ---------------------- | --------- | ------------- |
+| **Clés utilisées**     | 365       | ✅ Confirmées |
+| **Clés inutilisées**   | 19        | ✅ Consensus  |
+| **Taux d'utilisation** | **95.1%** | Excellent     |
 
 ---
 
@@ -83,12 +83,14 @@ space
 ### IA #1 : ❌ Beaucoup d'erreurs
 
 **Problèmes identifiés** :
+
 - ❌ 18+ faux positifs (clés marquées inutilisées alors qu'utilisées)
 - ❌ Mauvaise compréhension structure JSON (flat vs nested)
 - ❌ N'a pas vérifié les `data-translate` HTML
-- ❌ Théorie erronée sur duplication arcade.*
+- ❌ Théorie erronée sur duplication arcade.\*
 
 **Clés FAUSSEMENT marquées comme inutilisées** :
+
 - `home_button_label` (utilisée dans topBar.js)
 - Toutes les `about_*` (18 clés utilisées dans index.html)
 
@@ -97,6 +99,7 @@ space
 ### IA #2 : ✅ Très fiable
 
 **Points forts** :
+
 - ✅ Méthodologie rigoureuse (outil + scan perso + vérif manuelle)
 - ✅ Identification des faux positifs du script automatique
 - ✅ Croisement grep + regex
@@ -108,6 +111,7 @@ space
 ### Claude (moi) : ✅ Conservatrice mais incomplète
 
 **Approche** :
+
 - ✅ Analyse très conservatrice (zéro faux positif)
 - ✅ Vérification patterns dynamiques
 - ✅ Consultation i18n-keep.json
@@ -134,7 +138,8 @@ space
 ### Résultat
 
 **Aucune occurrence** de ces 19 clés n'a été trouvée dans :
-- ❌ Aucun fichier JavaScript (js/*.js)
+
+- ❌ Aucun fichier JavaScript (js/\*.js)
 - ❌ Aucun fichier HTML (index.html)
 - ❌ Aucun pattern dynamique
 - ❌ Aucune configuration (adventure-data.js, ArcadeMode.js, etc.)
@@ -147,20 +152,20 @@ space
 
 Ces clés sont **UTILISÉES** et ne doivent **PAS** être supprimées :
 
-| Clé | Utilisation | Fichier |
-|-----|-------------|---------|
-| `home_button_label` | `data-translate-title` | topBar.js:65,66,150 |
-| `about_title` | `data-translate` | index.html:601 |
-| `about_description_title` | `data-translate` | index.html:604 |
-| `about_description` | `data-translate` | index.html:605 |
-| `about_features_*` (5 clés) | `data-translate` | index.html:612-624 |
-| `about_opensource_*` (2 clés) | `data-translate` | index.html:631-632 |
-| `about_support_*` (2 clés) | `data-translate` | index.html:647-655 |
-| `about_useful_links` | `data-translate` | index.html:660 |
-| `about_legal_mentions` | `data-translate` | index.html:665 |
-| `about_privacy_policy` | `data-translate` | index.html:672 |
-| `forest_bg`, `mountain_bg`, `ocean_bg`, `space_bg` | `data-translate` | index.html:404-420 |
-| Toutes les `arcade.*` imbriquées | Structure JSON | Résolu par i18n-store.js |
+| Clé                                                | Utilisation            | Fichier                  |
+| -------------------------------------------------- | ---------------------- | ------------------------ |
+| `home_button_label`                                | `data-translate-title` | topBar.js:65,66,150      |
+| `about_title`                                      | `data-translate`       | index.html:601           |
+| `about_description_title`                          | `data-translate`       | index.html:604           |
+| `about_description`                                | `data-translate`       | index.html:605           |
+| `about_features_*` (5 clés)                        | `data-translate`       | index.html:612-624       |
+| `about_opensource_*` (2 clés)                      | `data-translate`       | index.html:631-632       |
+| `about_support_*` (2 clés)                         | `data-translate`       | index.html:647-655       |
+| `about_useful_links`                               | `data-translate`       | index.html:660           |
+| `about_legal_mentions`                             | `data-translate`       | index.html:665           |
+| `about_privacy_policy`                             | `data-translate`       | index.html:672           |
+| `forest_bg`, `mountain_bg`, `ocean_bg`, `space_bg` | `data-translate`       | index.html:404-420       |
+| Toutes les `arcade.*` imbriquées                   | Structure JSON         | Résolu par i18n-store.js |
 
 **Total** : 18+ clés FAUSSEMENT identifiées par l'IA #1
 
@@ -195,6 +200,7 @@ git grep "how_to_play_p1" $(git rev-list --all)
 ### Étape 3 : Suppression
 
 Supprimer les 19 clés dans les 3 fichiers :
+
 - `assets/translations/fr.json`
 - `assets/translations/en.json`
 - `assets/translations/es.json`
@@ -249,25 +255,25 @@ gh pr create --title "chore(i18n): Clean up 19 unused translation keys" \
 
 ## 📚 Fichiers de Référence
 
-| Fichier | Description |
-|---------|-------------|
+| Fichier                             | Description                                   |
+| ----------------------------------- | --------------------------------------------- |
 | `docs/i18n-comparative-analysis.md` | ✅ Analyse comparative complète (ce document) |
-| `docs/final-unused-keys-list.txt` | ✅ Liste finale des 19 clés avec détails |
-| `docs/i18n-analysis-report.md` | ✅ Mon rapport initial détaillé |
-| `docs/i18n-analysis-report.json` | ✅ Mon rapport JSON structuré |
-| `docs/potentially-unused-keys.txt` | ⚠️ Mon rapport initial (incomplet : 5 clés) |
+| `docs/final-unused-keys-list.txt`   | ✅ Liste finale des 19 clés avec détails      |
+| `docs/i18n-analysis-report.md`      | ✅ Mon rapport initial détaillé               |
+| `docs/i18n-analysis-report.json`    | ✅ Mon rapport JSON structuré                 |
+| `docs/potentially-unused-keys.txt`  | ⚠️ Mon rapport initial (incomplet : 5 clés)   |
 
 ---
 
 ## 📊 Statistiques Finales
 
-| Métrique | Valeur | Pourcentage |
-|----------|--------|-------------|
-| **Total de clés** | 384 | 100% |
-| **Clés utilisées** | 365 | **95.1%** |
-| **Clés inutilisées** | 19 | 4.9% |
-| **Faux positifs IA #1** | 18+ | - |
-| **Fiabilité consensus** | ✅ Très élevée | - |
+| Métrique                | Valeur         | Pourcentage |
+| ----------------------- | -------------- | ----------- |
+| **Total de clés**       | 384            | 100%        |
+| **Clés utilisées**      | 365            | **95.1%**   |
+| **Clés inutilisées**    | 19             | 4.9%        |
+| **Faux positifs IA #1** | 18+            | -           |
+| **Fiabilité consensus** | ✅ Très élevée | -           |
 
 ---
 
@@ -296,6 +302,7 @@ gh pr create --title "chore(i18n): Clean up 19 unused translation keys" \
 Le fichier de traduction `fr.json` est **très bien entretenu** avec un taux d'utilisation de **95.1%**.
 
 Les **19 clés inutilisées** identifiées par consensus peuvent être supprimées en toute sécurité après :
+
 1. ✅ Vérification de l'historique Git
 2. ✅ Tests complets de l'application
 3. ✅ Vérification de la console DevTools

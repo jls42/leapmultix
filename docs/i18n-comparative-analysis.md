@@ -8,57 +8,60 @@
 
 ## 📊 Tableau Comparatif des Résultats
 
-| IA | Clés inutilisées identifiées | Erreurs majeures | Fiabilité |
-|----|------------------------------|------------------|-----------|
-| **IA #1** | 20+ clés | ❌ Beaucoup de faux positifs | ⚠️ Faible |
-| **IA #2** | ~14 clés | ✅ Méthodologie rigoureuse | ✅ Élevée |
-| **Claude (moi)** | 5 clés | ✅ Analyse conservatrice | ✅ Très élevée |
+| IA               | Clés inutilisées identifiées | Erreurs majeures             | Fiabilité      |
+| ---------------- | ---------------------------- | ---------------------------- | -------------- |
+| **IA #1**        | 20+ clés                     | ❌ Beaucoup de faux positifs | ⚠️ Faible      |
+| **IA #2**        | ~14 clés                     | ✅ Méthodologie rigoureuse   | ✅ Élevée      |
+| **Claude (moi)** | 5 clés                       | ✅ Analyse conservatrice     | ✅ Très élevée |
 
 ---
 
 ## ❌ Erreurs de l'IA #1
 
-### 1. Fausse théorie sur la duplication arcade.*
+### 1. Fausse théorie sur la duplication arcade.\*
 
 **Affirmation de l'IA #1** :
+
 > "Vous avez à la fois des clés 'plates' et des clés 'imbriquées' qui représentent la même chose."
+>
 > ```
 > Clé plate: "arcade.multiMemory.title": "MultiMemory"
 > Clé imbriquée: "arcade": { "multiMemory": { "title": "MultiMemory" } }
 > ```
 
 **RÉALITÉ** : ❌ **FAUX**
+
 - Il n'existe **AUCUNE** clé plate `"arcade.multiMemory.title"` dans `fr.json`
 - Il n'y a **QUE** la structure imbriquée
 - Le système i18n utilise `resolveKey()` (dans `i18n-store.js:39-46`) qui résout la notation pointée en parcourant l'objet JSON
 - Exemple : `getTranslation('arcade.multiMemory.title')` → résout vers `translations.arcade.multiMemory.title`
 
-**Impact** : L'IA #1 a conclu à tort que toutes les clés arcade.* plates étaient inutilisées alors qu'elles n'existent même pas !
+**Impact** : L'IA #1 a conclu à tort que toutes les clés arcade.\* plates étaient inutilisées alors qu'elles n'existent même pas !
 
 ### 2. Faux positifs multiples
 
 **L'IA #1 marque comme inutilisées** (alors qu'elles sont UTILISÉES) :
 
-| Clé | Utilisation réelle | Fichier |
-|-----|-------------------|---------|
-| `home_button_label` | `data-translate-title="home_button_label"` | `topBar.js:65,66,150` |
-| `about_title` | `data-translate="about_title"` | `index.html:601` |
-| `about_description_title` | `data-translate="about_description_title"` | `index.html:604` |
-| `about_description` | `data-translate="about_description"` | `index.html:605` |
-| `about_features_title` | `data-translate="about_features_title"` | `index.html:612` |
-| `about_features_game_modes` | `data-translate="about_features_game_modes"` | `index.html:614` |
-| `about_features_arcade` | `data-translate="about_features_arcade"` | `index.html:617` |
-| `about_features_multilingual` | `data-translate="about_features_multilingual"` | `index.html:618` |
-| `about_features_customization` | `data-translate="about_features_customization"` | `index.html:621` |
-| `about_features_progression` | `data-translate="about_features_progression"` | `index.html:624` |
-| `about_opensource_title` | `data-translate="about_opensource_title"` | `index.html:631` |
-| `about_opensource_desc` | `data-translate="about_opensource_desc"` | `index.html:632` |
-| `about_github_link` | `data-translate="about_github_link"` | `index.html:642` |
-| `about_support_title` | `data-translate="about_support_title"` | `index.html:647` |
-| `about_support_button` | `data-translate="about_support_button"` | `index.html:655` |
-| `about_useful_links` | `data-translate="about_useful_links"` | `index.html:660` |
-| `about_legal_mentions` | `data-translate="about_legal_mentions"` | `index.html:665` |
-| `about_privacy_policy` | `data-translate="about_privacy_policy"` | `index.html:672` |
+| Clé                            | Utilisation réelle                              | Fichier               |
+| ------------------------------ | ----------------------------------------------- | --------------------- |
+| `home_button_label`            | `data-translate-title="home_button_label"`      | `topBar.js:65,66,150` |
+| `about_title`                  | `data-translate="about_title"`                  | `index.html:601`      |
+| `about_description_title`      | `data-translate="about_description_title"`      | `index.html:604`      |
+| `about_description`            | `data-translate="about_description"`            | `index.html:605`      |
+| `about_features_title`         | `data-translate="about_features_title"`         | `index.html:612`      |
+| `about_features_game_modes`    | `data-translate="about_features_game_modes"`    | `index.html:614`      |
+| `about_features_arcade`        | `data-translate="about_features_arcade"`        | `index.html:617`      |
+| `about_features_multilingual`  | `data-translate="about_features_multilingual"`  | `index.html:618`      |
+| `about_features_customization` | `data-translate="about_features_customization"` | `index.html:621`      |
+| `about_features_progression`   | `data-translate="about_features_progression"`   | `index.html:624`      |
+| `about_opensource_title`       | `data-translate="about_opensource_title"`       | `index.html:631`      |
+| `about_opensource_desc`        | `data-translate="about_opensource_desc"`        | `index.html:632`      |
+| `about_github_link`            | `data-translate="about_github_link"`            | `index.html:642`      |
+| `about_support_title`          | `data-translate="about_support_title"`          | `index.html:647`      |
+| `about_support_button`         | `data-translate="about_support_button"`         | `index.html:655`      |
+| `about_useful_links`           | `data-translate="about_useful_links"`           | `index.html:660`      |
+| `about_legal_mentions`         | `data-translate="about_legal_mentions"`         | `index.html:665`      |
+| `about_privacy_policy`         | `data-translate="about_privacy_policy"`         | `index.html:672`      |
 
 **Total de faux positifs de l'IA #1** : **18+ clés**
 
@@ -69,6 +72,7 @@
 ### Méthodologie rigoureuse
 
 L'IA #2 a :
+
 1. ✅ Exécuté l'outil existant `tools/find-unused-i18n.mjs`
 2. ✅ Identifié les faux positifs de cet outil
 3. ✅ Croisé avec un scan personnalisé (regex + grep)
@@ -78,16 +82,16 @@ L'IA #2 a :
 
 L'IA #2 a identifié les mêmes clés que moi + quelques autres :
 
-| Clé | Statut | Vérification |
-|-----|--------|--------------|
-| `how_to_play_p1...p4` | ⚠️ Non utilisées | ✅ Confirmé : aucune occurrence |
-| `how_to_play_title` | ⚠️ Non utilisée | ✅ Confirmé : aucune occurrence |
-| `level_1_label...level_5_label` | ⚠️ Non utilisées | ✅ Confirmé : aucune occurrence |
-| `level_choice_title` | ⚠️ Non utilisée | ✅ Confirmé : aucune occurrence |
-| `prepare_game_title` | ⚠️ Non utilisée | ✅ Confirmé : aucune occurrence |
-| `prepare_game_desc` | ⚠️ Non utilisée | ✅ Confirmé : aucune occurrence |
-| `next` | ⚠️ Non utilisée | ✅ Confirmé : aucune occurrence |
-| `theme_choice_title` | ⚠️ Non utilisée | ✅ Confirmé : aucune occurrence |
+| Clé                                    | Statut           | Vérification                                            |
+| -------------------------------------- | ---------------- | ------------------------------------------------------- |
+| `how_to_play_p1...p4`                  | ⚠️ Non utilisées | ✅ Confirmé : aucune occurrence                         |
+| `how_to_play_title`                    | ⚠️ Non utilisée  | ✅ Confirmé : aucune occurrence                         |
+| `level_1_label...level_5_label`        | ⚠️ Non utilisées | ✅ Confirmé : aucune occurrence                         |
+| `level_choice_title`                   | ⚠️ Non utilisée  | ✅ Confirmé : aucune occurrence                         |
+| `prepare_game_title`                   | ⚠️ Non utilisée  | ✅ Confirmé : aucune occurrence                         |
+| `prepare_game_desc`                    | ⚠️ Non utilisée  | ✅ Confirmé : aucune occurrence                         |
+| `next`                                 | ⚠️ Non utilisée  | ✅ Confirmé : aucune occurrence                         |
+| `theme_choice_title`                   | ⚠️ Non utilisée  | ✅ Confirmé : aucune occurrence                         |
 | `forest`, `mountain`, `ocean`, `space` | ⚠️ Non utilisées | ✅ Confirmé : seules les versions `*_bg` sont utilisées |
 
 ---
@@ -97,6 +101,7 @@ L'IA #2 a identifié les mêmes clés que moi + quelques autres :
 ### Approche conservatrice
 
 J'ai adopté une approche **extrêmement prudente** en :
+
 1. Analysant tous les patterns dynamiques
 2. Vérifiant les structures JSON imbriquées
 3. Consultant le fichier `i18n-keep.json`
@@ -105,13 +110,15 @@ J'ai adopté une approche **extrêmement prudente** en :
 ### Résultat initial
 
 J'ai identifié **seulement 5 clés** potentiellement inutilisées :
+
 - `level_1_label` à `level_5_label`
 
 **Mais j'ai manqué** :
+
 - ⚠️ `how_to_play_*` (5 clés)
 - ⚠️ `prepare_game_*` (2 clés)
 - ⚠️ `next`, `theme_choice_title`, `level_choice_title` (3 clés)
-- ⚠️ `forest`, `mountain`, `ocean`, `space` (4 clés - versions sans _bg)
+- ⚠️ `forest`, `mountain`, `ocean`, `space` (4 clés - versions sans \_bg)
 
 ---
 
@@ -122,6 +129,7 @@ J'ai identifié **seulement 5 clés** potentiellement inutilisées :
 Après croisement des 3 analyses + vérifications manuelles :
 
 #### 1. Bloc "Comment jouer" (5 clés)
+
 ```
 how_to_play_p1
 how_to_play_p2
@@ -129,9 +137,11 @@ how_to_play_p3
 how_to_play_p4
 how_to_play_title
 ```
+
 **Raison** : Section d'aide qui n'existe plus dans l'UI actuelle
 
 #### 2. Ancien système de niveaux (6 clés)
+
 ```
 level_1_label
 level_2_label
@@ -140,22 +150,28 @@ level_4_label
 level_5_label
 level_choice_title
 ```
+
 **Raison** : Remplacé par le nouveau système `level_X_name` / `level_X_desc`
 
 #### 3. Écran de préparation (2 clés)
+
 ```
 prepare_game_title
 prepare_game_desc
 ```
+
 **Raison** : Workflow de préparation supprimé
 
 #### 4. Navigation (1 clé)
+
 ```
 next
 ```
+
 **Raison** : Bouton "Suivant" non utilisé dans le workflow actuel
 
 #### 5. Ancien sélecteur de thème (5 clés)
+
 ```
 theme_choice_title
 forest
@@ -163,7 +179,9 @@ mountain
 ocean
 space
 ```
+
 **Raison** :
+
 - `theme_choice_title` : Section renommée ou supprimée
 - `forest`, `mountain`, `ocean`, `space` : Versions sans suffixe `_bg` qui sont inutilisées (les versions `forest_bg`, `mountain_bg`, etc. sont utilisées)
 
@@ -175,11 +193,11 @@ space
 
 Les 19 clés listées ci-dessus peuvent être supprimées en toute sécurité :
 
-1. **how_to_play_*** (5)
+1. **how*to_play*\*** (5)
 2. **level_X_label** + **level_choice_title** (6)
-3. **prepare_game_*** (2)
+3. **prepare*game*\*** (2)
 4. **next** (1)
-5. **theme_choice_title** + thèmes sans _bg (5)
+5. **theme_choice_title** + thèmes sans \_bg (5)
 
 ### ⚠️ Précautions
 
@@ -233,13 +251,13 @@ git push -u origin cleanup/i18n-unused-keys
 
 ## 📊 Statistiques Finales
 
-| Métrique | Valeur |
-|----------|--------|
-| **Total de clés** | 384 |
-| **Clés utilisées** | 365 (95.1%) |
-| **Clés inutilisées confirmées** | 19 (4.9%) |
-| **Faux positifs de l'IA #1** | 18 |
-| **Fiabilité du consensus** | TRÈS ÉLEVÉE |
+| Métrique                        | Valeur      |
+| ------------------------------- | ----------- |
+| **Total de clés**               | 384         |
+| **Clés utilisées**              | 365 (95.1%) |
+| **Clés inutilisées confirmées** | 19 (4.9%)   |
+| **Faux positifs de l'IA #1**    | 18          |
+| **Fiabilité du consensus**      | TRÈS ÉLEVÉE |
 
 ---
 

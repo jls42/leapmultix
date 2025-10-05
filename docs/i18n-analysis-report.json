@@ -25,49 +25,123 @@
         "pattern": "${mode}_info_bar_label",
         "modes": ["discovery", "quiz", "challenge", "adventure", "arcade"],
         "usage": "GameMode.js:193",
-        "keys": ["discovery_info_bar_label", "quiz_info_bar_label", "challenge_info_bar_label", "adventure_info_bar_label", "arcade_info_bar_label"]
+        "keys": [
+          "discovery_info_bar_label",
+          "quiz_info_bar_label",
+          "challenge_info_bar_label",
+          "adventure_info_bar_label",
+          "arcade_info_bar_label"
+        ]
       },
       {
         "pattern": "level_${1-10}_name",
         "usage": "core/adventure-data.js:5,13,21,29,37,45,53,61,69,77 (via nameKey)",
-        "keys": ["level_1_name", "level_2_name", "level_3_name", "level_4_name", "level_5_name", "level_6_name", "level_7_name", "level_8_name", "level_9_name", "level_10_name"]
+        "keys": [
+          "level_1_name",
+          "level_2_name",
+          "level_3_name",
+          "level_4_name",
+          "level_5_name",
+          "level_6_name",
+          "level_7_name",
+          "level_8_name",
+          "level_9_name",
+          "level_10_name"
+        ]
       },
       {
         "pattern": "level_${1-10}_desc",
         "usage": "core/adventure-data.js:6,14,22,30,38,46,54,62,70,78 (via descKey)",
-        "keys": ["level_1_desc", "level_2_desc", "level_3_desc", "level_4_desc", "level_5_desc", "level_6_desc", "level_7_desc", "level_8_desc", "level_9_desc", "level_10_desc"]
+        "keys": [
+          "level_1_desc",
+          "level_2_desc",
+          "level_3_desc",
+          "level_4_desc",
+          "level_5_desc",
+          "level_6_desc",
+          "level_7_desc",
+          "level_8_desc",
+          "level_9_desc",
+          "level_10_desc"
+        ]
       },
       {
         "pattern": "character_intro_${avatar}",
         "avatars": ["fox", "panda", "unicorn", "dragon", "astronaut"],
         "usage": "VideoManager.js:241",
-        "keys": ["character_intro_fox", "character_intro_panda", "character_intro_unicorn", "character_intro_dragon", "character_intro_astronaut"]
+        "keys": [
+          "character_intro_fox",
+          "character_intro_panda",
+          "character_intro_unicorn",
+          "character_intro_dragon",
+          "character_intro_astronaut"
+        ]
       },
       {
         "pattern": "mnemonic_${1-10}",
         "usage": "DiscoveryMode.js:115, QuizMode.js:387,440",
-        "keys": ["mnemonic_1", "mnemonic_2", "mnemonic_3", "mnemonic_4", "mnemonic_5", "mnemonic_6", "mnemonic_7", "mnemonic_8", "mnemonic_9", "mnemonic_10"]
+        "keys": [
+          "mnemonic_1",
+          "mnemonic_2",
+          "mnemonic_3",
+          "mnemonic_4",
+          "mnemonic_5",
+          "mnemonic_6",
+          "mnemonic_7",
+          "mnemonic_8",
+          "mnemonic_9",
+          "mnemonic_10"
+        ]
       },
       {
         "pattern": "badge_${id}_name",
         "usage": "badges.js:30,48",
-        "keys": ["badge_quiz_starter_name", "badge_challenge_accepted_name", "badge_adventurer_name", "badge_perfect_quiz_name", "badge_high_scorer_name", "badge_star_collector_name", "badge_daily_challenger_name"]
+        "keys": [
+          "badge_quiz_starter_name",
+          "badge_challenge_accepted_name",
+          "badge_adventurer_name",
+          "badge_perfect_quiz_name",
+          "badge_high_scorer_name",
+          "badge_star_collector_name",
+          "badge_daily_challenger_name"
+        ]
       },
       {
         "pattern": "badge_${id}_desc",
         "usage": "badges.js:31",
-        "keys": ["badge_quiz_starter_desc", "badge_challenge_accepted_desc", "badge_adventurer_desc", "badge_perfect_quiz_desc", "badge_high_scorer_desc", "badge_star_collector_desc", "badge_daily_challenger_desc"]
+        "keys": [
+          "badge_quiz_starter_desc",
+          "badge_challenge_accepted_desc",
+          "badge_adventurer_desc",
+          "badge_perfect_quiz_desc",
+          "badge_high_scorer_desc",
+          "badge_star_collector_desc",
+          "badge_daily_challenger_desc"
+        ]
       },
       {
         "pattern": "color_theme_${name}",
         "usage": "components/customization.js:331",
-        "keys": ["color_theme_default", "color_theme_blue", "color_theme_dark", "color_theme_green", "color_theme_orange"]
+        "keys": [
+          "color_theme_default",
+          "color_theme_blue",
+          "color_theme_dark",
+          "color_theme_green",
+          "color_theme_orange"
+        ]
       },
       {
         "pattern": "info_${type}_label",
         "types": ["score", "lives", "progress", "streak", "time", "bonus"],
         "usage": "components/infoBar.js (via data-translate)",
-        "keys": ["info_score_label", "info_lives_label", "info_progress_label", "info_streak_label", "info_time_label", "info_bonus_label"]
+        "keys": [
+          "info_score_label",
+          "info_lives_label",
+          "info_progress_label",
+          "info_streak_label",
+          "info_time_label",
+          "info_bonus_label"
+        ]
       },
       {
         "pattern": "feedback_*",
@@ -77,7 +151,11 @@
       {
         "pattern": "challenge_feedback_*",
         "usage": "ChallengeMode.js:423,428,453",
-        "keys": ["challenge_feedback_correct", "challenge_feedback_correct_bonus", "challenge_feedback_incorrect"]
+        "keys": [
+          "challenge_feedback_correct",
+          "challenge_feedback_correct_bonus",
+          "challenge_feedback_incorrect"
+        ]
       },
       {
         "pattern": "adventure_feedback_*",
@@ -135,10 +213,7 @@
       {
         "prefix": "arcade.multiSnake.",
         "usage": "multisnake.js:561,565",
-        "keys": [
-          "arcade.multiSnake.controls.mobile",
-          "arcade.multiSnake.controls.desktop"
-        ]
+        "keys": ["arcade.multiSnake.controls.mobile", "arcade.multiSnake.controls.desktop"]
       }
     ]
   },
@@ -169,7 +244,15 @@
   },
   "protected_keys": {
     "description": "Keys explicitly protected in i18n-keep.json",
-    "explicit_keys": ["fox", "panda", "unicorn", "dragon", "astronaut", "voice_toggle_on", "voice_toggle_off"],
+    "explicit_keys": [
+      "fox",
+      "panda",
+      "unicorn",
+      "dragon",
+      "astronaut",
+      "voice_toggle_on",
+      "voice_toggle_off"
+    ],
     "prefixes": [
       "character_intro_",
       "mnemonic_",

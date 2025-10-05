@@ -11,12 +11,12 @@
 
 ### Statistiques Globales
 
-| Métrique | Valeur |
-|----------|--------|
-| **Total de clés** | 384 |
-| **Clés confirmées utilisées** | 379 (98.7%) |
-| **Clés potentiellement non utilisées** | 5 (1.3%) |
-| **Niveau de confiance** | ÉLEVÉ |
+| Métrique                               | Valeur      |
+| -------------------------------------- | ----------- |
+| **Total de clés**                      | 384         |
+| **Clés confirmées utilisées**          | 379 (98.7%) |
+| **Clés potentiellement non utilisées** | 5 (1.3%)    |
+| **Niveau de confiance**                | ÉLEVÉ       |
 
 ### Conclusion Principale
 
@@ -32,32 +32,33 @@ Seulement 1.3% des clés semblent potentiellement inutilisées, et même pour ce
 Ces clés sont générées dynamiquement via des template strings ou des valeurs calculées :
 
 #### 🎮 Modes de jeu
+
 ```javascript
 // Pattern: ${mode}_mode
-getTranslation(this.modeName + '_mode') // GameMode.js:85
-
-// Clés générées:
-- discovery_mode
-- quiz_mode
-- challenge_mode
-- adventure_mode
-- arcade_mode
+getTranslation(this.modeName + '_mode') - // GameMode.js:85
+  // Clés générées:
+  discovery_mode -
+  quiz_mode -
+  challenge_mode -
+  adventure_mode -
+  arcade_mode;
 ```
 
 #### 📊 Labels de barre d'info
+
 ```javascript
 // Pattern: ${mode}_info_bar_label
-getTranslation(this.modeName + '_info_bar_label') // GameMode.js:193
-
-// Clés générées:
-- discovery_info_bar_label
-- quiz_info_bar_label
-- challenge_info_bar_label
-- adventure_info_bar_label
-- arcade_info_bar_label
+getTranslation(this.modeName + '_info_bar_label') - // GameMode.js:193
+  // Clés générées:
+  discovery_info_bar_label -
+  quiz_info_bar_label -
+  challenge_info_bar_label -
+  adventure_info_bar_label -
+  arcade_info_bar_label;
 ```
 
 #### 🏔️ Niveaux d'aventure
+
 ```javascript
 // Pattern: level_${1-10}_name et level_${1-10}_desc
 // Utilisés via nameKey et descKey dans adventure-data.js
@@ -70,22 +71,26 @@ getTranslation(this.modeName + '_info_bar_label') // GameMode.js:193
 **Fichier source**: `js/core/adventure-data.js:5-78`
 
 #### 🦊 Personnages et avatars
+
 ```javascript
 // Pattern: character_intro_${avatar}
-getTranslation(`character_intro_${avatar}`) // VideoManager.js:241
-
-// Clés générées:
-- character_intro_fox
-- character_intro_panda
-- character_intro_unicorn
-- character_intro_dragon
-- character_intro_astronaut
-
-// Noms d'avatars (aussi utilisés comme clés)
-- fox, panda, unicorn, dragon, astronaut
+(getTranslation(`character_intro_${avatar}`) - // VideoManager.js:241
+  // Clés générées:
+  character_intro_fox -
+  character_intro_panda -
+  character_intro_unicorn -
+  character_intro_dragon -
+  character_intro_astronaut -
+  // Noms d'avatars (aussi utilisés comme clés)
+  fox,
+  panda,
+  unicorn,
+  dragon,
+  astronaut);
 ```
 
 #### 💡 Mnémoniques des tables
+
 ```javascript
 // Pattern: mnemonic_${1-10}
 getTranslation(`mnemonic_${table}`) // DiscoveryMode.js:115, QuizMode.js:387,440
@@ -95,65 +100,65 @@ getTranslation(`mnemonic_${table}`) // DiscoveryMode.js:115, QuizMode.js:387,440
 ```
 
 #### 🏆 Badges et succès
+
 ```javascript
 // Pattern: badge_${id}_name et badge_${id}_desc
-getTranslation(`badge_${badge.id}_name`) // badges.js:30,48
-getTranslation(`badge_${badge.id}_desc`) // badges.js:31
-
-// Clés générées:
-- badge_quiz_starter_name / _desc
-- badge_challenge_accepted_name / _desc
-- badge_adventurer_name / _desc
-- badge_perfect_quiz_name / _desc
-- badge_high_scorer_name / _desc
-- badge_star_collector_name / _desc
-- badge_daily_challenger_name / _desc
+getTranslation(`badge_${badge.id}_name`); // badges.js:30,48
+getTranslation(`badge_${badge.id}_desc`) - // badges.js:31
+  // Clés générées:
+  badge_quiz_starter_name / _desc -
+  badge_challenge_accepted_name / _desc -
+  badge_adventurer_name / _desc -
+  badge_perfect_quiz_name / _desc -
+  badge_high_scorer_name / _desc -
+  badge_star_collector_name / _desc -
+  badge_daily_challenger_name / _desc;
 ```
 
 #### 🎨 Thèmes de couleur
+
 ```javascript
 // Pattern: color_theme_${name}
-getTranslation(`color_theme_${themeName}`) // customization.js:331
-
-// Clés générées:
-- color_theme_default
-- color_theme_blue
-- color_theme_dark
-- color_theme_green
-- color_theme_orange
+getTranslation(`color_theme_${themeName}`) - // customization.js:331
+  // Clés générées:
+  color_theme_default -
+  color_theme_blue -
+  color_theme_dark -
+  color_theme_green -
+  color_theme_orange;
 ```
 
 #### 📈 Labels d'information
+
 ```javascript
 // Pattern: info_${type}_label
 // Utilisés dans infoBar.js via data-translate
 
 // Clés générées:
-- info_score_label
-- info_lives_label
-- info_progress_label
-- info_streak_label
-- info_time_label
-- info_bonus_label
+-info_score_label -
+  info_lives_label -
+  info_progress_label -
+  info_streak_label -
+  info_time_label -
+  info_bonus_label;
 ```
 
 #### 💬 Messages de feedback
+
 ```javascript
 // Patterns multiples selon le mode de jeu
 
 // Quiz/General:
-- feedback_correct
-- feedback_incorrect
-- feedback_correct_streak
-
-// Challenge:
-- challenge_feedback_correct
-- challenge_feedback_correct_bonus
-- challenge_feedback_incorrect
-
-// Adventure:
-- adventure_feedback_correct
-- adventure_feedback_incorrect
+-feedback_correct -
+  feedback_incorrect -
+  feedback_correct_streak -
+  // Challenge:
+  challenge_feedback_correct -
+  challenge_feedback_correct_bonus -
+  challenge_feedback_incorrect -
+  // Adventure:
+  adventure_feedback_correct -
+  adventure_feedback_incorrect;
 ```
 
 ---
@@ -167,11 +172,12 @@ Ces clés utilisent la notation pointée (dot notation) pour accéder à des str
 **Fichier source**: `js/modes/ArcadeMode.js:587-600`
 
 ```javascript
-getTranslation('arcade.controls.invasion.keyboard')
-getTranslation('arcade.controls.multimiam.touch')
+getTranslation('arcade.controls.invasion.keyboard');
+getTranslation('arcade.controls.multimiam.touch');
 ```
 
 **Clés concernées** (11 clés):
+
 - `arcade.controls.title`
 - `arcade.controls.invasion.keyboard`
 - `arcade.controls.invasion.mouse`
@@ -188,6 +194,7 @@ getTranslation('arcade.controls.multimiam.touch')
 **Fichier source**: `js/arcade-multimemory.js`
 
 **Clés concernées** (10 clés):
+
 - `arcade.multiMemory.title`
 - `arcade.multiMemory.description`
 - `arcade.multiMemory.controls.desktop`
@@ -204,6 +211,7 @@ getTranslation('arcade.controls.multimiam.touch')
 **Fichier source**: `js/modes/ArcadeMode.js`, `js/arcade-multimiam.js`
 
 **Clés concernées** (5 clés):
+
 - `arcade.multiMiam.title`
 - `arcade.multiMiam.description`
 - `arcade.multiMiam.welcome`
@@ -215,6 +223,7 @@ getTranslation('arcade.controls.multimiam.touch')
 **Fichier source**: `js/multisnake.js`
 
 **Clés concernées** (2 clés):
+
 - `arcade.multiSnake.controls.mobile`
 - `arcade.multiSnake.controls.desktop`
 
@@ -225,6 +234,7 @@ getTranslation('arcade.controls.multimiam.touch')
 Ces clés contiennent des tableaux utilisés pour la sélection aléatoire :
 
 #### 🎉 Messages positifs
+
 ```json
 "correct": [
   "Bravo, c'est correct !",
@@ -234,9 +244,11 @@ Ces clés contiennent des tableaux utilisés pour la sélection aléatoire :
   "Impressionnant !"
 ]
 ```
+
 **Usage**: Sélection aléatoire pour la synthèse vocale dans plusieurs modes
 
 #### 📝 Templates de problèmes
+
 ```json
 "problem_templates": [
   "Si j'ai {num} boîtes de {table} pommes, combien de pommes ai-je ?",
@@ -244,6 +256,7 @@ Ces clés contiennent des tableaux utilisés pour la sélection aléatoire :
   "Une fusée fait {table} sauts de {num} cases. Quelle distance totale ?"
 ]
 ```
+
 **Usage**: `questionGenerator.js:71` pour générer des énoncés variés
 
 ---
@@ -258,6 +271,7 @@ Toutes les clés référencées dans `index.html` via les attributs suivants son
 - `data-translate-aria-label="key"` → aria-label
 
 **Exemples**:
+
 - `user_selection_title`
 - `new_user_placeholder`
 - `parental_answer_placeholder`
@@ -271,16 +285,26 @@ Toutes les clés référencées dans `index.html` via les attributs suivants son
 Le fichier `assets/translations/i18n-keep.json` définit explicitement les clés à protéger :
 
 #### Clés explicites
+
 ```json
 ["fox", "panda", "unicorn", "dragon", "astronaut", "voice_toggle_on", "voice_toggle_off"]
 ```
 
 #### Préfixes protégés
+
 ```json
-["character_intro_", "mnemonic_", "badge_", "arcade.controls.", "arcade.multiMemory.", "arcade.multiMiam."]
+[
+  "character_intro_",
+  "mnemonic_",
+  "badge_",
+  "arcade.controls.",
+  "arcade.multiMemory.",
+  "arcade.multiMiam."
+]
 ```
 
 #### Regex protégées
+
 ```json
 [
   "^level_\\d+_(name|desc)$",
@@ -296,24 +320,26 @@ Le fichier `assets/translations/i18n-keep.json` définit explicitement les clés
 
 ### Liste des 5 clés suspectes
 
-| Clé | Valeur | Confiance | Recommandation |
-|-----|--------|-----------|----------------|
-| `level_1_label` | "Niveau 1 (×1, ×2, ×5)" | Moyenne | Vérifier Git |
-| `level_2_label` | "Niveau 2 (×3, ×4)" | Moyenne | Vérifier Git |
-| `level_3_label` | "Niveau 3 (×6, ×7)" | Moyenne | Vérifier Git |
-| `level_4_label` | "Niveau 4 (×8, ×9, ×10)" | Moyenne | Vérifier Git |
-| `level_5_label` | "Niveau 5 (Tous)" | Moyenne | Vérifier Git |
+| Clé             | Valeur                   | Confiance | Recommandation |
+| --------------- | ------------------------ | --------- | -------------- |
+| `level_1_label` | "Niveau 1 (×1, ×2, ×5)"  | Moyenne   | Vérifier Git   |
+| `level_2_label` | "Niveau 2 (×3, ×4)"      | Moyenne   | Vérifier Git   |
+| `level_3_label` | "Niveau 3 (×6, ×7)"      | Moyenne   | Vérifier Git   |
+| `level_4_label` | "Niveau 4 (×8, ×9, ×10)" | Moyenne   | Vérifier Git   |
+| `level_5_label` | "Niveau 5 (Tous)"        | Moyenne   | Vérifier Git   |
 
 ### Analyse Détaillée
 
 **Hypothèse**: Ces clés semblent être d'anciennes clés de sélection de difficulté, probablement remplacées par le nouveau système de niveaux d'aventure (`level_X_name` / `level_X_desc`).
 
 **Statut**:
+
 - ✅ Absentes du code actuel (recherche exhaustive effectuée)
 - ✅ Listées dans `unused_keys.txt` généré par `find-unused-i18n.mjs`
 - ⚠️ Pourraient avoir été utilisées dans une version antérieure
 
 **Recommandations**:
+
 1. Vérifier l'historique Git pour confirmer qu'elles ne sont plus utilisées
 2. Chercher dans d'autres branches si elles existent
 3. Créer un backup avant toute suppression
@@ -326,18 +352,21 @@ Le fichier `assets/translations/i18n-keep.json` définit explicitement les clés
 ### Clés difficiles à détecter (mais CONFIRMÉES utilisées)
 
 #### voice_toggle_on / voice_toggle_off
+
 ```javascript
 // topBar.js - Utilisés pour les tooltips dynamiques
 const tooltip = isOn ? getTranslation('voice_toggle_off') : getTranslation('voice_toggle_on');
 ```
 
 #### mute_button_label_on / mute_button_label_off
+
 ```javascript
 // audio.js, theme.js - Utilisés pour les labels de bouton de son
 const label = isMuted ? 'mute_button_label_off' : 'mute_button_label_on';
 ```
 
 #### arcade_try_again, arcade_life_lost, arcade_load_error
+
 ```javascript
 // arcade.js, multisnake.js, arcade-invasion.js, multimiam-engine.js
 showArcadeMessage('arcade_life_lost');
@@ -346,6 +375,7 @@ showArcadeMessage('arcade_try_again');
 ```
 
 #### congrats1-5
+
 ```javascript
 // arcade-invasion.js - Utilisés pour varier les messages de félicitation
 const messages = ['congrats1', 'congrats2', 'congrats3', 'congrats4', 'congrats5'];
@@ -410,6 +440,7 @@ const messages = ['congrats1', 'congrats2', 'congrats3', 'congrats4', 'congrats5
 ### 📊 Qualité du Fichier
 
 Le fichier `fr.json` est **exceptionnellement bien maintenu** :
+
 - 98.7% des clés sont utilisées
 - Les patterns dynamiques sont bien documentés dans `i18n-keep.json`
 - Les structures imbriquées sont cohérentes

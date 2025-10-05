@@ -317,6 +317,7 @@ The project includes scripts to maintain translation files synchronization:
 This script ensures all language files (en.json, es.json) are synchronized with fr.json:
 
 **Features:**
+
 - Flattens nested JSON structures to dot notation (e.g., `arcade.multiMemory.title`)
 - Detects missing keys (present in fr.json but absent in other languages)
 - Detects extra keys (present in other languages but not in fr.json)
@@ -326,11 +327,13 @@ This script ensures all language files (en.json, es.json) are synchronized with 
 - Saves JSON report to `docs/translations-comparison-report.json`
 
 **Usage:**
+
 ```bash
 npm run i18n:compare
 ```
 
 **Output Example:**
+
 ```
 🔍 Analyse comparative des fichiers de traduction
 
@@ -355,6 +358,7 @@ npm run i18n:compare
 ```
 
 **Other i18n scripts:**
+
 - `npm run i18n:verify` - Verify translation keys consistency
 - `npm run i18n:unused` - Generate unused translation keys report
 - `scripts/cleanup-i18n-keys.cjs` - Remove unused keys from all translation files

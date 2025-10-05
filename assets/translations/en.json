@@ -111,13 +111,7 @@
   "congrats4": "Excellent!",
   "congrats5": "Well done!",
   "continue": "Continue",
-  "correct": [
-    "Great job, it's correct!",
-    "Awesome!",
-    "Excellent!",
-    "Well done!",
-    "Impressive!"
-  ],
+  "correct": ["Great job, it's correct!", "Awesome!", "Excellent!", "Well done!", "Impressive!"],
   "create_user": "Create",
   "current_avatar_label": "Current avatar:",
   "customization_saved": "Customization saved!",

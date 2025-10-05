@@ -105,7 +105,9 @@ function main() {
   if (totalRemoved === KEYS_TO_REMOVE.length * 3) {
     console.log('\n✅ Success! All 19 keys removed from all 3 files.');
   } else if (totalRemoved > 0) {
-    console.log('\n⚠️  Partial success. Some keys were not found (may already be removed or named differently).');
+    console.log(
+      '\n⚠️  Partial success. Some keys were not found (may already be removed or named differently).'
+    );
   } else {
     console.log('\n❌ No keys were removed. Please check the file paths and key names.');
   }
