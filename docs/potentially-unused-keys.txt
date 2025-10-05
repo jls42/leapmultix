@@ -1,0 +1,77 @@
+CLÉS POTENTIELLEMENT NON UTILISÉES DANS FR.JSON
+================================================
+
+Date: 2025-10-05
+Analyseur: Claude Code (Sonnet 4.5)
+Total analysé: 384 clés
+Potentiellement non utilisées: 5 clés (1.3%)
+
+LISTE DES CLÉS SUSPECTES:
+--------------------------
+
+1. level_1_label
+   Valeur: "Niveau 1 (×1, ×2, ×5)"
+   Confiance: Moyenne
+   Raison: Aucune référence trouvée dans le code actuel
+   Recommandation: Vérifier l'historique Git avant suppression
+
+2. level_2_label
+   Valeur: "Niveau 2 (×3, ×4)"
+   Confiance: Moyenne
+   Raison: Aucune référence trouvée dans le code actuel
+   Recommandation: Vérifier l'historique Git avant suppression
+
+3. level_3_label
+   Valeur: "Niveau 3 (×6, ×7)"
+   Confiance: Moyenne
+   Raison: Aucune référence trouvée dans le code actuel
+   Recommandation: Vérifier l'historique Git avant suppression
+
+4. level_4_label
+   Valeur: "Niveau 4 (×8, ×9, ×10)"
+   Confiance: Moyenne
+   Raison: Aucune référence trouvée dans le code actuel
+   Recommandation: Vérifier l'historique Git avant suppression
+
+5. level_5_label
+   Valeur: "Niveau 5 (Tous)"
+   Confiance: Moyenne
+   Raison: Aucune référence trouvée dans le code actuel
+   Recommandation: Vérifier l'historique Git avant suppression
+
+HYPOTHÈSE:
+---------
+Ces clés semblent être d'anciennes clés de sélection de difficulté,
+probablement remplacées par le nouveau système de niveaux d'aventure
+(level_X_name / level_X_desc).
+
+NOTES IMPORTANTES:
+------------------
+- Ces clés sont listées dans unused_keys.txt généré par find-unused-i18n.mjs
+- Aucune référence directe ou indirecte trouvée dans le code actuel
+- Aucun pattern dynamique ne correspond à ces clés
+- Elles ne sont pas protégées par i18n-keep.json
+
+RECOMMANDATIONS:
+----------------
+1. NE PAS supprimer automatiquement
+2. Vérifier l'historique Git pour confirmer qu'elles sont obsolètes
+3. Chercher dans d'autres branches si elles sont utilisées ailleurs
+4. Créer un backup de fr.json avant toute modification
+5. Tester l'application après suppression pour vérifier l'absence de traductions manquantes
+6. Mettre à jour en.json et es.json en conséquence si suppression confirmée
+
+TOUTES LES AUTRES CLÉS (379) SONT CONFIRMÉES COMME UTILISÉES
+==============================================================
+
+Les 379 autres clés (98.7%) sont utilisées via:
+- Patterns dynamiques (mnemonic_*, badge_*, character_intro_*, etc.)
+- Structure JSON imbriquée (arcade.controls.*, arcade.multiMemory.*)
+- Tableaux pour variation aléatoire (correct, problem_templates)
+- Attributs HTML data-translate
+- Références indirectes via configurations (nameKey, descKey)
+- Protection explicite dans i18n-keep.json
+
+Pour plus de détails, consulter:
+- docs/i18n-analysis-report.json (rapport JSON détaillé)
+- docs/i18n-analysis-report.md (rapport Markdown complet)
