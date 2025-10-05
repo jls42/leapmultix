@@ -33,6 +33,7 @@ npm run verify      # Run lint + test + coverage (quality gate)
 - `npm run analyze:globals` - Analyze global variables
 - `npm run i18n:verify` - Verify internationalization keys
 - `npm run i18n:unused` - Generate unused i18n keys report
+- `npm run i18n:compare` - Compare translation files (en.json, es.json) with fr.json reference
 - `npm run analyze:assets` - Asset analysis and optimization
 - `npm run analyze:jsdoc` - Analyze JSDoc coverage
 - `npm run improve:jsdoc` - Improve JSDoc coverage
@@ -306,6 +307,57 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 
 - `i18n.js` - Internationalization system
 - `i18n-store.js` - Translation storage
+
+#### Translation File Management
+
+The project includes scripts to maintain translation files synchronization:
+
+**`scripts/compare-translations.cjs`** - Compare translation files with fr.json reference
+
+This script ensures all language files (en.json, es.json) are synchronized with fr.json:
+
+**Features:**
+- Flattens nested JSON structures to dot notation (e.g., `arcade.multiMemory.title`)
+- Detects missing keys (present in fr.json but absent in other languages)
+- Detects extra keys (present in other languages but not in fr.json)
+- Identifies empty values (`""`, `null`, `undefined`, `[]`)
+- Checks type consistency (string vs array mismatches)
+- Generates detailed console report
+- Saves JSON report to `docs/translations-comparison-report.json`
+
+**Usage:**
+```bash
+npm run i18n:compare
+```
+
+**Output Example:**
+```
+🔍 Analyse comparative des fichiers de traduction
+
+📚 Langue de référence: fr.json
+✅ fr.json: 335 clés
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 Analyse de en.json
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Total de clés: 335
+✅ Aucune clé manquante
+✅ Aucune clé supplémentaire
+✅ Aucune valeur vide
+
+📊 RÉSUMÉ FINAL
+  fr.json: 335 clés
+  en.json: 335 clés
+  es.json: 335 clés
+
+✅ Tous les fichiers de traduction sont parfaitement synchronisés !
+```
+
+**Other i18n scripts:**
+- `npm run i18n:verify` - Verify translation keys consistency
+- `npm run i18n:unused` - Generate unused translation keys report
+- `scripts/cleanup-i18n-keys.cjs` - Remove unused keys from all translation files
 
 **Security and Error Handling:**
 
