@@ -1,4 +1,22 @@
-Este README también está disponible en [Francés](./README.md) e [Inglés](./README.en.md).
+<details>
+<summary>Este documento también está disponible en otros idiomas</summary>
+
+- [Français](./README.md)
+- [English](./README.en.md)
+- [Português](./README.pt.md)
+- [Deutsch](./README.de.md)
+- [中文](./README.zh.md)
+- [हिन्दी](./README.hi.md)
+- [العربية](./README.ar.md)
+- [Italiano](./README.it.md)
+- [Svenska](./README.sv.md)
+- [Polski](./README.pl.md)
+- [Nederlands](./README.nl.md)
+- [Română](./README.ro.md)
+- [日本語](./README.ja.md)
+- [한국어](./README.ko.md)
+
+</details>
 
 # LeapMultix
 
