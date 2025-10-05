@@ -612,7 +612,7 @@ export function startMultiplicationInvasion() {
 
       const randomAvatar = possibleAvatars[Math.floor(Math.random() * possibleAvatars.length)];
       avatarErrorImg = new Image();
-      avatarErrorImg.src = `assets/images/arcade/${randomAvatar}_128x128.png`;
+      avatarErrorImg.src = `assets/images/arcade/${randomAvatar}_right_128x128.png`;
       avatarErrorX = alien.x;
       avatarErrorY = alien.y;
       avatarErrorW = alienWidth;
@@ -672,7 +672,7 @@ export function startMultiplicationInvasion() {
       const liberatedAvatar = possibleAvatars[Math.floor(Math.random() * possibleAvatars.length)];
 
       avatarImg = new Image();
-      avatarImg.src = `assets/images/arcade/${liberatedAvatar}_128x128.png`;
+      avatarImg.src = `assets/images/arcade/${liberatedAvatar}_right_128x128.png`;
       avatarX = aliens[0].x;
       avatarY = aliens[0].y;
       avatarW = alienWidth;
