@@ -5,8 +5,8 @@
  * Date: 2025-10-05
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const translationsDir = path.join(__dirname, '..', 'assets', 'translations');
 const refLang = 'fr';
@@ -14,6 +14,7 @@ const otherLangs = ['en', 'es'];
 
 // Ensure predictable alphabetical ordering regardless of runtime locale settings
 const alphabeticalCompare = (a, b) => a.localeCompare(b);
+const EMPTY_VALUE_CHECKS = new Set(['', null, undefined]);
 
 /**
  * Flatten nested JSON to dot notation
@@ -22,9 +23,7 @@ const alphabeticalCompare = (a, b) => a.localeCompare(b);
 function flattenObject(obj, prefix = '') {
   const flattened = {};
 
-  for (const key in obj) {
-    if (!obj.hasOwnProperty(key)) continue;
-
+  for (const key of Object.keys(obj)) {
     const value = obj[key];
     const newKey = prefix ? `${prefix}.${key}` : key;
 
@@ -53,140 +52,140 @@ function loadTranslations(lang) {
 /**
  * Main comparison logic
  */
-function main() {
-  console.log('🔍 Analyse comparative des fichiers de traduction\n');
-  console.log(`📚 Langue de référence: ${refLang}.json\n`);
+function findMissingKeys(refKeys, langTranslations) {
+  const missingKeys = [];
+  for (const key of refKeys) {
+    if (!(key in langTranslations)) missingKeys.push(key);
+  }
+  return missingKeys;
+}
 
-  // Load reference translations
-  const refTranslations = loadTranslations(refLang);
-  const refKeys = Object.keys(refTranslations).sort(alphabeticalCompare);
+function findExtraKeys(langKeys, refTranslations) {
+  const extraKeys = [];
+  for (const key of langKeys) {
+    if (!(key in refTranslations)) extraKeys.push(key);
+  }
+  return extraKeys;
+}
 
-  console.log(`✅ ${refLang}.json: ${refKeys.length} clés\n`);
+function isEmptyValue(value) {
+  if (EMPTY_VALUE_CHECKS.has(value)) return true;
+  return Array.isArray(value) && value.length === 0;
+}
 
-  const results = {
-    summary: {
-      [refLang]: refKeys.length,
-    },
-    missingKeys: {},
-    extraKeys: {},
-    emptyValues: {},
-    structureDifferences: [],
-  };
+function findEmptyKeys(langKeys, langTranslations) {
+  const emptyKeys = [];
+  for (const key of langKeys) {
+    if (isEmptyValue(langTranslations[key])) emptyKeys.push(key);
+  }
+  return emptyKeys;
+}
 
-  // Compare each language
-  for (const lang of otherLangs) {
-    console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-    console.log(`📝 Analyse de ${lang}.json`);
-    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+function detectTypeMismatches(refKeys, refTranslations, langTranslations) {
+  const mismatches = [];
+  for (const key of refKeys) {
+    if (!(key in langTranslations)) continue;
 
-    const langTranslations = loadTranslations(lang);
-    const langKeys = Object.keys(langTranslations).sort(alphabeticalCompare);
+    const refValue = refTranslations[key];
+    const langValue = langTranslations[key];
 
-    results.summary[lang] = langKeys.length;
+    const refType = Array.isArray(refValue) ? 'array' : typeof refValue;
+    const langType = Array.isArray(langValue) ? 'array' : typeof langValue;
 
-    // Find missing keys (in ref but not in lang)
-    const missingInLang = refKeys.filter(key => !(key in langTranslations));
-    results.missingKeys[lang] = missingInLang;
-
-    // Find extra keys (in lang but not in ref)
-    const extraInLang = langKeys.filter(key => !(key in refTranslations));
-    results.extraKeys[lang] = extraInLang;
-
-    // Find empty values
-    const emptyInLang = langKeys.filter(key => {
-      const value = langTranslations[key];
-      return (
-        value === '' ||
-        value === null ||
-        value === undefined ||
-        (Array.isArray(value) && value.length === 0)
-      );
-    });
-    results.emptyValues[lang] = emptyInLang;
-
-    // Report
-    console.log(`📊 Total de clés: ${langKeys.length}`);
-
-    if (missingInLang.length > 0) {
-      console.log(`\n❌ Clés manquantes (${missingInLang.length}):`);
-      missingInLang.forEach(key => {
-        const refValue = refTranslations[key];
-        const preview =
-          typeof refValue === 'string'
-            ? refValue.substring(0, 50)
-            : JSON.stringify(refValue).substring(0, 50);
-        console.log(`  • ${key}`);
-        console.log(`    fr: "${preview}${preview.length >= 50 ? '...' : ''}"`);
-      });
-    } else {
-      console.log(`\n✅ Aucune clé manquante`);
-    }
-
-    if (extraInLang.length > 0) {
-      console.log(`\n⚠️  Clés supplémentaires (${extraInLang.length}):`);
-      extraInLang.forEach(key => {
-        const langValue = langTranslations[key];
-        const preview =
-          typeof langValue === 'string'
-            ? langValue.substring(0, 50)
-            : JSON.stringify(langValue).substring(0, 50);
-        console.log(`  • ${key}`);
-        console.log(`    ${lang}: "${preview}${preview.length >= 50 ? '...' : ''}"`);
-      });
-    } else {
-      console.log(`\n✅ Aucune clé supplémentaire`);
-    }
-
-    if (emptyInLang.length > 0) {
-      console.log(`\n⚠️  Valeurs vides (${emptyInLang.length}):`);
-      emptyInLang.forEach(key => {
-        console.log(`  • ${key} = ${JSON.stringify(langTranslations[key])}`);
-      });
-    } else {
-      console.log(`\n✅ Aucune valeur vide`);
-    }
-
-    // Check type consistency
-    const typeMismatches = [];
-    for (const key of refKeys) {
-      if (!(key in langTranslations)) continue;
-
-      const refValue = refTranslations[key];
-      const langValue = langTranslations[key];
-
-      const refType = Array.isArray(refValue) ? 'array' : typeof refValue;
-      const langType = Array.isArray(langValue) ? 'array' : typeof langValue;
-
-      if (refType !== langType) {
-        typeMismatches.push({
-          key,
-          refType,
-          langType,
-          refValue:
-            typeof refValue === 'string' ? refValue.substring(0, 30) : JSON.stringify(refValue),
-          langValue:
-            typeof langValue === 'string' ? langValue.substring(0, 30) : JSON.stringify(langValue),
-        });
-      }
-    }
-
-    if (typeMismatches.length > 0) {
-      console.log(`\n⚠️  Incompatibilités de types (${typeMismatches.length}):`);
-      typeMismatches.forEach(mismatch => {
-        console.log(`  • ${mismatch.key}`);
-        console.log(`    fr (${mismatch.refType}): ${mismatch.refValue}`);
-        console.log(`    ${lang} (${mismatch.langType}): ${mismatch.langValue}`);
+    if (refType !== langType) {
+      mismatches.push({
+        key,
+        refType,
+        langType,
+        refValue,
+        langValue,
       });
     }
   }
+  return mismatches;
+}
 
-  // Final summary
+function collectLanguageStats(lang, refTranslations, refKeys) {
+  const langTranslations = loadTranslations(lang);
+  const langKeys = Object.keys(langTranslations).sort(alphabeticalCompare);
+
+  return {
+    langTranslations,
+    langKeys,
+    missingInLang: findMissingKeys(refKeys, langTranslations),
+    extraInLang: findExtraKeys(langKeys, refTranslations),
+    emptyInLang: findEmptyKeys(langKeys, langTranslations),
+    typeMismatches: detectTypeMismatches(refKeys, refTranslations, langTranslations),
+  };
+}
+
+function formatPreview(value, length) {
+  const stringified = typeof value === 'string' ? value : JSON.stringify(value);
+  const trimmed = stringified.substring(0, length);
+  return `${trimmed}${stringified.length > length ? '...' : ''}`;
+}
+
+function printMissingKeys(missingKeys, refTranslations) {
+  if (missingKeys.length === 0) {
+    console.log(`\n✅ Aucune clé manquante`);
+    return;
+  }
+
+  console.log(`\n❌ Clés manquantes (${missingKeys.length}):`);
+  for (const key of missingKeys) {
+    const preview = formatPreview(refTranslations[key], 50);
+    console.log(`  • ${key}`);
+    console.log(`    fr: "${preview}"`);
+  }
+}
+
+function printExtraKeys(lang, extraKeys, langTranslations) {
+  if (extraKeys.length === 0) {
+    console.log(`\n✅ Aucune clé supplémentaire`);
+    return;
+  }
+
+  console.log(`\n⚠️  Clés supplémentaires (${extraKeys.length}):`);
+  for (const key of extraKeys) {
+    const preview = formatPreview(langTranslations[key], 50);
+    console.log(`  • ${key}`);
+    console.log(`    ${lang}: "${preview}"`);
+  }
+}
+
+function printEmptyValues(emptyKeys, langTranslations) {
+  if (emptyKeys.length === 0) {
+    console.log(`\n✅ Aucune valeur vide`);
+    return;
+  }
+
+  console.log(`\n⚠️  Valeurs vides (${emptyKeys.length}):`);
+  for (const key of emptyKeys) {
+    console.log(`  • ${key} = ${JSON.stringify(langTranslations[key])}`);
+  }
+}
+
+function printTypeMismatches(typeMismatches, lang) {
+  if (typeMismatches.length === 0) return;
+
+  console.log(`\n⚠️  Incompatibilités de types (${typeMismatches.length}):`);
+  for (const mismatch of typeMismatches) {
+    const refPreview = formatPreview(mismatch.refValue, 30);
+    const langPreview = formatPreview(mismatch.langValue, 30);
+    console.log(`  • ${mismatch.key}`);
+    console.log(`    fr (${mismatch.refType}): ${refPreview}`);
+    console.log(`    ${lang} (${mismatch.langType}): ${langPreview}`);
+  }
+}
+
+function printFinalSummary(results) {
   console.log(`\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
   console.log(`📊 RÉSUMÉ FINAL`);
   console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
 
   console.log(`Nombre de clés par fichier:`);
-  for (const lang in results.summary) {
+  const sortedLangs = Object.keys(results.summary).sort(alphabeticalCompare);
+  for (const lang of sortedLangs) {
     console.log(`  ${lang}.json: ${results.summary[lang]} clés`);
   }
 
@@ -211,30 +210,72 @@ function main() {
     console.log(`  ${icon} ${lang}.json: ${count} valeurs vides`);
   }
 
-  // Determine if action is needed
   const totalIssues = otherLangs.reduce((sum, lang) => {
     return (
       sum +
       results.missingKeys[lang].length +
       results.extraKeys[lang].length +
-      results.emptyValues[lang].length
+      results.emptyValues[lang].length +
+      results.typeMismatches[lang].length
     );
   }, 0);
 
   console.log(`\n\n💡 Conclusion:`);
   if (totalIssues === 0) {
     console.log(`✅ Tous les fichiers de traduction sont parfaitement synchronisés !`);
-  } else {
-    console.log(`⚠️  ${totalIssues} problème(s) détecté(s) nécessitant une correction.`);
-    console.log(`\n📝 Prochaines étapes recommandées:`);
-    console.log(`  1. Corriger les clés manquantes dans en.json et es.json`);
-    console.log(`  2. Supprimer les clés supplémentaires non nécessaires`);
-    console.log(`  3. Vérifier et compléter les valeurs vides`);
+    return;
   }
 
-  // Write detailed report to file
+  console.log(`⚠️  ${totalIssues} problème(s) détecté(s) nécessitant une correction.`);
+  console.log(`\n📝 Prochaines étapes recommandées:`);
+  console.log(`  1. Corriger les clés manquantes dans en.json et es.json`);
+  console.log(`  2. Supprimer les clés supplémentaires non nécessaires`);
+  console.log(`  3. Vérifier et compléter les valeurs vides`);
+}
+
+function main() {
+  console.log('🔍 Analyse comparative des fichiers de traduction\n');
+  console.log(`📚 Langue de référence: ${refLang}.json\n`);
+
+  const refTranslations = loadTranslations(refLang);
+  const refKeys = Object.keys(refTranslations).sort(alphabeticalCompare);
+
+  console.log(`✅ ${refLang}.json: ${refKeys.length} clés\n`);
+
+  const results = {
+    summary: {
+      [refLang]: refKeys.length,
+    },
+    missingKeys: {},
+    extraKeys: {},
+    emptyValues: {},
+    typeMismatches: {},
+  };
+
+  for (const lang of otherLangs) {
+    console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`📝 Analyse de ${lang}.json`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+
+    const stats = collectLanguageStats(lang, refTranslations, refKeys);
+    results.summary[lang] = stats.langKeys.length;
+    results.missingKeys[lang] = stats.missingInLang;
+    results.extraKeys[lang] = stats.extraInLang;
+    results.emptyValues[lang] = stats.emptyInLang;
+    results.typeMismatches[lang] = stats.typeMismatches;
+
+    console.log(`📊 Total de clés: ${stats.langKeys.length}`);
+    printMissingKeys(stats.missingInLang, refTranslations);
+    printExtraKeys(lang, stats.extraInLang, stats.langTranslations);
+    printEmptyValues(stats.emptyInLang, stats.langTranslations);
+    printTypeMismatches(stats.typeMismatches, lang);
+  }
+
+  printFinalSummary(results);
+
   const reportPath = path.join(__dirname, '..', 'docs', 'translations-comparison-report.json');
-  fs.writeFileSync(reportPath, JSON.stringify(results, null, 2), 'utf8');
+  const reportContent = `${JSON.stringify(results, null, 2)}\n`;
+  fs.writeFileSync(reportPath, reportContent, 'utf8');
   console.log(`\n📄 Rapport détaillé sauvegardé: ${reportPath}`);
 }
 

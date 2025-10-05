@@ -5,8 +5,8 @@
  * Source: docs/final-unused-keys-list.txt
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 // List of 19 keys to remove (consensus of 3 AI analyses)
 const KEYS_TO_REMOVE = [

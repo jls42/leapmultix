@@ -16,5 +16,8 @@
     "en": [],
     "es": []
   },
-  "structureDifferences": []
+  "typeMismatches": {
+    "en": [],
+    "es": []
+  }
 }
