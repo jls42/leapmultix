@@ -182,16 +182,13 @@ export default class PacmanRenderer {
       g.avatar.image_right &&
       g.avatar.image_right.complete
     ) {
-      // Sélectionne l'image en fonction de la direction (logique corrigée)
+      // Sélectionne l'image en fonction de la direction
       let imageToDraw;
       if (g.multimiam.direction === 'LEFT') {
         imageToDraw = g.avatar.image_left;
-      } else if (g.multimiam.direction === 'RIGHT') {
-        imageToDraw = g.avatar.image_right;
       } else {
-        // Pour HAUT et BAS, on garde la dernière orientation horizontale
-        // Si on ne l'a pas, on utilise l'image de droite par défaut
-        imageToDraw = g.avatar.lastDirection === 'LEFT' ? g.avatar.image_left : g.avatar.image_right;
+        // Par défaut, l'image orientée à droite pour les directions DROITE, HAUT et BAS
+        imageToDraw = g.avatar.image_right;
       }
 
       // Vérifie si l'image choisie est bien chargée
