@@ -5,7 +5,7 @@
 // - Translations JSON: stale-while-revalidate
 // - JS/CSS: network-first with cache fallback (updates take precedence)
 
-const VERSION = 'v6'; // bump (add service worker logging)
+const VERSION = 'v7'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
