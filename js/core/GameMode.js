@@ -772,7 +772,9 @@ export class GameMode {
   /**
    * Sauvegarder les résultats (à surcharger)
    */
-  saveResults() {}
+  saveResults() {
+    // Abstract method - override in subclass to save game results
+  }
 
   /**
    * Afficher les résultats (à surcharger)

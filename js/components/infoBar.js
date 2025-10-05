@@ -150,7 +150,9 @@ export const InfoBar = {
   /**
    * Initialiser le composant InfoBar
    */
-  init() {},
+  init() {
+    // No initialization needed - InfoBar is created on-demand when injected
+  },
 
   /**
    * Créer le HTML d'une barre d'information

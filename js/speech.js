@@ -51,12 +51,12 @@ function ensureSpeechReady(Root) {
   return true;
 }
 
-function handleHighPriority(text, isActive) {
+function handleHighPriority(text) {
   currentSpeechPriority = 'high';
   lastHighText = String(text || '');
 }
 
-function cancelNormalSpeech(Root, text) {
+function cancelNormalSpeech(Root) {
   try {
     Root.speechSynthesis.cancel();
   } catch (error) {
@@ -65,7 +65,7 @@ function cancelNormalSpeech(Root, text) {
   currentSpeechPriority = null;
 }
 
-function interruptHighSpeech(Root, text) {
+function interruptHighSpeech(Root) {
   try {
     Root.speechSynthesis.cancel();
   } catch (error) {
@@ -86,18 +86,18 @@ function handleNormalPriority({ Root, allowInterruptHigh, text, isActive }) {
       return;
     }
 
-    interruptHighSpeech(Root, text);
+    interruptHighSpeech(Root);
     return;
   }
 
-  cancelNormalSpeech(Root, text);
+  cancelNormalSpeech(Root);
 }
 
 function preparePriorityQueue({ Root, priority, allowInterruptHigh, text }) {
   const isActive = Root.speechSynthesis.speaking || Root.speechSynthesis.pending;
 
   if (priority === 'high') {
-    handleHighPriority(text, isActive);
+    handleHighPriority(text);
     return;
   }
 
@@ -121,7 +121,7 @@ function buildFinalText(priority, rawText) {
   return combined;
 }
 
-function attachUtteranceEvents(utterance, priority, spokenText) {
+function attachUtteranceEvents(utterance, priority) {
   utterance.onstart = () => {
     currentSpeechPriority = priority;
     if (priority === 'high') {
@@ -168,7 +168,7 @@ export function speak(text, options = {}) {
     const utterance = setupUtterance(spokenText, speechSettings);
     const volume = getVolumeLevel();
     utterance.volume = Math.max(0.1, Math.min(1, Number(volume || 1)));
-    attachUtteranceEvents(utterance, priority, spokenText);
+    attachUtteranceEvents(utterance, priority);
 
     Root.speechSynthesis.speak(utterance);
   } catch (error) {

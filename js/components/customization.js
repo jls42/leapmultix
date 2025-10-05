@@ -21,7 +21,9 @@ export const Customization = {
   /**
    * Initialiser le composant Customization
    */
-  init() {},
+  init() {
+    // No initialization needed - events are set up on-demand in show()
+  },
 
   /**
    * Afficher l'écran de personnalisation
