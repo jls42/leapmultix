@@ -217,86 +217,109 @@ export default class PacmanRenderer {
     const ctx = g.ctx;
     ctx.fillStyle = '#FFFF00';
     ctx.beginPath();
-    const angles = {
-      RIGHT: [0.2 * Math.PI, 1.8 * Math.PI],
-      LEFT: [1.2 * Math.PI, 0.8 * Math.PI],
-      UP: [1.7 * Math.PI, 1.3 * Math.PI],
-      DOWN: [0.7 * Math.PI, 0.3 * Math.PI],
-    };
 
-    const [start, end] = angles[g.multimiam.direction] || [0, 2 * Math.PI];
+    let start, end;
+    switch (g.multimiam.direction) {
+      case 'LEFT':
+        start = 1.2 * Math.PI;
+        end = 0.8 * Math.PI;
+        break;
+      case 'UP':
+        start = 1.7 * Math.PI;
+        end = 1.3 * Math.PI;
+        break;
+      case 'DOWN':
+        start = 0.7 * Math.PI;
+        end = 0.3 * Math.PI;
+        break;
+      case 'RIGHT':
+      default:
+        start = 0.2 * Math.PI;
+        end = 1.8 * Math.PI;
+        break;
+    }
+
     ctx.arc(px, py, g.multimiam.size / 2, start, end);
     ctx.lineTo(px, py);
     ctx.fill();
   }
 
   /* === fantômes ================================ */
-  drawGhosts() {
+
+  /**
+   * Calcule la position interpolée d'un fantôme pour une animation fluide.
+   * @param {object} ghost - L'objet fantôme.
+   * @param {number} index - L'index du fantôme dans le tableau.
+   * @returns {{x: number, y: number}} - La position interpolée en coordonnées de grille.
+   */
+  _getInterpolatedGhostPosition(ghost, index) {
+    const g = this.game;
+    if (!g.lastGhostPositions?.[index]) {
+      return { x: ghost.x, y: ghost.y };
+    }
+
+    const progress = g.ghostAnimationProgress !== undefined ? g.ghostAnimationProgress : 0;
+    // eslint-disable-next-line security/detect-object-injection -- Safe: index is a controlled numeric parameter from a for loop
+    const lastPos = g.lastGhostPositions[index];
+    const dx = ghost.x - lastPos.x;
+    const dy = ghost.y - lastPos.y;
+
+    const teleportX = Math.abs(dx) > 1;
+    const teleportY = Math.abs(dy) > 1;
+
+    const x = teleportX ? ghost.x : lastPos.x + dx * progress;
+    const y = teleportY ? ghost.y : lastPos.y + dy * progress;
+
+    return { x, y };
+  }
+
+  /**
+   * Dessine un seul fantôme sur le canvas.
+   * @param {object} ghost - L'objet fantôme avec sa direction.
+   * @param {object} monster - L'objet monstre avec les sprites.
+   * @param {number} pixelX - Coordonnée X en pixels.
+   * @param {number} pixelY - Coordonnée Y en pixels.
+   */
+  _drawSingleGhost(ghost, monster, pixelX, pixelY) {
     const g = this.game;
     const ctx = g.ctx;
+    const size = g.cellSize * 1.5;
+
+    const imageToDraw = ghost.direction === 'LEFT' ? monster?.image_left : monster?.image_right;
+
+    if (imageToDraw?.complete && imageToDraw.naturalHeight !== 0) {
+      ctx.save();
+      ctx.translate(pixelX, pixelY);
+      ctx.drawImage(imageToDraw, -size / 2, -size / 2, size, size);
+      ctx.restore();
+    } else {
+      // Fallback: dessiner un cercle rouge
+      ctx.fillStyle = 'red';
+      ctx.beginPath();
+      ctx.arc(pixelX, pixelY, size / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /**
+   * Méthode principale pour dessiner tous les fantômes actifs.
+   */
+  drawGhosts() {
+    const g = this.game;
     if (!g.ghosts) return;
 
     for (let i = 0; i < g.ghosts.length; i++) {
       const ghost = g.ghosts[i];
       if (!ghost.active) continue;
 
-      // Animation fluide: interpolation entre la position précédente et la position actuelle
-      let x, y;
+      const { x, y } = this._getInterpolatedGhostPosition(ghost, i);
 
-      // Utiliser directement la position de la grille sans animation si les ghostPositions ne sont pas initialisées
-
-      if (!g.lastGhostPositions || !g.lastGhostPositions[i]) {
-        x = ghost.x;
-        y = ghost.y;
-      } else {
-        // Sinon, utiliser l'animation fluide
-        const progress = g.ghostAnimationProgress !== undefined ? g.ghostAnimationProgress : 0;
-
-        // Détecter si on a traversé un bord (téléportation)
-
-        const dx = ghost.x - g.lastGhostPositions[i].x;
-
-        const dy = ghost.y - g.lastGhostPositions[i].y;
-        const teleportX = Math.abs(dx) > 1;
-        const teleportY = Math.abs(dy) > 1;
-
-        // Calcul de la position interpolée en fonction de la progression
-        if (teleportX) {
-          // Si téléportation, utiliser directement la nouvelle position
-          x = ghost.x;
-        } else {
-          // Sinon, interpoler linéairement entre l'ancienne et la nouvelle position
-
-          x = g.lastGhostPositions[i].x + dx * progress;
-        }
-
-        if (teleportY) {
-          // Si téléportation, utiliser directement la nouvelle position
-          y = ghost.y;
-        } else {
-          // Sinon, interpoler linéairement entre l'ancienne et la nouvelle position
-
-          y = g.lastGhostPositions[i].y + dy * progress;
-        }
-      }
-
-      // Convertir les coordonnées de la grille en pixels
       const pixelX = (x + 0.5) * g.cellSize;
       const pixelY = (y + 0.5) * g.cellSize;
-      const size = g.cellSize * 1.5;
 
       const monster = g.monsters && g.monsters[i % g.monsters.length];
-      if (monster && monster.image && monster.image.complete && monster.image.naturalHeight !== 0) {
-        ctx.save();
-        ctx.translate(pixelX, pixelY);
-        ctx.drawImage(monster.image, -size / 2, -size / 2, size, size);
-        ctx.restore();
-      } else {
-        ctx.fillStyle = 'red';
-        ctx.beginPath();
-        ctx.arc(pixelX, pixelY, size / 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
+
+      this._drawSingleGhost(ghost, monster, pixelX, pixelY);
     }
   }
 }

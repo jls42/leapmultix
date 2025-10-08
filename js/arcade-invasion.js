@@ -293,21 +293,21 @@ export function startMultiplicationInvasion() {
   const monsterSpriteNames = [];
   for (let i = 1; i <= 43; i++) {
     const num = i.toString().padStart(2, '0');
-    monsterSpriteNames.push(`monstre${num}_128x128.png`);
+    monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
   }
   // Intégration nouveaux monstres convertis
   for (let i = 84; i <= 111; i++) {
     const num = i.toString().padStart(2, '0');
-    monsterSpriteNames.push(`monstre${num}_128x128.png`);
+    monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
   }
   for (let i = 121; i <= 145; i++) {
     const num = i.toString().padStart(2, '0');
-    monsterSpriteNames.push(`monstre${num}_128x128.png`);
+    monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
   }
   // Intégration des nouveaux monstres 146–155
   for (let i = 146; i <= 155; i++) {
     const num = i.toString().padStart(2, '0');
-    monsterSpriteNames.push(`monstre${num}_128x128.png`);
+    monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
   }
   const monsterSprites = monsterSpriteNames.map(name => {
     const img = new Image();

@@ -373,12 +373,12 @@ export function stopArcadeMode() {
 export const monsterSpriteNames = [];
 for (let i = 1; i <= 83; i++) {
   const num = i.toString().padStart(2, '0');
-  monsterSpriteNames.push(`monstre${num}_128x128.png`);
+  monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
 }
 // Include newly added monsters 146–155
 for (let i = 146; i <= 155; i++) {
   const num = i.toString().padStart(2, '0');
-  monsterSpriteNames.push(`monstre${num}_128x128.png`);
+  monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
 }
 export const monsterSprites = monsterSpriteNames.map(name => {
   const img = new Image();

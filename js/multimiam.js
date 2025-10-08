@@ -517,12 +517,10 @@ export class PacmanGame {
     // Force la limitation à 5 monstres maximum pour éviter les problèmes de mémoire
 
     // Créer des images optimisées pour mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(globalThis.navigator?.userAgent || '');
-    const scale = isMobile ? 0.75 : 1.0; // Réduire la taille sur mobile pour de meilleures performances
 
     // Créer un tableau d'indices disponibles (1 à 43)
     const availableIndices = [];
-    for (let i = 1; i <= 43; i++) {
+    for (let i = 1; i <= 155; i++) {
       availableIndices.push(i);
     }
 
@@ -540,43 +538,32 @@ export class PacmanGame {
       // Formatter le numéro avec zéro de remplissage (01, 02, etc.)
       const formattedIndex = monsterIndex.toString().padStart(2, '0');
 
-      // Créer un objet monstre avec une propriété image
+      // Créer un objet monstre avec des images directionnelles
       const monsterObj = {
         id: monsterIndex,
-        image: new Image(),
+        image_left: new Image(),
+        image_right: new Image(),
       };
 
-      // Utiliser le même format de fichier que le reste de l'application
-      monsterObj.image.src = `assets/images/arcade/monstre${formattedIndex}_128x128.png`;
+      // Charger les deux images
+      monsterObj.image_left.src = `assets/images/arcade/monstre${formattedIndex}_left_128x128.png`;
+      monsterObj.image_right.src = `assets/images/arcade/monstre${formattedIndex}_right_128x128.png`;
 
-      // Appliquer les optimisations
-      if (isMobile) {
-        // Utiliser le système de cache-control pour forcer le navigateur à recharger l'image
-        monsterObj.image.setAttribute('importance', 'high'); // Indique au navigateur de charger cette image en priorité
-        monsterObj.image.style.imageRendering = 'crisp-edges'; // Améliore le rendu sur les appareils à écran haute densité
-      }
-
-      // Événement quand l'image est chargée
-      monsterObj.image.onload = () => {
-        this.monstersLoaded++;
-        // Appliquer un recadrage/redimensionnement optimisé si nécessaire
-        if (isMobile && scale !== 1.0) {
-          // Créer un canvas temporaire pour redimensionner l'image
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          canvas.width = monsterObj.image.width * scale;
-          canvas.height = monsterObj.image.height * scale;
-          ctx.drawImage(monsterObj.image, 0, 0, canvas.width, canvas.height);
-          // Convertir le canvas en nouvelle image
-          const optimizedMonster = new Image();
-          optimizedMonster.src = canvas.toDataURL('image/png');
-          // Remplacer l'ancienne image par la version optimisée
-          monsterObj.image = optimizedMonster;
+      // Événement quand les images sont chargées
+      let loadedCount = 0;
+      const onImageLoad = () => {
+        loadedCount++;
+        if (loadedCount === 2) {
+          // Attend que les deux images (gauche/droite) soient chargées
+          this.monstersLoaded++;
+          console.log(
+            `Monstre ${monsterIndex} chargé (${this.monstersLoaded}/${this.totalMonsters})`
+          );
         }
-        console.log(
-          `Monstre ${monsterIndex} chargé (${this.monstersLoaded}/${this.totalMonsters})`
-        );
       };
+
+      monsterObj.image_left.onload = onImageLoad;
+      monsterObj.image_right.onload = onImageLoad;
 
       // Ajout de l'objet monstre à la collection
       this.monsters.push(monsterObj);
