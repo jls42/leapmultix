@@ -254,11 +254,12 @@ export default class PacmanRenderer {
    */
   _getInterpolatedGhostPosition(ghost, index) {
     const g = this.game;
-    if (!g.lastGhostPositions || !g.lastGhostPositions[index]) {
+    if (!g.lastGhostPositions?.[index]) {
       return { x: ghost.x, y: ghost.y };
     }
 
     const progress = g.ghostAnimationProgress !== undefined ? g.ghostAnimationProgress : 0;
+    // eslint-disable-next-line security/detect-object-injection -- Safe: index is a controlled numeric parameter from a for loop
     const lastPos = g.lastGhostPositions[index];
     const dx = ghost.x - lastPos.x;
     const dy = ghost.y - lastPos.y;
