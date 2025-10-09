@@ -60,7 +60,7 @@ function initializeAudioSync() {
       };
       updateAudioState(initialState);
     }
-  } catch (err) {
+  } catch {
     // This is expected if speech.js is loaded before audio.js due to bundling.
     // The event listener above will handle the state update.
   }
