@@ -38,20 +38,20 @@ describe('Speech audio sync initialization', () => {
     const cancelMock = jest.fn();
     const speakMock = jest.fn();
 
-    jest.unstable_mockModule('../../js/core/audio.js', () => ({
+    jest.unstable_mockModule('../js/core/audio.js', () => ({
       AudioManager: {
         getVolume: getVolumeMock,
         isMuted: isMutedMock,
       },
     }));
 
-    jest.unstable_mockModule('../../js/core/eventBus.js', () => ({
+    jest.unstable_mockModule('../js/core/eventBus.js', () => ({
       eventBus: {
         on: eventBusOnMock,
       },
     }));
 
-    jest.unstable_mockModule('../../js/core/storage.js', () => ({
+    jest.unstable_mockModule('../js/core/storage.js', () => ({
       default: {
         loadVoiceEnabled: jest.fn(() => true),
       },
@@ -71,7 +71,7 @@ describe('Speech audio sync initialization', () => {
       this.lang = 'fr-FR';
     };
 
-    const speechModule = await import('../../js/speech.js');
+    const speechModule = await import('../js/speech.js');
 
     expect(getVolumeMock).toHaveBeenCalledTimes(1);
     expect(isMutedMock).toHaveBeenCalledTimes(1);
