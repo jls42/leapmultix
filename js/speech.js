@@ -8,6 +8,7 @@ import { eventBus } from './core/eventBus.js';
 // Module-level state for volume control
 let currentVolume = 1;
 let isMuted = false;
+let audioSyncInitialized = false;
 
 /**
  * Updates the module's state from an audio event or initial state.
@@ -35,6 +36,10 @@ function updateAudioState(audioState) {
  * Pulls the initial state from AudioManager and then subscribes to updates.
  */
 function initializeAudioSync() {
+  if (audioSyncInitialized) {
+    return;
+  }
+  audioSyncInitialized = true;
   try {
     // Pull initial state to avoid race condition
     const initialState = {
@@ -44,13 +49,27 @@ function initializeAudioSync() {
     updateAudioState(initialState);
 
     // Listen for subsequent updates
-    eventBus.on('volumeChanged', event => updateAudioState(event.detail));
+    eventBus.on('volumeChanged', payload => {
+      const detail =
+        payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : payload;
+      if (!detail || typeof detail !== 'object') {
+        return;
+      }
+      updateAudioState(detail);
+    });
   } catch (err) {
     console.warn('Failed to initialize speech audio sync', err);
   }
 }
 
-document.addEventListener('DOMContentLoaded', initializeAudioSync);
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAudioSync, { once: true });
+  } else {
+    // DOM is already ready: synchronise immediately for late imports
+    initializeAudioSync();
+  }
+}
 
 export function isVoiceEnabled() {
   try {
