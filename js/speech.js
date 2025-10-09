@@ -3,6 +3,55 @@
 
 import Storage from './core/storage.js';
 import { gameState } from './game.js';
+import { AudioManager } from './core/audio.js';
+import { eventBus } from './core/eventBus.js';
+
+// Module-level state for volume control
+let currentVolume = 1.0;
+let isMuted = false;
+
+/**
+ * Updates the module's state from an audio event or initial state.
+ * @param {{volume: number, muted: boolean}} audioState - The new audio state.
+ */
+function updateAudioState(audioState) {
+  const { volume, muted } = audioState;
+  currentVolume = volume;
+  isMuted = muted;
+
+  if (isMuted) {
+    const Root = getGlobalRoot();
+    if (Root && Root.speechSynthesis) {
+      try {
+        Root.speechSynthesis.cancel();
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
+/**
+ * Initializes the speech module's audio state.
+ * Pulls the initial state from AudioManager and then subscribes to updates.
+ */
+function initializeAudioSync() {
+  try {
+    // Pull initial state to avoid race condition
+    const initialState = {
+      volume: AudioManager.getVolume(),
+      muted: AudioManager.isMuted(),
+    };
+    updateAudioState(initialState);
+
+    // Listen for subsequent updates
+    eventBus.on('volumeChanged', event => updateAudioState(event.detail));
+  } catch (err) {
+    console.warn('Failed to initialize speech audio sync', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initializeAudioSync);
 
 export function isVoiceEnabled() {
   try {
@@ -30,11 +79,6 @@ function setupUtterance(text, settings) {
   utterance.rate = settings.rate ?? 0.9;
   utterance.pitch = settings.pitch ?? 1.1;
   return utterance;
-}
-
-function getVolumeLevel() {
-  if (!gameState || typeof gameState.volume === 'undefined') return 1;
-  return gameState.volume;
 }
 
 function ensureSpeechReady(Root) {
@@ -157,6 +201,11 @@ export function speak(text, options = {}) {
   } = options;
   const Root = getGlobalRoot();
 
+  // Abort if muted
+  if (isMuted) {
+    return;
+  }
+
   if (!ensureSpeechReady(Root)) {
     return;
   }
@@ -166,8 +215,10 @@ export function speak(text, options = {}) {
 
     const spokenText = buildFinalText(priority, text);
     const utterance = setupUtterance(spokenText, speechSettings);
-    const volume = getVolumeLevel();
-    utterance.volume = Math.max(0.1, Math.min(1, Number(volume || 1)));
+
+    // Use the live volume from the event bus, and allow it to be 0
+    utterance.volume = Math.max(0, Math.min(1, Number(currentVolume || 0)));
+
     attachUtteranceEvents(utterance, priority);
 
     Root.speechSynthesis.speak(utterance);

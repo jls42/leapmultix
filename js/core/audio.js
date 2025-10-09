@@ -8,6 +8,7 @@ import { UserManager } from '../userManager.js';
 import Storage from './storage.js';
 import { getTranslation } from '../i18n.js';
 import { gameState } from '../game.js';
+import { eventBus } from './eventBus.js';
 
 /**
  * API audio centralisée
@@ -23,6 +24,7 @@ const AudioManager = {
   // État audio interne
   _volume: 1,
   _muted: false,
+  _lastVolume: 1,
   _gameState: null, // Référence vers gameState global
   activeSounds: new Set(),
 
@@ -72,16 +74,19 @@ const AudioManager = {
 
     this._muted = this._volume === 0;
 
+    // Initialize _lastVolume with the loaded volume if it's not 0
+    if (this._volume > 0) {
+      this._lastVolume = this._volume;
+    }
+
     // Synchroniser avec gameState si disponible
-    /**
-     * Fonction if
-     * @param {*} this._gameState - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (this._gameState) {
       this._gameState.volume = this._volume;
       this._gameState.muted = this._muted;
     }
+
+    // Notifier les autres modules de l'état initial
+    eventBus.emit('volumeChanged', { volume: this._volume, muted: this._muted });
   },
 
   /**
@@ -133,11 +138,19 @@ const AudioManager = {
     this._volume = Math.max(0, Math.min(1, volume));
     this._muted = this._volume === 0;
 
+    // If the new volume is not zero, remember it for the next unmute
+    if (this._volume > 0) {
+      this._lastVolume = this._volume;
+    }
+
     // Sauvegarder
     this.savePreferences();
 
     // Mettre à jour l'UI
     this.updateVolumeControls();
+
+    // Notifier les autres modules
+    eventBus.emit('volumeChanged', { volume: this._volume, muted: this._muted });
   },
 
   /**
@@ -152,10 +165,10 @@ const AudioManager = {
    * Basculer muet/son
    */
   toggleMute() {
-    if (this._muted || this._volume === 0) {
-      this.setVolume(1);
+    if (this.isMuted()) {
+      this.setVolume(this._lastVolume || 1); // Restore to last known volume, or 1 as a fallback
     } else {
-      this.setVolume(0);
+      this.setVolume(0); // Mute
     }
   },
 
