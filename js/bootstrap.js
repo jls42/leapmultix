@@ -139,34 +139,34 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         TopBar.updateTranslations();
       } catch (err) {
-        /* ignore */
+        console.warn('TopBar.updateTranslations failed during language change', err);
       }
       try {
         const lang = e?.detail?.lang;
         if (lang) TopBar.updateLanguageButtons(lang);
       } catch (err) {
-        /* ignore */
+        console.warn('TopBar.updateLanguageButtons failed during language change', err);
       }
       try {
         updateCoinDisplay();
       } catch (err) {
-        /* ignore */
+        console.warn('updateCoinDisplay failed during language change', err);
       }
       try {
         await updateWelcomeMessageUI();
       } catch (err) {
-        /* ignore */
+        console.warn('updateWelcomeMessageUI failed during language change', err);
       }
     };
     try {
       eventBus.on('languageChanged', handler);
-    } catch (e) {
-      void e;
+    } catch (err) {
+      console.warn('Failed to attach languageChanged listener to eventBus', err);
     }
     try {
       globalThis.addEventListener('languageChanged', handler);
-    } catch (e) {
-      void e;
+    } catch (err) {
+      console.warn('Failed to attach languageChanged listener to globalThis', err);
     }
   } catch (e) {
     console.warn('Bootstrap wiring failed:', e);
