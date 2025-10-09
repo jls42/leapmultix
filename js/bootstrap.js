@@ -109,52 +109,53 @@ document.addEventListener('DOMContentLoaded', () => {
     // observer kept module-local; no global exposure
 
     // Refresh active mode texts on language change (ESM wrappers)
-    const handler = e => {
+    const handler = async e => {
       const mode = gameState?.gameMode;
-      switch (mode) {
-        case 'quiz':
-          import('./modes/QuizMode.js').then(m => m.refreshQuizTexts?.());
-          break;
-        case 'challenge':
-          import('./modes/ChallengeMode.js').then(m => m.refreshChallengeTexts?.());
-          break;
-        case 'adventure':
-          import('./modes/AdventureMode.js').then(m => m.refreshAdventureTexts?.());
-          break;
-        case 'discovery':
-          import('./modes/DiscoveryMode.js').then(m => m.refreshDiscoveryTexts?.());
-          break;
-        case 'arcade':
-          import('./modes/ArcadeMode.js').then(m => m.refreshArcadeTexts?.());
-          break;
-        default:
-          break;
+      try {
+        switch (mode) {
+          case 'quiz':
+            (await import('./modes/QuizMode.js')).refreshQuizTexts?.();
+            break;
+          case 'challenge':
+            (await import('./modes/ChallengeMode.js')).refreshChallengeTexts?.();
+            break;
+          case 'adventure':
+            (await import('./modes/AdventureMode.js')).refreshAdventureTexts?.();
+            break;
+          case 'discovery':
+            (await import('./modes/DiscoveryMode.js')).refreshDiscoveryTexts?.();
+            break;
+          case 'arcade':
+            (await import('./modes/ArcadeMode.js')).refreshArcadeTexts?.();
+            break;
+          default:
+            break;
+        }
+      } catch (err) {
+        console.warn('Dynamic module import failed on language change', err);
       }
 
       // Refresh TopBar labels, language buttons, and coin display
       try {
         TopBar.updateTranslations();
-      } catch (e) {
-        void e;
+      } catch (err) {
+        /* ignore */
       }
       try {
         const lang = e?.detail?.lang;
         if (lang) TopBar.updateLanguageButtons(lang);
       } catch (err) {
-        void err;
+        /* ignore */
       }
       try {
         updateCoinDisplay();
-      } catch (e) {
-        void e;
+      } catch (err) {
+        /* ignore */
       }
       try {
-        const maybePromise = updateWelcomeMessageUI();
-        if (maybePromise && typeof maybePromise.catch === 'function') {
-          maybePromise.catch(() => {});
-        }
-      } catch (e) {
-        void e;
+        await updateWelcomeMessageUI();
+      } catch (err) {
+        /* ignore */
       }
     };
     try {
