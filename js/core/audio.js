@@ -143,6 +143,15 @@ const AudioManager = {
       this._lastVolume = this._volume;
     }
 
+    // Mettre à jour le volume des sons actifs
+    this.activeSounds.forEach(audio => {
+      try {
+        audio.volume = this._volume;
+      } catch {
+        // ignore
+      }
+    });
+
     // Sauvegarder
     this.savePreferences();
 
@@ -221,7 +230,9 @@ const AudioManager = {
       }
 
       // Suivre le son actif
+
       this.activeSounds.add(audio);
+
       audio.addEventListener('ended', () => this.activeSounds.delete(audio));
 
       // Jouer le son (gérer proprement les erreurs de promesse)

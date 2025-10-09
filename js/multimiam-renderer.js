@@ -259,7 +259,7 @@ export default class PacmanRenderer {
     }
 
     const progress = g.ghostAnimationProgress !== undefined ? g.ghostAnimationProgress : 0;
-    // eslint-disable-next-line security/detect-object-injection -- Safe: index is a controlled numeric parameter from a for loop
+    // eslint-disable-next-line security/detect-object-injection -- Safe: index is a bounded integer over a static positions array
     const lastPos = g.lastGhostPositions[index];
     const dx = ghost.x - lastPos.x;
     const dy = ghost.y - lastPos.y;

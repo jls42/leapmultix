@@ -256,11 +256,11 @@ function displayDailyChallenge() {
     container.appendChild(p);
   } else {
     const pTable = document.createElement('p');
-    // eslint-disable-next-line security/detect-object-injection, sonarjs/no-unsafe-string-usage -- False positive: getTranslation returns safe internal content, not user input
+    // eslint-disable-next-line sonarjs/no-unsafe-string-usage -- False positive: getTranslation returns safe internal content, not user input
     const translatedHTML = getTranslation('daily_challenge_table_of_day', {
       table: challengeStatus.table,
     });
-    // eslint-disable-next-line security/detect-unsafe-regex, sonarjs/no-html-injection -- Safe: using appendSanitizedHTML for proper sanitization of internal content
+    // eslint-disable-next-line sonarjs/no-html-injection -- Safe: using appendSanitizedHTML for proper sanitization of internal content
     appendSanitizedHTML(pTable, translatedHTML);
     container.appendChild(pTable);
 

@@ -40,25 +40,29 @@ function initializeAudioSync() {
     return;
   }
   audioSyncInitialized = true;
-  try {
-    // Pull initial state to avoid race condition
-    const initialState = {
-      volume: AudioManager.getVolume(),
-      muted: AudioManager.isMuted(),
-    };
-    updateAudioState(initialState);
 
-    // Listen for subsequent updates
-    eventBus.on('volumeChanged', payload => {
-      const detail =
-        payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : payload;
-      if (!detail || typeof detail !== 'object') {
-        return;
-      }
-      updateAudioState(detail);
-    });
+  // Listen for subsequent updates
+  eventBus.on('volumeChanged', payload => {
+    const detail =
+      payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : payload;
+    if (!detail || typeof detail !== 'object') {
+      return;
+    }
+    updateAudioState(detail);
+  });
+
+  // Try to get initial state, but don't fail if AudioManager is not ready
+  try {
+    if (AudioManager) {
+      const initialState = {
+        volume: AudioManager.getVolume(),
+        muted: AudioManager.isMuted(),
+      };
+      updateAudioState(initialState);
+    }
   } catch (err) {
-    console.warn('Failed to initialize speech audio sync', err);
+    // This is expected if speech.js is loaded before audio.js due to bundling.
+    // The event listener above will handle the state update.
   }
 }
 
@@ -91,7 +95,7 @@ function getGlobalRoot() {
 }
 
 function setupUtterance(text, settings) {
-  // eslint-disable-next-line no-undef -- Browser API, SpeechSynthesisUtterance is globally available
+  // eslint-disable-next-line no-undef -- Browser global provided by speech synthesis API
   const utterance = new SpeechSynthesisUtterance(String(text || ''));
   utterance.lang = settings.lang || 'fr-FR';
   utterance.rate = settings.rate ?? 0.9;
