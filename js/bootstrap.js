@@ -4,7 +4,7 @@ import { saveCustomization as _saveCustomization } from './components/customizat
 import { goToSlide as _goToSlide } from './slides.js';
 import { setGameMode as _setGameMode } from './mode-orchestrator.js';
 import { TopBar } from './components/topBar.js';
-import { updateCoinDisplay } from './utils-es6.js';
+import { updateCoinDisplay, updateWelcomeMessageUI } from './utils-es6.js';
 import { gameState } from './game.js';
 import { eventBus } from './core/eventBus.js';
 
@@ -145,6 +145,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       try {
         updateCoinDisplay();
+      } catch (e) {
+        void e;
+      }
+      try {
+        const maybePromise = updateWelcomeMessageUI();
+        if (maybePromise && typeof maybePromise.catch === 'function') {
+          maybePromise.catch(() => {});
+        }
       } catch (e) {
         void e;
       }
