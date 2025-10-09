@@ -2,12 +2,11 @@
 // Provides speak() and isVoiceEnabled() without relying on window globals.
 
 import Storage from './core/storage.js';
-import { gameState } from './game.js';
 import { AudioManager } from './core/audio.js';
 import { eventBus } from './core/eventBus.js';
 
 // Module-level state for volume control
-let currentVolume = 1.0;
+let currentVolume = 1;
 let isMuted = false;
 
 /**
@@ -21,7 +20,7 @@ function updateAudioState(audioState) {
 
   if (isMuted) {
     const Root = getGlobalRoot();
-    if (Root && Root.speechSynthesis) {
+    if (Root?.speechSynthesis) {
       try {
         Root.speechSynthesis.cancel();
       } catch {
