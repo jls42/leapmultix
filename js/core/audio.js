@@ -144,13 +144,13 @@ const AudioManager = {
     }
 
     // Mettre à jour le volume des sons actifs
-    this.activeSounds.forEach(audio => {
+    for (const audio of this.activeSounds) {
       try {
         audio.volume = this._volume;
       } catch {
         // ignore
       }
-    });
+    }
 
     // Sauvegarder
     this.savePreferences();
