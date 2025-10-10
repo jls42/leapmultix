@@ -40,7 +40,7 @@ function resolveKey(obj, path) {
   return (
     path
       .split('.')
-      // eslint-disable-next-line -- Safe access to translation object keys from controlled path segments
+      // eslint-disable-next-line security/detect-object-injection -- Safe: path segments come from controlled translation keys
       .reduce((acc, seg) => (acc && acc[seg] !== undefined ? acc[seg] : undefined), obj)
   );
 }

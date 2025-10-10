@@ -2,7 +2,78 @@
 // Provides speak() and isVoiceEnabled() without relying on window globals.
 
 import Storage from './core/storage.js';
-import { gameState } from './game.js';
+import { AudioManager } from './core/audio.js';
+import { eventBus } from './core/eventBus.js';
+
+// Module-level state for volume control
+let currentVolume = 1;
+let isMuted = false;
+let audioSyncInitialized = false;
+
+/**
+ * Updates the module's state from an audio event or initial state.
+ * @param {{volume: number, muted: boolean}} audioState - The new audio state.
+ */
+function updateAudioState(audioState) {
+  const { volume, muted } = audioState;
+  currentVolume = volume;
+  isMuted = muted;
+
+  if (isMuted) {
+    const Root = getGlobalRoot();
+    if (Root?.speechSynthesis) {
+      try {
+        Root.speechSynthesis.cancel();
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
+/**
+ * Initializes the speech module's audio state.
+ * Pulls the initial state from AudioManager and then subscribes to updates.
+ */
+function initializeAudioSync() {
+  if (audioSyncInitialized) {
+    return;
+  }
+  audioSyncInitialized = true;
+
+  // Listen for subsequent updates
+  eventBus.on('volumeChanged', payload => {
+    const detail =
+      payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : payload;
+    if (!detail || typeof detail !== 'object') {
+      return;
+    }
+    updateAudioState(detail);
+  });
+
+  // Try to get initial state, but don't fail if AudioManager is not ready
+  try {
+    if (AudioManager) {
+      const initialState = {
+        volume: AudioManager.getVolume(),
+        muted: AudioManager.isMuted(),
+      };
+      updateAudioState(initialState);
+    }
+  } catch {
+    // This is expected if speech.js is loaded before audio.js due to bundling.
+    // The event listener above will handle the state update.
+  }
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAudioSync, { once: true });
+  } else {
+    // DOM is already ready: synchronise immediately for late imports
+    initializeAudioSync();
+  }
+}
 
 export function isVoiceEnabled() {
   try {
@@ -24,17 +95,12 @@ function getGlobalRoot() {
 }
 
 function setupUtterance(text, settings) {
-  // eslint-disable-next-line no-undef -- Browser API, SpeechSynthesisUtterance is globally available
+  // eslint-disable-next-line no-undef -- Browser global provided by speech synthesis API
   const utterance = new SpeechSynthesisUtterance(String(text || ''));
   utterance.lang = settings.lang || 'fr-FR';
   utterance.rate = settings.rate ?? 0.9;
   utterance.pitch = settings.pitch ?? 1.1;
   return utterance;
-}
-
-function getVolumeLevel() {
-  if (!gameState || typeof gameState.volume === 'undefined') return 1;
-  return gameState.volume;
 }
 
 function ensureSpeechReady(Root) {
@@ -157,6 +223,11 @@ export function speak(text, options = {}) {
   } = options;
   const Root = getGlobalRoot();
 
+  // Abort if muted
+  if (isMuted) {
+    return;
+  }
+
   if (!ensureSpeechReady(Root)) {
     return;
   }
@@ -166,8 +237,10 @@ export function speak(text, options = {}) {
 
     const spokenText = buildFinalText(priority, text);
     const utterance = setupUtterance(spokenText, speechSettings);
-    const volume = getVolumeLevel();
-    utterance.volume = Math.max(0.1, Math.min(1, Number(volume || 1)));
+
+    // Use the live volume from the event bus, and allow it to be 0
+    utterance.volume = Math.max(0, Math.min(1, Number(currentVolume || 0)));
+
     attachUtteranceEvents(utterance, priority);
 
     Root.speechSynthesis.speak(utterance);

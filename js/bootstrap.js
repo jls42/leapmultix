@@ -4,7 +4,7 @@ import { saveCustomization as _saveCustomization } from './components/customizat
 import { goToSlide as _goToSlide } from './slides.js';
 import { setGameMode as _setGameMode } from './mode-orchestrator.js';
 import { TopBar } from './components/topBar.js';
-import { updateCoinDisplay } from './utils-es6.js';
+import { updateCoinDisplay, updateWelcomeMessageUI } from './utils-es6.js';
 import { gameState } from './game.js';
 import { eventBus } from './core/eventBus.js';
 
@@ -109,55 +109,64 @@ document.addEventListener('DOMContentLoaded', () => {
     // observer kept module-local; no global exposure
 
     // Refresh active mode texts on language change (ESM wrappers)
-    const handler = e => {
+    const handler = async e => {
       const mode = gameState?.gameMode;
-      switch (mode) {
-        case 'quiz':
-          import('./modes/QuizMode.js').then(m => m.refreshQuizTexts?.());
-          break;
-        case 'challenge':
-          import('./modes/ChallengeMode.js').then(m => m.refreshChallengeTexts?.());
-          break;
-        case 'adventure':
-          import('./modes/AdventureMode.js').then(m => m.refreshAdventureTexts?.());
-          break;
-        case 'discovery':
-          import('./modes/DiscoveryMode.js').then(m => m.refreshDiscoveryTexts?.());
-          break;
-        case 'arcade':
-          import('./modes/ArcadeMode.js').then(m => m.refreshArcadeTexts?.());
-          break;
-        default:
-          break;
+      try {
+        switch (mode) {
+          case 'quiz':
+            (await import('./modes/QuizMode.js')).refreshQuizTexts?.();
+            break;
+          case 'challenge':
+            (await import('./modes/ChallengeMode.js')).refreshChallengeTexts?.();
+            break;
+          case 'adventure':
+            (await import('./modes/AdventureMode.js')).refreshAdventureTexts?.();
+            break;
+          case 'discovery':
+            (await import('./modes/DiscoveryMode.js')).refreshDiscoveryTexts?.();
+            break;
+          case 'arcade':
+            (await import('./modes/ArcadeMode.js')).refreshArcadeTexts?.();
+            break;
+          default:
+            break;
+        }
+      } catch (err) {
+        console.warn('Dynamic module import failed on language change', err);
       }
 
       // Refresh TopBar labels, language buttons, and coin display
       try {
         TopBar.updateTranslations();
-      } catch (e) {
-        void e;
+      } catch (err) {
+        console.warn('TopBar.updateTranslations failed during language change', err);
       }
       try {
         const lang = e?.detail?.lang;
         if (lang) TopBar.updateLanguageButtons(lang);
       } catch (err) {
-        void err;
+        console.warn('TopBar.updateLanguageButtons failed during language change', err);
       }
       try {
         updateCoinDisplay();
-      } catch (e) {
-        void e;
+      } catch (err) {
+        console.warn('updateCoinDisplay failed during language change', err);
+      }
+      try {
+        await updateWelcomeMessageUI();
+      } catch (err) {
+        console.warn('updateWelcomeMessageUI failed during language change', err);
       }
     };
     try {
       eventBus.on('languageChanged', handler);
-    } catch (e) {
-      void e;
+    } catch (err) {
+      console.warn('Failed to attach languageChanged listener to eventBus', err);
     }
     try {
       globalThis.addEventListener('languageChanged', handler);
-    } catch (e) {
-      void e;
+    } catch (err) {
+      console.warn('Failed to attach languageChanged listener to globalThis', err);
     }
   } catch (e) {
     console.warn('Bootstrap wiring failed:', e);

@@ -294,8 +294,7 @@ export const TopBar = {
     for (const btn of document.querySelectorAll('.mute-btn')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
-          const current = AudioManager.getVolume();
-          AudioManager.setVolume(current > 0 ? 0 : 1);
+          AudioManager.toggleMute();
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
