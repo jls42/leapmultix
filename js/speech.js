@@ -113,6 +113,13 @@ function getBestVoice(lang) {
 
   const langPrefix = lang.split('-')[0];
 
+  // Validate langPrefix to prevent object injection
+  const supportedLanguages = ['fr', 'en', 'es'];
+  if (!supportedLanguages.includes(langPrefix)) {
+    console.warn(`[Speech] Unsupported language prefix: ${langPrefix}`);
+    return null;
+  }
+
   // List of preferred high-quality voices by name for each language
   const preferredVoices = {
     fr: ['Google français', 'Amelie', 'Chantal', 'Thomas', 'fr-CA-Standard-A'],
