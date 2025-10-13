@@ -95,37 +95,71 @@ function getGlobalRoot() {
 }
 
 /**
- * Selects the best available voice for a given language.
- * @param {string} lang - The desired language code (e.g., 'fr-FR').
- * @returns {SpeechSynthesisVoice | null} The best voice found, or null.
+ * Filters out known low-quality voices.
+ * Based on research from web-speech-recommended-voices project.
+ * @param {SpeechSynthesisVoice[]} voices - The list of voices to filter.
+ * @returns {SpeechSynthesisVoice[]} Filtered voices without low-quality options.
  */
+function filterLowQualityVoices(voices) {
+  // Known low-quality voice patterns to exclude
+  const lowQualityPatterns = [
+    'eSpeak', // Very low quality TTS engine
+    'Eloquence', // Apple low-quality voices (8 voices)
+    'Albert', // Apple novelty voices
+    'Bad News',
+    'Bahh',
+    'Bells',
+    'Boing',
+    'Bubbles',
+    'Cellos',
+    'Good News',
+    'Jester',
+    'Organ',
+    'Superstar',
+    'Trinoids',
+    'Wobble',
+    'Zarvox',
+  ];
+
+  return voices.filter(voice => !lowQualityPatterns.some(pattern => voice.name.includes(pattern)));
+}
+
 /**
  * Finds a preferred voice from a list of candidates.
+ * Prioritizes local high-quality voices, then remote Google voices.
  * @param {SpeechSynthesisVoice[]} voiceCandidates - The list of available voices.
  * @param {string} langPrefix - The language prefix (e.g., 'fr').
  * @returns {SpeechSynthesisVoice | null} The found voice or null.
  */
 function findPreferredVoice(voiceCandidates, langPrefix) {
+  // Preferred voices organized by priority: local high-quality first, then remote
   const preferredVoices = {
-    fr: ['Google français', 'Amelie', 'Chantal', 'Thomas', 'fr-CA-Standard-A'],
-    en: ['Google US English', 'Alex', 'Samantha', 'Daniel', 'en-US-Standard-A'],
-    es: ['Google español', 'Monica', 'Paulina', 'Diego', 'es-US-Standard-A'],
+    fr: {
+      local: ['Amelie', 'Chantal', 'Thomas'], // macOS/iOS voices
+      remote: ['Google français', 'fr-CA-Standard-A'], // Cloud voices
+    },
+    en: {
+      local: ['Alex', 'Samantha', 'Daniel'], // macOS/iOS voices
+      remote: ['Google US English', 'en-US-Standard-A'], // Cloud voices
+    },
+    es: {
+      local: ['Monica', 'Paulina', 'Diego'], // macOS/iOS voices
+      remote: ['Google español', 'es-US-Standard-A'], // Cloud voices
+    },
   };
 
-  let preferred = [];
-  switch (langPrefix) {
-    case 'fr':
-      preferred = preferredVoices.fr;
-      break;
-    case 'en':
-      preferred = preferredVoices.en;
-      break;
-    case 'es':
-      preferred = preferredVoices.es;
-      break;
+  const preferred = preferredVoices[langPrefix] || { local: [], remote: [] };
+
+  // First, try to find a preferred local voice (better reliability, no network)
+  for (const voiceName of preferred.local) {
+    const found = voiceCandidates.find(v => v.name === voiceName);
+    if (found) {
+      return found;
+    }
   }
 
-  for (const voiceName of preferred) {
+  // Then try remote voices (Google voices - high quality but require network)
+  for (const voiceName of preferred.remote) {
     const found = voiceCandidates.find(v => v.name === voiceName);
     if (found) {
       return found;
@@ -137,6 +171,12 @@ function findPreferredVoice(voiceCandidates, langPrefix) {
 
 /**
  * Selects the best available voice for a given language.
+ * Strategy prioritizes reliability and quality:
+ * 1. Filter out known low-quality voices
+ * 2. Search for preferred high-quality voices (local first, then remote)
+ * 3. Fallback to any local voice
+ * 4. Fallback to any remote voice
+ *
  * @param {string} lang - The desired language code (e.g., 'fr-FR').
  * @returns {SpeechSynthesisVoice | null} The best voice found, or null.
  */
@@ -154,42 +194,45 @@ function getBestVoice(lang) {
 
   const langPrefix = lang.split('-')[0];
 
-  // 1. Find and sort local voices
-  const localCandidates = voices
-    .filter(voice => voice.localService && voice.lang.startsWith(langPrefix))
-    .sort((a, b) => {
-      const aIsExact = a.lang.toLowerCase() === lang.toLowerCase();
-      const bIsExact = b.lang.toLowerCase() === lang.toLowerCase();
-      if (aIsExact === bIsExact) return 0;
-      return aIsExact ? -1 : 1;
-    });
+  // 1. Filter out low-quality voices and match language
+  const qualityCandidates = filterLowQualityVoices(voices).filter(voice =>
+    voice.lang.startsWith(langPrefix)
+  );
 
-  // 2. Try to find a preferred voice
-  const preferredVoice = findPreferredVoice(localCandidates, langPrefix);
+  if (qualityCandidates.length === 0) {
+    console.warn(`[Speech] No quality voices found for language: ${lang}`);
+    return null;
+  }
+
+  // 2. Sort by exact locale match (prefer fr-FR over fr-CA when requesting fr-FR)
+  qualityCandidates.sort((a, b) => {
+    const aIsExact = a.lang.toLowerCase() === lang.toLowerCase();
+    const bIsExact = b.lang.toLowerCase() === lang.toLowerCase();
+    if (aIsExact === bIsExact) return 0;
+    return aIsExact ? -1 : 1;
+  });
+
+  // 3. Try to find a preferred voice (searches both local and remote)
+  const preferredVoice = findPreferredVoice(qualityCandidates, langPrefix);
   if (preferredVoice) {
-    console.log(`[Speech] Found preferred voice: ${preferredVoice.name}`);
+    console.log(
+      `[Speech] Found preferred voice: ${preferredVoice.name} (${preferredVoice.localService ? 'local' : 'remote'})`
+    );
     return preferredVoice;
   }
 
-  // 3. Fallback to the best local candidate
-  if (localCandidates.length > 0) {
-    console.log(
-      `[Speech] No preferred voice found, using first available local voice: ${localCandidates[0].name}`
-    );
-    return localCandidates[0];
+  // 4. Fallback to first local voice (better reliability for offline use)
+  const localVoice = qualityCandidates.find(v => v.localService);
+  if (localVoice) {
+    console.log(`[Speech] Using first available local voice: ${localVoice.name}`);
+    return localVoice;
   }
 
-  // 4. Fallback to any remote voice
-  const anyVoice = voices.find(voice => voice.lang.startsWith(langPrefix));
-  if (anyVoice) {
-    console.log(
-      `[Speech] No local voice found, using first available remote voice: ${anyVoice.name}`
-    );
-    return anyVoice;
-  }
-
-  console.warn(`[Speech] No voice found for language: ${lang}`);
-  return null;
+  // 5. Last resort: use first remote voice
+  console.log(
+    `[Speech] No local voice found, using first available remote voice: ${qualityCandidates[0].name}`
+  );
+  return qualityCandidates[0];
 }
 
 /**
