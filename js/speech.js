@@ -113,19 +113,26 @@ function getBestVoice(lang) {
 
   const langPrefix = lang.split('-')[0];
 
-  // Validate langPrefix to prevent object injection
-  const supportedLanguages = ['fr', 'en', 'es'];
-  if (!supportedLanguages.includes(langPrefix)) {
-    console.warn(`[Speech] Unsupported language prefix: ${langPrefix}`);
-    return null;
-  }
-
   // List of preferred high-quality voices by name for each language
   const preferredVoices = {
     fr: ['Google français', 'Amelie', 'Chantal', 'Thomas', 'fr-CA-Standard-A'],
     en: ['Google US English', 'Alex', 'Samantha', 'Daniel', 'en-US-Standard-A'],
     es: ['Google español', 'Monica', 'Paulina', 'Diego', 'es-US-Standard-A'],
   };
+
+  // Safely get the preferred voices list using a switch to prevent object injection
+  let preferred = [];
+  switch (langPrefix) {
+    case 'fr':
+      preferred = preferredVoices.fr;
+      break;
+    case 'en':
+      preferred = preferredVoices.en;
+      break;
+    case 'es':
+      preferred = preferredVoices.es;
+      break;
+  }
 
   // 1. Find local voices that match the primary language
   const voiceCandidates = voices.filter(
@@ -141,7 +148,6 @@ function getBestVoice(lang) {
   });
 
   // 2. Try to find a preferred voice from the sorted candidates
-  const preferred = preferredVoices[langPrefix] || [];
   for (const voiceName of preferred) {
     const found = voiceCandidates.find(v => v.name === voiceName);
     if (found) {
