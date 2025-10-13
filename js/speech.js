@@ -43,8 +43,7 @@ function initializeAudioSync() {
 
   // Listen for subsequent updates
   eventBus.on('volumeChanged', payload => {
-    const detail =
-      payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : payload;
+    const detail = payload?.detail ?? payload;
     if (!detail || typeof detail !== 'object') {
       return;
     }
@@ -84,6 +83,7 @@ export function isVoiceEnabled() {
 }
 
 let speechSettings = { lang: 'fr-FR', rate: 0.9, pitch: 1.1 };
+let selectedVoice = null;
 let currentSpeechPriority = null; // Track priority of current speech
 let lastHighText = '';
 let pendingHighReplay = null;
@@ -94,12 +94,145 @@ function getGlobalRoot() {
   return undefined;
 }
 
+/**
+ * Selects the best available voice for a given language.
+ * @param {string} lang - The desired language code (e.g., 'fr-FR').
+ * @returns {SpeechSynthesisVoice | null} The best voice found, or null.
+ */
+/**
+ * Finds a preferred voice from a list of candidates.
+ * @param {SpeechSynthesisVoice[]} voiceCandidates - The list of available voices.
+ * @param {string} langPrefix - The language prefix (e.g., 'fr').
+ * @returns {SpeechSynthesisVoice | null} The found voice or null.
+ */
+function findPreferredVoice(voiceCandidates, langPrefix) {
+  const preferredVoices = {
+    fr: ['Google français', 'Amelie', 'Chantal', 'Thomas', 'fr-CA-Standard-A'],
+    en: ['Google US English', 'Alex', 'Samantha', 'Daniel', 'en-US-Standard-A'],
+    es: ['Google español', 'Monica', 'Paulina', 'Diego', 'es-US-Standard-A'],
+  };
+
+  let preferred = [];
+  switch (langPrefix) {
+    case 'fr':
+      preferred = preferredVoices.fr;
+      break;
+    case 'en':
+      preferred = preferredVoices.en;
+      break;
+    case 'es':
+      preferred = preferredVoices.es;
+      break;
+  }
+
+  for (const voiceName of preferred) {
+    const found = voiceCandidates.find(v => v.name === voiceName);
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Selects the best available voice for a given language.
+ * @param {string} lang - The desired language code (e.g., 'fr-FR').
+ * @returns {SpeechSynthesisVoice | null} The best voice found, or null.
+ */
+function getBestVoice(lang) {
+  const Root = getGlobalRoot();
+  if (!Root?.speechSynthesis) {
+    return null;
+  }
+
+  const voices = Root.speechSynthesis.getVoices();
+  if (!voices || voices.length === 0) {
+    console.warn('[Speech] No voices available.');
+    return null;
+  }
+
+  const langPrefix = lang.split('-')[0];
+
+  // 1. Find and sort local voices
+  const localCandidates = voices
+    .filter(voice => voice.localService && voice.lang.startsWith(langPrefix))
+    .sort((a, b) => {
+      const aIsExact = a.lang.toLowerCase() === lang.toLowerCase();
+      const bIsExact = b.lang.toLowerCase() === lang.toLowerCase();
+      if (aIsExact === bIsExact) return 0;
+      return aIsExact ? -1 : 1;
+    });
+
+  // 2. Try to find a preferred voice
+  const preferredVoice = findPreferredVoice(localCandidates, langPrefix);
+  if (preferredVoice) {
+    console.log(`[Speech] Found preferred voice: ${preferredVoice.name}`);
+    return preferredVoice;
+  }
+
+  // 3. Fallback to the best local candidate
+  if (localCandidates.length > 0) {
+    console.log(
+      `[Speech] No preferred voice found, using first available local voice: ${localCandidates[0].name}`
+    );
+    return localCandidates[0];
+  }
+
+  // 4. Fallback to any remote voice
+  const anyVoice = voices.find(voice => voice.lang.startsWith(langPrefix));
+  if (anyVoice) {
+    console.log(
+      `[Speech] No local voice found, using first available remote voice: ${anyVoice.name}`
+    );
+    return anyVoice;
+  }
+
+  console.warn(`[Speech] No voice found for language: ${lang}`);
+  return null;
+}
+
+/**
+ * Updates the selected voice based on the current language setting.
+ */
+function updateVoiceSelection() {
+  const Root = getGlobalRoot();
+  if (!Root?.speechSynthesis) {
+    return;
+  }
+
+  // Voices may not be loaded yet. getVoices() is async.
+  let voices = Root.speechSynthesis.getVoices();
+  if (voices.length === 0) {
+    // If voices are not loaded, wait for the onvoiceschanged event
+    Root.speechSynthesis.onvoiceschanged = () => {
+      voices = Root.speechSynthesis.getVoices();
+      selectedVoice = getBestVoice(speechSettings.lang);
+      console.log(
+        `[Speech] Voice selected onvoiceschanged: ${selectedVoice ? selectedVoice.name : 'default'}`
+      );
+    };
+  } else {
+    // If voices are already available, select one immediately
+    selectedVoice = getBestVoice(speechSettings.lang);
+    console.log(
+      `[Speech] Voice selected immediately: ${selectedVoice ? selectedVoice.name : 'default'}`
+    );
+  }
+}
+
 function setupUtterance(text, settings) {
   // eslint-disable-next-line no-undef -- Browser global provided by speech synthesis API
   const utterance = new SpeechSynthesisUtterance(String(text || ''));
   utterance.lang = settings.lang || 'fr-FR';
   utterance.rate = settings.rate ?? 0.9;
   utterance.pitch = settings.pitch ?? 1.1;
+
+  // Assign the selected high-quality voice if available
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+  }
+
   return utterance;
 }
 
@@ -262,4 +395,9 @@ export function updateSpeechVoice(langCode) {
       voiceLang = 'fr-FR';
   }
   speechSettings = { ...speechSettings, lang: voiceLang };
+  // Update the selected voice when the language changes
+  updateVoiceSelection();
 }
+
+// Initial voice selection when the module is loaded
+updateVoiceSelection();
