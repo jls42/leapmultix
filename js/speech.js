@@ -148,6 +148,7 @@ function findPreferredVoice(voiceCandidates, langPrefix) {
     },
   };
 
+  // eslint-disable-next-line security/detect-object-injection -- False positive: langPrefix comes from lang.split('-')[0] with controlled values ('fr'|'en'|'es')
   const preferred = preferredVoices[langPrefix] || { local: [], remote: [] };
 
   // First, try to find a preferred local voice (better reliability, no network)
