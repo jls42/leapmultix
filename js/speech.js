@@ -99,6 +99,47 @@ function getGlobalRoot() {
  * @param {string} lang - The desired language code (e.g., 'fr-FR').
  * @returns {SpeechSynthesisVoice | null} The best voice found, or null.
  */
+/**
+ * Finds a preferred voice from a list of candidates.
+ * @param {SpeechSynthesisVoice[]} voiceCandidates - The list of available voices.
+ * @param {string} langPrefix - The language prefix (e.g., 'fr').
+ * @returns {SpeechSynthesisVoice | null} The found voice or null.
+ */
+function findPreferredVoice(voiceCandidates, langPrefix) {
+  const preferredVoices = {
+    fr: ['Google français', 'Amelie', 'Chantal', 'Thomas', 'fr-CA-Standard-A'],
+    en: ['Google US English', 'Alex', 'Samantha', 'Daniel', 'en-US-Standard-A'],
+    es: ['Google español', 'Monica', 'Paulina', 'Diego', 'es-US-Standard-A'],
+  };
+
+  let preferred = [];
+  switch (langPrefix) {
+    case 'fr':
+      preferred = preferredVoices.fr;
+      break;
+    case 'en':
+      preferred = preferredVoices.en;
+      break;
+    case 'es':
+      preferred = preferredVoices.es;
+      break;
+  }
+
+  for (const voiceName of preferred) {
+    const found = voiceCandidates.find(v => v.name === voiceName);
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Selects the best available voice for a given language.
+ * @param {string} lang - The desired language code (e.g., 'fr-FR').
+ * @returns {SpeechSynthesisVoice | null} The best voice found, or null.
+ */
 function getBestVoice(lang) {
   const Root = getGlobalRoot();
   if (!Root?.speechSynthesis) {
@@ -113,58 +154,32 @@ function getBestVoice(lang) {
 
   const langPrefix = lang.split('-')[0];
 
-  // List of preferred high-quality voices by name for each language
-  const preferredVoices = {
-    fr: ['Google français', 'Amelie', 'Chantal', 'Thomas', 'fr-CA-Standard-A'],
-    en: ['Google US English', 'Alex', 'Samantha', 'Daniel', 'en-US-Standard-A'],
-    es: ['Google español', 'Monica', 'Paulina', 'Diego', 'es-US-Standard-A'],
-  };
+  // 1. Find and sort local voices
+  const localCandidates = voices
+    .filter(voice => voice.localService && voice.lang.startsWith(langPrefix))
+    .sort((a, b) => {
+      const aIsExact = a.lang.toLowerCase() === lang.toLowerCase();
+      const bIsExact = b.lang.toLowerCase() === lang.toLowerCase();
+      if (aIsExact === bIsExact) return 0;
+      return aIsExact ? -1 : 1;
+    });
 
-  // Safely get the preferred voices list using a switch to prevent object injection
-  let preferred = [];
-  switch (langPrefix) {
-    case 'fr':
-      preferred = preferredVoices.fr;
-      break;
-    case 'en':
-      preferred = preferredVoices.en;
-      break;
-    case 'es':
-      preferred = preferredVoices.es;
-      break;
+  // 2. Try to find a preferred voice
+  const preferredVoice = findPreferredVoice(localCandidates, langPrefix);
+  if (preferredVoice) {
+    console.log(`[Speech] Found preferred voice: ${preferredVoice.name}`);
+    return preferredVoice;
   }
 
-  // 1. Find local voices that match the primary language
-  const voiceCandidates = voices.filter(
-    voice => voice.localService && voice.lang.startsWith(langPrefix)
-  );
-
-  // Prioritize exact locale match over regional variants
-  voiceCandidates.sort((a, b) => {
-    const aIsExact = a.lang.toLowerCase() === lang.toLowerCase();
-    const bIsExact = b.lang.toLowerCase() === lang.toLowerCase();
-    if (aIsExact === bIsExact) return 0;
-    return aIsExact ? -1 : 1;
-  });
-
-  // 2. Try to find a preferred voice from the sorted candidates
-  for (const voiceName of preferred) {
-    const found = voiceCandidates.find(v => v.name === voiceName);
-    if (found) {
-      console.log(`[Speech] Found preferred voice: ${found.name}`);
-      return found;
-    }
-  }
-
-  // 3. If no preferred voice is found, return the first candidate (best match from sort)
-  if (voiceCandidates.length > 0) {
+  // 3. Fallback to the best local candidate
+  if (localCandidates.length > 0) {
     console.log(
-      `[Speech] No preferred voice found, using first available local voice: ${voiceCandidates[0].name}`
+      `[Speech] No preferred voice found, using first available local voice: ${localCandidates[0].name}`
     );
-    return voiceCandidates[0];
+    return localCandidates[0];
   }
 
-  // 4. If no local voice is available, find any voice matching the primary language
+  // 4. Fallback to any remote voice
   const anyVoice = voices.find(voice => voice.lang.startsWith(langPrefix));
   if (anyVoice) {
     console.log(
