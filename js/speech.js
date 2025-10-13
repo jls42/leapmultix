@@ -43,8 +43,7 @@ function initializeAudioSync() {
 
   // Listen for subsequent updates
   eventBus.on('volumeChanged', payload => {
-    const detail =
-      payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : payload;
+    const detail = payload?.detail ?? payload;
     if (!detail || typeof detail !== 'object') {
       return;
     }
@@ -102,7 +101,7 @@ function getGlobalRoot() {
  */
 function getBestVoice(lang) {
   const Root = getGlobalRoot();
-  if (!Root || !Root.speechSynthesis) {
+  if (!Root?.speechSynthesis) {
     return null;
   }
 
@@ -170,7 +169,7 @@ function getBestVoice(lang) {
  */
 function updateVoiceSelection() {
   const Root = getGlobalRoot();
-  if (!Root || !Root.speechSynthesis) {
+  if (!Root?.speechSynthesis) {
     return;
   }
 
