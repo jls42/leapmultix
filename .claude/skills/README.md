@@ -102,11 +102,146 @@ npm run sw:fix                # Réparer SW en cas de problèmes
 - Debugging avec Chrome DevTools
 - Tests offline et mise à jour forcée
 
-### 🟡 Moyenne priorité (à créer)
+### 🟢 Phase 3 - Skills avancées (implémentées)
 
 #### 7. JSDoc Generator
-**Description :** Générer documentation JSDoc pour modules ES6
-**Quand créer :** Pour standardiser la documentation du code
+**Emplacement :** `jsdoc-generator/`
+**Description :** Génère automatiquement la documentation JSDoc pour modules ES6
+**Utilisation :** Claude active cette skill lors de documentation de fonctions/classes
+
+**Commandes manuelles :**
+```bash
+npm run analyze:jsdoc       # Analyser couverture JSDoc
+npm run improve:jsdoc       # Suggestions amélioration
+```
+
+**Concepts couverts :**
+- Format JSDoc standard (@param, @returns, @throws, @example)
+- Types TypeScript-like dans JSDoc
+- Documentation de classes et modules
+- @typedef pour types personnalisés
+- Génération HTML avec JSDoc CLI
+
+#### 8. Performance Profiler
+**Emplacement :** `performance-profiler/`
+**Description :** Analyse et optimise les performances (temps de chargement, FPS, mémoire)
+**Utilisation :** Claude active cette skill lors de ralentissements ou optimisation
+
+**Outils couverts :**
+- Chrome DevTools Performance
+- Lighthouse audits
+- Performance API (performance.mark/measure)
+- FPS monitoring
+- Memory leak detection
+
+**Objectifs :**
+- FPS ≥ 60 dans jeux arcade
+- First Contentful Paint < 1.5s
+- Time to Interactive < 3s
+- Memory usage stable
+
+#### 9. Bundle Size Optimizer
+**Emplacement :** `bundle-size-optimizer/`
+**Description :** Analyse et réduit la taille des bundles JavaScript
+**Utilisation :** Claude active cette skill lors d'ajout de dépendances ou bundle > 200 KB
+
+**Commandes manuelles :**
+```bash
+npm run analyze:dependencies  # Analyser dépendances
+npm run verify:dead-code      # Détecter code mort
+```
+
+**Stratégies :**
+- Tree shaking et code splitting
+- Lazy loading (déjà implémenté dans lazy-loader.js)
+- Minification avec Terser
+- Bundle analysis avec visualizer
+
+#### 10. Asset Optimizer
+**Emplacement :** `asset-optimizer/`
+**Description :** Optimise images, sprites, sons et médias pour réduire bande passante
+**Utilisation :** Claude active cette skill avant d'ajouter gros assets
+
+**Commandes manuelles :**
+```bash
+npm run assets:generate      # Générer versions responsive
+npm run assets:analyze       # Analyser utilisation
+npm run assets:diff          # Comparer avant/après
+```
+
+**Optimisations :**
+- Compression images (PNG, JPG, WebP, AVIF)
+- Sprite sheets et lazy loading
+- Audio compression (MP3 96 kbps)
+- Formats modernes avec fallback
+
+### 🎮 Phase 4 - Skills spécialisées (implémentées)
+
+#### 11. Arcade Game Creator
+**Emplacement :** `arcade-game-creator/`
+**Description :** Crée des jeux arcade canvas HTML5 suivant les patterns leapmultix
+**Utilisation :** Claude active cette skill lors de création de nouveaux mini-jeux
+
+**Architecture :**
+- Engine (logique jeu)
+- Renderer (rendu canvas)
+- Controls (clavier + touch)
+- Questions (intégration multiplication)
+
+**Jeux de référence :**
+- `multisnake.js` (38 KB) - Snake game
+- `arcade-invasion.js` (31 KB) - Space Invaders
+- `multimiam-*.js` - Multimiam décomposé
+
+#### 12. Animation System Helper
+**Emplacement :** `animation-system/`
+**Description :** Crée animations CSS et JavaScript (keyframes, transitions, sprite animations)
+**Utilisation :** Claude active cette skill lors d'ajout d'animations visuelles
+
+**Types d'animations :**
+- CSS Keyframes (@keyframes fadeIn, pulse, shake, etc.)
+- CSS Transitions (hover, active states)
+- JavaScript requestAnimationFrame
+- Sprite animations canvas
+- Particle systems
+
+**Performance :**
+- GPU acceleration (transform, opacity)
+- prefers-reduced-motion support
+- 60 FPS maintenu
+
+#### 13. Sound Effect Manager
+**Emplacement :** `sound-effect-manager/`
+**Description :** Gère effets sonores et audio pour feedback utilisateur
+**Utilisation :** Claude active cette skill lors d'ajout de nouveaux sons
+
+**Module existant :**
+- `js/core/audio.js` - AudioManager complet
+- playSound(), setVolume(), toggleMute()
+
+**Patterns :**
+- Sound pools (sons répétitifs)
+- Fade in/out
+- Musique de fond avec loop
+- Web Audio API avancé
+- Mobile autoplay handling
+
+#### 14. Sprite Management
+**Emplacement :** `sprite-management/`
+**Description :** Gère sprites, sprite sheets, animations et collisions
+**Utilisation :** Claude active cette skill lors de création de jeux ou ajout de personnages
+
+**Features :**
+- Sprite simple et sprite sheets
+- Animations (idle, walk, jump, attack)
+- Collisions (AABB, circle, spatial grid)
+- Sprites directionnels (4 directions)
+- Object pooling et culling
+
+**Optimisations :**
+- Batch rendering
+- Spatial hashing pour collisions
+- Culling (dessiner seulement visible)
 
 ## Comment utiliser les Skills
 
@@ -405,17 +540,21 @@ Questions ou problèmes avec les Skills ?
 - [x] Accessibility Validator
 - [x] PWA Service Worker Manager
 
-### Phase 3 (Actuelle) - Skills avancées
-- [ ] JSDoc Generator - Documentation ES6 automatisée
-- [ ] Performance Profiler - Analyse et optimisation performance
-- [ ] Bundle Size Optimizer - Optimisation taille bundles
-- [ ] Asset Optimizer - Optimisation images et médias
+### Phase 3 ✅ - Skills avancées (Complétée)
+- [x] JSDoc Generator - Documentation ES6 automatisée
+- [x] Performance Profiler - Analyse et optimisation performance
+- [x] Bundle Size Optimizer - Optimisation taille bundles
+- [x] Asset Optimizer - Optimisation images et médias
 
-### Phase 4 - Skills spécialisées
-- [ ] Arcade Game Creator - Template jeux arcade canvas
-- [ ] Animation System Helper - Animations CSS/JS
-- [ ] Sound Effect Manager - Gestion effets sonores
-- [ ] Sprite Management - Gestion sprites et animations
+### Phase 4 ✅ - Skills spécialisées (Complétée)
+- [x] Arcade Game Creator - Template jeux arcade canvas
+- [x] Animation System Helper - Animations CSS/JS
+- [x] Sound Effect Manager - Gestion effets sonores
+- [x] Sprite Management - Gestion sprites et animations
+
+## 🎉 Toutes les skills ont été créées !
+
+**Total : 14 skills opérationnelles** couvrant l'ensemble du cycle de développement de leapmultix, de la qualité du code aux jeux arcade en passant par l'optimisation et l'accessibilité.
 
 ## Licence
 
