@@ -43,19 +43,66 @@ npm run verify
 - `js/modes/QuizMode.js` - Exemple simple
 - `js/modes/ChallengeMode.js` - Exemple complexe
 
-### 🟡 Moyenne priorité (à créer)
-
 #### 4. TDD with Jest
-**Description :** Implémenter features avec TDD (RED/GREEN/REFACTOR)
-**Quand créer :** Quand vous voulez standardiser l'approche TDD
+**Emplacement :** `tdd-jest/`
+**Description :** Implémente les fonctionnalités en suivant le cycle RED/GREEN/REFACTOR avec Jest
+**Utilisation :** Claude active cette skill lors de l'ajout de features, corrections de bugs, ou refactoring
+
+**Commandes manuelles :**
+```bash
+npm test                    # Tous les tests
+npm run test:watch         # Tests en mode watch
+npm run test:coverage      # Tests avec couverture
+npm run test:verbose       # Output détaillé
+```
+
+**Concepts couverts :**
+- Cycle TDD : RED → GREEN → REFACTOR
+- Assertions Jest (toBe, toEqual, toThrow, etc.)
+- Mocking et spies
+- Tests asynchrones
+- Patterns pour Game Modes et Event Bus
 
 #### 5. Accessibility Validator
-**Description :** Tester l'accessibilité avec WCAG 2.1 AA
-**Quand créer :** Si vous voulez automatiser les audits a11y
+**Emplacement :** `accessibility/`
+**Description :** Valide l'accessibilité web selon les standards WCAG 2.1 niveau AA
+**Utilisation :** Claude active cette skill lors de modifications UI ou audits d'accessibilité
+
+**Commandes manuelles :**
+```bash
+npm run audit:accessibility    # Audit a11y complet
+npm run audit:mobile          # Audit mobile responsive
+```
+
+**Standards couverts :**
+- Structure sémantique HTML
+- Navigation clavier (Tab, Enter, Escape)
+- Attributs ARIA (labels, roles, états)
+- Contraste des couleurs (4.5:1 min)
+- Alternatives textuelles (alt, aria-label)
+- Focus visible et gestion du focus
+- Tests avec lecteurs d'écran
 
 #### 6. PWA Service Worker Manager
-**Description :** Gérer les mises à jour du service worker en toute sécurité
-**Quand créer :** Avant de modifier le service worker
+**Emplacement :** `pwa-service-worker/`
+**Description :** Gère les mises à jour du Service Worker avec versioning du cache et tests offline
+**Utilisation :** Claude active cette skill lors de modifications du SW ou ajout de ressources
+
+**Commandes manuelles :**
+```bash
+npm run test:pwa-offline      # Tester fonctionnalité offline
+npm run sw:disable            # Désactiver SW temporairement
+npm run sw:fix                # Réparer SW en cas de problèmes
+```
+
+**Concepts couverts :**
+- Versioning de cache (SemVer)
+- Stratégies de cache (Cache First, Network First)
+- Événements SW (install, activate, fetch)
+- Debugging avec Chrome DevTools
+- Tests offline et mise à jour forcée
+
+### 🟡 Moyenne priorité (à créer)
 
 #### 7. JSDoc Generator
 **Description :** Générer documentation JSDoc pour modules ES6
@@ -78,6 +125,15 @@ Vous : "Je suis prêt à committer mes changements"
 
 Vous : "Je veux créer un nouveau mode de jeu pour apprendre les divisions"
 → Claude active automatiquement la skill "New Game Mode Creator"
+
+Vous : "Je veux implémenter une nouvelle fonction en TDD"
+→ Claude active automatiquement la skill "TDD with Jest"
+
+Vous : "Peux-tu vérifier l'accessibilité de cette page ?"
+→ Claude active automatiquement la skill "Accessibility Validator"
+
+Vous : "Je dois mettre à jour le Service Worker"
+→ Claude active automatiquement la skill "PWA Service Worker Manager"
 ```
 
 ### Vérifier les Skills disponibles
@@ -100,6 +156,15 @@ Est-ce que mon code est prêt à être committé ?
 
 Comment créer un nouveau mode de jeu ?
 → Active "New Game Mode Creator"
+
+Écris les tests en TDD pour cette fonction
+→ Active "TDD with Jest"
+
+Vérifie l'accessibilité de ce composant
+→ Active "Accessibility Validator"
+
+Comment mettre à jour le cache du Service Worker ?
+→ Active "PWA Service Worker Manager"
 ```
 
 ## Structure d'une Skill
@@ -330,27 +395,27 @@ Questions ou problèmes avec les Skills ?
 
 ## Roadmap
 
-### Phase 1 (Actuelle) - Skills de base
+### Phase 1 ✅ - Skills de base (Complétée)
 - [x] I18n Translation Sync
 - [x] Code Quality Gate
 - [x] New Game Mode Creator
 
-### Phase 2 - Skills intermédiaires
-- [ ] TDD with Jest
-- [ ] Accessibility Validator
-- [ ] PWA Service Worker Manager
+### Phase 2 ✅ - Skills intermédiaires (Complétée)
+- [x] TDD with Jest
+- [x] Accessibility Validator
+- [x] PWA Service Worker Manager
 
-### Phase 3 - Skills avancées
-- [ ] JSDoc Generator
-- [ ] Performance Profiler
-- [ ] Bundle Size Optimizer
-- [ ] Asset Optimizer
+### Phase 3 (Actuelle) - Skills avancées
+- [ ] JSDoc Generator - Documentation ES6 automatisée
+- [ ] Performance Profiler - Analyse et optimisation performance
+- [ ] Bundle Size Optimizer - Optimisation taille bundles
+- [ ] Asset Optimizer - Optimisation images et médias
 
 ### Phase 4 - Skills spécialisées
-- [ ] Arcade Game Creator
-- [ ] Animation System Helper
-- [ ] Sound Effect Manager
-- [ ] Sprite Management
+- [ ] Arcade Game Creator - Template jeux arcade canvas
+- [ ] Animation System Helper - Animations CSS/JS
+- [ ] Sound Effect Manager - Gestion effets sonores
+- [ ] Sprite Management - Gestion sprites et animations
 
 ## Licence
 
