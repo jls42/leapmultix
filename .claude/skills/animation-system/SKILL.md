@@ -1,5 +1,5 @@
 ---
-name: "Animation System Helper"
+name: 'Animation System Helper'
 description: "Crée et gère animations CSS et JavaScript (keyframes, transitions, sprite animations, canvas animations). Utiliser lors d'ajout d'animations visuelles ou feedback utilisateur"
 ---
 
@@ -8,6 +8,7 @@ description: "Crée et gère animations CSS et JavaScript (keyframes, transition
 Cette skill guide la création d'animations fluides pour améliorer l'expérience utilisateur.
 
 ## Quand utiliser cette skill
+
 - Ajout de feedback visuel (boutons, transitions)
 - Animations de sprites (jeux arcade)
 - Transitions entre slides
@@ -43,33 +44,59 @@ Cette skill guide la création d'animations fluides pour améliorer l'expérienc
 ```css
 /* Pulse (battement) */
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 /* Shake (secousse) */
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-10px); }
-  75% { transform: translateX(10px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
 }
 
 /* Bounce (rebond) */
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 /* Rotate (rotation) */
 @keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Flash (clignotement) */
 @keyframes flash {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 ```
 
@@ -95,13 +122,13 @@ Cette skill guide la création d'animations fluides pour améliorer l'expérienc
 
 ```css
 button {
-  background: #1976D2;
+  background: #1976d2;
   transform: scale(1);
   transition: all 0.2s ease;
 }
 
 button:hover {
-  background: #1565C0;
+  background: #1565c0;
   transform: scale(1.05);
 }
 
@@ -122,7 +149,7 @@ button:active {
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 ```
 
@@ -223,13 +250,18 @@ function easeOutCubic(t) {
 }
 
 // Utilisation
-animateWithCallback(element, {
-  opacity: 1,
-  left: 300,
-  top: 200
-}, 500, () => {
-  console.log('Animation terminée');
-});
+animateWithCallback(
+  element,
+  {
+    opacity: 1,
+    left: 300,
+    top: 200,
+  },
+  500,
+  () => {
+    console.log('Animation terminée');
+  }
+);
 ```
 
 ### 4. Sprite Animations (canvas)
@@ -264,10 +296,14 @@ class SpriteAnimation {
 
     ctx.drawImage(
       this.image,
-      sourceX, 0, // Source position
-      this.frameWidth, this.frameHeight, // Source size
-      x, y, // Destination position
-      this.frameWidth, this.frameHeight // Destination size
+      sourceX,
+      0, // Source position
+      this.frameWidth,
+      this.frameHeight, // Source size
+      x,
+      y, // Destination position
+      this.frameWidth,
+      this.frameHeight // Destination size
     );
   }
 
@@ -280,7 +316,8 @@ class SpriteAnimation {
 // Utilisation
 const monsterWalk = new SpriteAnimation(
   monsterImage,
-  64, 64, // Frame width/height
+  64,
+  64, // Frame width/height
   8, // 8 frames
   12 // 12 FPS
 );
@@ -335,10 +372,14 @@ class DirectionalSpriteAnimation {
 
     ctx.drawImage(
       this.spritesheet,
-      sourceX, sourceY,
-      anim.frameWidth, anim.frameHeight,
-      x, y,
-      anim.frameWidth, anim.frameHeight
+      sourceX,
+      sourceY,
+      anim.frameWidth,
+      anim.frameHeight,
+      x,
+      y,
+      anim.frameWidth,
+      anim.frameHeight
     );
   }
 }
@@ -348,7 +389,7 @@ const playerAnimations = new DirectionalSpriteAnimation(playerSpritesheet, {
   idle: { row: 0, startFrame: 0, frameCount: 4, frameWidth: 64, frameHeight: 64, fps: 8 },
   walk_right: { row: 1, startFrame: 0, frameCount: 6, frameWidth: 64, frameHeight: 64, fps: 10 },
   walk_left: { row: 2, startFrame: 0, frameCount: 6, frameWidth: 64, frameHeight: 64, fps: 10 },
-  jump: { row: 3, startFrame: 0, frameCount: 3, frameWidth: 64, frameHeight: 64, fps: 15 }
+  jump: { row: 3, startFrame: 0, frameCount: 3, frameWidth: 64, frameHeight: 64, fps: 15 },
 });
 
 // Utilisation
@@ -405,9 +446,7 @@ class ParticleSystem {
       const velocityY = Math.sin(angle) * speed;
       const life = 500 + Math.random() * 500;
 
-      this.particles.push(
-        new Particle(x, y, velocityX, velocityY, life, color)
-      );
+      this.particles.push(new Particle(x, y, velocityX, velocityY, life, color));
     }
   }
 
@@ -434,7 +473,7 @@ function onCollision(x, y) {
 
 ### Animation de feedback (réponse correcte)
 
-```javascript
+````javascript
 // Classe ou fonction utilitaire
 export function showCorrectFeedback(element) {
   element.classList.add('correct-feedback');
@@ -465,7 +504,7 @@ export function showCorrectFeedback(element) {
     background: transparent;
   }
 }
-```
+````
 
 ### Animation de transition entre slides
 
@@ -529,14 +568,19 @@ export function animateCoinGain(amount, fromElement) {
   const target = document.getElementById('coinDisplay');
   const targetRect = target.getBoundingClientRect();
 
-  animateElement(coin, {
-    left: targetRect.left,
-    top: targetRect.top,
-    opacity: 0
-  }, 800, () => {
-    coin.remove();
-    updateCoinDisplay(amount);
-  });
+  animateElement(
+    coin,
+    {
+      left: targetRect.left,
+      top: targetRect.top,
+      opacity: 0,
+    },
+    800,
+    () => {
+      coin.remove();
+      updateCoinDisplay(amount);
+    }
+  );
 }
 ```
 
@@ -557,9 +601,7 @@ export function animateCoinGain(amount, fromElement) {
 
 ```javascript
 // Détecter préférence en JS
-const prefersReducedMotion = window.matchMedia(
-  '(prefers-reduced-motion: reduce)'
-).matches;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 if (!prefersReducedMotion) {
   // Activer animations complexes
@@ -586,7 +628,7 @@ if (!prefersReducedMotion) {
 /* ❌ Mauvais : CPU layout/paint */
 .animated {
   left: 100px;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
 }
 ```
 
@@ -631,22 +673,22 @@ export const Easing = {
 
   easeInQuad: t => t * t,
   easeOutQuad: t => t * (2 - t),
-  easeInOutQuad: t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+  easeInOutQuad: t => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
 
   easeInCubic: t => t * t * t,
-  easeOutCubic: t => (--t) * t * t + 1,
-  easeInOutCubic: t => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
+  easeOutCubic: t => --t * t * t + 1,
+  easeInOutCubic: t => (t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1),
 
   easeInElastic: t => {
     if (t === 0 || t === 1) return t;
     const p = 0.3;
-    return -Math.pow(2, 10 * (t - 1)) * Math.sin((t - 1.1) * 2 * Math.PI / p);
+    return -Math.pow(2, 10 * (t - 1)) * Math.sin(((t - 1.1) * 2 * Math.PI) / p);
   },
 
   easeOutElastic: t => {
     if (t === 0 || t === 1) return t;
     const p = 0.3;
-    return Math.pow(2, -10 * t) * Math.sin((t - 0.1) * 2 * Math.PI / p) + 1;
+    return Math.pow(2, -10 * t) * Math.sin(((t - 0.1) * 2 * Math.PI) / p) + 1;
   },
 
   easeOutBounce: t => {
@@ -659,7 +701,7 @@ export const Easing = {
     } else {
       return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
     }
-  }
+  },
 };
 
 // Utilisation

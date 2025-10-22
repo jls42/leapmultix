@@ -1,6 +1,6 @@
 ---
-name: "Sprite Management"
-description: "Gère sprites, sprite sheets, animations de sprites pour jeux arcade (chargement, rendu, collisions). Utiliser lors de création de jeux ou ajout de personnages animés"
+name: 'Sprite Management'
+description: 'Gère sprites, sprite sheets, animations de sprites pour jeux arcade (chargement, rendu, collisions). Utiliser lors de création de jeux ou ajout de personnages animés'
 ---
 
 # Sprite Management
@@ -8,6 +8,7 @@ description: "Gère sprites, sprite sheets, animations de sprites pour jeux arca
 Cette skill guide la gestion des sprites et sprite sheets pour les jeux arcade de leapmultix.
 
 ## Quand utiliser cette skill
+
 - Ajout de nouveaux personnages/ennemis
 - Création de sprite sheets
 - Animations de sprites (marche, saut, etc.)
@@ -18,12 +19,14 @@ Cette skill guide la gestion des sprites et sprite sheets pour les jeux arcade d
 ## Sprites dans leapmultix
 
 **Sprites existants :**
+
 - Monsters (jeux arcade)
 - Player characters
 - Power-ups
 - Obstacles
 
 **Formats utilisés :**
+
 - PNG avec transparence
 - Sprite sheets (multiples frames)
 - Résolutions multiples (@1x, @2x, @3x)
@@ -33,6 +36,7 @@ Cette skill guide la gestion des sprites et sprite sheets pour les jeux arcade d
 ### 1. Préparer image
 
 **Spécifications :**
+
 - Format : PNG (transparence)
 - Taille : 64×64px (base) ou multiples de 16
 - Résolutions : 1x, 2x, 3x pour Retina
@@ -68,13 +72,7 @@ export class Sprite {
   draw(ctx) {
     if (!this.loaded) return;
 
-    ctx.drawImage(
-      this.image,
-      this.x,
-      this.y,
-      this.width,
-      this.height
-    );
+    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
   }
 
   // Bounding box pour collisions
@@ -83,7 +81,7 @@ export class Sprite {
       x: this.x,
       y: this.y,
       width: this.width,
-      height: this.height
+      height: this.height,
     };
   }
 
@@ -93,10 +91,7 @@ export class Sprite {
     const b = other.getBounds();
 
     return (
-      a.x < b.x + b.width &&
-      a.x + a.width > b.x &&
-      a.y < b.y + b.height &&
-      a.y + a.height > b.y
+      a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
     );
   }
 
@@ -185,14 +180,14 @@ export class SpriteSheet {
 
     ctx.drawImage(
       this.image,
-      col * this.frameWidth,       // Source X
-      row * this.frameHeight,       // Source Y
-      this.frameWidth,              // Source Width
-      this.frameHeight,             // Source Height
-      x,                            // Dest X
-      y,                            // Dest Y
-      this.frameWidth,              // Dest Width
-      this.frameHeight              // Dest Height
+      col * this.frameWidth, // Source X
+      row * this.frameHeight, // Source Y
+      this.frameWidth, // Source Width
+      this.frameHeight, // Source Height
+      x, // Dest X
+      y, // Dest Y
+      this.frameWidth, // Dest Width
+      this.frameHeight // Dest Height
     );
   }
 
@@ -263,7 +258,7 @@ export class AnimatedSprite {
       frameCount: config.frameCount,
       fps: config.fps || 10,
       loop: config.loop !== false,
-      frameInterval: 1000 / (config.fps || 10)
+      frameInterval: 1000 / (config.fps || 10),
     });
   }
 
@@ -323,13 +318,7 @@ export class AnimatedSprite {
       ctx.translate(-this.x - this.spriteSheet.frameWidth, 0);
     }
 
-    this.spriteSheet.drawFrameFromRow(
-      ctx,
-      anim.row,
-      this.currentFrame,
-      this.x,
-      this.y
-    );
+    this.spriteSheet.drawFrameFromRow(ctx, anim.row, this.currentFrame, this.x, this.y);
 
     ctx.restore();
   }
@@ -371,12 +360,7 @@ function gameLoop(deltaTime) {
  * Collision rectangulaire simple
  */
 function checkAABBCollision(a, b) {
-  return (
-    a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
-    a.y < b.y + b.height &&
-    a.y + a.height > b.y
-  );
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
 // Utilisation
@@ -392,10 +376,10 @@ if (checkAABBCollision(player, enemy)) {
  * Collision pour sprites circulaires
  */
 function checkCircleCollision(a, b) {
-  const dx = (a.x + a.width / 2) - (b.x + b.width / 2);
-  const dy = (a.y + a.height / 2) - (b.y + b.height / 2);
+  const dx = a.x + a.width / 2 - (b.x + b.width / 2);
+  const dy = a.y + a.height / 2 - (b.y + b.height / 2);
   const distance = Math.sqrt(dx * dx + dy * dy);
-  const radiusSum = (a.width / 2) + (b.width / 2);
+  const radiusSum = a.width / 2 + b.width / 2;
 
   return distance < radiusSum;
 }
@@ -606,7 +590,7 @@ class DirectionalSprite extends AnimatedSprite {
       down: 0,
       left: 1,
       right: 2,
-      up: 3
+      up: 3,
     };
 
     // Changer animation en fonction de direction

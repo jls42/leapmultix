@@ -1,6 +1,6 @@
 ---
-name: "PWA Service Worker Manager"
-description: "Gère les mises à jour du Service Worker de manière sécurisée avec versioning du cache et tests offline. Utiliser lors de modifications du SW, ajout de ressources, ou changements de stratégie de cache"
+name: 'PWA Service Worker Manager'
+description: 'Gère les mises à jour du Service Worker de manière sécurisée avec versioning du cache et tests offline. Utiliser lors de modifications du SW, ajout de ressources, ou changements de stratégie de cache'
 ---
 
 # PWA Service Worker Manager
@@ -8,6 +8,7 @@ description: "Gère les mises à jour du Service Worker de manière sécurisée 
 Cette skill guide la gestion sécurisée du Service Worker pour l'application PWA leapmultix.
 
 ## Quand utiliser cette skill
+
 - Modification du Service Worker
 - Ajout de nouvelles ressources à cacher
 - Changement de stratégie de cache
@@ -29,6 +30,7 @@ leapmultix/
 ### Stratégie de cache actuelle
 
 Le Service Worker utilise une stratégie **Cache First** avec fallback :
+
 1. Vérifier le cache en premier
 2. Si absent, fetch depuis le réseau
 3. Mettre en cache la nouvelle ressource
@@ -72,6 +74,7 @@ const CACHE_NAME = `leapmultix-${CACHE_VERSION}`;
 ```
 
 **Quand incrémenter la version :**
+
 - Changements dans `sw.js` → Incrémenter version
 - Ajout/suppression de ressources → Incrémenter version
 - Modification de stratégie de cache → Incrémenter version
@@ -80,6 +83,7 @@ const CACHE_NAME = `leapmultix-${CACHE_VERSION}`;
 ### Convention de versioning
 
 Utiliser **SemVer** (Semantic Versioning) :
+
 - **Major** (v2.0.0) : Changements cassants, nouvelle architecture
 - **Minor** (v1.2.0) : Nouvelles fonctionnalités, ressources ajoutées
 - **Patch** (v1.2.3) : Corrections de bugs, optimisations
@@ -126,7 +130,7 @@ const RESOURCES_TO_CACHE = [
   '/js/game.js',
   // Ajouter nouvelles ressources ici
   '/js/new-feature.js',
-  '/assets/new-sprite.png'
+  '/assets/new-sprite.png',
 ];
 ```
 
@@ -178,17 +182,17 @@ git push -u origin feat/update-service-worker
 
 ```javascript
 // sw.js - Cache First
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then((cached) => {
+    caches.match(event.request).then(cached => {
       // Retourner depuis cache si disponible
       if (cached) {
         return cached;
       }
 
       // Sinon fetch et mettre en cache
-      return fetch(event.request).then((response) => {
-        return caches.open(CACHE_NAME).then((cache) => {
+      return fetch(event.request).then(response => {
+        return caches.open(CACHE_NAME).then(cache => {
           cache.put(event.request, response.clone());
           return response;
         });
@@ -199,11 +203,13 @@ self.addEventListener('fetch', (event) => {
 ```
 
 **Avantages :**
+
 - Performance maximale
 - Fonctionne offline
 - Réduit utilisation réseau
 
 **Inconvénients :**
+
 - Contenu peut être obsolète
 - Nécessite version de cache pour forcer update
 
@@ -213,13 +219,13 @@ self.addEventListener('fetch', (event) => {
 
 ```javascript
 // Network First - Pour données dynamiques
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   if (event.request.url.includes('/api/')) {
     event.respondWith(
       fetch(event.request)
-        .then((response) => {
+        .then(response => {
           // Mettre en cache après fetch
-          return caches.open(CACHE_NAME).then((cache) => {
+          return caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, response.clone());
             return response;
           });
@@ -239,12 +245,9 @@ self.addEventListener('fetch', (event) => {
 
 ```javascript
 // Cache Only - Assets immuables
-const IMMUTABLE_ASSETS = [
-  '/assets/logo.svg',
-  '/fonts/roboto.woff2'
-];
+const IMMUTABLE_ASSETS = ['/assets/logo.svg', '/fonts/roboto.woff2'];
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   if (IMMUTABLE_ASSETS.some(asset => event.request.url.includes(asset))) {
     event.respondWith(caches.match(event.request));
   }
@@ -257,12 +260,9 @@ self.addEventListener('fetch', (event) => {
 
 ```javascript
 // Network Only - Toujours fetch
-const NO_CACHE_URLS = [
-  '/api/auth/',
-  '/analytics/'
-];
+const NO_CACHE_URLS = ['/api/auth/', '/analytics/'];
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   if (NO_CACHE_URLS.some(url => event.request.url.includes(url))) {
     event.respondWith(fetch(event.request));
   }
@@ -275,11 +275,11 @@ self.addEventListener('fetch', (event) => {
 
 ```javascript
 // sw.js - Installation
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   console.log('[SW] Installing version', CACHE_VERSION);
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(CACHE_NAME).then(cache => {
       console.log('[SW] Caching resources');
       return cache.addAll(RESOURCES_TO_CACHE);
     })
@@ -291,6 +291,7 @@ self.addEventListener('install', (event) => {
 ```
 
 **À faire pendant install :**
+
 - Ouvrir nouveau cache
 - Pré-cacher ressources critiques
 - Appeler `skipWaiting()` pour activation immédiate
@@ -299,19 +300,19 @@ self.addEventListener('install', (event) => {
 
 ```javascript
 // sw.js - Activation
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
   console.log('[SW] Activating version', CACHE_VERSION);
 
   event.waitUntil(
     // Nettoyer anciens caches
-    caches.keys().then((cacheNames) => {
+    caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames
-          .filter((name) => {
+          .filter(name => {
             // Supprimer caches qui ne matchent pas la version actuelle
             return name.startsWith('leapmultix-') && name !== CACHE_NAME;
           })
-          .map((name) => {
+          .map(name => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
           })
@@ -325,6 +326,7 @@ self.addEventListener('activate', (event) => {
 ```
 
 **À faire pendant activate :**
+
 - Supprimer anciens caches
 - Appeler `clients.claim()` pour contrôle immédiat
 - Migrations de données si nécessaire
@@ -333,20 +335,21 @@ self.addEventListener('activate', (event) => {
 
 ```javascript
 // sw.js - Fetch avec gestion d'erreurs
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   // Ignorer requêtes non-GET
   if (event.request.method !== 'GET') {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request)
-      .then((cached) => {
+    caches
+      .match(event.request)
+      .then(cached => {
         if (cached) {
           return cached;
         }
 
-        return fetch(event.request).then((response) => {
+        return fetch(event.request).then(response => {
           // Ne cacher que les réponses OK
           if (!response || response.status !== 200) {
             return response;
@@ -355,14 +358,14 @@ self.addEventListener('fetch', (event) => {
           // Cloner avant de cacher
           const responseToCache = response.clone();
 
-          caches.open(CACHE_NAME).then((cache) => {
+          caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache);
           });
 
           return response;
         });
       })
-      .catch((error) => {
+      .catch(error => {
         console.error('[SW] Fetch error:', error);
 
         // Page offline de fallback
@@ -412,11 +415,13 @@ const cssUrl = getCachedAssetUrl('/css/styles.css');
 ### Chrome DevTools
 
 **Accéder aux DevTools :**
+
 1. Ouvrir DevTools (F12)
 2. Aller à l'onglet "Application"
 3. Section "Service Workers"
 
 **Actions disponibles :**
+
 - **Unregister** : Supprimer le SW
 - **Update** : Forcer mise à jour
 - **Offline** : Simuler mode offline
@@ -441,7 +446,10 @@ caches.keys().then(keys => {
 
 caches.open('leapmultix-v1.2.3').then(cache => {
   cache.keys().then(requests => {
-    console.log('Ressources cachées:', requests.map(r => r.url));
+    console.log(
+      'Ressources cachées:',
+      requests.map(r => r.url)
+    );
   });
 });
 ```
@@ -450,11 +458,14 @@ caches.open('leapmultix-v1.2.3').then(cache => {
 
 ```javascript
 // Console navigateur - Supprimer tous les caches
-caches.keys().then(keys => {
-  return Promise.all(keys.map(key => caches.delete(key)));
-}).then(() => {
-  console.log('Tous les caches supprimés');
-});
+caches
+  .keys()
+  .then(keys => {
+    return Promise.all(keys.map(key => caches.delete(key)));
+  })
+  .then(() => {
+    console.log('Tous les caches supprimés');
+  });
 
 // Désinscrire le Service Worker
 navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -520,22 +531,25 @@ npx lighthouse http://localhost:8000 --view
 ### 1. Service Worker ne s'update pas
 
 **Symptômes :**
+
 - Ancien cache toujours utilisé
 - Modifications non visibles
 
 **Causes :**
+
 - Version de cache non incrémentée
 - `skipWaiting()` non appelé
 - Browser cache agressif
 
 **Solutions :**
+
 ```javascript
 // sw.js - Forcer update
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   self.skipWaiting(); // ✅ Ajouter cette ligne
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
   self.clients.claim(); // ✅ Ajouter cette ligne
 });
 ```
@@ -550,20 +564,23 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
 ### 2. Ressources manquantes offline
 
 **Symptômes :**
+
 - Erreurs 404 en mode offline
 - Fonctionnalités ne marchent pas
 
 **Causes :**
+
 - Ressource non dans RESOURCES_TO_CACHE
 - Typo dans chemin
 
 **Solutions :**
+
 ```javascript
 // sw.js - Ajouter ressource manquante
 const RESOURCES_TO_CACHE = [
   // ... autres ressources
   '/js/missing-module.js', // ✅ Ajouter
-  '/assets/missing-sprite.png' // ✅ Ajouter
+  '/assets/missing-sprite.png', // ✅ Ajouter
 ];
 
 // ✅ Incrémenter version
@@ -573,34 +590,31 @@ const CACHE_VERSION = 'v1.2.4';
 ### 3. Cache trop volumineux
 
 **Symptômes :**
+
 - Temps d'installation long
 - Erreur QuotaExceeded
 
 **Solutions :**
+
 ```javascript
 // sw.js - Stratégie sélective
-const CRITICAL_RESOURCES = [
-  '/',
-  '/index.html',
-  '/css/critical.css',
-  '/js/main.js'
-];
+const CRITICAL_RESOURCES = ['/', '/index.html', '/css/critical.css', '/js/main.js'];
 
 const OPTIONAL_RESOURCES = [
-  '/assets/large-video.mp4' // Ne pas pré-cacher
+  '/assets/large-video.mp4', // Ne pas pré-cacher
 ];
 
 // Pré-cacher seulement critical
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(CACHE_NAME).then(cache => {
       return cache.addAll(CRITICAL_RESOURCES);
     })
   );
 });
 
 // Cacher optional à la demande
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   // Cache on demand pour OPTIONAL_RESOURCES
 });
 ```
@@ -608,10 +622,12 @@ self.addEventListener('fetch', (event) => {
 ### 4. SW bloqué en "waiting"
 
 **Symptômes :**
+
 - Nouveau SW installé mais pas activé
 - Reste en état "waiting"
 
 **Solutions :**
+
 ```javascript
 // main.js - Forcer activation
 navigator.serviceWorker.ready.then(registration => {
@@ -619,8 +635,7 @@ navigator.serviceWorker.ready.then(registration => {
     const newWorker = registration.installing;
 
     newWorker.addEventListener('statechange', () => {
-      if (newWorker.state === 'installed' &&
-          navigator.serviceWorker.controller) {
+      if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
         // Notifier utilisateur
         if (confirm('Nouvelle version disponible. Recharger ?')) {
           newWorker.postMessage({ type: 'SKIP_WAITING' });
@@ -633,7 +648,7 @@ navigator.serviceWorker.ready.then(registration => {
 
 ```javascript
 // sw.js - Écouter message SKIP_WAITING
-self.addEventListener('message', (event) => {
+self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
@@ -702,21 +717,25 @@ npm run serve:dist
 ## Ressources
 
 ### Fichiers projet
+
 - `sw.js` - Service Worker principal
 - `js/cache-updater.js` - Versioning cache (10 KB)
 - `manifest.json` - Manifeste PWA
 
 ### Scripts npm
+
 - `npm run test:pwa-offline` - Test fonctionnalité offline
 - `npm run sw:disable` - Désactiver Service Worker
 - `npm run sw:fix` - Réparer Service Worker
 
 ### Documentation
+
 - Service Worker API: https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API
 - Workbox (alternative): https://developers.google.com/web/tools/workbox
 - PWA Checklist: https://web.dev/pwa-checklist/
 
 ## Voir aussi
+
 - `code-quality/SKILL.md` - Workflow de qualité avant commit
 - `tdd-jest/SKILL.md` - Tests automatisés du SW
 - `CLAUDE.md` - Architecture et conventions du projet

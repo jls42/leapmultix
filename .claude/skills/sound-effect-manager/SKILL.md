@@ -1,5 +1,5 @@
 ---
-name: "Sound Effect Manager"
+name: 'Sound Effect Manager'
 description: "Gère effets sonores et audio pour feedback utilisateur (sons correct/wrong, musiques, volume). Utiliser lors d'ajout de nouveaux sons ou gestion audio"
 ---
 
@@ -8,6 +8,7 @@ description: "Gère effets sonores et audio pour feedback utilisateur (sons corr
 Cette skill guide la gestion des effets sonores et de l'audio dans leapmultix.
 
 ## Quand utiliser cette skill
+
 - Ajout de nouveaux effets sonores
 - Gestion du volume et mute
 - Musique de fond pour jeux
@@ -36,6 +37,7 @@ const muted = isMuted();
 ## Sons disponibles
 
 **Catalogue actuel :**
+
 - `correct` - Réponse correcte
 - `wrong` - Réponse incorrecte
 - `victory` - Victoire/fin de jeu
@@ -48,6 +50,7 @@ const muted = isMuted();
 ### 1. Préparer fichiers audio
 
 **Formats recommandés :**
+
 - MP3 : Compatibilité universelle
 - OGG : Alternative open-source
 - WebM : Format moderne léger
@@ -90,7 +93,7 @@ const SOUND_CATALOG = {
   coin: 'assets/sounds/coin.mp3',
   levelup: 'assets/sounds/levelup.mp3',
   // Ajouter nouveau son
-  newSound: 'assets/sounds/new-sound.mp3'
+  newSound: 'assets/sounds/new-sound.mp3',
 };
 ```
 
@@ -114,8 +117,8 @@ playSound('correct');
 
 // Avec options
 playSound('backgroundMusic', {
-  loop: true,     // Répéter en boucle
-  volume: 0.3     // Volume spécifique (0.0-1.0)
+  loop: true, // Répéter en boucle
+  volume: 0.3, // Volume spécifique (0.0-1.0)
 });
 ```
 
@@ -364,6 +367,7 @@ audioManager.playPanned('laser', -0.8);
 ### 1. Compression
 
 **Bitrate recommandé :**
+
 - Effets sonores : 96 kbps
 - Musique : 128 kbps
 - Voix : 64 kbps
@@ -378,9 +382,9 @@ ffmpeg -i input.wav -b:a 96k output.mp3
 
 ```html
 <audio id="correctSound">
-  <source src="correct.webm" type="audio/webm">
-  <source src="correct.mp3" type="audio/mpeg">
-  <source src="correct.ogg" type="audio/ogg">
+  <source src="correct.webm" type="audio/webm" />
+  <source src="correct.mp3" type="audio/mpeg" />
+  <source src="correct.ogg" type="audio/ogg" />
 </audio>
 ```
 
@@ -424,12 +428,15 @@ function unlockAudio() {
   if (audioUnlocked) return;
 
   const sound = new Audio('assets/sounds/silence.mp3'); // Fichier silence court
-  sound.play().then(() => {
-    audioUnlocked = true;
-    console.log('Audio unlocked');
-  }).catch(() => {
-    console.log('Audio still locked');
-  });
+  sound
+    .play()
+    .then(() => {
+      audioUnlocked = true;
+      console.log('Audio unlocked');
+    })
+    .catch(() => {
+      console.log('Audio still locked');
+    });
 }
 
 // Débloquer sur première interaction
@@ -455,9 +462,7 @@ document.addEventListener('visibilitychange', () => {
 ### Respecter prefers-reduced-motion
 
 ```javascript
-const prefersReducedMotion = window.matchMedia(
-  '(prefers-reduced-motion: reduce)'
-).matches;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 if (prefersReducedMotion) {
   // Désactiver sons ou réduire fréquence
@@ -469,9 +474,9 @@ if (prefersReducedMotion) {
 
 ```html
 <audio controls>
-  <source src="tutorial.mp3" type="audio/mpeg">
-  <track kind="captions" src="tutorial-fr.vtt" srclang="fr" label="Français">
-  <track kind="captions" src="tutorial-en.vtt" srclang="en" label="English">
+  <source src="tutorial.mp3" type="audio/mpeg" />
+  <track kind="captions" src="tutorial-fr.vtt" srclang="fr" label="Français" />
+  <track kind="captions" src="tutorial-en.vtt" srclang="en" label="English" />
 </audio>
 ```
 
@@ -524,13 +529,7 @@ export default class QuizMode extends GameMode {
 </button>
 
 <!-- Slider volume -->
-<input
-  type="range"
-  id="volumeSlider"
-  min="0"
-  max="100"
-  value="70"
-  aria-label="Volume">
+<input type="range" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume" />
 ```
 
 ```javascript
@@ -548,7 +547,7 @@ function updateMuteIcon() {
 }
 
 // Volume slider
-document.getElementById('volumeSlider').addEventListener('input', (e) => {
+document.getElementById('volumeSlider').addEventListener('input', e => {
   const volume = e.target.value / 100;
   setVolume(volume);
 });

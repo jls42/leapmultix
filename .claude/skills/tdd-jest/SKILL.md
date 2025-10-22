@@ -1,5 +1,5 @@
 ---
-name: "TDD with Jest"
+name: 'TDD with Jest'
 description: "Implémente les fonctionnalités en suivant le cycle Test-Driven Development RED/GREEN/REFACTOR avec Jest. Utiliser lors de l'ajout de nouvelles features, correction de bugs, ou refactoring de code existant"
 ---
 
@@ -8,6 +8,7 @@ description: "Implémente les fonctionnalités en suivant le cycle Test-Driven D
 Cette skill guide l'implémentation de code en suivant la méthodologie TDD avec le framework Jest.
 
 ## Quand utiliser cette skill
+
 - Implémentation de nouvelles fonctionnalités
 - Correction de bugs avec reproduction du problème
 - Refactoring de code existant
@@ -31,12 +32,14 @@ describe('MyFeature', () => {
 ```
 
 **Étapes :**
+
 1. Identifier le comportement à implémenter
 2. Écrire le test d'abord (avant le code)
 3. Exécuter le test et **vérifier qu'il échoue**
 4. Documenter pourquoi il échoue (fonction non définie, mauvais résultat, etc.)
 
 **Commande :**
+
 ```bash
 npm test myFeature.test.js
 ```
@@ -56,12 +59,14 @@ export function myFunction(input) {
 ```
 
 **Étapes :**
+
 1. Écrire le code le plus simple possible
 2. Ne pas optimiser, ne pas généraliser
 3. Faire passer le test uniquement
 4. Exécuter le test et **vérifier qu'il passe**
 
 **Commande :**
+
 ```bash
 npm test myFeature.test.js
 ```
@@ -73,6 +78,7 @@ npm test myFeature.test.js
 **Objectif :** Améliorer le code sans changer le comportement
 
 **Étapes :**
+
 1. Nettoyer le code (noms, structure)
 2. Éliminer les duplications
 3. Améliorer la lisibilité
@@ -80,6 +86,7 @@ npm test myFeature.test.js
 5. **Vérifier que les tests passent toujours**
 
 **Commande :**
+
 ```bash
 npm test myFeature.test.js
 ```
@@ -211,7 +218,7 @@ const mockFn = jest.fn();
 mockFn.mockReturnValue(42);
 
 // Mock avec implémentation
-mockFn.mockImplementation((x) => x * 2);
+mockFn.mockImplementation(x => x * 2);
 
 // Mock avec promesse
 mockFn.mockResolvedValue('success');
@@ -229,7 +236,7 @@ expect(mockFn).toHaveBeenCalledTimes(2);
 // Mock d'un module entier
 jest.mock('../../js/audio.js', () => ({
   playSound: jest.fn(),
-  setVolume: jest.fn()
+  setVolume: jest.fn(),
 }));
 
 // Import du mock
@@ -286,8 +293,8 @@ test('should reject promise', () => {
 ### Avec done callback
 
 ```javascript
-test('should handle callback', (done) => {
-  asyncFunction((result) => {
+test('should handle callback', done => {
+  asyncFunction(result => {
     expect(result).toBe('expected');
     done();
   });
@@ -344,10 +351,7 @@ test('should emit initialization event', async () => {
 
   await mode.init();
 
-  expect(spy).toHaveBeenCalledWith(
-    'mode:initialized',
-    expect.objectContaining({ mode: 'myMode' })
-  );
+  expect(spy).toHaveBeenCalledWith('mode:initialized', expect.objectContaining({ mode: 'myMode' }));
 });
 ```
 
@@ -405,6 +409,7 @@ npm test -- --coverage myFile.test.js
 ### Objectifs de couverture
 
 Pour leapmultix, viser :
+
 - **Statements:** > 80%
 - **Branches:** > 75%
 - **Functions:** > 80%
@@ -604,24 +609,48 @@ Avant de considérer une feature terminée :
 - [ ] Documentation ajoutée (JSDoc)
 - [ ] Code formatté et linté
 
+## Agent TDD disponible
+
+Pour appliquer cette méthodologie TDD avec expertise sur le projet leapmultix :
+
+**Test-writer Agent :**
+
+- Use the **test-writer agent** pour créer des tests TDD complets
+- Il applique automatiquement le cycle RED → GREEN → REFACTOR
+- Spécialisé dans : Jest, canvas games, event bus, storage, i18n
+- Couverture > 80%, mocking approprié, patterns leapmultix
+
+**Workflow recommandé :**
+
+1. Décrire la feature à implémenter
+2. Use the **test-writer agent** pour créer les tests (phase RED)
+3. Vérifier que les tests échouent
+4. Implémenter le code minimum (phase GREEN)
+5. Use the **test-writer agent** pour vérifier couverture et edge cases
+6. Refactorer (phase REFACTOR)
+
 ## Ressources
 
 ### Fichiers de configuration
+
 - `jest.config.cjs` - Configuration Jest
 - `tests/__tests__/` - Répertoire des tests
 
 ### Tests de référence
+
 - `tests/__tests__/core/utils.test.js` - Tests utilitaires
 - `tests/__tests__/core/storage.test.js` - Tests storage
 - `tests/__tests__/lazy-loader.test.js` - Tests lazy loading
 - `tests/__tests__/integration/` - Tests d'intégration
 
 ### Documentation Jest
+
 - Jest Matchers: https://jestjs.io/docs/expect
 - Jest Mocks: https://jestjs.io/docs/mock-functions
 - Jest Async: https://jestjs.io/docs/asynchronous
 
 ## Voir aussi
+
 - `code-quality/SKILL.md` - Skill qualité code avec workflow tests
 - `game-mode/SKILL.md` - Skill création game mode avec tests inclus
 - `CLAUDE.md` - Architecture et conventions du projet

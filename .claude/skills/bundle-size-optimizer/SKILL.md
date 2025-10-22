@@ -1,5 +1,5 @@
 ---
-name: "Bundle Size Optimizer"
+name: 'Bundle Size Optimizer'
 description: "Analyse et réduit la taille des bundles JavaScript pour chargement rapide. Utiliser lors d'ajout de dépendances, avant release, ou si bundle > 200 KB"
 ---
 
@@ -8,6 +8,7 @@ description: "Analyse et réduit la taille des bundles JavaScript pour chargemen
 Cette skill guide l'optimisation de la taille des bundles JavaScript pour un chargement rapide.
 
 ## Quand utiliser cette skill
+
 - Ajout de nouvelles dépendances
 - Bundle initial > 200 KB
 - Temps de chargement élevé
@@ -18,6 +19,7 @@ Cette skill guide l'optimisation de la taille des bundles JavaScript pour un cha
 ## Objectifs de taille
 
 **Cibles leapmultix :**
+
 - Bundle initial (critical path) : < 100 KB (gzipped)
 - Bundle total (avec lazy loaded) : < 500 KB
 - Modules individuels : < 50 KB
@@ -30,14 +32,14 @@ Cette skill guide l'optimisation de la taille des bundles JavaScript pour un cha
 ```javascript
 // Modules les plus lourds (non-gzipped)
 const moduleSizes = {
-  'multisnake.js': 38,          // Jeu Snake
-  'arcade-invasion.js': 31,     // Space Invaders
-  'arcade-multimemory.js': 31,  // Memory game
-  'userManager.js': 19,          // Gestion utilisateurs
-  'multimiam-engine.js': 15,    // Engine Multimiam
-  'VideoManager.js': 12,         // Vidéo
-  'cache-updater.js': 10,        // Cache PWA
-  'core/utils.js': 10            // Utilitaires
+  'multisnake.js': 38, // Jeu Snake
+  'arcade-invasion.js': 31, // Space Invaders
+  'arcade-multimemory.js': 31, // Memory game
+  'userManager.js': 19, // Gestion utilisateurs
+  'multimiam-engine.js': 15, // Engine Multimiam
+  'VideoManager.js': 12, // Vidéo
+  'cache-updater.js': 10, // Cache PWA
+  'core/utils.js': 10, // Utilitaires
 };
 
 // Total: ~167 KB de JS (avant gzip)
@@ -47,6 +49,7 @@ const moduleSizes = {
 ### Stratégie actuelle (✅ Déjà optimisée)
 
 Le projet utilise déjà **lazy loading** via `lazy-loader.js` :
+
 - Jeux arcade chargés à la demande
 - Modes de jeu lazy loaded
 - Économie estimée : ~120 KB sur chargement initial
@@ -111,14 +114,22 @@ export default {
   shuffle,
   random,
   clamp,
-  debounce
+  debounce,
 };
 
 // ✅ Bon : Named exports
-export function shuffle(array) { /* ... */ }
-export function random(min, max) { /* ... */ }
-export function clamp(value, min, max) { /* ... */ }
-export function debounce(func, wait) { /* ... */ }
+export function shuffle(array) {
+  /* ... */
+}
+export function random(min, max) {
+  /* ... */
+}
+export function clamp(value, min, max) {
+  /* ... */
+}
+export function debounce(func, wait) {
+  /* ... */
+}
 ```
 
 ### 2. Code Splitting
@@ -132,12 +143,12 @@ export function debounce(func, wait) { /* ... */ }
 const MODE_CONFIGS = {
   arcade: {
     module: () => import('./modes/ArcadeMode.js'),
-    size: '31 KB'
+    size: '31 KB',
   },
   invasion: {
     module: () => import('./arcade-invasion.js'),
-    size: '31 KB'
-  }
+    size: '31 KB',
+  },
 };
 
 // Charger à la demande
@@ -190,20 +201,20 @@ export default {
   output: {
     file: 'dist/bundle.js',
     format: 'es',
-    sourcemap: true
+    sourcemap: true,
   },
   plugins: [
     terser({
       compress: {
         drop_console: true, // Retirer console.log en prod
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug']
+        pure_funcs: ['console.log', 'console.debug'],
       },
       mangle: {
-        reserved: ['GameMode', 'Storage'] // Garder noms importants
-      }
-    })
-  ]
+        reserved: ['GameMode', 'Storage'], // Garder noms importants
+      },
+    }),
+  ],
 };
 ```
 
@@ -324,9 +335,9 @@ export default {
       filename: 'docs/bundle-stats.html',
       open: true,
       gzipSize: true,
-      brotliSize: true
-    })
-  ]
+      brotliSize: true,
+    }),
+  ],
 };
 ```
 
@@ -343,9 +354,7 @@ npm install --save-dev webpack-bundle-analyzer
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
-  plugins: [
-    new BundleAnalyzerPlugin()
-  ]
+  plugins: [new BundleAnalyzerPlugin()],
 };
 ```
 
@@ -450,6 +459,7 @@ gzip_types
 ```
 
 **Résultats typiques :**
+
 - JS non compressé : 200 KB
 - JS gzippé : 60 KB (-70%)
 
@@ -467,6 +477,7 @@ brotli_types
 ```
 
 **Résultats typiques :**
+
 - JS non compressé : 200 KB
 - JS brotli : 50 KB (-75%)
 
@@ -512,13 +523,13 @@ module.exports = {
       filename: 'remoteEntry.js',
       exposes: {
         './GameMode': './js/core/GameMode.js',
-        './Utils': './js/core/utils.js'
+        './Utils': './js/core/utils.js',
       },
       shared: {
         // Partager dépendances communes
-      }
-    })
-  ]
+      },
+    }),
+  ],
 };
 ```
 
@@ -526,13 +537,13 @@ module.exports = {
 
 ```html
 <!-- Preload : Ressource critique (haute priorité) -->
-<link rel="preload" href="/js/main.js" as="script">
+<link rel="preload" href="/js/main.js" as="script" />
 
 <!-- Prefetch : Ressource future (basse priorité) -->
-<link rel="prefetch" href="/js/arcade-invasion.js">
+<link rel="prefetch" href="/js/arcade-invasion.js" />
 
 <!-- Preconnect : Connection future -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
 ```
 
 ```javascript
@@ -546,9 +557,13 @@ function prefetchModule(modulePath) {
 }
 
 // Prefetch au hover
-document.querySelector('.arcade-btn').addEventListener('mouseenter', () => {
-  prefetchModule('/js/arcade-invasion.js');
-}, { once: true });
+document.querySelector('.arcade-btn').addEventListener(
+  'mouseenter',
+  () => {
+    prefetchModule('/js/arcade-invasion.js');
+  },
+  { once: true }
+);
 ```
 
 ## Mesurer l'impact
@@ -568,7 +583,7 @@ function measureBundle(filePath) {
     file: filePath,
     raw: `${(content.length / 1024).toFixed(2)} KB`,
     gzip: `${(gzipped.length / 1024).toFixed(2)} KB`,
-    ratio: `${((1 - gzipped.length / content.length) * 100).toFixed(1)}%`
+    ratio: `${((1 - gzipped.length / content.length) * 100).toFixed(1)}%`,
   });
 }
 

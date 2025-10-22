@@ -1,6 +1,6 @@
 ---
-name: "Arcade Game Creator"
-description: "Crée des jeux arcade canvas HTML5 suivant les patterns leapmultix (Multimiam, Multisnake, Invasion). Utiliser lors de création de nouveaux mini-jeux arcade"
+name: 'Arcade Game Creator'
+description: 'Crée des jeux arcade canvas HTML5 suivant les patterns leapmultix (Multimiam, Multisnake, Invasion). Utiliser lors de création de nouveaux mini-jeux arcade'
 ---
 
 # Arcade Game Creator
@@ -8,6 +8,7 @@ description: "Crée des jeux arcade canvas HTML5 suivant les patterns leapmultix
 Cette skill guide la création de nouveaux jeux arcade canvas pour le mode Arcade de leapmultix.
 
 ## Quand utiliser cette skill
+
 - Création d'un nouveau jeu arcade
 - Extension du mode Arcade
 - Adaptation de jeux existants
@@ -16,6 +17,7 @@ Cette skill guide la création de nouveaux jeux arcade canvas pour le mode Arcad
 ## Jeux existants (références)
 
 **Multimiam :**
+
 - Architecture décomposée (engine, renderer, controls, questions, UI)
 - `multimiam-engine.js` (15 KB) - Logique jeu
 - `multimiam-renderer.js` (9 KB) - Rendu canvas
@@ -23,14 +25,17 @@ Cette skill guide la création de nouveaux jeux arcade canvas pour le mode Arcad
 - `multimiam-questions.js` (6 KB) - Questions multiplication
 
 **Multisnake :**
+
 - `multisnake.js` (38 KB) - Jeu Snake complet
 - Grille, serpent, pommes avec questions math
 
 **Arcade Invasion :**
+
 - `arcade-invasion.js` (31 KB) - Space Invaders style
 - Vagues d'ennemis, tir, questions pour munitions
 
 **Arcade Multi Memory :**
+
 - `arcade-multimemory.js` (31 KB) - Memory matching
 - Paires de multiplications à associer
 
@@ -80,7 +85,7 @@ export function startNewGame(canvas, options = {}) {
   // Lifecycle
   function init() {
     engine.init();
-    controls.onInput((input) => engine.handleInput(input));
+    controls.onInput(input => engine.handleInput(input));
 
     // Événements
     eventBus.on('game:correct', handleCorrectAnswer);
@@ -128,7 +133,7 @@ export function startNewGame(canvas, options = {}) {
     if (options.onComplete) {
       options.onComplete({
         score: engine.getScore(),
-        correctAnswers: engine.getCorrectCount()
+        correctAnswers: engine.getCorrectCount(),
       });
     }
 
@@ -151,7 +156,7 @@ export function startNewGame(canvas, options = {}) {
       gameRunning = true;
       gameLoop();
     },
-    stop: endGame
+    stop: endGame,
   };
 }
 ```
@@ -220,7 +225,7 @@ export class NewGameEngine {
       score: this.score,
       lives: this.lives,
       level: this.level,
-      entities: this.entities
+      entities: this.entities,
     };
   }
 
@@ -360,7 +365,7 @@ export class NewGameControls {
   }
 
   setupKeyboard() {
-    this.onKeyDown = (e) => {
+    this.onKeyDown = e => {
       this.keys.add(e.key);
 
       switch (e.key) {
@@ -383,7 +388,7 @@ export class NewGameControls {
       }
     };
 
-    this.onKeyUp = (e) => {
+    this.onKeyUp = e => {
       this.keys.delete(e.key);
     };
 
@@ -395,13 +400,13 @@ export class NewGameControls {
     let touchStartX = 0;
     let touchStartY = 0;
 
-    this.onTouchStart = (e) => {
+    this.onTouchStart = e => {
       const touch = e.touches[0];
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
     };
 
-    this.onTouchEnd = (e) => {
+    this.onTouchEnd = e => {
       const touch = e.changedTouches[0];
       const deltaX = touch.clientX - touchStartX;
       const deltaY = touch.clientY - touchStartY;
@@ -475,7 +480,7 @@ export class QuestionSystem {
     // Émettre événement
     eventBus.emit(isCorrect ? 'game:correct' : 'game:wrong', {
       question: this.currentQuestion,
-      userAnswer
+      userAnswer,
     });
 
     this.currentQuestion = null;
@@ -499,8 +504,8 @@ const MODE_CONFIGS = {
   newGame: {
     module: () => import('./arcade-new-game.js'),
     size: '30 KB', // Estimer taille
-    description: 'Description du nouveau jeu'
-  }
+    description: 'Description du nouveau jeu',
+  },
 };
 ```
 
@@ -525,13 +530,13 @@ async function startArcadeNewGame() {
   const { startNewGame } = await import('./arcade-new-game.js');
 
   const game = startNewGame(canvas, {
-    onScore: (score) => {
+    onScore: score => {
       updateScoreDisplay(score);
     },
-    onComplete: (result) => {
+    onComplete: result => {
       showGameResults(result);
       saveHighScore('newGame', result.score);
-    }
+    },
   });
 
   // Gérer boutons pause/stop
@@ -588,7 +593,7 @@ class Shooter {
       y: this.player.y,
       velocityY: -5,
       width: 5,
-      height: 10
+      height: 10,
     };
 
     this.bullets.push(bullet);
@@ -664,6 +669,29 @@ class PuzzleGame {
 - [ ] Cleanup des listeners
 - [ ] Tests créés
 - [ ] Performance 60 FPS
+
+## Expert Agents to Use
+
+Quand tu travailles sur des jeux arcade, utilise ces agents spécialisés :
+
+- **@arcade-specialist** - Expert canvas games pour :
+  - Optimisation performance 60 FPS
+  - Collision detection algorithms (AABB, circle, spatial partitioning)
+  - Game loop architecture (requestAnimationFrame, fixed timestep)
+  - Memory management (object pooling, cleanup)
+  - Sprite and animation management
+  - Educational content integration
+
+- **@performance-analyzer** - Pour analyser et optimiser :
+  - FPS profiling et frame timing
+  - Memory leak detection
+  - Canvas rendering performance
+  - Chrome DevTools profiling
+
+- **@test-writer** - Pour créer tests Jest :
+  - Game logic tests
+  - Collision detection tests
+  - Integration tests
 
 ## Voir aussi
 

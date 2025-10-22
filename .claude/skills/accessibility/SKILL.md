@@ -1,5 +1,5 @@
 ---
-name: "Accessibility Validator"
+name: 'Accessibility Validator'
 description: "Valide l'accessibilité web selon les standards WCAG 2.1 AA pour les utilisateurs en situation de handicap. Utiliser lors de modifications UI, ajout de composants, ou audits d'accessibilité"
 ---
 
@@ -8,6 +8,7 @@ description: "Valide l'accessibilité web selon les standards WCAG 2.1 AA pour l
 Cette skill guide la validation et l'amélioration de l'accessibilité web selon les standards WCAG 2.1 niveau AA.
 
 ## Quand utiliser cette skill
+
 - Ajout de nouveaux composants UI
 - Modification d'interfaces existantes
 - Avant chaque release majeure
@@ -32,6 +33,7 @@ npm run audit:accessibility
 ```
 
 Cette commande vérifie :
+
 - Attributs ARIA appropriés
 - Navigation clavier
 - Contraste des couleurs
@@ -45,6 +47,7 @@ npm run audit:mobile
 ```
 
 Vérifie l'accessibilité sur mobile :
+
 - Taille des zones tactiles
 - Orientation écran
 - Zoom et redimensionnement
@@ -92,14 +95,15 @@ Vérifie l'accessibilité sur mobile :
 ```html
 <!-- ✅ Bon - Hiérarchie logique -->
 <h1>Titre principal</h1>
-  <h2>Section 1</h2>
-    <h3>Sous-section 1.1</h3>
-  <h2>Section 2</h2>
+<h2>Section 1</h2>
+<h3>Sous-section 1.1</h3>
+<h2>Section 2</h2>
 
 <!-- ❌ Mauvais - Hiérarchie cassée -->
 <h1>Titre principal</h1>
-  <h3>Section 1</h3>  <!-- Manque h2 -->
-  <h2>Section 2</h2>
+<h3>Section 1</h3>
+<!-- Manque h2 -->
+<h2>Section 2</h2>
 ```
 
 ### 2. Navigation clavier
@@ -165,7 +169,9 @@ Vérifie l'accessibilité sur mobile :
 
 <!-- ✅ Navigation avec label -->
 <nav aria-label="Navigation principale">
-  <ul>...</ul>
+  <ul>
+    ...
+  </ul>
 </nav>
 
 <!-- ✅ Région identifiable -->
@@ -205,24 +211,16 @@ Vérifie l'accessibilité sur mobile :
 <!-- ✅ Composants interactifs -->
 <div role="dialog" aria-modal="true" aria-labelledby="dialog-title">
   <h2 id="dialog-title">Titre du dialogue</h2>
-  <div role="document">
-    Contenu...
-  </div>
+  <div role="document">Contenu...</div>
 </div>
 
 <!-- ✅ Navigation et structure -->
-<div role="navigation" aria-label="Navigation secondaire">
-  ...
-</div>
+<div role="navigation" aria-label="Navigation secondaire">...</div>
 
-<div role="main">
-  Contenu principal
-</div>
+<div role="main">Contenu principal</div>
 
 <!-- ✅ État de chargement -->
-<div role="status" aria-live="polite">
-  Chargement en cours...
-</div>
+<div role="status" aria-live="polite">Chargement en cours...</div>
 ```
 
 ### 4. Alternatives textuelles
@@ -231,24 +229,19 @@ Vérifie l'accessibilité sur mobile :
 
 ```html
 <!-- ✅ Image informative -->
-<img
-  src="multiplication-table.png"
-  alt="Table de multiplication de 1 à 10">
+<img src="multiplication-table.png" alt="Table de multiplication de 1 à 10" />
 
 <!-- ✅ Image décorative -->
-<img
-  src="decoration.png"
-  alt=""
-  role="presentation">
+<img src="decoration.png" alt="" role="presentation" />
 
 <!-- ✅ Image avec caption -->
 <figure>
-  <img src="graph.png" alt="Graphique des scores">
+  <img src="graph.png" alt="Graphique des scores" />
   <figcaption>Progression des scores sur 7 jours</figcaption>
 </figure>
 
 <!-- ❌ Mauvais - Alt manquant -->
-<img src="important.png">
+<img src="important.png" />
 ```
 
 **Icônes**
@@ -271,23 +264,16 @@ Vérifie l'accessibilité sur mobile :
 ```html
 <!-- ✅ Vidéo avec sous-titres -->
 <video controls>
-  <source src="tutorial.mp4" type="video/mp4">
-  <track
-    kind="captions"
-    src="captions-fr.vtt"
-    srclang="fr"
-    label="Français">
-  <track
-    kind="captions"
-    src="captions-en.vtt"
-    srclang="en"
-    label="English">
+  <source src="tutorial.mp4" type="video/mp4" />
+  <track kind="captions" src="captions-fr.vtt" srclang="fr" label="Français" />
+  <track kind="captions" src="captions-en.vtt" srclang="en" label="English" />
 </video>
 ```
 
 ### 5. Contraste des couleurs
 
 **Ratio minimum WCAG AA :**
+
 - Texte normal : 4.5:1
 - Texte large (18pt+) : 3:1
 - Composants UI : 3:1
@@ -296,25 +282,26 @@ Vérifie l'accessibilité sur mobile :
 /* ✅ Bon - Contraste suffisant */
 .text {
   color: #212121; /* Noir foncé */
-  background: #FFFFFF; /* Blanc */
+  background: #ffffff; /* Blanc */
   /* Ratio: 16.1:1 */
 }
 
 .button {
-  color: #FFFFFF;
-  background: #1976D2; /* Bleu */
+  color: #ffffff;
+  background: #1976d2; /* Bleu */
   /* Ratio: 4.6:1 */
 }
 
 /* ❌ Mauvais - Contraste insuffisant */
 .light-text {
-  color: #CCCCCC; /* Gris clair */
-  background: #FFFFFF;
+  color: #cccccc; /* Gris clair */
+  background: #ffffff;
   /* Ratio: 1.6:1 - Trop faible */
 }
 ```
 
 **Vérifier le contraste :**
+
 ```bash
 # Outils en ligne
 - WebAIM Contrast Checker
@@ -333,11 +320,12 @@ Vérifie l'accessibilité sur mobile :
   id="username"
   name="username"
   aria-required="true"
-  aria-describedby="username-hint">
+  aria-describedby="username-hint"
+/>
 <span id="username-hint">Entre 3 et 20 caractères</span>
 
 <!-- ❌ Mauvais - Placeholder seul -->
-<input type="text" placeholder="Nom d'utilisateur">
+<input type="text" placeholder="Nom d'utilisateur" />
 ```
 
 **Messages d'erreur**
@@ -345,17 +333,8 @@ Vérifie l'accessibilité sur mobile :
 ```html
 <!-- ✅ Bon - Erreur annoncée -->
 <label for="email">Email:</label>
-<input
-  type="email"
-  id="email"
-  aria-invalid="true"
-  aria-describedby="email-error">
-<span
-  id="email-error"
-  role="alert"
-  aria-live="assertive">
-  Format d'email invalide
-</span>
+<input type="email" id="email" aria-invalid="true" aria-describedby="email-error" />
+<span id="email-error" role="alert" aria-live="assertive"> Format d'email invalide </span>
 ```
 
 **Groupes de champs**
@@ -365,15 +344,15 @@ Vérifie l'accessibilité sur mobile :
 <fieldset>
   <legend>Choisir une difficulté</legend>
   <label>
-    <input type="radio" name="difficulty" value="easy">
+    <input type="radio" name="difficulty" value="easy" />
     Facile
   </label>
   <label>
-    <input type="radio" name="difficulty" value="medium">
+    <input type="radio" name="difficulty" value="medium" />
     Moyen
   </label>
   <label>
-    <input type="radio" name="difficulty" value="hard">
+    <input type="radio" name="difficulty" value="hard" />
     Difficile
   </label>
 </fieldset>
@@ -387,7 +366,7 @@ Vérifie l'accessibilité sur mobile :
 /* ✅ Bon - Focus visible personnalisé */
 button:focus,
 a:focus {
-  outline: 3px solid #1976D2;
+  outline: 3px solid #1976d2;
   outline-offset: 2px;
 }
 
@@ -425,9 +404,7 @@ button:focus {
 
 ```javascript
 // ✅ Détection en JavaScript
-const prefersReducedMotion = window.matchMedia(
-  '(prefers-reduced-motion: reduce)'
-).matches;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 if (!prefersReducedMotion) {
   // Activer les animations
@@ -459,9 +436,7 @@ if (!prefersReducedMotion) {
 ```html
 <!-- ✅ Bon - Landmarks ARIA -->
 <header role="banner">
-  <nav role="navigation" aria-label="Navigation principale">
-    ...
-  </nav>
+  <nav role="navigation" aria-label="Navigation principale">...</nav>
 </header>
 
 <main role="main">
@@ -471,13 +446,9 @@ if (!prefersReducedMotion) {
   </section>
 </main>
 
-<aside role="complementary" aria-label="Statistiques">
-  ...
-</aside>
+<aside role="complementary" aria-label="Statistiques">...</aside>
 
-<footer role="contentinfo">
-  ...
-</footer>
+<footer role="contentinfo">...</footer>
 ```
 
 ## Tests d'accessibilité
@@ -499,12 +470,14 @@ if (!prefersReducedMotion) {
 ### Tests avec lecteur d'écran
 
 **Lecteurs d'écran à tester :**
+
 - **NVDA** (Windows, gratuit)
 - **JAWS** (Windows, payant)
 - **VoiceOver** (macOS/iOS, intégré)
 - **TalkBack** (Android, intégré)
 
 **Points à vérifier :**
+
 - [ ] Navigation par landmarks (`D` dans NVDA)
 - [ ] Navigation par titres (`H`)
 - [ ] Lecture du contenu des images
@@ -556,10 +529,7 @@ function showModal() {
 
 ```html
 <!-- ✅ Bouton de navigation accessible -->
-<button
-  class="slide-nav"
-  aria-label="Aller à la slide suivante"
-  onClick="goToSlide(2)">
+<button class="slide-nav" aria-label="Aller à la slide suivante" onClick="goToSlide(2)">
   Suivant
 </button>
 ```
@@ -581,25 +551,26 @@ function updateScore(newScore) {
 ```
 
 ```html
-<div id="score-announcement"
-     role="status"
-     aria-live="polite"
-     aria-atomic="true"
-     class="sr-only">
-</div>
+<div
+  id="score-announcement"
+  role="status"
+  aria-live="polite"
+  aria-atomic="true"
+  class="sr-only"
+></div>
 
 <style>
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
 </style>
 ```
 
@@ -666,24 +637,59 @@ Avant chaque release :
 - [ ] Audit automatisé passé
 - [ ] Mobile responsive accessible
 
+## Agents disponibles pour audit d'accessibilité
+
+Pour des vérifications approfondies d'accessibilité :
+
+**Code-reviewer Agent :**
+
+- Use the **code-reviewer agent** pour une analyse complète incluant WCAG 2.1 AA
+- Il vérifie : navigation clavier, ARIA labels, color contrast, semantic HTML, touch targets
+- Fournit feedback structuré par sévérité (Critical/Important/Suggestion)
+
+**Test-writer Agent (pour tests a11y) :**
+
+- Use the **test-writer agent** pour créer des tests automatisés d'accessibilité
+- Tests pour : keyboard navigation, screen reader compatibility, ARIA attributes
+- Intégration dans suite Jest
+
+**Chrome-devtools-tester Agent :**
+
+- Use the **chrome-devtools-tester agent** pour valider dans le navigateur
+- Tests visuels : focus indicators, responsive design, animations
+- Vérification console errors liés à a11y
+
+**Workflow recommandé :**
+
+1. Modifier UI ou ajouter composant
+2. Use **code-reviewer agent** pour vérifier WCAG compliance
+3. Use **test-writer agent** pour tests automatisés
+4. Use **chrome-devtools-tester agent** pour validation navigateur
+5. Tester manuellement avec lecteur d'écran
+6. Exécuter `npm run audit:accessibility`
+
 ## Ressources
 
 ### Documentation WCAG
+
 - WCAG 2.1 Quick Reference: https://www.w3.org/WAI/WCAG21/quickref/
 - WebAIM Articles: https://webaim.org/articles/
 
 ### Scripts projet
+
 - `npm run audit:accessibility` - Audit a11y
 - `npm run audit:mobile` - Audit mobile
 - `js/accessibility.js` - Module accessibilité
 - `js/keyboard-navigation.js` - Navigation clavier
 
 ### Fichiers de référence
+
 - `js/keyboard-navigation.js` - Navigation clavier implémentée
 - `js/accessibility.js` - Utilitaires accessibilité
 - `js/speech.js` - Support synthèse vocale
 
 ## Voir aussi
+
 - `code-quality/SKILL.md` - Standards de code incluant a11y
 - `CLAUDE.md` - Architecture et conventions du projet
 - W3C ARIA Authoring Practices: https://www.w3.org/WAI/ARIA/apg/

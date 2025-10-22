@@ -1,5 +1,5 @@
 ---
-name: "Performance Profiler"
+name: 'Performance Profiler'
 description: "Analyse et optimise les performances de l'application (temps de chargement, FPS, mémoire, bottlenecks). Utiliser lors de ralentissements, avant release, ou optimisation des jeux arcade"
 ---
 
@@ -8,6 +8,7 @@ description: "Analyse et optimise les performances de l'application (temps de ch
 Cette skill guide l'analyse et l'optimisation des performances pour une expérience utilisateur fluide.
 
 ## Quand utiliser cette skill
+
 - Ralentissements détectés dans les jeux
 - Avant chaque release majeure
 - Ajout de nouvelles features lourdes
@@ -21,16 +22,19 @@ Cette skill guide l'analyse et l'optimisation des performances pour une expérie
 ### Métriques cibles
 
 **Chargement initial :**
+
 - First Contentful Paint (FCP) : < 1.5s
 - Time to Interactive (TTI) : < 3s
 - Total Blocking Time (TBT) : < 200ms
 
 **Performance runtime :**
+
 - Frame Rate (FPS) : ≥ 60 FPS (jeux arcade)
 - Input Latency : < 100ms
 - Memory Usage : < 50 MB (stable)
 
 **Bundle size :**
+
 - Initial JS : < 200 KB (gzipped)
 - Total assets : < 2 MB (first load)
 
@@ -39,6 +43,7 @@ Cette skill guide l'analyse et l'optimisation des performances pour une expérie
 ### Chrome DevTools Performance
 
 **Accès :**
+
 1. Ouvrir DevTools (F12)
 2. Onglet "Performance"
 3. Cliquer "Record" (Ctrl+E)
@@ -47,6 +52,7 @@ Cette skill guide l'analyse et l'optimisation des performances pour une expérie
 6. Analyser timeline
 
 **Métriques analysées :**
+
 - **Scripting (JS)** : Temps d'exécution JavaScript
 - **Rendering** : Calcul styles, layout
 - **Painting** : Dessin des pixels
@@ -74,6 +80,7 @@ npx lighthouse http://localhost:8000 --view
 ```
 
 **Catégories analysées :**
+
 - Performance (0-100)
 - Accessibility
 - Best Practices
@@ -81,6 +88,7 @@ npx lighthouse http://localhost:8000 --view
 - PWA
 
 **Seuils pour leapmultix :**
+
 - Performance : > 90
 - Accessibility : > 95
 - Best Practices : > 90
@@ -101,11 +109,7 @@ await heavyOperation();
 performance.mark('operation-end');
 
 // Mesurer durée
-performance.measure(
-  'operation-duration',
-  'operation-start',
-  'operation-end'
-);
+performance.measure('operation-duration', 'operation-start', 'operation-end');
 
 // Récupérer résultats
 const measure = performance.getEntriesByName('operation-duration')[0];
@@ -154,6 +158,7 @@ npx lighthouse http://localhost:8000 \
 ```
 
 **Métriques clés :**
+
 - **FCP** (First Contentful Paint) : Premier élément affiché
 - **LCP** (Largest Contentful Paint) : Plus grand élément affiché
 - **TTI** (Time to Interactive) : Page interactive
@@ -168,7 +173,7 @@ import './multisnake.js';
 // Total : ~100 KB chargés immédiatement
 
 // ✅ Bon : Lazy loading
-const lazyLoad = (module) => {
+const lazyLoad = module => {
   return import(module);
 };
 
@@ -236,7 +241,7 @@ measureFPS();
 function gameLoop() {
   sprites.forEach(sprite => {
     // Calcul coûteux à chaque frame
-    sprite.angle = Math.atan2(sprite.y, sprite.x) * 180 / Math.PI;
+    sprite.angle = (Math.atan2(sprite.y, sprite.x) * 180) / Math.PI;
     sprite.update();
     sprite.render();
   });
@@ -252,7 +257,7 @@ function gameLoop() {
     if (!sprite.moved) {
       sprite.angle = angleCache.get(sprite.id);
     } else {
-      sprite.angle = Math.atan2(sprite.y, sprite.x) * 180 / Math.PI;
+      sprite.angle = (Math.atan2(sprite.y, sprite.x) * 180) / Math.PI;
       angleCache.set(sprite.id, sprite.angle);
       sprite.moved = false;
     }
@@ -325,7 +330,7 @@ if (performance.memory) {
   console.log({
     usedJSHeapSize: (performance.memory.usedJSHeapSize / 1048576).toFixed(2) + ' MB',
     totalJSHeapSize: (performance.memory.totalJSHeapSize / 1048576).toFixed(2) + ' MB',
-    limit: (performance.memory.jsHeapSizeLimit / 1048576).toFixed(2) + ' MB'
+    limit: (performance.memory.jsHeapSizeLimit / 1048576).toFixed(2) + ' MB',
   });
 }
 
@@ -464,7 +469,7 @@ const moduleSizes = {
   'multimiam-engine.js': 15,
   'VideoManager.js': 12,
   'cache-updater.js': 10,
-  'core/utils.js': 10
+  'core/utils.js': 10,
 };
 
 // Modules candidats pour code splitting
@@ -483,16 +488,16 @@ console.log('Code splitting candidates:', candidates);
 const MODE_CONFIGS = {
   arcade: {
     module: () => import('./modes/ArcadeMode.js'),
-    size: '31 KB'
+    size: '31 KB',
   },
   invasion: {
     module: () => import('./arcade-invasion.js'),
-    size: '31 KB'
+    size: '31 KB',
   },
   multisnake: {
     module: () => import('./multisnake.js'),
-    size: '38 KB'
-  }
+    size: '38 KB',
+  },
 };
 
 // Charger seulement à la demande
@@ -504,11 +509,7 @@ async function loadMode(modeName) {
   const module = await config.module();
   performance.mark(`load-${modeName}-end`);
 
-  performance.measure(
-    `load-${modeName}`,
-    `load-${modeName}-start`,
-    `load-${modeName}-end`
-  );
+  performance.measure(`load-${modeName}`, `load-${modeName}-start`, `load-${modeName}-end`);
 
   return module;
 }
@@ -613,9 +614,13 @@ async function preloadModules() {
 }
 
 // Précharger au hover
-document.querySelector('.quiz-button').addEventListener('mouseenter', () => {
-  lazyLoad('QuizMode'); // Précharger avant click
-}, { once: true });
+document.querySelector('.quiz-button').addEventListener(
+  'mouseenter',
+  () => {
+    lazyLoad('QuizMode'); // Précharger avant click
+  },
+  { once: true }
+);
 ```
 
 ### 3. Optimiser Event Bus
@@ -645,7 +650,7 @@ export function emit(event, data) {
 
 ```javascript
 // ❌ Mauvais : Trop d'événements
-eventBus.on('sprite:move', (sprite) => {
+eventBus.on('sprite:move', sprite => {
   updateUI(); // À chaque mouvement de sprite !
 });
 
@@ -654,7 +659,7 @@ import { debounce } from './utils.js';
 
 const debouncedUpdateUI = debounce(updateUI, 100);
 
-eventBus.on('sprite:move', (sprite) => {
+eventBus.on('sprite:move', sprite => {
   debouncedUpdateUI();
 });
 ```
@@ -800,7 +805,7 @@ export function memoize(func) {
 }
 
 // Utilisation
-const memoizedFactorial = memoize((n) => {
+const memoizedFactorial = memoize(n => {
   if (n <= 1) return 1;
   return n * memoizedFactorial(n - 1);
 });
@@ -870,6 +875,31 @@ npm run verify:dead-code
 # Tests de performance (Jest)
 npm run test -- performance.test.js
 ```
+
+## Expert Agents to Use
+
+Quand tu travailles sur l'optimisation de performance, utilise ces agents spécialisés :
+
+- **@performance-analyzer** - Expert performance pour :
+  - Lighthouse audits et Core Web Vitals (LCP, CLS, TBT)
+  - Memory leak detection (Heap snapshots, MemLab, Fuite)
+  - FPS profiling et frame timing
+  - Bundle size analysis
+  - Service worker cache optimization
+  - JavaScript execution profiling
+  - Asset loading optimization
+  - Network performance analysis
+
+- **@arcade-specialist** - Pour optimiser jeux arcade :
+  - Canvas rendering performance (60 FPS)
+  - Game loop optimization
+  - Collision detection optimization
+  - Memory management dans jeux
+
+- **@pwa-expert** - Pour optimisation PWA :
+  - Service worker cache strategies
+  - Offline performance
+  - Cache versioning
 
 ## Voir aussi
 

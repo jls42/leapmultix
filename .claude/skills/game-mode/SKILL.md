@@ -1,6 +1,6 @@
 ---
-name: "New Game Mode Creator"
-description: "Crée un nouveau mode de jeu en étendant la classe abstraite GameMode.js avec gestion du cycle de vie, event bus, et lazy loading"
+name: 'New Game Mode Creator'
+description: 'Crée un nouveau mode de jeu en étendant la classe abstraite GameMode.js avec gestion du cycle de vie, event bus, et lazy loading'
 ---
 
 # New Game Mode Creator
@@ -8,6 +8,7 @@ description: "Crée un nouveau mode de jeu en étendant la classe abstraite Game
 Cette skill guide la création de nouveaux modes de jeu suivant l'architecture établie du projet leapmultix.
 
 ## Quand utiliser cette skill
+
 - Création d'un nouveau mode de jeu
 - Extension de la fonctionnalité arcade
 - Ajout de variantes de modes existants
@@ -35,17 +36,31 @@ Emplacement : `js/core/GameMode.js`
 ```javascript
 class GameMode {
   // Cycle de vie
-  async init() { throw new Error('Must implement init()'); }
-  async cleanup() { throw new Error('Must implement cleanup()'); }
+  async init() {
+    throw new Error('Must implement init()');
+  }
+  async cleanup() {
+    throw new Error('Must implement cleanup()');
+  }
 
   // Gestion des questions
-  async handleQuestion(question) { throw new Error('Must implement handleQuestion()'); }
-  handleCorrectAnswer(question) { throw new Error('Must implement handleCorrectAnswer()'); }
-  handleWrongAnswer(question) { throw new Error('Must implement handleWrongAnswer()'); }
+  async handleQuestion(question) {
+    throw new Error('Must implement handleQuestion()');
+  }
+  handleCorrectAnswer(question) {
+    throw new Error('Must implement handleCorrectAnswer()');
+  }
+  handleWrongAnswer(question) {
+    throw new Error('Must implement handleWrongAnswer()');
+  }
 
   // UI
-  updateUI() { throw new Error('Must implement updateUI()'); }
-  showResults() { throw new Error('Must implement showResults()'); }
+  updateUI() {
+    throw new Error('Must implement updateUI()');
+  }
+  showResults() {
+    throw new Error('Must implement showResults()');
+  }
 }
 ```
 
@@ -143,7 +158,7 @@ export default class YourMode extends GameMode {
     // Émettre événement
     eventBus.emit('mode:correctAnswer', {
       mode: this.name,
-      question
+      question,
     });
   }
 
@@ -162,7 +177,7 @@ export default class YourMode extends GameMode {
     // Émettre événement
     eventBus.emit('mode:wrongAnswer', {
       mode: this.name,
-      question
+      question,
     });
   }
 
@@ -188,7 +203,7 @@ export default class YourMode extends GameMode {
     // Émettre événement de fin
     eventBus.emit('mode:completed', {
       mode: this.name,
-      results
+      results,
     });
   }
 
@@ -260,8 +275,8 @@ Emplacement : `js/lazy-loader.js`
 const MODE_CONFIGS = {
   yourMode: {
     module: () => import('./modes/YourMode.js'),
-    size: 'XX KB'  // Taille estimée
-  }
+    size: 'XX KB', // Taille estimée
+  },
 };
 ```
 
@@ -286,6 +301,7 @@ Fichiers : `i18n/fr.json`, `i18n/en.json`, `i18n/es.json`
 **IMPORTANT :** Toujours ajouter d'abord à fr.json (référence), puis traduire dans les autres langues.
 
 Vérifier avec :
+
 ```bash
 npm run i18n:compare
 ```
@@ -321,7 +337,8 @@ describe('YourMode', () => {
     test('should emit initialization event', async () => {
       const spy = jest.spyOn(eventBus, 'emit');
       await mode.init();
-      expect(spy).toHaveBeenCalledWith('mode:initialized',
+      expect(spy).toHaveBeenCalledWith(
+        'mode:initialized',
         expect.objectContaining({ mode: 'yourMode' })
       );
     });
@@ -376,6 +393,7 @@ describe('YourMode', () => {
 ```
 
 Exécuter les tests :
+
 ```bash
 npm test YourMode.test.js
 ```
@@ -416,19 +434,22 @@ window.startYourMode = startYourMode;
 ### Communication via Event Bus
 
 **Émettre des événements :**
+
 ```javascript
 eventBus.emit('mode:stateChange', { mode: this.name, state: 'ready' });
 ```
 
 **Écouter des événements :**
+
 ```javascript
-this.onUserAction = (data) => {
+this.onUserAction = data => {
   // Gérer l'action
 };
 eventBus.on('user:action', this.onUserAction);
 ```
 
 **Nettoyer les listeners :**
+
 ```javascript
 eventBus.off('user:action', this.onUserAction);
 ```
@@ -522,11 +543,13 @@ exitMode() {
 ## Debugging
 
 **Vérifier initialisation :**
+
 ```javascript
 console.log(`[YourMode] isActive: ${this.isActive}`);
 ```
 
 **Vérifier event bus :**
+
 ```javascript
 eventBus.on('*', (event, data) => {
   console.log('Event:', event, data);
@@ -534,6 +557,7 @@ eventBus.on('*', (event, data) => {
 ```
 
 **Vérifier cleanup :**
+
 ```javascript
 window.addEventListener('beforeunload', () => {
   console.log('[YourMode] Cleanup before unload');
@@ -542,6 +566,7 @@ window.addEventListener('beforeunload', () => {
 ```
 
 ## Voir aussi
+
 - `js/core/GameMode.js` - Classe abstraite
 - `js/core/GameModeManager.js` - Gestionnaire de modes
 - `js/lazy-loader.js` - Système de lazy loading

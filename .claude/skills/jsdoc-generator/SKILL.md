@@ -1,5 +1,5 @@
 ---
-name: "JSDoc Generator"
+name: 'JSDoc Generator'
 description: "Génère automatiquement la documentation JSDoc pour modules ES6 avec @param, @returns, @throws et exemples. Utiliser lors de l'ajout de fonctions, refactoring, ou amélioration de la documentation"
 ---
 
@@ -8,6 +8,7 @@ description: "Génère automatiquement la documentation JSDoc pour modules ES6 a
 Cette skill guide la génération et l'amélioration de la documentation JSDoc pour les modules ES6 du projet leapmultix.
 
 ## Quand utiliser cette skill
+
 - Ajout de nouvelles fonctions ou classes
 - Refactoring de code existant
 - Amélioration de la documentation
@@ -492,6 +493,7 @@ npm run analyze:jsdoc
 ```
 
 **Output :**
+
 ```
 📊 Analyse de la couverture JSDoc
 
@@ -572,6 +574,7 @@ export function multiply(a, b) {
 ### Prompt pour génération
 
 **Pour une fonction :**
+
 ```
 Génère JSDoc pour cette fonction en incluant:
 - Description concise (impératif)
@@ -584,6 +587,7 @@ Génère JSDoc pour cette fonction en incluant:
 ```
 
 **Pour une classe :**
+
 ```
 Génère JSDoc pour cette classe en incluant:
 - Description de la classe et sa responsabilité
@@ -634,17 +638,20 @@ Génère JSDoc pour cette classe en incluant:
 ### Priorités de documentation
 
 **Haute priorité :**
+
 - API publiques (exports)
 - Fonctions complexes
 - Classes et constructeurs
 - Fonctions avec side effects
 
 **Moyenne priorité :**
+
 - Méthodes de classe
 - Callbacks
 - Utilitaires
 
 **Basse priorité :**
+
 - Fonctions privées simples
 - Getters/setters évidents
 - One-liners évidents
@@ -681,6 +688,7 @@ Créer `jsdoc.json` :
 ```
 
 Puis :
+
 ```bash
 npx jsdoc -c jsdoc.json
 ```
@@ -702,7 +710,7 @@ npx jsdoc -c jsdoc.json
 1. **Pas de JSDoc redondant** - Si nom de fonction clair, JSDoc minimal OK
 2. **Pas de copier-coller** - Adapter description à chaque fonction
 3. **Pas de JSDoc obsolète** - Mieux rien que faux
-4. **Pas de types vagues** - Éviter {*} sauf vraiment nécessaire
+4. **Pas de types vagues** - Éviter {\*} sauf vraiment nécessaire
 5. **Pas de doc pour l'évident** - `getter getName()` n'a pas besoin de JSDoc
 
 ## Checklist documentation complète

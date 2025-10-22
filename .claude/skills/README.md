@@ -7,11 +7,13 @@ Ce répertoire contient les Skills Claude Code pour le projet leapmultix. Les Sk
 ### 🔴 Haute priorité (implémentées)
 
 #### 1. I18n Translation Sync
+
 **Emplacement :** `i18n-sync/`
 **Description :** Vérifie la synchronisation des fichiers de traduction (fr.json, en.json, es.json)
 **Utilisation :** Claude active automatiquement cette skill quand vous travaillez sur les traductions
 
 **Commandes manuelles :**
+
 ```bash
 npm run i18n:compare
 npm run i18n:verify
@@ -19,11 +21,13 @@ npm run i18n:unused
 ```
 
 #### 2. Code Quality Gate
+
 **Emplacement :** `code-quality/`
 **Description :** Exécute les vérifications de qualité (format:check, ESLint, Jest) avant commits
 **Utilisation :** Claude active cette skill avant les commits et lors des revues de code
 
 **Commandes manuelles :**
+
 ```bash
 npm run format:check
 npm run format
@@ -34,21 +38,25 @@ npm run verify
 ```
 
 #### 3. New Game Mode Creator
+
 **Emplacement :** `game-mode/`
 **Description :** Guide la création de nouveaux modes de jeu suivant l'architecture GameMode.js
 **Utilisation :** Claude active cette skill lors de la création de nouveaux modes de jeu
 
 **Fichiers de référence :**
+
 - `js/core/GameMode.js` - Classe abstraite
 - `js/modes/QuizMode.js` - Exemple simple
 - `js/modes/ChallengeMode.js` - Exemple complexe
 
 #### 4. TDD with Jest
+
 **Emplacement :** `tdd-jest/`
 **Description :** Implémente les fonctionnalités en suivant le cycle RED/GREEN/REFACTOR avec Jest
 **Utilisation :** Claude active cette skill lors de l'ajout de features, corrections de bugs, ou refactoring
 
 **Commandes manuelles :**
+
 ```bash
 npm test                    # Tous les tests
 npm run test:watch         # Tests en mode watch
@@ -57,6 +65,7 @@ npm run test:verbose       # Output détaillé
 ```
 
 **Concepts couverts :**
+
 - Cycle TDD : RED → GREEN → REFACTOR
 - Assertions Jest (toBe, toEqual, toThrow, etc.)
 - Mocking et spies
@@ -64,17 +73,20 @@ npm run test:verbose       # Output détaillé
 - Patterns pour Game Modes et Event Bus
 
 #### 5. Accessibility Validator
+
 **Emplacement :** `accessibility/`
 **Description :** Valide l'accessibilité web selon les standards WCAG 2.1 niveau AA
 **Utilisation :** Claude active cette skill lors de modifications UI ou audits d'accessibilité
 
 **Commandes manuelles :**
+
 ```bash
 npm run audit:accessibility    # Audit a11y complet
 npm run audit:mobile          # Audit mobile responsive
 ```
 
 **Standards couverts :**
+
 - Structure sémantique HTML
 - Navigation clavier (Tab, Enter, Escape)
 - Attributs ARIA (labels, roles, états)
@@ -84,11 +96,13 @@ npm run audit:mobile          # Audit mobile responsive
 - Tests avec lecteurs d'écran
 
 #### 6. PWA Service Worker Manager
+
 **Emplacement :** `pwa-service-worker/`
 **Description :** Gère les mises à jour du Service Worker avec versioning du cache et tests offline
 **Utilisation :** Claude active cette skill lors de modifications du SW ou ajout de ressources
 
 **Commandes manuelles :**
+
 ```bash
 npm run test:pwa-offline      # Tester fonctionnalité offline
 npm run sw:disable            # Désactiver SW temporairement
@@ -96,6 +110,7 @@ npm run sw:fix                # Réparer SW en cas de problèmes
 ```
 
 **Concepts couverts :**
+
 - Versioning de cache (SemVer)
 - Stratégies de cache (Cache First, Network First)
 - Événements SW (install, activate, fetch)
@@ -105,17 +120,20 @@ npm run sw:fix                # Réparer SW en cas de problèmes
 ### 🟢 Phase 3 - Skills avancées (implémentées)
 
 #### 7. JSDoc Generator
+
 **Emplacement :** `jsdoc-generator/`
 **Description :** Génère automatiquement la documentation JSDoc pour modules ES6
 **Utilisation :** Claude active cette skill lors de documentation de fonctions/classes
 
 **Commandes manuelles :**
+
 ```bash
 npm run analyze:jsdoc       # Analyser couverture JSDoc
 npm run improve:jsdoc       # Suggestions amélioration
 ```
 
 **Concepts couverts :**
+
 - Format JSDoc standard (@param, @returns, @throws, @example)
 - Types TypeScript-like dans JSDoc
 - Documentation de classes et modules
@@ -123,11 +141,13 @@ npm run improve:jsdoc       # Suggestions amélioration
 - Génération HTML avec JSDoc CLI
 
 #### 8. Performance Profiler
+
 **Emplacement :** `performance-profiler/`
 **Description :** Analyse et optimise les performances (temps de chargement, FPS, mémoire)
 **Utilisation :** Claude active cette skill lors de ralentissements ou optimisation
 
 **Outils couverts :**
+
 - Chrome DevTools Performance
 - Lighthouse audits
 - Performance API (performance.mark/measure)
@@ -135,34 +155,40 @@ npm run improve:jsdoc       # Suggestions amélioration
 - Memory leak detection
 
 **Objectifs :**
+
 - FPS ≥ 60 dans jeux arcade
 - First Contentful Paint < 1.5s
 - Time to Interactive < 3s
 - Memory usage stable
 
 #### 9. Bundle Size Optimizer
+
 **Emplacement :** `bundle-size-optimizer/`
 **Description :** Analyse et réduit la taille des bundles JavaScript
 **Utilisation :** Claude active cette skill lors d'ajout de dépendances ou bundle > 200 KB
 
 **Commandes manuelles :**
+
 ```bash
 npm run analyze:dependencies  # Analyser dépendances
 npm run verify:dead-code      # Détecter code mort
 ```
 
 **Stratégies :**
+
 - Tree shaking et code splitting
 - Lazy loading (déjà implémenté dans lazy-loader.js)
 - Minification avec Terser
 - Bundle analysis avec visualizer
 
 #### 10. Asset Optimizer
+
 **Emplacement :** `asset-optimizer/`
 **Description :** Optimise images, sprites, sons et médias pour réduire bande passante
 **Utilisation :** Claude active cette skill avant d'ajouter gros assets
 
 **Commandes manuelles :**
+
 ```bash
 npm run assets:generate      # Générer versions responsive
 npm run assets:analyze       # Analyser utilisation
@@ -170,6 +196,7 @@ npm run assets:diff          # Comparer avant/après
 ```
 
 **Optimisations :**
+
 - Compression images (PNG, JPG, WebP, AVIF)
 - Sprite sheets et lazy loading
 - Audio compression (MP3 96 kbps)
@@ -178,27 +205,32 @@ npm run assets:diff          # Comparer avant/après
 ### 🎮 Phase 4 - Skills spécialisées (implémentées)
 
 #### 11. Arcade Game Creator
+
 **Emplacement :** `arcade-game-creator/`
 **Description :** Crée des jeux arcade canvas HTML5 suivant les patterns leapmultix
 **Utilisation :** Claude active cette skill lors de création de nouveaux mini-jeux
 
 **Architecture :**
+
 - Engine (logique jeu)
 - Renderer (rendu canvas)
 - Controls (clavier + touch)
 - Questions (intégration multiplication)
 
 **Jeux de référence :**
+
 - `multisnake.js` (38 KB) - Snake game
 - `arcade-invasion.js` (31 KB) - Space Invaders
 - `multimiam-*.js` - Multimiam décomposé
 
 #### 12. Animation System Helper
+
 **Emplacement :** `animation-system/`
 **Description :** Crée animations CSS et JavaScript (keyframes, transitions, sprite animations)
 **Utilisation :** Claude active cette skill lors d'ajout d'animations visuelles
 
 **Types d'animations :**
+
 - CSS Keyframes (@keyframes fadeIn, pulse, shake, etc.)
 - CSS Transitions (hover, active states)
 - JavaScript requestAnimationFrame
@@ -206,20 +238,24 @@ npm run assets:diff          # Comparer avant/après
 - Particle systems
 
 **Performance :**
+
 - GPU acceleration (transform, opacity)
 - prefers-reduced-motion support
 - 60 FPS maintenu
 
 #### 13. Sound Effect Manager
+
 **Emplacement :** `sound-effect-manager/`
 **Description :** Gère effets sonores et audio pour feedback utilisateur
 **Utilisation :** Claude active cette skill lors d'ajout de nouveaux sons
 
 **Module existant :**
+
 - `js/core/audio.js` - AudioManager complet
 - playSound(), setVolume(), toggleMute()
 
 **Patterns :**
+
 - Sound pools (sons répétitifs)
 - Fade in/out
 - Musique de fond avec loop
@@ -227,11 +263,13 @@ npm run assets:diff          # Comparer avant/après
 - Mobile autoplay handling
 
 #### 14. Sprite Management
+
 **Emplacement :** `sprite-management/`
 **Description :** Gère sprites, sprite sheets, animations et collisions
 **Utilisation :** Claude active cette skill lors de création de jeux ou ajout de personnages
 
 **Features :**
+
 - Sprite simple et sprite sheets
 - Animations (idle, walk, jump, attack)
 - Collisions (AABB, circle, spatial grid)
@@ -239,6 +277,7 @@ npm run assets:diff          # Comparer avant/après
 - Object pooling et culling
 
 **Optimisations :**
+
 - Batch rendering
 - Spatial hashing pour collisions
 - Culling (dessiner seulement visible)
@@ -274,6 +313,7 @@ Vous : "Je dois mettre à jour le Service Worker"
 ### Vérifier les Skills disponibles
 
 Demandez à Claude :
+
 ```
 Quelles skills sont disponibles pour ce projet ?
 ```
@@ -355,6 +395,7 @@ touch .claude/skills/ma-skill/SKILL.md
 ### Étape 2 : Écrire SKILL.md
 
 Utilisez le template ci-dessus et assurez-vous que :
+
 - Le `description` explique QUAND utiliser la skill
 - Les instructions sont claires et actionnables
 - Des exemples concrets sont fournis
@@ -371,6 +412,7 @@ Peux-tu m'aider avec [description de ta skill] ?
 ### Étape 4 : Itérer
 
 Basé sur l'utilisation :
+
 - Raffiner la description pour meilleure découverte
 - Ajouter des exemples manquants
 - Déplacer le contenu long dans resources/
@@ -381,13 +423,15 @@ Basé sur l'utilisation :
 ### Description efficace
 
 **❌ Trop vague :**
+
 ```yaml
-description: "Aide avec les données"
+description: 'Aide avec les données'
 ```
 
 **✅ Spécifique :**
+
 ```yaml
-description: "Vérifie la synchronisation des fichiers i18n (fr, en, es) et détecte clés manquantes, valeurs vides, incohérences de types. Utiliser lors de modifications de traductions."
+description: 'Vérifie la synchronisation des fichiers i18n (fr, en, es) et détecte clés manquantes, valeurs vides, incohérences de types. Utiliser lors de modifications de traductions.'
 ```
 
 ### Garder SKILL.md concis
@@ -415,11 +459,13 @@ templates/
 ### Noms de fichiers descriptifs
 
 **✅ Bon :**
+
 - `resources/jest-patterns.md`
 - `resources/gamemode-lifecycle.md`
 - `templates/GameModeTemplate.js`
 
 **❌ Éviter :**
+
 - `resources/doc1.md`
 - `resources/info.md`
 - `templates/template.js`
@@ -444,6 +490,7 @@ Ajoutez une section historique dans SKILL.md :
 
 ```markdown
 ## Historique des versions
+
 - v1.1.0 (2025-10-19) : Ajout vérification types array/string
 - v1.0.0 (2025-10-15) : Version initiale
 ```
@@ -453,11 +500,13 @@ Ajoutez une section historique dans SKILL.md :
 ### Skill ne s'active pas
 
 **Vérifier :**
+
 1. Description assez spécifique ?
 2. YAML frontmatter valide ?
 3. Fichier dans bon emplacement ?
 
 **Tester :**
+
 ```bash
 # Vérifier existence
 ls .claude/skills/*/SKILL.md
@@ -474,6 +523,7 @@ claude --debug
 Si plusieurs skills correspondent, rendez les descriptions plus distinctes :
 
 **❌ Trop similaire :**
+
 ```yaml
 # Skill 1
 description: "Pour l'analyse de données"
@@ -483,6 +533,7 @@ description: "Pour analyser les données"
 ```
 
 **✅ Distinct :**
+
 ```yaml
 # Skill 1
 description: "Analyser données de ventes Excel/CRM pour rapports revenus"
@@ -494,16 +545,19 @@ description: "Analyser fichiers logs et métriques système pour diagnostics"
 ## Ressources
 
 ### Documentation officielle
+
 - [Claude Code Skills Guide](https://docs.claude.com/en/docs/claude-code/skills)
 - [Agent Skills Overview](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)
 - [Best Practices](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices)
 
 ### Exemples communautaires
+
 - [Anthropic Official Skills](https://github.com/anthropics/skills)
 - [obra/superpowers](https://github.com/obra/superpowers) - Core skills library
 - [obra/superpowers-skills](https://github.com/obra/superpowers-skills) - Community skills
 
 ### Projet leapmultix
+
 - `CLAUDE.md` - Documentation principale du projet
 - `package.json` - Scripts npm disponibles
 - `eslint.config.js` - Configuration ESLint
@@ -531,22 +585,26 @@ Questions ou problèmes avec les Skills ?
 ## Roadmap
 
 ### Phase 1 ✅ - Skills de base (Complétée)
+
 - [x] I18n Translation Sync
 - [x] Code Quality Gate
 - [x] New Game Mode Creator
 
 ### Phase 2 ✅ - Skills intermédiaires (Complétée)
+
 - [x] TDD with Jest
 - [x] Accessibility Validator
 - [x] PWA Service Worker Manager
 
 ### Phase 3 ✅ - Skills avancées (Complétée)
+
 - [x] JSDoc Generator - Documentation ES6 automatisée
 - [x] Performance Profiler - Analyse et optimisation performance
 - [x] Bundle Size Optimizer - Optimisation taille bundles
 - [x] Asset Optimizer - Optimisation images et médias
 
 ### Phase 4 ✅ - Skills spécialisées (Complétée)
+
 - [x] Arcade Game Creator - Template jeux arcade canvas
 - [x] Animation System Helper - Animations CSS/JS
 - [x] Sound Effect Manager - Gestion effets sonores

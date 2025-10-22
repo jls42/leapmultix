@@ -1,5 +1,5 @@
 ---
-name: "Asset Optimizer"
+name: 'Asset Optimizer'
 description: "Optimise images, sprites, sons et médias pour réduire bande passante et améliorer chargement. Utiliser avant d'ajouter gros assets ou lors d'optimisation mobile"
 ---
 
@@ -8,6 +8,7 @@ description: "Optimise images, sprites, sons et médias pour réduire bande pass
 Cette skill guide l'optimisation des assets (images, sprites, sons, vidéos) pour un chargement rapide.
 
 ## Quand utiliser cette skill
+
 - Avant d'ajouter de nouvelles images/sprites
 - Assets > 100 KB individuellement
 - Optimisation mobile (3G/4G)
@@ -26,12 +27,14 @@ npm run assets:diff        # Comparer avant/après
 ## Objectifs d'optimisation
 
 **Images :**
+
 - PNG : < 50 KB par image
 - JPG : < 30 KB par image
 - WebP : -25% vs JPG
 - Sprites sheets : < 100 KB total
 
 **Audio :**
+
 - MP3 : < 50 KB par son
 - Formats multiples (MP3, OGG, WebM)
 - Bitrate : 96-128 kbps suffisant
@@ -54,6 +57,7 @@ imagemin assets/sprites/*.png --out-dir=assets/sprites/optimized
 ```
 
 **Résultats typiques :**
+
 - PNG : -30% à -50%
 - JPG : -20% à -40%
 - Qualité visuelle : identique
@@ -77,9 +81,9 @@ cwebp -q 80 input.jpg -o output.webp
 
 ```html
 <picture>
-  <source srcset="monster.webp" type="image/webp">
-  <source srcset="monster.png" type="image/png">
-  <img src="monster.png" alt="Monster sprite">
+  <source srcset="monster.webp" type="image/webp" />
+  <source srcset="monster.png" type="image/png" />
+  <img src="monster.png" alt="Monster sprite" />
 </picture>
 ```
 
@@ -87,9 +91,9 @@ cwebp -q 80 input.jpg -o output.webp
 
 ```html
 <picture>
-  <source srcset="bg.avif" type="image/avif">
-  <source srcset="bg.webp" type="image/webp">
-  <img src="bg.jpg" alt="Background">
+  <source srcset="bg.avif" type="image/avif" />
+  <source srcset="bg.webp" type="image/webp" />
+  <img src="bg.jpg" alt="Background" />
 </picture>
 ```
 
@@ -107,12 +111,11 @@ npm run assets:generate
 ```html
 <img
   src="sprite.png"
-  srcset="sprite-1x.png 1x,
-          sprite-2x.png 2x,
-          sprite-3x.png 3x"
+  srcset="sprite-1x.png 1x, sprite-2x.png 2x, sprite-3x.png 3x"
   alt="Sprite"
   width="64"
-  height="64">
+  height="64"
+/>
 ```
 
 **Module responsive-image-loader.js (9 KB) :**
@@ -124,7 +127,7 @@ import { loadResponsiveImage } from './responsive-image-loader.js';
 loadResponsiveImage('monster', {
   '1x': 'monster-1x.png',
   '2x': 'monster-2x.png',
-  '3x': 'monster-3x.png'
+  '3x': 'monster-3x.png',
 });
 ```
 
@@ -133,13 +136,13 @@ loadResponsiveImage('monster', {
 **Native lazy loading :**
 
 ```html
-<img src="large-image.png" loading="lazy" alt="Large image">
+<img src="large-image.png" loading="lazy" alt="Large image" />
 ```
 
 **Intersection Observer :**
 
 ```javascript
-const imageObserver = new IntersectionObserver((entries) => {
+const imageObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       const img = entry.target;
@@ -155,7 +158,7 @@ document.querySelectorAll('img[data-src]').forEach(img => {
 ```
 
 ```html
-<img data-src="real-image.png" src="placeholder.png" alt="Lazy image">
+<img data-src="real-image.png" src="placeholder.png" alt="Lazy image" />
 ```
 
 ## Optimisation des sprites
@@ -212,6 +215,7 @@ spritesmith monster*.png -o monsters-sheet.png --cssFormat css
 ### 2. SVG pour icônes
 
 **Avantages :**
+
 - Taille très petite
 - Scalable (pas de perte qualité)
 - Modifiable via CSS
@@ -219,7 +223,7 @@ spritesmith monster*.png -o monsters-sheet.png --cssFormat css
 ```html
 <!-- Inline SVG -->
 <svg width="24" height="24" viewBox="0 0 24 24">
-  <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+  <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
 </svg>
 
 <!-- Avec sprite SVG -->
@@ -245,6 +249,7 @@ svgo -f assets/icons/
 ### 1. Compression MP3
 
 **Bitrate recommandé :**
+
 - Effets sonores : 96 kbps (suffisant)
 - Musique : 128 kbps
 - Voix : 64 kbps
@@ -267,9 +272,9 @@ done
 
 ```html
 <audio>
-  <source src="sound.webm" type="audio/webm">
-  <source src="sound.mp3" type="audio/mpeg">
-  <source src="sound.ogg" type="audio/ogg">
+  <source src="sound.webm" type="audio/webm" />
+  <source src="sound.mp3" type="audio/mpeg" />
+  <source src="sound.ogg" type="audio/ogg" />
 </audio>
 ```
 
@@ -287,7 +292,7 @@ ffmpeg -i input.mp3 -c:a libopus -b:a 96k output.webm
 
 ```html
 <!-- Preload son important -->
-<link rel="preload" href="correct-sound.mp3" as="audio">
+<link rel="preload" href="correct-sound.mp3" as="audio" />
 ```
 
 ```javascript
@@ -314,6 +319,7 @@ updateBackgroundImage(element, '/assets/bg.png');
 ```
 
 **Avantages :**
+
 - Cache busting automatique
 - Pas besoin de renommer fichiers
 - Version synchronisée avec app
@@ -346,11 +352,13 @@ updateBackgroundImage(element, '/assets/bg.png');
 ### 2. Image CDN
 
 **Utiliser CDN d'images :**
+
 - Cloudinary
 - imgix
 - Cloudflare Images
 
 **Avantages :**
+
 - Optimisation automatique
 - Resize à la volée
 - Formats modernes auto
@@ -381,10 +389,12 @@ const url = cloudinaryUrl('monster', 400);
 ```
 
 **Avantages :**
+
 - 0 requête HTTP supplémentaire
 - Embarqué dans CSS
 
 **Inconvénients :**
+
 - Augmente taille CSS
 - Pas cacheable séparément
 - Réservé aux très petits assets
@@ -392,6 +402,7 @@ const url = cloudinaryUrl('monster', 400);
 ## Checklist optimisation
 
 **Images :**
+
 - [ ] Compressées (TinyPNG, Squoosh)
 - [ ] WebP généré avec fallback PNG/JPG
 - [ ] Responsive (srcset avec 1x, 2x, 3x)
@@ -401,12 +412,14 @@ const url = cloudinaryUrl('monster', 400);
 - [ ] Alt text sur toutes les images
 
 **Audio :**
+
 - [ ] Bitrate optimisé (96-128 kbps)
 - [ ] Formats multiples (MP3, OGG, WebM)
 - [ ] Preload pour sons critiques
 - [ ] Taille < 50 KB par fichier
 
 **Général :**
+
 - [ ] Cache-updater versioning activé
 - [ ] Lighthouse Performance > 90
 - [ ] Total assets < 2 MB first load
@@ -415,16 +428,19 @@ const url = cloudinaryUrl('monster', 400);
 ## Outils recommandés
 
 **Compression images :**
+
 - TinyPNG (web) : https://tinypng.com
 - Squoosh (web) : https://squoosh.app
 - ImageOptim (Mac) : https://imageoptim.com
 
 **Conversion formats :**
+
 - cwebp (WebP CLI)
 - ffmpeg (Audio/Vidéo)
 - svgo (SVG optimization)
 
 **Analyse :**
+
 - Lighthouse (Chrome DevTools)
 - PageSpeed Insights (Google)
 - WebPageTest
