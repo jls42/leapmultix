@@ -18,22 +18,27 @@ export function initPacmanControls(game) {
 
     switch (e.key) {
       case 'ArrowUp':
+        e.preventDefault(); // Empêcher le scroll de la page
         newDirection = 'UP';
         directionChanged = true;
         break;
       case 'ArrowDown':
+        e.preventDefault(); // Empêcher le scroll de la page
         newDirection = 'DOWN';
         directionChanged = true;
         break;
       case 'ArrowLeft':
+        e.preventDefault(); // Empêcher le scroll de la page
         newDirection = 'LEFT';
         directionChanged = true;
         break;
       case 'ArrowRight':
+        e.preventDefault(); // Empêcher le scroll de la page
         newDirection = 'RIGHT';
         directionChanged = true;
         break;
       case ' ':
+        e.preventDefault(); // Empêcher le scroll de la page
         if (game.gameOver) {
           game.start();
         } else {

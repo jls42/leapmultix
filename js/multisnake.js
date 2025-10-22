@@ -466,26 +466,31 @@ class SnakeGame {
   handleKeyDown(e) {
     switch (e.key) {
       case 'ArrowUp':
+        e.preventDefault(); // Empêcher le scroll de la page
         if (this.direction.y !== 1) {
           this.nextDirection = { x: 0, y: -1 };
         }
         break;
       case 'ArrowDown':
+        e.preventDefault(); // Empêcher le scroll de la page
         if (this.direction.y !== -1) {
           this.nextDirection = { x: 0, y: 1 };
         }
         break;
       case 'ArrowLeft':
+        e.preventDefault(); // Empêcher le scroll de la page
         if (this.direction.x !== 1) {
           this.nextDirection = { x: -1, y: 0 };
         }
         break;
       case 'ArrowRight':
+        e.preventDefault(); // Empêcher le scroll de la page
         if (this.direction.x !== -1) {
           this.nextDirection = { x: 1, y: 0 };
         }
         break;
       case ' ':
+        e.preventDefault(); // Empêcher le scroll de la page
         if (this.gameOver) {
           this.start();
         }

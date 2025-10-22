@@ -45,10 +45,16 @@ export function setArcadeActive(v) {
 }
 // La fonction shoot sera définie plus bas, mais doit être accessible globalement
 export function arcadeKeyDown(e) {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault(); // Empêcher le scroll de la page
+  }
   if (e.key === 'ArrowLeft') arcadeControls.leftPressed = true;
   if (e.key === 'ArrowRight') arcadeControls.rightPressed = true;
 }
 export function arcadeKeyUp(e) {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault(); // Empêcher le scroll de la page
+  }
   if (e.key === 'ArrowLeft') arcadeControls.leftPressed = false;
   if (e.key === 'ArrowRight') arcadeControls.rightPressed = false;
 }
