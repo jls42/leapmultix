@@ -283,15 +283,25 @@ class MemoryGame {
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
 
+    // Réserver de l'espace pour les éléments UI (score en haut + bouton en bas)
+    const uiSpaceReserved = 185; // pixels réservés pour UI (score: ~133px + button: 52px)
+    const availableHeight = Math.max(containerHeight - uiSpaceReserved, 300);
+
     // Garder un ratio d'affichage correct
     const aspectRatio = this.isMobile ? 0.75 : 1.33; // hauteur / largeur
 
     let canvasWidth, canvasHeight;
-    if (containerWidth * aspectRatio <= containerHeight) {
+    if (containerWidth * aspectRatio <= availableHeight) {
       canvasWidth = containerWidth * 0.95;
       canvasHeight = canvasWidth * aspectRatio;
     } else {
-      canvasHeight = containerHeight * 0.95;
+      canvasHeight = availableHeight * 0.95;
+      canvasWidth = canvasHeight / aspectRatio;
+    }
+
+    // Garantir que le canvas ne dépasse JAMAIS la hauteur disponible
+    if (canvasHeight > availableHeight * 0.95) {
+      canvasHeight = availableHeight * 0.95;
       canvasWidth = canvasHeight / aspectRatio;
     }
 

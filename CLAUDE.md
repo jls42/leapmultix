@@ -431,9 +431,14 @@ The application maintains state through:
 
 ### Commit and Quality Guidelines
 
+- **Branch workflow**: **NEVER commit directly to main**. Always create a feature branch first
+  - Create branch: `git checkout -b feat/your-feature-name`
+  - Commit on branch: `git commit -m "Your message"`
+  - Push and create PR: `git push -u origin feat/your-feature-name`
 - **Commit style**: Concise, imperative mood (e.g., "Fix arcade init errors", "Refactor cache updater")
 - **Quality gate**: Ensure `npm run lint`, `npm test`, and `npm run test:coverage` pass before commits
 - **Security**: Do not commit secrets, API keys, or Terraform state files
+- **Commit messages**: Do not mention AI tools or assistants in commit messages or PR descriptions
 
 ### Deployment
 

@@ -509,12 +509,68 @@ class SnakeGame {
     }
 
     // Réinitialiser complètement l'état du jeu
+    this.resetGameState();
+
+    // Initialiser le serpent
+    this.initializeSnakePosition();
+
+    // Générer opération et nombres
+    this.generateOperation();
+    this.placeNumbers();
+
+    // Mettre à jour la barre d'info via InfoBar (ESM)
+    this.updateInfoBar();
+
+    // Afficher les instructions du jeu
+    this.showInstructions();
+
+    // Donner le focus au canvas sans provoquer de scroll
+    this.focusCanvasWithoutScroll();
+
+    // Démarrer la boucle de jeu avec requestAnimationFrame
+    this.gameLoop();
+  }
+
+  /**
+   * Reset game state variables
+   * @private
+   */
+  resetGameState() {
     this.gameOver = false;
     this.score = 0;
     this.lives = 3;
     this.moveInterval = this.initialSpeed;
 
-    // Initialiser le serpent - s'assurer qu'il est dans les bonnes dimensions
+    // Direction initiale
+    this.direction = { x: 1, y: 0 };
+    this.nextDirection = { x: 1, y: 0 };
+
+    // Réinitialiser les variables d'animation
+    this.lastUpdateTime = 0;
+    this.moveTime = 0;
+    this.animationProgress = 1;
+
+    // Réinitialiser les nombres
+    this.numberPositions = [];
+  }
+
+  /**
+   * Update info bar with current score and lives
+   * @private
+   */
+  updateInfoBar() {
+    try {
+      InfoBar.update({ score: 0, lives: this.lives }, 'multisnake');
+    } catch (e) {
+      void e;
+    }
+  }
+
+  /**
+   * Initialize snake position at game start
+   * @private
+   */
+  initializeSnakePosition() {
     const startX = Math.max(1, Math.min(this.cols - 2, Math.floor(this.cols / 2)));
     const startY = Math.max(1, Math.min(this.rows - 2, Math.floor(this.rows / 2)));
 
@@ -531,50 +587,54 @@ class SnakeGame {
     for (const segment of this.multisnake) {
       this.lastPositions.push({ ...segment });
     }
+  }
 
-    // Direction initiale
-    this.direction = { x: 1, y: 0 };
-    this.nextDirection = { x: 1, y: 0 };
-
-    // Réinitialiser les variables d'animation
-    this.lastUpdateTime = 0;
-    this.moveTime = 0;
-    this.animationProgress = 1;
-
-    // Réinitialiser les nombres
-    this.numberPositions = [];
-
-    // Générer opération et nombres
-    this.generateOperation();
-    this.placeNumbers();
-
-    // Mettre à jour la barre d'info via InfoBar (ESM)
-    try {
-      InfoBar.update({ score: 0, lives: this.lives }, 'multisnake');
-    } catch (e) {
-      void e;
-    }
-
-    // Afficher les instructions du jeu
+  /**
+   * Show game instructions based on device type
+   * @private
+   */
+  showInstructions() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       globalThis.navigator?.userAgent || ''
     );
-    let instructions;
 
-    if (isMobile) {
-      instructions =
-        getTranslation('arcade.multiSnake.controls.mobile') ||
-        'Glisse dans la direction désirée pour déplacer le serpent';
-    } else {
-      instructions =
-        getTranslation('arcade.multiSnake.controls.desktop') ||
+    const instructions = isMobile
+      ? getTranslation('arcade.multiSnake.controls.mobile') ||
+        'Glisse dans la direction désirée pour déplacer le serpent'
+      : getTranslation('arcade.multiSnake.controls.desktop') ||
         'Utilise les flèches du clavier pour déplacer le serpent';
-    }
 
     showGameInstructions(this.canvas, instructions, '#4CAF50', 5000);
+  }
 
-    // Démarrer la boucle de jeu avec requestAnimationFrame
-    this.gameLoop();
+  /**
+   * Focus canvas without triggering page scroll
+   * @private
+   */
+  focusCanvasWithoutScroll() {
+    try {
+      if (this.canvas?.focus) {
+        const scrollBefore = window.scrollY || 0;
+        this.canvas.focus({ preventScroll: true });
+
+        // Fallback: forcer le scroll à 0 si preventScroll n'a pas fonctionné
+        if (window.scrollY !== scrollBefore && window.scrollY !== 0) {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+      }
+    } catch {
+      try {
+        if (this.canvas) {
+          this.canvas.focus();
+          // Forcer scroll à 0 même en cas d'erreur
+          if (window.scrollY !== 0) {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+          }
+        }
+      } catch {
+        /* no-op */
+      }
+    }
   }
 
   // Générer une opération mathématique
