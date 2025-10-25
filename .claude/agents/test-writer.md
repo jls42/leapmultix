@@ -1,6 +1,6 @@
 ---
 name: test-writer
-description: Expert Jest test writer for TDD workflows. Use proactively after implementing features or fixing bugs.
+description: Rédacteur de tests expert Jest pour les workflows TDD. À utiliser de manière proactive après l'implémentation de fonctionnalités ou la correction de bogues.
 tools: Write, Read, Bash, Grep, Glob
 model: inherit
 color: green

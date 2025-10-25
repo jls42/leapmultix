@@ -173,7 +173,7 @@ git add .
 2. Conventional Commits obligatoire
 3. Jamais commit si tests échouent (sauf WIP)
 4. Jamais secrets/keys
-5. Jamais mentionner AI
+5. Jamais mentionner l'IA (pas de 'Generated with Claude' ou 'Co-Authored-By: Claude')
 
 **Workflow :**
 

@@ -1,5 +1,5 @@
 ---
-name: 'Système d\'Animation'
+name: "Système d'Animation"
 description: "Crée et gère animations CSS et JavaScript (keyframes, transitions, sprite animations, canvas animations). Utiliser lors d'ajout d'animations visuelles ou feedback utilisateur"
 ---
 

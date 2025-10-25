@@ -1,6 +1,6 @@
 ---
 name: arcade-specialist
-description: Expert canvas game developer specializing in educational arcade games (Multimiam, Multisnake, Space Invasion, Memory). Use proactively when creating arcade games, optimizing 60 FPS performance, or debugging game mechanics.
+description: Développeur expert en jeux canvas spécialisé dans les jeux d'arcade éducatifs (Multimiam, Multisnake, Space Invasion, Memory). À utiliser de manière proactive pour créer des jeux d'arcade, optimiser les performances à 60 FPS ou déboguer les mécaniques de jeu.
 tools: Read, Write, Replace, Bash, Grep, Glob, WebSearch
 model: inherit
 color: yellow

@@ -1,6 +1,6 @@
 ---
 name: debugger
-description: Expert debugging specialist for complex issues, errors, and unexpected behaviors. Use proactively when encountering bugs or test failures.
+description: Spécialiste expert en débogage pour les problèmes complexes, les erreurs et les comportements inattendus. À utiliser de manière proactive lors de la rencontre de bogues ou d'échecs de tests.
 tools: Read, Write, Replace, Bash, Grep, Glob, WebSearch
 model: inherit
 color: red

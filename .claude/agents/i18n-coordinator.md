@@ -1,6 +1,6 @@
 ---
 name: i18n-coordinator
-description: Expert internationalization coordinator. Use proactively when modifying translations or adding UI text.
+description: Coordinateur expert en internationalisation. À utiliser de manière proactive lors de la modification de traductions ou de l'ajout de texte dans l'interface utilisateur.
 tools: Read, Write, Bash, Grep, Glob
 model: inherit
 ---

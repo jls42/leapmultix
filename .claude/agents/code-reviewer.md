@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Expert code reviewer specializing in security, performance, and best practices. Use proactively after code changes.
+description: Réviseur de code expert spécialisé en sécurité, performance et bonnes pratiques. À utiliser de manière proactive après des modifications de code.
 tools: Read, Grep, Glob, Bash, WebSearch
 model: inherit
 color: blue

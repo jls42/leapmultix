@@ -1,6 +1,6 @@
 ---
 name: performance-analyzer
-description: Expert performance analyst for web apps and canvas games. Use proactively for performance issues or before releases.
+description: Analyste de performance expert pour les applications web et les jeux canvas. À utiliser de manière proactive pour les problèmes de performance ou avant les mises en production.
 tools: Read, Grep, Glob, Bash, WebSearch
 model: inherit
 color: orange

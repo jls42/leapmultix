@@ -1,5 +1,5 @@
 ---
-name: 'Validateur d\'Accessibilité'
+name: "Validateur d'Accessibilité"
 description: "Valide l'accessibilité web selon les standards WCAG 2.1 AA pour les utilisateurs en situation de handicap. Utiliser lors de modifications UI, ajout de composants, ou audits d'accessibilité"
 ---
 

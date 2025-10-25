@@ -1,6 +1,6 @@
 ---
 name: pwa-expert
-description: Progressive Web App specialist for service workers, offline functionality, and caching. Use for PWA changes or pre-release audits.
+description: Spécialiste des Progressive Web App pour les service workers, la fonctionnalité hors ligne et la mise en cache. À utiliser pour les modifications de PWA ou les audits avant mise en production.
 tools: Read, Write, Bash, Grep, Glob, WebSearch
 model: inherit
 color: cyan
