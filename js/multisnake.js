@@ -573,6 +573,31 @@ class SnakeGame {
 
     showGameInstructions(this.canvas, instructions, '#4CAF50', 5000);
 
+    // Donner le focus au canvas sans provoquer de scroll
+    try {
+      if (this.canvas && this.canvas.focus) {
+        const scrollBefore = window.scrollY || 0;
+        this.canvas.focus({ preventScroll: true });
+
+        // Fallback: forcer le scroll à 0 si preventScroll n'a pas fonctionné
+        if (window.scrollY !== scrollBefore && window.scrollY !== 0) {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+      }
+    } catch {
+      try {
+        if (this.canvas) {
+          this.canvas.focus();
+          // Forcer scroll à 0 même en cas d'erreur
+          if (window.scrollY !== 0) {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+          }
+        }
+      } catch {
+        /* no-op */
+      }
+    }
+
     // Démarrer la boucle de jeu avec requestAnimationFrame
     this.gameLoop();
   }

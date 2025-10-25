@@ -4,7 +4,7 @@
  */
 
 // Version globale de l'application - doit correspondre à sw.js
-export const APP_VERSION = 'v7';
+export const APP_VERSION = 'v10';
 export const VERSION_PARAM = `v=${APP_VERSION}`;
 
 // Fonction de développement pour forcer le nettoyage complet
