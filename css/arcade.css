@@ -420,7 +420,8 @@ body.night .arcade-dev-banner,
 /* Desktop par défaut */
 @media (min-width: 768px) {
   /* Slide arcade : layout flexbox pour éliminer overflow */
-  #slide4 {
+  /* IMPORTANT: Sélecteur conditionné à .active-slide pour éviter d'afficher slide4 quand inactif */
+  #slide4.active-slide {
     padding: 0 !important;
     min-height: 100vh;
     display: flex;
@@ -429,13 +430,13 @@ body.night .arcade-dev-banner,
   }
 
   /* Top-bar dans le slide arcade : ne pas grandir */
-  #slide4 .top-bar {
+  #slide4.active-slide .top-bar {
     flex-shrink: 0;
     margin-bottom: 0;
   }
 
   /* Game content area : prendre tout l'espace restant */
-  #slide4 .game-content-area {
+  #slide4.active-slide .game-content-area {
     flex: 1 1 auto;
     min-height: 0;
     overflow: visible;
