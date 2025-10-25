@@ -52,7 +52,8 @@
   border: 2px solid var(--neutral-medium);
   border-radius: 12px;
   padding: 12px;
-  min-width: 140px;
+  min-width: 260px;
+  overflow: hidden;
 }
 
 .visual-item.highlighted {
