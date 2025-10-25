@@ -419,6 +419,37 @@ body.night .arcade-dev-banner,
 
 /* Desktop par défaut */
 @media (min-width: 768px) {
+  /* Slide arcade : layout flexbox pour éliminer overflow */
+  /* IMPORTANT: Sélecteur conditionné à .active-slide pour éviter d'afficher slide4 quand inactif */
+  #slide4.active-slide {
+    padding: 0 !important;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  /* Top-bar dans le slide arcade : ne pas grandir */
+  #slide4.active-slide .top-bar {
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+
+  /* Game content area : prendre tout l'espace restant */
+  #slide4.active-slide .game-content-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Empêcher les scrollbars doubles sur les content-card */
+  #slide4 .game-content-area > .content-card {
+    overflow: visible;
+    flex-shrink: 0;
+  }
+
   .arcade-game-ui {
     display: flex;
     flex-direction: column;
@@ -426,16 +457,22 @@ body.night .arcade-dev-banner,
     justify-content: center;
     min-width: 650px;
     max-width: 1220px;
-    min-height: 420px;
+    /* Retirer min-height fixe et ajouter max-height pour éviter débordement viewport */
+    max-height: 100%;
     padding: 24px 0;
     margin: 0 auto;
     gap: 16px;
+    /* Scroll interne si nécessaire */
+    overflow-y: auto;
+    flex: 1;
   }
 
   /* Assurer que les éléments de score restent visibles sur desktop */
   .arcade-mult-display {
-    position: relative;
-    z-index: 10;
+    /* Hériter du sticky de la règle de base, ne pas override avec relative */
+    position: sticky;
+    top: 10px;
+    z-index: 100;
     margin-bottom: 16px;
     flex-shrink: 0;
   }
@@ -558,7 +595,10 @@ body.night .arcade-dev-banner,
   text-align: center;
   min-width: 320px;
   max-width: 90vw;
-  /* Sticky retiré (provoquait chevauchement du canvas). Le focus preventScroll suffit. */
+  /* Sticky pour garantir visibilité + preventScroll dans JS pour éviter scroll initial */
+  position: sticky;
+  top: 10px;
+  z-index: 100;
 }
 
 .arcade-score-bar {
