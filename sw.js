@@ -123,7 +123,7 @@ self.addEventListener('fetch', event => {
       (async () => {
         const cache = await caches.open(RUNTIME_CACHE);
         try {
-          const net = await fetch(request);
+          const net = await fetch(request, { cache: 'no-store' });
           if (net.ok) cache.put(request, net.clone());
           return net;
         } catch {
