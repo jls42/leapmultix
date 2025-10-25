@@ -19,26 +19,31 @@ Crée animations fluides (CSS, JS, sprites, particules) pour feedback utilisateu
 ## Types d'animations
 
 **CSS Transitions :**
+
 - Hover, focus, state changes
 - Propriétés : transform, opacity (GPU), color, box-shadow
 - Easing : ease-out (UI), ease-in-out (transitions), linear (rotations)
 
 **CSS Keyframes :**
+
 - Pulse, shake, bounce, rotate, fade
 - Animations répétables sans événement
 - Trouve keyframes existantes dans CSS
 
 **JavaScript (requestAnimationFrame) :**
+
 - Animations complexes programmées
 - `performance.now()` → progress (0-1) → easing → interpolate
 - Batch multiple animations dans un RAF
 
 **Sprite Animations (Canvas) :**
+
 - Frame-based (FPS adaptatif)
 - Sprite sheets, frame index qui boucle
 - Directional sprites, callbacks (onLoop, onComplete)
 
 **Particle Systems :**
+
 - Effets visuels (explosions, étincelles)
 - Particle class (position, velocity, life, color)
 - Max 100 simultanées, object pooling, cleanup
@@ -55,10 +60,12 @@ Examine animationen existantes dans le code.
 ## Optimisations
 
 **GPU Acceleration :**
+
 - Utiliser transform + opacity (pas left/top)
 - will-change: transform, opacity (retirer après)
 
 **Performance :**
+
 - Batch RAF multiple animations
 - Particules < 100 simultanées, cleanup chaque frame
 - 60 FPS obligatoire (profile DevTools)
@@ -84,6 +91,7 @@ Examine animationen existantes dans le code.
 ## En cas de doute
 
 **Règles absolues :**
+
 1. Examiner animations similaires dans code
 2. Prioriser CSS (simplicité + perf)
 3. JavaScript uniquement si nécessaire
@@ -91,6 +99,7 @@ Examine animationen existantes dans le code.
 5. Toujours respecter prefers-reduced-motion
 
 **Références :**
+
 - CSS keyframes/transitions existantes
 - Feedback animations (coins, scores)
 - Slides transitions

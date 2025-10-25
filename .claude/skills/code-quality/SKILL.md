@@ -17,18 +17,21 @@ Garantit code respecte standards avant commit (format, lint, tests).
 ## Workflow OBLIGATOIRE (séquence)
 
 1. **Formatage (CRITIQUE) :**
+
    ```bash
    npm run format:check
    # Si ✗ → npm run format
    ```
 
 2. **Linting :**
+
    ```bash
    npm run lint
    # Si ✗ → npm run lint:fix
    ```
 
 3. **Tests :**
+
    ```bash
    npm test
    ```
@@ -43,15 +46,18 @@ Garantit code respecte standards avant commit (format, lint, tests).
 ## Standards essentiels
 
 **JavaScript :**
+
 - Pas variables inutilisées (supprime ou eslint-disable avec justification)
 - Pas catch blocks vides (logger erreur)
 - Utiliser security-utils pour DOM (`appendSanitizedHTML()`, `setSafeMessage()`)
 - Complexité cognitive < 15 (découpe fonctions complexes)
 
 **CSS :**
+
 - Notation couleur moderne : `rgb(255 255 255 / 0.9)` pas `rgba(...)`
 
 **Sécurité :**
+
 - Jamais `innerHTML` données externes (utiliser security-utils)
 - Scripts externes: `crossorigin="anonymous"`
 - Integrity hashes bibliothèques (pas analytics, auto-update)
@@ -101,22 +107,26 @@ Garantit code respecte standards avant commit (format, lint, tests).
 ## En cas de doute
 
 **Règles absolues :**
+
 1. `npm run format:check` TOUJOURS d'abord
 2. Ne JAMAIS committer si échec
 3. Ne JAMAIS désactiver sans justification
 4. Exécuter localement AVANT pusher
 
 **Workflow minimal :**
+
 ```bash
 npm run format:check && npm run lint && npm test
 ```
 
 **Workflow complet :**
+
 ```bash
 npm run verify
 ```
 
 **Fichiers clés :**
+
 - CLAUDE.md - Conventions
 - eslint.config.js - Règles
 - security-utils.js - DOM sécurisé

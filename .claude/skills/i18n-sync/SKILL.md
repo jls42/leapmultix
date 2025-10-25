@@ -63,18 +63,23 @@ Lance l'application et teste le sélecteur de langue.
 Le script `npm run i18n:compare` détecte :
 
 **Clés manquantes :**
+
 - Clés présentes dans fr.json mais absentes dans en.json/es.json
 
 **Clés supplémentaires :**
+
 - Clés présentes dans en.json/es.json mais absentes dans fr.json
 
 **Valeurs vides :**
+
 - `""`, `null`, `undefined`, `[]`
 
 **Incohérences de types :**
+
 - String vs Array (ex: fr.json = "text", en.json = ["array"])
 
 **Format du rapport :**
+
 - Console détaillée
 - JSON exporté dans `docs/translations-comparison-report.json`
 
@@ -99,6 +104,7 @@ Uniformise le type (soit String partout, soit Array partout).
 ## Structure des fichiers
 
 **Format JSON :**
+
 ```json
 {
   "key": "value",
@@ -110,6 +116,7 @@ Uniformise le type (soit String partout, soit Array partout).
 ```
 
 **Dot notation :**
+
 - `key` → "key"
 - `nested.key` → "nested.key"
 - `array` → "array"
@@ -131,6 +138,7 @@ Le script aplatit la structure en dot notation pour comparaison.
 **Source :** fr.json + npm scripts
 
 **Règles absolues :**
+
 1. Toujours vérifier avec `npm run i18n:compare`
 2. fr.json est la référence (pas en.json, pas es.json)
 3. Ne jamais committer avec erreurs i18n
@@ -138,6 +146,7 @@ Le script aplatit la structure en dot notation pour comparaison.
 5. Scripts npm détectent TOUS les problèmes
 
 **Workflow minimal :**
+
 ```bash
 # Modifier fr.json
 npm run i18n:compare  # Vérifier

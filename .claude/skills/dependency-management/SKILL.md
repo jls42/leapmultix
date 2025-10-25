@@ -27,21 +27,25 @@ Gère dépendances npm de manière sécurisée (audit, mises à jour, lockfile).
 ## Workflows essentiels
 
 **Audit sécurité :**
+
 - CRITICAL/HIGH → Corriger immédiatement
 - MODERATE → Corriger avant release
 - LOW → Corriger quand possible
 
 **Types mises à jour (SemVer) :**
+
 - Patch (1.0.x) → Bugs, sécurisé
 - Minor (1.x.0) → Features, rétrocompatible
 - Major (x.0.0) → Breaking, nécessite tests
 
 **Stratégie :**
+
 - Patches → Auto si tests passent
 - Minors → Manuel vérification
 - Majors → Manuel migration plan
 
 **Lockfile :**
+
 - Garantit versions exactes
 - Commit toujours avec package.json
 - Désynchronisé → `npm install`
@@ -58,17 +62,20 @@ Gère dépendances npm de manière sécurisée (audit, mises à jour, lockfile).
 ## Migrations majeures
 
 **Préparation :**
+
 1. Lire CHANGELOG (breaking changes)
 2. Estimer impact code
 3. Créer branche dédiée
 
 **Exécution :**
+
 1. Update package.json
 2. Adapter code aux breaking changes
 3. Corriger erreurs TS/ESLint
 4. Tests exhaustifs
 
 **Validation :**
+
 - Tests passent
 - Lighthouse score OK
 - Performance stable
@@ -77,6 +84,7 @@ Gère dépendances npm de manière sécurisée (audit, mises à jour, lockfile).
 ## Bonnes pratiques
 
 **Do's :**
+
 - Commit lockfile toujours
 - Audit hebdomadaire minimum
 - Tests après update
@@ -85,6 +93,7 @@ Gère dépendances npm de manière sécurisée (audit, mises à jour, lockfile).
 - Respecter SemVer
 
 **Don'ts :**
+
 - Pas `npm install --force` (sauf urgence)
 - Pas updates aveugles
 - Pas lockfile .gitignore
@@ -106,6 +115,7 @@ Gère dépendances npm de manière sécurisée (audit, mises à jour, lockfile).
 ## En cas de doute
 
 **Règles absolues :**
+
 1. `npm audit` AVANT release obligatoire
 2. Tester APRÈS mise à jour
 3. Jamais ignorer lockfile
@@ -113,6 +123,7 @@ Gère dépendances npm de manière sécurisée (audit, mises à jour, lockfile).
 5. CRITICAL/HIGH fix immédiat
 
 **Workflow mensuel :**
+
 ```bash
 npm outdated
 npm audit
@@ -121,6 +132,7 @@ npm test
 ```
 
 **Workflow avant release :**
+
 ```bash
 npm audit --audit-level=moderate
 npm outdated
@@ -129,6 +141,7 @@ npm run build
 ```
 
 **Références :**
+
 - package.json - Versions actuelles
 - package-lock.json - Lockfile
 - npm docs - Documentation

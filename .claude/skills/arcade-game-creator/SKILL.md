@@ -19,11 +19,13 @@ Guide la création de nouveaux jeux arcade canvas pour le mode Arcade.
 ### Architecture simple
 
 **Arcade Multi Memory** (31 KB) :
+
 - Jeu de memory matching
 - Structure monolithique simple
 - Bon point de départ
 
 **Arcade Invasion** (31 KB) :
+
 - Space Invaders style
 - Gestion d'entités multiples
 - Pattern de vagues d'ennemis
@@ -31,22 +33,26 @@ Guide la création de nouveaux jeux arcade canvas pour le mode Arcade.
 ### Architecture décomposée
 
 **Multimiam** (architecture modulaire) :
+
 - Point d'entrée + modules séparés
 - Engine (logique), Renderer (rendu), Controls (inputs), Questions (multiplication)
 - Meilleure maintenabilité
 
 **Multisnake** (38 KB) :
+
 - Structure plus monolithique
 - Gestion de grille
 
 ## Patterns architecturaux
 
 ### Pattern monolithique
+
 Tout dans un fichier. Simple pour jeux petits.
 
 **Quand utiliser** : Jeux simples, prototypes
 
 ### Pattern décomposé
+
 Séparation en modules (Engine, Renderer, Controls, Questions).
 
 **Quand utiliser** : Jeux complexes, maintenance long terme
@@ -56,15 +62,19 @@ Examine Multimiam pour voir ce pattern en action.
 ## Composants essentiels
 
 ### Game Loop
+
 Boucle continue : update → render → next frame (requestAnimationFrame)
 
 ### Système de rendu Canvas
+
 Clear canvas → Draw entities → Draw UI
 
 ### Gestion des inputs
+
 Support clavier ET touch pour mobile
 
 ### Intégration questions multiplication
+
 Questions intégrées au gameplay, pas séparées
 
 Cherche ces patterns dans les jeux existants.
@@ -74,6 +84,7 @@ Cherche ces patterns dans les jeux existants.
 ### Étape 1 : Choisir un jeu de référence
 
 Identifie le jeu existant qui ressemble le plus au tien :
+
 - Jeu de puzzle/memory → arcade-multimemory.js
 - Jeu de tir/action → arcade-invasion.js
 - Jeu de grille → multisnake.js
@@ -83,6 +94,7 @@ Identifie le jeu existant qui ressemble le plus au tien :
 **Jeu simple** : Fichier unique `arcade-new-game.js`
 
 **Jeu complexe** : Fichiers multiples
+
 - `new-game.js` (point d'entrée)
 - `new-game-engine.js` (logique)
 - `new-game-renderer.js` (rendu)
@@ -91,6 +103,7 @@ Identifie le jeu existant qui ressemble le plus au tien :
 ### Étape 3 : Comprendre le pattern de référence
 
 Examine le jeu choisi :
+
 - Comment l'initialisation fonctionne ?
 - Comment le game loop est structuré ?
 - Comment le rendu est organisé ?
@@ -112,17 +125,21 @@ Ajoute ton jeu suivant le même pattern.
 ## Patterns de gameplay
 
 ### Collision detection
+
 Cherche comment les jeux existants détectent les collisions (AABB pattern courant).
 
 ### Spawning d'entités
+
 Trouve comment les ennemis/objets sont créés dans les jeux.
 
 ### Scoring et progression
+
 Examine les systèmes de score et de niveaux dans les jeux existants.
 
 ## Performance (viser 60 FPS)
 
 **Techniques essentielles** :
+
 - `requestAnimationFrame` (pas `setInterval`)
 - Object pooling pour entités
 - Éviter allocations mémoire dans game loop
@@ -133,11 +150,13 @@ Cherche exemples de ces optimisations dans le code existant.
 ## Checklist
 
 ### Découverte
+
 - [ ] Examiner jeu similaire existant
 - [ ] Comprendre architecture (monolithique ou décomposée)
 - [ ] Identifier patterns de game loop et rendu
 
 ### Implémentation
+
 - [ ] Fichiers créés avec convention de nommage
 - [ ] Game loop avec requestAnimationFrame
 - [ ] Rendu canvas fonctionnel
@@ -146,12 +165,14 @@ Cherche exemples de ces optimisations dans le code existant.
 - [ ] Sons joués (correct/wrong)
 
 ### Intégration
+
 - [ ] Intégré dans mode Arcade
 - [ ] Bouton ajouté dans HTML
 - [ ] Traductions ajoutées
 - [ ] `npm run i18n:compare` passe
 
 ### Qualité
+
 - [ ] Performance 60 FPS (tester sur mobile)
 - [ ] Cleanup des listeners (pas de leaks)
 - [ ] Tests si logique complexe
@@ -160,18 +181,22 @@ Cherche exemples de ces optimisations dans le code existant.
 ## Debugging
 
 ### Problèmes de performance
+
 Utilise Chrome DevTools → Performance tab
 Enregistre pendant le jeu et cherche frame drops
 
 ### Problèmes de rendu
+
 Vérifie ordre de rendu (background → entités → UI)
 
 ### Problèmes d'inputs
+
 Vérifie event listeners attachés et retirés proprement
 
 ## Outils disponibles
 
 Examine le code pour trouver :
+
 - Fonctions audio (playSound)
 - Event bus (communication avec UI)
 - Utils généraux (utils-es6.js)
@@ -191,6 +216,7 @@ Examine le code pour trouver :
 ## Références
 
 Cherche dans le code :
+
 - `js/arcade-multimemory.js` - Jeu simple
 - `js/arcade-invasion.js` - Space invaders
 - `js/multimiam*.js` - Architecture décomposée

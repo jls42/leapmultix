@@ -18,6 +18,7 @@ Gère effets sonores et feedback audio pour meilleure expérience utilisateur.
 ## AudioManager (js/core/audio.js)
 
 **API :**
+
 - `playSound(soundName, options)` - Jouer son
 - `setVolume(volume)` - Volume global (0.0-1.0)
 - `toggleMute()` / `isMuted()` - Mute control
@@ -48,6 +49,7 @@ correct, wrong, victory, click, coin, levelup
 ## Gestion du lifecycle
 
 **Mode avec musique :**
+
 ```javascript
 // Lancer musique
 playSound('background-music', { loop: true, volume: 0.3 });
@@ -70,6 +72,7 @@ Examine QuizMode/ChallengeMode pour patterns existants.
 ## En cas de doute
 
 **Règles absolues :**
+
 1. Utiliser audio.js API (jamais créer Audio directement)
 2. < 50 KB par fichier
 3. Stopper musique dans cleanup()
@@ -77,6 +80,7 @@ Examine QuizMode/ChallengeMode pour patterns existants.
 5. Volume par défaut ≤ 0.7
 
 **Référence :**
+
 - `js/core/audio.js` - API complète
 - `assets/sounds/` - Catalogues existants
 - Modes (QuizMode, ChallengeMode) - Exemples d'utilisation

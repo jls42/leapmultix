@@ -24,21 +24,25 @@ Optimise taille des bundles JavaScript pour chargement rapide et performance mob
 ## Stratégies essentielles
 
 ### Tree Shaking
+
 - Imports nommés (pas `import *`)
 - Imports spécifiques de modules externes
 - Named exports (pas d'export default d'objets)
 
 ### Code Splitting
+
 - Import dynamique avec `import()`
 - Lazy loading de composants lourds
 - Vérifier lazy loading des modes de jeu
 
 ### Minification & Compression
+
 - Minifier actif en production
 - Gzip/Brotli sur serveur (-70% taille)
 - Source maps pour debug
 
 ### Éliminer duplications
+
 - Détecter code similaire entre modules
 - Extraire logique partagée
 - Cherche jeux arcade avec patterns similaires
@@ -46,12 +50,14 @@ Optimise taille des bundles JavaScript pour chargement rapide et performance mob
 ## Outils d'analyse
 
 **Scripts npm :**
+
 - `npm run analyze:dependencies` - Dépendances non utilisées
 - `npm run dead-code` - Exports/fonctions jamais appelés
 - `npm run analyze:globals` - Variables globales
 - `npm run analyze:assets` - Assets volumineux
 
 **Mesurer impact :**
+
 - Taille gzippée avant/après
 - Lighthouse CI (Performance > 90)
 - Tests mobile 3G/4G
@@ -77,6 +83,7 @@ Optimise taille des bundles JavaScript pour chargement rapide et performance mob
 ## En cas de doute
 
 **Règles absolues :**
+
 1. Toujours mesurer avant/après
 2. Une optimisation à la fois
 3. Priorité : lazy loading > tree shaking > minification
@@ -84,6 +91,7 @@ Optimise taille des bundles JavaScript pour chargement rapide et performance mob
 5. Tests passent après chaque changement
 
 **Workflow minimal :**
+
 ```bash
 npm run analyze:dependencies    # Identifier code mort
 npm run dead-code              # Vérifier exports non utilisés

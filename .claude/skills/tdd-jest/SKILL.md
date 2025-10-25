@@ -18,16 +18,19 @@ Implémente code en suivant cycle TDD RED/GREEN/REFACTOR avec Jest.
 ## Cycle TDD : RED → GREEN → REFACTOR
 
 **RED (Test échoue) :**
+
 1. Identifier comportement
 2. Écrire test AVANT code
 3. Test DOIT échouer ❌
 
 **GREEN (Test passe) :**
+
 1. Code minimum possible
 2. Pas d'optimisation/généralisation
 3. Faire passer test uniquement ✅
 
 **REFACTOR (Améliorer) :**
+
 1. Nettoyer code (noms, structure)
 2. Éliminer duplications
 3. Vérifier tests passent toujours ✅
@@ -41,11 +44,13 @@ Implémente code en suivant cycle TDD RED/GREEN/REFACTOR avec Jest.
 ## Structure tests (Arrange-Act-Assert)
 
 **AAA Pattern :**
+
 - **Arrange :** Préparer données
 - **Act :** Exécuter action
 - **Assert :** Vérifier résultat
 
 **Grouping :**
+
 - `describe()` - Grouper tests liés
 - `test()` / `it()` - Tests individuels
 - `beforeEach()` / `afterEach()` - Setup/cleanup
@@ -65,6 +70,7 @@ Voir documentation Jest pour liste complète.
 ## Mocking
 
 **Fonctions :**
+
 - `jest.fn()` - Mock simple
 - `mockReturnValue()` - Valeur
 - `mockResolvedValue()` / `mockRejectedValue()` - Promesses
@@ -89,6 +95,7 @@ Lance `npm run test:coverage`, examine rapport.
 ## Bonnes pratiques
 
 **Do's :**
+
 - Test AVANT code TOUJOURS
 - Un test à la fois (RED → GREEN → REFACTOR)
 - Tests descriptifs (noms clairs)
@@ -97,6 +104,7 @@ Lance `npm run test:coverage`, examine rapport.
 - Rapides (< 100ms idéal)
 
 **Don'ts :**
+
 - Pas de code avant test
 - Pas de tests trop larges
 - Pas de tests fragiles (timing, random)
@@ -128,6 +136,7 @@ Lance `npm run test:coverage`, examine rapport.
 ## En cas de doute
 
 **Règles absolues :**
+
 1. Cycle RED → GREEN → REFACTOR OBLIGATOIRE
 2. Test doit échouer d'abord (sinon inutile)
 3. Code minimum (pas sur-engineering)
@@ -136,6 +145,7 @@ Lance `npm run test:coverage`, examine rapport.
 6. Couverture > 80%
 
 **Références :**
+
 - Tests existants patterns
 - jest.config.cjs - Configuration
 - npm run test:coverage - État actual

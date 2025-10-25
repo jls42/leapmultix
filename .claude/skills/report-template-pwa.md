@@ -34,7 +34,9 @@
 ## Actions à entreprendre
 
 ### Doit être corrigé (Bloquant)
+
 1. [Problème critique 1]
 
 ### Devrait être corrigé (Haute priorité)
+
 1. [Problème important 1]

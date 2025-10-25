@@ -26,6 +26,7 @@ Automatise la création de commits Git avec messages conformes Conventional Comm
 **Scopes leapmultix :** arcade, i18n, ui, a11y, perf, pwa, test, deps
 
 **Description :**
+
 - Verbe impératif minuscule (add, fix, update, remove)
 - Pas de majuscule, pas de point
 - Max 72 caractères
@@ -45,6 +46,7 @@ git log --oneline -5  # Style existant
 ### 2. Déterminer type et scope
 
 **Type :**
+
 - Nouveaux fichiers/fonctions → feat
 - Corrections bugs → fix
 - Restructuration → refactor
@@ -52,6 +54,7 @@ git log --oneline -5  # Style existant
 - package.json → chore(deps)
 
 **Scope :**
+
 - Examine chemins fichiers
 - Identifie domaine principal
 - Omets si générique/multiple
@@ -79,6 +82,7 @@ git commit -m "type(scope): description"
 ```
 
 **Avec body si nécessaire :**
+
 ```bash
 git commit -m "$(cat <<'EOF'
 type(scope): description
@@ -91,6 +95,7 @@ EOF
 ## Exemples
 
 **Bons :**
+
 ```
 feat(arcade): add power-up system to Multimiam
 fix(arcade): correct collision detection
@@ -100,6 +105,7 @@ feat(i18n): add Spanish translations
 ```
 
 **Mauvais :**
+
 ```
 fix: bug fixes              # Trop vague
 Add new feature            # Pas de type
@@ -109,18 +115,22 @@ feat: added feature        # Pas impératif
 ## Cas d'usage
 
 ### Multiples fichiers, même feature
+
 Un seul commit avec tous les fichiers.
 
 ### Multiples types (feat + fix + refactor)
+
 Créer PLUSIEURS commits séparés. Chaque commit = 1 objectif.
 
 ### i18n modifié
+
 ```bash
 npm run i18n:compare  # Vérifie sync
 # Puis commit
 ```
 
 ### Dépendances
+
 ```bash
 chore(deps): add playwright
 chore(deps): update jest to 29.7.0
@@ -130,9 +140,11 @@ fix(deps): update minimatch (CVE-2022-3517)
 ## Gestion erreurs
 
 ### Tests échouent
+
 NE PAS committer ! Fix d'abord ou WIP avec `--no-verify` (précaution).
 
 ### Lint/Format échoue
+
 ```bash
 npm run lint:fix
 npm run format
@@ -156,6 +168,7 @@ git add .
 **Source :** CLAUDE.md et `git log` (exemples)
 
 **Règles absolues :**
+
 1. Vérifier qualité avant commit
 2. Conventional Commits obligatoire
 3. Jamais commit si tests échouent (sauf WIP)
@@ -163,6 +176,7 @@ git add .
 5. Jamais mentionner AI
 
 **Workflow :**
+
 ```bash
 npm run verify
 git add <files>

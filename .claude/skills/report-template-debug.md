@@ -10,11 +10,13 @@
 **Symptôme** : [Ce qui échoue/est cassé]
 
 **Environnement** :
+
 - Navigateur: [Version du navigateur]
 - Appareil: [Type d'appareil]
 - SE: [Système d'exploitation]
 
 **Étapes pour reproduire** :
+
 1. [Étape 1]
 2. [Étape 2]
 
@@ -25,15 +27,18 @@
 ## Analyse de la cause racine
 
 ### Cause immédiate
+
 **Ce qui a échoué** : [Le code/composant immédiat qui a échoué]
 **Emplacement** : `[chemin du fichier]:[numéro de ligne]`
 
 ### Cause première
+
 **Pourquoi ça a échoué** : [Explication approfondie du problème sous-jacent]
 
 ## Le correctif
 
 ### Solution implémentée
+
 **Approche** : [Description de haut niveau du correctif]
 
 **Modifications du code** :
@@ -47,6 +52,7 @@
 ```
 
 ### Pourquoi ce correctif fonctionne
+
 [Explication de la manière dont le correctif résout la cause première]
 
 ## Vérification

@@ -28,6 +28,7 @@ Trouve les breakpoints CSS utilisés dans le projet.
 ### Chrome DevTools Device Mode
 
 Émule différents appareils :
+
 - Viewports prédéfinis
 - Touch simulation
 - Network/CPU throttling
@@ -41,10 +42,12 @@ Trouve les breakpoints CSS utilisés dans le projet.
 ### Tests sur vrais appareils
 
 **Essentiels :**
+
 - iPhone (iOS récent)
 - Android (version récente)
 
 **Pourquoi :**
+
 - Touch réel ≠ simulation
 - Performance réelle
 - Bugs spécifiques device
@@ -61,6 +64,7 @@ Trouve les breakpoints CSS utilisés dans le projet.
 ### 2. Touch targets
 
 **Taille minimum :**
+
 - 44×44 px (iOS)
 - 48×48 px (Android)
 - 8px espacement minimum
@@ -77,11 +81,13 @@ Trouve les tailles de touch targets dans le CSS.
 ### 4. Touch interactions
 
 **Supportés :**
+
 - Tap (pas de hover requis)
 - Swipe si applicable
 - Pinch-zoom si pertinent
 
 **Éviter :**
+
 - Hover-only interactions
 - Gestures complexes
 
@@ -90,6 +96,7 @@ Trouve les touch handlers dans le JavaScript.
 ### 5. Formulaires mobiles
 
 **Optimisations :**
+
 - Input type approprié (`email`, `tel`, `number`)
 - `autocomplete` actif
 - Labels visibles
@@ -100,6 +107,7 @@ Examine les formulaires et leur configuration.
 ### 6. Images responsive
 
 **Techniques :**
+
 - `srcset` pour résolutions multiples
 - `<picture>` pour art direction
 - Lazy loading
@@ -110,6 +118,7 @@ Trouve la stratégie d'images responsive.
 ### 7. Typography
 
 **Tailles :**
+
 - 16px minimum corps de texte
 - Line-height ≥ 1.5
 - rem/em pour scalabilité
@@ -119,6 +128,7 @@ Examine les tailles de police CSS.
 ### 8. Performance mobile
 
 **Métriques cibles :**
+
 - First Contentful Paint < 2s (3G)
 - Time to Interactive < 5s (3G)
 - Lighthouse Performance > 80
@@ -130,6 +140,7 @@ Lance Lighthouse en mode mobile.
 ### 1. Tests DevTools
 
 Pour chaque viewport clé :
+
 - Layout adaptatif
 - Touch targets simulation
 - Performance
@@ -138,6 +149,7 @@ Pour chaque viewport clé :
 ### 2. Tests vrais devices
 
 iPhone et Android :
+
 - Navigation complète
 - Touch interactions réelles
 - Formulaires
@@ -146,6 +158,7 @@ iPhone et Android :
 ### 3. Tests throttling
 
 Avec 3G + 4x CPU :
+
 - Temps de chargement
 - Fluidité interactions
 - FPS jeux arcade
@@ -153,6 +166,7 @@ Avec 3G + 4x CPU :
 ### 4. Corrections
 
 Priorise :
+
 1. Bloquants (layout cassé)
 2. UX dégradée (touch targets petits)
 3. Performance (chargement lent)
@@ -176,6 +190,7 @@ Priorise :
 **Source :** Vrais appareils + Lighthouse Mobile
 
 **Règles absolues :**
+
 1. Toujours tester sur vrais appareils (iOS + Android)
 2. Toujours tester avec 3G throttling
 3. Touch targets minimum 44×44 px
@@ -183,6 +198,7 @@ Priorise :
 5. Lighthouse Mobile > 80 obligatoire
 
 **Workflow minimal :**
+
 - DevTools pour iterations rapides
 - Vrais appareils pour validation finale
 - Lighthouse mobile pour métriques

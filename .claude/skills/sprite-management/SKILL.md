@@ -18,12 +18,14 @@ Guide la gestion des sprites et sprite sheets pour les jeux arcade.
 ## Sprites dans le projet
 
 Trouve dans le code :
+
 - Personnages joueurs
 - Monstres et ennemis
 - Power-ups et collectibles
 - Sprite sheets existants
 
 **Formats :**
+
 - PNG avec transparence
 - Sprite sheets (multiples frames)
 - Résolutions multiples (@1x, @2x, @3x)
@@ -39,11 +41,13 @@ Image statique, pas d'animation, position et taille fixes.
 ### 2. Sprite Sheet
 
 **Multiple frames dans une image :**
+
 - Layout horizontal (frames en ligne)
 - Layout grille (frames en grille)
 - Permet animations fluides
 
 **Layouts courants :**
+
 - Horizontal : 8 frames × 64px = 512×64px
 - Grille 4×4 : 16 frames de 64×64px = 256×256px
 - Par row : Chaque ligne = animation différente
@@ -53,6 +57,7 @@ Trouve les sprite sheets existants.
 ### 3. Sprite animé
 
 **Animation frame par frame :**
+
 - FPS configurable
 - Boucle automatique
 - Delta time pour smoothness
@@ -60,6 +65,7 @@ Trouve les sprite sheets existants.
 ### 4. Sprite directionnel
 
 **Différentes animations par direction :**
+
 - Idle, Walk, Jump par direction
 - Row dans sprite sheet par action
 - State machine pour transitions
@@ -69,6 +75,7 @@ Trouve les sprite sheets existants.
 ### Chargement d'images
 
 **Asynchrone :**
+
 - `Image.onload` pour savoir quand prêt
 - Précharger avant utilisation
 - Placeholder ou loading si nécessaire
@@ -78,6 +85,7 @@ Trouve comment le projet gère le chargement.
 ### Rendering
 
 **Canvas drawImage() :**
+
 - Source rectangle (quelle partie du sprite sheet)
 - Destination rectangle (où dessiner)
 - Scaling automatique si tailles différentes
@@ -87,6 +95,7 @@ Examine les fonctions de rendu dans les jeux.
 ### Collision Detection
 
 **Techniques disponibles :**
+
 - Bounding box (AABB) - Simple et rapide
 - Collision circulaire - Pour objets ronds
 - Pixel-perfect - Précis mais coûteux
@@ -97,6 +106,7 @@ Trouve les fonctions de collision utilisées.
 ### Animation State Machine
 
 **États et transitions :**
+
 - IDLE → WALK → JUMP → FALL → IDLE
 - Changement frame selon elapsed time
 - Loop ou one-shot selon animation
@@ -106,6 +116,7 @@ Examine les state machines dans les jeux arcade.
 ## Classes et structures recommandées
 
 Trouve dans le code :
+
 - Classe Sprite de base
 - Classe AnimatedSprite
 - Manager de sprites (pool, loading)
@@ -174,6 +185,7 @@ Cherche les optimisations déjà en place.
 **Source :** Jeux arcade existants + sprite utils
 
 **Règles absolues :**
+
 1. Toujours précharger sprites avant utilisation
 2. Utiliser delta time pour animations fluides
 3. Bounding box (AABB) pour la plupart des collisions
@@ -181,6 +193,7 @@ Cherche les optimisations déjà en place.
 5. Cleanup sprites inutilisés pour éviter memory leaks
 
 **Workflow minimal :**
+
 - Charger sprite sheet avec Image.onload
 - drawImage() avec source/destination rectangles
 - Collision AABB pour détection rapide

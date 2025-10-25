@@ -10,13 +10,13 @@
 
 ## Score de conformité WCAG 2.1
 
-| Principe | Score | Statut |
-|-----------|-------|--------|
-| **Perceptible** | [X]/100 | ✅/⚠️/❌ |
-| **Utilisable** | [X]/100 | ✅/⚠️/❌ |
+| Principe           | Score   | Statut   |
+| ------------------ | ------- | -------- |
+| **Perceptible**    | [X]/100 | ✅/⚠️/❌ |
+| **Utilisable**     | [X]/100 | ✅/⚠️/❌ |
 | **Compréhensible** | [X]/100 | ✅/⚠️/❌ |
-| **Robuste** | [X]/100 | ✅/⚠️/❌ |
-| **Global** | [X]/100 | ✅/⚠️/❌ |
+| **Robuste**        | [X]/100 | ✅/⚠️/❌ |
+| **Global**         | [X]/100 | ✅/⚠️/❌ |
 
 ---
 
@@ -32,11 +32,13 @@
 [Description détaillée du problème]
 
 **Code actuel** :
+
 ```html
 [Code problématique]
 ```
 
 **Recommandation** :
+
 ```html
 [Code corrigé]
 ```
@@ -73,6 +75,7 @@
 **VoiceOver (macOS)** : ✅ Compatible | ⚠️ Problèmes | ❌ Cassé
 
 **Utilisation d'ARIA** :
+
 - Étiquettes : ✅ Appropriées | ⚠️ Problèmes | ❌ Manquantes
 - Points de repère : ✅ Présents | ⚠️ Incomplets | ❌ Manquants
 - Régions live : ✅ Fonctionnelles | ⚠️ Problèmes | ❌ Manquantes
@@ -83,19 +86,21 @@
 
 **Statut** : ✅ CONFORME | ⚠️ PROBLÈMES TROUVÉS | ❌ NON CONFORME
 
-| Élément | Premier plan | Arrière-plan | Ratio | Requis | Statut |
-|---------|-----------|------------|-------|----------|--------|
-| Texte normal | #XXXXXX | #XXXXXX | X.X:1 | 4.5:1 | ✅/❌ |
-| Grand texte | #XXXXXX | #XXXXXX | X.X:1 | 3:1 | ✅/❌ |
+| Élément      | Premier plan | Arrière-plan | Ratio | Requis | Statut |
+| ------------ | ------------ | ------------ | ----- | ------ | ------ |
+| Texte normal | #XXXXXX      | #XXXXXX      | X.X:1 | 4.5:1  | ✅/❌  |
+| Grand texte  | #XXXXXX      | #XXXXXX      | X.X:1 | 3:1    | ✅/❌  |
 
 ---
 
 ## Actions à entreprendre
 
 ### Must Fix (Bloquant - Violations WCAG)
+
 1. [Problème d'accessibilité critique 1]
 
 ### Should Fix (Haute Priorité)
+
 1. [Problème d'accessibilité important 1]
 
 ---

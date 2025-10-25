@@ -19,6 +19,7 @@ Détecte régressions visuelles dans jeux canvas et UI responsive via captures a
 ## Ce que les tests visuels détectent
 
 **Tests unitaires NE détectent PAS:**
+
 - Sprites mal positionnés/manquants
 - Couleurs incorrectes
 - Animations cassées
@@ -29,11 +30,13 @@ Détecte régressions visuelles dans jeux canvas et UI responsive via captures a
 ## Architecture
 
 **Structure :**
+
 - `baselines/` - Images de référence
 - `current/` - Captures actuelles
 - `diffs/` - Différences visuelles
 
 **Viewports :**
+
 - Desktop: 1920×1080
 - Tablet: 768×1024
 - Mobile: 375×667
@@ -45,6 +48,7 @@ Trouve structure tests visuels dans projet.
 **Outils :** Playwright (visual testing intégré)
 
 **Configuration clés :**
+
 - Répertoire tests visuels
 - Timeout canvas
 - Retry sur timing
@@ -56,17 +60,20 @@ Trouve ou crée configuration Playwright.
 ## Tests essentiels
 
 **Jeux arcade (par jeu):**
+
 - Écran démarrage
 - Gameplay + action
 - Game over
 - États spécifiques
 
 **UI responsive (par composant):**
+
 - Dashboard, TopBar, Customization
 - Chaque viewport (desktop, tablet, mobile)
 - États interactifs (menus, toggles)
 
 **Tolérance :**
+
 - UI statique: maxDiffPixels 50-100
 - Canvas animé: maxDiffPixels 200-300
 - Responsive: maxDiffPixels 100
@@ -80,11 +87,13 @@ Trouve ou crée configuration Playwright.
 ## Debugging
 
 **Outils :**
+
 - Rapport HTML (diffs visuels)
 - Mode UI interactif (meilleur debug)
 - Inspection manuelle diffs
 
 **Images générées :**
+
 - baseline (référence)
 - actual (capture)
 - diff (différences en rouge)
@@ -111,6 +120,7 @@ Trouve ou crée configuration Playwright.
 ## En cas de doute
 
 **Règles absolues :**
+
 1. Tests visuels OBLIGATOIRES après mods visuelles
 2. Review manuellement TOUS diffs
 3. Update baselines uniquement si intentionnel
@@ -119,6 +129,7 @@ Trouve ou crée configuration Playwright.
 6. Baselines avec messages descriptifs
 
 **Référence :**
+
 - Structure baselines/ existante
 - Scripts npm visual-testing
 - Diffs générés (baseline/actual/diff)

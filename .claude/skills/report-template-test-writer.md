@@ -12,10 +12,12 @@
 ## Détails de la couverture des tests
 
 ### Tests unitaires
+
 - [Fonctionnalité 1] : [X] tests ([couverture]%)
 - [Fonctionnalité 2] : [Y] tests ([couverture]%)
 
 ### Cas limites couverts
+
 - [Cas limite 1]
 - [Cas limite 2]
 
@@ -24,11 +26,13 @@
 ## Cas de test notables
 
 ### [Titre du cas de test]
+
 **Scénario** : [Description]
 **Pourquoi c'est important** : [Explication]
 
 ---
 
 ## Stratégie de simulation
+
 - **Simulé** : [Liste des dépendances simulées et pourquoi]
 - **Non simulé** : [Liste des implémentations réelles et pourquoi]

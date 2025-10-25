@@ -26,11 +26,13 @@ npm run sw:fix              # Réparer SW
 ## Versioning et workflow
 
 **SemVer (voir sw.js) :**
+
 - Major : Changements cassants
 - Minor : Ressources ajoutées
 - Patch : Corrections
 
 **Workflow :**
+
 1. **Modifier :** sw.js (version, ressources, handlers)
 2. **Incrémenter :** Version (SemVer)
 3. **Tester :** `npm run test:pwa-offline`
@@ -55,10 +57,12 @@ Trouve stratégie dans sw.js existant.
 ## Debugging
 
 **Chrome DevTools (F12) → Application → Service Workers :**
+
 - Offline mode → Tester navigation
 - caches.keys() en console → Vérifier caches
 
 **Problèmes courants :**
+
 - SW ne s'update → Incrémenter version, skipWaiting() présent
 - Ressources manquantes → Ajouter à liste cache
 - Cache volumineux → Cacher uniquement ressources critiques
@@ -75,6 +79,7 @@ Trouve stratégie dans sw.js existant.
 ## En cas de doute
 
 **Règles absolues :**
+
 1. Incrémenter version TOUJOURS
 2. Tester offline AVANT commit
 3. DevTools Application tab verification
@@ -82,6 +87,7 @@ Trouve stratégie dans sw.js existant.
 5. skipWaiting() + clients.claim() essentiels
 
 **Références :**
+
 - `sw.js` - Service Worker principal
 - `manifest.json` - PWA manifest
 - Chrome DevTools Application tab

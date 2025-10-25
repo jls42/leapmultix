@@ -18,6 +18,7 @@ Exécute vérifications de qualité pour garantir standards avant commit/merge/r
 ## Standards obligatoires
 
 **MUST PASS :**
+
 1. Formatage code (Prettier)
 2. Linting (ESLint)
 3. Tests unitaires (Jest)
@@ -25,6 +26,7 @@ Exécute vérifications de qualité pour garantir standards avant commit/merge/r
 5. i18n synchronisé (fr.json, en.json, es.json)
 
 **Recommandés :**
+
 - Pas d'erreurs console
 - Dead code vérifié
 - Audit sécurité (`npm audit`)
@@ -32,6 +34,7 @@ Exécute vérifications de qualité pour garantir standards avant commit/merge/r
 ## Scripts npm
 
 Trouve et utilise :
+
 - `npm run format:check` - Vérifier formatage
 - `npm run format` - Formater automatiquement
 - `npm run lint` - Linter
@@ -58,13 +61,13 @@ Trouve et utilise :
 
 ## Gestion des échecs
 
-| Problème | Solution |
-|----------|----------|
-| Format échoue | `npm run format` → commit |
-| Lint auto-fixable | `npm run lint:fix` |
-| Tests échouent | Debug test, corriger code |
-| Coverage < 80% | Ajouter tests critiques |
-| i18n désyncé | Ajouter clés manquantes |
+| Problème          | Solution                  |
+| ----------------- | ------------------------- |
+| Format échoue     | `npm run format` → commit |
+| Lint auto-fixable | `npm run lint:fix`        |
+| Tests échouent    | Debug test, corriger code |
+| Coverage < 80%    | Ajouter tests critiques   |
+| i18n désyncé      | Ajouter clés manquantes   |
 
 ## Checklist avant commit
 
@@ -80,6 +83,7 @@ Trouve et utilise :
 ## En cas de doute
 
 **Règles absolues :**
+
 1. Lancer TOUS les scripts avant commit
 2. Ne JAMAIS bypass vérifications
 3. Corriger erreurs une par une
@@ -87,11 +91,13 @@ Trouve et utilise :
 5. CI/CD doit être vert avant merge
 
 **Exécution rapide :**
+
 ```bash
 npm run format:check && npm run lint && npm test
 ```
 
 **Références :**
+
 - Scripts npm (package.json)
 - ESLint config (eslint.config.js)
 - Prettier config (.prettierrc)

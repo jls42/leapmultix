@@ -17,6 +17,7 @@ Guide la validation et l'amélioration de l'accessibilité web selon WCAG 2.1 ni
 ## Standards WCAG 2.1 AA
 
 **Quatre principes POUR :**
+
 1. **Perceptible** - Information présentable
 2. **Opérable** - Composants opérables
 3. **Compréhensible** - Info et UI compréhensibles
@@ -25,6 +26,7 @@ Guide la validation et l'amélioration de l'accessibilité web selon WCAG 2.1 ni
 ## Scripts npm disponibles
 
 Trouve et utilise :
+
 - Audit accessibilité complet
 - Audit mobile responsive
 - Vérification contraste
@@ -50,11 +52,13 @@ Trouve et utilise :
 **Utiliser quand sémantique HTML insuffisante**
 
 Règles :
+
 - Pas d'ARIA mieux que mauvais ARIA
 - Vérifier support lecteurs d'écran
 - Tester avec vraies technologies assistives
 
 Attributs courants :
+
 - `aria-label`, `aria-labelledby`
 - `aria-describedby`
 - `aria-hidden`
@@ -63,6 +67,7 @@ Attributs courants :
 ### 4. Contraste couleurs
 
 **WCAG 2.1 AA minimum :**
+
 - Texte normal : 4.5:1
 - Texte large (≥18pt ou ≥14pt gras) : 3:1
 - Composants UI : 3:1
@@ -98,16 +103,19 @@ Utilise scripts npm disponibles ou Lighthouse (Chrome DevTools).
 ### 2. Tests manuels
 
 **Navigation clavier :**
+
 - Tab à travers tous éléments interactifs
 - Enter/Space pour activer
 - Échap pour fermer modales/menus
 
 **Lecteur d'écran :**
+
 - VoiceOver (macOS/iOS)
 - NVDA (Windows)
 - JAWS (Windows)
 
 **Contraste :**
+
 - Vérifie tous textes et icônes
 - Teste modes sombre/clair
 
@@ -134,6 +142,7 @@ Utilise scripts npm disponibles ou Lighthouse (Chrome DevTools).
 **Source :** Standards WCAG 2.1 AA officiels
 
 **Règles absolues :**
+
 1. Toujours tester clavier uniquement
 2. Toujours vérifier contraste
 3. Toujours tester lecteur d'écran
@@ -141,6 +150,7 @@ Utilise scripts npm disponibles ou Lighthouse (Chrome DevTools).
 5. Jamais empêcher zoom mobile
 
 **Workflow minimal :**
+
 - Lighthouse audit
 - Navigation clavier complète
 - Test 1 lecteur d'écran minimum

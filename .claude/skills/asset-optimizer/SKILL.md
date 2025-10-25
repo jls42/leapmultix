@@ -27,22 +27,26 @@ Optimise images, sprites, sons, vidéos pour chargement rapide et performance mo
 ## Principes essentiels
 
 **Images :**
+
 - Compresse (TinyPNG, Squoosh): -30-50% PNG, -20-40% JPG
 - WebP + fallback PNG/JPG (-25% vs JPG)
 - Responsive (1x, 2x, 3x via srcset)
 - Lazy loading (loading="lazy" ou Intersection Observer)
 
 **Audio :**
+
 - Bitrate: 96 kbps effets, 128 kbps musique
 - Formats: MP3 + OGG/WebM (compatibilité)
 - Preload sons critiques
 
 **Sprites :**
+
 - Combiner en sheets (moins requêtes HTTP)
 - SVG icônes (scalable, modifiable CSS)
 - Optimize avec SVGO
 
 **Cache :**
+
 - cache-updater.js (versioning auto)
 - responsive-image-loader.js (chargement adapté densité)
 
@@ -56,6 +60,7 @@ Optimise images, sprites, sons, vidéos pour chargement rapide et performance mo
 ## Checklist
 
 **Images :**
+
 - [ ] Compressées (TinyPNG/Squoosh)
 - [ ] WebP + fallback PNG/JPG
 - [ ] Responsive si > 50 KB (srcset)
@@ -64,12 +69,14 @@ Optimise images, sprites, sons, vidéos pour chargement rapide et performance mo
 - [ ] Versioning cache-updater.js
 
 **Audio :**
+
 - [ ] Bitrate optimisé (96-128 kbps)
 - [ ] Formats multiples (MP3 + OGG)
 - [ ] < 50 KB par fichier
 - [ ] Preload si critique
 
 **Général :**
+
 - [ ] assets:analyze exécuté
 - [ ] assets:diff vérifié
 - [ ] Lighthouse > 90
@@ -78,22 +85,26 @@ Optimise images, sprites, sons, vidéos pour chargement rapide et performance mo
 ## En cas de doute
 
 **Règles absolues :**
+
 1. Compresse TOUJOURS (TinyPNG/Squoosh)
 2. WebP + fallback PNG/JPG
 3. Versioning via cache-updater.js
 4. Lighthouse > 90 OBLIGATOIRE
 
 **Outils :**
+
 - TinyPNG/Squoosh - Compression (web)
 - ffmpeg - Audio/vidéo (CLI)
 - Lighthouse - Vérification
 
 **Modules clés :**
+
 - responsive-image-loader.js (9 KB)
 - cache-updater.js (10 KB)
-- npm run assets:*
+- npm run assets:\*
 
 **Où chercher :**
+
 - responsive-image-loader.js - Chargement images
 - cache-updater.js - Versioning
 - assets/ - Organisation actuelle

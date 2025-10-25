@@ -30,12 +30,14 @@ Vérifie : `gh --version` et `gh auth status`
 ### 2. Analyser les commits
 
 Examine TOUS commits depuis main :
+
 ```bash
 git log main...HEAD --oneline
 git diff main...HEAD --stat
 ```
 
 Identifie :
+
 - Types (feat/fix/refactor/test/chore)
 - Scopes (arcade/i18n/ui/pwa)
 - Fichiers modifiés par catégorie
@@ -43,6 +45,7 @@ Identifie :
 ### 3. Générer titre PR
 
 **Règles :**
+
 - 1 commit → utilise message commit
 - Similaires → généralise
 - Mixte → "Multiple improvements (scopes)"
@@ -51,14 +54,18 @@ Identifie :
 ### 4. Générer description PR
 
 **Structure :**
+
 ```markdown
 ## Summary
+
 [1-4 bullet points changements clés]
 
 ## Changes
+
 [Fichiers modifiés groupés par catégorie]
 
 ## Test Plan
+
 - [ ] [Tests spécifiques]
 - [ ] Run `npm run verify`
 ```
@@ -128,6 +135,7 @@ gh pr list              # PRs existantes
 **Source :** CLAUDE.md et PRs existantes (`gh pr list --state all`)
 
 **Règles absolues :**
+
 1. Vérifier qualité avant PR (`npm run verify`)
 2. Analyser TOUS commits depuis main
 3. Jamais PR depuis main
@@ -135,6 +143,7 @@ gh pr list              # PRs existantes
 5. Jamais mentionner AI
 
 **Workflow minimal :**
+
 ```bash
 npm run verify
 git push -u origin $(git branch --show-current)
