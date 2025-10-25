@@ -5,9 +5,9 @@ description: 'Crée un nouveau mode de jeu en étendant la classe abstraite Game
 
 # New Game Mode Creator
 
-Cette skill guide la création de nouveaux modes de jeu suivant l'architecture établie du projet leapmultix.
+Guide la création de nouveaux modes de jeu suivant l'architecture établie du projet.
 
-## Quand utiliser cette skill
+## Quand utiliser
 
 - Création d'un nouveau mode de jeu
 - Extension de la fonctionnalité arcade
@@ -16,559 +16,174 @@ Cette skill guide la création de nouveaux modes de jeu suivant l'architecture �
 
 ## Architecture des Game Modes
 
-### Hiérarchie de classes
+### Principes fondamentaux
 
-```
-GameMode (abstract)
-├── QuizMode.js          - Quiz multiplication basique
-├── ChallengeMode.js     - Défis chronométrés avec scoring
-├── DiscoveryMode.js     - Exploration orientée apprentissage
-├── AdventureMode.js     - Progression narrative
-└── ArcadeMode.js        - Collection mini-jeux
-```
+**Héritage** : Tous les modes héritent de `GameMode` (classe abstraite)
 
-### Classe abstraite GameMode
+**Communication** :
+- Utilise `eventBus` pour découplage (jamais de couplage direct)
+- Pattern publish/subscribe pour événements
 
-Emplacement : `js/core/GameMode.js`
+**Chargement** : Lazy loading via le système existant
 
-**Méthodes abstraites obligatoires :**
+**Cycle de vie** : `init()` → `start()` → `update()` → `cleanup()`
+- Toujours nettoyer les listeners dans `cleanup()`
 
-```javascript
-class GameMode {
-  // Cycle de vie
-  async init() {
-    throw new Error('Must implement init()');
-  }
-  async cleanup() {
-    throw new Error('Must implement cleanup()');
-  }
+### Méthodes abstraites requises
 
-  // Gestion des questions
-  async handleQuestion(question) {
-    throw new Error('Must implement handleQuestion()');
-  }
-  handleCorrectAnswer(question) {
-    throw new Error('Must implement handleCorrectAnswer()');
-  }
-  handleWrongAnswer(question) {
-    throw new Error('Must implement handleWrongAnswer()');
-  }
+À implémenter dans tout mode :
+- `init()` - Initialisation
+- `cleanup()` - Nettoyage et libération ressources
+- `handleQuestion()` - Traitement d'une question
+- `handleCorrectAnswer()` - Gestion réponse correcte
+- `handleWrongAnswer()` - Gestion réponse incorrecte
+- `updateUI()` - Mise à jour interface
+- `showResults()` - Affichage résultats
 
-  // UI
-  updateUI() {
-    throw new Error('Must implement updateUI()');
-  }
-  showResults() {
-    throw new Error('Must implement showResults()');
-  }
-}
-```
+## Workflow de création
 
-## Processus de création d'un nouveau mode
+### Étape 1 : Explorer les exemples existants
 
-### Étape 1 : Créer le fichier du mode
+Examine les modes dans `js/modes/` :
+- **QuizMode.js** : Mode simple, bon point de départ
+- **ChallengeMode.js** : Mode avec timer, patterns avancés
+- **ArcadeMode.js** : Collection de mini-jeux
 
-Emplacement : `js/modes/YourMode.js`
+Trouve celui qui ressemble le plus à ce que tu veux créer.
 
-**Template de base :**
+### Étape 2 : Localiser la classe abstraite
 
-```javascript
-/**
- * YourMode - Description du mode
- * @module modes/YourMode
- */
+Trouve et examine `GameMode.js` pour comprendre :
+- Les méthodes abstraites obligatoires
+- Les méthodes utilitaires disponibles
+- Le contrat d'interface
 
-import GameMode from '../core/GameMode.js';
-import { eventBus } from '../core/eventBus.js';
-import { utils } from '../utils-es6.js';
-import { getTranslation } from '../i18n.js';
+### Étape 3 : Comprendre l'intégration
 
-/**
- * Description de votre mode
- */
-export default class YourMode extends GameMode {
-  constructor() {
-    super();
-    this.name = 'yourMode';
-    this.isActive = false;
-    // Vos propriétés spécifiques
-  }
+Cherche dans le code existant :
+- Comment les modes sont enregistrés (gestionnaire de modes)
+- Comment le lazy loading fonctionne
+- Comment les modes communiquent via eventBus
 
-  /**
-   * Initialise le mode
-   */
-  async init() {
-    console.log(`[YourMode] Initializing`);
-    this.isActive = true;
+### Étape 4 : Créer ton mode
 
-    // Configuration initiale
-    this.setupUI();
-    this.attachEventListeners();
+**Convention de nommage** : `js/modes/YourMode.js` (PascalCase)
 
-    // Émettre événement d'initialisation
-    eventBus.emit('mode:initialized', { mode: this.name });
+**Structure minimale** :
+- Hérite de GameMode
+- Implémente toutes les méthodes abstraites
+- Utilise eventBus pour communication
+- Nettoie proprement dans cleanup()
 
-    return Promise.resolve();
-  }
+Adapte un exemple existant à ton besoin.
 
-  /**
-   * Nettoie le mode
-   */
-  async cleanup() {
-    console.log(`[YourMode] Cleaning up`);
-    this.isActive = false;
+### Étape 5 : Intégrer
 
-    // Retirer event listeners
-    this.removeEventListeners();
+- Enregistre dans le gestionnaire de modes
+- Ajoute au lazy loader
+- Crée les traductions (fr, en, es)
+- Vérifie synchronisation i18n
 
-    // Nettoyer UI
-    this.cleanupUI();
+### Étape 6 : Tester
 
-    // Émettre événement de nettoyage
-    eventBus.emit('mode:cleanup', { mode: this.name });
-
-    return Promise.resolve();
-  }
-
-  /**
-   * Gère une question
-   */
-  async handleQuestion(question) {
-    if (!this.isActive) return;
-
-    // Logique de traitement de la question
-    this.currentQuestion = question;
-    this.displayQuestion(question);
-
-    return Promise.resolve();
-  }
-
-  /**
-   * Gère une réponse correcte
-   */
-  handleCorrectAnswer(question) {
-    console.log('[YourMode] Correct answer');
-
-    // Feedback positif
-    this.showFeedback(true);
-
-    // Mise à jour score/stats
-    this.updateStats('correct');
-
-    // Émettre événement
-    eventBus.emit('mode:correctAnswer', {
-      mode: this.name,
-      question,
-    });
-  }
-
-  /**
-   * Gère une réponse incorrecte
-   */
-  handleWrongAnswer(question) {
-    console.log('[YourMode] Wrong answer');
-
-    // Feedback négatif
-    this.showFeedback(false);
-
-    // Mise à jour stats
-    this.updateStats('wrong');
-
-    // Émettre événement
-    eventBus.emit('mode:wrongAnswer', {
-      mode: this.name,
-      question,
-    });
-  }
-
-  /**
-   * Met à jour l'interface
-   */
-  updateUI() {
-    if (!this.isActive) return;
-
-    // Mettre à jour éléments UI
-    this.updateScore();
-    this.updateProgress();
-  }
-
-  /**
-   * Affiche les résultats
-   */
-  showResults() {
-    // Afficher écran de résultats
-    const results = this.calculateResults();
-    this.displayResults(results);
-
-    // Émettre événement de fin
-    eventBus.emit('mode:completed', {
-      mode: this.name,
-      results,
-    });
-  }
-
-  // === Méthodes privées ===
-
-  setupUI() {
-    // Configuration UI spécifique
-  }
-
-  cleanupUI() {
-    // Nettoyage UI
-  }
-
-  attachEventListeners() {
-    // Attacher listeners
-  }
-
-  removeEventListeners() {
-    // Retirer listeners
-  }
-
-  displayQuestion(question) {
-    // Afficher la question
-  }
-
-  showFeedback(isCorrect) {
-    // Afficher feedback
-  }
-
-  updateStats(result) {
-    // Mettre à jour statistiques
-  }
-
-  updateScore() {
-    // Mettre à jour score
-  }
-
-  updateProgress() {
-    // Mettre à jour progression
-  }
-
-  calculateResults() {
-    // Calculer résultats
-    return {};
-  }
-
-  displayResults(results) {
-    // Afficher résultats
-  }
-}
+```bash
+npm test YourMode.test.js
+npm run format:check
+npm run lint
+npm run i18n:compare
 ```
 
-### Étape 2 : Enregistrer dans GameModeManager
+## Patterns et conventions
 
-Emplacement : `js/core/GameModeManager.js`
+### Communication via Event Bus
 
-```javascript
-import YourMode from '../modes/YourMode.js';
+**Principe** : Ne jamais coupler directement les composants
 
-// Dans la méthode d'enregistrement
-this.registerMode('yourMode', new YourMode());
-```
+**Pattern typique** :
+- Émettre : `eventBus.emit('mode:event', data)`
+- Écouter : `eventBus.on('user:action', this.handler)`
+- Nettoyer : `eventBus.off('user:action', this.handler)`
 
-### Étape 3 : Ajouter lazy loading
+Cherche des exemples dans les modes existants.
 
-Emplacement : `js/lazy-loader.js`
+### Gestion de l'état
 
-```javascript
-const MODE_CONFIGS = {
-  yourMode: {
-    module: () => import('./modes/YourMode.js'),
-    size: 'XX KB', // Taille estimée
-  },
-};
-```
+Trouve comment les modes existants gèrent leur état interne.
+Pattern commun : objet `this.state` avec propriétés du jeu.
 
-### Étape 4 : Ajouter traductions i18n
+### Utilisation des utilitaires
 
-Fichiers : `i18n/fr.json`, `i18n/en.json`, `i18n/es.json`
+Examine `utils-es6.js` pour voir les fonctions disponibles :
+- Génération de nombres aléatoires
+- Mélange d'arrays
+- Formatage du temps
+- Etc.
 
-```json
-{
-  "modes": {
-    "yourMode": {
-      "title": "Titre du Mode",
-      "description": "Description du mode",
-      "instructions": "Instructions",
-      "start": "Démarrer",
-      "results": "Résultats"
-    }
-  }
-}
-```
+## Checklist de création
 
-**IMPORTANT :** Toujours ajouter d'abord à fr.json (référence), puis traduire dans les autres langues.
+### Découverte
+- [ ] Examiner au moins 1 mode existant similaire
+- [ ] Comprendre GameMode (classe abstraite)
+- [ ] Identifier où les modes sont enregistrés
+- [ ] Trouver le pattern de lazy loading
 
-Vérifier avec :
+### Implémentation
+- [ ] Fichier créé dans `js/modes/`
+- [ ] Hérite de GameMode
+- [ ] Toutes méthodes abstraites implémentées
+- [ ] Event bus utilisé (pas de couplage direct)
+- [ ] Cleanup proper (listeners retirés)
 
+### Intégration
+- [ ] Enregistré dans gestionnaire
+- [ ] Ajouté au lazy loader
+- [ ] Traductions ajoutées (fr → en → es)
+- [ ] `npm run i18n:compare` passe
+
+### Qualité
+- [ ] Tests créés et passent
+- [ ] Code formatté (`npm run format`)
+- [ ] Lint passe (`npm run lint`)
+- [ ] Documentation JSDoc
+- [ ] Testé manuellement
+
+## Debugging
+
+### Vérifier initialisation
+Cherche les patterns de logging dans les modes existants.
+
+### Vérifier event bus
+Liste tous les événements émis par les modes existants pour comprendre les conventions.
+
+### Problèmes courants
+
+**Mode ne se charge pas** :
+- Vérifie enregistrement dans gestionnaire
+- Vérifie configuration lazy loader
+
+**Event bus ne fonctionne pas** :
+- Vérifie que cleanup retire les listeners
+- Cherche la bonne signature des événements
+
+**Traductions manquantes** :
 ```bash
 npm run i18n:compare
 ```
 
-### Étape 5 : Créer les tests
+## En cas de doute
 
-Emplacement : `tests/__tests__/YourMode.test.js`
+**Source de vérité = code existant**
 
-```javascript
-import YourMode from '../../js/modes/YourMode.js';
-import { eventBus } from '../../js/core/eventBus.js';
+1. Explore les modes similaires
+2. Le code réel est plus fiable que toute documentation
+3. Adapte les patterns, ne copie pas aveuglément
+4. Teste fréquemment
 
-describe('YourMode', () => {
-  let mode;
+## Références
 
-  beforeEach(() => {
-    mode = new YourMode();
-    jest.clearAllMocks();
-  });
-
-  afterEach(async () => {
-    if (mode.isActive) {
-      await mode.cleanup();
-    }
-  });
-
-  describe('Initialization', () => {
-    test('should initialize correctly', async () => {
-      await mode.init();
-      expect(mode.isActive).toBe(true);
-    });
-
-    test('should emit initialization event', async () => {
-      const spy = jest.spyOn(eventBus, 'emit');
-      await mode.init();
-      expect(spy).toHaveBeenCalledWith(
-        'mode:initialized',
-        expect.objectContaining({ mode: 'yourMode' })
-      );
-    });
-  });
-
-  describe('Cleanup', () => {
-    test('should cleanup correctly', async () => {
-      await mode.init();
-      await mode.cleanup();
-      expect(mode.isActive).toBe(false);
-    });
-  });
-
-  describe('Question Handling', () => {
-    test('should handle correct answer', async () => {
-      await mode.init();
-      const question = { num1: 3, num2: 4, answer: 12 };
-
-      mode.handleCorrectAnswer(question);
-
-      // Vérifier comportement attendu
-    });
-
-    test('should handle wrong answer', async () => {
-      await mode.init();
-      const question = { num1: 3, num2: 4, answer: 12 };
-
-      mode.handleWrongAnswer(question);
-
-      // Vérifier comportement attendu
-    });
-  });
-
-  describe('UI Updates', () => {
-    test('should update UI when active', async () => {
-      await mode.init();
-      expect(() => mode.updateUI()).not.toThrow();
-    });
-
-    test('should not update UI when inactive', () => {
-      expect(() => mode.updateUI()).not.toThrow();
-    });
-  });
-
-  describe('Results', () => {
-    test('should show results', async () => {
-      await mode.init();
-      expect(() => mode.showResults()).not.toThrow();
-    });
-  });
-});
-```
-
-Exécuter les tests :
-
-```bash
-npm test YourMode.test.js
-```
-
-### Étape 6 : Intégrer dans UI
-
-**HTML (index.html) :**
-
-```html
-<!-- Bouton de lancement -->
-<button onclick="startYourMode()" class="mode-button">
-  <span data-i18n="modes.yourMode.title"></span>
-</button>
-
-<!-- Slide du mode -->
-<div id="slideYourMode" class="slide" style="display:none;">
-  <!-- Contenu du mode -->
-</div>
-```
-
-**JavaScript (main.js ou bootstrap.js) :**
-
-```javascript
-import { GameModeManager } from './core/GameModeManager.js';
-
-async function startYourMode() {
-  const manager = GameModeManager.getInstance();
-  await manager.switchMode('yourMode');
-  goToSlide('slideYourMode');
-}
-
-// Enregistrer globalement si nécessaire
-window.startYourMode = startYourMode;
-```
-
-## Patterns et bonnes pratiques
-
-### Communication via Event Bus
-
-**Émettre des événements :**
-
-```javascript
-eventBus.emit('mode:stateChange', { mode: this.name, state: 'ready' });
-```
-
-**Écouter des événements :**
-
-```javascript
-this.onUserAction = data => {
-  // Gérer l'action
-};
-eventBus.on('user:action', this.onUserAction);
-```
-
-**Nettoyer les listeners :**
-
-```javascript
-eventBus.off('user:action', this.onUserAction);
-```
-
-### Gestion de l'état
-
-```javascript
-constructor() {
-  super();
-  this.state = {
-    score: 0,
-    questionsAnswered: 0,
-    correctAnswers: 0,
-    currentQuestion: null,
-    isPlaying: false
-  };
-}
-```
-
-### Utilisation de utils
-
-```javascript
-import { utils } from '../utils-es6.js';
-
-// Générer nombres aléatoires
-const num = utils.random(1, 10);
-
-// Mélanger array
-const shuffled = utils.shuffle(array);
-
-// Formater temps
-const formatted = utils.formatTime(seconds);
-```
-
-### Audio feedback
-
-```javascript
-import { playSound } from '../core/audio.js';
-
-handleCorrectAnswer() {
-  playSound('correct');  // ou 'success', 'victory'
-  // ...
-}
-
-handleWrongAnswer() {
-  playSound('wrong');    // ou 'error', 'fail'
-  // ...
-}
-```
-
-### Navigation entre slides
-
-```javascript
-import { goToSlide } from '../core/navigation.js';
-
-showResults() {
-  // Afficher résultats
-  goToSlide('slideResults');
-}
-
-exitMode() {
-  // Retour au menu
-  goToSlide('slide1');
-}
-```
-
-## Checklist de création
-
-- [ ] Fichier créé dans `js/modes/`
-- [ ] Classe étend GameMode
-- [ ] Toutes les méthodes abstraites implémentées
-- [ ] Enregistré dans GameModeManager
-- [ ] Ajouté au lazy loader
-- [ ] Traductions ajoutées (fr, en, es)
-- [ ] `npm run i18n:compare` passe
-- [ ] Tests créés et passent
-- [ ] UI ajoutée dans index.html
-- [ ] Intégration testée manuellement
-- [ ] Event bus utilisé pour communication
-- [ ] Cleanup proper implémenté
-- [ ] Documentation JSDoc complète
-- [ ] Code formatté (`npm run format`)
-- [ ] Lint passe (`npm run lint`)
-
-## Exemples de référence
-
-**Mode simple :** `js/modes/QuizMode.js`
-**Mode complexe :** `js/modes/ChallengeMode.js`
-**Mode avec sous-jeux :** `js/modes/ArcadeMode.js`
-
-## Debugging
-
-**Vérifier initialisation :**
-
-```javascript
-console.log(`[YourMode] isActive: ${this.isActive}`);
-```
-
-**Vérifier event bus :**
-
-```javascript
-eventBus.on('*', (event, data) => {
-  console.log('Event:', event, data);
-});
-```
-
-**Vérifier cleanup :**
-
-```javascript
-window.addEventListener('beforeunload', () => {
-  console.log('[YourMode] Cleanup before unload');
-  this.cleanup();
-});
-```
-
-## Voir aussi
-
+Cherche dans le code :
 - `js/core/GameMode.js` - Classe abstraite
-- `js/core/GameModeManager.js` - Gestionnaire de modes
-- `js/lazy-loader.js` - Système de lazy loading
+- `js/modes/` - Tous les modes existants
+- `js/core/GameModeManager.js` - Gestionnaire
+- `js/lazy-loader.js` - Configuration lazy loading
 - `js/core/eventBus.js` - Event bus
-- `js/modes/` - Modes existants comme exemples

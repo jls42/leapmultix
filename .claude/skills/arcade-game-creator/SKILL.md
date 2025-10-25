@@ -5,9 +5,9 @@ description: 'Crée des jeux arcade canvas HTML5 suivant les patterns leapmultix
 
 # Arcade Game Creator
 
-Cette skill guide la création de nouveaux jeux arcade canvas pour le mode Arcade de leapmultix.
+Guide la création de nouveaux jeux arcade canvas pour le mode Arcade.
 
-## Quand utiliser cette skill
+## Quand utiliser
 
 - Création d'un nouveau jeu arcade
 - Extension du mode Arcade
@@ -16,688 +16,184 @@ Cette skill guide la création de nouveaux jeux arcade canvas pour le mode Arcad
 
 ## Jeux existants (références)
 
-**Multimiam :**
-
-- Architecture décomposée (engine, renderer, controls, questions, UI)
-- `multimiam-engine.js` (15 KB) - Logique jeu
-- `multimiam-renderer.js` (9 KB) - Rendu canvas
-- `multimiam-controls.js` (7 KB) - Inputs
-- `multimiam-questions.js` (6 KB) - Questions multiplication
-
-**Multisnake :**
-
-- `multisnake.js` (38 KB) - Jeu Snake complet
-- Grille, serpent, pommes avec questions math
-
-**Arcade Invasion :**
-
-- `arcade-invasion.js` (31 KB) - Space Invaders style
-- Vagues d'ennemis, tir, questions pour munitions
-
-**Arcade Multi Memory :**
-
-- `arcade-multimemory.js` (31 KB) - Memory matching
-- Paires de multiplications à associer
-
-## Template de base
-
-### Structure fichiers
-
-```
-arcade-new-game/
-├── arcade-new-game.js           # Point d'entrée
-├── arcade-new-game-engine.js    # Logique jeu
-├── arcade-new-game-renderer.js  # Rendu canvas
-├── arcade-new-game-controls.js  # Inputs clavier/touch
-└── arcade-new-game-questions.js # Intégration questions
-```
-
-### Point d'entrée (arcade-new-game.js)
-
-```javascript
-/**
- * New Arcade Game - [Description du jeu]
- *
- * @module arcade/new-game
- */
-
-import { NewGameEngine } from './arcade-new-game-engine.js';
-import { NewGameRenderer } from './arcade-new-game-renderer.js';
-import { NewGameControls } from './arcade-new-game-controls.js';
-import { playSound } from './audio.js';
-import { eventBus } from './core/eventBus.js';
-
-/**
- * Initialise et lance le nouveau jeu arcade
- *
- * @param {HTMLCanvasElement} canvas - Canvas du jeu
- * @param {Object} options - Options de configuration
- * @param {Function} options.onComplete - Callback fin de jeu
- * @param {Function} options.onScore - Callback changement score
- */
-export function startNewGame(canvas, options = {}) {
-  const engine = new NewGameEngine();
-  const renderer = new NewGameRenderer(canvas);
-  const controls = new NewGameControls(canvas);
-
-  let gameRunning = true;
-
-  // Lifecycle
-  function init() {
-    engine.init();
-    controls.onInput(input => engine.handleInput(input));
-
-    // Événements
-    eventBus.on('game:correct', handleCorrectAnswer);
-    eventBus.on('game:wrong', handleWrongAnswer);
-
-    gameLoop();
-  }
-
-  function gameLoop() {
-    if (!gameRunning) return;
-
-    // Update
-    engine.update(16); // ~60 FPS
-
-    // Render
-    renderer.clear();
-    renderer.render(engine.getState());
-
-    // Next frame
-    requestAnimationFrame(gameLoop);
-  }
-
-  function handleCorrectAnswer() {
-    playSound('correct');
-    engine.addPoints(10);
-
-    if (options.onScore) {
-      options.onScore(engine.getScore());
-    }
-  }
-
-  function handleWrongAnswer() {
-    playSound('wrong');
-    engine.loseLife();
-
-    if (engine.isGameOver()) {
-      endGame();
-    }
-  }
-
-  function endGame() {
-    gameRunning = false;
-    renderer.showGameOver(engine.getScore());
-
-    if (options.onComplete) {
-      options.onComplete({
-        score: engine.getScore(),
-        correctAnswers: engine.getCorrectCount(),
-      });
-    }
-
-    cleanup();
-  }
-
-  function cleanup() {
-    eventBus.off('game:correct', handleCorrectAnswer);
-    eventBus.off('game:wrong', handleWrongAnswer);
-    controls.destroy();
-  }
-
-  // Démarrer
-  init();
-
-  // API publique
-  return {
-    pause: () => (gameRunning = false),
-    resume: () => {
-      gameRunning = true;
-      gameLoop();
-    },
-    stop: endGame,
-  };
-}
-```
-
-### Engine (arcade-new-game-engine.js)
-
-```javascript
-/**
- * Moteur de jeu - Logique et état
- */
-export class NewGameEngine {
-  constructor() {
-    this.score = 0;
-    this.lives = 3;
-    this.level = 1;
-    this.correctAnswers = 0;
-    this.entities = [];
-  }
-
-  init() {
-    this.spawnEntities();
-  }
-
-  update(deltaTime) {
-    // Mettre à jour entités
-    this.entities.forEach(entity => {
-      entity.update(deltaTime);
-    });
-
-    // Vérifier collisions
-    this.checkCollisions();
-
-    // Vérifier conditions victoire/défaite
-    if (this.shouldLevelUp()) {
-      this.levelUp();
-    }
-  }
-
-  handleInput(input) {
-    // Gérer inputs (left, right, up, down, action)
-    switch (input.type) {
-      case 'move':
-        this.movePlayer(input.direction);
-        break;
-      case 'action':
-        this.playerAction();
-        break;
-    }
-  }
-
-  addPoints(points) {
-    this.score += points;
-    this.correctAnswers++;
-  }
-
-  loseLife() {
-    this.lives--;
-  }
-
-  isGameOver() {
-    return this.lives <= 0;
-  }
-
-  getState() {
-    return {
-      score: this.score,
-      lives: this.lives,
-      level: this.level,
-      entities: this.entities,
-    };
-  }
-
-  getScore() {
-    return this.score;
-  }
-
-  getCorrectCount() {
-    return this.correctAnswers;
-  }
-
-  // Méthodes privées
-  spawnEntities() {
-    // Créer entités initiales
-  }
-
-  checkCollisions() {
-    // Détecter collisions
-  }
-
-  shouldLevelUp() {
-    return this.score >= this.level * 100;
-  }
-
-  levelUp() {
-    this.level++;
-    this.spawnEntities();
-  }
-
-  movePlayer(direction) {
-    // Déplacer joueur
-  }
-
-  playerAction() {
-    // Action joueur (tir, saut, etc.)
-  }
-}
-```
-
-### Renderer (arcade-new-game-renderer.js)
-
-```javascript
-/**
- * Renderer - Rendu canvas
- */
-export class NewGameRenderer {
-  constructor(canvas) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    this.width = canvas.width;
-    this.height = canvas.height;
-  }
-
-  clear() {
-    this.ctx.clearRect(0, 0, this.width, this.height);
-  }
-
-  render(state) {
-    // Dessiner background
-    this.drawBackground();
-
-    // Dessiner entités
-    state.entities.forEach(entity => {
-      this.drawEntity(entity);
-    });
-
-    // Dessiner UI
-    this.drawUI(state);
-  }
-
-  drawBackground() {
-    this.ctx.fillStyle = '#000';
-    this.ctx.fillRect(0, 0, this.width, this.height);
-  }
-
-  drawEntity(entity) {
-    const { x, y, width, height, color } = entity;
-
-    this.ctx.fillStyle = color || '#fff';
-    this.ctx.fillRect(x, y, width, height);
-
-    // Ou dessiner sprite si disponible
-    if (entity.sprite) {
-      this.ctx.drawImage(entity.sprite, x, y, width, height);
-    }
-  }
-
-  drawUI(state) {
-    // Score
-    this.ctx.fillStyle = '#fff';
-    this.ctx.font = '20px Arial';
-    this.ctx.fillText(`Score: ${state.score}`, 10, 30);
-
-    // Vies
-    this.ctx.fillText(`Vies: ${state.lives}`, 10, 60);
-
-    // Niveau
-    this.ctx.fillText(`Niveau: ${state.level}`, 10, 90);
-  }
-
-  showGameOver(score) {
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    this.ctx.fillRect(0, 0, this.width, this.height);
-
-    this.ctx.fillStyle = '#fff';
-    this.ctx.font = '40px Arial';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('GAME OVER', this.width / 2, this.height / 2);
-    this.ctx.font = '24px Arial';
-    this.ctx.fillText(`Score: ${score}`, this.width / 2, this.height / 2 + 40);
-  }
-}
-```
-
-### Controls (arcade-new-game-controls.js)
-
-```javascript
-/**
- * Gestion des inputs (clavier + touch)
- */
-export class NewGameControls {
-  constructor(canvas) {
-    this.canvas = canvas;
-    this.listeners = [];
-    this.keys = new Set();
-
-    this.setupKeyboard();
-    this.setupTouch();
-  }
-
-  onInput(callback) {
-    this.listeners.push(callback);
-  }
-
-  emit(input) {
-    this.listeners.forEach(listener => listener(input));
-  }
-
-  setupKeyboard() {
-    this.onKeyDown = e => {
-      this.keys.add(e.key);
-
-      switch (e.key) {
-        case 'ArrowLeft':
-          this.emit({ type: 'move', direction: 'left' });
-          break;
-        case 'ArrowRight':
-          this.emit({ type: 'move', direction: 'right' });
-          break;
-        case 'ArrowUp':
-          this.emit({ type: 'move', direction: 'up' });
-          break;
-        case 'ArrowDown':
-          this.emit({ type: 'move', direction: 'down' });
-          break;
-        case ' ':
-        case 'Enter':
-          this.emit({ type: 'action' });
-          break;
-      }
-    };
-
-    this.onKeyUp = e => {
-      this.keys.delete(e.key);
-    };
-
-    document.addEventListener('keydown', this.onKeyDown);
-    document.addEventListener('keyup', this.onKeyUp);
-  }
-
-  setupTouch() {
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    this.onTouchStart = e => {
-      const touch = e.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-    };
-
-    this.onTouchEnd = e => {
-      const touch = e.changedTouches[0];
-      const deltaX = touch.clientX - touchStartX;
-      const deltaY = touch.clientY - touchStartY;
-
-      // Swipe detection
-      if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (deltaX > 30) {
-          this.emit({ type: 'move', direction: 'right' });
-        } else if (deltaX < -30) {
-          this.emit({ type: 'move', direction: 'left' });
-        }
-      } else {
-        if (deltaY > 30) {
-          this.emit({ type: 'move', direction: 'down' });
-        } else if (deltaY < -30) {
-          this.emit({ type: 'move', direction: 'up' });
-        }
-      }
-    };
-
-    this.canvas.addEventListener('touchstart', this.onTouchStart);
-    this.canvas.addEventListener('touchend', this.onTouchEnd);
-  }
-
-  isKeyPressed(key) {
-    return this.keys.has(key);
-  }
-
-  destroy() {
-    document.removeEventListener('keydown', this.onKeyDown);
-    document.removeEventListener('keyup', this.onKeyUp);
-    this.canvas.removeEventListener('touchstart', this.onTouchStart);
-    this.canvas.removeEventListener('touchend', this.onTouchEnd);
-  }
-}
-```
-
-### Intégration questions (arcade-new-game-questions.js)
-
-```javascript
-/**
- * Intégration questions multiplication
- */
-import { generateQuestion } from './questionGenerator.js';
-import { eventBus } from './core/eventBus.js';
-
-export class QuestionSystem {
-  constructor() {
-    this.currentQuestion = null;
-    this.pendingQuestion = false;
-  }
-
-  askQuestion(difficulty = 5) {
-    if (this.pendingQuestion) return;
-
-    this.currentQuestion = generateQuestion(difficulty);
-    this.pendingQuestion = true;
-
-    // Afficher question dans UI
-    eventBus.emit('question:show', this.currentQuestion);
-
-    return this.currentQuestion;
-  }
-
-  checkAnswer(userAnswer) {
-    if (!this.currentQuestion) return false;
-
-    const isCorrect = userAnswer === this.currentQuestion.answer;
-    this.pendingQuestion = false;
-
-    // Émettre événement
-    eventBus.emit(isCorrect ? 'game:correct' : 'game:wrong', {
-      question: this.currentQuestion,
-      userAnswer,
-    });
-
-    this.currentQuestion = null;
-    return isCorrect;
-  }
-
-  hasPendingQuestion() {
-    return this.pendingQuestion;
-  }
-}
-```
-
-## Intégration dans mode Arcade
-
-### Ajouter à lazy-loader.js
-
-```javascript
-// lazy-loader.js
-const MODE_CONFIGS = {
-  // ... modes existants
-  newGame: {
-    module: () => import('./arcade-new-game.js'),
-    size: '30 KB', // Estimer taille
-    description: 'Description du nouveau jeu',
-  },
-};
-```
-
-### Ajouter bouton dans index.html
-
-```html
-<div class="arcade-game-card">
-  <h3 data-i18n="arcade.newGame.title">New Game</h3>
-  <p data-i18n="arcade.newGame.description">Description</p>
-  <button onclick="startArcadeNewGame()">
-    <span data-i18n="arcade.start">Démarrer</span>
-  </button>
-</div>
-```
-
-### Handler de démarrage
-
-```javascript
-// arcade.js ou bootstrap.js
-async function startArcadeNewGame() {
-  const canvas = document.getElementById('gameCanvas');
-  const { startNewGame } = await import('./arcade-new-game.js');
-
-  const game = startNewGame(canvas, {
-    onScore: score => {
-      updateScoreDisplay(score);
-    },
-    onComplete: result => {
-      showGameResults(result);
-      saveHighScore('newGame', result.score);
-    },
-  });
-
-  // Gérer boutons pause/stop
-  document.getElementById('pauseBtn').onclick = () => game.pause();
-  document.getElementById('resumeBtn').onclick = () => game.resume();
-  document.getElementById('stopBtn').onclick = () => game.stop();
-}
-```
-
-## Patterns de jeux arcade
-
-### Pattern : Platformer
-
-```javascript
-class Platformer {
-  update(deltaTime) {
-    // Gravité
-    this.player.velocityY += this.gravity * deltaTime;
-
-    // Mouvement horizontal
-    if (this.keys.has('ArrowLeft')) {
-      this.player.x -= this.player.speed * deltaTime;
-    }
-    if (this.keys.has('ArrowRight')) {
-      this.player.x += this.player.speed * deltaTime;
-    }
-
-    // Saut
-    if (this.keys.has(' ') && this.player.onGround) {
-      this.player.velocityY = -this.jumpForce;
-      this.player.onGround = false;
-    }
-
-    // Appliquer vélocité
-    this.player.y += this.player.velocityY * deltaTime;
-
-    // Collision sol
-    if (this.player.y >= this.groundY) {
-      this.player.y = this.groundY;
-      this.player.velocityY = 0;
-      this.player.onGround = true;
-    }
-  }
-}
-```
-
-### Pattern : Shooter
-
-```javascript
-class Shooter {
-  shoot() {
-    const bullet = {
-      x: this.player.x,
-      y: this.player.y,
-      velocityY: -5,
-      width: 5,
-      height: 10,
-    };
-
-    this.bullets.push(bullet);
-    playSound('shoot');
-  }
-
-  update(deltaTime) {
-    // Mettre à jour projectiles
-    this.bullets.forEach(bullet => {
-      bullet.y += bullet.velocityY;
-    });
-
-    // Retirer projectiles hors écran
-    this.bullets = this.bullets.filter(b => b.y > 0);
-
-    // Vérifier collisions projectiles-ennemis
-    this.bullets.forEach(bullet => {
-      this.enemies.forEach(enemy => {
-        if (this.collides(bullet, enemy)) {
-          this.destroyEnemy(enemy);
-          this.bullets.splice(this.bullets.indexOf(bullet), 1);
-        }
-      });
-    });
-  }
-}
-```
-
-### Pattern : Puzzle
-
-```javascript
-class PuzzleGame {
-  constructor() {
-    this.grid = this.createGrid(10, 10);
-    this.selected = [];
-  }
-
-  selectTile(x, y) {
-    this.selected.push({ x, y });
-
-    if (this.selected.length === 2) {
-      this.checkMatch();
-    }
-  }
-
-  checkMatch() {
-    const [tile1, tile2] = this.selected;
-
-    if (this.tilesMatch(tile1, tile2)) {
-      this.removeTiles(tile1, tile2);
-      eventBus.emit('game:correct');
-    } else {
-      this.deselectTiles();
-      eventBus.emit('game:wrong');
-    }
-
-    this.selected = [];
-  }
-}
-```
-
-## Checklist création jeu
-
-- [ ] Fichiers créés (engine, renderer, controls, questions)
-- [ ] Point d'entrée exporté
-- [ ] Intégration dans lazy-loader.js
-- [ ] Bouton ajouté dans index.html
-- [ ] Traductions ajoutées (fr, en, es) dans i18n/
+### Architecture simple
+
+**Arcade Multi Memory** (31 KB) :
+- Jeu de memory matching
+- Structure monolithique simple
+- Bon point de départ
+
+**Arcade Invasion** (31 KB) :
+- Space Invaders style
+- Gestion d'entités multiples
+- Pattern de vagues d'ennemis
+
+### Architecture décomposée
+
+**Multimiam** (architecture modulaire) :
+- Point d'entrée + modules séparés
+- Engine (logique), Renderer (rendu), Controls (inputs), Questions (multiplication)
+- Meilleure maintenabilité
+
+**Multisnake** (38 KB) :
+- Structure plus monolithique
+- Gestion de grille
+
+## Patterns architecturaux
+
+### Pattern monolithique
+Tout dans un fichier. Simple pour jeux petits.
+
+**Quand utiliser** : Jeux simples, prototypes
+
+### Pattern décomposé
+Séparation en modules (Engine, Renderer, Controls, Questions).
+
+**Quand utiliser** : Jeux complexes, maintenance long terme
+
+Examine Multimiam pour voir ce pattern en action.
+
+## Composants essentiels
+
+### Game Loop
+Boucle continue : update → render → next frame (requestAnimationFrame)
+
+### Système de rendu Canvas
+Clear canvas → Draw entities → Draw UI
+
+### Gestion des inputs
+Support clavier ET touch pour mobile
+
+### Intégration questions multiplication
+Questions intégrées au gameplay, pas séparées
+
+Cherche ces patterns dans les jeux existants.
+
+## Workflow de création
+
+### Étape 1 : Choisir un jeu de référence
+
+Identifie le jeu existant qui ressemble le plus au tien :
+- Jeu de puzzle/memory → arcade-multimemory.js
+- Jeu de tir/action → arcade-invasion.js
+- Jeu de grille → multisnake.js
+
+### Étape 2 : Décider de l'architecture
+
+**Jeu simple** : Fichier unique `arcade-new-game.js`
+
+**Jeu complexe** : Fichiers multiples
+- `new-game.js` (point d'entrée)
+- `new-game-engine.js` (logique)
+- `new-game-renderer.js` (rendu)
+- `new-game-controls.js` (inputs)
+
+### Étape 3 : Comprendre le pattern de référence
+
+Examine le jeu choisi :
+- Comment l'initialisation fonctionne ?
+- Comment le game loop est structuré ?
+- Comment le rendu est organisé ?
+- Comment les questions sont intégrées ?
+
+Adapte (ne copie pas aveuglément).
+
+### Étape 4 : Intégrer dans mode Arcade
+
+Trouve où les jeux arcade sont enregistrés.
+Ajoute ton jeu suivant le même pattern.
+
+### Étape 5 : Ajouter UI et traductions
+
+- Ajoute bouton dans HTML (cherche structure existante)
+- Crée traductions (fr → en → es)
+- Vérifie synchronisation i18n
+
+## Patterns de gameplay
+
+### Collision detection
+Cherche comment les jeux existants détectent les collisions (AABB pattern courant).
+
+### Spawning d'entités
+Trouve comment les ennemis/objets sont créés dans les jeux.
+
+### Scoring et progression
+Examine les systèmes de score et de niveaux dans les jeux existants.
+
+## Performance (viser 60 FPS)
+
+**Techniques essentielles** :
+- `requestAnimationFrame` (pas `setInterval`)
+- Object pooling pour entités
+- Éviter allocations mémoire dans game loop
+- Optimiser opérations canvas
+
+Cherche exemples de ces optimisations dans le code existant.
+
+## Checklist
+
+### Découverte
+- [ ] Examiner jeu similaire existant
+- [ ] Comprendre architecture (monolithique ou décomposée)
+- [ ] Identifier patterns de game loop et rendu
+
+### Implémentation
+- [ ] Fichiers créés avec convention de nommage
+- [ ] Game loop avec requestAnimationFrame
+- [ ] Rendu canvas fonctionnel
 - [ ] Controls clavier ET touch
 - [ ] Questions multiplication intégrées
-- [ ] Sons (correct, wrong, etc.)
-- [ ] Game over et score final
-- [ ] Cleanup des listeners
-- [ ] Tests créés
-- [ ] Performance 60 FPS
+- [ ] Sons joués (correct/wrong)
 
-## Expert Agents to Use
+### Intégration
+- [ ] Intégré dans mode Arcade
+- [ ] Bouton ajouté dans HTML
+- [ ] Traductions ajoutées
+- [ ] `npm run i18n:compare` passe
 
-Quand tu travailles sur des jeux arcade, utilise ces agents spécialisés :
+### Qualité
+- [ ] Performance 60 FPS (tester sur mobile)
+- [ ] Cleanup des listeners (pas de leaks)
+- [ ] Tests si logique complexe
+- [ ] Code formatté et lint passe
 
-- **@arcade-specialist** - Expert canvas games pour :
-  - Optimisation performance 60 FPS
-  - Collision detection algorithms (AABB, circle, spatial partitioning)
-  - Game loop architecture (requestAnimationFrame, fixed timestep)
-  - Memory management (object pooling, cleanup)
-  - Sprite and animation management
-  - Educational content integration
+## Debugging
 
-- **@performance-analyzer** - Pour analyser et optimiser :
-  - FPS profiling et frame timing
-  - Memory leak detection
-  - Canvas rendering performance
-  - Chrome DevTools profiling
+### Problèmes de performance
+Utilise Chrome DevTools → Performance tab
+Enregistre pendant le jeu et cherche frame drops
 
-- **@test-writer** - Pour créer tests Jest :
-  - Game logic tests
-  - Collision detection tests
-  - Integration tests
+### Problèmes de rendu
+Vérifie ordre de rendu (background → entités → UI)
 
-## Voir aussi
+### Problèmes d'inputs
+Vérifie event listeners attachés et retirés proprement
 
-- `game-mode/SKILL.md` - Patterns GameMode
-- `animation-system/SKILL.md` - Animations pour jeux
-- `sprite-management/SKILL.md` - Gestion sprites
-- `sound-effect-manager/SKILL.md` - Effets sonores
-- `performance-profiler/SKILL.md` - Optimisation FPS
-- Jeux existants : `arcade-invasion.js`, `multisnake.js`, `multimiam-*.js`
+## Outils disponibles
+
+Examine le code pour trouver :
+- Fonctions audio (playSound)
+- Event bus (communication avec UI)
+- Utils généraux (utils-es6.js)
+- Question generator (questionGenerator.js)
+- Fonctions communes arcade (arcade-common.js, arcade-utils.js)
+
+## En cas de doute
+
+**Code existant = source de vérité**
+
+1. Choisis jeu similaire comme référence
+2. Comprends son architecture avant de coder
+3. Adapte les patterns
+4. Teste fréquemment (surtout performance)
+5. Mobile-first : teste sur touch dès le début
+
+## Références
+
+Cherche dans le code :
+- `js/arcade-multimemory.js` - Jeu simple
+- `js/arcade-invasion.js` - Space invaders
+- `js/multimiam*.js` - Architecture décomposée
+- `js/multisnake.js` - Snake
+- `js/arcade-common.js` - Fonctions communes
+- `js/questionGenerator.js` - Génération questions

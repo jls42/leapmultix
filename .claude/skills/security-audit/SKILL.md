@@ -1,379 +1,184 @@
 ---
-name: 'Security Audit'
+name: 'security-audit'
 description: "Audite la sécurité de l'application (XSS, CSP, dépendances vulnérables, CORS). Utiliser avant release, après ajout dépendances, ou modification security-utils.js"
 ---
 
 # Security Audit
 
-Cette skill audite la sécurité de l'application web éducative selon les standards OWASP et best practices pour PWA.
+Audite la sécurité de l'application web selon standards OWASP et best practices.
 
-## Quand utiliser cette skill
+## Quand utiliser
 
 - Avant chaque release en production
-- Après ajout ou mise à jour de dépendances npm
-- Lors de modifications de `security-utils.js`
-- Quand des warnings eslint-plugin-security apparaissent
-- Avant de committer du code manipulant du HTML dynamique
-- Lors de l'ajout de scripts externes (CDN, analytics)
+- Après ajout/mise à jour dépendances npm
+- Modifications de `security-utils.js`
+- Warnings eslint-plugin-security
+- Avant commit manipulant HTML dynamique
+- Ajout de scripts externes (CDN, analytics)
 
-## Domaines de sécurité couverts
+## Domaines de sécurité
 
 ### 1. XSS (Cross-Site Scripting) Prevention
 
-**Patterns sécurisés du projet:**
+**Règle absolue : Utiliser security-utils.js**
 
-```javascript
-// ✅ SÉCURISÉ - Utiliser security-utils.js
-import { appendSanitizedHTML, createSafeElement, setSafeMessage } from './security-utils.js';
+Trouve security-utils.js pour voir fonctions disponibles :
+- `appendSanitizedHTML()` - Insérer HTML dynamique
+- `createSafeElement()` - Créer élément avec contenu sécurisé
+- `setSafeMessage()` - Définir texte (pas HTML)
 
-// Insérer HTML dynamique de manière sécurisée
-appendSanitizedHTML(element, htmlString);
+**Dangers :**
+- `innerHTML` avec user input → XSS
+- Fonctions d'exécution dynamique avec données externes
+- Event handlers depuis user input
 
-// Créer un élément avec contenu sécurisé
-const div = createSafeElement('div', { className: 'message' }, textContent);
-
-// Définir un message texte (pas de HTML)
-setSafeMessage(element, textContent);
-```
-
-```javascript
-// ❌ DANGEREUX - Éviter
-element.innerHTML = userInput; // XSS vulnerability
-element.innerHTML = getTranslation('key'); // Acceptable mais préférer setSafeMessage
-
-// ✅ EXCEPTIONS SÉCURISÉES
-element.innerHTML = ''; // Safe: clearing with empty string
-// eslint-disable-next-line no-restricted-properties -- Safe: clearing with empty string
-```
-
-**Audit checklist XSS:**
-
-- [ ] Tous les `innerHTML` utilisent `appendSanitizedHTML()` ou sont justifiés
-- [ ] `getTranslation()` output n'est jamais combiné avec user input
-- [ ] Pas de `eval()`, `Function()`, ou `setTimeout(string)` avec données externes
-- [ ] Les attributs HTML sont correctement échappés
-- [ ] Les event handlers ne proviennent pas d'entrées utilisateur
+**Exceptions sécurisées :**
+- `innerHTML = ''` (nettoyage)
+- `getTranslation()` output (contenu interne)
 
 ### 2. Content Security Policy (CSP)
 
-**Configuration recommandée pour leapmultix:**
+**Principe : Meta tag CSP dans index.html**
 
-```html
-<!-- index.html - Ajouter dans <head> -->
-<meta
-  http-equiv="Content-Security-Policy"
-  content="
-  default-src 'self';
-  script-src 'self' 'nonce-RANDOM_NONCE' https://plausible.io;
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' data: https:;
-  font-src 'self' data:;
-  connect-src 'self' https://plausible.io;
-  media-src 'self';
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self';
-  frame-ancestors 'none';
-  upgrade-insecure-requests;
-"
-/>
-```
+Examine index.html pour voir configuration CSP actuelle.
 
-**Scripts externes - Gestion integrity hashes:**
+**Baseline restrictive :**
+- `default-src 'self'`
+- Pas de `'unsafe-eval'` dans script-src
+- `'unsafe-inline'` limité au strict nécessaire
+- `frame-ancestors 'none'` pour prévenir clickjacking
 
-```html
-<!-- ✅ AVEC integrity - Scripts statiques avec versions fixes -->
-<script
-  src="https://cdn.example.com/lib@1.0.0/library.js"
-  integrity="sha384-HASH_HERE"
-  crossorigin="anonymous"
-></script>
-
-<!-- ✅ SANS integrity - Scripts analytics qui auto-update -->
-<!-- eslint-disable-next-line sonarjs/no-script-without-integrity -- Analytics script auto-updates, integrity would break functionality -->
-<script
-  src="https://plausible.io/js/script.js"
-  data-domain="example.com"
-  crossorigin="anonymous"
-></script>
-```
-
-**CSP Audit checklist:**
-
-- [ ] Meta tag CSP présent dans `index.html`
-- [ ] `default-src 'self'` comme baseline restrictive
-- [ ] Scripts analytics sans integrity documentés (commentaires)
-- [ ] Pas de `'unsafe-eval'` dans script-src
-- [ ] `'unsafe-inline'` limité au strict nécessaire (styles uniquement si besoin)
-- [ ] `crossorigin="anonymous"` sur tous les scripts externes
-- [ ] `frame-ancestors 'none'` pour prévenir clickjacking
+**Scripts externes :**
+- Toujours `crossorigin="anonymous"`
+- Integrity hashes pour bibliothèques statiques
+- PAS d'integrity pour analytics (auto-update)
+- Documenter exceptions avec commentaires
 
 ### 3. Dependency Vulnerabilities
 
-**Commandes de scan:**
+**Commandes audit :**
 
 ```bash
-# Audit npm pour vulnérabilités connues
-npm audit
-
-# Audit avec détails complets
-npm audit --json > audit-report.json
-
-# Fix automatique des vulnérabilités (patch/minor)
-npm audit fix
-
-# Fix incluant breaking changes (attention!)
-npm audit fix --force
-
-# Vérifier les packages outdated
-npm outdated
+npm audit                 # Scan vulnérabilités
+npm audit --json         # Rapport détaillé
+npm audit fix            # Fix auto (patch/minor)
+npm audit fix --force    # Fix breaking (attention!)
 ```
 
-**Workflow recommandé:**
+**Niveaux de sévérité :**
+- **Critical/High** : Fix immédiatement avant release
+- **Moderate** : Fix dans sprint suivant
+- **Low** : Monitorer, fix si possible
 
-1. **Exécuter `npm audit` régulièrement** (avant chaque commit majeur)
-2. **Analyser le rapport:**
-   - `Critical` et `High` → Fix immédiatement
-   - `Moderate` → Fix avant release
-   - `Low` → Fix quand possible
-3. **Vérifier les breaking changes** avant `npm audit fix --force`
-4. **Tester après updates:** `npm test && npm run verify`
+**Vérifier :**
+- Pas de dépendances deprecated
+- Versions à jour (pas trop anciennes)
+- Licences compatibles
 
-**Dependency audit checklist:**
+### 4. HTTPS et Mixed Content
 
-- [ ] `npm audit` ne montre aucune vulnérabilité Critical/High
-- [ ] Toutes les dépendances sont à jour (vérifier `npm outdated`)
-- [ ] Pas de packages depreciated
-- [ ] `package-lock.json` est commité et à jour
-- [ ] Pas de dépendances inutilisées (utiliser `npm run analyze:dependencies`)
+**Vérifier :**
+- HTTPS obligatoire en production
+- Pas de resources HTTP (mixed content)
+- Redirection HTTP → HTTPS
+- HSTS header
 
-### 4. ESLint Security Plugin
+Examine configuration serveur ou CDN.
 
-**Installation:**
+### 5. Secrets et Credentials
 
-```bash
-npm install --save-dev eslint-plugin-security
-```
+**Règles :**
+- **JAMAIS** committer secrets (API keys, tokens, passwords)
+- **JAMAIS** stocker passwords en LocalStorage
+- Utiliser variables d'environnement
+- .gitignore pour fichiers sensibles (.env, credentials.json)
 
-**Configuration dans `eslint.config.js`:**
-
-```javascript
-import security from 'eslint-plugin-security';
-
-export default [
-  {
-    plugins: {
-      security,
-    },
-    rules: {
-      'security/detect-object-injection': 'warn',
-      'security/detect-non-literal-regexp': 'warn',
-      'security/detect-unsafe-regex': 'warn',
-      'security/detect-buffer-noassert': 'error',
-      'security/detect-eval-with-expression': 'error',
-      'security/detect-no-csrf-before-method-override': 'error',
-      'security/detect-possible-timing-attacks': 'warn',
-      'security/detect-pseudoRandomBytes': 'error',
-    },
-  },
-];
-```
-
-**Gestion des false positives:**
-
-```javascript
-// Multiple règles pour couverture complète Codacy/SonarCloud
-// eslint-disable-next-line security/detect-object-injection, sonarjs/no-unsafe-string-usage -- False positive: getTranslation returns safe internal content
-const text = getTranslation('key.path');
-
-// eslint-disable-next-line security/detect-unsafe-regex, sonarjs/no-html-injection -- Safe: using appendSanitizedHTML for proper sanitization
-appendSanitizedHTML(element, sanitizedHTML);
-
-// eslint-disable-next-line no-restricted-properties -- Safe: clearing with empty string
-element.innerHTML = '';
-```
-
-**ESLint security checklist:**
-
-- [ ] `eslint-plugin-security` installé et configuré
-- [ ] Toutes les règles security activées (error ou warn)
-- [ ] False positives documentés avec justifications claires
-- [ ] `npm run lint` passe sans erreurs security non justifiées
-
-### 5. CORS (Cross-Origin Resource Sharing)
-
-**Pour leapmultix (PWA offline-first):**
-
-Comme le projet est une PWA statique sans backend:
-
-- ✅ Pas de configuration CORS nécessaire
-- ✅ Toutes les ressources servies depuis même origine
-- ✅ Service Worker gère le cache offline
-
-**Si API externe ajoutée à l'avenir:**
-
-```javascript
-// ✅ CORS safe fetch
-fetch('https://api.example.com/data', {
-  method: 'GET',
-  mode: 'cors', // Explicitly request CORS
-  credentials: 'omit', // Don't send cookies cross-origin
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-```
-
-**CORS audit checklist (si API externe):**
-
-- [ ] `Access-Control-Allow-Origin` configuré côté serveur
-- [ ] Pas de wildcard `*` en production
-- [ ] `credentials: 'omit'` pour requêtes non authentifiées
-- [ ] Preflight requests (OPTIONS) gérées correctement
+**Vérifier :**
+- Pas de secrets hardcodés dans code
+- .env dans .gitignore
+- Terraform state pas committé
 
 ### 6. LocalStorage Security
 
-**Best practices pour leapmultix:**
+**Données sensibles :**
+- **JAMAIS** tokens d'authentification
+- **JAMAIS** passwords ou PII
+- OK pour préférences utilisateur non sensibles
 
-```javascript
-// ✅ SÉCURISÉ - Ne jamais stocker de données sensibles
-Storage.set('userProgress', progressData); // OK: données de progression
-Storage.set('currentUser', username); // OK: username (pas sensible)
+**Vérifier :**
+- storage.js utilise localStorage correctement
+- Pas de données sensibles stockées
+- Données validées avant lecture
 
-// ❌ DANGEREUX - Ne JAMAIS stocker
-Storage.set('password', hashedPassword); // Même hashé, non!
-Storage.set('apiKey', key); // Clés API en localStorage = vulnérable
-Storage.set('sessionToken', token); // Tokens en localStorage = XSS risk
-```
+## Checklist sécurité
 
-**LocalStorage audit checklist:**
+- [ ] Tous `innerHTML` utilisent `appendSanitizedHTML()` ou justifiés
+- [ ] Pas de fonctions d'exécution dynamique avec données externes
+- [ ] Meta tag CSP présent dans index.html
+- [ ] `crossorigin="anonymous"` sur scripts externes
+- [ ] `npm audit` sans Critical/High
+- [ ] Pas de secrets hardcodés
+- [ ] Pas de données sensibles en LocalStorage
+- [ ] HTTPS en production
+- [ ] Pas de mixed content
+- [ ] Tests sécurité passent
 
-- [ ] Aucune donnée sensible stockée (passwords, tokens, API keys)
-- [ ] Validation des données lues depuis LocalStorage (peuvent être modifiées)
-- [ ] Gestion des données corrompues (try/catch, fallbacks)
-- [ ] Pas de code exécutable stocké en LocalStorage
+## Outils d'audit
 
-### 7. Subresource Integrity (SRI)
-
-**Quand utiliser integrity hashes:**
-
-```html
-<!-- ✅ UTILISER integrity - Bibliothèques statiques avec versions fixes -->
-<script
-  src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"
-  integrity="sha384-kjOc+8xOjVdF8qY8lBa6xBw6KfFmJZp9bCLPZgZyZ7aK8..."
-  crossorigin="anonymous"
-></script>
-
-<!-- ✅ NE PAS utiliser integrity - Scripts analytics qui auto-update -->
-<!-- Suppressing static analysis warnings:
-sonarjs:S5725 - External scripts without integrity acceptable for analytics
--->
-<!-- eslint-disable-next-line sonarjs/no-script-without-integrity -- Analytics auto-updates -->
-<script src="https://plausible.io/js/script.js" crossorigin="anonymous"></script>
-```
-
-**Générer integrity hash:**
-
+**ESLint Security :**
 ```bash
-# Télécharger le fichier
-curl https://cdn.example.com/library.js -o library.js
-
-# Générer hash SHA-384
-openssl dgst -sha384 -binary library.js | openssl base64 -A
-
-# Ou utiliser l'outil en ligne: https://www.srihash.org/
+npm run lint  # Inclut eslint-plugin-security
 ```
 
-**SRI audit checklist:**
-
-- [ ] Tous les scripts CDN statiques ont `integrity` et `crossorigin`
-- [ ] Scripts analytics sans integrity sont documentés
-- [ ] Integrity hashes correspondent aux versions des scripts
-- [ ] Mise à jour des hashes quand versions CDN changent
-
-## Workflows de sécurité
-
-### Avant chaque commit
-
+**Dependency Scan :**
 ```bash
-# 1. Vérifier le linting avec règles security
-npm run lint
-
-# 2. Audit des dépendances
 npm audit
-
-# 3. Tests de sécurité (si implémentés)
-npm test -- security
-
-# 4. Vérifier les patterns dangereux
-git diff | grep -i "innerHTML\|eval\|Function("
 ```
 
-### Avant chaque release
+**Lighthouse Security Audit :**
+- Lance Chrome DevTools → Lighthouse
+- Vérifie section Security
+- Score doit être 100
 
+**OWASP ZAP (optionnel) :**
+- Scan automatisé pour vulnérabilités web
+- Tests de pénétration
+
+## En cas de doute
+
+**Source :** security-utils.js + CLAUDE.md
+
+**Fichiers clés :**
+1. `js/security-utils.js` - Fonctions sécurité du projet
+2. `eslint.config.js` - Règles security ESLint
+3. `index.html` - Configuration CSP
+4. `CLAUDE.md` - Guidelines sécurité
+
+**Règles absolues :**
+1. TOUJOURS utiliser security-utils.js pour manipulation DOM
+2. TOUJOURS audit avant release (`npm audit`)
+3. JAMAIS `innerHTML` avec user input direct
+4. JAMAIS stocker données sensibles en LocalStorage
+5. JAMAIS scripts externes sans `crossorigin="anonymous"`
+
+**Workflow minimal avant commit :**
 ```bash
-# Audit complet de sécurité
-npm audit --audit-level=moderate
-npm run lint
-npm test
-npm run verify
-
-# Vérifier CSP headers
-curl -I https://your-domain.com | grep -i "content-security-policy"
-
-# Scan avec outils externes (optionnel)
-# - Lighthouse security audit
-# - OWASP ZAP
-# - Snyk scan
+npm run lint   # ESLint security rules
+npm audit      # Dependency check
+npm test       # Security tests
 ```
 
-### Code review checklist sécurité
+**Workflow complet avant release :**
+```bash
+npm run verify                        # Full quality gate
+npm audit --audit-level=moderate      # Dependency audit
+# Lighthouse security audit
+# Review index.html CSP config
+```
 
-Lors de la review de code, vérifier:
-
-- [ ] Aucun `innerHTML` sans justification ou sans `appendSanitizedHTML()`
-- [ ] Tous les scripts externes ont `crossorigin="anonymous"`
-- [ ] Pas de secrets/tokens/API keys dans le code
-- [ ] Validation des entrées utilisateur (forms, localStorage)
-- [ ] Gestion des erreurs sécurisée (pas de stack traces exposées)
-- [ ] False positives ESLint documentés avec `--` commentaires
-- [ ] Pas de `eval()`, `Function()`, `setTimeout(string)` avec données externes
-
-## Outils et ressources
-
-### Outils recommandés
-
-- **ESLint Security Plugin**: `npm install eslint-plugin-security`
-- **npm audit**: Intégré à npm
-- **Snyk**: `npm install -g snyk` - Scan vulnerabilities avancé
-- **Lighthouse**: Audit sécurité via Chrome DevTools
-- **OWASP ZAP**: Scan de sécurité web approfondi
-
-### Ressources de référence
-
-- [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)
-- [CSP Quick Reference Guide](https://content-security-policy.com/)
-- [MDN Web Security](https://developer.mozilla.org/en-US/docs/Web/Security)
-- [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity)
-
-## Integration avec autres Skills
-
-Utilise ces Skills en complément:
-
-- **@code-quality** - Lint et format avant security audit
-- **@tdd-jest** - Tests unitaires incluant security edge cases
-- **@pwa-service-worker** - Sécurité du Service Worker et cache
-
-## Expert Agents recommandés
-
-- **@code-reviewer** - Review sécurité dans le code, utilise ce Skill
-- **@debugger** - Investigation de failles de sécurité découvertes
-- **@web-research-specialist** - Recherche de CVEs, advisories, patches
-
-## Voir aussi
-
-- `js/security-utils.js` - Fonctions de sécurité du projet
-- `eslint.config.js` - Configuration ESLint avec règles security
-- `CLAUDE.md` - Guidelines sécurité et suppression false positives
-- `.claude/skills/code-quality/` - Workflow qualité de code
+**Red flags (arrêter immédiatement) :**
+- Fonctions d'exécution dynamique avec données externes
+- `innerHTML = userInput`
+- Tokens/passwords en LocalStorage
+- npm audit Critical/High
+- Scripts CDN sans crossorigin
