@@ -52,15 +52,28 @@
   border: 2px solid var(--neutral-medium);
   border-radius: 12px;
   padding: 10px;
-  min-width: 240px;
-  max-width: 300px;
+  min-width: 200px;
+  max-width: 240px;
   overflow: hidden;
-  margin: 8px;
+  margin: 0;
 }
 
 .visual-item.highlighted {
   border-color: var(--accent-color);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+
+.visual-exploration {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.visual-grid {
+  gap: 32px 28px !important;
+  justify-content: center !important;
+  padding: 20px !important;
 }
 
 .visual-representation .visual-groups {
