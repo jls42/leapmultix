@@ -15,6 +15,7 @@ build/
 .idea/
 .claude/*
 !.claude/skills/
+!.claude/agents/
 .genkit/
 *.swp
 *.swo
