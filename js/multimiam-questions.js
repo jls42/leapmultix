@@ -6,6 +6,23 @@ import { safeShuffleArray } from './arcade-utils.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 
+const isValidIndex = (value, size) => Number.isInteger(value) && value >= 0 && value < size;
+
+const isFreeLabyrinthCell = (labyrinth, x, y) => {
+  if (!Array.isArray(labyrinth) || !isValidIndex(y, labyrinth.length)) {
+    return false;
+  }
+
+  // eslint-disable-next-line security/detect-object-injection -- y is validated numeric index
+  const row = labyrinth[y];
+  if (!Array.isArray(row) || !isValidIndex(x, row.length)) {
+    return false;
+  }
+
+  // eslint-disable-next-line security/detect-object-injection -- x is validated numeric index
+  return row[x] === 0;
+};
+
 export const PacmanQuestions = {
   generateOperation(game) {
     try {
@@ -115,7 +132,7 @@ export const PacmanQuestions = {
     const positions = this.getPredefinedPositions();
     safeShuffleArray(positions);
     return positions.filter(p => {
-      const isFree = game.labyrinth?.[p.y]?.[p.x] === 0;
+      const isFree = isFreeLabyrinthCell(game.labyrinth, p.x, p.y);
       return (
         isFree &&
         !(p.x === multimiamX && p.y === multimiamY) &&
@@ -135,7 +152,7 @@ export const PacmanQuestions = {
     const fallbackY = 7;
 
     if (
-      game.labyrinth?.[fallbackY]?.[fallbackX] === 0 &&
+      isFreeLabyrinthCell(game.labyrinth, fallbackX, fallbackY) &&
       !(fallbackX === multimiamX && fallbackY === multimiamY) &&
       !(fallbackX === multimiamX + 1 && fallbackY === multimiamY)
     ) {

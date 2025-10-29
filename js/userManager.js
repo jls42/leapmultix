@@ -19,6 +19,85 @@ import { createVirtualKeyboard } from './virtual-keyboard.js';
 import { goToSlide } from './slides.js';
 import { gameState, displayDailyChallenge } from './game.js';
 
+const DEFAULT_TABLE_PREFERENCES = Object.freeze({
+  globalExclusions: [],
+  globalEnabled: false,
+});
+
+const DEFAULT_USER_DATA = Object.freeze({
+  bestScore: 0,
+  wrongAnswers: {},
+  progressHistory: [],
+  avatar: 'fox',
+  nickname: '',
+  theme: 'forest',
+  colorTheme: 'default',
+  unlockedAvatars: ['fox'],
+  unlockedBadges: [],
+  volume: 1,
+  dailyChallengesCompleted: 0,
+  parentalLockEnabled: false,
+  starsByTable: {},
+  coins: 0,
+});
+
+const ensureArray = (value, fallback = []) => (Array.isArray(value) ? [...value] : [...fallback]);
+
+const ensureObject = (value, fallback = {}) =>
+  value && typeof value === 'object' && !Array.isArray(value) ? { ...value } : { ...fallback };
+
+const ensureNumber = (value, fallback = 0) => (Number.isFinite(value) ? Number(value) : fallback);
+
+const createDefaultUserData = (nickname = '') => ({
+  ...DEFAULT_USER_DATA,
+  wrongAnswers: {},
+  progressHistory: [],
+  unlockedAvatars: [...DEFAULT_USER_DATA.unlockedAvatars],
+  unlockedBadges: [],
+  starsByTable: {},
+  tablePreferences: { ...DEFAULT_TABLE_PREFERENCES, globalExclusions: [] },
+  nickname,
+});
+
+const normalizeUserData = (rawData, currentUser) => {
+  const base = {
+    ...DEFAULT_USER_DATA,
+    ...rawData,
+  };
+
+  const wrongAnswers = ensureObject(rawData?.wrongAnswers);
+  const progressHistory = ensureArray(rawData?.progressHistory);
+  const unlockedAvatars = ensureArray(rawData?.unlockedAvatars, ['fox']);
+  const unlockedBadges = ensureArray(rawData?.unlockedBadges);
+  const starsByTable = ensureObject(rawData?.starsByTable);
+  const tablePreferences = ensureObject(rawData?.tablePreferences, DEFAULT_TABLE_PREFERENCES);
+
+  return {
+    ...base,
+    bestScore: ensureNumber(rawData?.bestScore, 0),
+    wrongAnswers,
+    progressHistory,
+    avatar: rawData?.avatar || 'fox',
+    nickname: rawData?.nickname || currentUser,
+    theme: rawData?.theme || 'forest',
+    colorTheme: rawData?.colorTheme || 'default',
+    unlockedAvatars,
+    unlockedBadges,
+    volume:
+      typeof rawData?.volume === 'number' && Number.isFinite(rawData.volume) ? rawData.volume : 1,
+    dailyChallengesCompleted: ensureNumber(rawData?.dailyChallengesCompleted, 0),
+    parentalLockEnabled: rawData?.parentalLockEnabled === true,
+    starsByTable,
+    coins: ensureNumber(rawData?.coins, 0),
+    tablePreferences: {
+      ...DEFAULT_TABLE_PREFERENCES,
+      ...tablePreferences,
+      globalExclusions: ensureArray(tablePreferences.globalExclusions),
+      globalEnabled: tablePreferences.globalEnabled === true,
+    },
+  };
+};
+
 /**
  * Gestionnaire principal des utilisateurs
  */
@@ -63,49 +142,12 @@ export const UserManager = {
       !this._currentUser ||
       !Object.prototype.hasOwnProperty.call(this._players, this._currentUser)
     ) {
-      // Retourner une structure par défaut si pas d'utilisateur ou données manquantes
-      return {
-        bestScore: 0,
-        wrongAnswers: {},
-        progressHistory: [],
-        avatar: 'fox',
-        nickname: '',
-        theme: 'forest',
-        colorTheme: 'default',
-        unlockedAvatars: ['fox'],
-        unlockedBadges: [],
-        volume: 1,
-        dailyChallengesCompleted: 0,
-        parentalLockEnabled: false,
-        starsByTable: {},
-        coins: 0,
-      };
+      return createDefaultUserData(this._currentUser || '');
     }
 
-    // S'assurer que toutes les clés attendues existent
-    const userData = this._players[this._currentUser];
-    userData.bestScore = userData.bestScore || 0;
-    userData.wrongAnswers = userData.wrongAnswers || {};
-    userData.progressHistory = userData.progressHistory || [];
-    userData.avatar = userData.avatar || 'fox';
-    userData.nickname = userData.nickname || this._currentUser;
-    userData.theme = userData.theme || 'forest';
-    userData.colorTheme = userData.colorTheme || 'default';
-    userData.unlockedAvatars = userData.unlockedAvatars || ['fox'];
-    userData.unlockedBadges = userData.unlockedBadges || [];
-    userData.volume = userData.volume !== undefined ? userData.volume : 1;
-    userData.dailyChallengesCompleted = userData.dailyChallengesCompleted || 0;
-    userData.parentalLockEnabled = userData.parentalLockEnabled === true;
-    userData.starsByTable = userData.starsByTable || {};
-    userData.coins = userData.coins || 0;
-
-    // Initialiser les préférences de tables globales
-    userData.tablePreferences = userData.tablePreferences || {
-      globalExclusions: [],
-      globalEnabled: false,
-    };
-
-    return userData;
+    const normalized = normalizeUserData(this._players[this._currentUser], this._currentUser);
+    this._players[this._currentUser] = normalized;
+    return normalized;
   },
 
   /**

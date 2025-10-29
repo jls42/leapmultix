@@ -303,45 +303,45 @@ export const TopBar = {
   },
 
   attachHomeButtons() {
-    document.querySelectorAll('.home-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.home-btn')) {
       btn.addEventListener('click', () => {
         goToSlide(1);
       });
-    });
+    }
   },
 
   attachLanguageButtons() {
-    document.querySelectorAll('.lang-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.lang-btn')) {
       btn.addEventListener('click', event => {
         const lang = event.currentTarget?.dataset?.lang;
         if (lang) changeLanguage(lang);
       });
-    });
+    }
   },
 
   attachVolumeControls() {
-    document.querySelectorAll('.mute-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.mute-btn')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
           AudioManager.toggleMute();
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
 
-    document.querySelectorAll('.volume-slider').forEach(slider => {
+    for (const slider of document.querySelectorAll('.volume-slider')) {
       if (!slider.dataset.topBarListenerAttached) {
         slider.addEventListener('input', event => {
-          const newVolume = parseFloat(event.currentTarget?.value || '0');
+          const newVolume = Number.parseFloat(event.currentTarget?.value || '0');
           AudioManager.setVolume(newVolume);
         });
         slider.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
   },
 
   attachVoiceToggles() {
-    document.querySelectorAll('.voice-toggle').forEach(btn => {
+    for (const btn of document.querySelectorAll('.voice-toggle')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
           try {
@@ -353,20 +353,20 @@ export const TopBar = {
               try {
                 _speak(getTranslation('voice_enabled') || 'Synthèse vocale activée');
               } catch (error) {
-                void error;
+                console.warn('TopBar voice announcement failed', error);
               }
             }
           } catch (error) {
-            void error;
+            console.warn('TopBar voice toggle failed', error);
           }
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
   },
 
   attachTableSettingsButtons() {
-    document.querySelectorAll('.table-settings-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.table-settings-btn')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
           import('../components/tableSettingsModal.js')
@@ -379,11 +379,11 @@ export const TopBar = {
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
   },
 
   attachBurgerMenus() {
-    document.querySelectorAll('.burger-menu-btn').forEach(btn => {
+    for (const btn of document.querySelectorAll('.burger-menu-btn')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', event => {
           const topBar = event.currentTarget?.closest('.top-bar');
@@ -397,18 +397,18 @@ export const TopBar = {
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    });
+    }
   },
 
   attachOutsideClickWatcher() {
     if (this._outsideClickBound) return;
     document.addEventListener('click', event => {
-      document.querySelectorAll('.top-bar-nav.is-open').forEach(nav => {
+      for (const nav of document.querySelectorAll('.top-bar-nav.is-open')) {
         const topBar = nav.closest('.top-bar');
         if (topBar && !topBar.contains(event.target)) {
           nav.classList.remove('is-open');
         }
-      });
+      }
     });
     this._outsideClickBound = true;
   },
