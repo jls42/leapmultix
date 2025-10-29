@@ -16,6 +16,7 @@ import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
 
 export const TopBar = {
+  _outsideClickBound: false,
   /**
    * Initialiser le composant TopBar
    */
@@ -152,7 +153,7 @@ export const TopBar = {
     home.id = `home-button-${slideId}`;
     home.className = 'btn home-btn';
     home.title = 'Accueil';
-    home.setAttribute('data-translate-title', 'home_button_label');
+    home.dataset.translateTitle = 'home_button_label';
     home.textContent = '🏠';
     if (!config.showHomeButton) home.style.visibility = 'hidden';
     top.appendChild(home);
@@ -160,9 +161,9 @@ export const TopBar = {
     if (config.showAboutButton !== false) {
       const about = document.createElement('button');
       about.className = 'btn btn-sm about-btn';
-      about.setAttribute('data-slide', '8');
+      about.dataset.slide = '8';
       about.title = "À propos de l'application";
-      about.setAttribute('data-translate-title', 'about_button_label');
+      about.dataset.translateTitle = 'about_button_label';
       about.textContent = 'ℹ️';
       top.appendChild(about);
     }
@@ -212,7 +213,7 @@ export const TopBar = {
       tableSettingsBtn.id = `table-settings-btn-${slideId}`;
       tableSettingsBtn.className = 'btn btn-sm table-settings-btn';
       tableSettingsBtn.title = 'Paramètres des tables';
-      tableSettingsBtn.setAttribute('data-translate-title', 'table_settings_button_label');
+      tableSettingsBtn.dataset.translateTitle = 'table_settings_button_label';
       tableSettingsBtn.textContent = '⚙️';
       navContainer.appendChild(tableSettingsBtn);
     }
@@ -223,7 +224,7 @@ export const TopBar = {
     mute.id = `mute-button-${slideId}`;
     mute.className = 'btn btn-sm mute-btn';
     mute.title = 'Couper le son';
-    mute.setAttribute('data-translate-title', 'mute_button_label_on');
+    mute.dataset.translateTitle = 'mute_button_label_on';
     mute.textContent = '🔊';
     const slider = document.createElement('input');
     slider.type = 'range';
@@ -260,7 +261,7 @@ export const TopBar = {
       const change = document.createElement('button');
       change.className = 'btn change-user-btn';
       change.dataset.slide = '0';
-      change.setAttribute('data-translate', 'change_user');
+      change.dataset.translate = 'change_user';
       change.textContent = "Changer d'utilisateur";
       navContainer.appendChild(change);
     }
@@ -292,43 +293,55 @@ export const TopBar = {
    * Configurer les écouteurs d'événements pour la barre supérieure
    */
   setupEventListeners() {
-    // Écouteurs pour les boutons Home
-    for (const btn of document.querySelectorAll('.home-btn')) {
+    this.attachHomeButtons();
+    this.attachLanguageButtons();
+    this.attachVolumeControls();
+    this.attachVoiceToggles();
+    this.attachTableSettingsButtons();
+    this.attachBurgerMenus();
+    this.attachOutsideClickWatcher();
+  },
+
+  attachHomeButtons() {
+    document.querySelectorAll('.home-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         goToSlide(1);
       });
-    }
+    });
+  },
 
-    // Écouteurs pour les boutons de langue
-    for (const btn of document.querySelectorAll('.lang-btn')) {
-      btn.addEventListener('click', e => {
-        const lang = e.target.dataset.lang;
-        changeLanguage(lang);
+  attachLanguageButtons() {
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', event => {
+        const lang = event.currentTarget?.dataset?.lang;
+        if (lang) changeLanguage(lang);
       });
-    }
+    });
+  },
 
-    // Écouteurs pour les contrôles de volume
-    for (const btn of document.querySelectorAll('.mute-btn')) {
+  attachVolumeControls() {
+    document.querySelectorAll('.mute-btn').forEach(btn => {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
           AudioManager.toggleMute();
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    }
+    });
 
-    for (const slider of document.querySelectorAll('.volume-slider')) {
+    document.querySelectorAll('.volume-slider').forEach(slider => {
       if (!slider.dataset.topBarListenerAttached) {
-        slider.addEventListener('input', e => {
-          const newVolume = parseFloat(e.target.value);
+        slider.addEventListener('input', event => {
+          const newVolume = parseFloat(event.currentTarget?.value || '0');
           AudioManager.setVolume(newVolume);
         });
         slider.dataset.topBarListenerAttached = 'true';
       }
-    }
+    });
+  },
 
-    // Écouteur pour le toggle voix
-    for (const btn of document.querySelectorAll('.voice-toggle')) {
+  attachVoiceToggles() {
+    document.querySelectorAll('.voice-toggle').forEach(btn => {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
           try {
@@ -339,23 +352,23 @@ export const TopBar = {
             if (next) {
               try {
                 _speak(getTranslation('voice_enabled') || 'Synthèse vocale activée');
-              } catch (e) {
-                void e;
+              } catch (error) {
+                void error;
               }
             }
-          } catch (e) {
-            void e;
+          } catch (error) {
+            void error;
           }
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    }
+    });
+  },
 
-    // Écouteur pour le bouton paramètres de tables
-    for (const btn of document.querySelectorAll('.table-settings-btn')) {
+  attachTableSettingsButtons() {
+    document.querySelectorAll('.table-settings-btn').forEach(btn => {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
-          // Ouvrir la modale des paramètres de tables
           import('../components/tableSettingsModal.js')
             .then(module => {
               module.TableSettingsModal.open();
@@ -366,34 +379,38 @@ export const TopBar = {
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    }
+    });
+  },
 
-    // Écouteur pour le menu burger
-    for (const btn of document.querySelectorAll('.burger-menu-btn')) {
+  attachBurgerMenus() {
+    document.querySelectorAll('.burger-menu-btn').forEach(btn => {
       if (!btn.dataset.topBarListenerAttached) {
-        btn.addEventListener('click', e => {
-          const topBar = e.target.closest('.top-bar');
+        btn.addEventListener('click', event => {
+          const topBar = event.currentTarget?.closest('.top-bar');
           if (topBar) {
             const nav = topBar.querySelector('.top-bar-nav');
             if (nav) {
               nav.classList.toggle('is-open');
             }
           }
-          e.stopPropagation();
+          event.stopPropagation();
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
-    }
+    });
+  },
 
-    // Fermer le menu si on clique ailleurs
-    document.addEventListener('click', e => {
-      for (const nav of document.querySelectorAll('.top-bar-nav.is-open')) {
+  attachOutsideClickWatcher() {
+    if (this._outsideClickBound) return;
+    document.addEventListener('click', event => {
+      document.querySelectorAll('.top-bar-nav.is-open').forEach(nav => {
         const topBar = nav.closest('.top-bar');
-        if (topBar && !topBar.contains(e.target)) {
+        if (topBar && !topBar.contains(event.target)) {
           nav.classList.remove('is-open');
         }
-      }
+      });
     });
+    this._outsideClickBound = true;
   },
 
   /**

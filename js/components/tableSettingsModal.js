@@ -38,25 +38,47 @@ export const TableSettingsModal = {
       return; // Déjà créée
     }
 
-    // Container principal
+    const { modal, content } = this.buildModalShell();
+    content.appendChild(this.buildHeaderSection());
+    content.appendChild(this.buildDescriptionSection());
+    content.appendChild(this.buildToggleSection());
+    content.appendChild(this.buildTablesGrid());
+    content.appendChild(this.buildStatusSection());
+    document.body.appendChild(modal);
+
+    this.modalElement = modal;
+  },
+
+  /**
+   * Crée la structure de base de la modale (conteneur + overlay + contenu)
+   * @returns {{modal: HTMLElement, content: HTMLElement}}
+   */
+  buildModalShell() {
     const modal = createSafeElement('div', '', {
       class: 'table-settings-modal',
       id: 'table-settings-modal',
     });
 
-    // Overlay (fond sombre)
     const overlay = createSafeElement('div', '', {
       class: 'modal-overlay',
     });
     overlay.addEventListener('click', () => this.close());
-    modal.appendChild(overlay);
 
-    // Contenu de la modale
     const content = createSafeElement('div', '', {
       class: 'modal-content',
     });
 
-    // En-tête
+    modal.appendChild(overlay);
+    modal.appendChild(content);
+
+    return { modal, content };
+  },
+
+  /**
+   * Construit l'entête de la modale
+   * @returns {HTMLElement}
+   */
+  buildHeaderSection() {
     const header = createSafeElement('div', '', {
       class: 'modal-header',
     });
@@ -65,10 +87,10 @@ export const TableSettingsModal = {
       class: 'modal-title',
     });
     title.textContent = '⚙️ ';
+
     const titleText = createSafeElement('span', '');
-    titleText.setAttribute('data-translate', 'table_settings_title');
+    titleText.dataset.translate = 'table_settings_title';
     titleText.textContent = getTranslation('table_settings_title') || 'Paramètres des tables';
-    title.appendChild(titleText);
 
     const closeBtn = createSafeElement('button', '', {
       class: 'modal-close-btn',
@@ -77,21 +99,33 @@ export const TableSettingsModal = {
     closeBtn.setAttribute('aria-label', 'Fermer');
     closeBtn.addEventListener('click', () => this.close());
 
+    title.appendChild(titleText);
     header.appendChild(title);
     header.appendChild(closeBtn);
-    content.appendChild(header);
 
-    // Description
+    return header;
+  },
+
+  /**
+   * Construit la description introductive de la modale
+   * @returns {HTMLElement}
+   */
+  buildDescriptionSection() {
     const description = createSafeElement('p', '', {
       class: 'modal-description',
     });
-    description.setAttribute('data-translate', 'table_settings_description');
+    description.dataset.translate = 'table_settings_description';
     description.textContent =
       getTranslation('table_settings_description') ||
       'Choisis les tables à exclure de tes jeux (sauf Découverte et Aventure) :';
-    content.appendChild(description);
+    return description;
+  },
 
-    // Toggle principal
+  /**
+   * Construit le bloc de bascule (toggle) principal
+   * @returns {HTMLElement}
+   */
+  buildToggleSection() {
     const toggleContainer = createSafeElement('div', '', {
       class: 'toggle-container',
     });
@@ -115,7 +149,7 @@ export const TableSettingsModal = {
     const toggleText = createSafeElement('span', '', {
       class: 'toggle-text',
     });
-    toggleText.setAttribute('data-translate', 'global_exclusion_enable');
+    toggleText.dataset.translate = 'global_exclusion_enable';
     toggleText.textContent =
       getTranslation('global_exclusion_enable') || "Activer l'exclusion globale";
 
@@ -123,9 +157,14 @@ export const TableSettingsModal = {
     toggleLabel.appendChild(toggleSlider);
     toggleLabel.appendChild(toggleText);
     toggleContainer.appendChild(toggleLabel);
-    content.appendChild(toggleContainer);
+    return toggleContainer;
+  },
 
-    // Grille de sélection des tables
+  /**
+   * Crée la grille de boutons pour sélectionner les tables
+   * @returns {HTMLElement}
+   */
+  buildTablesGrid() {
     const gridContainer = createSafeElement('div', '', {
       class: 'tables-grid',
       id: 'tables-grid',
@@ -142,9 +181,14 @@ export const TableSettingsModal = {
       btn.addEventListener('click', () => this.toggleTable(i));
       gridContainer.appendChild(btn);
     }
-    content.appendChild(gridContainer);
+    return gridContainer;
+  },
 
-    // Indicateur des tables exclues
+  /**
+   * Construit le bloc affichant les tables exclues
+   * @returns {HTMLElement}
+   */
+  buildStatusSection() {
     const statusContainer = createSafeElement('div', '', {
       class: 'exclusion-status',
       id: 'exclusion-status',
@@ -152,7 +196,7 @@ export const TableSettingsModal = {
     statusContainer.style.display = 'none';
 
     const statusLabel = createSafeElement('span', '');
-    statusLabel.setAttribute('data-translate', 'excluded_tables_label');
+    statusLabel.dataset.translate = 'excluded_tables_label';
     statusLabel.textContent = getTranslation('excluded_tables_label') || 'Tables exclues :';
 
     const statusList = createSafeElement('strong', '', {
@@ -163,12 +207,7 @@ export const TableSettingsModal = {
     statusContainer.appendChild(statusLabel);
     statusContainer.appendChild(document.createTextNode(' '));
     statusContainer.appendChild(statusList);
-    content.appendChild(statusContainer);
-
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-
-    this.modalElement = modal;
+    return statusContainer;
   },
 
   /**
@@ -202,7 +241,7 @@ export const TableSettingsModal = {
     const currentUser = UserManager.getCurrentUser();
     if (!currentUser) return;
 
-    const exclusions = [...TablePreferences.getGlobalExclusions(currentUser)];
+    const exclusions = new Set(TablePreferences.getGlobalExclusions(currentUser));
     const enabled = TablePreferences.isGlobalEnabled(currentUser);
 
     // Mettre à jour le toggle
@@ -215,7 +254,7 @@ export const TableSettingsModal = {
     for (let i = 1; i <= 10; i++) {
       const btn = document.querySelector(`.table-btn[data-table="${i}"]`);
       if (btn) {
-        if (exclusions.includes(i)) {
+        if (exclusions.has(i)) {
           btn.classList.add('excluded');
           btn.setAttribute('aria-pressed', 'true');
         } else {
@@ -248,25 +287,28 @@ export const TableSettingsModal = {
     const currentUser = UserManager.getCurrentUser();
     if (!currentUser) return;
 
-    const exclusions = [...TablePreferences.getGlobalExclusions(currentUser)];
-    const idx = exclusions.indexOf(table);
+    const exclusions = new Set(TablePreferences.getGlobalExclusions(currentUser));
+    let isExcluded;
 
-    if (idx >= 0) {
+    if (exclusions.has(table)) {
       // Retirer l'exclusion
-      exclusions.splice(idx, 1);
+      exclusions.delete(table);
+      isExcluded = false;
     } else {
       // Ajouter l'exclusion
-      exclusions.push(table);
+      exclusions.add(table);
+      isExcluded = true;
     }
 
     // Sauvegarder
-    TablePreferences.setGlobalExclusions(currentUser, exclusions);
+    const updated = Array.from(exclusions).sort((a, b) => a - b);
+    TablePreferences.setGlobalExclusions(currentUser, updated);
 
     // Mettre à jour l'UI
     const btn = document.querySelector(`.table-btn[data-table="${table}"]`);
     if (btn) {
-      btn.classList.toggle('excluded');
-      btn.setAttribute('aria-pressed', idx >= 0 ? 'false' : 'true');
+      btn.classList.toggle('excluded', isExcluded);
+      btn.setAttribute('aria-pressed', String(isExcluded));
     }
 
     this.updateStatusDisplay();

@@ -35,7 +35,7 @@
   height: 100%;
   background: rgb(0 0 0 / 60%);
   backdrop-filter: blur(4px);
-  animation: fadeIn 0.3s ease;
+  animation: fade-in 0.3s ease;
 }
 
 /* Contenu de la modale */
@@ -50,10 +50,10 @@
   max-height: 85vh;
   overflow-y: auto;
   transform: scale(0.9);
-  animation: popIn 0.3s ease forwards;
+  animation: pop-in 0.3s ease forwards;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from {
     opacity: 0;
   }
@@ -62,7 +62,7 @@
   }
 }
 
-@keyframes popIn {
+@keyframes pop-in {
   from {
     transform: scale(0.9);
     opacity: 0;
@@ -103,7 +103,7 @@
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  color: #6c757d;
+  color: #343a40;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -126,9 +126,9 @@
 .toggle-container {
   margin-bottom: 2rem;
   padding: 1.25rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4338ca 0%, #5b21b6 100%);
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgb(102 126 234 / 30%);
+  box-shadow: 0 4px 12px rgb(67 56 202 / 35%);
 }
 
 .toggle-label {
@@ -191,13 +191,13 @@
   aspect-ratio: 1;
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+  color: #f8fafc;
   border: 3px solid transparent;
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgb(79 172 254 / 40%);
+  box-shadow: 0 4px 12px rgb(30 64 175 / 50%);
   position: relative;
   overflow: hidden;
 }
@@ -230,9 +230,9 @@
 }
 
 .table-btn.excluded {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  border-color: #f5576c;
-  box-shadow: 0 4px 12px rgb(245 87 108 / 40%);
+  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+  border-color: #7f1d1d;
+  box-shadow: 0 4px 12px rgb(127 29 29 / 45%);
 }
 
 .table-btn.excluded::after {
@@ -256,10 +256,10 @@
   border-left: 4px solid #f39c12;
   font-size: 1rem;
   box-shadow: 0 2px 8px rgb(253 203 110 / 40%);
-  animation: slideIn 0.3s ease;
+  animation: slide-in 0.3s ease;
 }
 
-@keyframes slideIn {
+@keyframes slide-in {
   from {
     opacity: 0;
     transform: translateY(-10px);

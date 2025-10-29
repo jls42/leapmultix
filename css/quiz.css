@@ -154,9 +154,9 @@
   box-shadow: 0 6px 12px rgb(0 0 0 / 0.15);
 }
 .numpad-btn.delete-btn {
-  background-color: #e74c3c;
-  border-color: #c0392b;
-  color: white;
+  background-color: #b91c1c;
+  border-color: #7f1d1d;
+  color: #f8fafc;
 }
 .numpad-container .validate-btn {
   flex: 1 1 100%;
@@ -172,7 +172,7 @@
   border-radius: 15px;
   margin-top: 15px;
   font-size: 1em;
-  color: #8c6bac;
+  color: #3f2a75;
   box-shadow: 0 4px 8px rgb(0 0 0 / 0.05);
   border: 2px solid #ffd789;
 }

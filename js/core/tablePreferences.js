@@ -16,10 +16,8 @@ export const TablePreferences = {
   getActiveExclusions(currentUser, includeGlobal = true) {
     if (!currentUser) return [];
 
-    // Si includeGlobal = false ou globalEnabled = false, retourner []
-    if (!includeGlobal || !this.isGlobalEnabled(currentUser)) {
-      return [];
-    }
+    if (!includeGlobal) return [];
+    if (!this.isGlobalEnabled(currentUser)) return [];
 
     const global = this.getGlobalExclusions(currentUser);
 
@@ -42,11 +40,11 @@ export const TablePreferences = {
   getGlobalExclusions(currentUser) {
     if (!currentUser) return [];
 
-    const userData = UserManager.getCurrentUserData();
-    if (!userData || !userData.tablePreferences) return [];
+    const tablePreferences = UserManager.getCurrentUserData()?.tablePreferences;
+    if (!tablePreferences) return [];
 
-    return Array.isArray(userData.tablePreferences.globalExclusions)
-      ? userData.tablePreferences.globalExclusions
+    return Array.isArray(tablePreferences.globalExclusions)
+      ? [...tablePreferences.globalExclusions]
       : [];
   },
 
@@ -58,10 +56,7 @@ export const TablePreferences = {
   isGlobalEnabled(currentUser) {
     if (!currentUser) return false;
 
-    const userData = UserManager.getCurrentUserData();
-    if (!userData || !userData.tablePreferences) return false;
-
-    return userData.tablePreferences.globalEnabled === true;
+    return UserManager.getCurrentUserData()?.tablePreferences?.globalEnabled === true;
   },
 
   /**
@@ -75,19 +70,18 @@ export const TablePreferences = {
     const userData = UserManager.getCurrentUserData();
     if (!userData) return;
 
-    if (!userData.tablePreferences) {
-      userData.tablePreferences = {
-        globalExclusions: [],
-        globalEnabled: false,
-      };
-    }
+    const tablePreferences = userData.tablePreferences ?? {
+      globalExclusions: [],
+      globalEnabled: false,
+    };
 
     // Valider et nettoyer les tables (1-10 uniquement)
     const validTables = Array.isArray(tables)
-      ? tables.filter(t => Number.isInteger(t) && t >= 1 && t <= 10)
+      ? tables.filter(t => Number.isInteger(t) && t >= 1 && t <= 10).sort((a, b) => a - b)
       : [];
 
-    userData.tablePreferences.globalExclusions = validTables;
+    tablePreferences.globalExclusions = validTables;
+    userData.tablePreferences = tablePreferences;
     UserManager.updateCurrentUserData(userData);
 
     eventBus.emit('tablePreferences:changed');
@@ -104,14 +98,13 @@ export const TablePreferences = {
     const userData = UserManager.getCurrentUserData();
     if (!userData) return;
 
-    if (!userData.tablePreferences) {
-      userData.tablePreferences = {
-        globalExclusions: [],
-        globalEnabled: false,
-      };
-    }
+    const tablePreferences = userData.tablePreferences ?? {
+      globalExclusions: [],
+      globalEnabled: false,
+    };
 
-    userData.tablePreferences.globalEnabled = enabled === true;
+    tablePreferences.globalEnabled = enabled === true;
+    userData.tablePreferences = tablePreferences;
     UserManager.updateCurrentUserData(userData);
 
     eventBus.emit('tablePreferences:changed');
@@ -142,15 +135,14 @@ export const TablePreferences = {
     const userData = UserManager.getCurrentUserData();
     if (!userData) return;
 
-    if (!userData.tablePreferences) {
-      userData.tablePreferences = {
-        globalExclusions: [],
-        globalEnabled: false,
-      };
-    } else {
-      userData.tablePreferences.globalExclusions = [];
-      userData.tablePreferences.globalEnabled = false;
-    }
+    const tablePreferences = userData.tablePreferences ?? {
+      globalExclusions: [],
+      globalEnabled: false,
+    };
+
+    tablePreferences.globalExclusions = [];
+    tablePreferences.globalEnabled = false;
+    userData.tablePreferences = tablePreferences;
 
     UserManager.updateCurrentUserData(userData);
     eventBus.emit('tablePreferences:changed');

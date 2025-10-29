@@ -104,7 +104,7 @@ function getEligibleTables({ forceTable, tables, excludeTables, minTable, maxTab
     const filteredTables = tables.filter(t => !excludeTables.includes(t));
     if (filteredTables.length === 0) {
       console.warn(
-        "[generateQuestion] Toutes les tables explicites sont exclues, ignorance des exclusions pour ce mode."
+        '[generateQuestion] Toutes les tables explicites sont exclues, ignorance des exclusions pour ce mode.'
       );
       return [...new Set(tables)];
     }

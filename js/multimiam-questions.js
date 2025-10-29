@@ -19,8 +19,8 @@ export const PacmanQuestions = {
       const questionData = generateQuestion({
         type: 'classic',
         excludeTables: excluded,
-        tables: Array.isArray(game.tables) && game.tables.length > 0 ? game.tables : undefined,
-        forceTable: game.mode === 'table' && game.tableNumber ? game.tableNumber : null,
+        tables: Array.isArray(game?.tables) && game.tables.length > 0 ? game.tables : undefined,
+        forceTable: game?.mode === 'table' && game?.tableNumber ? game.tableNumber : null,
         minTable: 1,
         maxTable: 10,
         minNum: 1,
@@ -114,12 +114,14 @@ export const PacmanQuestions = {
   getValidPositions(game, multimiamX, multimiamY) {
     const positions = this.getPredefinedPositions();
     safeShuffleArray(positions);
-    return positions.filter(
-      p =>
-        game.labyrinth[p.y][p.x] === 0 &&
+    return positions.filter(p => {
+      const isFree = game.labyrinth?.[p.y]?.[p.x] === 0;
+      return (
+        isFree &&
         !(p.x === multimiamX && p.y === multimiamY) &&
         !(p.x === multimiamX + 1 && p.y === multimiamY)
-    );
+      );
+    });
   },
 
   addFallbackPosition(valids, game, multimiamX, multimiamY) {
@@ -133,13 +135,11 @@ export const PacmanQuestions = {
     const fallbackY = 7;
 
     if (
-      game.labyrinth[fallbackY] &&
-      game.labyrinth[fallbackY][fallbackX] === 0 &&
+      game.labyrinth?.[fallbackY]?.[fallbackX] === 0 &&
       !(fallbackX === multimiamX && fallbackY === multimiamY) &&
       !(fallbackX === multimiamX + 1 && fallbackY === multimiamY)
     ) {
       valids.push({ x: fallbackX, y: fallbackY });
-      console.log('Position de secours (9, 7) ajoutée.');
     } else {
       console.error('Position de secours invalide ou occupée.');
     }
