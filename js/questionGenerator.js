@@ -34,6 +34,11 @@ export function generateQuestion(options = {}) {
     maxTable,
   });
   const eligibleNums = getEligibleNums({ forceNum, minNum, maxNum });
+  if (eligibleTables.length === 0 || eligibleNums.length === 0) {
+    throw new Error(
+      `generateQuestion: aucune combinaison possible (tables=${eligibleTables.length}, nums=${eligibleNums.length})`
+    );
+  }
   const { t: table, n: num } = pickWeightedPair(eligibleTables, eligibleNums, weakTables);
 
   // Déterminer le type de question
@@ -91,11 +96,27 @@ export function generateQuestion(options = {}) {
 // --- Helpers pour réduire la complexité de generateQuestion ---
 function getEligibleTables({ forceTable, tables, excludeTables, minTable, maxTable }) {
   if (forceTable !== null) return [forceTable];
-  if (Array.isArray(tables) && tables.length > 0)
-    return tables.filter(t => !excludeTables.includes(t));
-  return Array.from({ length: maxTable - minTable + 1 }, (_, i) => i + minTable).filter(
-    t => !excludeTables.includes(t)
+
+  const fullRange = Array.from({ length: maxTable - minTable + 1 }, (_, i) => i + minTable);
+  const filteredRange = fullRange.filter(t => !excludeTables.includes(t));
+
+  if (Array.isArray(tables) && tables.length > 0) {
+    const filteredTables = tables.filter(t => !excludeTables.includes(t));
+    if (filteredTables.length === 0) {
+      console.warn(
+        '[generateQuestion] Toutes les tables explicites sont exclues, ignorance des exclusions pour ce mode.'
+      );
+      return [...new Set(tables)];
+    }
+    return filteredTables;
+  }
+
+  if (filteredRange.length > 0) return filteredRange;
+
+  console.warn(
+    '[generateQuestion] Toutes les tables min/max sont exclues, réutilisation du range complet'
   );
+  return fullRange.length > 0 ? fullRange : [minTable || 1];
 }
 
 function getEligibleNums({ forceNum, minNum, maxNum }) {

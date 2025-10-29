@@ -16,6 +16,7 @@ import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
 
 export const TopBar = {
+  _outsideClickBound: false,
   /**
    * Initialiser le composant TopBar
    */
@@ -72,6 +73,11 @@ export const TopBar = {
                 <button class="lang-btn" data-lang="es">🇪🇸</button>
             </div>`;
 
+    // Bouton paramètres de tables (visible uniquement si utilisateur connecté)
+    const tableSettingsButton = config.showCoinDisplay
+      ? `<button id="table-settings-btn-${slideId}" class="btn btn-sm table-settings-btn" title="Paramètres des tables" data-translate-title="table_settings_button_label">⚙️</button>`
+      : '';
+
     // Contrôles de volume
     const volumeControls = `
             <div class="global-volume-controls">
@@ -118,6 +124,7 @@ export const TopBar = {
                 ${homeButton}
                 ${aboutButton}
                 ${languageSelector}
+                ${tableSettingsButton}
                 ${volumeControls}
                 ${voiceToggle}
                 ${coinDisplay}
@@ -146,7 +153,7 @@ export const TopBar = {
     home.id = `home-button-${slideId}`;
     home.className = 'btn home-btn';
     home.title = 'Accueil';
-    home.setAttribute('data-translate-title', 'home_button_label');
+    home.dataset.translateTitle = 'home_button_label';
     home.textContent = '🏠';
     if (!config.showHomeButton) home.style.visibility = 'hidden';
     top.appendChild(home);
@@ -154,9 +161,9 @@ export const TopBar = {
     if (config.showAboutButton !== false) {
       const about = document.createElement('button');
       about.className = 'btn btn-sm about-btn';
-      about.setAttribute('data-slide', '8');
+      about.dataset.slide = '8';
       about.title = "À propos de l'application";
-      about.setAttribute('data-translate-title', 'about_button_label');
+      about.dataset.translateTitle = 'about_button_label';
       about.textContent = 'ℹ️';
       top.appendChild(about);
     }
@@ -200,13 +207,24 @@ export const TopBar = {
     });
     navContainer.appendChild(langWrap);
 
+    // Bouton paramètres de tables (visible uniquement si utilisateur connecté)
+    if (config.showCoinDisplay) {
+      const tableSettingsBtn = document.createElement('button');
+      tableSettingsBtn.id = `table-settings-btn-${slideId}`;
+      tableSettingsBtn.className = 'btn btn-sm table-settings-btn';
+      tableSettingsBtn.title = 'Paramètres des tables';
+      tableSettingsBtn.dataset.translateTitle = 'table_settings_button_label';
+      tableSettingsBtn.textContent = '⚙️';
+      navContainer.appendChild(tableSettingsBtn);
+    }
+
     const volWrap = document.createElement('div');
     volWrap.className = 'global-volume-controls';
     const mute = document.createElement('button');
     mute.id = `mute-button-${slideId}`;
     mute.className = 'btn btn-sm mute-btn';
     mute.title = 'Couper le son';
-    mute.setAttribute('data-translate-title', 'mute_button_label_on');
+    mute.dataset.translateTitle = 'mute_button_label_on';
     mute.textContent = '🔊';
     const slider = document.createElement('input');
     slider.type = 'range';
@@ -243,7 +261,7 @@ export const TopBar = {
       const change = document.createElement('button');
       change.className = 'btn change-user-btn';
       change.dataset.slide = '0';
-      change.setAttribute('data-translate', 'change_user');
+      change.dataset.translate = 'change_user';
       change.textContent = "Changer d'utilisateur";
       navContainer.appendChild(change);
     }
@@ -275,22 +293,33 @@ export const TopBar = {
    * Configurer les écouteurs d'événements pour la barre supérieure
    */
   setupEventListeners() {
-    // Écouteurs pour les boutons Home
+    this.attachHomeButtons();
+    this.attachLanguageButtons();
+    this.attachVolumeControls();
+    this.attachVoiceToggles();
+    this.attachTableSettingsButtons();
+    this.attachBurgerMenus();
+    this.attachOutsideClickWatcher();
+  },
+
+  attachHomeButtons() {
     for (const btn of document.querySelectorAll('.home-btn')) {
       btn.addEventListener('click', () => {
         goToSlide(1);
       });
     }
+  },
 
-    // Écouteurs pour les boutons de langue
+  attachLanguageButtons() {
     for (const btn of document.querySelectorAll('.lang-btn')) {
-      btn.addEventListener('click', e => {
-        const lang = e.target.dataset.lang;
-        changeLanguage(lang);
+      btn.addEventListener('click', event => {
+        const lang = event.currentTarget?.dataset?.lang;
+        if (lang) changeLanguage(lang);
       });
     }
+  },
 
-    // Écouteurs pour les contrôles de volume
+  attachVolumeControls() {
     for (const btn of document.querySelectorAll('.mute-btn')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
@@ -302,15 +331,16 @@ export const TopBar = {
 
     for (const slider of document.querySelectorAll('.volume-slider')) {
       if (!slider.dataset.topBarListenerAttached) {
-        slider.addEventListener('input', e => {
-          const newVolume = parseFloat(e.target.value);
+        slider.addEventListener('input', event => {
+          const newVolume = Number.parseFloat(event.currentTarget?.value || '0');
           AudioManager.setVolume(newVolume);
         });
         slider.dataset.topBarListenerAttached = 'true';
       }
     }
+  },
 
-    // Écouteur pour le toggle voix
+  attachVoiceToggles() {
     for (const btn of document.querySelectorAll('.voice-toggle')) {
       if (!btn.dataset.topBarListenerAttached) {
         btn.addEventListener('click', () => {
@@ -322,44 +352,65 @@ export const TopBar = {
             if (next) {
               try {
                 _speak(getTranslation('voice_enabled') || 'Synthèse vocale activée');
-              } catch (e) {
-                void e;
+              } catch (error) {
+                console.warn('TopBar voice announcement failed', error);
               }
             }
-          } catch (e) {
-            void e;
+          } catch (error) {
+            console.warn('TopBar voice toggle failed', error);
           }
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
     }
+  },
 
-    // Écouteur pour le menu burger
+  attachTableSettingsButtons() {
+    for (const btn of document.querySelectorAll('.table-settings-btn')) {
+      if (!btn.dataset.topBarListenerAttached) {
+        btn.addEventListener('click', () => {
+          import('../components/tableSettingsModal.js')
+            .then(module => {
+              module.TableSettingsModal.open();
+            })
+            .catch(error => {
+              console.error('Erreur chargement modale paramètres tables:', error);
+            });
+        });
+        btn.dataset.topBarListenerAttached = 'true';
+      }
+    }
+  },
+
+  attachBurgerMenus() {
     for (const btn of document.querySelectorAll('.burger-menu-btn')) {
       if (!btn.dataset.topBarListenerAttached) {
-        btn.addEventListener('click', e => {
-          const topBar = e.target.closest('.top-bar');
+        btn.addEventListener('click', event => {
+          const topBar = event.currentTarget?.closest('.top-bar');
           if (topBar) {
             const nav = topBar.querySelector('.top-bar-nav');
             if (nav) {
               nav.classList.toggle('is-open');
             }
           }
-          e.stopPropagation();
+          event.stopPropagation();
         });
         btn.dataset.topBarListenerAttached = 'true';
       }
     }
+  },
 
-    // Fermer le menu si on clique ailleurs
-    document.addEventListener('click', e => {
+  attachOutsideClickWatcher() {
+    if (this._outsideClickBound) return;
+    document.addEventListener('click', event => {
       for (const nav of document.querySelectorAll('.top-bar-nav.is-open')) {
         const topBar = nav.closest('.top-bar');
-        if (topBar && !topBar.contains(e.target)) {
+        if (topBar && !topBar.contains(event.target)) {
           nav.classList.remove('is-open');
         }
       }
     });
+    this._outsideClickBound = true;
   },
 
   /**

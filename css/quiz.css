@@ -154,9 +154,9 @@
   box-shadow: 0 6px 12px rgb(0 0 0 / 0.15);
 }
 .numpad-btn.delete-btn {
-  background-color: #e74c3c;
-  border-color: #c0392b;
-  color: white;
+  background-color: #b91c1c;
+  border-color: #7f1d1d;
+  color: #f8fafc;
 }
 .numpad-container .validate-btn {
   flex: 1 1 100%;
@@ -172,7 +172,7 @@
   border-radius: 15px;
   margin-top: 15px;
   font-size: 1em;
-  color: #8c6bac;
+  color: #3f2a75;
   box-shadow: 0 4px 8px rgb(0 0 0 / 0.05);
   border: 2px solid #ffd789;
 }
@@ -285,71 +285,6 @@
   to {
     transform: scaleY(1);
   }
-}
-.quiz-filter {
-  background-color: white;
-  padding: 15px;
-  border-radius: 10px;
-  margin: 10px 0;
-  box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
-}
-.filter-toggle {
-  background-color: var(--primary-color);
-  color: var(--text-color);
-}
-.theme-dark .filter-toggle {
-  background-color: var(--primary-dark);
-  color: var(--text-color);
-}
-.exclude-btn {
-  background-color: var(--neutral-light);
-  color: var(--text-color);
-}
-.theme-dark .exclude-btn {
-  background-color: var(--neutral-medium);
-  color: var(--text-color);
-}
-.filter-info {
-  font-size: 0.9em;
-  margin-bottom: 5px;
-  color: var(--text-color);
-}
-.filter-toggle {
-  background-color: #f1f1f1;
-  border: none;
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 1em;
-  margin-left: 10px;
-  transition:
-    background-color 0.3s,
-    transform 0.2s;
-}
-.filter-toggle:hover {
-  background-color: #e0e0e0;
-}
-.exclude-table-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-  gap: 5px;
-  margin: 10px 0;
-}
-.exclude-btn {
-  background-color: #ecf0f1;
-  border: 1px solid #bdc3c7;
-  border-radius: 5px;
-  padding: 8px;
-  cursor: pointer;
-  text-align: center;
-  transition:
-    background-color 0.3s,
-    color 0.3s;
-}
-.exclude-btn.selected {
-  background-color: var(--primary-color);
-  color: white;
-  border-color: var(--primary-dark);
 }
 #apply-filters-btn {
   margin-top: 10px;

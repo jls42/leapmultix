@@ -3,15 +3,41 @@
 
 import { generateQuestion } from './questionGenerator.js';
 import { safeShuffleArray } from './arcade-utils.js';
+import { TablePreferences } from './core/tablePreferences.js';
+import { UserManager } from './userManager.js';
+
+const isValidIndex = (value, size) => Number.isInteger(value) && value >= 0 && value < size;
+
+const isFreeLabyrinthCell = (labyrinth, x, y) => {
+  if (!Array.isArray(labyrinth) || !isValidIndex(y, labyrinth.length)) {
+    return false;
+  }
+
+  // eslint-disable-next-line security/detect-object-injection -- y is validated numeric index
+  const row = labyrinth[y];
+  if (!Array.isArray(row) || !isValidIndex(x, row.length)) {
+    return false;
+  }
+
+  // eslint-disable-next-line security/detect-object-injection -- x is validated numeric index
+  return row[x] === 0;
+};
 
 export const PacmanQuestions = {
   generateOperation(game) {
     try {
+      // Appliquer l'exclusion globale de tables
+      const currentUser = UserManager.getCurrentUser();
+      const excluded = TablePreferences.isGlobalEnabled(currentUser)
+        ? TablePreferences.getActiveExclusions(currentUser)
+        : [];
+
       // Utiliser generateQuestion pour cohérence avec le système centralisé
       const questionData = generateQuestion({
         type: 'classic',
-        tables: Array.isArray(game.tables) && game.tables.length > 0 ? game.tables : undefined,
-        forceTable: game.mode === 'table' && game.tableNumber ? game.tableNumber : null,
+        excludeTables: excluded,
+        tables: Array.isArray(game?.tables) && game.tables.length > 0 ? game.tables : undefined,
+        forceTable: game?.mode === 'table' && game?.tableNumber ? game.tableNumber : null,
         minTable: 1,
         maxTable: 10,
         minNum: 1,
@@ -105,12 +131,14 @@ export const PacmanQuestions = {
   getValidPositions(game, multimiamX, multimiamY) {
     const positions = this.getPredefinedPositions();
     safeShuffleArray(positions);
-    return positions.filter(
-      p =>
-        game.labyrinth[p.y][p.x] === 0 &&
+    return positions.filter(p => {
+      const isFree = isFreeLabyrinthCell(game.labyrinth, p.x, p.y);
+      return (
+        isFree &&
         !(p.x === multimiamX && p.y === multimiamY) &&
         !(p.x === multimiamX + 1 && p.y === multimiamY)
-    );
+      );
+    });
   },
 
   addFallbackPosition(valids, game, multimiamX, multimiamY) {
@@ -124,13 +152,11 @@ export const PacmanQuestions = {
     const fallbackY = 7;
 
     if (
-      game.labyrinth[fallbackY] &&
-      game.labyrinth[fallbackY][fallbackX] === 0 &&
+      isFreeLabyrinthCell(game.labyrinth, fallbackX, fallbackY) &&
       !(fallbackX === multimiamX && fallbackY === multimiamY) &&
       !(fallbackX === multimiamX + 1 && fallbackY === multimiamY)
     ) {
       valids.push({ x: fallbackX, y: fallbackY });
-      console.log('Position de secours (9, 7) ajoutée.');
     } else {
       console.error('Position de secours invalide ou occupée.');
     }
