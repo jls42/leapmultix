@@ -3,13 +3,22 @@
 
 import { generateQuestion } from './questionGenerator.js';
 import { safeShuffleArray } from './arcade-utils.js';
+import { TablePreferences } from './core/tablePreferences.js';
+import { UserManager } from './userManager.js';
 
 export const PacmanQuestions = {
   generateOperation(game) {
     try {
+      // Appliquer l'exclusion globale de tables
+      const currentUser = UserManager.getCurrentUser();
+      const excluded = TablePreferences.isGlobalEnabled(currentUser)
+        ? TablePreferences.getActiveExclusions(currentUser)
+        : [];
+
       // Utiliser generateQuestion pour cohérence avec le système centralisé
       const questionData = generateQuestion({
         type: 'classic',
+        excludeTables: excluded,
         tables: Array.isArray(game.tables) && game.tables.length > 0 ? game.tables : undefined,
         forceTable: game.mode === 'table' && game.tableNumber ? game.tableNumber : null,
         minTable: 1,

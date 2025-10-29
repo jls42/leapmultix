@@ -72,6 +72,11 @@ export const TopBar = {
                 <button class="lang-btn" data-lang="es">🇪🇸</button>
             </div>`;
 
+    // Bouton paramètres de tables (visible uniquement si utilisateur connecté)
+    const tableSettingsButton = config.showCoinDisplay
+      ? `<button id="table-settings-btn-${slideId}" class="btn btn-sm table-settings-btn" title="Paramètres des tables" data-translate-title="table_settings_button_label">⚙️</button>`
+      : '';
+
     // Contrôles de volume
     const volumeControls = `
             <div class="global-volume-controls">
@@ -118,6 +123,7 @@ export const TopBar = {
                 ${homeButton}
                 ${aboutButton}
                 ${languageSelector}
+                ${tableSettingsButton}
                 ${volumeControls}
                 ${voiceToggle}
                 ${coinDisplay}
@@ -199,6 +205,17 @@ export const TopBar = {
       langWrap.appendChild(btn);
     });
     navContainer.appendChild(langWrap);
+
+    // Bouton paramètres de tables (visible uniquement si utilisateur connecté)
+    if (config.showCoinDisplay) {
+      const tableSettingsBtn = document.createElement('button');
+      tableSettingsBtn.id = `table-settings-btn-${slideId}`;
+      tableSettingsBtn.className = 'btn btn-sm table-settings-btn';
+      tableSettingsBtn.title = 'Paramètres des tables';
+      tableSettingsBtn.setAttribute('data-translate-title', 'table_settings_button_label');
+      tableSettingsBtn.textContent = '⚙️';
+      navContainer.appendChild(tableSettingsBtn);
+    }
 
     const volWrap = document.createElement('div');
     volWrap.className = 'global-volume-controls';
@@ -329,6 +346,23 @@ export const TopBar = {
           } catch (e) {
             void e;
           }
+        });
+        btn.dataset.topBarListenerAttached = 'true';
+      }
+    }
+
+    // Écouteur pour le bouton paramètres de tables
+    for (const btn of document.querySelectorAll('.table-settings-btn')) {
+      if (!btn.dataset.topBarListenerAttached) {
+        btn.addEventListener('click', () => {
+          // Ouvrir la modale des paramètres de tables
+          import('../components/tableSettingsModal.js')
+            .then(module => {
+              module.TableSettingsModal.open();
+            })
+            .catch(error => {
+              console.error('Erreur chargement modale paramètres tables:', error);
+            });
         });
         btn.dataset.topBarListenerAttached = 'true';
       }

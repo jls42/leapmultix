@@ -22,7 +22,8 @@ export const STORAGE_KEYS = {
   MULT_STATS: 'multiplicationStats',
 
   // Quiz
-  QUIZ_EXCLUDE_TABLES: 'quizExcludeTables',
+  // Préférences de tables globales
+  GLOBAL_EXCLUDE_TABLES: 'globalExcludeTables',
 };
 
 /**
@@ -256,20 +257,6 @@ const Storage = {
   },
 
   /**
-   * Charger tables exclues du quiz
-   */
-  loadQuizExcludeTables() {
-    return this.get(STORAGE_KEYS.QUIZ_EXCLUDE_TABLES, []);
-  },
-
-  /**
-   * Sauvegarder tables exclues du quiz
-   */
-  saveQuizExcludeTables(excluded) {
-    return this.set(STORAGE_KEYS.QUIZ_EXCLUDE_TABLES, excluded);
-  },
-
-  /**
    * Obtenir la date actuelle comme string
    */
   getCurrentDateString() {
@@ -280,6 +267,4 @@ const Storage = {
 export default Storage;
 // Named exports convenience wrappers for ESM consumers
 export const loadMultiplicationStats = () => Storage.loadMultiplicationStats();
-export const loadQuizExcludeTables = () => Storage.loadQuizExcludeTables();
-export const saveQuizExcludeTables = excluded => Storage.saveQuizExcludeTables(excluded);
 export const getCurrentDateString = () => Storage.getCurrentDateString();

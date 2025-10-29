@@ -9,6 +9,8 @@ import { showArcadeGameOver } from './arcade.js';
 import { cleanupGameResources } from './game-cleanup.js';
 import { Utils } from './utils-es6.js';
 import { InfoBar } from './components/infoBar.js';
+import { TablePreferences } from './core/tablePreferences.js';
+import { UserManager } from './userManager.js';
 // Utilisation de la fonction shuffleArray centralisée via Utils
 
 class SnakeGame {
@@ -640,9 +642,16 @@ class SnakeGame {
   // Générer une opération mathématique
   generateOperation() {
     try {
+      // Appliquer l'exclusion globale de tables
+      const currentUser = UserManager.getCurrentUser();
+      const excluded = TablePreferences.isGlobalEnabled(currentUser)
+        ? TablePreferences.getActiveExclusions(currentUser)
+        : [];
+
       // Utiliser generateQuestion pour cohérence avec le système centralisé
       const questionData = generateQuestion({
         type: 'classic',
+        excludeTables: excluded,
         tables: Array.isArray(this.tables) && this.tables.length > 0 ? this.tables : undefined,
         forceTable: this.mode === 'table' && this.tableNumber ? this.tableNumber : null,
         minTable: 1,

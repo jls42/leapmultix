@@ -1,0 +1,339 @@
+/* ====================================
+   Modale de Paramétrage des Tables
+   Design moderne et ludique pour enfants 8-12 ans
+   ==================================== */
+
+/* Modale et overlay */
+.table-settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.table-settings-modal.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Overlay semi-transparent */
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgb(0 0 0 / 60%);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+/* Contenu de la modale */
+.modal-content {
+  position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 30%);
+  padding: 2rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  transform: scale(0.9);
+  animation: popIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* En-tête */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.modal-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-close-btn {
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: rotate(90deg);
+}
+
+/* Description */
+.modal-description {
+  font-size: 1rem;
+  color: #495057;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+/* Toggle principal */
+.toggle-container {
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgb(102 126 234 / 30%);
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-input {
+  position: relative;
+  width: 60px;
+  height: 32px;
+  appearance: none;
+  background: rgb(255 255 255 / 30%);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.toggle-input:checked {
+  background: #48bb78;
+}
+
+.toggle-input::before {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: white;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+}
+
+.toggle-input:checked::before {
+  transform: translateX(28px);
+}
+
+.toggle-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 2px 4px rgb(0 0 0 / 20%);
+}
+
+/* Grille de tables */
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.table-btn {
+  aspect-ratio: 1;
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  border: 3px solid transparent;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgb(79 172 254 / 40%);
+  position: relative;
+  overflow: hidden;
+}
+
+.table-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 30%);
+  transform: translate(-50%, -50%);
+  transition: all 0.4s ease;
+}
+
+.table-btn:hover::before {
+  width: 100%;
+  height: 100%;
+}
+
+.table-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 20px rgb(79 172 254 / 50%);
+}
+
+.table-btn:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.table-btn.excluded {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-color: #f5576c;
+  box-shadow: 0 4px 12px rgb(245 87 108 / 40%);
+}
+
+.table-btn.excluded::after {
+  content: '✕';
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.table-btn.excluded:hover {
+  box-shadow: 0 8px 20px rgb(245 87 108 / 50%);
+}
+
+/* Indicateur des tables exclues */
+.exclusion-status {
+  padding: 1rem;
+  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+  border-radius: 12px;
+  border-left: 4px solid #f39c12;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgb(253 203 110 / 40%);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.excluded-list {
+  color: #d63031;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Responsive - Mobile */
+@media (max-width: 600px) {
+  .modal-content {
+    padding: 1.5rem;
+    max-width: 95%;
+    border-radius: 20px;
+  }
+
+  .modal-title {
+    font-size: 1.5rem;
+  }
+
+  .tables-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+
+  .table-btn {
+    font-size: 1.25rem;
+  }
+
+  .toggle-text {
+    font-size: 1rem;
+  }
+}
+
+/* Responsive - Très petits écrans */
+@media (max-width: 400px) {
+  .tables-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .table-btn {
+    font-size: 1.1rem;
+  }
+}
+
+/* Amélioration accessibilité */
+.table-btn:focus-visible {
+  outline: 3px solid #ffd700;
+  outline-offset: 2px;
+}
+
+.modal-close-btn:focus-visible {
+  outline: 3px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Animation du bouton paramètres dans la topBar */
+.table-settings-btn {
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+}
+
+.table-settings-btn:hover {
+  transform: rotate(45deg) scale(1.1);
+}
+
+.table-settings-btn:active {
+  transform: rotate(90deg) scale(0.95);
+}

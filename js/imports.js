@@ -52,12 +52,7 @@ export {
   versionImageSrc,
   updateBackgroundImage,
 } from './cache-updater.js';
-export {
-  loadMultiplicationStats,
-  loadQuizExcludeTables,
-  saveQuizExcludeTables,
-} from './core/storage.js';
-export { getCurrentDateString } from './core/storage.js';
+export { loadMultiplicationStats, getCurrentDateString } from './core/storage.js';
 export { recordMultiplicationResult, getMultiplicationStats } from './core/mult-stats.js';
 export { loadDailyChallengeData, saveDailyChallengeData } from './core/daily-challenge.js';
 export { getChallengeTopScores } from './core/challenge-stats.js';

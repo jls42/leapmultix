@@ -19,6 +19,8 @@ import { generateMCQOptions } from '../uiUtils.js';
 import { UserState } from '../core/userState.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { updateDailyChallengeProgress } from '../game.js';
+import { TablePreferences } from '../core/tablePreferences.js';
+import { UserManager } from '../userManager.js';
 
 export class ChallengeMode extends GameMode {
   /**
@@ -254,10 +256,20 @@ export class ChallengeMode extends GameMode {
 
   /**
    * Options de génération spécifiques au Challenge
+   * Applique l'exclusion globale de tables
    */
   getQuestionOptions() {
+    const currentUser = UserManager.getCurrentUser();
+    const excluded = TablePreferences.isGlobalEnabled(currentUser)
+      ? TablePreferences.getActiveExclusions(currentUser)
+      : [];
+
+    const allowed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(t => !excluded.includes(t));
+
     return {
       type: 'mcq', // Toujours QCM pour la rapidité
+      tables: allowed,
+      excludeTables: excluded,
       minTable: 1,
       maxTable: 10,
       minNum: 1,

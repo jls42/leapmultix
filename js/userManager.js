@@ -99,6 +99,12 @@ export const UserManager = {
     userData.starsByTable = userData.starsByTable || {};
     userData.coins = userData.coins || 0;
 
+    // Initialiser les préférences de tables globales
+    userData.tablePreferences = userData.tablePreferences || {
+      globalExclusions: [],
+      globalEnabled: false,
+    };
+
     return userData;
   },
 

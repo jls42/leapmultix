@@ -18,8 +18,9 @@ import { goToSlide } from '../slides.js';
 import { UserState } from '../core/userState.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { updateDailyChallengeProgress } from '../game.js';
-import { saveQuizExcludeTables, loadQuizExcludeTables } from '../core/storage.js';
 import { generateMCQOptions } from '../uiUtils.js';
+import { TablePreferences } from '../core/tablePreferences.js';
+import { UserManager } from '../userManager.js';
 
 export class QuizMode extends GameMode {
   constructor() {
@@ -35,7 +36,6 @@ export class QuizMode extends GameMode {
     });
 
     // État spécifique au Quiz
-    this.excludeTables = [];
     this.errors = 0;
     this.feedbackTimeoutId = null;
     this.feedbackIntervalId = null;
@@ -54,25 +54,6 @@ export class QuizMode extends GameMode {
    */
   async getCustomHTML() {
     return `
-            <div class="quiz-filter-section">
-                <button id="quiz-filter-toggle" class="btn btn-sm filter-toggle">
-                    ${getTranslation('quiz_filter_toggle')}
-                </button>
-                <div id="quiz-filter" class="quiz-filter hidden">
-                    <p class="filter-info">${getTranslation('quiz_filter_info')}</p>
-                    <h3>${getTranslation('exclude_tables_title')}</h3>
-                    <div class="exclude-table-buttons">
-                        ${Array.from({ length: 10 }, (_, i) => i + 1)
-                          .map(
-                            table =>
-                              `<button class="btn exclude-btn" data-table="${table}">${table}</button>`
-                          )
-                          .join('')}
-                    </div>
-                </div>
-                <div id="quiz-exclusion-message" class="quiz-exclusion-message"></div>
-            </div>
-            
             <!-- Zone d'astuce (affichée après réponse) -->
             <div id="quiz-hint" class="quiz-hint" style="display:none; margin-top:10px;">
                 <strong>${getTranslation('hint')}:</strong>
@@ -98,80 +79,8 @@ export class QuizMode extends GameMode {
   async initializeUI() {
     await super.initializeUI();
 
-    // Charger les exclusions de tables AVANT de configurer l'UI
-    this.excludeTables = loadQuizExcludeTables() || [];
-
-    // Configurer les interactions du filtre
-    this.setupFilterUI();
-
-    // Afficher le message d'exclusion initial
-    this.updateExclusionMessage();
-
     // Bouton d'abandon
     this.setupGameControls();
-  }
-
-  /**
-   * Configurer l'interface de filtrage
-   */
-  setupFilterUI() {
-    const filterToggle = document.getElementById('quiz-filter-toggle');
-    const quizFilter = document.getElementById('quiz-filter');
-
-    if (filterToggle && quizFilter) {
-      filterToggle.onclick = () => quizFilter.classList.toggle('hidden');
-    }
-
-    // Configuration des boutons d'exclusion
-    const excludeBtns = quizFilter?.querySelectorAll('.exclude-btn');
-    excludeBtns?.forEach(btn => {
-      const table = parseInt(btn.dataset.table);
-      btn.onclick = () => this.toggleTableExclusion(table);
-
-      // Restaurer l'état visuel selon les données sauvegardées
-      if (this.excludeTables.includes(table)) {
-        btn.classList.add('selected');
-      }
-    });
-
-    // La sélection des tables enregistre désormais immédiatement
-  }
-
-  /**
-   * Basculer l'exclusion d'une table
-   */
-  toggleTableExclusion(table) {
-    const idx = this.excludeTables.indexOf(table);
-    const btn = document.querySelector(`.exclude-btn[data-table="${table}"]`);
-
-    if (idx >= 0) {
-      this.excludeTables.splice(idx, 1);
-      btn?.classList.remove('selected');
-    } else {
-      this.excludeTables.push(table);
-      btn?.classList.add('selected');
-    }
-
-    saveQuizExcludeTables(this.excludeTables);
-    this.updateExclusionMessage();
-  }
-
-  /**
-   * Mettre à jour le message d'exclusion
-   */
-  updateExclusionMessage() {
-    const msgEl = document.getElementById('quiz-exclusion-message');
-    if (!msgEl) return;
-
-    if (this.excludeTables.length > 0) {
-      const msgText = getTranslation('quiz_excluded_tables', {
-        tables: this.excludeTables.join(', '),
-      });
-      msgEl.textContent = msgText;
-      msgEl.style.display = 'block';
-    } else {
-      msgEl.style.display = 'none';
-    }
   }
 
   /**
@@ -204,24 +113,34 @@ export class QuizMode extends GameMode {
    */
   getQuestionOptions() {
     const weakTables = getWeakTables();
+    const currentUser = UserManager.getCurrentUser();
+
+    const globalExclusions = TablePreferences.isGlobalEnabled(currentUser)
+      ? TablePreferences.getActiveExclusions(currentUser)
+      : [];
 
     // Filtrer les tables autorisées
     const allowedTables = Array.from({ length: 10 }, (_, i) => i + 1).filter(
-      t => !this.excludeTables.includes(t)
+      t => !globalExclusions.includes(t)
     );
 
     // Si aucune table n'est disponible, réinitialiser les exclusions
     if (allowedTables.length === 0) {
-      console.warn('Aucune table disponible pour le quiz, annulation des exclusions.');
-      this.excludeTables = [];
-      this.updateExclusionMessage();
-      saveQuizExcludeTables([]);
-      return this.getQuestionOptions(); // Récursif pour récupérer toutes les tables
+      console.warn('⚠️ Aucune table disponible pour le quiz, utilisation du jeu complet.');
+      return {
+        weakTables,
+        tables: Array.from({ length: 10 }, (_, i) => i + 1),
+        excludeTables: [],
+        type: 'auto',
+        minNum: 1,
+        maxNum: 10,
+      };
     }
 
     return {
       weakTables,
       tables: allowedTables,
+      excludeTables: globalExclusions,
       type: 'auto',
       minNum: 1,
       maxNum: 10,
@@ -632,7 +551,9 @@ export class QuizMode extends GameMode {
       successRate: successRate,
       maxStreak: Math.max(userData.bestStreak || 0, this.state.streak),
       date: Date.now(),
-      excludedTables: [...this.excludeTables],
+      excludedTables: TablePreferences.isGlobalEnabled(UserManager.getCurrentUser())
+        ? TablePreferences.getActiveExclusions(UserManager.getCurrentUser())
+        : [],
     });
 
     // Garder seulement les 20 derniers résultats
@@ -756,16 +677,7 @@ export class QuizMode extends GameMode {
    * Fonction pour rafraîchir les textes après changement de langue
    */
   refreshTexts() {
-    const toggle = document.getElementById('quiz-filter-toggle');
-    if (toggle) toggle.textContent = getTranslation('quiz_filter_toggle');
-
-    const info = document.querySelector('#quiz-filter .filter-info');
-    if (info) info.textContent = getTranslation('quiz_filter_info');
-
-    const title = document.querySelector('#quiz-filter h3');
-    if (title) title.textContent = getTranslation('exclude_tables_title');
-
-    this.updateExclusionMessage();
+    // Pas de contenu spécifique à rafraîchir en dehors de l'infrastructure standard
   }
 }
 

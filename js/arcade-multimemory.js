@@ -22,6 +22,8 @@ import { eventBus } from './core/eventBus.js';
 import { AudioManager } from './core/audio.js';
 import { showGameInstructions } from './arcade-common.js';
 import { getDifficultySettings } from './difficulty.js';
+import { TablePreferences } from './core/tablePreferences.js';
+import { UserManager } from './userManager.js';
 // Dépend des helpers ESM (plus d'assignations window.*)
 
 // Instance locale du jeu (remplace window.memoryGame)
@@ -444,10 +446,17 @@ class MemoryGame {
     for (let i = 0; i < this.pairs; i++) {
       if (i >= selectedTables.length) this.shuffleArray(selectedTables);
 
+      // Appliquer l'exclusion globale de tables
+      const currentUser = UserManager.getCurrentUser();
+      const excluded = TablePreferences.isGlobalEnabled(currentUser)
+        ? TablePreferences.getActiveExclusions(currentUser)
+        : [];
+
       // Utiliser generateQuestion pour génération cohérente
       const questionData = generateQuestion({
         type: 'classic',
         tables: this.tables,
+        excludeTables: excluded,
         minNum: 1,
         maxNum: 10,
       });

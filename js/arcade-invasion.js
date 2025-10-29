@@ -20,6 +20,8 @@ import { eventBus } from './core/eventBus.js';
 import { InfoBar } from './components/infoBar.js';
 import { getDifficultySettings } from './difficulty.js';
 import { gameState as globalGameState } from './game.js';
+import { TablePreferences } from './core/tablePreferences.js';
+import { UserManager } from './userManager.js';
 import {
   startArcadeTimer,
   showArcadeGameOver,
@@ -439,9 +441,17 @@ export function startMultiplicationInvasion() {
     // reset flag (variable supprimée)
     // Génération des questions selon le niveau de difficulté (Cascade 2025)
     // Récupération des paramètres de difficulté
+
+    // Appliquer l'exclusion globale de tables
+    const currentUser = UserManager.getCurrentUser();
+    const excluded = TablePreferences.isGlobalEnabled(currentUser)
+      ? TablePreferences.getActiveExclusions(currentUser)
+      : [];
+
     const q = generateQuestion({
       type: 'mcq',
       tables: difficultySettings.tables,
+      excludeTables: excluded,
       minNum: 2,
       maxNum: 10,
       distractorDistance: difficultySettings.distractorDistance,
