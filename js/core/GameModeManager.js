@@ -107,7 +107,7 @@ export class GameModeManager {
     } catch (error) {
       this.isTransitioning = false;
       console.error(`❌ Erreur lors du démarrage de ${modeName}:`, error);
-      this.handleError(error, modeName);
+      await this.handleError(error, modeName);
     }
   }
 
@@ -362,7 +362,7 @@ export class GameModeManager {
   /**
    * Gestion d'erreur
    */
-  handleError(error, modeName) {
+  async handleError(error, modeName) {
     console.error(`💥 Erreur critique dans GameModeManager pour ${modeName}:`, error);
 
     // Tenter de revenir à l'écran d'accueil
@@ -372,7 +372,7 @@ export class GameModeManager {
        * @param {*} typeof - Description du paramètre
        * @returns {*} Description du retour
        */
-      goToSlide(1);
+      await goToSlide(1);
     } catch (e) {
       console.error("❌ Impossible de revenir à l'écran d'accueil:", e);
     }
