@@ -650,6 +650,18 @@ export class QuizMode extends GameMode {
         });
       });
       btnRow.appendChild(btn);
+
+      const homeBtn = createSafeElement('button', getTranslation('back_to_home'), {
+        class: 'btn',
+        'data-action': 'back-to-home',
+        'aria-label': getTranslation('back_to_home'),
+      });
+      homeBtn.addEventListener('click', e => {
+        e.preventDefault();
+        goToSlide(1);
+      });
+      btnRow.appendChild(homeBtn);
+
       container.appendChild(btnRow);
 
       resultsScreen.appendChild(container);

@@ -9,12 +9,20 @@ import { getStartingMode } from './mode-orchestrator.js';
 import Dashboard from './components/dashboard.js';
 
 // Arrêt non bloquant des modes actifs sans créer de dépendances fortes.
-function stopActiveModes() {
+async function stopActiveModes(targetSlideId = null) {
   const mode = gameState?.gameMode;
   // Ne pas arrêter un mode qui est en cours de démarrage (protection contre auto-stop)
+  // SAUF si on navigue explicitement vers home/user selection (slides 0-1)
   try {
     const starting = getStartingMode?.();
-    if (starting && starting === mode) return; // skip
+    if (starting && starting === mode) {
+      // Allow cleanup when navigating to home/user slides even if mode is starting
+      // This prevents sounds/animations from continuing after user clicks home
+      const targetingHomeSlides = targetSlideId && ['slide0', 'slide1'].includes(targetSlideId);
+      if (!targetingHomeSlides) {
+        return; // skip cleanup only if not going to home
+      }
+    }
   } catch (e) {
     void e;
   }
@@ -33,7 +41,7 @@ function stopActiveModes() {
   const stopper = typeof mode === 'string' ? STOPPERS.get(mode) : undefined;
   if (typeof stopper === 'function') {
     try {
-      stopper();
+      await stopper();
     } catch {
       /* no-op */
     }
@@ -43,36 +51,37 @@ function stopActiveModes() {
 /**
  * Affiche la slide correspondant à l'identifiant ou au numéro donné.
  * @param {number|string} n - Numéro ou id de la slide (ex: 1 ou 'slide1')
+ * @returns {Promise<void>}
  */
-function goToSlide(n) {
+async function goToSlide(n) {
+  const slideId = typeof n === 'number' ? 'slide' + n : n;
   // Arrêt non bloquant des modes actifs avant le changement de slide
   try {
-    stopActiveModes();
+    await stopActiveModes(slideId);
   } catch {
     /* no-op */
   }
-  const slideId = typeof n === 'number' ? 'slide' + n : n;
   showSlide(slideId);
 }
 
-function nextSlide() {
+async function nextSlide() {
   const slides = Array.from(document.querySelectorAll('.slide'));
   const active = document.querySelector('.slide.active-slide');
   if (!slides.length) return;
   const index = Math.max(0, slides.indexOf(active));
   const nextIndex = Math.min(index + 1, slides.length - 1);
   const nextId = slides[nextIndex]?.id || 'slide1';
-  goToSlide(nextId);
+  await goToSlide(nextId);
 }
 
-function prevSlide() {
+async function prevSlide() {
   const slides = Array.from(document.querySelectorAll('.slide'));
   const active = document.querySelector('.slide.active-slide');
   if (!slides.length) return;
   const index = Math.max(0, slides.indexOf(active));
   const prevIndex = Math.max(index - 1, 0);
   const prevId = slides[prevIndex]?.id || 'slide1';
-  goToSlide(prevId);
+  await goToSlide(prevId);
 }
 
 /**

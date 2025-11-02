@@ -32,8 +32,8 @@ export function showArcadeMessage(messageKey, color = '#F44336', duration = 1500
 
   try {
     if (isVoiceEnabled()) speak(messageElement.textContent);
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
   setTimeout(() => {

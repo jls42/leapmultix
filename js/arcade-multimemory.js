@@ -29,11 +29,35 @@ import { UserManager } from './userManager.js';
 // Instance locale du jeu (remplace window.memoryGame)
 let _memoryGameInstance = null;
 
+/**
+ * Fonction centralisée de nettoyage du jeu Memory
+ * Utilisée à la fois pour le bouton "Abandonner" et pour arcade:stop (bouton accueil)
+ * @returns {number} Le score actuel du jeu
+ */
+function cleanupMemoryGame() {
+  if (!_memoryGameInstance) return 0;
+
+  const score = _memoryGameInstance.score ?? 0;
+
+  // Nettoyer toutes les ressources du jeu
+  try {
+    if (typeof _memoryGameInstance.cleanup === 'function') {
+      _memoryGameInstance.cleanup();
+    }
+    cleanupGameResources(_memoryGameInstance);
+  } catch {
+    // Erreur ignorée (non-critique)
+  }
+
+  _memoryGameInstance = null;
+  return score;
+}
+
 export function startMemoryArcade() {
   try {
     stopArcadeMode();
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
   // Définir le mode avant le changement de slide pour éviter les auto-stop
   setStartingMode('multimemory');
@@ -98,8 +122,8 @@ export function startMemoryArcade() {
   // Forcer la mise à zéro du score via InfoBar
   try {
     InfoBar.update({ score: 0 }, 'multimemory');
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
   // Bouton abandon → retour au menu Arcade avec sauvegarde du score
@@ -121,58 +145,28 @@ export function startMemoryArcade() {
 
   try {
     setTimeout(() => setStartingMode(null), 0);
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
-  // Nettoyage à l'arrêt arcade
+  // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup sans game over
   try {
-    eventBus.on(
-      'arcade:stop',
-      () => {
-        try {
-          _memoryGameInstance?.cleanup?.();
-        } catch (e) {
-          void e;
-        }
-        _memoryGameInstance = null;
-      },
-      { once: true }
-    );
-  } catch (e) {
-    void e;
+    eventBus.on('arcade:stop', cleanupMemoryGame, { once: true });
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 }
 
 // Gestionnaire d'événement pour le bouton abandon
 function handleAbandonClick() {
-  let score = 0;
-  if (_memoryGameInstance && typeof _memoryGameInstance.score === 'number') {
-    score = _memoryGameInstance.score;
-  }
-
   // Désactiver le bouton pour éviter les clics multiples
   const abandonBtn = document.getElementById('multimemory-abandon-btn');
   if (abandonBtn) {
     abandonBtn.disabled = true;
   }
 
-  // Signaler que le jeu n'est plus actif
-  // Nettoyer toutes les ressources du jeu avant de quitter
-  if (_memoryGameInstance) {
-    // Appeler d'abord la méthode de nettoyage spécifique
-    if (typeof _memoryGameInstance.cleanup === 'function') {
-      _memoryGameInstance.cleanup();
-    }
-
-    // Puis utiliser la fonction de nettoyage générique
-    cleanupGameResources(_memoryGameInstance);
-
-    // Supprimer la référence
-    _memoryGameInstance = null;
-  }
-
-  // Afficher l'écran de fin
+  // Cleanup centralisé + afficher game over
+  const score = cleanupMemoryGame();
   showArcadeGameOver(score);
 }
 
@@ -677,8 +671,8 @@ class MemoryGame {
         // Mettre à jour l'affichage du score
         try {
           InfoBar.update({ score: this.score }, 'multimemory');
-        } catch (e) {
-          void e;
+        } catch {
+          // Erreur ignorée (non-critique)
         }
 
         // Jouer le son de succès si le son est activé
@@ -737,8 +731,8 @@ class MemoryGame {
     // Mettre à jour le score final
     try {
       InfoBar.update({ score: this.score }, 'multimemory');
-    } catch (e) {
-      void e;
+    } catch {
+      // Erreur ignorée (non-critique)
     }
 
     // Montrer un message de victoire

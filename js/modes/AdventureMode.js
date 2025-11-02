@@ -119,7 +119,7 @@ export class AdventureMode extends GameMode {
                 </div>
                 
                 <div class="adventure-controls" role="region" aria-label="${getTranslation('adventure_controls_label')}">
-                    <button id="adventure-abandon" class="btn" data-translate="abandon_adventure_button" aria-label="${getTranslation('abandon_adventure_button')}">
+                    <button id="adventure-abandon" class="btn btn-secondary" data-translate="abandon_adventure_button" aria-label="${getTranslation('abandon_adventure_button')}">
                         ${getTranslation('abandon_adventure_button')}
                     </button>
                 </div>

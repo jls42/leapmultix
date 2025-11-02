@@ -87,7 +87,15 @@ export const resetArcadeScoresMemory = _resetArcadeScoresMemory;
 export const getWeakTables = _getWeakTables;
 export const getDailyChallengeTable = _getDailyChallengeTable;
 export const addArrowKeyNavigation = Utils.addArrowKeyNavigation;
-export const numberToWords = Utils.numberToWords;
+
+/**
+ * Wrapper pour numberToWords qui injecte automatiquement getTranslation
+ * Cela permet d'utiliser les fichiers de traduction i18n avec la langue active
+ */
+export const numberToWords = num => {
+  return Utils.numberToWords(num, _getTranslation);
+};
+
 export const getStarsHTML = Utils.getStarsHTML;
 export const cleanupGameResources = _cleanupGameResources;
 export const getEventListeners = _getEventListeners;

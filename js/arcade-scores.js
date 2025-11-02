@@ -10,8 +10,8 @@ function getCurrentUserId() {
     // ESM path: use UserState current user's nickname if available
     const name = UserState.getCurrentUserData()?.nickname;
     if (name && String(name).trim()) return String(name).trim();
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
   return 'default';
 }

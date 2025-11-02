@@ -20,6 +20,8 @@ show_help() {
     echo "Options:"
     echo "  --config FILE    Utiliser un fichier de configuration spécifique"
     echo "  --dry-run        Simuler le déploiement sans l'exécuter"
+    echo "  --force-version  Générer automatiquement une nouvelle version pour sw.js et cache-updater"
+    echo "  -fv              Raccourci pour --force-version"
     echo "  --help           Afficher cette aide"
     echo ""
     echo "Variables d'environnement supportées:"
@@ -34,6 +36,7 @@ show_help() {
 CONFIG_FILE="deploy.config"
 DRY_RUN=false
 TEMP_DIR=""
+FORCE_VERSION=false
 
 # Parsing des arguments
 while [[ $# -gt 0 ]]; do
@@ -44,6 +47,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --dry-run)
             DRY_RUN=true
+            shift
+            ;;
+        --force-version|-fv)
+            FORCE_VERSION=true
             shift
             ;;
         --help)
@@ -133,16 +140,44 @@ rsync -av \
   --exclude='*' \
   . "$TEMP_DIR/"
 
+# Forcer la version SW/cache-updater si demandé
+if [[ "$FORCE_VERSION" == "true" ]]; then
+    NEW_VERSION="v$(date -u +%Y%m%d%H%M%S)"
+    echo -e "${YELLOW}⚡ Force version activée - nouvelle version: ${NEW_VERSION}${NC}"
+
+    if [[ -f "$TEMP_DIR/sw.js" ]]; then
+        sed -i.bak "s/^const VERSION = '.*';/const VERSION = '${NEW_VERSION}';/" "$TEMP_DIR/sw.js" && rm "$TEMP_DIR/sw.js.bak"
+        if ! grep -q "const VERSION = '${NEW_VERSION}';" "$TEMP_DIR/sw.js"; then
+            echo -e "${RED}❌ Échec mise à jour VERSION dans sw.js${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}❌ sw.js introuvable dans le répertoire temporaire${NC}"
+        exit 1
+    fi
+
+    if [[ -f "$TEMP_DIR/js/cache-updater.js" ]]; then
+        sed -i.bak "s/^export const APP_VERSION = '.*';/export const APP_VERSION = '${NEW_VERSION}';/" "$TEMP_DIR/js/cache-updater.js" && rm "$TEMP_DIR/js/cache-updater.js.bak"
+        if ! grep -q "export const APP_VERSION = '${NEW_VERSION}';" "$TEMP_DIR/js/cache-updater.js"; then
+            echo -e "${RED}❌ Échec mise à jour APP_VERSION dans js/cache-updater.js${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}❌ js/cache-updater.js introuvable dans le répertoire temporaire${NC}"
+        exit 1
+    fi
+fi
+
 # Remplacement des placeholders
 echo -e "${BLUE}🔄 Remplacement des placeholders...${NC}"
 
 # Remplacement du domaine Plausible dans index.html
 if [[ -n "$PLAUSIBLE_DOMAIN" ]]; then
-    sed -i "s/{{PLAUSIBLE_DOMAIN}}/$PLAUSIBLE_DOMAIN/g" "$TEMP_DIR/index.html"
+    sed -i.bak "s/{{PLAUSIBLE_DOMAIN}}/$PLAUSIBLE_DOMAIN/g" "$TEMP_DIR/index.html" && rm "$TEMP_DIR/index.html.bak"
     echo -e "${GREEN}   ✅ Domaine Plausible configuré${NC}"
 else
     # Supprimer complètement les scripts Plausible si pas de domaine
-    sed -i '/<!-- Analytics Plausible/,/^[[:space:]]*<\/script>/d' "$TEMP_DIR/index.html"
+    sed -i.bak '/<!-- Analytics Plausible/,/^[[:space:]]*<\/script>/d' "$TEMP_DIR/index.html" && rm "$TEMP_DIR/index.html.bak"
     echo -e "${YELLOW}   ⚠️  Scripts Plausible supprimés (pas de domaine)${NC}"
 fi
 

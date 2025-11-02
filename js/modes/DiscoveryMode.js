@@ -120,9 +120,14 @@ export class DiscoveryMode extends GameMode {
                 ${this.generateVisualExplorationHTML()}
                 ${this.generateInteractionHTML()}
 
-                <button id="discovery-table-back-btn" class="btn">
-                    ${getTranslation('back_to_tables')}
-                </button>
+                <div class="button-row">
+                    <button id="discovery-table-back-btn" class="btn">
+                        ${getTranslation('back_to_tables')}
+                    </button>
+                    <button id="discovery-home-btn" class="btn">
+                        ${getTranslation('back_to_home')}
+                    </button>
+                </div>
             </div>
         `;
   }
@@ -289,10 +294,18 @@ export class DiscoveryMode extends GameMode {
    * Configurer l'exploration de table
    */
   setupTableExploration() {
-    // Bouton retour
+    // Bouton retour aux tables
     const backBtn = document.getElementById('discovery-table-back-btn');
     if (backBtn) {
       backBtn.addEventListener('click', () => this.returnToTableSelection());
+    }
+
+    // Bouton retour à l'accueil
+    const homeBtn = document.getElementById('discovery-home-btn');
+    if (homeBtn) {
+      homeBtn.addEventListener('click', () => {
+        import('../slides.js').then(m => m.goToSlide(1));
+      });
     }
 
     // Configurer le glisser-déposer

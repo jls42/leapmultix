@@ -158,31 +158,75 @@ export class PacmanGame {
   // Calculer les dimensions du canvas selon les ratios
   calculateCanvasDimensions() {
     const container = this.canvas.parentElement;
+    if (!container) {
+      return { width: 800, height: 600 };
+    }
+
     const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
     const windowDimensions = this.getWindowDimensions();
 
-    const widthRatio = this.isMobile ? 0.95 : 0.9;
-    const heightRatio = this.isMobile ? 0.6 : 0.8;
-
-    const containerHeight = Math.min(
-      container.clientHeight || windowDimensions.height * heightRatio,
-      windowDimensions.height * heightRatio
+    // Réserver de l'espace pour les éléments UI (barre info, boutons, marges)
+    // Info bar: ~80px, boutons: ~60px, marges: ~50px
+    // Mobile: réduire l'espace réservé pour maximiser le canvas
+    const uiSpaceReserved = this.isMobile ? 170 : 190;
+    const availableHeight = Math.max(
+      Math.min(containerHeight, windowDimensions.height) - uiSpaceReserved,
+      300 // Hauteur minimum
     );
 
+    const widthRatio = this.isMobile ? 0.98 : 0.9;
+    const heightRatio = this.isMobile ? 0.98 : 0.95;
     const maxWidth = Math.min(containerWidth, windowDimensions.width * widthRatio);
 
-    return { width: maxWidth, height: containerHeight };
+    // Calculer les dimensions en respectant le ratio du labyrinthe (19:15)
+    const labyrinthAspectRatio = this.rows / this.cols; // 15/19 = 0.789
+    let canvasWidth, canvasHeight;
+
+    // Stratégie différente selon l'orientation
+    const isPortrait = windowDimensions.height > windowDimensions.width;
+
+    if (isPortrait || this.isMobile) {
+      // Mobile/Portrait: maximiser la hauteur disponible
+      canvasHeight = availableHeight * heightRatio;
+      canvasWidth = canvasHeight / labyrinthAspectRatio;
+
+      // Si la largeur dépasse, ajuster
+      if (canvasWidth > maxWidth) {
+        canvasWidth = maxWidth * widthRatio;
+        canvasHeight = canvasWidth * labyrinthAspectRatio;
+      }
+    } else {
+      // Desktop/Paysage: maximiser la largeur
+      canvasWidth = maxWidth * widthRatio;
+      canvasHeight = canvasWidth * labyrinthAspectRatio;
+
+      // Si la hauteur dépasse l'espace disponible, ajuster
+      if (canvasHeight > availableHeight) {
+        canvasHeight = availableHeight * heightRatio;
+        canvasWidth = canvasHeight / labyrinthAspectRatio;
+      }
+    }
+
+    // S'assurer que les dimensions ne dépassent jamais l'espace disponible
+    canvasWidth = Math.min(canvasWidth, maxWidth);
+    canvasHeight = Math.min(canvasHeight, availableHeight);
+
+    return { width: Math.floor(canvasWidth), height: Math.floor(canvasHeight) };
   }
 
   // Appliquer les styles visuels au canvas
   applyCanvasStyles(width, height) {
-    this.canvas.style.width = width + 'px';
-    this.canvas.style.height = height + 'px';
+    // IMPORTANT: Utiliser setProperty avec !important pour surcharger le CSS externe
+    // qui définit height: auto et box-sizing: border-box !important
+    this.canvas.style.setProperty('width', width + 'px', 'important');
+    this.canvas.style.setProperty('height', height + 'px', 'important');
+    this.canvas.style.setProperty('box-sizing', 'content-box', 'important');
+    this.canvas.style.setProperty('padding', '0', 'important');
     this.canvas.style.display = 'block';
     this.canvas.style.margin = '0 auto';
     this.canvas.style.border = '2px solid #3F51B5';
     this.canvas.style.borderRadius = '8px';
-    this.canvas.style.boxSizing = 'border-box';
   }
 
   // Redimensionner le canvas pour s'adapter à l'écran
@@ -191,8 +235,6 @@ export class PacmanGame {
 
     this.canvas.width = dimensions.width;
     this.canvas.height = dimensions.height;
-
-    this.applyCanvasStyles(dimensions.width, dimensions.height);
 
     // Calculer la taille des cellules
     this.cellSize = Math.floor(
@@ -206,6 +248,10 @@ export class PacmanGame {
     // S'assurer que le canvas a la bonne taille pour afficher tout le labyrinthe
     this.canvas.width = actualWidth;
     this.canvas.height = actualHeight;
+
+    // IMPORTANT: Appliquer les styles CSS APRÈS avoir défini les dimensions internes
+    // pour éviter un décalage entre taille CSS et taille interne du canvas
+    this.applyCanvasStyles(actualWidth, actualHeight);
   }
 
   // Créer un labyrinthe de base

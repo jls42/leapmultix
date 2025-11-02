@@ -20,7 +20,6 @@
   width: 100%;
   height: 100%;
   background: rgb(0 0 0 / 0.85);
-  backdrop-filter: blur(5px);
 }
 
 .video-container {
