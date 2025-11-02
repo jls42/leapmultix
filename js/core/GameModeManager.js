@@ -222,7 +222,7 @@ export class GameModeManager {
          * @returns {*} Description du retour
          */
         if (this.currentMode.instance && typeof this.currentMode.instance.stop === 'function') {
-          this.currentMode.instance.stop();
+          await this.currentMode.instance.stop();
         }
       } else {
         // Mode legacy : appeler la fonction stop correspondante via une whitelist ESM
