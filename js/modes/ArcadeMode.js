@@ -31,6 +31,8 @@ export class ArcadeMode extends GameMode {
     // État spécifique à l'Arcade
     this.selectedDifficulty = 'moyen';
     this.selectedSpaceship = null;
+    this.listElement = null;
+    this.listClickHandler = this.handleListClick.bind(this);
     this.availableGames = [
       {
         id: 'invasion',
@@ -78,6 +80,7 @@ export class ArcadeMode extends GameMode {
    * Nettoyage spécifique de l'Arcade
    */
   onStop() {
+    this.detachArcadeListEvents();
     // Nettoyer la classe arcade-wide de la content-card
     const contentCard = document.querySelector('.content-card.arcade-wide');
     if (contentCard) {
@@ -283,6 +286,7 @@ export class ArcadeMode extends GameMode {
    * Configuration post-UI pour l'Arcade
    */
   async initializeUI() {
+    this.detachArcadeListEvents();
     await super.initializeUI();
 
     // Ajouter classe pour élargir la content-card
@@ -291,38 +295,58 @@ export class ArcadeMode extends GameMode {
       contentCard.classList.add('arcade-wide');
     }
 
-    // Brancher les événements sans inline handlers
-    const list = this.gameScreen.querySelector('.arcade-games-list');
-    if (list) {
-      list.addEventListener('click', e => {
-        const actionEl = e.target.closest('[data-action]');
-        if (actionEl) {
-          const action = actionEl.getAttribute('data-action');
-          if (action === 'arcade-play') {
-            const gameId = actionEl.getAttribute('data-game');
-            if (gameId) this.startGame(gameId);
-            return;
-          }
-          if (action === 'arcade-set-difficulty') {
-            const diff = actionEl.getAttribute('data-difficulty');
-            const gameId = actionEl.getAttribute('data-game');
-            if (diff && gameId) this.setDifficulty(diff, gameId);
-            return;
-          }
-          if (action === 'arcade-set-spaceship') {
-            const input = e.target.closest('input[type="radio"]');
-            if (input && input.value) this.setSpaceship(input.value);
-            return;
-          }
-        }
-        const card = e.target.closest('.arcade-game-card');
-        const insideControl = e.target.closest(
-          'button,input,label,.difficulty-btn-row,.spaceship-select-block,.arcade-controls-help'
-        );
-        if (card && !insideControl) {
-          this.toggleCard(card);
-        }
-      });
+    this.attachArcadeListEvents();
+  }
+
+  attachArcadeListEvents() {
+    const list = this.gameScreen?.querySelector('.arcade-games-list');
+    // Idempotency guard: in case this helper is called without a prior detach,
+    // always remove the previously registered listener before attaching a new one.
+    if (this.listElement) {
+      this.listElement.removeEventListener('click', this.listClickHandler);
+    }
+
+    this.listElement = list || null;
+
+    if (this.listElement) {
+      this.listElement.addEventListener('click', this.listClickHandler);
+    }
+  }
+
+  detachArcadeListEvents() {
+    if (this.listElement) {
+      this.listElement.removeEventListener('click', this.listClickHandler);
+      this.listElement = null;
+    }
+  }
+
+  handleListClick(e) {
+    const actionEl = e.target.closest('[data-action]');
+    if (actionEl) {
+      const action = actionEl.getAttribute('data-action');
+      if (action === 'arcade-play') {
+        const gameId = actionEl.getAttribute('data-game');
+        if (gameId) this.startGame(gameId);
+        return;
+      }
+      if (action === 'arcade-set-difficulty') {
+        const diff = actionEl.getAttribute('data-difficulty');
+        const gameId = actionEl.getAttribute('data-game');
+        if (diff && gameId) this.setDifficulty(diff, gameId);
+        return;
+      }
+      if (action === 'arcade-set-spaceship') {
+        const input = e.target.closest('input[type="radio"]');
+        if (input && input.value) this.setSpaceship(input.value);
+        return;
+      }
+    }
+    const card = e.target.closest('.arcade-game-card');
+    const insideControl = e.target.closest(
+      'button,input,label,.difficulty-btn-row,.spaceship-select-block,.arcade-controls-help'
+    );
+    if (card && !insideControl) {
+      this.toggleCard(card);
     }
   }
 
