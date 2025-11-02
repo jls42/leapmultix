@@ -4,6 +4,7 @@ import { getDailyChallengeTable, getTranslation, showMessage } from './utils-es6
 import { UserState } from './core/userState.js';
 import { UserManager } from './userManager.js';
 import { appendSanitizedHTML } from './security-utils.js';
+import { eventBus } from './core/eventBus.js';
 
 /* ======================
    ÉTAT DU JEU
@@ -296,6 +297,11 @@ function displayDailyChallenge() {
     }
   }
 }
+
+// Écouter les changements de langue pour mettre à jour le daily challenge
+eventBus.on('languageChanged', () => {
+  displayDailyChallenge();
+});
 
 // Expose for legacy compatibility
 // Plus d'export global: ESM import depuis './game.js'

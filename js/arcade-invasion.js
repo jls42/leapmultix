@@ -117,40 +117,78 @@ function getRootObject() {
       : undefined;
 }
 
+/**
+ * Fonction centralisée de nettoyage du jeu Invasion
+ * @param {Object} params - Paramètres de nettoyage
+ * @param {Object} params.gameVars - Variables du jeu (gameLoopId, arcadeAvatarTimeoutId)
+ * @param {number} params.autoRestartTimeout - Timeout de redémarrage auto
+ * @param {HTMLImageElement} params.spaceshipImg - Image du vaisseau
+ * @param {HTMLImageElement} params.avatarImg - Image de l'avatar
+ * @param {Function} params.handleSpaceDown - Handler pour la barre d'espace
+ * @param {number} params.score - Score actuel
+ * @returns {number} Le score actuel
+ */
+function cleanupInvasionGame({
+  gameVars,
+  autoRestartTimeout,
+  spaceshipImg,
+  avatarImg,
+  handleSpaceDown,
+  score = 0,
+}) {
+  const { gameLoopId, arcadeAvatarTimeoutId } = gameVars || {};
+
+  // Créer l'objet pour cleanupGameResources
+  const invadersGame = {
+    eventListeners: [],
+    timers: [arcadeAvatarTimeoutId, autoRestartTimeout].filter(Boolean),
+    animationId: gameLoopId,
+    images: [spaceshipImg, avatarImg].filter(Boolean),
+  };
+
+  // Nettoyer les ressources
+  try {
+    cleanupGameResources(invadersGame, {
+      cleanAnimations: true,
+      cleanEvents: true,
+      cleanImages: true,
+      cleanTimers: true,
+    });
+  } catch (e) {
+    void e;
+  }
+
+  // Nettoyage supplémentaire
+  if (arcadeAvatarTimeoutId) {
+    clearTimeout(arcadeAvatarTimeoutId);
+  }
+
+  if (autoRestartTimeout) {
+    clearTimeout(autoRestartTimeout);
+  }
+
+  // Retirer le listener de la barre d'espace
+  if (handleSpaceDown) {
+    document.removeEventListener('keydown', handleSpaceDown);
+  }
+
+  return score;
+}
+
 function setupAbandonButton(gameVars) {
   // This function will be used to setup the abandon button after all variables are declared
   // For now, just return a function that can be called later
   return function (autoRestartTimeout, spaceshipImg, avatarImg, score, handleSpaceDown) {
     document.getElementById('arcade-abandon-btn').addEventListener('click', function () {
-      const { gameLoopId, arcadeAvatarTimeoutId } = gameVars; // lire les valeurs actuelles
-      const invadersGame = {
-        eventListeners: [],
-        timers: [arcadeAvatarTimeoutId, autoRestartTimeout],
-        animationId: gameLoopId,
-        images: [spaceshipImg, avatarImg],
-      };
-
-      try {
-        cleanupGameResources(invadersGame, {
-          cleanAnimations: true,
-          cleanEvents: true,
-          cleanImages: true,
-          cleanTimers: true,
-        });
-      } catch (e) {
-        void e;
-      }
-
-      if (arcadeAvatarTimeoutId) {
-        clearTimeout(arcadeAvatarTimeoutId);
-      }
-
-      if (autoRestartTimeout) {
-        clearTimeout(autoRestartTimeout);
-      }
-
-      showArcadeGameOver(score);
-      document.removeEventListener('keydown', handleSpaceDown);
+      const finalScore = cleanupInvasionGame({
+        gameVars,
+        autoRestartTimeout,
+        spaceshipImg,
+        avatarImg,
+        handleSpaceDown,
+        score,
+      });
+      showArcadeGameOver(finalScore);
     });
   };
 }
@@ -921,20 +959,23 @@ export function startMultiplicationInvasion() {
   generateProblem();
   refreshInfoBar();
   gameLoop();
-  // Nettoyage de l'écouteur espace si une fin externe du mode arcade survient
-  const removeSpaceListener = () => document.removeEventListener('keydown', handleSpaceDown);
+
+  // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup complet sans game over
   try {
-    eventBus.on('arcade:stop', removeSpaceListener, { once: true });
-  } catch (e) {
-    void e;
-  }
-  try {
-    eventBus.on('arcade:stop', removeSpaceListener);
-  } catch (e) {
-    void e;
-  }
-  try {
-    Root?.addEventListener?.('arcade:stop', removeSpaceListener, { once: true });
+    eventBus.on(
+      'arcade:stop',
+      () => {
+        cleanupInvasionGame({
+          gameVars,
+          autoRestartTimeout,
+          spaceshipImg,
+          avatarImg,
+          handleSpaceDown,
+          score,
+        });
+      },
+      { once: true }
+    );
   } catch (e) {
     void e;
   }

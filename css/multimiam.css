@@ -49,12 +49,10 @@
   box-shadow:
     0 4px 32px rgb(0 0 0 / 0.28),
     0 0 0 4px #ffe066;
-  border: 2px solid #fffbe6;
-  padding: 18px;
+  /* Note: border, padding et dimensions sont gérées par JavaScript (multimiam.js)
+     pour éviter un décalage entre dimensions CSS et dimensions internes du canvas
+     qui cause des problèmes de détection de clic souris */
   margin: 18px auto;
-  max-width: 100%;
-  height: auto;
-  box-sizing: border-box !important;
 }
 
 .multimiam-mobile-controls {
@@ -133,16 +131,9 @@
   /* Canvas Pacman portrait - sécurisé */
   #multimiam-canvas,
   .arcade-game-ui > canvas.multimiam-canvas {
-    width: calc(100% - 16px);
-    max-width: calc(100% - 16px);
-    height: auto;
-    max-height: 50vh;
-    padding: 4px;
-    border-width: 1px;
-    border-radius: 8px;
+    /* Dimensions gérées par JavaScript pour éviter problèmes de clic */
     margin: 0 auto 8px;
     object-fit: contain;
-    box-sizing: border-box;
   }
 
   .multimiam-control-btn {
@@ -173,10 +164,7 @@
 
   #multimiam-canvas,
   .arcade-game-ui > canvas.multimiam-canvas {
-    padding: 10px;
-    border-radius: 8px;
-    width: calc(100% - 16px) !important;
-    max-width: calc(100% - 16px) !important;
+    /* Dimensions gérées par JavaScript pour éviter problèmes de clic */
     margin: 0 auto 8px !important;
   }
 
@@ -202,17 +190,9 @@
   /* Canvas Pacman paysage - carré optimal sécurisé */
   #multimiam-canvas,
   .arcade-game-ui > canvas.multimiam-canvas {
-    width: 65vh;
-    max-width: 65vh;
-    height: 65vh;
-    max-height: 65vh;
-    padding: 6px;
-    border-width: 2px;
-    border-radius: 12px;
+    /* Dimensions gérées par JavaScript pour éviter problèmes de clic */
     margin: 0;
     object-fit: contain;
-    aspect-ratio: 1;
-    box-sizing: border-box;
   }
 
   /* Affichage opération en paysage */

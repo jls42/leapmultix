@@ -291,7 +291,10 @@ export function initPacmanEngine(game) {
           this.lives--;
           this.updateUI();
           // Utiliser la fonction unifiée pour tous les jeux d'arcade
-          showArcadeMessage('arcade_life_lost', '#F44336');
+          // Only show message if game is still running to prevent sounds after navigation away
+          if (!this.gameOver && this.running) {
+            showArcadeMessage('arcade_life_lost', '#F44336');
+          }
           if (this.lives <= 0) {
             this.endGame();
             return;

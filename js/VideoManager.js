@@ -9,11 +9,36 @@ import { getTranslation } from './utils-es6.js';
 export const VideoManager = {
   // Configuration des vidéos par avatar
   CHARACTER_VIDEOS: new Map([
-    ['fox', 'renard_intro_vid.mp4'],
-    ['panda', 'panda_intro_vid.mp4'],
-    ['unicorn', 'licorne_intro_vide.mp4'],
-    ['dragon', 'dragon_intro_vid.mp4'],
-    ['astronaut', 'astronaut_intro_vid.mp4'],
+    [
+      'fox',
+      {
+        base: 'renard_intro_vid',
+      },
+    ],
+    [
+      'panda',
+      {
+        base: 'panda_intro_vid',
+      },
+    ],
+    [
+      'unicorn',
+      {
+        base: 'licorne_intro_vide',
+      },
+    ],
+    [
+      'dragon',
+      {
+        base: 'dragon_intro_vid',
+      },
+    ],
+    [
+      'astronaut',
+      {
+        base: 'astronaut_intro_vid',
+      },
+    ],
   ]),
 
   // État interne
@@ -21,12 +46,21 @@ export const VideoManager = {
   _modal: null,
   _skipCallback: null,
   _isMobile: false,
+  _supportsWebm: false,
+  _isLowPower: false,
+  _sourceQueue: [],
+  _currentSourceIndex: 0,
+  _currentAvatar: null,
+  _readyHandler: null,
+  _readyTimeout: null,
 
   /**
    * Initialiser le gestionnaire vidéo
    */
   init() {
     this.detectDevice();
+    this.detectPerformanceProfile();
+    this._supportsWebm = this.detectWebmSupport();
     this.createVideoModal();
     this.setupEventListeners();
   },
@@ -46,6 +80,18 @@ export const VideoManager = {
       );
       this._isMobile = this._isMobile || slowConnection;
     }
+  },
+
+  detectPerformanceProfile() {
+    const concurrency = globalThis.navigator?.hardwareConcurrency || 4;
+    const deviceMemory = globalThis.navigator?.deviceMemory || 4;
+    this._isLowPower = concurrency <= 4 || deviceMemory <= 4;
+  },
+
+  detectWebmSupport() {
+    const videoEl = document.createElement('video');
+    if (!videoEl.canPlayType) return false;
+    return videoEl.canPlayType('video/webm; codecs="vp9"') !== '';
   },
 
   /**
@@ -85,9 +131,9 @@ export const VideoManager = {
 
     const video = document.createElement('video');
     video.id = 'character-intro-video';
-    video.autoplay = true;
+    video.autoplay = false;
     video.muted = true;
-    video.preload = 'metadata';
+    video.preload = 'auto';
     video.playsInline = true;
     const source = document.createElement('source');
     source.id = 'video-source';
@@ -177,7 +223,17 @@ export const VideoManager = {
     this._skipCallback = callback;
 
     // Choisir la version appropriée (mobile ou desktop)
-    const videoPath = this.getVideoPath(avatar);
+    const sources = this.buildSourceQueue(avatar);
+    if (!sources.length) {
+      console.error(`❌ Aucune source vidéo disponible pour l'avatar: ${avatar}`);
+      if (callback) callback();
+      return;
+    }
+
+    this._sourceQueue = sources;
+    this._currentSourceIndex = 0;
+    this._currentAvatar = avatar;
+
     const videoSource = document.getElementById('video-source');
     const welcomeMessage = document.getElementById('video-welcome-message');
 
@@ -187,9 +243,10 @@ export const VideoManager = {
       welcomeMessage.textContent = personalMessage;
     }
 
+    this.preparePlayback();
+
     // Configurer la source vidéo
-    videoSource.src = videoPath;
-    this._currentVideo.load(); // Recharger avec la nouvelle source
+    this.applyCurrentSource(videoSource);
 
     // Afficher la modal
     this.showModal();
@@ -201,16 +258,112 @@ export const VideoManager = {
    * @returns {string} Chemin vers la vidéo
    */
   getVideoPath(avatar) {
-    const filename = this.CHARACTER_VIDEOS.get(avatar);
+    const [firstSource] = this.buildSourceQueue(avatar);
+    return firstSource?.src ?? '';
+  },
+
+  buildSourceQueue(avatar) {
+    const config = this.CHARACTER_VIDEOS.get(avatar);
+    if (!config) return [];
+
+    const sources = [];
     const basePath = 'assets/videos/';
+    const baseName = config.base;
+
+    const mobileSource = {
+      src: `${basePath}mobile/${baseName}_mobile.mp4`,
+      type: 'video/mp4',
+      quality: 'mobile',
+    };
+
+    const mp4Optimized = {
+      src: `${basePath}${baseName}_720.mp4`,
+      type: 'video/mp4',
+      quality: '720-mp4',
+    };
+
+    const webmOptimized = {
+      src: `${basePath}${baseName}_720.webm`,
+      type: 'video/webm',
+      quality: '720-webm',
+    };
 
     if (this._isMobile) {
-      // Version mobile compressée
-      const mobileFilename = filename.replace('.mp4', '_mobile.mp4');
-      return `${basePath}mobile/${mobileFilename}`;
+      sources.push(mobileSource);
+      sources.push(mp4Optimized);
     } else {
-      // Version desktop originale
-      return `${basePath}${filename}`;
+      sources.push(mp4Optimized);
+      if (this._supportsWebm && !this._isLowPower) {
+        sources.push(webmOptimized);
+      }
+    }
+
+    sources.push({
+      src: `${basePath}${baseName}.mp4`,
+      type: 'video/mp4',
+      quality: 'original',
+    });
+
+    if (!this._isMobile) {
+      sources.push(mobileSource);
+    }
+
+    return sources;
+  },
+
+  applyCurrentSource(videoSourceEl = document.getElementById('video-source')) {
+    const current = this._sourceQueue[this._currentSourceIndex];
+    if (!current || !videoSourceEl) return;
+
+    videoSourceEl.src = current.src;
+    if (current.type) {
+      videoSourceEl.type = current.type;
+    } else {
+      videoSourceEl.removeAttribute('type');
+    }
+    videoSourceEl.dataset.quality = current.quality || '';
+    this._currentVideo.load();
+  },
+
+  preparePlayback() {
+    if (!this._currentVideo) return;
+
+    this.cleanupPlaybackPreparation();
+
+    const videoEl = this._currentVideo;
+    videoEl.pause();
+    videoEl.currentTime = 0;
+
+    const startPlayback = () => {
+      this.cleanupPlaybackPreparation();
+      requestAnimationFrame(() => {
+        const playPromise = videoEl.play();
+        if (typeof playPromise?.catch === 'function') {
+          playPromise.catch(err => {
+            if (err?.name !== 'AbortError') {
+              console.warn('Video playback interrupted', err);
+            }
+          });
+        }
+      });
+    };
+
+    this._readyHandler = startPlayback;
+    videoEl.addEventListener('canplaythrough', this._readyHandler);
+    videoEl.addEventListener('canplay', this._readyHandler);
+    this._readyTimeout = globalThis.setTimeout(startPlayback, 4000);
+  },
+
+  cleanupPlaybackPreparation() {
+    if (!this._currentVideo) return;
+    if (this._readyHandler) {
+      this._currentVideo.removeEventListener('canplaythrough', this._readyHandler);
+      this._currentVideo.removeEventListener('canplay', this._readyHandler);
+      this._readyHandler = null;
+    }
+    if (this._readyTimeout) {
+      globalThis.clearTimeout(this._readyTimeout);
+      this._readyTimeout = null;
     }
   },
 
@@ -270,6 +423,10 @@ export const VideoManager = {
       document.body.style.overflow = ''; // Restaurer le scroll
       this._currentVideo.pause();
       this._currentVideo.currentTime = 0;
+      this._sourceQueue = [];
+      this._currentSourceIndex = 0;
+      this._currentAvatar = null;
+      this.cleanupPlaybackPreparation();
     }, 200);
   },
 
@@ -303,19 +460,16 @@ export const VideoManager = {
   onVideoError() {
     console.error('❌ Erreur de lecture vidéo');
 
-    // Essayer la version alternative si échec
-    if (!this._isMobile) {
-      this._isMobile = true;
-      const avatar = this.getCurrentAvatar();
-      if (avatar) {
-        const videoSource = document.getElementById('video-source');
-        videoSource.src = this.getVideoPath(avatar);
-        this._currentVideo.load();
+    if (this._sourceQueue.length) {
+      const nextIndex = this._currentSourceIndex + 1;
+      if (nextIndex < this._sourceQueue.length) {
+        this._currentSourceIndex = nextIndex;
+        this.preparePlayback();
+        this.applyCurrentSource();
         return;
       }
     }
 
-    // Fallback: fermer la modal
     this.hideModal();
 
     if (this._skipCallback) {
@@ -363,15 +517,7 @@ export const VideoManager = {
    * @returns {string|null} Nom de l'avatar
    */
   getCurrentAvatar() {
-    const source = document.getElementById('video-source');
-    if (!source.src) return null;
-
-    for (const [avatar, filename] of Object.entries(this.CHARACTER_VIDEOS)) {
-      if (source.src.includes(filename.replace('.mp4', ''))) {
-        return avatar;
-      }
-    }
-    return null;
+    return this._currentAvatar;
   },
 
   /**

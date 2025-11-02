@@ -83,48 +83,32 @@ export const Utils = {
   },
 
   /**
-   * Convertit un nombre en mots (pour l'accessibilité)
-   * @param {number} num - Nombre à convertir
-   * @returns {string} Nombre en mots
+   * Convertit un nombre en mots selon la langue active (pour l'accessibilité)
+   * Utilise les fichiers de traduction i18n pour une meilleure maintenabilité
+   * @param {number} num - Nombre à convertir (0-100)
+   * @param {Function} getTranslationFn - Fonction de traduction (injection de dépendance)
+   * @returns {string} Nombre en mots ou le nombre en chiffres si non traduit
    */
-  numberToWords(num) {
-    const units = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf'];
-    const teens = [
-      'dix',
-      'onze',
-      'douze',
-      'treize',
-      'quatorze',
-      'quinze',
-      'seize',
-      'dix-sept',
-      'dix-huit',
-      'dix-neuf',
-    ];
-    const tens = [
-      '',
-      '',
-      'vingt',
-      'trente',
-      'quarante',
-      'cinquante',
-      'soixante',
-      'soixante-dix',
-      'quatre-vingts',
-      'quatre-vingt-dix',
-    ];
-
-    if (num === 0) return 'zéro';
-
-    if (num < 10) return units[num];
-    if (num < 20) return teens[num - 10];
-    if (num < 100) {
-      const ten = Math.floor(num / 10);
-      const unit = num % 10;
-
-      return tens[ten] + (unit ? '-' + units[unit] : '');
+  numberToWords(num, getTranslationFn = null) {
+    // Validation : doit être un nombre entre 0 et 100
+    if (typeof num !== 'number' || num < 0 || num > 100) {
+      return num.toString();
     }
-    return num.toString(); // Au-delà de 99, retourner le chiffre
+
+    // Utiliser i18n si disponible
+    if (getTranslationFn) {
+      const translationKey = `numbers.${num}`;
+      const translation = getTranslationFn(translationKey);
+
+      // Vérifier que la traduction est valide (pas un placeholder [key])
+      if (translation && typeof translation === 'string' && !translation.startsWith('[')) {
+        return translation;
+      }
+    }
+
+    // Pas de getTranslation fournie = contexte de test
+    // Retourner le nombre tel quel (sera mocké dans les tests)
+    return num.toString();
   },
 
   // === GÉNÉRATION DE QCM ===

@@ -135,8 +135,7 @@
   /* Canvas mobile portrait - sécurisé contre débordement */
   .arcade-canvas,
   .arcade-game-ui > canvas,
-  #arcade-canvas,
-  #multimiam-canvas {
+  #arcade-canvas {
     width: calc(100% - 20px) !important;
     max-width: calc(100% - 20px) !important;
     height: auto !important;
@@ -147,6 +146,8 @@
     display: block !important;
     overflow: hidden !important;
   }
+
+  /* multimiam-canvas exclu - dimensions gérées par JavaScript */
 
   /* Affichage des opérations */
   .arcade-mult-display,
@@ -222,8 +223,7 @@
   /* Canvas paysage - carré optimal sécurisé */
   .arcade-canvas,
   .arcade-game-ui > canvas,
-  #arcade-canvas,
-  #multimiam-canvas {
+  #arcade-canvas {
     width: 65vh;
     max-width: 65vh;
     height: 65vh;
@@ -234,6 +234,8 @@
     aspect-ratio: 1;
     object-fit: contain;
   }
+
+  /* multimiam-canvas exclu - dimensions gérées par JavaScript */
 
   /* Panneau de contrôles à droite - largeur calculée sécurisée */
   .arcade-controls-panel {
@@ -495,8 +497,7 @@ body.night .arcade-dev-banner,
 
 /* Canvas par défaut - mobile first */
 .arcade-canvas,
-#arcade-canvas,
-#multimiam-canvas {
+#arcade-canvas {
   border: 2px solid #fff;
   background: #000;
   border-radius: 12px;
@@ -512,15 +513,18 @@ body.night .arcade-dev-banner,
   margin-right: auto;
 }
 
+/* multimiam-canvas exclu - dimensions et styles gérés par JavaScript pour éviter problèmes de clic */
+
 /* Canvas desktop */
 @media (min-width: 768px) {
   .arcade-canvas,
-  #arcade-canvas,
-  #multimiam-canvas {
+  #arcade-canvas {
     width: auto;
     max-width: 100%;
     max-height: 65vh;
   }
+
+  /* multimiam-canvas exclu - dimensions gérées par JavaScript pour éviter problèmes de clic */
 }
 
 #arcade-mobile-controls {

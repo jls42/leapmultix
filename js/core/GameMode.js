@@ -589,6 +589,9 @@ export class GameMode {
     // Sauvegarder les résultats
     this.saveResults();
 
+    // Nettoyer les ressources avant d'afficher les résultats
+    this.cleanup();
+
     // Afficher les résultats
     this.showResults();
 

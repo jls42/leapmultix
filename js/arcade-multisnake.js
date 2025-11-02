@@ -18,11 +18,39 @@ import { eventBus } from './core/eventBus.js';
 // Instance locale du jeu (remplace window._multisnakeInstance)
 let _snakeInstance = null;
 
+/**
+ * Fonction centralisée de nettoyage du jeu Snake
+ * Utilisée à la fois pour le bouton "Abandonner" et pour arcade:stop (bouton accueil)
+ * @returns {number} Le score actuel du jeu
+ */
+function cleanupSnakeGame() {
+  if (!_snakeInstance) return 0;
+
+  const score = _snakeInstance.score ?? 0;
+
+  // Nettoyer toutes les ressources du jeu
+  try {
+    if (typeof _snakeInstance.cleanup === 'function') {
+      _snakeInstance.cleanup();
+    } else {
+      // Nettoyage de secours
+      cleanupGameResources(_snakeInstance);
+    }
+  } catch (e) {
+    // Erreur de cleanup non-critique : le jeu continue de fonctionner
+    void e;
+  }
+
+  _snakeInstance = null;
+  return score;
+}
+
 export function startSnakeArcade() {
   // Couper proprement toute instance arcade précédente
   try {
     stopArcadeMode();
   } catch (e) {
+    // Attendu : le mode arcade peut ne pas être actif
     void e;
   }
   // Définir le mode avant le changement de slide pour éviter les auto-stop
@@ -68,8 +96,9 @@ export function startSnakeArcade() {
   // Forcer la mise à zéro du score
 
   try {
-    setTimeout(() => setStartingMode(null), 1200);
+    setTimeout(() => setStartingMode(null), 0);
   } catch (e) {
+    // Opération asynchrone non-critique
     void e;
   }
   const scoreElement = document.getElementById('multisnake-info-score');
@@ -77,22 +106,9 @@ export function startSnakeArcade() {
     scoreElement.textContent = '0';
   }
 
-  // Bouton abandon → retour au menu Arcade avec sauvegarde du score
+  // Bouton abandon → cleanup + afficher game over
   document.getElementById('multisnake-abandon-btn').addEventListener('click', function () {
-    let score = 0;
-    if (_snakeInstance && typeof _snakeInstance.score === 'number') {
-      score = _snakeInstance.score;
-    }
-
-    // Nettoyer toutes les ressources du jeu avant de quitter
-    if (_snakeInstance && typeof _snakeInstance.cleanup === 'function') {
-      _snakeInstance.cleanup();
-    } else {
-      // Nettoyage de secours
-      if (cleanupGameResources && _snakeInstance) {
-        cleanupGameResources(_snakeInstance);
-      }
-    }
+    const score = cleanupSnakeGame();
     showArcadeGameOver(score);
   });
 
@@ -108,21 +124,11 @@ export function startSnakeArcade() {
   console.log('Jeu Snake démarré avec le niveau:', gameState.difficulty || 'moyen');
   _snakeInstance.start();
 
-  // Écouter l'arrêt arcade via EventBus pour nettoyer
+  // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup sans game over
   try {
-    eventBus.on(
-      'arcade:stop',
-      () => {
-        try {
-          _snakeInstance?.cleanup?.();
-        } catch (e) {
-          void e;
-        }
-        _snakeInstance = null;
-      },
-      { once: true }
-    );
+    eventBus.on('arcade:stop', cleanupSnakeGame, { once: true });
   } catch (e) {
+    // Enregistrement d'événement non-critique
     void e;
   }
 }

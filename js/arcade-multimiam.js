@@ -20,16 +20,34 @@ import { InfoBar } from './components/infoBar.js';
 // Instance locale du jeu (remplace window.multimiamGame)
 let _pacmanGame = null;
 
-function cleanupExistingPacmanGame() {
-  if (_pacmanGame) {
+/**
+ * Fonction centralisée de nettoyage du jeu Multimiam
+ * Utilisée à la fois pour le bouton "Abandonner" et pour arcade:stop (bouton accueil)
+ * @returns {number} Le score actuel du jeu
+ */
+function cleanupPacmanGame() {
+  if (!_pacmanGame) return 0;
+
+  const score = _pacmanGame.score ?? 0;
+
+  // Nettoyer toutes les ressources du jeu
+  try {
+    // Ne pas appeler endGame() car il affiche le game over
+    // Juste faire le cleanup sans UI
+    _pacmanGame.pause?.();
     cleanupGameResources(_pacmanGame, {
       cleanAnimations: true,
       cleanEvents: true,
       cleanImages: true,
       cleanTimers: true,
     });
-    _pacmanGame = null;
+  } catch (e) {
+    // Erreur de cleanup non-critique : le jeu continue de fonctionner
+    void e;
   }
+
+  _pacmanGame = null;
+  return score;
 }
 
 function renderPacmanUI() {
@@ -53,17 +71,7 @@ function renderPacmanUI() {
 
 function attachAbandonHandler() {
   document.getElementById('multimiam-abandon-btn').addEventListener('click', function () {
-    let score = 0;
-    if (_pacmanGame && typeof _pacmanGame.score === 'number') {
-      score = _pacmanGame.score;
-      if (typeof _pacmanGame.endGame === 'function') {
-        _pacmanGame.endGame();
-      } else {
-        _pacmanGame.pause?.();
-        cleanupGameResources?.(_pacmanGame);
-      }
-      _pacmanGame = null;
-    }
+    const score = cleanupPacmanGame();
     showArcadeGameOver(score);
   });
 }
@@ -89,6 +97,7 @@ export function startPacmanArcade() {
   try {
     stopArcadeMode();
   } catch (e) {
+    // Attendu : le mode arcade peut ne pas être actif
     void e;
   }
   // Définir le mode avant le changement de slide pour éviter les auto-stop
@@ -97,7 +106,7 @@ export function startPacmanArcade() {
   goToSlide(4);
 
   // Nettoyer les anciennes instances de jeux et leurs ressources
-  cleanupExistingPacmanGame();
+  cleanupPacmanGame();
 
   // Nettoyage préventif centralisé via stopArcadeMode (déjà appelé)
 
@@ -152,28 +161,15 @@ export function startPacmanArcade() {
     try {
       setTimeout(() => setStartingMode(null), 0);
     } catch (e) {
+      // Opération asynchrone non-critique
       void e;
     }
 
-    // Nettoyage à l'arrêt arcade
+    // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup sans game over
     try {
-      eventBus.on(
-        'arcade:stop',
-        () => {
-          try {
-            _pacmanGame?.endGame?.();
-          } catch {
-            try {
-              _pacmanGame?.pause?.();
-            } catch {
-              // Ignore errors during cleanup
-            }
-          }
-          _pacmanGame = null;
-        },
-        { once: true }
-      );
+      eventBus.on('arcade:stop', cleanupPacmanGame, { once: true });
     } catch (e) {
+      // Enregistrement d'événement non-critique
       void e;
     }
 
