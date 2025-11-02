@@ -45,8 +45,8 @@ function cleanupMemoryGame() {
       _memoryGameInstance.cleanup();
     }
     cleanupGameResources(_memoryGameInstance);
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
   _memoryGameInstance = null;
@@ -56,8 +56,8 @@ function cleanupMemoryGame() {
 export function startMemoryArcade() {
   try {
     stopArcadeMode();
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
   // Définir le mode avant le changement de slide pour éviter les auto-stop
   setStartingMode('multimemory');
@@ -122,8 +122,8 @@ export function startMemoryArcade() {
   // Forcer la mise à zéro du score via InfoBar
   try {
     InfoBar.update({ score: 0 }, 'multimemory');
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
   // Bouton abandon → retour au menu Arcade avec sauvegarde du score
@@ -145,15 +145,15 @@ export function startMemoryArcade() {
 
   try {
     setTimeout(() => setStartingMode(null), 0);
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
   // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup sans game over
   try {
     eventBus.on('arcade:stop', cleanupMemoryGame, { once: true });
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 }
 
@@ -671,8 +671,8 @@ class MemoryGame {
         // Mettre à jour l'affichage du score
         try {
           InfoBar.update({ score: this.score }, 'multimemory');
-        } catch (e) {
-          void e;
+        } catch {
+          // Erreur ignorée (non-critique)
         }
 
         // Jouer le son de succès si le son est activé
@@ -731,8 +731,8 @@ class MemoryGame {
     // Mettre à jour le score final
     try {
       InfoBar.update({ score: this.score }, 'multimemory');
-    } catch (e) {
-      void e;
+    } catch {
+      // Erreur ignorée (non-critique)
     }
 
     // Montrer un message de victoire

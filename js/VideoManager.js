@@ -289,8 +289,7 @@ export const VideoManager = {
     };
 
     if (this._isMobile) {
-      sources.push(mobileSource);
-      sources.push(mp4Optimized);
+      sources.push(mobileSource, mp4Optimized);
     } else {
       sources.push(mp4Optimized);
       if (this._supportsWebm && !this._isLowPower) {

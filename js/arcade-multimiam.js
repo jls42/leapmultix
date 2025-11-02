@@ -41,9 +41,8 @@ function cleanupPacmanGame() {
       cleanImages: true,
       cleanTimers: true,
     });
-  } catch (e) {
-    // Erreur de cleanup non-critique : le jeu continue de fonctionner
-    void e;
+  } catch {
+    // Erreur de cleanup non-critique ignorée : le jeu continue de fonctionner
   }
 
   _pacmanGame = null;
@@ -96,9 +95,9 @@ export function startPacmanArcade() {
   // Couper toute instance arcade éventuellement active
   try {
     stopArcadeMode();
-  } catch (e) {
+  } catch {
     // Attendu : le mode arcade peut ne pas être actif
-    void e;
+    // Erreur ignorée (non-critique)
   }
   // Définir le mode avant le changement de slide pour éviter les auto-stop
   setStartingMode('multimiam');
@@ -160,17 +159,17 @@ export function startPacmanArcade() {
 
     try {
       setTimeout(() => setStartingMode(null), 0);
-    } catch (e) {
+    } catch {
       // Opération asynchrone non-critique
-      void e;
+      // Erreur ignorée (non-critique)
     }
 
     // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup sans game over
     try {
       eventBus.on('arcade:stop', cleanupPacmanGame, { once: true });
-    } catch (e) {
+    } catch {
       // Enregistrement d'événement non-critique
-      void e;
+      // Erreur ignorée (non-critique)
     }
 
     // Afficher les instructions du jeu

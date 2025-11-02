@@ -85,15 +85,7 @@
 }
 
 /* === Mobile touch optimisations (MultiInvaders & autres) === */
-.arcade-canvas,
-#arcade-canvas {
-  /* Empêcher le double-tap zoom (Safari/iOS) et retarder le click */
-  touch-action: none;
-  /* Désactive les gestures par défaut pour une réactivité immédiate */
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
+/* Fusionné avec les styles par défaut du canvas plus bas (L499) pour éviter duplication */
 
 /* MOBILE PORTRAIT - Corrections coordonnées */
 @media (max-width: 600px) and (orientation: portrait) {
@@ -498,6 +490,13 @@ body.night .arcade-dev-banner,
 /* Canvas par défaut - mobile first */
 .arcade-canvas,
 #arcade-canvas {
+  /* Empêcher le double-tap zoom (Safari/iOS) et retarder le click */
+  touch-action: none;
+  /* Désactive les gestures par défaut pour une réactivité immédiate */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  /* Styles visuels */
   border: 2px solid #fff;
   background: #000;
   border-radius: 12px;

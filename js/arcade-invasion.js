@@ -42,14 +42,14 @@ const baseHeight = 600;
 function initializeInvadersGame() {
   try {
     stopArcadeMode();
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
   try {
     globalGameState.gameMode = 'multiinvaders';
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
   const Root =
@@ -154,8 +154,8 @@ function cleanupInvasionGame({
       cleanImages: true,
       cleanTimers: true,
     });
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
   // Nettoyage supplémentaire
@@ -976,8 +976,8 @@ export function startMultiplicationInvasion() {
       },
       { once: true }
     );
-  } catch (e) {
-    void e;
+  } catch {
+    // Erreur ignorée (non-critique)
   }
 
   // Afficher les instructions uniformisées au-dessus du canvas
