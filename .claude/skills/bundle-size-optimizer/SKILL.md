@@ -1,6 +1,7 @@
 ---
-name: 'Optimiseur de Taille de Bundle'
-description: "Analyse et réduit la taille des bundles JavaScript pour chargement rapide. Utiliser lors d'ajout de dépendances, avant release, ou si bundle > 200 KB"
+name: optimizing-bundle-size
+description: Analyzes and reduces JavaScript bundle size for fast loading. Use when adding dependencies, before releases, or if bundle exceeds 200KB
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Optimiseur de Taille de Bundle

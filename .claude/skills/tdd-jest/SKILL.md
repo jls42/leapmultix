@@ -1,6 +1,7 @@
 ---
-name: 'TDD avec Jest'
-description: "Implémente les fonctionnalités en suivant le cycle Test-Driven Development RED/GREEN/REFACTOR avec Jest. Utiliser lors de l'ajout de nouvelles features, correction de bugs, ou refactoring de code existant"
+name: tdd-jest
+description: Implements features following Test-Driven Development RED/GREEN/REFACTOR cycle with Jest. Use when adding new features, fixing bugs, or refactoring existing code
+allowed-tools: Read, Write, Grep, Glob, Bash
 ---
 
 # Test-Driven Development avec Jest

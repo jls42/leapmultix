@@ -1,6 +1,7 @@
 ---
-name: 'commit-helper'
-description: "Automatise la création de commits Git avec messages conventionnels. Utiliser quand l'utilisateur veut committer des changements avec analyse automatique du diff."
+name: commit-helper
+description: Automates Git commit creation with conventional messages. Use when user wants to commit changes with automatic diff analysis
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Commit Helper

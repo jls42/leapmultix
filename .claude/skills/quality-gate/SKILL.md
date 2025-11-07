@@ -1,6 +1,7 @@
 ---
-name: 'Porte de Qualité'
-description: 'Exécute toutes les vérifications de qualité (format, lint, tests, i18n, coverage). Utiliser avant commits, avant PRs, ou avant releases pour garantir la qualité'
+name: quality-gate
+description: Executes all quality checks (format, lint, tests, i18n, coverage). Use before commits, PRs, or releases to ensure quality standards
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Porte de Qualité

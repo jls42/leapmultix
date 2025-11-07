@@ -1,6 +1,7 @@
 ---
-name: 'pr-creator'
-description: "Crée des Pull Requests GitHub avec descriptions détaillées générées depuis les commits. Utiliser quand l'utilisateur veut créer une PR après avoir commité des changements."
+name: pr-creator
+description: Creates GitHub Pull Requests with detailed descriptions generated from commits. Use when user wants to create a PR after committing changes
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # PR Creator

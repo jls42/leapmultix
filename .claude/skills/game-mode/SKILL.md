@@ -1,6 +1,7 @@
 ---
-name: 'New Game Mode Creator'
-description: 'Crée un nouveau mode de jeu en étendant la classe abstraite GameMode.js avec gestion du cycle de vie, event bus, et lazy loading'
+name: creating-game-modes
+description: Creates new game modes by extending the abstract GameMode.js class with lifecycle management, event bus, and lazy loading
+allowed-tools: Read, Write, Grep, Glob, Bash
 ---
 
 # New Game Mode Creator

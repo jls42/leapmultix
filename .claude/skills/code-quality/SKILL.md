@@ -1,6 +1,7 @@
 ---
-name: 'code-quality'
-description: 'Exécute les vérifications de qualité du code (format:check, ESLint, Jest) avant chaque commit selon les standards du projet leapmultix'
+name: code-quality
+description: Executes code quality checks (format:check, ESLint, Jest) before each commit according to leapmultix project standards
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Code Quality Gate

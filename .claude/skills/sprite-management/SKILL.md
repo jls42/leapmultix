@@ -1,6 +1,7 @@
 ---
-name: 'Gestion des Sprites'
-description: 'Gère sprites, sprite sheets, animations de sprites pour jeux arcade (chargement, rendu, collisions). Utiliser lors de création de jeux ou ajout de personnages animés'
+name: managing-sprites
+description: Manages sprites, sprite sheets, sprite animations for arcade games (loading, rendering, collisions). Use when creating games or adding animated characters
+allowed-tools: Read, Write, Grep, Glob, Bash
 ---
 
 # Gestion des Sprites

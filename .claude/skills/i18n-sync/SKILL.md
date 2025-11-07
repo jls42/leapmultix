@@ -1,6 +1,7 @@
 ---
-name: 'I18n Translation Sync'
-description: 'Vérifie la synchronisation des fichiers de traduction (fr.json, en.json, es.json) et détecte les clés manquantes, valeurs vides, et incohérences de types'
+name: synchronizing-i18n-translations
+description: Verifies translation files synchronization (fr.json, en.json, es.json) and detects missing keys, empty values, and type inconsistencies
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # I18n Translation Synchronization

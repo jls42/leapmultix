@@ -1,6 +1,7 @@
 ---
-name: 'asset-optimizer'
-description: "Optimise images, sprites, sons et médias pour réduire bande passante et améliorer chargement. Utiliser avant d'ajouter gros assets ou lors d'optimisation mobile"
+name: asset-optimizer
+description: Optimizes images, sprites, sounds and media to reduce bandwidth and improve loading. Use before adding large assets or during mobile optimization
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Asset Optimizer
