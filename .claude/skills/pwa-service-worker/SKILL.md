@@ -1,6 +1,7 @@
 ---
-name: 'PWA Service Worker Manager'
-description: 'Gère les mises à jour du Service Worker de manière sécurisée avec versioning du cache et tests offline. Utiliser lors de modifications du SW, ajout de ressources, ou changements de stratégie de cache'
+name: managing-pwa-service-worker
+description: Manages Service Worker updates securely with cache versioning and offline tests. Use when modifying SW, adding resources, or changing cache strategy
+allowed-tools: Read, Write, Grep, Glob, Bash
 ---
 
 # PWA Service Worker Manager

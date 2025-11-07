@@ -1,6 +1,7 @@
 ---
-name: 'Profileur de Performance'
-description: "Analyse et optimise les performances de l'application (temps de chargement, FPS, mémoire, bottlenecks). Utiliser lors de ralentissements, avant release, ou optimisation des jeux arcade"
+name: profiling-performance
+description: Analyzes and optimizes application performance (loading time, FPS, memory, bottlenecks). Use when experiencing slowdowns, before releases, or optimizing arcade games
+allowed-tools: Read, Grep, Glob, Bash, WebSearch
 ---
 
 # Profileur de Performance

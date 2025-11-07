@@ -1,6 +1,7 @@
 ---
-name: 'Générateur JSDoc'
-description: "Génère automatiquement la documentation JSDoc pour modules ES6 avec @param, @returns, @throws et exemples. Utiliser lors de l'ajout de fonctions, refactoring, ou amélioration de la documentation"
+name: generating-jsdoc
+description: Automatically generates JSDoc documentation for ES6 modules with @param, @returns, @throws and examples. Use when adding functions, refactoring, or improving documentation
+allowed-tools: Read, Write, Grep, Glob, Bash
 ---
 
 # Générateur JSDoc

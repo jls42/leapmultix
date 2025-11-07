@@ -1,6 +1,7 @@
 ---
-name: 'Arcade Game Creator'
-description: 'Crée des jeux arcade canvas HTML5 suivant les patterns leapmultix (Multimiam, Multisnake, Invasion). Utiliser lors de création de nouveaux mini-jeux arcade'
+name: arcade-game-creator
+description: Creates HTML5 canvas arcade games following leapmultix patterns (Multimiam, Multisnake, Invasion). Use when creating new arcade mini-games
+allowed-tools: Read, Write, Grep, Glob, Bash
 ---
 
 # Arcade Game Creator

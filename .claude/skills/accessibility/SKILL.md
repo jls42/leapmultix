@@ -1,6 +1,7 @@
 ---
-name: "Validateur d'Accessibilité"
-description: "Valide l'accessibilité web selon les standards WCAG 2.1 AA pour les utilisateurs en situation de handicap. Utiliser lors de modifications UI, ajout de composants, ou audits d'accessibilité"
+name: validating-accessibility
+description: Validates web accessibility according to WCAG 2.1 AA standards for users with disabilities. Use when modifying UI, adding components, or performing accessibility audits
+allowed-tools: Read, Grep, Glob, Bash, WebSearch
 ---
 
 # Validateur d'Accessibilité

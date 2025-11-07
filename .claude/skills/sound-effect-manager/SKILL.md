@@ -1,6 +1,7 @@
 ---
-name: 'sound-effect-manager'
-description: "Gère effets sonores et audio pour feedback utilisateur (sons correct/wrong, musiques, volume). Utiliser lors d'ajout de nouveaux sons ou gestion audio"
+name: managing-sound-effects
+description: Manages sound effects and audio for user feedback (correct/wrong sounds, music, volume). Use when adding new sounds or managing audio
+allowed-tools: Read, Write, Grep, Glob, Bash
 ---
 
 # Sound Effect Manager

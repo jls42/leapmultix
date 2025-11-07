@@ -1,6 +1,7 @@
 ---
-name: "Système d'Animation"
-description: "Crée et gère animations CSS et JavaScript (keyframes, transitions, sprite animations, canvas animations). Utiliser lors d'ajout d'animations visuelles ou feedback utilisateur"
+name: managing-animations
+description: Creates and manages CSS and JavaScript animations (keyframes, transitions, sprite animations, canvas animations). Use when adding visual animations or user feedback
+allowed-tools: Read, Write, Grep, Glob, Bash
 ---
 
 # Système d'Animation

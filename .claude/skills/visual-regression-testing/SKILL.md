@@ -1,6 +1,7 @@
 ---
-name: 'Tests de Régression Visuelle'
-description: 'Tests de régression visuelle pour jeux canvas et UI responsive. Utiliser après modifications canvas, CSS, ou ajout de nouveaux jeux arcade'
+name: testing-visual-regression
+description: Visual regression tests for canvas games and responsive UI. Use after canvas modifications, CSS changes, or adding new arcade games
+allowed-tools: Read, Grep, Glob, Bash, WebSearch
 ---
 
 # Tests de Régression Visuelle

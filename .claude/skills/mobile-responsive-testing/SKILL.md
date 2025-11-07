@@ -1,6 +1,7 @@
 ---
-name: 'Tests Responsive Mobile'
-description: 'Tests de compatibilité mobile et responsive design (touch, viewports, performance mobile). Utiliser après modifications CSS responsive, touch controls, ou avant release'
+name: testing-mobile-responsive
+description: Tests mobile compatibility and responsive design (touch, viewports, mobile performance). Use after responsive CSS modifications, touch controls, or before releases
+allowed-tools: Read, Grep, Glob, Bash, WebSearch
 ---
 
 # Tests Responsive Mobile

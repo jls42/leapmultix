@@ -1,6 +1,7 @@
 ---
-name: 'security-audit'
-description: "Audite la sécurité de l'application (XSS, CSP, dépendances vulnérables, CORS). Utiliser avant release, après ajout dépendances, ou modification security-utils.js"
+name: security-audit
+description: Audits application security (XSS, CSP, vulnerable dependencies, CORS). Use before releases, after adding dependencies, or modifying security-utils.js
+allowed-tools: Read, Grep, Glob, Bash, WebSearch
 ---
 
 # Security Audit

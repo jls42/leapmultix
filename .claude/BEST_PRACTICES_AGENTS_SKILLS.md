@@ -1,6 +1,53 @@
 # Bonnes Pratiques pour la Conception de Skills et Subagents
 
-Ce document résume la stratégie d'optimisation et les meilleures pratiques pour créer des agents et des skills maintenables, sécurisés et efficaces.
+> **📚 Documentation officielle (consultez-la pour les spécifications détaillées) :**
+>
+> - [Skills Overview](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview.md) - Concepts clés et architecture
+> - [Best Practices](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices.md) - Recommandations de conception
+> - [Subagents Format](https://code.claude.com/docs/en/sub-agents.md) - Structure et configuration
+> - [Skills Format](https://code.claude.com/docs/en/skills.md) - Format et organisation
+> - [Slash Commands](https://code.claude.com/docs/en/slash-commands.md) - Commandes personnalisées
+>
+> _Ce document se concentre sur les **insights pratiques** et **patterns d'intégration** pour ce projet._
+
+---
+
+## 📚 Utilisation de la Documentation Officielle
+
+Les liens ci-dessus sont fournis pour **consultation active** par les agents et skills via WebFetch/WebSearch, pas seulement comme référence passive.
+
+### Quand consulter la documentation officielle (via WebFetch/WebSearch)
+
+**✅ Utilisez activement pour :**
+- Vérifier les spécifications exactes (limites de caractères : name max 64, description max 1024)
+- Valider des règles de nommage spécifiques (gérondif, kebab-case, reserved words)
+- Confirmer la syntaxe YAML frontmatter (champs requis, optionnels)
+- Découvrir de nouvelles fonctionnalités ou best practices récentes
+- Résoudre des ambiguïtés ou cas limites non couverts dans ce document
+
+**❌ Ne PAS utiliser pour :**
+- Remplacer la lecture de ce document (TOUJOURS lire BEST_PRACTICES en premier)
+- Copier du contenu verbatim (résumer et adapter au contexte du projet)
+- Recherches générales (utiliser ce document comme première source)
+
+### Méthode de consultation
+
+**Pour les agents avec WebFetch :**
+```
+WebFetch(url: "https://code.claude.com/docs/en/skills.md",
+         prompt: "Quelle est la limite exacte de caractères pour le champ description?")
+```
+
+**Pour les skills avec WebSearch :**
+```
+WebSearch(query: "Claude Code skills frontmatter description character limit")
+```
+
+### Hiérarchie des sources
+
+1. **BEST_PRACTICES_AGENTS_SKILLS.md** (ce fichier) - Consulter EN PREMIER
+2. **Documentation officielle** (liens ci-dessus) - Consulter pour specs exactes et nouveautés
+3. **Code existant** (.claude/skills/, .claude/agents/) - Consulter pour patterns concrets
 
 ## Philosophie Générale
 
@@ -11,6 +58,10 @@ Ce document résume la stratégie d'optimisation et les meilleures pratiques pou
 2.  **Le Code Vivant est la Source de Vérité**
     *   **Principe :** Ne copiez pas de longs extraits de code dans les prompts. Ils deviennent vite obsolètes. Instruisez l'agent d'aller lire les fichiers pertinents du projet.
     *   **Bénéfice :** L'agent s'adapte toujours à l'état actuel du code, garantissant des actions plus pertinentes.
+
+3.  **La Concision est Fondamentale**
+    *   **Principe :** "The context window is a public good" - Gardez `SKILL.md` sous 500 lignes. N'incluez que le contexte que Claude ne possède pas déjà.
+    *   **Bénéfice :** Optimise la consommation de jetons et améliore la performance globale du système.
 
 ---
 
@@ -30,13 +81,26 @@ Cette architecture permet à l'IA de naviguer et de ne charger que ce qui est st
 
 ## Bonnes Pratiques pour les "Skills"
 
-Les "Skills" sont des blocs de connaissances passifs et réutilisables.
+Les "Skills" sont des blocs de connaissances passifs et réutilisables, découverts automatiquement par Claude.
 
 *   **Rôle :** Agir comme des **templates**, des **librairies de contenu**, ou des **bases de connaissances** statiques.
 *   **Contenu :** Doit être focalisé sur une seule chose (ex: le format d'un type de rapport, une checklist standard).
 *   **Exemples :**
-    *   `report-template-code-review.md`
-    *   `checklist-pre-release.md`
+    *   `processing-pdfs` - Traitement de documents PDF (forme gérondif recommandée)
+    *   `analyzing-spreadsheets` - Analyse de feuilles de calcul
+    *   `report-template-code-review` - Template de rapport de revue de code
+
+### Configuration YAML
+
+```yaml
+---
+name: your-skill-name         # Kebab-case, forme gérondif recommandée (-ing)
+description: What it does and when to use it (3rd person)
+allowed-tools: Read, Grep     # Optionnel : restreindre les outils disponibles
+---
+```
+
+**Note importante :** Pour les Skills, utilisez `allowed-tools` (avec tiret). Pour les Subagents, utilisez `tools` (sans tiret).
 
 ### Contraintes Techniques pour les Skills avec Code
 
@@ -90,6 +154,130 @@ Ce flux de travail sépare le "processus de réflexion" de la "mise en forme du 
 
 Il est utile de distinguer comment les différents composants sont activés :
 
-*   **Skills :** Déclenchés **automatiquement par le modèle** en fonction du contexte et de la pertinence de leur `description`.
-*   **Subagents :** Déclenchés **automatiquement par le modèle** (similaire aux skills) ou **explicitement par l'utilisateur** (`> Use the code-reviewer...`).
-*   **Commandes Slash (`/`) :** Déclenchées **toujours explicitement par l'utilisateur**.
+| Composant | Activation | Usage | Structure |
+|-----------|------------|-------|-----------|
+| **Skills** | Automatique (découverte contexte) | Capacités complexes multi-fichiers | Dossier avec `SKILL.md` |
+| **Subagents** | Auto ou explicite | Tâches spécialisées déléguées | Fichier `.md` avec frontmatter |
+| **Slash Commands** | Toujours explicite (`/command`) | Prompts rapides et fréquents | Fichier `.md` simple |
+
+---
+
+## Bonnes Pratiques pour les "Slash Commands"
+
+Les "Slash Commands" sont des prompts réutilisables à invocation explicite, parfaits pour les instructions fréquemment utilisées.
+
+*   **Rôle :** Prompts rapides nécessitant un contrôle explicite de l'utilisateur.
+*   **Activation :** Toujours explicite : `/review`, `/optimize`, `/explain`
+*   **Structure :** Fichier Markdown simple (avec frontmatter optionnel)
+
+### Quand Utiliser Quoi ?
+
+**Choisissez Slash Commands quand :**
+- Vous invoquez répétitivement la même instruction
+- Vous voulez un contrôle explicite sur l'exécution
+- Prompt simple sans ressources multiples nécessaires
+
+**Choisissez Skills quand :**
+- Plusieurs fichiers, scripts ou matériel de référence nécessaires
+- Découverte automatique basée sur le contexte souhaitée
+- Structure organisée de connaissances réutilisables
+
+**Choisissez Subagents quand :**
+- Délégation de tâches spécialisées à un agent indépendant
+- Expertise focalisée sur un domaine spécifique
+- Nécessité de restreindre les permissions tools
+
+### Structure d'une Slash Command
+
+**Commande simple :**
+```markdown
+---
+description: Review code for security and performance
+---
+
+Review the current codebase focusing on:
+- Security vulnerabilities
+- Performance bottlenecks
+- Best practices violations
+```
+
+**Avec arguments :**
+```markdown
+---
+description: Explain code in detail
+---
+
+Explain the following code: $ARGUMENTS
+Focus on architecture, patterns, and key decisions.
+```
+
+**Localisation :**
+- **Personal** : `~/.claude/commands/command-name.md`
+- **Project** : `.claude/commands/command-name.md` (versionné avec git)
+
+---
+
+## Best Practices Additionnelles
+
+### Feedback Loops et Validation
+
+**Pattern de validation :** Pour les opérations critiques, utilisez un cycle de validation :
+
+```markdown
+1. Générer le plan/output
+2. Valider avec un script ou checklist
+3. Si erreurs : corriger et retourner à l'étape 1
+4. Si valide : continuer
+```
+
+**Bénéfice :** Améliore dramatiquement la qualité des outputs pour les opérations sensibles.
+
+### Gestion des Erreurs
+
+**Principe :** "Solve, don't punt" - Gérez explicitement les conditions d'erreur plutôt que d'attendre que Claude récupère après échec.
+
+**Exemple :**
+```python
+# ❌ Mauvais : laisse échouer
+data = json.load(f)
+
+# ✅ Bon : gestion explicite
+try:
+    data = json.load(f)
+except json.JSONDecodeError:
+    data = {"default": "values"}
+    print("Using default configuration")
+```
+
+### Organisation de l'Information
+
+**Tables des matières :** Pour les fichiers de référence > 100 lignes, incluez une table des matières pour que Claude voie l'information complète même lors de lectures partielles.
+
+**Progressive disclosure :** Organisez par domaines. Pour des Skills avec plusieurs datasets, créez des fichiers de référence séparés : `reference/finance.md`, `reference/sales.md`.
+
+**Références à un niveau :** Évitez les références imbriquées (SKILL.md → advanced.md → details.md). Gardez tout à un niveau de profondeur depuis SKILL.md.
+
+### Testing et Itération
+
+**Testez sur tous les modèles cibles :** Ce qui fonctionne pour Opus peut nécessiter des guidances supplémentaires pour Haiku.
+
+**Pattern de raffinement :**
+1. Claude A (Designer) : Aide à concevoir le Skill/Agent
+2. Claude B (Tester) : Teste sur des tâches réelles
+3. Observez le comportement de Claude B
+4. Retournez les insights à Claude A
+5. Raffinez et répétez
+
+---
+
+## Résumé des Conventions de Nommage
+
+| Composant | Field | Naming | Exemple |
+|-----------|-------|--------|---------|
+| **Skill** | `name` | kebab-case, gérondif (-ing) | `processing-pdfs` |
+| **Skill** | `description` | 3ème personne | "Processes PDF files..." |
+| **Skill** | Tools | `allowed-tools` | `allowed-tools: Read, Grep` |
+| **Subagent** | `name` | kebab-case | `code-reviewer` |
+| **Subagent** | `description` | 3ème personne + quand utiliser | "Expert reviewer. Use proactively..." |
+| **Subagent** | Tools | `tools` | `tools: Read, Grep, Glob` |
+| **Slash Cmd** | Nom fichier | kebab-case | `review-code.md` |

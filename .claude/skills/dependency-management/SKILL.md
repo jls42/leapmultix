@@ -1,6 +1,7 @@
 ---
-name: 'Gestion des Dépendances'
-description: 'Gestion des dépendances npm (audit, mises à jour, breaking changes, lockfile). Utiliser avant release, après ajout packages, ou mensuellement pour maintenance'
+name: managing-dependencies
+description: Manages npm dependencies (audit, updates, breaking changes, lockfile). Use before releases, after adding packages, or monthly for maintenance
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Gestion des Dépendances
