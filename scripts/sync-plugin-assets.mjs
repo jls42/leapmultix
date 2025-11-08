@@ -50,10 +50,12 @@ async function main() {
   console.log('\nAll syncs complete.');
 }
 
-main().catch(error => {
+try {
+  await main();
+} catch (error) {
   console.error(`\nSync failed: ${error.message}`);
   process.exitCode = 1;
-});
+}
 
 async function runJob(job, manifestEntries) {
   console.log(`\nSyncing plugin: ${job.label}`);
@@ -68,7 +70,9 @@ async function runJob(job, manifestEntries) {
 
   await writePluginManifest(job.pluginRoot, job.pluginInfo);
   manifestEntries.push(job.pluginInfo);
-  messages.forEach(msg => console.log(`- ${msg}`));
+  for (const msg of messages) {
+    console.log(`- ${msg}`);
+  }
 }
 
 async function syncSection(section, selection, pluginRoot, messages) {
