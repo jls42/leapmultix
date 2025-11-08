@@ -403,17 +403,17 @@ async function syncIndividualComponents(manifestEntries, opts) {
   };
 
   for (const [section, config] of Object.entries(componentConfigs)) {
-    try {
-      if (!includeAll && !requestedSet.has(section)) {
-        continue;
-      }
-      const items = await config.listItems();
-      if (items.length === 0) {
-        continue;
-      }
+    if (!includeAll && !requestedSet.has(section)) {
+      continue;
+    }
+    const items = await config.listItems();
+    if (items.length === 0) {
+      continue;
+    }
 
-      console.log(`\nSyncing individual ${section}`);
-      for (const item of items) {
+    console.log(`\nSyncing individual ${section}`);
+    for (const item of items) {
+      try {
         const pluginName = `${config.pluginPrefix}-${item.name}`;
         const pluginRoot = ensurePathWithinRepo(
           path.join(config.targetBase, item.name),
@@ -429,9 +429,9 @@ async function syncIndividualComponents(manifestEntries, opts) {
         });
         await writePluginManifest(pluginRoot, pluginInfo);
         manifestEntries.push(pluginInfo);
+      } catch (error) {
+        throw new Error(`Failed to sync ${section} plugin ${item.name}: ${error.message}`);
       }
-    } catch (error) {
-      throw new Error(`Failed to sync ${section} plugins: ${error.message}`);
     }
   }
 }
