@@ -406,37 +406,37 @@ async function syncIndividualComponents(manifestEntries, opts) {
     if (!includeAll && !requestedSet.has(section)) {
       continue;
     }
-    let items;
-    try {
-      items = await config.listItems();
-    } catch (error) {
-      throw new Error(`Failed to list ${section} components: ${error.message}`);
-    }
-    if (items.length === 0) {
-      continue;
-    }
 
-    console.log(`\nSyncing individual ${section}`);
-    for (const item of items) {
-      try {
-        const pluginName = `${config.pluginPrefix}-${item.name}`;
-        const pluginRoot = ensurePathWithinRepo(
-          path.join(config.targetBase, item.name),
-          `${section} plugin root`
-        );
-        await ensureDir(pluginRoot);
-        await config.copyItem(item, pluginRoot);
-        const pluginInfo = buildPluginInfo({
-          pluginName,
-          description: config.description(item.name),
-          category: config.category,
-          pluginRoot,
-        });
-        await writePluginManifest(pluginRoot, pluginInfo);
-        manifestEntries.push(pluginInfo);
-      } catch (error) {
-        throw new Error(`Failed to sync ${section} plugin ${item.name}: ${error.message}`);
+    try {
+      const items = await config.listItems();
+      if (items.length === 0) {
+        continue;
       }
+
+      console.log(`\nSyncing individual ${section}`);
+      for (const item of items) {
+        try {
+          const pluginName = `${config.pluginPrefix}-${item.name}`;
+          const pluginRoot = ensurePathWithinRepo(
+            path.join(config.targetBase, item.name),
+            `${section} plugin root`
+          );
+          await ensureDir(pluginRoot);
+          await config.copyItem(item, pluginRoot);
+          const pluginInfo = buildPluginInfo({
+            pluginName,
+            description: config.description(item.name),
+            category: config.category,
+            pluginRoot,
+          });
+          await writePluginManifest(pluginRoot, pluginInfo);
+          manifestEntries.push(pluginInfo);
+        } catch (error) {
+          throw new Error(`Failed to sync ${section} plugin ${item.name}: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      throw new Error(`Failed to sync ${section} components: ${error.message}`);
     }
   }
 }
