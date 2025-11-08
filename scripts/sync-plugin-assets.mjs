@@ -59,16 +59,18 @@ try {
 
 async function runJob(job, manifestEntries) {
   console.log(`\nSyncing plugin: ${job.label}`);
-  await ensureDir(job.pluginRoot);
+  const safePluginRoot = ensurePathWithinRepo(job.pluginRoot, 'plugin output directory');
+  await ensureDir(safePluginRoot);
 
   const sections = ['commands', 'agents', 'skills'];
   const messages = [];
   for (const section of sections) {
+    const selection = getSectionSelection(job.selectionConfig, section);
     // eslint-disable-next-line no-await-in-loop -- sequential to keep logs ordered
-    await syncSection(section, job.selectionConfig[section], job.pluginRoot, messages);
+    await syncSection(section, selection, safePluginRoot, messages);
   }
 
-  await writePluginManifest(job.pluginRoot, job.pluginInfo);
+  await writePluginManifest(safePluginRoot, job.pluginInfo);
   manifestEntries.push(job.pluginInfo);
   for (const msg of messages) {
     console.log(`- ${msg}`);
@@ -76,8 +78,16 @@ async function runJob(job, manifestEntries) {
 }
 
 async function syncSection(section, selection, pluginRoot, messages) {
-  const sourceDir = path.join(sourceRoot, section);
-  const targetDir = path.join(pluginRoot, section);
+  const sourceDir = ensurePathWithinBase(
+    path.join(sourceRoot, section),
+    sourceRoot,
+    `${section} source`
+  );
+  const targetDir = ensurePathWithinBase(
+    path.join(pluginRoot, section),
+    pluginRoot,
+    `${section} target`
+  );
 
   if (!(await pathExists(sourceDir))) {
     messages.push(`${section}: skipped (source directory missing)`);
@@ -104,7 +114,11 @@ async function syncSection(section, selection, pluginRoot, messages) {
       missing.push(entry);
       continue;
     }
-    const destinationPath = path.join(targetDir, resolved.relativeName);
+    const destinationPath = ensurePathWithinBase(
+      path.join(targetDir, resolved.relativeName),
+      targetDir,
+      `${section} destination`
+    );
     // eslint-disable-next-line no-await-in-loop -- sequential copy
     await copyEntry(resolved.absolutePath, destinationPath);
     copied += 1;
@@ -119,8 +133,10 @@ async function syncSection(section, selection, pluginRoot, messages) {
 }
 
 async function copyEntry(sourcePath, destinationPath) {
-  const stats = await fs.stat(sourcePath);
-  await fs.cp(sourcePath, destinationPath, { recursive: stats.isDirectory() });
+  const safeSource = ensurePathWithinRepo(sourcePath, 'copy source');
+  const safeDestination = ensurePathWithinRepo(destinationPath, 'copy destination');
+  const stats = await fs.stat(safeSource);
+  await fs.cp(safeSource, safeDestination, { recursive: stats.isDirectory() });
 }
 
 async function resolveEntry(section, entry, sourceDir) {
@@ -143,9 +159,17 @@ async function resolveEntry(section, entry, sourceDir) {
 }
 
 async function writePluginManifest(pluginRoot, pluginInfo) {
-  const manifestDir = path.join(pluginRoot, '.claude-plugin');
+  const manifestDir = ensurePathWithinBase(
+    path.join(pluginRoot, '.claude-plugin'),
+    pluginRoot,
+    'plugin manifest dir'
+  );
   await ensureDir(manifestDir);
-  const manifestPath = path.join(manifestDir, 'plugin.json');
+  const manifestPath = ensurePathWithinBase(
+    path.join(manifestDir, 'plugin.json'),
+    manifestDir,
+    'plugin manifest'
+  );
   const payload = {
     name: pluginInfo.name,
     description: pluginInfo.description,
@@ -181,21 +205,31 @@ async function writeMarketplaceManifests(entries) {
   };
 
   const targets = [
-    path.join(repoRoot, '.claude-plugin'),
-    path.join(marketplaceRoot, '.claude-plugin'),
+    ensurePathWithinRepo(path.join(repoRoot, '.claude-plugin'), 'root marketplace manifest'),
+    ensurePathWithinRepo(
+      path.join(marketplaceRoot, '.claude-plugin'),
+      'local marketplace manifest',
+      marketplaceRoot
+    ),
   ];
 
   for (const target of targets) {
     // eslint-disable-next-line no-await-in-loop -- sequential for clarity
     await ensureDir(target);
-    const manifestPath = path.join(target, 'marketplace.json');
+    const manifestPath = ensurePathWithinRepo(
+      path.join(target, 'marketplace.json'),
+      'marketplace manifest'
+    );
     // eslint-disable-next-line no-await-in-loop -- sequential write is fine
     await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   }
 }
 
 async function buildManualJob(opts) {
-  const target = path.resolve(repoRoot, opts.target ?? defaultTarget);
+  const target = ensurePathWithinRepo(
+    path.resolve(repoRoot, opts.target ?? defaultTarget),
+    'manual plugin target'
+  );
   const selectionConfig = buildSelectionConfig(opts);
   const pluginName = opts.name ?? path.basename(target);
   const description = opts.description ?? `Custom plugin bundle generated from ${pluginName}`;
@@ -210,14 +244,18 @@ async function buildManualJob(opts) {
 
 async function buildProfileJobs(opts) {
   const profiles = await loadProfiles();
+  const profileEntries = Object.entries(profiles);
   const requested = parseListOption(opts.profile) ?? Object.keys(profiles);
   const jobs = [];
   for (const key of requested) {
-    const profile = profiles[key];
+    const profile = profileEntries.find(([name]) => name === key)?.[1];
     if (!profile) {
       throw new Error(`Unknown profile "${key}" in plugin-profiles.json`);
     }
-    const pluginRoot = path.resolve(repoRoot, profile.target);
+    const pluginRoot = ensurePathWithinRepo(
+      path.resolve(repoRoot, profile.target),
+      'profile plugin target'
+    );
     jobs.push({
       label: profile.label ?? key,
       pluginRoot,
@@ -234,7 +272,10 @@ async function buildProfileJobs(opts) {
 }
 
 async function loadProfiles() {
-  const profilePath = path.join(marketplaceRoot, 'plugin-profiles.json');
+  const profilePath = ensurePathWithinRepo(
+    path.join(marketplaceRoot, 'plugin-profiles.json'),
+    'plugin profile manifest'
+  );
   const raw = await fs.readFile(profilePath, 'utf-8');
   return JSON.parse(raw);
 }
@@ -262,6 +303,19 @@ function normalizeSelection(value) {
     return list ? new Set(list) : null;
   }
   return null;
+}
+
+function getSectionSelection(selectionConfig, section) {
+  switch (section) {
+    case 'commands':
+      return selectionConfig.commands;
+    case 'agents':
+      return selectionConfig.agents;
+    case 'skills':
+      return selectionConfig.skills;
+    default:
+      return null;
+  }
 }
 
 function parseArgs(args) {
@@ -313,7 +367,10 @@ async function syncIndividualComponents(manifestEntries, opts) {
 
   const componentConfigs = {
     commands: {
-      targetBase: path.join(marketplaceRoot, 'commands'),
+      targetBase: ensurePathWithinRepo(
+        path.join(marketplaceRoot, 'commands'),
+        'commands plugins base'
+      ),
       pluginPrefix: 'leapmultix-command',
       category: 'command',
       description: name => `Slash command /${name} from LeapMultix`,
@@ -321,7 +378,7 @@ async function syncIndividualComponents(manifestEntries, opts) {
       copyItem: copyCommand,
     },
     agents: {
-      targetBase: path.join(marketplaceRoot, 'agents'),
+      targetBase: ensurePathWithinRepo(path.join(marketplaceRoot, 'agents'), 'agents plugins base'),
       pluginPrefix: 'leapmultix-agent',
       category: 'agent',
       description: name => `Agent ${name} from LeapMultix`,
@@ -329,7 +386,7 @@ async function syncIndividualComponents(manifestEntries, opts) {
       copyItem: copyAgent,
     },
     skills: {
-      targetBase: path.join(marketplaceRoot, 'skills'),
+      targetBase: ensurePathWithinRepo(path.join(marketplaceRoot, 'skills'), 'skills plugins base'),
       pluginPrefix: 'leapmultix-skill',
       category: 'skill',
       description: name => `Skill ${name} from LeapMultix`,
@@ -350,7 +407,10 @@ async function syncIndividualComponents(manifestEntries, opts) {
     console.log(`\nSyncing individual ${section}`);
     for (const item of items) {
       const pluginName = `${config.pluginPrefix}-${item.name}`;
-      const pluginRoot = path.join(config.targetBase, item.name);
+      const pluginRoot = ensurePathWithinRepo(
+        path.join(config.targetBase, item.name),
+        `${section} plugin root`
+      );
       await ensureDir(pluginRoot);
       await config.copyItem(item, pluginRoot);
       const pluginInfo = buildPluginInfo({
@@ -366,85 +426,137 @@ async function syncIndividualComponents(manifestEntries, opts) {
 }
 
 async function listCommandComponents() {
-  const commandsDir = path.join(sourceRoot, 'commands');
+  const commandsDir = ensurePathWithinBase(
+    path.join(sourceRoot, 'commands'),
+    sourceRoot,
+    'commands dir'
+  );
   if (!(await pathExists(commandsDir))) {
     return [];
   }
-  const entries = await fs.readdir(commandsDir, { withFileTypes: true });
-  return entries
-    .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
-    .map(entry => ({
-      name: removeExtension(entry.name),
-      sourceName: entry.name,
-    }));
+  try {
+    const entries = await fs.readdir(commandsDir, { withFileTypes: true });
+    return entries
+      .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
+      .map(entry => ({
+        name: removeExtension(entry.name),
+        sourceName: entry.name,
+      }));
+  } catch (error) {
+    throw new Error(`Failed to list command components: ${error.message}`);
+  }
 }
 
 async function listAgentComponents() {
-  const agentsDir = path.join(sourceRoot, 'agents');
+  const agentsDir = ensurePathWithinBase(path.join(sourceRoot, 'agents'), sourceRoot, 'agents dir');
   if (!(await pathExists(agentsDir))) {
     return [];
   }
-  const entries = await fs.readdir(agentsDir, { withFileTypes: true });
-  return entries
-    .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
-    .map(entry => ({
-      name: removeExtension(entry.name),
-      sourceName: entry.name,
-    }));
+  try {
+    const entries = await fs.readdir(agentsDir, { withFileTypes: true });
+    return entries
+      .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
+      .map(entry => ({
+        name: removeExtension(entry.name),
+        sourceName: entry.name,
+      }));
+  } catch (error) {
+    throw new Error(`Failed to list agent components: ${error.message}`);
+  }
 }
 
 async function listSkillComponents() {
-  const skillsDir = path.join(sourceRoot, 'skills');
+  const skillsDir = ensurePathWithinBase(path.join(sourceRoot, 'skills'), sourceRoot, 'skills dir');
   if (!(await pathExists(skillsDir))) {
     return [];
   }
-  const entries = await fs.readdir(skillsDir, { withFileTypes: true });
-  const skills = [];
-  for (const entry of entries) {
-    if (!entry.isDirectory()) {
-      continue;
+  try {
+    const entries = await fs.readdir(skillsDir, { withFileTypes: true });
+    const skills = [];
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+      const skillDir = ensurePathWithinBase(
+        path.join(skillsDir, entry.name),
+        skillsDir,
+        'skill directory'
+      );
+      // eslint-disable-next-line no-await-in-loop -- sequential check is fine
+      if (await pathExists(path.join(skillDir, 'SKILL.md'))) {
+        skills.push({
+          name: entry.name,
+          sourceName: entry.name,
+        });
+      }
     }
-    const skillDir = path.join(skillsDir, entry.name);
-    // eslint-disable-next-line no-await-in-loop -- sequential check is fine
-    if (await pathExists(path.join(skillDir, 'SKILL.md'))) {
-      skills.push({
-        name: entry.name,
-        sourceName: entry.name,
-      });
-    }
+    return skills;
+  } catch (error) {
+    throw new Error(`Failed to list skill components: ${error.message}`);
   }
-  return skills;
 }
 
 async function copyCommand(item, pluginRoot) {
-  const targetDir = path.join(pluginRoot, 'commands');
-  await ensureDir(targetDir);
-  await removeIfExists(path.join(targetDir, item.sourceName));
-  await fs.copyFile(
-    path.join(sourceRoot, 'commands', item.sourceName),
-    path.join(targetDir, item.sourceName)
+  const targetDir = ensurePathWithinBase(
+    path.join(pluginRoot, 'commands'),
+    pluginRoot,
+    'commands target'
   );
+  await ensureDir(targetDir);
+  const destinationPath = ensurePathWithinBase(
+    path.join(targetDir, item.sourceName),
+    targetDir,
+    'command destination file'
+  );
+  await removeIfExists(destinationPath);
+  const sourcePath = ensurePathWithinBase(
+    path.join(sourceRoot, 'commands', item.sourceName),
+    sourceRoot,
+    'command source file'
+  );
+  await fs.copyFile(sourcePath, destinationPath);
 }
 
 async function copyAgent(item, pluginRoot) {
-  const targetDir = path.join(pluginRoot, 'agents');
-  await ensureDir(targetDir);
-  await removeIfExists(path.join(targetDir, item.sourceName));
-  await fs.copyFile(
-    path.join(sourceRoot, 'agents', item.sourceName),
-    path.join(targetDir, item.sourceName)
+  const targetDir = ensurePathWithinBase(
+    path.join(pluginRoot, 'agents'),
+    pluginRoot,
+    'agents target'
   );
+  await ensureDir(targetDir);
+  const destinationPath = ensurePathWithinBase(
+    path.join(targetDir, item.sourceName),
+    targetDir,
+    'agent destination file'
+  );
+  await removeIfExists(destinationPath);
+  const sourcePath = ensurePathWithinBase(
+    path.join(sourceRoot, 'agents', item.sourceName),
+    sourceRoot,
+    'agent source file'
+  );
+  await fs.copyFile(sourcePath, destinationPath);
 }
 
 async function copySkill(item, pluginRoot) {
-  const targetDir = path.join(pluginRoot, 'skills');
-  await ensureDir(targetDir);
-  await removeIfExists(path.join(targetDir, item.sourceName));
-  await fs.cp(
-    path.join(sourceRoot, 'skills', item.sourceName),
-    path.join(targetDir, item.sourceName),
-    { recursive: true }
+  const targetDir = ensurePathWithinBase(
+    path.join(pluginRoot, 'skills'),
+    pluginRoot,
+    'skills target'
   );
+  await ensureDir(targetDir);
+  const destinationPath = ensurePathWithinBase(
+    path.join(targetDir, item.sourceName),
+    targetDir,
+    'skill destination dir'
+  );
+  await removeIfExists(destinationPath);
+  const sourcePath = ensurePathWithinBase(
+    path.join(sourceRoot, 'skills', item.sourceName),
+    sourceRoot,
+    'skill source dir'
+  );
+  await fs.cp(sourcePath, destinationPath, { recursive: true });
 }
 
 function removeExtension(filename) {
@@ -458,16 +570,19 @@ async function ensurePathExists(targetPath, { errorMessage }) {
 }
 
 async function ensureDir(dirPath) {
-  await fs.mkdir(dirPath, { recursive: true });
+  const safeDirPath = ensurePathWithinRepo(dirPath, 'directory creation');
+  await fs.mkdir(safeDirPath, { recursive: true });
 }
 
 async function removeIfExists(targetPath) {
-  await fs.rm(targetPath, { recursive: true, force: true });
+  const safeTarget = ensurePathWithinRepo(targetPath, 'removal target');
+  await fs.rm(safeTarget, { recursive: true, force: true });
 }
 
 async function pathExists(checkPath) {
+  const safePath = ensurePathWithinRepo(checkPath, 'path access');
   try {
-    await fs.access(checkPath);
+    await fs.access(safePath);
     return true;
   } catch {
     return false;
@@ -475,6 +590,22 @@ async function pathExists(checkPath) {
 }
 
 async function countEntries(dirPath) {
-  const entries = await fs.readdir(dirPath, { withFileTypes: true });
+  const safeDirPath = ensurePathWithinRepo(dirPath, 'directory listing');
+  const entries = await fs.readdir(safeDirPath, { withFileTypes: true });
   return entries.length;
+}
+
+function ensurePathWithinRepo(targetPath, description, base = repoRoot) {
+  return ensurePathWithinBase(targetPath, base, description);
+}
+
+function ensurePathWithinBase(targetPath, base, description) {
+  const resolved = path.resolve(targetPath);
+  const normalizedBase = path.resolve(base);
+  if (resolved === normalizedBase || resolved.startsWith(`${normalizedBase}${path.sep}`)) {
+    return resolved;
+  }
+  throw new Error(
+    `Refusing to access ${description ?? 'path'} outside ${normalizedBase}: ${resolved}`
+  );
 }
