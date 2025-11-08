@@ -98,6 +98,7 @@ async function syncSection(section, selection, pluginRoot, messages) {
   await ensureDir(path.dirname(targetDir));
   await removeIfExists(targetDir);
   if (!selection) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- source/target sanitized via ensurePathWithinBase
     await fs.cp(sourceDir, targetDir, { recursive: true });
     const count = await countEntries(targetDir);
     messages.push(`${section}: copied ${count} item${count === 1 ? '' : 's'}`);
@@ -135,7 +136,9 @@ async function syncSection(section, selection, pluginRoot, messages) {
 async function copyEntry(sourcePath, destinationPath) {
   const safeSource = ensurePathWithinRepo(sourcePath, 'copy source');
   const safeDestination = ensurePathWithinRepo(destinationPath, 'copy destination');
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- path sanitized via ensurePathWithinRepo
   const stats = await fs.stat(safeSource);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- destination sanitized via ensurePathWithinRepo
   await fs.cp(safeSource, safeDestination, { recursive: stats.isDirectory() });
 }
 
@@ -177,6 +180,7 @@ async function writePluginManifest(pluginRoot, pluginInfo) {
     author: pluginInfo.author ?? DEFAULT_AUTHOR,
     ...PROJECT_LINKS,
   };
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- manifestPath sanitized via ensurePathWithinBase
   await fs.writeFile(manifestPath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
@@ -221,6 +225,7 @@ async function writeMarketplaceManifests(entries) {
       'marketplace manifest'
     );
     // eslint-disable-next-line no-await-in-loop -- sequential write is fine
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- manifestPath sanitized via ensurePathWithinRepo
     await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   }
 }
@@ -276,6 +281,7 @@ async function loadProfiles() {
     path.join(marketplaceRoot, 'plugin-profiles.json'),
     'plugin profile manifest'
   );
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- profilePath sanitized via ensurePathWithinRepo
   const raw = await fs.readFile(profilePath, 'utf-8');
   return JSON.parse(raw);
 }
@@ -325,6 +331,7 @@ function parseArgs(args) {
       return acc;
     }
     const normalizedKey = key.slice(2);
+    // eslint-disable-next-line security/detect-object-injection -- CLI options limited to predefined flags
     acc[normalizedKey] = value ?? true;
     return acc;
   }, {});
@@ -396,31 +403,35 @@ async function syncIndividualComponents(manifestEntries, opts) {
   };
 
   for (const [section, config] of Object.entries(componentConfigs)) {
-    if (!includeAll && !requestedSet.has(section)) {
-      continue;
-    }
-    const items = await config.listItems();
-    if (items.length === 0) {
-      continue;
-    }
+    try {
+      if (!includeAll && !requestedSet.has(section)) {
+        continue;
+      }
+      const items = await config.listItems();
+      if (items.length === 0) {
+        continue;
+      }
 
-    console.log(`\nSyncing individual ${section}`);
-    for (const item of items) {
-      const pluginName = `${config.pluginPrefix}-${item.name}`;
-      const pluginRoot = ensurePathWithinRepo(
-        path.join(config.targetBase, item.name),
-        `${section} plugin root`
-      );
-      await ensureDir(pluginRoot);
-      await config.copyItem(item, pluginRoot);
-      const pluginInfo = buildPluginInfo({
-        pluginName,
-        description: config.description(item.name),
-        category: config.category,
-        pluginRoot,
-      });
-      await writePluginManifest(pluginRoot, pluginInfo);
-      manifestEntries.push(pluginInfo);
+      console.log(`\nSyncing individual ${section}`);
+      for (const item of items) {
+        const pluginName = `${config.pluginPrefix}-${item.name}`;
+        const pluginRoot = ensurePathWithinRepo(
+          path.join(config.targetBase, item.name),
+          `${section} plugin root`
+        );
+        await ensureDir(pluginRoot);
+        await config.copyItem(item, pluginRoot);
+        const pluginInfo = buildPluginInfo({
+          pluginName,
+          description: config.description(item.name),
+          category: config.category,
+          pluginRoot,
+        });
+        await writePluginManifest(pluginRoot, pluginInfo);
+        manifestEntries.push(pluginInfo);
+      }
+    } catch (error) {
+      throw new Error(`Failed to sync ${section} plugins: ${error.message}`);
     }
   }
 }
@@ -435,6 +446,7 @@ async function listCommandComponents() {
     return [];
   }
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- commandsDir sanitized via ensurePathWithinBase
     const entries = await fs.readdir(commandsDir, { withFileTypes: true });
     return entries
       .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
@@ -453,6 +465,7 @@ async function listAgentComponents() {
     return [];
   }
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- agentsDir sanitized via ensurePathWithinBase
     const entries = await fs.readdir(agentsDir, { withFileTypes: true });
     return entries
       .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
@@ -471,6 +484,7 @@ async function listSkillComponents() {
     return [];
   }
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- skillsDir sanitized via ensurePathWithinBase
     const entries = await fs.readdir(skillsDir, { withFileTypes: true });
     const skills = [];
     for (const entry of entries) {
@@ -514,6 +528,7 @@ async function copyCommand(item, pluginRoot) {
     sourceRoot,
     'command source file'
   );
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- paths sanitized via ensurePathWithinBase
   await fs.copyFile(sourcePath, destinationPath);
 }
 
@@ -535,6 +550,7 @@ async function copyAgent(item, pluginRoot) {
     sourceRoot,
     'agent source file'
   );
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- paths sanitized via ensurePathWithinBase
   await fs.copyFile(sourcePath, destinationPath);
 }
 
@@ -556,6 +572,7 @@ async function copySkill(item, pluginRoot) {
     sourceRoot,
     'skill source dir'
   );
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- paths sanitized via ensurePathWithinBase
   await fs.cp(sourcePath, destinationPath, { recursive: true });
 }
 
@@ -571,17 +588,20 @@ async function ensurePathExists(targetPath, { errorMessage }) {
 
 async function ensureDir(dirPath) {
   const safeDirPath = ensurePathWithinRepo(dirPath, 'directory creation');
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- path sanitized via ensurePathWithinRepo
   await fs.mkdir(safeDirPath, { recursive: true });
 }
 
 async function removeIfExists(targetPath) {
   const safeTarget = ensurePathWithinRepo(targetPath, 'removal target');
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- path sanitized via ensurePathWithinRepo
   await fs.rm(safeTarget, { recursive: true, force: true });
 }
 
 async function pathExists(checkPath) {
   const safePath = ensurePathWithinRepo(checkPath, 'path access');
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path sanitized via ensurePathWithinRepo
     await fs.access(safePath);
     return true;
   } catch {
@@ -591,6 +611,7 @@ async function pathExists(checkPath) {
 
 async function countEntries(dirPath) {
   const safeDirPath = ensurePathWithinRepo(dirPath, 'directory listing');
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- safeDirPath sanitized via ensurePathWithinRepo
   const entries = await fs.readdir(safeDirPath, { withFileTypes: true });
   return entries.length;
 }
