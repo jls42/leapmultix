@@ -4,13 +4,13 @@ Ce répertoire regroupe les plugins distribués par le projet LeapMultix pour Cl
 
 ## Plugins disponibles
 
-| Plugin | Description | Contenu principal |
-| --- | --- | --- |
-| `leapmultix-dev-tools` | Suite complète (tous les agents, skills et slash commands) | 12 agents, 20+ skills, `/audit-config` |
-| `leapmultix-dev-core` | Workflow quotidien (code review, plugin manager, qualité) | Agents `code-reviewer`, `plugin-manager`, skills qualité/PR |
-| `leapmultix-dev-audit` | Audits et conformité (accessibilité, i18n, sécurité, PWA) | Agents `accessibility-auditor`, `i18n-coordinator`, `web-research-specialist`, `pwa-expert` |
-| `leapmultix-dev-qa` | Tests et performance | Agents `agent-architecte`, `chrome-devtools-tester`, `debugger`, `performance-analyzer`, `test-writer` |
-| `leapmultix-dev-arcade` | Aide au développement des modes arcade | Agent `arcade-specialist`, skills `creating-arcade-games`, `sprite-management`, etc. |
+| Plugin                  | Description                                                | Contenu principal                                                                                      |
+| ----------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `leapmultix-dev-tools`  | Suite complète (tous les agents, skills et slash commands) | 12 agents, 20+ skills, `/audit-config`                                                                 |
+| `leapmultix-dev-core`   | Workflow quotidien (code review, plugin manager, qualité)  | Agents `code-reviewer`, `plugin-manager`, skills qualité/PR                                            |
+| `leapmultix-dev-audit`  | Audits et conformité (accessibilité, i18n, sécurité, PWA)  | Agents `accessibility-auditor`, `i18n-coordinator`, `web-research-specialist`, `pwa-expert`            |
+| `leapmultix-dev-qa`     | Tests et performance                                       | Agents `agent-architecte`, `chrome-devtools-tester`, `debugger`, `performance-analyzer`, `test-writer` |
+| `leapmultix-dev-arcade` | Aide au développement des modes arcade                     | Agent `arcade-specialist`, skills `creating-arcade-games`, `sprite-management`, etc.                   |
 
 ### Plugins unitaires (1 composant = 1 plugin)
 

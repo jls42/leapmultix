@@ -50,7 +50,7 @@ async function main() {
   console.log('\nAll syncs complete.');
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error(`\nSync failed: ${error.message}`);
   process.exitCode = 1;
 });
@@ -68,7 +68,7 @@ async function runJob(job, manifestEntries) {
 
   await writePluginManifest(job.pluginRoot, job.pluginInfo);
   manifestEntries.push(job.pluginInfo);
-  messages.forEach((msg) => console.log(`- ${msg}`));
+  messages.forEach(msg => console.log(`- ${msg}`));
 }
 
 async function syncSection(section, selection, pluginRoot, messages) {
@@ -159,7 +159,7 @@ async function writeMarketplaceManifests(entries) {
   }
 
   const sortedEntries = entries
-    .map((entry) => ({
+    .map(entry => ({
       name: entry.name,
       description: entry.description,
       source: entry.source,
@@ -194,8 +194,7 @@ async function buildManualJob(opts) {
   const target = path.resolve(repoRoot, opts.target ?? defaultTarget);
   const selectionConfig = buildSelectionConfig(opts);
   const pluginName = opts.name ?? path.basename(target);
-  const description =
-    opts.description ?? `Custom plugin bundle generated from ${pluginName}`;
+  const description = opts.description ?? `Custom plugin bundle generated from ${pluginName}`;
   const category = opts.category ?? 'custom';
   return {
     label: pluginName,
@@ -221,8 +220,7 @@ async function buildProfileJobs(opts) {
       selectionConfig: buildSelectionConfig(profile),
       pluginInfo: buildPluginInfo({
         pluginName: path.basename(profile.target),
-        description:
-          profile.description ?? `Bundle generated from profile ${key}`,
+        description: profile.description ?? `Bundle generated from profile ${key}`,
         category: profile.category ?? 'bundle',
         pluginRoot,
       }),
@@ -280,7 +278,7 @@ function parseListOption(rawValue) {
   }
   return rawValue
     .split(',')
-    .map((entry) => entry.trim())
+    .map(entry => entry.trim())
     .filter(Boolean);
 }
 
@@ -314,7 +312,7 @@ async function syncIndividualComponents(manifestEntries, opts) {
       targetBase: path.join(marketplaceRoot, 'commands'),
       pluginPrefix: 'leapmultix-command',
       category: 'command',
-      description: (name) => `Slash command /${name} from LeapMultix`,
+      description: name => `Slash command /${name} from LeapMultix`,
       listItems: listCommandComponents,
       copyItem: copyCommand,
     },
@@ -322,7 +320,7 @@ async function syncIndividualComponents(manifestEntries, opts) {
       targetBase: path.join(marketplaceRoot, 'agents'),
       pluginPrefix: 'leapmultix-agent',
       category: 'agent',
-      description: (name) => `Agent ${name} from LeapMultix`,
+      description: name => `Agent ${name} from LeapMultix`,
       listItems: listAgentComponents,
       copyItem: copyAgent,
     },
@@ -330,7 +328,7 @@ async function syncIndividualComponents(manifestEntries, opts) {
       targetBase: path.join(marketplaceRoot, 'skills'),
       pluginPrefix: 'leapmultix-skill',
       category: 'skill',
-      description: (name) => `Skill ${name} from LeapMultix`,
+      description: name => `Skill ${name} from LeapMultix`,
       listItems: listSkillComponents,
       copyItem: copySkill,
     },
@@ -370,8 +368,8 @@ async function listCommandComponents() {
   }
   const entries = await fs.readdir(commandsDir, { withFileTypes: true });
   return entries
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
-    .map((entry) => ({
+    .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
+    .map(entry => ({
       name: removeExtension(entry.name),
       sourceName: entry.name,
     }));
@@ -384,8 +382,8 @@ async function listAgentComponents() {
   }
   const entries = await fs.readdir(agentsDir, { withFileTypes: true });
   return entries
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
-    .map((entry) => ({
+    .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
+    .map(entry => ({
       name: removeExtension(entry.name),
       sourceName: entry.name,
     }));
@@ -420,7 +418,7 @@ async function copyCommand(item, pluginRoot) {
   await removeIfExists(path.join(targetDir, item.sourceName));
   await fs.copyFile(
     path.join(sourceRoot, 'commands', item.sourceName),
-    path.join(targetDir, item.sourceName),
+    path.join(targetDir, item.sourceName)
   );
 }
 
@@ -430,7 +428,7 @@ async function copyAgent(item, pluginRoot) {
   await removeIfExists(path.join(targetDir, item.sourceName));
   await fs.copyFile(
     path.join(sourceRoot, 'agents', item.sourceName),
-    path.join(targetDir, item.sourceName),
+    path.join(targetDir, item.sourceName)
   );
 }
 
@@ -441,7 +439,7 @@ async function copySkill(item, pluginRoot) {
   await fs.cp(
     path.join(sourceRoot, 'skills', item.sourceName),
     path.join(targetDir, item.sourceName),
-    { recursive: true },
+    { recursive: true }
   );
 }
 

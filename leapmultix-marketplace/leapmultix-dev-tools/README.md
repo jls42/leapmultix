@@ -82,11 +82,13 @@ Les plugins unitaires (`leapmultix-agent-*`, `leapmultix-skill-*`, `leapmultix-c
 Exécute les vérifications de qualité du code (format:check, ESLint, Jest) avant chaque commit selon les standards du projet.
 
 **Quand utiliser :**
+
 - TOUJOURS avant chaque commit
 - Avant de créer une PR
 - Après modification JavaScript/CSS
 
 **Workflow :**
+
 1. `npm run format:check` (CRITIQUE)
 2. `npm run lint`
 3. `npm test`
@@ -97,11 +99,13 @@ Exécute les vérifications de qualité du code (format:check, ESLint, Jest) ava
 Automatise la création de Pull Requests GitHub avec descriptions structurées générées depuis les commits.
 
 **Quand utiliser :**
+
 - Quand l'utilisateur demande de créer une PR
 - Après commits sur feature branch
 - Feature terminée et prête pour review
 
 **Workflow :**
+
 1. Analyser tous les commits depuis main
 2. Générer titre et description PR
 3. Créer PR avec gh CLI
@@ -111,11 +115,13 @@ Automatise la création de Pull Requests GitHub avec descriptions structurées g
 Valide la conformité des Skills, Subagents et Slash Commands contre les best practices Claude Code.
 
 **Quand utiliser :**
+
 - Après création ou modification de Skills/Agents/Commands
 - Avant publication de plugins
 - Audit systématique du repository
 
 **Validation :**
+
 - Frontmatter YAML correct
 - Noms en kebab-case (gerund pour skills)
 - Descriptions complètes et conformes
@@ -126,12 +132,14 @@ Valide la conformité des Skills, Subagents et Slash Commands contre les best pr
 Audite la sécurité de l'application (XSS, CSP, vulnérabilités des dépendances, CORS) selon standards OWASP.
 
 **Quand utiliser :**
+
 - Avant chaque release en production
 - Après ajout/mise à jour de dépendances npm
 - Modifications de security-utils.js
 - Warnings eslint-plugin-security
 
 **Domaines couverts :**
+
 - XSS Prevention (via security-utils)
 - Content Security Policy (CSP)
 - Dependency Vulnerabilities
@@ -265,6 +273,7 @@ Avant release en production :
 **Cause :** GitHub CLI non installé ou non dans PATH
 
 **Solution :**
+
 ```bash
 # Installer gh
 # macOS
@@ -285,6 +294,7 @@ gh auth login
 **Cause :** Code pas formaté selon Prettier
 
 **Solution :**
+
 ```bash
 npm run format  # Auto-format
 npm run format:check  # Vérifier
@@ -295,6 +305,7 @@ npm run format:check  # Vérifier
 **Cause :** Skills/Agents/Commands non conformes aux best practices
 
 **Solution :**
+
 ```bash
 /audit-config  # Voir détails des erreurs
 # Corriger selon rapport généré
@@ -306,6 +317,7 @@ npm run format:check  # Vérifier
 **Cause :** Structure du plugin invalide ou composants corrompus
 
 **Solution :**
+
 1. Vérifier `.claude-plugin/plugin.json` existe et valide
 2. Vérifier composants dans bons dossiers (racine du plugin)
 3. Réinstaller : `/plugin uninstall` puis `/plugin install`
@@ -327,6 +339,7 @@ MIT - Voir LICENSE du projet LeapMultix
 ## Support
 
 Pour questions ou problèmes :
+
 - Ouvrir une issue sur le repository LeapMultix
 - Consulter la documentation des skills dans `.claude/skills/`
 - Utiliser l'agent `plugin-manager` pour aide sur les plugins

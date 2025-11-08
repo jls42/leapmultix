@@ -40,6 +40,7 @@ Vérifie : `/help` fonctionne et affiche les commands disponibles
 **Projet avec composants à empaqueter**
 
 Au moins un de :
+
 - `.claude/commands/*.md` - Slash commands
 - `.claude/agents/*.md` - Subagents
 - `.claude/skills/*/SKILL.md` - Skills
@@ -103,21 +104,25 @@ mkdir -p plugin-name/hooks
 ### 3. Copier les composants
 
 **Commands :**
+
 ```bash
 cp .claude/commands/*.md plugin-name/commands/
 ```
 
 **Agents :**
+
 ```bash
 cp .claude/agents/*.md plugin-name/agents/
 ```
 
 **Skills :**
+
 ```bash
 cp -r .claude/skills/* plugin-name/skills/
 ```
 
 **Hooks :**
+
 ```bash
 cp .claude/hooks/hooks.json plugin-name/hooks/
 ```
@@ -138,6 +143,7 @@ Utilise le template `templates/plugin.json.template` :
 Sauvegarde dans `plugin-name/.claude-plugin/plugin.json`
 
 **Règles de nommage :**
+
 - `name` : kebab-case, descriptif
 - `description` : Max 1024 caractères, décrit QUOI et QUAND utiliser
 - `version` : Semantic versioning (MAJOR.MINOR.PATCH)
@@ -162,14 +168,17 @@ Description détaillée du plugin et de son utilité.
 ## Composants inclus
 
 ### Commands
+
 - `/command1` - Description
 - `/command2` - Description
 
 ### Agents
+
 - `agent1` - Description et quand l'utiliser
 - `agent2` - Description et quand l'utiliser
 
 ### Skills
+
 - `skill1` - Description
 - `skill2` - Description
 
@@ -230,6 +239,7 @@ Contenu de `mon-marketplace/marketplace.json` :
 ```
 
 Vérifie que :
+
 - Commands apparaissent dans `/help`
 - Agents sont disponibles
 - Skills sont détectés automatiquement
@@ -265,12 +275,14 @@ Ce repository dispose d'un pipeline de packaging automatique. **Ne pas copier le
 Localisation : `.claude-plugin/plugin.json`
 
 Champs obligatoires :
+
 - `name` (string) : Identifiant unique du plugin
 - `description` (string) : Description claire
 - `version` (string) : Version semantic (ex: "1.0.0")
 - `author` (string) : Nom de l'auteur
 
 Champs optionnels :
+
 - `homepage` (string) : URL du projet
 - `repository` (string) : URL du repository git
 - `license` (string) : Type de licence (MIT, Apache, etc.)
@@ -315,6 +327,7 @@ Structure :
 ```
 
 **Notes :**
+
 - Un marketplace peut contenir plusieurs plugins
 - `source` : chemin relatif depuis marketplace.json
 - `name` dans marketplace doit matcher `name` dans plugin.json
@@ -368,6 +381,7 @@ Structure :
    - Mettre à jour version dans plugin.json
 
 2. **Réinstaller**
+
    ```bash
    /plugin uninstall plugin-name@marketplace-name
    /plugin install plugin-name@marketplace-name
@@ -439,6 +453,7 @@ Pour déploiement automatique quand équipe trust le repository :
 ### Versioning et updates
 
 **Semantic Versioning :**
+
 - **MAJOR** (1.0.0 → 2.0.0) : Breaking changes
 - **MINOR** (1.0.0 → 1.1.0) : Nouvelles fonctionnalités rétro-compatibles
 - **PATCH** (1.0.0 → 1.0.1) : Bug fixes
@@ -466,6 +481,7 @@ code-review-plugin/
 ```
 
 `plugin.json` :
+
 ```json
 {
   "name": "code-review",
@@ -519,6 +535,7 @@ company-marketplace/
 ```
 
 `marketplace.json` :
+
 ```json
 {
   "name": "company-tools",
@@ -550,6 +567,7 @@ company-marketplace/
 **Cause :** Nom plugin ou marketplace incorrect
 
 **Solution :**
+
 ```bash
 /plugin marketplace list  # Vérifier nom marketplace
 # Vérifier que name dans plugin.json match la commande install
@@ -560,6 +578,7 @@ company-marketplace/
 **Cause :** JSON malformé ou champs manquants
 
 **Solution :**
+
 - Valider JSON avec un linter
 - Vérifier champs requis : name, description, version, author
 - Vérifier format semantic versioning pour version
@@ -567,11 +586,13 @@ company-marketplace/
 ### Erreur : Commands not appearing in /help
 
 **Causes possibles :**
+
 - Plugin désactivé
 - Commands dans mauvais dossier (doivent être dans `plugin-name/commands/` pas `.claude-plugin/commands/`)
 - Conflits de noms avec autres plugins
 
 **Solution :**
+
 ```bash
 /plugin enable plugin-name@marketplace-name
 # Vérifier structure : commands/ à la racine du plugin
@@ -583,6 +604,7 @@ company-marketplace/
 **Cause :** Path incorrect ou permissions
 
 **Solution :**
+
 - Vérifier path est correct (relatif ou absolu)
 - Vérifier permissions de lecture sur dossier
 - Pour URLs : vérifier connectivité réseau
@@ -592,6 +614,7 @@ company-marketplace/
 **Cause :** Composants invalides (agents avec mauvais frontmatter, etc.)
 
 **Solution :**
+
 - Valider chaque composant individuellement avant packaging
 - Utiliser skill `checking-config-compliance`
 - Vérifier logs Claude Code pour détails
@@ -645,6 +668,7 @@ company-marketplace/
 **Source :** `.claude/BEST_PRACTICES_AGENTS_SKILLS.md` section Plugins
 
 **Templates disponibles :**
+
 - `templates/plugin.json.template` - Structure plugin.json
 - `templates/marketplace.json.template` - Structure marketplace.json
 
@@ -683,6 +707,7 @@ mkdir marketplace && mv plugin-name marketplace/
 ```
 
 **Ressources :**
+
 - Documentation officielle : https://code.claude.com/docs/en/plugins
 - BEST_PRACTICES section Plugins
 - Exemples dans ce SKILL.md
