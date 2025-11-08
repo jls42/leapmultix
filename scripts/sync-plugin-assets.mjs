@@ -406,7 +406,12 @@ async function syncIndividualComponents(manifestEntries, opts) {
     if (!includeAll && !requestedSet.has(section)) {
       continue;
     }
-    const items = await config.listItems();
+    let items;
+    try {
+      items = await config.listItems();
+    } catch (error) {
+      throw new Error(`Failed to list ${section} components: ${error.message}`);
+    }
     if (items.length === 0) {
       continue;
     }
@@ -581,7 +586,14 @@ function removeExtension(filename) {
 }
 
 async function ensurePathExists(targetPath, { errorMessage }) {
-  if (!(await pathExists(targetPath))) {
+  let exists;
+  try {
+    exists = await pathExists(targetPath);
+  } catch (error) {
+    throw new Error(`${errorMessage}: ${error.message}`);
+  }
+
+  if (!exists) {
     throw new Error(errorMessage);
   }
 }
@@ -599,13 +611,21 @@ async function removeIfExists(targetPath) {
 }
 
 async function pathExists(checkPath) {
-  const safePath = ensurePathWithinRepo(checkPath, 'path access');
+  let safePath;
+  try {
+    safePath = ensurePathWithinRepo(checkPath, 'path access');
+  } catch (error) {
+    throw new Error(`Cannot access ${checkPath}: ${error.message}`);
+  }
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- path sanitized via ensurePathWithinRepo
     await fs.access(safePath);
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    if (error?.code === 'ENOENT' || error?.code === 'ENOTDIR') {
+      return false;
+    }
+    throw new Error(`Unable to access ${safePath}: ${error.message}`);
   }
 }
 
