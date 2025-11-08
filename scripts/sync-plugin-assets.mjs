@@ -416,25 +416,7 @@ async function syncIndividualComponents(manifestEntries, opts) {
 
         console.log(`\nSyncing individual ${section}`);
         for (const item of items) {
-          try {
-            const pluginName = `${config.pluginPrefix}-${item.name}`;
-            const pluginRoot = ensurePathWithinRepo(
-              path.join(config.targetBase, item.name),
-              `${section} plugin root`
-            );
-            await ensureDir(pluginRoot);
-            await config.copyItem(item, pluginRoot);
-            const pluginInfo = buildPluginInfo({
-              pluginName,
-              description: config.description(item.name),
-              category: config.category,
-              pluginRoot,
-            });
-            await writePluginManifest(pluginRoot, pluginInfo);
-            manifestEntries.push(pluginInfo);
-          } catch (error) {
-            throw new Error(`Failed to sync ${section} plugin ${item.name}: ${error.message}`);
-          }
+          await syncSinglePlugin(item, section, config, manifestEntries);
         }
       } catch (error) {
         throw new Error(`Failed to sync ${section} components: ${error.message}`);
@@ -442,6 +424,28 @@ async function syncIndividualComponents(manifestEntries, opts) {
     }
   } catch (error) {
     throw new Error(`Failed to sync individual components: ${error.message}`);
+  }
+}
+
+async function syncSinglePlugin(item, section, config, manifestEntries) {
+  try {
+    const pluginName = `${config.pluginPrefix}-${item.name}`;
+    const pluginRoot = ensurePathWithinRepo(
+      path.join(config.targetBase, item.name),
+      `${section} plugin root`
+    );
+    await ensureDir(pluginRoot);
+    await config.copyItem(item, pluginRoot);
+    const pluginInfo = buildPluginInfo({
+      pluginName,
+      description: config.description(item.name),
+      category: config.category,
+      pluginRoot,
+    });
+    await writePluginManifest(pluginRoot, pluginInfo);
+    manifestEntries.push(pluginInfo);
+  } catch (error) {
+    throw new Error(`Failed to sync ${section} plugin ${item.name}: ${error.message}`);
   }
 }
 
