@@ -1,0 +1,11 @@
+{
+  "name": "leapmultix-skill-performance-profiler",
+  "description": "Skill performance-profiler from LeapMultix",
+  "version": "1.0.0",
+  "author": {
+    "name": "LeapMultix Team"
+  },
+  "homepage": "https://github.com/leapmultix/leapmultix",
+  "repository": "https://github.com/leapmultix/leapmultix.git",
+  "license": "MIT"
+}

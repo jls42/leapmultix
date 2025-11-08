@@ -39,7 +39,8 @@
     "verify:cleanup": "npm run dead-code && npm run analyze:globals",
     "test:esm": "NODE_OPTIONS=--experimental-vm-modules jest --maxWorkers=50% tests-esm --testMatch \"**/*.test.mjs\"",
     "assets:generate": "node scripts/generate-responsive-assets.cjs",
-    "assets:analyze": "node scripts/analyze-responsive-usage.cjs"
+    "assets:analyze": "node scripts/analyze-responsive-usage.cjs",
+    "plugin:sync": "node scripts/sync-plugin-assets.mjs"
   },
   "keywords": [
     "education",
