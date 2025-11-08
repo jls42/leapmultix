@@ -1,0 +1,11 @@
+{
+  "name": "leapmultix-dev-core",
+  "description": "Core workflow: code review duo, plugin manager, and CI quality gate skills",
+  "version": "1.0.0",
+  "author": {
+    "name": "LeapMultix Team"
+  },
+  "homepage": "https://github.com/leapmultix/leapmultix",
+  "repository": "https://github.com/leapmultix/leapmultix.git",
+  "license": "MIT"
+}

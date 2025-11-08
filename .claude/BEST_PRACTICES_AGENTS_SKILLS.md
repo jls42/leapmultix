@@ -7,6 +7,7 @@
 > - [Subagents Format](https://code.claude.com/docs/en/sub-agents.md) - Structure et configuration
 > - [Skills Format](https://code.claude.com/docs/en/skills.md) - Format et organisation
 > - [Slash Commands](https://code.claude.com/docs/en/slash-commands.md) - Commandes personnalisées
+> - [Plugins](https://code.claude.com/docs/en/plugins) - Création et distribution de plugins
 >
 > _Ce document se concentre sur les **insights pratiques** et **patterns d'intégration** pour ce projet._
 
@@ -159,6 +160,7 @@ Il est utile de distinguer comment les différents composants sont activés :
 | **Skills** | Automatique (découverte contexte) | Capacités complexes multi-fichiers | Dossier avec `SKILL.md` |
 | **Subagents** | Auto ou explicite | Tâches spécialisées déléguées | Fichier `.md` avec frontmatter |
 | **Slash Commands** | Toujours explicite (`/command`) | Prompts rapides et fréquents | Fichier `.md` simple |
+| **Plugins** | Via commandes `/plugin` | Empaquetage et distribution | Dossier avec `.claude-plugin/` |
 
 ---
 
@@ -214,6 +216,213 @@ Focus on architecture, patterns, and key decisions.
 **Localisation :**
 - **Personal** : `~/.claude/commands/command-name.md`
 - **Project** : `.claude/commands/command-name.md` (versionné avec git)
+
+---
+
+## Bonnes Pratiques pour les "Plugins"
+
+Les "Plugins" permettent d'étendre Claude Code avec des fonctionnalités personnalisées partageables entre projets et équipes.
+
+*   **Rôle :** Empaqueter et distribuer commands, agents, skills, hooks et serveurs MCP comme unité réutilisable.
+*   **Activation :** Via commandes `/plugin` (marketplace, install, enable, etc.).
+*   **Structure :** Dossier avec sous-répertoire `.claude-plugin/` contenant les manifests.
+
+### Structure d'un Plugin
+
+Un plugin suit cette hiérarchie de répertoires :
+
+```
+plugin-name/
+├── .claude-plugin/
+│   ├── plugin.json          # Manifest du plugin (requis)
+│   └── marketplace.json     # Manifest marketplace (pour distribution)
+├── commands/                 # Slash commands (optionnel)
+├── agents/                   # Subagents (optionnel)
+├── skills/                   # Skills avec SKILL.md (optionnel)
+├── hooks/                    # Event handlers (optionnel)
+└── README.md                 # Documentation (fortement recommandé)
+```
+
+### Configuration Requise
+
+**Plugin Manifest** (`.claude-plugin/plugin.json`)
+
+Métadonnées essentielles du plugin :
+
+```json
+{
+  "name": "mon-plugin",
+  "description": "Description claire du plugin",
+  "version": "1.0.0",
+  "author": "Votre Nom"
+}
+```
+
+**Marketplace Manifest** (`.claude-plugin/marketplace.json`)
+
+Créé à la racine du marketplace (niveau parent des plugins) :
+
+```json
+{
+  "name": "mon-marketplace",
+  "owner": "organisation",
+  "plugins": [
+    {
+      "name": "plugin-name",
+      "source": "./plugin-name",
+      "description": "Description du plugin"
+    }
+  ]
+}
+```
+
+### Quand Créer un Plugin ?
+
+**Choisissez Plugin quand :**
+- Partage de fonctionnalités entre multiples projets
+- Distribution à une équipe ou communauté
+- Empaquetage cohérent de plusieurs composants liés
+- Versioning et mises à jour contrôlées nécessaires
+- Configuration d'équipe standardisée (`.claude/settings.json`)
+
+**Choisissez Composants individuels quand :**
+- Fonctionnalité spécifique à un seul projet
+- Prototypage rapide sans besoin de distribution
+- Personnalisation locale non partageable
+
+### Workflow de Création
+
+1.  **Initialiser la structure**
+    - Créer dossier plugin avec sous-répertoire `.claude-plugin/`
+    - Créer `plugin.json` avec métadonnées
+
+2.  **Ajouter composants**
+    - Créer `commands/` pour slash commands (fichiers `.md`)
+    - Créer `agents/` pour subagents (fichiers `.md` avec frontmatter)
+    - Créer `skills/` pour skills (dossiers avec `SKILL.md`)
+    - Créer `hooks/` pour event handlers (`hooks.json`)
+
+3.  **Créer marketplace de test**
+    - Créer dossier parent marketplace
+    - Ajouter `marketplace.json` à la racine
+    - Référencer le plugin dans le tableau `plugins`
+
+4.  **Installation locale**
+    ```bash
+    /plugin marketplace add ./path/to/marketplace
+    /plugin install plugin-name@marketplace-name
+    ```
+
+5.  **Validation**
+    - Vérifier avec `/help` que les commands apparaissent
+    - Tester agents, skills, hooks individuellement
+    - Valider la structure avec le skill `checking-config-compliance`
+
+6.  **Documentation**
+    - Créer `README.md` avec instructions d'installation et usage
+    - Documenter chaque composant (commands, agents, skills)
+    - Inclure exemples d'utilisation
+
+7.  **Distribution**
+    - Versionner avec semantic versioning
+    - Configurer dans `.claude/settings.json` pour équipe
+    - Publier sur marketplace interne ou public
+
+### Commandes de Gestion
+
+```bash
+/plugin                              # Menu interactif de gestion
+/plugin marketplace add <path>       # Enregistrer un marketplace
+/plugin marketplace list             # Lister marketplaces disponibles
+/plugin install name@marketplace     # Installer un plugin
+/plugin enable name@marketplace      # Activer sans réinstaller
+/plugin disable name@marketplace     # Désactiver sans supprimer
+/plugin uninstall name@marketplace   # Suppression complète
+/help                                # Voir commands installées
+```
+
+### Automatisation LeapMultix (CRITIQUE)
+
+Dans ce repository, **n'effectue pas de copies manuelles** : le script `npm run plugin:sync` construit tous les plugins (bundles + unitaires) à partir de `.claude/` et met à jour les manifests.
+
+1. **Définir/ajuster les bundles** dans `leapmultix-marketplace/plugin-profiles.json` (target, listes commands/agents/skills, description, catégorie).
+2. **Lancer la synchro** :
+   ```bash
+   npm run plugin:sync -- --profile=all,core,audit
+   # ou bundle sur-mesure
+   npm run plugin:sync -- --target=leapmultix-marketplace/custom-plugin \
+     --agents=code-reviewer --skills=checking-code-quality --commands=audit-config
+   ```
+3. Le script :
+   - Copie les composants depuis `.claude/`
+   - Regénère les `plugin.json`
+   - Crée les plugins unitaires (`leapmultix-agent-*`, `leapmultix-skill-*`, `leapmultix-command-*`)
+   - Met à jour **les deux manifests marketplace** (`.claude-plugin/marketplace.json` et `leapmultix-marketplace/.claude-plugin/marketplace.json`)
+
+👉 **Règle d'or :** après toute modification d'un command/agent/skill, relance `npm run plugin:sync` avant d'installer/tester les plugins.
+
+### Configuration d'Équipe
+
+Pour déploiement automatique en équipe, configurez dans `.claude/settings.json` :
+
+```json
+{
+  "marketplaces": [
+    {
+      "path": "./path/to/marketplace"
+    }
+  ],
+  "plugins": [
+    {
+      "name": "plugin-name",
+      "marketplace": "marketplace-name",
+      "enabled": true
+    }
+  ]
+}
+```
+
+Lorsque les membres de l'équipe trust le dossier repository, Claude Code installe automatiquement les marketplaces et plugins spécifiés.
+
+### Best Practices
+
+**Structure et Organisation :**
+- Composants à la racine du plugin (pas dans `.claude-plugin/`)
+- Un plugin = une responsabilité cohérente
+- Séparer fonctionnalités complexes en multiple plugins
+
+**Versioning :**
+- Utiliser semantic versioning (MAJOR.MINOR.PATCH)
+- Documenter breaking changes dans README
+- Maintenir changelog pour transparence
+
+**Testing :**
+- Tester cycle complet : uninstall → modify → reinstall
+- Valider sur tous composants (commands, agents, skills, hooks)
+- Tester avec membres équipe avant distribution large
+
+**Documentation :**
+- README complet avec installation, usage, exemples
+- Documenter prérequis (tools, dependencies, permissions)
+- Inclure troubleshooting pour erreurs communes
+
+**Sécurité :**
+- Appliquer principe moindre privilège pour tools
+- Valider inputs dans hooks et commands
+- Ne jamais inclure secrets dans plugin (utiliser env vars)
+
+### Checklist Avant Publication
+
+- [ ] `plugin.json` complet et valide
+- [ ] `marketplace.json` correct (si distribution)
+- [ ] README avec installation et usage
+- [ ] Tous composants testés individuellement
+- [ ] Semantic versioning appliqué
+- [ ] Changelog à jour
+- [ ] Pas de secrets ou credentials
+- [ ] Testé par au moins un autre utilisateur
+- [ ] Documentation des breaking changes
+- [ ] Validation compliance (via skill `checking-config-compliance`)
 
 ---
 
