@@ -242,7 +242,8 @@ function announceVoiceSelection(reason, voice) {
   }
   lastAnnouncedVoiceKey = key;
 
-  // Map reason to human-readable label using hardcoded strings to avoid false positive security warnings
+  // Map reason to human-readable label using hardcoded strings
+  // eslint-disable-next-line security/detect-object-injection, sonarjs/no-object-literal-type-assertion -- False positive: only string literals assigned, no dynamic object access
   let label = 'unknown';
   if (reason === 'language-change') {
     label = 'language change';
