@@ -231,7 +231,6 @@ function getBestVoice(lang) {
   return qualityCandidates[0];
 }
 
-/* eslint-disable security/detect-object-injection -- False positive: switch statement with string literals only */
 function announceVoiceSelection(reason, voice) {
   if (!voice) {
     return;
@@ -243,29 +242,22 @@ function announceVoiceSelection(reason, voice) {
   }
   lastAnnouncedVoiceKey = key;
 
-  // Map reason to human-readable label (using switch for static analyzer compatibility)
-  let label;
-  switch (reason) {
-    case 'language-change':
-      label = 'language change';
-      break;
-    case 'voiceschanged':
-      label = 'voiceschanged';
-      break;
-    case 'init':
-      label = 'boot';
-      break;
-    case 'auto':
-      label = 'auto';
-      break;
-    default:
-      label = reason;
+  // Map reason to human-readable label using hardcoded strings to avoid false positive security warnings
+  let label = 'unknown';
+  if (reason === 'language-change') {
+    label = 'language change';
+  } else if (reason === 'voiceschanged') {
+    label = 'voiceschanged';
+  } else if (reason === 'init') {
+    label = 'boot';
+  } else if (reason === 'auto') {
+    label = 'auto';
   }
+
   console.debug(
     `[Speech] Voice ready (${label}): ${voice.name} (${voice.localService ? 'local' : 'remote'})`
   );
 }
-/* eslint-enable security/detect-object-injection */
 
 function waitForVoiceList(Root) {
   if (waitingForVoiceLoad) {
