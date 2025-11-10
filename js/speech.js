@@ -231,6 +231,7 @@ function getBestVoice(lang) {
   return qualityCandidates[0];
 }
 
+/* eslint-disable security/detect-object-injection -- False positive: switch statement with string literals only */
 function announceVoiceSelection(reason, voice) {
   if (!voice) {
     return;
@@ -242,7 +243,7 @@ function announceVoiceSelection(reason, voice) {
   }
   lastAnnouncedVoiceKey = key;
 
-  // Map reason to human-readable label (avoiding Map.get for static analyzer compatibility)
+  // Map reason to human-readable label (using switch for static analyzer compatibility)
   let label;
   switch (reason) {
     case 'language-change':
@@ -264,6 +265,7 @@ function announceVoiceSelection(reason, voice) {
     `[Speech] Voice ready (${label}): ${voice.name} (${voice.localService ? 'local' : 'remote'})`
   );
 }
+/* eslint-enable security/detect-object-injection */
 
 function waitForVoiceList(Root) {
   if (waitingForVoiceLoad) {
