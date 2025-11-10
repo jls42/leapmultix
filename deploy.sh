@@ -127,6 +127,9 @@ echo -e "${BLUE}📁 Répertoire temporaire: $TEMP_DIR${NC}"
 echo -e "${BLUE}📋 Copie des fichiers sources...${NC}"
 rsync -av \
   --include='index.html' \
+  --include='parents.html' \
+  --include='modes.html' \
+  --include='pwa.html' \
   --include='offline.html' \
   --include='sw.js' \
   --include='manifest.json' \
@@ -199,6 +202,9 @@ SYNC_CMD="aws s3 sync --size-only --delete \
   \"$TEMP_DIR/\" s3://$S3_BUCKET \
   --exclude \"*\" \
   --include \"index.html\" \
+  --include \"parents.html\" \
+  --include \"modes.html\" \
+  --include \"pwa.html\" \
   --include \"offline.html\" \
   --include \"sw.js\" \
   --include \"manifest.json\" \

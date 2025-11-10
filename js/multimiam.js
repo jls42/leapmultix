@@ -395,7 +395,6 @@ export class PacmanGame {
 
     for (let i = 0; i < initialGhostPositions.length; i++) {
       this.ghosts.push({
-        // eslint-disable-next-line security/detect-object-injection -- Safe: controlled numeric index iterating initialGhostPositions
         ...initialGhostPositions[i],
         direction: 'UP', // Direction initiale
         vulnerable: false,

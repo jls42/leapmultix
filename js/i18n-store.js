@@ -37,12 +37,9 @@ export function setTranslations(obj) {
 
 // Utility: resolve nested key like "section.sub.key"
 function resolveKey(obj, path) {
-  return (
-    path
-      .split('.')
-      // eslint-disable-next-line security/detect-object-injection -- Safe: path segments come from controlled translation keys
-      .reduce((acc, seg) => (acc && acc[seg] !== undefined ? acc[seg] : undefined), obj)
-  );
+  return path
+    .split('.')
+    .reduce((acc, seg) => (acc && acc[seg] !== undefined ? acc[seg] : undefined), obj);
 }
 
 // Translate using the local store only
