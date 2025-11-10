@@ -322,7 +322,6 @@ function updateVoiceSelection(reason = 'auto') {
 }
 
 function setupUtterance(text, settings) {
-   
   const utterance = new SpeechSynthesisUtterance(String(text || ''));
   utterance.lang = settings.lang || 'fr-FR';
   utterance.rate = settings.rate ?? 0.9;
