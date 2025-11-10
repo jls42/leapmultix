@@ -37,9 +37,7 @@ export function setTranslations(obj) {
 
 // Utility: resolve nested key like "section.sub.key"
 function resolveKey(obj, path) {
-  return path
-    .split('.')
-    .reduce((acc, seg) => (acc && acc[seg] !== undefined ? acc[seg] : undefined), obj);
+  return path.split('.').reduce((acc, seg) => acc?.[seg], obj);
 }
 
 // Translate using the local store only
