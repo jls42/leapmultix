@@ -249,6 +249,7 @@ function announceVoiceSelection(reason, voice) {
     ['auto', 'auto'],
   ]);
 
+  // eslint-disable-next-line security/detect-object-injection -- False positive: Map.get() with controlled keys for debug logging only
   const label = sourceLabels.get(reason) || reason;
   console.debug(
     `[Speech] Voice ready (${label}): ${voice.name} (${voice.localService ? 'local' : 'remote'})`
