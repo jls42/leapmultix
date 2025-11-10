@@ -133,6 +133,8 @@ rsync -av \
   --include='favicon.svg' \
   --include='favicon.ico' \
   --include='favicon.png' \
+  --include='robots.txt' \
+  --include='sitemap.xml' \
   --include='assets/***' \
   --include='css/***' \
   --include='js/***' \
@@ -203,6 +205,8 @@ SYNC_CMD="aws s3 sync --size-only --delete \
   --include \"favicon.svg\" \
   --include \"favicon.ico\" \
   --include \"favicon.png\" \
+  --include \"robots.txt\" \
+  --include \"sitemap.xml\" \
   --include \"assets/*\" \
   --include \"css/*\" \
   --include \"js/*\" \

@@ -1,0 +1,22 @@
+# robots.txt pour LeapMultix
+# Application éducative pour apprendre les tables de multiplication
+# URL: https://leapmultix.jls42.org/
+
+User-agent: *
+Allow: /
+
+# Blocage des ressources non indexables
+Disallow: /tests/
+Disallow: /scripts/
+Disallow: /node_modules/
+Disallow: /offline.html
+
+# NOTE IMPORTANTE : /js/ et /css/ ne sont PAS bloqués
+# Raison : Google en a besoin pour évaluer le rendu (Mobile-Friendly Test, Core Web Vitals)
+# Référence : Google Webmaster Guidelines 2015+
+
+# Sitemap (aide les moteurs de recherche à découvrir toutes les pages)
+Sitemap: https://leapmultix.jls42.org/sitemap.xml
+
+# Délai de crawl (politesse envers les crawlers)
+Crawl-delay: 1
