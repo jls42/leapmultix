@@ -29,8 +29,13 @@
     <!-- Performance Hints -->
     <link rel="dns-prefetch" href="https://plausible.io" />
     <link rel="preconnect" href="https://plausible.io" crossorigin />
-    <link rel="preload" href="/assets/icons/panda-512.png" as="image" />
-    <link rel="preload" href="/assets/social/leapmultix-social-card.webp" as="image" />
+    <link rel="preload" href="/assets/icons/panda-512.png" as="image" fetchpriority="low" />
+    <link
+      rel="preload"
+      href="/assets/social/leapmultix-social-card.webp"
+      as="image"
+      fetchpriority="low"
+    />
 
     <!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
     <meta property="og:type" content="website" />
@@ -249,6 +254,31 @@
     <link rel="stylesheet" href="css/multimiam.css" />
     <link rel="stylesheet" href="css/multisnake.css" />
     <link rel="stylesheet" href="css/video.css" />
+
+    <script>
+      (() => {
+        const targets = [
+          '/assets/icons/panda-512.png',
+          '/assets/social/leapmultix-social-card.webp',
+        ];
+
+        const warmAssets = () => {
+          window.__preloadedSeoAssets = window.__preloadedSeoAssets || [];
+          targets.forEach(url => {
+            const img = new Image();
+            img.decoding = 'async';
+            img.src = url;
+            window.__preloadedSeoAssets.push(img);
+          });
+        };
+
+        if (document.readyState === 'complete') {
+          requestAnimationFrame(warmAssets);
+        } else {
+          window.addEventListener('load', () => requestAnimationFrame(warmAssets), { once: true });
+        }
+      })();
+    </script>
 
     <!-- Analytics Plausible (remplacé par le script de déploiement) -->
     <!--

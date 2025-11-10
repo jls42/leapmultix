@@ -87,6 +87,8 @@ let selectedVoice = null;
 let currentSpeechPriority = null; // Track priority of current speech
 let lastHighText = '';
 let pendingHighReplay = null;
+let waitingForVoiceLoad = false;
+let lastAnnouncedVoiceKey = null;
 
 function getGlobalRoot() {
   if (typeof globalThis !== 'undefined') return globalThis;
@@ -216,53 +218,94 @@ function getBestVoice(lang) {
   // 3. Try to find a preferred voice (searches both local and remote)
   const preferredVoice = findPreferredVoice(qualityCandidates, langPrefix);
   if (preferredVoice) {
-    console.log(
-      `[Speech] Found preferred voice: ${preferredVoice.name} (${preferredVoice.localService ? 'local' : 'remote'})`
-    );
     return preferredVoice;
   }
 
   // 4. Fallback to first local voice (better reliability for offline use)
   const localVoice = qualityCandidates.find(v => v.localService);
   if (localVoice) {
-    console.log(`[Speech] Using first available local voice: ${localVoice.name}`);
     return localVoice;
   }
 
   // 5. Last resort: use first remote voice
-  console.log(
-    `[Speech] No local voice found, using first available remote voice: ${qualityCandidates[0].name}`
-  );
   return qualityCandidates[0];
+}
+
+function announceVoiceSelection(reason, voice) {
+  if (!voice) {
+    return;
+  }
+
+  const key = `${speechSettings.lang}:${voice.name}`;
+  if (lastAnnouncedVoiceKey === key) {
+    return;
+  }
+  lastAnnouncedVoiceKey = key;
+
+  const sourceLabels = {
+    'language-change': 'language change',
+    voiceschanged: 'voiceschanged',
+    init: 'boot',
+    auto: 'auto',
+  };
+
+  const label = sourceLabels[reason] || reason;
+  console.debug(
+    `[Speech] Voice ready (${label}): ${voice.name} (${voice.localService ? 'local' : 'remote'})`
+  );
+}
+
+function waitForVoiceList(Root) {
+  if (waitingForVoiceLoad) {
+    return;
+  }
+  waitingForVoiceLoad = true;
+
+  const handler = () => {
+    waitingForVoiceLoad = false;
+    if (typeof Root.speechSynthesis.removeEventListener === 'function') {
+      Root.speechSynthesis.removeEventListener('voiceschanged', handler);
+    } else {
+      Root.speechSynthesis.onvoiceschanged = null;
+    }
+    updateVoiceSelection('voiceschanged');
+  };
+
+  if (typeof Root.speechSynthesis.addEventListener === 'function') {
+    Root.speechSynthesis.addEventListener('voiceschanged', handler, { once: true });
+  } else {
+    Root.speechSynthesis.onvoiceschanged = handler;
+  }
 }
 
 /**
  * Updates the selected voice based on the current language setting.
  */
-function updateVoiceSelection() {
+function updateVoiceSelection(reason = 'auto') {
   const Root = getGlobalRoot();
   if (!Root?.speechSynthesis) {
     return;
   }
 
   // Voices may not be loaded yet. getVoices() is async.
-  let voices = Root.speechSynthesis.getVoices();
-  if (voices.length === 0) {
-    // If voices are not loaded, wait for the onvoiceschanged event
-    Root.speechSynthesis.onvoiceschanged = () => {
-      voices = Root.speechSynthesis.getVoices();
-      selectedVoice = getBestVoice(speechSettings.lang);
-      console.log(
-        `[Speech] Voice selected onvoiceschanged: ${selectedVoice ? selectedVoice.name : 'default'}`
-      );
-    };
-  } else {
-    // If voices are already available, select one immediately
-    selectedVoice = getBestVoice(speechSettings.lang);
-    console.log(
-      `[Speech] Voice selected immediately: ${selectedVoice ? selectedVoice.name : 'default'}`
-    );
+  const voices = Root.speechSynthesis.getVoices();
+  if (!voices || voices.length === 0) {
+    waitForVoiceList(Root);
+    return;
   }
+
+  const nextVoice = getBestVoice(speechSettings.lang);
+  if (!nextVoice) {
+    selectedVoice = null;
+    return;
+  }
+
+  if (selectedVoice?.name === nextVoice.name) {
+    return;
+  }
+
+  selectedVoice = nextVoice;
+  announceVoiceSelection(reason, selectedVoice);
 }
 
 function setupUtterance(text, settings) {
@@ -438,10 +481,13 @@ export function updateSpeechVoice(langCode) {
     default:
       voiceLang = 'fr-FR';
   }
+  if (speechSettings.lang === voiceLang) {
+    return;
+  }
   speechSettings = { ...speechSettings, lang: voiceLang };
   // Update the selected voice when the language changes
-  updateVoiceSelection();
+  updateVoiceSelection('language-change');
 }
 
 // Initial voice selection when the module is loaded
-updateVoiceSelection();
+updateVoiceSelection('init');
