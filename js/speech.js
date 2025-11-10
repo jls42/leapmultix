@@ -242,15 +242,24 @@ function announceVoiceSelection(reason, voice) {
   }
   lastAnnouncedVoiceKey = key;
 
-  const sourceLabels = new Map([
-    ['language-change', 'language change'],
-    ['voiceschanged', 'voiceschanged'],
-    ['init', 'boot'],
-    ['auto', 'auto'],
-  ]);
-
-  // eslint-disable-next-line security/detect-object-injection -- False positive: Map.get() with controlled keys for debug logging only
-  const label = sourceLabels.get(reason) || reason;
+  // Map reason to human-readable label (avoiding Map.get for static analyzer compatibility)
+  let label;
+  switch (reason) {
+    case 'language-change':
+      label = 'language change';
+      break;
+    case 'voiceschanged':
+      label = 'voiceschanged';
+      break;
+    case 'init':
+      label = 'boot';
+      break;
+    case 'auto':
+      label = 'auto';
+      break;
+    default:
+      label = reason;
+  }
   console.debug(
     `[Speech] Voice ready (${label}): ${voice.name} (${voice.localService ? 'local' : 'remote'})`
   );
