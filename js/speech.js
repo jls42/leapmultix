@@ -10,6 +10,32 @@ let currentVolume = 1;
 let isMuted = false;
 let audioSyncInitialized = false;
 
+const preferredVoiceRegistry = new Map([
+  [
+    'fr',
+    {
+      local: ['Amelie', 'Chantal', 'Thomas'], // macOS/iOS voices
+      remote: ['Google français', 'fr-CA-Standard-A'], // Cloud voices
+    },
+  ],
+  [
+    'en',
+    {
+      local: ['Alex', 'Samantha', 'Daniel'],
+      remote: ['Google US English', 'en-US-Standard-A'],
+    },
+  ],
+  [
+    'es',
+    {
+      local: ['Monica', 'Paulina', 'Diego'],
+      remote: ['Google español', 'es-US-Standard-A'],
+    },
+  ],
+]);
+
+const defaultPreferredVoices = { local: [], remote: [] };
+
 /**
  * Updates the module's state from an audio event or initial state.
  * @param {{volume: number, muted: boolean}} audioState - The new audio state.
@@ -134,24 +160,7 @@ function filterLowQualityVoices(voices) {
  * @returns {SpeechSynthesisVoice | null} The found voice or null.
  */
 function findPreferredVoice(voiceCandidates, langPrefix) {
-  // Preferred voices organized by priority: local high-quality first, then remote
-  const preferredVoices = {
-    fr: {
-      local: ['Amelie', 'Chantal', 'Thomas'], // macOS/iOS voices
-      remote: ['Google français', 'fr-CA-Standard-A'], // Cloud voices
-    },
-    en: {
-      local: ['Alex', 'Samantha', 'Daniel'], // macOS/iOS voices
-      remote: ['Google US English', 'en-US-Standard-A'], // Cloud voices
-    },
-    es: {
-      local: ['Monica', 'Paulina', 'Diego'], // macOS/iOS voices
-      remote: ['Google español', 'es-US-Standard-A'], // Cloud voices
-    },
-  };
-
-  // eslint-disable-next-line security/detect-object-injection -- False positive: langPrefix comes from lang.split('-')[0] with controlled values ('fr'|'en'|'es')
-  const preferred = preferredVoices[langPrefix] || { local: [], remote: [] };
+  const preferred = preferredVoiceRegistry.get(langPrefix) || defaultPreferredVoices;
 
   // First, try to find a preferred local voice (better reliability, no network)
   for (const voiceName of preferred.local) {
@@ -243,7 +252,6 @@ function announceVoiceSelection(reason, voice) {
   lastAnnouncedVoiceKey = key;
 
   // Map reason to human-readable label using hardcoded strings
-  // eslint-disable-next-line security/detect-object-injection, sonarjs/no-object-literal-type-assertion -- False positive: only string literals assigned, no dynamic object access
   let label = 'unknown';
   if (reason === 'language-change') {
     label = 'language change';
@@ -314,7 +322,7 @@ function updateVoiceSelection(reason = 'auto') {
 }
 
 function setupUtterance(text, settings) {
-  // eslint-disable-next-line no-undef -- Browser global provided by speech synthesis API
+   
   const utterance = new SpeechSynthesisUtterance(String(text || ''));
   utterance.lang = settings.lang || 'fr-FR';
   utterance.rate = settings.rate ?? 0.9;
