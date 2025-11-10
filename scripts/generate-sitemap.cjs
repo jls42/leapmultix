@@ -19,7 +19,25 @@ const pages = [
     url: '/',
     changefreq: 'weekly',
     priority: 1.0,
-    languages: ['fr', 'en', 'es'], // Support multilingue
+    languages: ['fr', 'en', 'es'],
+  },
+  {
+    url: '/modes.html',
+    changefreq: 'weekly',
+    priority: 0.8,
+    languages: ['fr', 'en', 'es'],
+  },
+  {
+    url: '/parents.html',
+    changefreq: 'weekly',
+    priority: 0.7,
+    languages: ['fr', 'en', 'es'],
+  },
+  {
+    url: '/pwa.html',
+    changefreq: 'weekly',
+    priority: 0.6,
+    languages: ['fr', 'en', 'es'],
   },
 ];
 

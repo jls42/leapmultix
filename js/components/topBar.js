@@ -14,6 +14,9 @@ import { AudioManager } from '../core/audio.js';
 import { goToSlide } from '../slides.js';
 import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
+import UserManager from '../userManager.js';
+
+const tableSettingsListeners = new WeakSet();
 
 export const TopBar = {
   _outsideClickBound: false,
@@ -367,18 +370,26 @@ export const TopBar = {
 
   attachTableSettingsButtons() {
     for (const btn of document.querySelectorAll('.table-settings-btn')) {
-      if (!btn.dataset.topBarListenerAttached) {
-        btn.addEventListener('click', () => {
-          import('../components/tableSettingsModal.js')
-            .then(module => {
-              module.TableSettingsModal.open();
-            })
-            .catch(error => {
-              console.error('Erreur chargement modale paramètres tables:', error);
-            });
-        });
-        btn.dataset.topBarListenerAttached = 'true';
-      }
+      if (tableSettingsListeners.has(btn)) continue;
+      btn.addEventListener('click', () => {
+        const currentUser =
+          typeof UserManager.getCurrentUser === 'function' ? UserManager.getCurrentUser() : null;
+        if (!currentUser) {
+          alert(
+            getTranslation('table_settings_requires_user') ||
+              'Choisis un profil avant de personnaliser les tables.'
+          );
+          return;
+        }
+        import('../components/tableSettingsModal.js')
+          .then(module => {
+            module.TableSettingsModal.open();
+          })
+          .catch(error => {
+            console.error('Erreur chargement modale paramètres tables:', error);
+          });
+      });
+      tableSettingsListeners.add(btn);
     }
   },
 
