@@ -242,14 +242,14 @@ function announceVoiceSelection(reason, voice) {
   }
   lastAnnouncedVoiceKey = key;
 
-  const sourceLabels = {
-    'language-change': 'language change',
-    voiceschanged: 'voiceschanged',
-    init: 'boot',
-    auto: 'auto',
-  };
+  const sourceLabels = new Map([
+    ['language-change', 'language change'],
+    ['voiceschanged', 'voiceschanged'],
+    ['init', 'boot'],
+    ['auto', 'auto'],
+  ]);
 
-  const label = sourceLabels[reason] || reason;
+  const label = sourceLabels.get(reason) || reason;
   console.debug(
     `[Speech] Voice ready (${label}): ${voice.name} (${voice.localService ? 'local' : 'remote'})`
   );

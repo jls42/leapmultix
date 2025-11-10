@@ -29,7 +29,7 @@ const formatScore = category => {
   if (!category || typeof category.score !== 'number') {
     return 'N/A';
   }
-  return Math.round(category.score * 100);
+  return String(Math.round(category.score * 100));
 };
 
 async function ensureReportDirectory() {
@@ -81,7 +81,9 @@ async function main() {
   console.log('ℹ️  Définissez SEO_REPORT_BASE_URL pour auditer un environnement spécifique.');
 }
 
-main().catch(error => {
+try {
+  await main();
+} catch (error) {
   console.error('❌ Échec du rapport SEO :', error);
   process.exit(1);
-});
+}

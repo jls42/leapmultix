@@ -262,20 +262,22 @@
           '/assets/social/leapmultix-social-card.webp',
         ];
 
+        const root = globalThis;
+
         const warmAssets = () => {
-          window.__preloadedSeoAssets = window.__preloadedSeoAssets || [];
-          targets.forEach(url => {
+          root.__preloadedSeoAssets = root.__preloadedSeoAssets || [];
+          for (const url of targets) {
             const img = new Image();
             img.decoding = 'async';
             img.src = url;
-            window.__preloadedSeoAssets.push(img);
-          });
+            root.__preloadedSeoAssets.push(img);
+          }
         };
 
         if (document.readyState === 'complete') {
           requestAnimationFrame(warmAssets);
         } else {
-          window.addEventListener('load', () => requestAnimationFrame(warmAssets), { once: true });
+          root.addEventListener('load', () => requestAnimationFrame(warmAssets), { once: true });
         }
       })();
     </script>
@@ -317,15 +319,7 @@
           </p>
 
           <!-- SEO Content Block: Visible before JS execution -->
-          <div
-            class="seo-intro"
-            style="
-              margin-top: 1.5rem;
-              padding: 1rem;
-              background: rgba(255, 255, 255, 0.05);
-              border-radius: 8px;
-            "
-          >
+          <div class="seo-intro">
             <p data-translate="app_intro_p1">
               <strong>LeapMultix</strong> est une application éducative interactive gratuite pour
               apprendre et maîtriser les <strong>tables de multiplication</strong>. Conçue pour tous

@@ -72,6 +72,13 @@
   color: var(--primary-color-dark, #303f9f);
 }
 
+.seo-intro {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgb(255 255 255 / 0.05);
+  border-radius: 8px;
+}
+
 /* Liens externes */
 .legal-section a[href^='http'],
 .legal-section a[href^='mailto:'] {

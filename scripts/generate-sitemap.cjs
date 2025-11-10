@@ -6,8 +6,8 @@
  * Usage: node scripts/generate-sitemap.cjs
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 // Configuration
 const BASE_URL = 'https://leapmultix.jls42.org';
@@ -18,7 +18,7 @@ const pages = [
   {
     url: '/',
     changefreq: 'weekly',
-    priority: 1.0,
+    priority: 1,
     languages: ['fr', 'en', 'es'],
   },
   {
@@ -55,7 +55,7 @@ function generateSitemap() {
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 `;
 
-  pages.forEach(page => {
+  for (const page of pages) {
     const fullUrl = `${BASE_URL}${page.url}`;
 
     xml += `  <url>
@@ -67,10 +67,10 @@ function generateSitemap() {
 
     // Ajouter les liens multilingues
     if (page.languages && page.languages.length > 0) {
-      page.languages.forEach(lang => {
+      for (const lang of page.languages) {
         xml += `    <xhtml:link rel="alternate" hreflang="${lang}" href="${fullUrl}" />
 `;
-      });
+      }
       // Ajouter x-default
       xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${fullUrl}" />
 `;
@@ -78,7 +78,7 @@ function generateSitemap() {
 
     xml += `  </url>
 `;
-  });
+  }
 
   xml += `</urlset>
 `;
