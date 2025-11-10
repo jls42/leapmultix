@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://leapmultix.jls42.org/</loc>
+    <lastmod>2025-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://leapmultix.jls42.org/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://leapmultix.jls42.org/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://leapmultix.jls42.org/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://leapmultix.jls42.org/" />
+  </url>
+  <url>
+    <loc>https://leapmultix.jls42.org/modes.html</loc>
+    <lastmod>2025-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://leapmultix.jls42.org/modes.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://leapmultix.jls42.org/modes.html" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://leapmultix.jls42.org/modes.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://leapmultix.jls42.org/modes.html" />
+  </url>
+  <url>
+    <loc>https://leapmultix.jls42.org/parents.html</loc>
+    <lastmod>2025-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://leapmultix.jls42.org/parents.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://leapmultix.jls42.org/parents.html" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://leapmultix.jls42.org/parents.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://leapmultix.jls42.org/parents.html" />
+  </url>
+  <url>
+    <loc>https://leapmultix.jls42.org/pwa.html</loc>
+    <lastmod>2025-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://leapmultix.jls42.org/pwa.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://leapmultix.jls42.org/pwa.html" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://leapmultix.jls42.org/pwa.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://leapmultix.jls42.org/pwa.html" />
+  </url>
+</urlset>

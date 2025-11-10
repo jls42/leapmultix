@@ -13,13 +13,11 @@ const isFreeLabyrinthCell = (labyrinth, x, y) => {
     return false;
   }
 
-  // eslint-disable-next-line security/detect-object-injection -- y is validated numeric index
   const row = labyrinth[y];
   if (!Array.isArray(row) || !isValidIndex(x, row.length)) {
     return false;
   }
 
-  // eslint-disable-next-line security/detect-object-injection -- x is validated numeric index
   return row[x] === 0;
 };
 

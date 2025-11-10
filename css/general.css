@@ -42,7 +42,7 @@
 .about-section h3,
 .legal-section h3,
 .privacy-section h3 {
-  color: var(--primary-color, #3f51b5);
+  color: #3498db;
   margin-bottom: 15px;
   font-size: 1.2em;
 }
@@ -52,6 +52,7 @@
 .privacy-section p {
   line-height: 1.6;
   margin-bottom: 10px;
+  color: #2c3e50;
 }
 
 /* Liens inline dans le texte */
@@ -69,6 +70,13 @@
 
 .inline-link:hover {
   color: var(--primary-color-dark, #303f9f);
+}
+
+.seo-intro {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgb(255 255 255 / 0.05);
+  border-radius: 8px;
 }
 
 /* Liens externes */
@@ -100,8 +108,8 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: var(--primary-color, #3f51b5);
-  color: white;
+  background: #2471a3; /* WCAG AA compliant: 4.92:1 contrast ratio with white */
+  color: #fff;
   text-decoration: none;
   border-radius: 8px;
   margin-top: 10px;
@@ -109,7 +117,7 @@
 }
 
 .opensource-link:hover {
-  background: var(--primary-color-dark, #303f9f);
+  background: #1f618d; /* Darker shade for hover state */
   transform: translateY(-1px);
 }
 
