@@ -114,7 +114,7 @@ export class AdventureMode extends GameMode {
                     <div class="adventure-character" id="adventure-character">${this.getPlayerAvatar()}</div>
                     <div class="adventure-path" id="adventure-path"></div>
                     <div class="adventure-treasure" id="adventure-treasure">
-                        <img src="assets/images/arcade/cadeau_ferme.png" alt="cadeau fermé">
+                        <img src="assets/images/arcade/cadeau_ferme.png" alt="cadeau fermé" width="80" height="80">
                     </div>
                 </div>
                 
@@ -511,7 +511,10 @@ export class AdventureMode extends GameMode {
         img.alt = 'cadeau ouvert';
       } else {
         treasure.textContent = '';
-        const safeImg = createSafeImage('assets/images/arcade/cadeau_ouvert.png', 'cadeau ouvert');
+        const safeImg = createSafeImage('assets/images/arcade/cadeau_ouvert.png', 'cadeau ouvert', {
+          width: '80',
+          height: '80',
+        });
         treasure.appendChild(safeImg);
       }
     }

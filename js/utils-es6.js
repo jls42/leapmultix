@@ -31,12 +31,6 @@ import {
   getArcadeScoresMemory as _getArcadeScoresMemory,
   resetArcadeScoresMemory as _resetArcadeScoresMemory,
 } from './arcade-scores.js';
-import {
-  updateBackgroundByAvatar as _updateBackgroundByAvatar,
-  startBackgroundRotation as _startBackgroundRotation,
-  renderAvatarSelector as _renderAvatarSelector,
-  updateWelcomeMessageUI as _updateWelcomeMessageUI,
-} from './main-helpers.js';
 import { updateInfoBar as _updateInfoBar } from './components/infoBar.js';
 import { updateCoinDisplay as _updateCoinDisplay } from './coin-display.js';
 import {
@@ -99,13 +93,6 @@ export const numberToWords = num => {
 export const getStarsHTML = Utils.getStarsHTML;
 export const cleanupGameResources = _cleanupGameResources;
 export const getEventListeners = _getEventListeners;
-// Main.js utilities exposed as globals (bridge for modules)
-// Helpers migrés vers ES6 (source: main-helpers.js)
-export const updateBackgroundByAvatar = _updateBackgroundByAvatar;
-export const startBackgroundRotation = _startBackgroundRotation;
-export const renderAvatarSelector = _renderAvatarSelector;
-export const updateWelcomeMessageUI = _updateWelcomeMessageUI;
-
 // Plus de pont global: utiliser les imports ESM (main-helpers)
 
 // Petits helpers legacy conservés accessibles via imports
@@ -119,6 +106,14 @@ export const applyStaticTranslations = _applyStaticTranslations;
 export const updateLanguageButtons = _updateLanguageButtons;
 export const updateSpeechVoice = _updateSpeechVoice;
 export const changeLanguage = _changeLanguage;
+
+export {
+  updateBackgroundByAvatar,
+  startBackgroundRotation,
+  renderAvatarSelector,
+  updateWelcomeMessageUI,
+  updateSeoHeroImage,
+} from './main-helpers.js';
 
 // Export de l'objet utilitaire modernisé
 export { Utils };

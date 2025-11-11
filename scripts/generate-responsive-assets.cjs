@@ -7,10 +7,19 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+let sharp = null;
+
+try {
+  // sharp fournit la conversion WebP + resize avec support alpha
+  sharp = require('sharp');
+} catch (error) {
+  // La dépendance n'est peut-être pas installée dans l'environnement courant
+  console.warn('⚠️  Module "sharp" introuvable. Activera le mode fallback.');
+}
 
 const ASSETS_SOURCE = './assets/images'; // Originaux
-const ASSETS_DIST = './dist/assets/images'; // Build optimisés
+const ASSETS_DIST = './dist/assets/images'; // Build optimisés pour futur build
+const PUBLIC_ASSETS_DIR = './assets/generated-images'; // Compatible deploy.sh actuel
 const REPORT_FILE = './analysis/responsive-assets-report.json';
 
 // Configuration des résolutions cibles
@@ -63,6 +72,7 @@ class ResponsiveAssetGenerator {
 
       await this.scanAndProcess();
       await this.generateImageMap();
+      await this.syncToPublicDir();
       this.writeReport();
       this.displaySummary();
     } catch (error) {
@@ -93,6 +103,7 @@ class ResponsiveAssetGenerator {
       });
 
       console.log(`📋 Copié ${existingFiles.length} assets originaux`);
+      await this.syncToPublicDir();
       this.writeReport();
     } catch (error) {
       console.warn('⚠️ Mode fallback échoué:', error.message);
@@ -100,22 +111,10 @@ class ResponsiveAssetGenerator {
   }
 
   checkDependencies() {
-    const tools = ['cwebp', 'identify'];
-    const missing = [];
-
-    for (const tool of tools) {
-      try {
-        execSync(`which ${tool}`, { stdio: 'pipe' });
-      } catch (e) {
-        missing.push(tool);
-      }
-    }
-
-    if (missing.length > 0) {
-      console.warn(`⚠️  Outils manquants: ${missing.join(', ')}`);
-      console.log(`💡 Pour optimisation complète:`);
-      console.log(`   sudo apt install webp imagemagick optipng`);
-      console.log(`🔄 Mode fallback: copie des originaux seulement`);
+    if (!sharp) {
+      console.warn("⚠️  sharp n'est pas installé.");
+      console.log('💡 Pour activer la génération WebP: npm install --save-dev sharp');
+      console.log('🔄 Mode fallback: copie des originaux seulement');
       return false;
     }
     return true;
@@ -155,18 +154,30 @@ class ResponsiveAssetGenerator {
   }
 
   findSourceFiles() {
-    try {
-      const result = execSync(`find ${ASSETS_SOURCE} -name "*.png" -type f`, {
-        encoding: 'utf-8',
-      });
-      return result
-        .trim()
-        .split('\n')
-        .filter(file => file.length > 0);
-    } catch (error) {
-      console.error('❌ Erreur lors du scan des fichiers sources');
-      return [];
-    }
+    return this.walkFiles(ASSETS_SOURCE, '.png');
+  }
+
+  walkFiles(rootDir, extension) {
+    const files = [];
+
+    const walk = currentDir => {
+      if (!fs.existsSync(currentDir)) {
+        return;
+      }
+
+      const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(currentDir, entry.name);
+        if (entry.isDirectory()) {
+          walk(fullPath);
+        } else if (entry.isFile() && entry.name.toLowerCase().endsWith(extension)) {
+          files.push(fullPath);
+        }
+      }
+    };
+
+    walk(rootDir);
+    return files;
   }
 
   async processFile(sourceFile) {
@@ -185,7 +196,7 @@ class ResponsiveAssetGenerator {
     }
 
     // Obtenir dimensions originales
-    const dimensions = this.getImageDimensions(sourceFile);
+    const dimensions = await this.getImageDimensions(sourceFile);
     const baseName = path.basename(sourceFile, '.png');
 
     // Déterminer quelles résolutions générer
@@ -198,16 +209,19 @@ class ResponsiveAssetGenerator {
     }
   }
 
-  getImageDimensions(filePath) {
+  async getImageDimensions(filePath) {
     try {
-      const output = execSync(`identify -format "%wx%h" "${filePath}"`, {
-        encoding: 'utf-8',
-      });
-      const [width, height] = output.trim().split('x').map(Number);
-      return { width, height };
+      if (!sharp) {
+        return { width: 1024, height: 1024 };
+      }
+      const metadata = await sharp(filePath).metadata();
+      return {
+        width: metadata.width || 1024,
+        height: metadata.height || 1024,
+      };
     } catch (error) {
       console.warn(`⚠️  Impossible de lire dimensions: ${filePath}`);
-      return { width: 1024, height: 1024 }; // Défaut
+      return { width: 1024, height: 1024 };
     }
   }
 
@@ -253,9 +267,18 @@ class ResponsiveAssetGenerator {
     }
 
     try {
-      // Générer WebP redimensionné avec transparence
-      const cmd = `cwebp -resize ${config.width} 0 -q ${config.quality} -alpha_q 100 -mt "${sourceFile}" -o "${webpFile}"`;
-      execSync(cmd, { stdio: 'pipe' });
+      if (!sharp) {
+        throw new Error('sharp non disponible');
+      }
+
+      await sharp(sourceFile)
+        .resize({ width: config.width, withoutEnlargement: true })
+        .webp({
+          quality: config.quality,
+          alphaQuality: 100,
+          effort: 5,
+        })
+        .toFile(webpFile);
 
       const stats = fs.statSync(webpFile);
       this.report.sizeAfter += stats.size;
@@ -265,16 +288,10 @@ class ResponsiveAssetGenerator {
   }
 
   async generateImageMap() {
-    // Créer un mapping JSON pour le runtime
     const imageMap = {};
 
     try {
-      const webpFiles = execSync(`find ${ASSETS_DIST} -name "*.webp" -type f`, {
-        encoding: 'utf-8',
-      })
-        .trim()
-        .split('\n')
-        .filter(file => file.length > 0);
+      const webpFiles = this.walkFiles(ASSETS_DIST, '.webp');
 
       webpFiles.forEach(webpFile => {
         const relativePath = path.relative(ASSETS_DIST, webpFile);
@@ -295,13 +312,30 @@ class ResponsiveAssetGenerator {
         }
       });
 
-      // Écrire le mapping
       const mapFile = path.join(ASSETS_DIST, 'image-map.json');
       fs.writeFileSync(mapFile, JSON.stringify(imageMap, null, 2));
 
       console.log(`📋 Image map générée: ${Object.keys(imageMap).length} assets`);
     } catch (error) {
       console.warn('⚠️  Impossible de générer image map:', error.message);
+    }
+  }
+
+  async syncToPublicDir() {
+    if (!PUBLIC_ASSETS_DIR) {
+      return;
+    }
+
+    try {
+      fs.rmSync(PUBLIC_ASSETS_DIR, { recursive: true, force: true });
+      fs.mkdirSync(path.dirname(PUBLIC_ASSETS_DIR), { recursive: true });
+      fs.cpSync(ASSETS_DIST, PUBLIC_ASSETS_DIR, { recursive: true });
+      console.log(`📦 Assets copiés vers ${PUBLIC_ASSETS_DIR} (déploiement direct)`);
+    } catch (error) {
+      console.warn(
+        '⚠️  Impossible de copier les assets générés vers assets/generated-images:',
+        error.message
+      );
     }
   }
 

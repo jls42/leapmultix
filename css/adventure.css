@@ -272,7 +272,11 @@
   font-size: 18px;
   border-radius: 15px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s,
+    background-color 0.3s,
+    border-color 0.3s;
 
   /* font-family héritée de body */
   box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);

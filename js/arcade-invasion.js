@@ -18,6 +18,7 @@ import {
 } from './utils-es6.js';
 import { eventBus } from './core/eventBus.js';
 import { InfoBar } from './components/infoBar.js';
+import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
 import { getDifficultySettings } from './difficulty.js';
 import { gameState as globalGameState } from './game.js';
 import { TablePreferences } from './core/tablePreferences.js';
@@ -235,6 +236,122 @@ function computeBaseAlienSpeed(isMobile, difficulty, enemySpeed) {
   return 0.09 * enemySpeed;
 }
 
+function createSpaceshipSprite(selectedState) {
+  const playerAvatar = selectedState?.avatar ?? 'fox';
+  const spaceshipFile =
+    selectedState?.selectedSpaceship || `spaceship_${playerAvatar}.png|spaceship_default.png`;
+  const [mainFile, rawFallbackFile] = spaceshipFile.split('|');
+
+  const sanitizeSpriteName = fileName => (fileName || '').trim().replace(/\.png$/i, '');
+  const mainSpriteName = sanitizeSpriteName(mainFile) || 'spaceship_default';
+
+  let fallbackSpriteName = null;
+  if (rawFallbackFile?.trim() && rawFallbackFile !== mainFile) {
+    fallbackSpriteName = sanitizeSpriteName(rawFallbackFile);
+  } else if (mainSpriteName !== 'spaceship_default') {
+    fallbackSpriteName = 'spaceship_default';
+  }
+
+  const loaderInstance = arcadeSpriteLoader?.loader;
+  const spriteContext = 'ui';
+  const createSpriteSource = spriteName => {
+    if (!spriteName) return null;
+    const normalized = sanitizeSpriteName(spriteName);
+    const basePath = `assets/images/arcade/${normalized}.png`;
+    let optimizedUrl = basePath;
+
+    try {
+      const optimalSize = loaderInstance?.calculateOptimalSize?.(spriteContext);
+      if (optimalSize && loaderInstance?.getOptimalImageUrl) {
+        optimizedUrl = loaderInstance.getOptimalImageUrl(basePath, optimalSize);
+      }
+    } catch (error) {
+      console.warn(`[Arcade] Impossible d'optimiser le sprite ${normalized}`, error);
+    }
+
+    return {
+      name: normalized,
+      basePath,
+      optimizedUrl,
+    };
+  };
+
+  const spaceshipSources = {
+    primary: createSpriteSource(mainSpriteName),
+    fallback:
+      fallbackSpriteName && fallbackSpriteName !== mainSpriteName
+        ? createSpriteSource(fallbackSpriteName)
+        : null,
+  };
+
+  const spaceshipImg = new Image();
+  spaceshipImg.decoding = 'async';
+
+  let activeSpriteKey = 'primary';
+  let attemptedOptimizedRecovery = false;
+  let fallbackApplied = false;
+
+  const assignSpriteSource = key => {
+    const source = spaceshipSources[key];
+    if (!source) return false;
+    activeSpriteKey = key;
+    attemptedOptimizedRecovery = false;
+    spaceshipImg.src = source.optimizedUrl || source.basePath;
+    return true;
+  };
+
+  const canRetryWithBaseSource = source => {
+    if (attemptedOptimizedRecovery) return false;
+    const optimizedUrl = source?.optimizedUrl;
+    if (!optimizedUrl) return false;
+    return optimizedUrl !== source?.basePath;
+  };
+
+  const tryRecoverFromOptimizedFailure = source => {
+    if (!canRetryWithBaseSource(source)) {
+      return false;
+    }
+
+    attemptedOptimizedRecovery = true;
+    spaceshipImg.src = source.basePath;
+    return true;
+  };
+
+  const tryApplyFallbackSprite = () => {
+    const fallbackSource = spaceshipSources.fallback;
+    if (activeSpriteKey !== 'primary' || !fallbackSource || fallbackApplied) {
+      return false;
+    }
+
+    fallbackApplied = true;
+    const fallbackName = fallbackSource.name ?? 'spaceship_default';
+    console.info(
+      `[Arcade] Image du vaisseau personnalisée non trouvée, utilisation de "${fallbackName}" en secours.`
+    );
+    assignSpriteSource('fallback');
+    return true;
+  };
+
+  spaceshipImg.onerror = function handleSpaceshipError() {
+    const source = spaceshipSources[activeSpriteKey];
+    if (tryRecoverFromOptimizedFailure(source)) {
+      return;
+    }
+
+    if (tryApplyFallbackSprite()) {
+      return;
+    }
+
+    console.error(
+      `[Arcade] Impossible de charger le sprite de vaisseau "${source?.name ?? 'inconnu'}".`
+    );
+  };
+
+  assignSpriteSource('primary');
+
+  return spaceshipImg;
+}
+
 export function startMultiplicationInvasion() {
   const gameVars = initializeInvadersGame();
   const difficultySettings = setupGameUI();
@@ -307,27 +424,14 @@ export function startMultiplicationInvasion() {
     avatarDisplayTime = 0;
 
   // Pré-chargement des images
-  const playerAvatar = globalGameState?.avatar ?? 'fox';
-  const spaceshipImg = new Image();
+  const spaceshipImg = createSpaceshipSprite(globalGameState);
   let spaceshipLoaded = false;
   let imagesLoaded = false;
   // Nombre d'images à charger
-
-  // Déterminer le fichier à charger selon la sélection
-  const spaceshipFile =
-    globalGameState.selectedSpaceship || `spaceship_${playerAvatar}.png|spaceship_default.png`;
-  const [mainFile, fallbackFile] = spaceshipFile.split('|');
-  spaceshipImg.onerror = function () {
-    console.info(
-      `[Arcade] Image du vaisseau personnalisée non trouvée (${spaceshipImg.src}), fallback sur le vaisseau générique.`
-    );
-    spaceshipImg.src = `assets/images/arcade/${fallbackFile}`;
-  };
   spaceshipImg.onload = function () {
     spaceshipLoaded = true;
     if (spaceshipLoaded && monsterSpritesLoaded) imagesLoaded = true;
   };
-  spaceshipImg.src = `assets/images/arcade/${mainFile}`;
 
   // ENNEMIS : monstres dédiés
   const monsterSpriteNames = [];
@@ -350,9 +454,8 @@ export function startMultiplicationInvasion() {
     monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
   }
   const monsterSprites = monsterSpriteNames.map(name => {
-    const img = new Image();
-    img.src = 'assets/images/arcade/' + name;
-    return img;
+    const spriteName = name.replace(/\.png$/, '');
+    return arcadeSpriteLoader.loadSpriteSync(spriteName, 'monster');
   });
   let monsterSpritesLoaded = false;
   let loadedCount = 0;
@@ -659,8 +762,8 @@ export function startMultiplicationInvasion() {
       );
 
       const randomAvatar = possibleAvatars[Math.floor(Math.random() * possibleAvatars.length)];
-      avatarErrorImg = new Image();
-      avatarErrorImg.src = `assets/images/arcade/${randomAvatar}_right_128x128.png`;
+      const spriteName = `${randomAvatar}_right_128x128`;
+      avatarErrorImg = arcadeSpriteLoader.loadSpriteSync(spriteName, 'ui');
       avatarErrorX = alien.x;
       avatarErrorY = alien.y;
       avatarErrorW = alienWidth;
@@ -719,8 +822,8 @@ export function startMultiplicationInvasion() {
 
       const liberatedAvatar = possibleAvatars[Math.floor(Math.random() * possibleAvatars.length)];
 
-      avatarImg = new Image();
-      avatarImg.src = `assets/images/arcade/${liberatedAvatar}_right_128x128.png`;
+      const liberatedSpriteName = `${liberatedAvatar}_right_128x128`;
+      avatarImg = arcadeSpriteLoader.loadSpriteSync(liberatedSpriteName, 'ui');
       avatarX = aliens[0].x;
       avatarY = aliens[0].y;
       avatarW = alienWidth;

@@ -4,8 +4,15 @@ const { pathToFileURL } = require('url');
 let versionImageSrc, updateBackgroundImage;
 
 beforeAll(async () => {
-  global.window = global.window || {};
-  global.window.getComputedStyle = jest.fn(() => ({ backgroundImage: 'none' }));
+  const testUrl = 'https://leapmultix.jls42.org/index.html';
+  if (globalThis.document) {
+    Object.defineProperty(globalThis.document, 'baseURI', {
+      value: testUrl,
+      configurable: true,
+    });
+  }
+  const windowRef = globalThis.window || globalThis;
+  windowRef.getComputedStyle = jest.fn(() => ({ backgroundImage: 'none' }));
   try {
     const mod = await import(pathToFileURL(path.join(__dirname, '../../js/cache-updater.js')).href);
     versionImageSrc = mod.versionImageSrc;
@@ -22,26 +29,68 @@ beforeAll(async () => {
     };
     updateBackgroundImage = (el, ts) => {
       el.dataset.bgProcessed = 'true';
-      el.style.backgroundImage = `url("http://example.com/bg.png?v=${ts}")`;
+      el.style.backgroundImage = `url("https://leapmultix.jls42.org/assets/bg.png?v=${ts}")`;
     };
   }
 });
 
+const createImgElement = (absoluteSrc, attributeSrc = absoluteSrc) => {
+  const element = {
+    dataset: {},
+    src: absoluteSrc,
+    __getAttributeCalls: [],
+  };
+  let attrSrc = attributeSrc;
+  element.getAttribute = name => {
+    if (name === 'src') {
+      element.__getAttributeCalls.push({ name, value: attrSrc });
+      return attrSrc;
+    }
+    element.__getAttributeCalls.push({ name, value: undefined });
+    return undefined;
+  };
+  element.setAttribute = (name, value) => {
+    if (name === 'src') {
+      attrSrc = value;
+      element.src = value;
+    }
+  };
+  return element;
+};
+
 describe('cache-updater helpers', () => {
   test('versionImageSrc adds version param', () => {
-    const img = { src: 'http://example.com/img.png', dataset: {} };
+    const img = createImgElement('https://leapmultix.jls42.org/assets/img.png');
     versionImageSrc(img, '123');
-    expect(img.src).toBe('http://example.com/img.png?v=123');
-    expect(img.dataset.originalSrc).toBe('http://example.com/img.png');
+    expect(img.src).toBe('https://leapmultix.jls42.org/assets/img.png?v=123');
+    expect(img.dataset.originalSrc).toBe('https://leapmultix.jls42.org/assets/img.png');
+  });
+
+  test('versionImageSrc preserves subdirectory for relative paths', () => {
+    const img = createImgElement(
+      'https://leapmultix.jls42.org/leapmultix/assets/img.png',
+      'assets/img.png'
+    );
+    expect(typeof img.getAttribute).toBe('function');
+    expect(img.getAttribute('src')).toBe('assets/img.png');
+    versionImageSrc(img, 'cache123');
+    const lastCall = img.__getAttributeCalls.at(-1);
+    expect(lastCall?.value).toBe('assets/img.png');
+    expect(img.src).toBe('https://leapmultix.jls42.org/leapmultix/assets/img.png?v=cache123');
+    expect(img.src).toContain('/leapmultix/assets/img.png?v=cache123');
+    expect(img.dataset.originalSrc).toContain('assets/img.png');
   });
 
   test('updateBackgroundImage adds version to background-image', () => {
     const element = { style: {}, dataset: {} };
-    global.window.getComputedStyle.mockReturnValue({
-      backgroundImage: 'url(http://example.com/bg.png)',
+    const windowRef = globalThis.window || globalThis;
+    windowRef.getComputedStyle.mockReturnValue({
+      backgroundImage: 'url(https://leapmultix.jls42.org/assets/bg.png)',
     });
     updateBackgroundImage(element, '456');
-    expect(element.style.backgroundImage).toBe('url("http://example.com/bg.png?v=456")');
+    expect(element.style.backgroundImage).toBe(
+      'url("https://leapmultix.jls42.org/assets/bg.png?v=456")'
+    );
     expect(element.dataset.bgProcessed).toBe('true');
   });
 });

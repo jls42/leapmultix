@@ -11,7 +11,7 @@ const marketplaceRoot = path.join(repoRoot, 'leapmultix-marketplace');
 const defaultTarget = path.join(marketplaceRoot, 'leapmultix-dev-tools');
 
 const DEFAULT_VERSION = '1.0.0';
-const DEFAULT_AUTHOR = { name: 'LeapMultix Team' };
+const DEFAULT_AUTHOR = { name: 'Julien LE SAUX', email: 'contact@jls42.org' };
 const MARKETPLACE_INFO = {
   name: 'leapmultix-repo-marketplace',
   owner: { name: 'LeapMultix' },

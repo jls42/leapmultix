@@ -18,6 +18,7 @@ import {
   getArcadeScoresMemory,
   resetArcadeScoresMemory,
 } from './utils-es6.js';
+import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
 // showArcadeMessage import not needed here
 import { gameState as globalGameState } from './game.js';
 import { AudioManager } from './core/audio.js';
@@ -387,9 +388,9 @@ for (let i = 146; i <= 155; i++) {
   monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
 }
 export const monsterSprites = monsterSpriteNames.map(name => {
-  const img = new Image();
-  img.src = 'assets/images/arcade/' + name;
-  return img;
+  // Remove .png extension for sprite loader
+  const spriteName = name.replace(/\.png$/, '');
+  return arcadeSpriteLoader.loadSpriteSync(spriteName, 'monster');
 });
 
 // ===== Timer de l'Arcade (compte à rebours) =====

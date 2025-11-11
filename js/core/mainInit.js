@@ -14,8 +14,14 @@ import { goToSlide } from '../slides.js';
 import { initThemes, applyHighContrastMode, applyFontSize } from './theme.js';
 import { removeAvatarAfterCadenas } from './parental.js';
 import { refreshUserList } from './userUi.js';
-import { changeLanguage, getTranslation } from '../utils-es6.js';
-import { updateBackgroundByAvatar, startBackgroundRotation } from '../utils-es6.js';
+import {
+  changeLanguage,
+  getTranslation,
+  loadTranslations,
+  updateBackgroundByAvatar,
+  startBackgroundRotation,
+  updateSeoHeroImage,
+} from '../utils-es6.js';
 import { VideoManager } from '../VideoManager.js';
 
 const avatarAvailableImages = {
@@ -27,12 +33,16 @@ const avatarAvailableImages = {
   default: [1],
 };
 
+const logInitWarning = (message, error) => {
+  console.warn(`[MainInit] ${message}`, error);
+};
+
 function attachHomeButtons() {
-  document.querySelectorAll('.home-btn').forEach(btn => {
+  for (const btn of document.querySelectorAll('.home-btn')) {
     btn.addEventListener('click', () => {
       goToSlide(1);
     });
-  });
+  }
 }
 
 function setupHighContrastAndFontSize() {
@@ -43,11 +53,11 @@ function setupHighContrastAndFontSize() {
       applyHighContrastMode(e.target.checked);
     });
   }
-  document.querySelectorAll('.font-size-btn').forEach(btn => {
+  for (const btn of document.querySelectorAll('.font-size-btn')) {
     btn.addEventListener('click', e => {
       applyFontSize(e.target.dataset.size);
     });
-  });
+  }
 }
 
 function isActivableElement(el) {
@@ -96,9 +106,9 @@ function wireCreationAvatarSelector() {
   creationAvatarSelector.addEventListener('click', e => {
     const btn = e.target.closest('.avatar-btn');
     if (!btn || !creationAvatarSelector.contains(btn)) return;
-    creationAvatarSelector
-      .querySelectorAll('.avatar-btn')
-      .forEach(b => b.classList.remove('active'));
+    for (const button of creationAvatarSelector.querySelectorAll('.avatar-btn')) {
+      button.classList.remove('active');
+    }
     btn.classList.add('active');
     const selectedAvatarId = btn.dataset.avatar;
     updateBackgroundByAvatar(selectedAvatarId);
@@ -110,12 +120,12 @@ function wireCreationAvatarSelector() {
         gameState.avatar = selectedAvatarId;
         try {
           UserState.updateUserData(userData);
-        } catch (e2) {
-          void e2;
+        } catch (error) {
+          logInitWarning('Impossible de persister le changement avatar', error);
         }
       }
-    } catch (e) {
-      void e;
+    } catch (error) {
+      logInitWarning('Sélection avatar création impossible', error);
     }
   });
 }
@@ -133,8 +143,8 @@ function setupParentalPopup() {
     }, 300);
   });
   parentalSubmitBtn.addEventListener('click', () => {
-    const answer = parseInt(parentalAnswerInput.value);
-    const expectedAnswer = parseInt(parentalAnswerInput.dataset.expectedAnswer);
+    const answer = Number.parseInt(parentalAnswerInput.value, 10);
+    const expectedAnswer = Number.parseInt(parentalAnswerInput.dataset.expectedAnswer, 10);
     const errorEl = document.getElementById('parental-error');
     if (answer === expectedAnswer) {
       parentalPopup.classList.remove('visible');
@@ -157,116 +167,181 @@ function setupParentalPopup() {
 }
 
 function wirePersonalizationButton() {
-  document.querySelectorAll('[data-translate="personalization"], [data-slide="6"]').forEach(btn => {
-    if (btn._customizationWired) return;
+  const targets = document.querySelectorAll('[data-translate="personalization"], [data-slide="6"]');
+  for (const btn of targets) {
+    if (btn._customizationWired) continue;
     btn.addEventListener('click', () => {
       setTimeout(() => {
         try {
           Customization.show();
-        } catch (e) {
-          void e;
+        } catch (error) {
+          logInitWarning('Affichage personnalisation impossible', error);
         }
       }, 0);
     });
     btn._customizationWired = true;
-  });
+  }
+}
+
+function scheduleBackgroundRotationTask() {
+  const startRotation = () => {
+    const avatarsWithImages = Object.keys(avatarAvailableImages).filter(
+      id => id !== 'default' && avatarAvailableImages[id].length > 0
+    );
+    const randomAvatarId =
+      avatarsWithImages[Math.floor(Math.random() * avatarsWithImages.length)] || 'fox';
+    updateBackgroundByAvatar(randomAvatarId);
+    startBackgroundRotation(randomAvatarId);
+  };
+
+  if ('requestIdleCallback' in globalThis) {
+    globalThis.requestIdleCallback(startRotation, { timeout: 2000 });
+    return;
+  }
+
+  setTimeout(startRotation, 1500);
+}
+
+async function prepareLanguage() {
+  const lang = typeof Storage.loadLanguage === 'function' ? Storage.loadLanguage() : 'fr';
+  if (lang === 'fr') {
+    try {
+      await loadTranslations('fr');
+    } catch (error) {
+      logInitWarning('Chargement traductions FR impossible', error);
+    }
+    return 'fr';
+  }
+
+  try {
+    await changeLanguage(lang);
+    return lang;
+  } catch (error) {
+    logInitWarning(`Chargement langue ${lang} impossible`, error);
+    try {
+      await changeLanguage('fr');
+    } catch (fallbackError) {
+      logInitWarning('Chargement langue FR de secours impossible', fallbackError);
+    }
+    return 'fr';
+  }
+}
+
+function safeUpdateSeoHeroImage(resolvedLang) {
+  try {
+    updateSeoHeroImage(resolvedLang);
+  } catch (error) {
+    logInitWarning('Mise à jour SEO hero image échouée', error);
+  }
+}
+
+function refreshAudioControls() {
+  try {
+    AudioManager.updateVolumeControls();
+  } catch (error) {
+    logInitWarning('Mise à jour des contrôles audio échouée', error);
+  }
+}
+
+function initUserSystems() {
+  try {
+    UserManager.init();
+  } catch (error) {
+    logInitWarning('Initialisation UserManager impossible', error);
+    refreshUserList();
+  }
+}
+
+function initComponentModules() {
+  try {
+    TopBar.init();
+  } catch (error) {
+    logInitWarning('Initialisation TopBar impossible', error);
+  }
+
+  try {
+    InfoBar.init?.();
+  } catch (error) {
+    logInitWarning('Initialisation InfoBar impossible', error);
+  }
+
+  try {
+    Dashboard.init();
+  } catch (error) {
+    logInitWarning('Initialisation Dashboard impossible', error);
+  }
+
+  try {
+    Customization.init();
+  } catch (error) {
+    logInitWarning('Initialisation Customization impossible', error);
+  }
+
+  try {
+    VideoManager.init();
+  } catch (error) {
+    console.warn('VideoManager init failed', error);
+  }
+}
+
+function wireUiHandlers() {
+  attachHomeButtons();
+  setupHighContrastAndFontSize();
+  setupEnterKeyActivation();
+  wireCreationAvatarSelector();
+  setupParentalPopup();
+  wirePersonalizationButton();
+}
+
+function safeRemoveAvatarAfterCadenas() {
+  try {
+    removeAvatarAfterCadenas();
+  } catch (error) {
+    logInitWarning('Nettoyage avatar cadenas impossible', error);
+  }
 }
 
 async function runInit() {
-  // Random avatar background at startup
-  const avatarsWithImages = Object.keys(avatarAvailableImages).filter(
-    id => id !== 'default' && avatarAvailableImages[id].length > 0
-  );
-  const randomAvatarId =
-    avatarsWithImages[Math.floor(Math.random() * avatarsWithImages.length)] || 'fox';
-  updateBackgroundByAvatar(randomAvatarId);
-  startBackgroundRotation(randomAvatarId);
-
-  // Language load and apply
-  const lang = typeof Storage.loadLanguage === 'function' ? Storage.loadLanguage() : 'fr';
-  try {
-    await changeLanguage(lang);
-  } catch (e) {
-    void e;
-    try {
-      await changeLanguage('fr');
-    } catch (e2) {
-      void e2;
-    }
-  }
-
-  // Audio controls refresh after translations
-  try {
-    AudioManager.updateVolumeControls();
-  } catch (e) {
-    void e;
-  }
-
-  // Themes / accessibility
+  scheduleBackgroundRotationTask();
+  const resolvedLang = await prepareLanguage();
+  safeUpdateSeoHeroImage(resolvedLang);
+  refreshAudioControls();
   initThemes();
-
-  // User manager
-  try {
-    UserManager.init();
-  } catch (e) {
-    void e;
-    refreshUserList();
-  }
-
-  // Components
-  try {
-    TopBar.init();
-  } catch (e) {
-    void e;
-  }
-  try {
-    InfoBar.init?.();
-  } catch (e) {
-    void e;
-  }
-  try {
-    Dashboard.init();
-  } catch (e) {
-    void e;
-  }
-  try {
-    Customization.init();
-  } catch (e) {
-    void e;
-  }
-  try {
-    VideoManager.init();
-  } catch (e) {
-    console.warn('VideoManager init failed', e);
-  }
-
-  attachHomeButtons();
-
-  setupHighContrastAndFontSize();
-
-  setupEnterKeyActivation();
-
-  // Creation avatar selector
-  wireCreationAvatarSelector();
-
-  // Parental popup handlers
-  setupParentalPopup();
-
-  // Personalization button handler (robust selectors)
-  wirePersonalizationButton();
-
-  // Avatar ::after cleanup after DOM
-  try {
-    removeAvatarAfterCadenas();
-  } catch (e) {
-    void e;
-  }
+  initUserSystems();
+  initComponentModules();
+  wireUiHandlers();
+  safeRemoveAvatarAfterCadenas();
 }
 
+let initRequested = false;
+let initStarted = false;
+
+const startInitOnce = () => {
+  if (initStarted) return;
+  initStarted = true;
+  runInit();
+};
+
 export function initOnDomReady() {
-  document.addEventListener('DOMContentLoaded', () => {
-    runInit();
-  });
+  if (initRequested) {
+    if (document.readyState !== 'loading') {
+      startInitOnce();
+    }
+    return;
+  }
+
+  initRequested = true;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startInitOnce, { once: true });
+    return;
+  }
+
+  if (typeof queueMicrotask === 'function') {
+    queueMicrotask(startInitOnce);
+  } else {
+    setTimeout(startInitOnce, 0);
+  }
 }
 
 export default { initOnDomReady };

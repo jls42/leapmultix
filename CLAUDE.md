@@ -44,6 +44,8 @@ npm run verify      # Run lint + test + coverage (quality gate)
 - `npm run build` - Build production bundle with Rollup
 - `npm run serve:dist` - Serve production build from dist/
 - `npm run assets:generate` - Generate responsive image assets
+- `npm run assets:generate` - Generate responsive image assets (obligatoire dès qu'un PNG est ajouté/modifié afin de rafraîchir `assets/generated-images/` avant `deploy.sh`)
+- `npm run assets:backgrounds` - Convert `img/background_*.png` en WebP (à lancer si tu ajoutes/modifies un fond animé)
 - `npm run assets:analyze` - Analyze responsive asset usage
 - `npm run assets:diff` - Compare asset changes
 
@@ -179,7 +181,7 @@ Suppressing static analysis warnings:
 sonarjs:S5725 - External scripts without integrity is acceptable for analytics services that auto-update
 -->
 <!-- eslint-disable-next-line sonarjs/no-script-without-integrity -- Analytics script auto-updates, integrity would break functionality -->
-<script src="https://example.com/analytics.js"></script>
+<script src="https://leapmultix.jls42.org/js/analytics.js"></script>
 ```
 
 #### Best Practices for Suppression

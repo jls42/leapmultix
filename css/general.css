@@ -1,4 +1,35 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('Poppins Regular'),
+    local('Poppins-Regular'),
+    url('../assets/fonts/poppins-latin-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src:
+    local('Poppins SemiBold'),
+    local('Poppins-SemiBold'),
+    url('../assets/fonts/poppins-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    local('Poppins Bold'),
+    local('Poppins-Bold'),
+    url('../assets/fonts/poppins-latin-700.woff2') format('woff2');
+}
 
 /* Styles pour les pages À propos, Mentions légales, Confidentialité */
 .about-content,
@@ -73,10 +104,47 @@
 }
 
 .seo-intro {
-  margin-top: 1.5rem;
-  padding: 1rem;
+  margin: 0.25rem auto 0.75rem;
+  padding: 0.5rem 0.75rem;
   background: rgb(255 255 255 / 0.05);
-  border-radius: 8px;
+  border-radius: 12px;
+  max-width: min(960px, 100%);
+  text-align: center;
+}
+
+.seo-intro p {
+  margin: 0.35rem 0;
+}
+
+.seo-intro p:last-child {
+  margin-bottom: 0.25rem;
+}
+
+.seo-hero {
+  display: block;
+  width: clamp(300px, 72vw, 820px);
+  height: auto;
+  margin: 0.25rem auto 0.5rem;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.18);
+}
+
+.user-selection-intro {
+  margin: 0.25rem auto 1rem;
+  max-width: 520px;
+  text-align: center;
+  min-height: 100px;
+}
+
+.user-selection-intro h1 {
+  font-size: clamp(1rem, 2.8vw, 1.25rem);
+  margin-bottom: 0.15rem;
+}
+
+.user-selection-intro p {
+  font-size: 1rem;
+  color: var(--neutral-dark);
+  margin: 0;
 }
 
 /* Liens externes */
@@ -84,7 +152,9 @@
 .legal-section a[href^='mailto:'] {
   color: var(--primary-color, #3f51b5);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
 }
 
 .legal-section a[href^='http']:hover,
@@ -113,7 +183,10 @@
   text-decoration: none;
   border-radius: 8px;
   margin-top: 10px;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .opensource-link:hover {
@@ -133,7 +206,9 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
   font-size: 1.2em;
 }
 
@@ -155,7 +230,11 @@
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 @media (max-width: 600px) {
@@ -185,7 +264,7 @@ body {
     color 0.5s,
     font-size 0.3s;
   font-size: 16px;
-  background-image: var(--current-bg-image-url, none);
+  background-image: var(--current-bg-image-webp, var(--current-bg-image-url, none));
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -217,35 +296,6 @@ body.font-size-medium {
 }
 .hidden {
   display: none !important;
-}
-
-body.bg-fox-001 {
-  background-image: url('../img/background_fox_001.png');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
-body.bg-fox-002 {
-  background-image: url('../img/background_fox_002.png');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
-body.bg-fox-003 {
-  background-image: url('../img/background_fox_003.png');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
-body.bg-panda-001 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_001.png') no-repeat center
-    center / cover fixed;
 }
 
 .content-card {
@@ -310,326 +360,6 @@ body.bg-panda-001 {
     margin: 0 auto;
     box-sizing: border-box;
   }
-}
-
-body.bg-panda-002 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_002.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-003 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_003.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-004 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_004.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-005 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_005.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-006 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_006.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-007 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_007.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-008 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_008.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-009 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_009.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-010 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_010.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-011 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_011.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-012 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_012.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-013 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_013.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-014 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_014.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-015 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_015.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-016 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_016.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-panda-017 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_panda_017.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-001 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_001.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-002 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_002.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-003 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_003.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-005 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_005.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-006 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_006.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-007 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_007.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-008 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_008.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-009 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_009.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-010 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_010.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-011 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_011.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-012 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_012.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-013 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_013.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-014 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_014.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-unicorn-015 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_unicorn_015.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-001 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_001.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-002 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_002.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-003 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_003.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-004 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_004.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-005 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_005.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-006 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_006.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-007 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_007.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-008 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_008.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-009 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_009.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-010 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_010.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-011 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_011.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-012 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_012.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-013 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_013.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-014 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_014.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-015 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_015.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-016 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_016.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-dragon-017 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_dragon_017.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-001 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_001.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-002 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_002.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-003 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_003.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-004 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_004.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-005 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_005.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-006 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_006.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-007 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_007.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-008 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_008.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-009 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_009.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-010 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_010.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-011 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_011.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-012 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_012.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-013 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_013.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-014 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_014.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-015 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_015.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-016 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_016.png') no-repeat center
-    center / cover fixed;
-}
-
-body.bg-astronaut-017 {
-  background: var(--bg-color, #e6f7ff) url('../img/background_astronaut_017.png') no-repeat center
-    center / cover fixed;
 }
 
 body.font-size-large {
@@ -722,7 +452,10 @@ p {
   font-size: 1em;
   font-family: Poppins, sans-serif;
   box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
-  transition: all 0.3s;
+  transition:
+    background-color 0.3s,
+    box-shadow 0.3s,
+    transform 0.3s;
   min-height: 44px;
 }
 
@@ -756,7 +489,10 @@ p {
   line-height: 1;
   margin: 5px;
   box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
-  transition: all 0.3s;
+  transition:
+    background-color 0.3s,
+    box-shadow 0.3s,
+    transform 0.3s;
 }
 
 .avatar-btn:hover {
@@ -1007,7 +743,10 @@ p {
   border-radius: 15px;
   padding: 15px;
   box-shadow: 0 6px 12px rgb(0 0 0 / 0.1);
-  transition: all 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
   display: inline-block;
   margin: 5px;
   vertical-align: top;

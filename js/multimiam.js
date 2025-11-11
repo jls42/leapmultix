@@ -5,6 +5,7 @@ import { loadSingleAvatar } from './arcade-utils.js';
 import { gameState } from './game.js';
 import { InfoBar } from './components/infoBar.js';
 import { getTranslation } from './utils-es6.js';
+import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
 import PacmanQuestions from './multimiam-questions.js';
 import PacmanRenderer from './multimiam-renderer.js';
 import { initPacmanEngine } from './multimiam-engine.js';
@@ -137,8 +138,7 @@ export class PacmanGame {
     this.gameTitle = getTranslation('multimiam_mode_title');
 
     // Utiliser le logo MultiMiam
-    this.logoImg = new Image();
-    this.logoImg.src = 'assets/images/arcade/logo_multimiam_128x128.png';
+    this.logoImg = arcadeSpriteLoader.loadSpriteSync('logo_multimiam_128x128', 'logo');
   }
 
   // Obtenir les dimensions de la fenêtre avec fallback
@@ -586,13 +586,15 @@ export class PacmanGame {
       // Créer un objet monstre avec des images directionnelles
       const monsterObj = {
         id: monsterIndex,
-        image_left: new Image(),
-        image_right: new Image(),
+        image_left: arcadeSpriteLoader.loadSpriteSync(
+          `monstre${formattedIndex}_left_128x128`,
+          'monster'
+        ),
+        image_right: arcadeSpriteLoader.loadSpriteSync(
+          `monstre${formattedIndex}_right_128x128`,
+          'monster'
+        ),
       };
-
-      // Charger les deux images
-      monsterObj.image_left.src = `assets/images/arcade/monstre${formattedIndex}_left_128x128.png`;
-      monsterObj.image_right.src = `assets/images/arcade/monstre${formattedIndex}_right_128x128.png`;
 
       // Événement quand les images sont chargées
       let loadedCount = 0;
