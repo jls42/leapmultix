@@ -1,3 +1,5 @@
+Copyright 2014 Indian Type Foundry (info@indiantypefoundry.com)
+
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 
 PREAMBLE
