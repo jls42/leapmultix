@@ -20,7 +20,7 @@ import {
   loadTranslations,
   getTranslation as translate,
 } from '../utils-es6.js';
-import { updateBackgroundByAvatar, startBackgroundRotation } from '../utils-es6.js';
+import { updateBackgroundByAvatar, startBackgroundRotation, updateSeoHeroImage } from '../utils-es6.js';
 import { VideoManager } from '../VideoManager.js';
 
 const avatarAvailableImages = {
@@ -197,6 +197,7 @@ async function runInit() {
 
   // Language load and apply
   const lang = typeof Storage.loadLanguage === 'function' ? Storage.loadLanguage() : 'fr';
+  let resolvedLang = lang;
   if (lang === 'fr') {
     try {
       await loadTranslations('fr');
@@ -208,12 +209,19 @@ async function runInit() {
       await changeLanguage(lang);
     } catch (e) {
       void e;
+      resolvedLang = 'fr';
       try {
         await changeLanguage('fr');
       } catch (e2) {
         void e2;
       }
     }
+  }
+
+  try {
+    updateSeoHeroImage(resolvedLang);
+  } catch (e) {
+    void e;
   }
 
   // Audio controls refresh after translations

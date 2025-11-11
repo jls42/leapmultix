@@ -36,6 +36,7 @@ import {
   startBackgroundRotation as _startBackgroundRotation,
   renderAvatarSelector as _renderAvatarSelector,
   updateWelcomeMessageUI as _updateWelcomeMessageUI,
+  updateSeoHeroImage as _updateSeoHeroImage,
 } from './main-helpers.js';
 import { updateInfoBar as _updateInfoBar } from './components/infoBar.js';
 import { updateCoinDisplay as _updateCoinDisplay } from './coin-display.js';
@@ -105,6 +106,7 @@ export const updateBackgroundByAvatar = _updateBackgroundByAvatar;
 export const startBackgroundRotation = _startBackgroundRotation;
 export const renderAvatarSelector = _renderAvatarSelector;
 export const updateWelcomeMessageUI = _updateWelcomeMessageUI;
+export const updateSeoHeroImage = _updateSeoHeroImage;
 
 // Plus de pont global: utiliser les imports ESM (main-helpers)
 

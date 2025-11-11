@@ -4,7 +4,7 @@ import { saveCustomization as _saveCustomization } from './components/customizat
 import { goToSlide as _goToSlide } from './slides.js';
 import { setGameMode as _setGameMode } from './mode-orchestrator.js';
 import { TopBar } from './components/topBar.js';
-import { updateCoinDisplay, updateWelcomeMessageUI } from './utils-es6.js';
+import { updateCoinDisplay, updateWelcomeMessageUI, updateSeoHeroImage } from './utils-es6.js';
 import { gameState } from './game.js';
 import { eventBus } from './core/eventBus.js';
 
@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Refresh active mode texts on language change (ESM wrappers)
     const handler = async e => {
       const mode = gameState?.gameMode;
+      const lang = e?.detail?.lang;
       try {
         switch (mode) {
           case 'quiz':
@@ -142,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('TopBar.updateTranslations failed during language change', err);
       }
       try {
-        const lang = e?.detail?.lang;
         if (lang) TopBar.updateLanguageButtons(lang);
       } catch (err) {
         console.warn('TopBar.updateLanguageButtons failed during language change', err);
@@ -156,6 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
         await updateWelcomeMessageUI();
       } catch (err) {
         console.warn('updateWelcomeMessageUI failed during language change', err);
+      }
+      try {
+        updateSeoHeroImage(lang);
+      } catch (err) {
+        console.warn('updateSeoHeroImage failed during language change', err);
       }
     };
     try {

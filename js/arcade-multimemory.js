@@ -27,6 +27,41 @@ import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 // Dépend des helpers ESM (plus d'assignations window.*)
 
+const FULL_TABLE_SET = Array.from({ length: 10 }, (_, i) => i + 1);
+
+const sanitizeTableList = list =>
+  Array.isArray(list)
+    ? list
+        .map(value => Number(value))
+        .filter(table => Number.isInteger(table) && table >= 1 && table <= 10)
+    : [];
+
+const sanitizeExclusions = exclusions =>
+  Array.isArray(exclusions)
+    ? Array.from(
+        new Set(
+          exclusions
+            .map(value => Number(value))
+            .filter(table => Number.isInteger(table) && table >= 1 && table <= 10)
+        )
+      )
+    : [];
+
+export function resolveMultimemoryTables(baseTables, exclusions) {
+  const normalizedBase = sanitizeTableList(baseTables);
+  const normalizedExclusions = sanitizeExclusions(exclusions);
+
+  const basePool = normalizedBase.length > 0 ? normalizedBase : FULL_TABLE_SET;
+  const filteredBase = basePool.filter(table => !normalizedExclusions.includes(table));
+  if (filteredBase.length > 0) return filteredBase;
+
+  const fallbackPool = FULL_TABLE_SET.filter(table => !normalizedExclusions.includes(table));
+  if (fallbackPool.length > 0) return fallbackPool;
+
+  // Cas extrême: exclusions couvrent tout; on retourne la base pour éviter un tableau vide
+  return basePool;
+}
+
 // Instance locale du jeu (remplace window.memoryGame)
 let _memoryGameInstance = null;
 
@@ -117,6 +152,11 @@ export function startMemoryArcade() {
 
   // Utilisation des paramètres de difficulté (Cascade 2025)
   const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
+
+  const currentUser =
+    typeof UserManager.getCurrentUser === 'function' ? UserManager.getCurrentUser() : null;
+  const globalExclusions = TablePreferences.getActiveExclusions(currentUser);
+  const tablesForGame = resolveMultimemoryTables(difficultySettings.tables, globalExclusions);
   // Durée de la partie selon le niveau
   startArcadeTimer(difficultySettings.timeSeconds);
 
@@ -138,7 +178,8 @@ export function startMemoryArcade() {
   // Initialiser le jeu Memory
   _memoryGameInstance = new MemoryGame('multimemory-canvas', {
     difficulty: gameState.difficulty || 'moyen',
-    tables: difficultySettings.tables,
+    tables: tablesForGame,
+    excludedTables: globalExclusions,
     lives: difficultySettings.lives || 3,
     pairs: difficultySettings.pairs,
   });
@@ -183,7 +224,9 @@ class MemoryGame {
 
     // Options et difficulté
     this.difficulty = options.difficulty || 'moyen';
-    this.tables = Array.isArray(options.tables) ? options.tables : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const sanitizedTables = sanitizeTableList(options.tables);
+    this.tables = sanitizedTables.length > 0 ? [...new Set(sanitizedTables)] : FULL_TABLE_SET;
+    this.excludedTables = sanitizeExclusions(options.excludedTables);
 
     // S'assurer que les options.pairs sont correctement appliquées
     if (typeof options.pairs === 'number') {
@@ -440,17 +483,11 @@ class MemoryGame {
     for (let i = 0; i < this.pairs; i++) {
       if (i >= selectedTables.length) this.shuffleArray(selectedTables);
 
-      // Appliquer l'exclusion globale de tables
-      const currentUser = UserManager.getCurrentUser();
-      const excluded = TablePreferences.isGlobalEnabled(currentUser)
-        ? TablePreferences.getActiveExclusions(currentUser)
-        : [];
-
       // Utiliser generateQuestion pour génération cohérente
       const questionData = generateQuestion({
         type: 'classic',
         tables: this.tables,
-        excludeTables: excluded,
+        excludeTables: this.excludedTables,
         minNum: 1,
         maxNum: 10,
       });

@@ -2,8 +2,15 @@
 import { UserState } from './core/userState.js';
 import { getTranslation } from './utils-es6.js';
 import { gameState } from './game.js';
+import Storage from './core/storage.js';
 
 const AVATAR_LIST = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
+const HERO_IMAGE_BY_LANG = {
+  fr: 'assets/social/leapmultix-social-card.webp',
+  en: 'assets/social/leapmultix-social-card-en.webp',
+  es: 'assets/social/leapmultix-social-card-es.webp',
+};
+const HERO_DEFAULT_LANG = 'fr';
 
 export function renderAvatarSelector(target) {
   let avatarSelector = null;
@@ -85,6 +92,33 @@ export function pickRandomAvatarId() {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+const normalizeLang = lang => {
+  if (!lang) return HERO_DEFAULT_LANG;
+  return String(lang).toLowerCase().split('-')[0];
+};
+
+export function updateSeoHeroImage(preferredLang) {
+  const heroImg = document.querySelector('.seo-hero');
+  if (!heroImg) return;
+
+  const storedLang = typeof Storage.loadLanguage === 'function' ? Storage.loadLanguage() : null;
+  const lang = normalizeLang(preferredLang || storedLang || HERO_DEFAULT_LANG);
+  const nextSrc = HERO_IMAGE_BY_LANG[lang] || HERO_IMAGE_BY_LANG[HERO_DEFAULT_LANG];
+
+  if (heroImg.getAttribute('src') !== nextSrc) {
+    heroImg.setAttribute('src', nextSrc);
+  }
+
+  try {
+    const alt = getTranslation('seo_hero_alt');
+    if (typeof alt === 'string' && !alt.startsWith('[')) {
+      heroImg.setAttribute('alt', alt);
+    }
+  } catch (error) {
+    console.warn('updateSeoHeroImage: impossible de traduire alt', error);
+  }
+}
+
 // No global exposure; use ES module imports instead
 
 // Background helpers (guarded definitions to avoid overriding main.js if present)
@@ -141,4 +175,4 @@ export function startBackgroundRotation(avatarId) {
   _backgroundIntervalId = setInterval(changeBg, 42000);
 }
 
-export default { renderAvatarSelector, updateWelcomeMessageUI };
+export default { renderAvatarSelector, updateWelcomeMessageUI, updateSeoHeroImage };
