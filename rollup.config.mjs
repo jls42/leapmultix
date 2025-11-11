@@ -6,6 +6,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Minimal production build config (ESM, code-splitting enabled)
 export default defineConfig({
   input: {
+    'bootstrap-critical': 'js/bootstrap-critical.js',
     'main-es6': 'js/main-es6.js',
   },
   output: {

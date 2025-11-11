@@ -124,8 +124,12 @@ export function updateBackgroundByAvatar(avatarId) {
 
   _lastUsedImageNumber[effective] = chosen;
   const imageNumber = String(chosen).padStart(3, '0');
-  const imagePath = `../img/background_${effective}_${imageNumber}.png`;
-  document.body.style.setProperty('--current-bg-image-url', `url('${imagePath}')`);
+  const basePath = `../img/background_${effective}_${imageNumber}`;
+  const pngPath = `${basePath}.png`;
+  const webpPath = `${basePath}.webp`;
+  const imageSet = `image-set(url('${webpPath}') type('image/webp'), url('${pngPath}') type('image/png'))`;
+  document.body.style.setProperty('--current-bg-image-webp', imageSet);
+  document.body.style.setProperty('--current-bg-image-url', `url('${pngPath}')`);
 }
 
 export function startBackgroundRotation(avatarId) {

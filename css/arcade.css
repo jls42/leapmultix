@@ -363,7 +363,8 @@ body.night .arcade-dev-banner,
   justify-content: flex-start;
   transition:
     transform 0.2s,
-    max-height 0.3s ease;
+    max-height 0.3s ease,
+    box-shadow 0.3s ease;
   cursor: pointer;
   margin-left: auto;
   margin-right: auto;
@@ -987,7 +988,10 @@ body.night .arcade-dev-banner,
   font-size: 1em;
   border: none;
   cursor: pointer;
-  transition: all 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s,
+    background-color 0.3s;
   background-color: #f0f0f0;
   color: #333;
 }
@@ -1221,5 +1225,4 @@ body.night .arcade-game-card {
 .arcade-game-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgb(0 0 0 / 0.25);
-  transition: all 0.3s ease-in-out;
 }

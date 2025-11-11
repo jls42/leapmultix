@@ -115,6 +115,7 @@ let lastHighText = '';
 let pendingHighReplay = null;
 let waitingForVoiceLoad = false;
 let lastAnnouncedVoiceKey = null;
+const BENIGN_SPEECH_ERRORS = new Set(['interrupted', 'canceled']);
 
 function getGlobalRoot() {
   if (typeof globalThis !== 'undefined') return globalThis;
@@ -435,16 +436,16 @@ function attachUtteranceEvents(utterance, priority) {
   };
 
   utterance.onerror = event => {
-    // Les erreurs 'interrupted' sont normales quand un message en coupe un autre.
-    if (event.error === 'interrupted') {
-      return; // On ne traite pas cela comme une erreur.
+    if (BENIGN_SPEECH_ERRORS.has(event?.error)) {
+      return;
     }
 
     currentSpeechPriority = null;
     if (priority === 'high') {
       pendingHighReplay = null;
     }
-    console.error('[Speech] ❌ Error:', event);
+    const reason = event?.error || event?.message || 'unknown';
+    console.error(`[Speech] ❌ Error: ${reason}`, event);
   };
 }
 

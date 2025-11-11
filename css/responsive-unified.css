@@ -65,6 +65,11 @@ img {
   height: auto;
 }
 
+.img-responsive {
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+}
+
 /* Grid système adaptatif */
 .grid-responsive {
   display: grid;
@@ -526,7 +531,10 @@ img {
     border-radius: 20px;
     font-size: 16px;
     box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
-    transition: all 0.3s;
+    transition:
+      transform 0.3s,
+      box-shadow 0.3s,
+      background-color 0.3s;
   }
 }
 

@@ -14,7 +14,12 @@ import { goToSlide } from '../slides.js';
 import { initThemes, applyHighContrastMode, applyFontSize } from './theme.js';
 import { removeAvatarAfterCadenas } from './parental.js';
 import { refreshUserList } from './userUi.js';
-import { changeLanguage, getTranslation } from '../utils-es6.js';
+import {
+  changeLanguage,
+  getTranslation,
+  loadTranslations,
+  getTranslation as translate,
+} from '../utils-es6.js';
 import { updateBackgroundByAvatar, startBackgroundRotation } from '../utils-es6.js';
 import { VideoManager } from '../VideoManager.js';
 
@@ -173,25 +178,41 @@ function wirePersonalizationButton() {
 }
 
 async function runInit() {
-  // Random avatar background at startup
-  const avatarsWithImages = Object.keys(avatarAvailableImages).filter(
-    id => id !== 'default' && avatarAvailableImages[id].length > 0
-  );
-  const randomAvatarId =
-    avatarsWithImages[Math.floor(Math.random() * avatarsWithImages.length)] || 'fox';
-  updateBackgroundByAvatar(randomAvatarId);
-  startBackgroundRotation(randomAvatarId);
+  // Reporter la rotation des fonds pour ne pas bloquer le LCP
+  const scheduleBackgroundRotation = () => {
+    const avatarsWithImages = Object.keys(avatarAvailableImages).filter(
+      id => id !== 'default' && avatarAvailableImages[id].length > 0
+    );
+    const randomAvatarId =
+      avatarsWithImages[Math.floor(Math.random() * avatarsWithImages.length)] || 'fox';
+    updateBackgroundByAvatar(randomAvatarId);
+    startBackgroundRotation(randomAvatarId);
+  };
+
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(scheduleBackgroundRotation, { timeout: 2000 });
+  } else {
+    setTimeout(scheduleBackgroundRotation, 1500);
+  }
 
   // Language load and apply
   const lang = typeof Storage.loadLanguage === 'function' ? Storage.loadLanguage() : 'fr';
-  try {
-    await changeLanguage(lang);
-  } catch (e) {
-    void e;
+  if (lang === 'fr') {
     try {
-      await changeLanguage('fr');
-    } catch (e2) {
-      void e2;
+      await loadTranslations('fr');
+    } catch (e) {
+      void e;
+    }
+  } else {
+    try {
+      await changeLanguage(lang);
+    } catch (e) {
+      void e;
+      try {
+        await changeLanguage('fr');
+      } catch (e2) {
+        void e2;
+      }
     }
   }
 
@@ -263,10 +284,35 @@ async function runInit() {
   }
 }
 
+let initRequested = false;
+let initStarted = false;
+
+const startInitOnce = () => {
+  if (initStarted) return;
+  initStarted = true;
+  runInit();
+};
+
 export function initOnDomReady() {
-  document.addEventListener('DOMContentLoaded', () => {
-    runInit();
-  });
+  if (initRequested) {
+    if (document.readyState !== 'loading') {
+      startInitOnce();
+    }
+    return;
+  }
+
+  initRequested = true;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startInitOnce, { once: true });
+    return;
+  }
+
+  if (typeof queueMicrotask === 'function') {
+    queueMicrotask(startInitOnce);
+  } else {
+    setTimeout(startInitOnce, 0);
+  }
 }
 
 export default { initOnDomReady };

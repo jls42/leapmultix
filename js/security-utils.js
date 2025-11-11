@@ -122,11 +122,27 @@ export function createSafeImage(src, alt = '', attributes = {}) {
     src = 'assets/images/arcade/fox_head_avatar_128x128.png'; // Image par défaut
   }
 
-  const img = createSafeElement('img', '', {
+  const safeAttributes = {
+    ...attributes,
     src: escapeHtml(src),
     alt: escapeHtml(alt),
-    ...attributes,
-  });
+  };
+
+  const widthValue = safeAttributes.width ?? attributes.width;
+  const heightValue = safeAttributes.height ?? attributes.height;
+
+  const img = createSafeElement('img', '', safeAttributes);
+
+  const widthNumber = Number.parseFloat(widthValue);
+  const heightNumber = Number.parseFloat(heightValue);
+  if (
+    Number.isFinite(widthNumber) &&
+    Number.isFinite(heightNumber) &&
+    widthNumber > 0 &&
+    heightNumber > 0
+  ) {
+    img.style.aspectRatio = `${widthNumber} / ${heightNumber}`;
+  }
 
   return img;
 }

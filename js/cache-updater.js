@@ -7,6 +7,56 @@
 export const APP_VERSION = 'v14';
 export const VERSION_PARAM = `v=${APP_VERSION}`;
 
+const shouldSkipVersioning = element => {
+  if (!element) return false;
+  const dataset = element.dataset || {};
+  if (Object.prototype.hasOwnProperty.call(dataset, 'skipVersion')) {
+    const value = dataset.skipVersion;
+    return value === '' || value === 'true';
+  }
+  return false;
+};
+
+function broadcastAppVersion() {
+  const root =
+    typeof globalThis !== 'undefined'
+      ? globalThis
+      : typeof window !== 'undefined'
+        ? window
+        : undefined;
+  if (!root) {
+    return;
+  }
+
+  root.__LEAPMULTIX_APP_VERSION__ = APP_VERSION;
+  root.__LEAPMULTIX_VERSION_PARAM__ = VERSION_PARAM;
+
+  const doc = root.document;
+  if (!doc || !doc.documentElement) {
+    return;
+  }
+
+  try {
+    doc.documentElement.dataset.appVersion = APP_VERSION;
+    doc.documentElement.dataset.versionParam = VERSION_PARAM;
+  } catch {
+    // dataset not available (e.g., legacy browsers) -> ignore.
+  }
+
+  try {
+    const alreadyDispatched = doc.documentElement.dataset.versionEventDispatched === 'true';
+    if (!alreadyDispatched) {
+      doc.documentElement.dataset.versionEventDispatched = 'true';
+      const detail = { version: APP_VERSION, versionParam: VERSION_PARAM };
+      doc.dispatchEvent(new CustomEvent('leapmultix:version-ready', { detail }));
+    }
+  } catch {
+    // Ignore environments without CustomEvent support.
+  }
+}
+
+broadcastAppVersion();
+
 // Fonction de développement pour forcer le nettoyage complet
 export function forceDevCacheClear() {
   // Unregister service worker
@@ -78,16 +128,14 @@ export function registerServiceWorker() {
 
 // Ajouter un paramètre de version aux ressources principales
 export function addVersionParam() {
-  document
-    .querySelectorAll('script:not([src*="?"]), link[rel="stylesheet"]:not([href*="?"])')
-    .forEach(el => {
-      const urlAttribute = el.tagName === 'SCRIPT' ? 'src' : 'href';
-      if (urlAttribute === 'src' && el.src) {
-        el.src = `${el.src}?${VERSION_PARAM}`;
-      } else if (urlAttribute === 'href' && el.href) {
-        el.href = `${el.href}?${VERSION_PARAM}`;
-      }
-    });
+  document.querySelectorAll('script[src]:not([src*="?"])').forEach(el => {
+    el.src = `${el.src}?${VERSION_PARAM}`;
+  });
+
+  document.querySelectorAll('link[rel="stylesheet"]:not([href*="?"])').forEach(el => {
+    if (shouldSkipVersioning(el)) return;
+    el.href = `${el.href}?${VERSION_PARAM}`;
+  });
 }
 
 // Fonction pour vider manuellement le cache et recharger (fonction interne utilisée par le service worker)
@@ -213,16 +261,82 @@ export function versionAllImages() {
 
 // Ajouter un paramètre de version à l'URL d'une image
 export function versionImageSrc(imgElement, timestamp) {
-  if (imgElement.dataset.originalSrc) return; // Déjà traité
+  if (!imgElement || typeof imgElement !== 'object') return;
+  if (shouldSkipVersioning(imgElement)) return;
+  const dataset = (() => {
+    try {
+      return imgElement.dataset;
+    } catch {
+      return null;
+    }
+  })();
 
-  if (imgElement.src && imgElement.src.startsWith('http')) {
-    // Sauvegarder l'URL originale
-    imgElement.dataset.originalSrc = imgElement.src;
+  const hasGetAttribute = typeof imgElement.getAttribute === 'function';
+  const hasSetAttribute = typeof imgElement.setAttribute === 'function';
 
-    // Ajouter le paramètre de version
-    const url = new URL(imgElement.src);
-    url.searchParams.set('v', timestamp);
-    imgElement.src = url.href;
+  const getStoredOriginalSrc = () => {
+    if (dataset && typeof dataset.originalSrc === 'string') {
+      return dataset.originalSrc;
+    }
+    return hasGetAttribute ? imgElement.getAttribute('data-original-src') : '';
+  };
+
+  if (getStoredOriginalSrc()) return; // Déjà traité
+
+  const originalAttributeValue = hasGetAttribute ? imgElement.getAttribute('src') : imgElement.src;
+  const resolvedOriginalValue =
+    originalAttributeValue || imgElement.currentSrc || imgElement.src || '';
+  if (!resolvedOriginalValue) return;
+
+  const setStoredOriginalSrc = value => {
+    if (!value) return;
+    if (dataset) {
+      dataset.originalSrc = value;
+      return;
+    }
+    if (hasSetAttribute) {
+      imgElement.setAttribute('data-original-src', value);
+    }
+  };
+
+  setStoredOriginalSrc(originalAttributeValue || resolvedOriginalValue);
+
+  const root =
+    typeof globalThis !== 'undefined'
+      ? globalThis
+      : typeof window !== 'undefined'
+        ? window
+        : undefined;
+  const baseHref = root?.document?.baseURI || root?.location?.href || root?.location?.origin;
+
+  let absoluteUrl;
+  try {
+    absoluteUrl = baseHref
+      ? new URL(resolvedOriginalValue, baseHref)
+      : new URL(resolvedOriginalValue);
+  } catch {
+    try {
+      absoluteUrl = new URL(imgElement.src);
+    } catch {
+      return;
+    }
+  }
+
+  absoluteUrl.searchParams.set('v', timestamp);
+
+  const preserveRelativePath =
+    !!originalAttributeValue &&
+    !originalAttributeValue.startsWith('http') &&
+    !originalAttributeValue.startsWith('//');
+
+  const nextValue = preserveRelativePath
+    ? `${absoluteUrl.pathname}${absoluteUrl.search}${absoluteUrl.hash}`
+    : absoluteUrl.href;
+
+  if (hasSetAttribute) {
+    imgElement.setAttribute('src', nextValue);
+  } else {
+    imgElement.src = nextValue;
   }
 }
 
@@ -235,6 +349,7 @@ try {
 
 // Mettre à jour une background-image avec un paramètre de version
 export function updateBackgroundImage(element, timestamp) {
+  if (shouldSkipVersioning(element)) return;
   if (element.dataset.bgProcessed) return; // Déjà traité
 
   const style =

@@ -28,9 +28,9 @@ async function run() {
 
   // 1) locate built entry file
   const files = await fsp.readdir(dist);
-  const entry = files.find(f => /^main-es6-.*\.js$/.test(f));
-  if (!entry) {
-    console.error('[postbuild] Could not find main-es6-*.js in dist');
+  const criticalEntry = files.find(f => /^bootstrap-critical-.*\.js$/.test(f));
+  if (!criticalEntry) {
+    console.error('[postbuild] Could not find bootstrap-critical-*.js in dist');
     process.exitCode = 1;
     return;
   }
@@ -40,8 +40,8 @@ async function run() {
   const indexOutPath = path.join(dist, 'index.html');
   let html = await fsp.readFile(indexSrcPath, 'utf8');
   html = html.replace(
-    /<script\s+type="module"\s+src="js\/main-es6\.js"><\/script>/,
-    `<script type="module" src="${entry}"></script>`
+    /<script\s+type="module"\s+src="js\/bootstrap-critical\.js"><\/script>/,
+    `<script type="module" src="${criticalEntry}"></script>`
   );
   await fsp.writeFile(indexOutPath, html, 'utf8');
 
@@ -62,7 +62,7 @@ async function run() {
     } catch (e) {}
   }
 
-  console.log(`[postbuild] Packed dist with entry ${entry}`);
+  console.log(`[postbuild] Packed dist with entry ${criticalEntry}`);
 }
 
 run().catch(e => {

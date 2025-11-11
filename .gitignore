@@ -48,6 +48,9 @@ deploy.config
 # Generated analysis reports
 analysis/
 
+# Generated responsive assets (copied lors du déploiement direct)
+assets/generated-images/
+
 # Runtime data
 pids
 *.pid

@@ -9,6 +9,7 @@ import { goToSlide } from './slides.js';
 import { gameState } from './game.js';
 import { Utils } from './utils-es6.js';
 import { getTranslation, cleanupGameResources, showArcadeMessage } from './utils-es6.js';
+import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
 import { setStartingMode } from './mode-orchestrator.js';
 import { InfoBar } from './components/infoBar.js';
 import {
@@ -207,8 +208,7 @@ class MemoryGame {
     this.animations = [];
 
     // Images pour les cartes
-    this.cardBack = new Image();
-    this.cardBack.src = 'assets/images/arcade/chemin.png';
+    this.cardBack = arcadeSpriteLoader.loadSpriteSync('chemin', 'ui');
 
     // Sons
     this.successSound = new Audio('assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav');

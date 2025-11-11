@@ -36,6 +36,27 @@
       as="image"
       fetchpriority="low"
     />
+    <link
+      rel="preload"
+      href="assets/fonts/poppins-latin-400.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/poppins-latin-600.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/poppins-latin-700.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
 
     <!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
     <meta property="og:type" content="website" />
@@ -230,30 +251,151 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/panda-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/panda-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/panda-180.png" />
-    <link rel="stylesheet" href="css/themes.css" />
-    <link rel="stylesheet" href="css/general.css" />
-    <link rel="stylesheet" href="css/users.css" />
-    <link rel="stylesheet" href="css/game.css" />
-    <link rel="stylesheet" href="css/stars.css" />
-    <link rel="stylesheet" href="css/celebration.css" />
-    <link rel="stylesheet" href="css/parent-controls.css" />
-    <link rel="stylesheet" href="css/timer.css" />
-    <link rel="stylesheet" href="css/power-ups.css" />
-    <link rel="stylesheet" href="css/theme-selector.css" />
-    <link rel="stylesheet" href="css/volume-control.css" />
-    <link rel="stylesheet" href="css/streak-counter.css" />
-    <link rel="stylesheet" href="css/progress-dashboard.css" />
-    <link rel="stylesheet" href="css/discovery-mode.css" />
-    <link rel="stylesheet" href="css/discovery-fixes.css" />
-    <link rel="stylesheet" href="css/quiz.css" />
-    <link rel="stylesheet" href="css/table-settings-modal.css" />
-    <link rel="stylesheet" href="css/challenge.css" />
-    <link rel="stylesheet" href="css/adventure.css" />
-    <link rel="stylesheet" href="css/arcade.css" />
-    <link rel="stylesheet" href="css/responsive-unified.css" />
-    <link rel="stylesheet" href="css/multimiam.css" />
-    <link rel="stylesheet" href="css/multisnake.css" />
-    <link rel="stylesheet" href="css/video.css" />
+    <link rel="stylesheet" href="css/themes.css" data-critical-css="true" />
+    <link rel="stylesheet" href="css/general.css" data-critical-css="true" />
+    <link rel="stylesheet" href="css/users.css" data-critical-css="true" />
+    <link rel="stylesheet" href="css/responsive-unified.css" data-critical-css="true" />
+
+    <script type="module">
+      import { APP_VERSION, VERSION_PARAM } from './js/cache-updater.js';
+      (() => {
+        const optionalStyles = [
+          'css/game.css',
+          'css/stars.css',
+          'css/celebration.css',
+          'css/parent-controls.css',
+          'css/timer.css',
+          'css/power-ups.css',
+          'css/theme-selector.css',
+          'css/volume-control.css',
+          'css/streak-counter.css',
+          'css/progress-dashboard.css',
+          'css/discovery-mode.css',
+          'css/discovery-fixes.css',
+          'css/quiz.css',
+          'css/table-settings-modal.css',
+          'css/challenge.css',
+          'css/adventure.css',
+          'css/arcade.css',
+          'css/multimiam.css',
+          'css/multisnake.css',
+          'css/video.css',
+        ];
+
+        const VERSION_EVENT = 'leapmultix:version-ready';
+
+        const DEFAULT_APP_VERSION = APP_VERSION || 'v-dev';
+        const DEFAULT_VERSION_PARAM = VERSION_PARAM || `v=${DEFAULT_APP_VERSION}`;
+
+        const toVersionParam = raw => {
+          const value = (raw || '').trim();
+          if (!value) return DEFAULT_VERSION_PARAM;
+          if (value.startsWith('v=')) return value;
+          if (value.startsWith('v')) return `v=${value}`;
+          const sanitized = value.replace(/^\?*v=/, '').trim();
+          return `v=${sanitized || DEFAULT_APP_VERSION}`;
+        };
+
+        const resolveVersionParam = () => {
+          const root = typeof globalThis !== 'undefined' ? globalThis : window;
+          const fromGlobalParam = root?.__LEAPMULTIX_VERSION_PARAM__;
+          if (typeof fromGlobalParam === 'string' && fromGlobalParam.length > 0) {
+            return toVersionParam(fromGlobalParam);
+          }
+          const fromGlobalVersion = root?.__LEAPMULTIX_APP_VERSION__;
+          if (typeof fromGlobalVersion === 'string' && fromGlobalVersion.length > 0) {
+            return toVersionParam(fromGlobalVersion);
+          }
+          const docParam = document?.documentElement?.dataset?.versionParam;
+          if (typeof docParam === 'string' && docParam.length > 0) {
+            return toVersionParam(docParam);
+          }
+          return DEFAULT_VERSION_PARAM;
+        };
+
+        const withVersion = (href, versionParam) => {
+          if (!versionParam) return href;
+          if (href.includes(versionParam)) {
+            return href;
+          }
+          const separator = href.includes('?') ? '&' : '?';
+          return `${href}${separator}${versionParam}`;
+        };
+
+        const loadOptionalStyles = versionParam => {
+          optionalStyles.forEach(href => {
+            const versionedHref = withVersion(href, versionParam);
+            if (document.querySelector(`link[data-optional-css="${href}"]`)) {
+              return;
+            }
+            if (document.querySelector(`link[href="${versionedHref}"]`)) {
+              return;
+            }
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = versionedHref;
+            link.dataset.optionalCss = href;
+            document.head.appendChild(link);
+          });
+        };
+
+        const scheduleLoad = versionParam => {
+          const runner = () => loadOptionalStyles(versionParam);
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(runner, { timeout: 2500 });
+          } else {
+            window.addEventListener('load', runner, { once: true });
+          }
+        };
+
+        const startWithResolvedVersion = () => {
+          scheduleLoad(resolveVersionParam());
+        };
+
+        const root = typeof globalThis !== 'undefined' ? globalThis : window;
+        if (root?.__LEAPMULTIX_VERSION_PARAM__ || root?.__LEAPMULTIX_APP_VERSION__) {
+          startWithResolvedVersion();
+          return;
+        }
+
+        const onVersionReady = event => {
+          document.removeEventListener(VERSION_EVENT, onVersionReady);
+          const detailParam = event?.detail?.versionParam;
+          scheduleLoad(detailParam ? toVersionParam(detailParam) : resolveVersionParam());
+        };
+        document.addEventListener(VERSION_EVENT, onVersionReady, { once: true });
+
+        // Fallback to default version if the event never fires (e.g., legacy browsers)
+        setTimeout(() => {
+          document.removeEventListener(VERSION_EVENT, onVersionReady);
+          scheduleLoad(DEFAULT_VERSION_PARAM);
+        }, 2000);
+      })();
+    </script>
+    <noscript>
+      <link rel="stylesheet" href="css/users.css" />
+      <link rel="stylesheet" href="css/game.css" />
+      <link rel="stylesheet" href="css/stars.css" />
+      <link rel="stylesheet" href="css/celebration.css" />
+      <link rel="stylesheet" href="css/parent-controls.css" />
+      <link rel="stylesheet" href="css/timer.css" />
+      <link rel="stylesheet" href="css/power-ups.css" />
+      <link rel="stylesheet" href="css/theme-selector.css" />
+      <link rel="stylesheet" href="css/volume-control.css" />
+      <link rel="stylesheet" href="css/streak-counter.css" />
+      <link rel="stylesheet" href="css/progress-dashboard.css" />
+      <link rel="stylesheet" href="css/discovery-mode.css" />
+      <link rel="stylesheet" href="css/discovery-fixes.css" />
+      <link rel="stylesheet" href="css/quiz.css" />
+      <link rel="stylesheet" href="css/table-settings-modal.css" />
+      <link rel="stylesheet" href="css/challenge.css" />
+      <link rel="stylesheet" href="css/adventure.css" />
+      <link rel="stylesheet" href="css/arcade.css" />
+      <link rel="stylesheet" href="css/responsive-unified.css" />
+      <link rel="stylesheet" href="css/multimiam.css" />
+      <link rel="stylesheet" href="css/multisnake.css" />
+      <link rel="stylesheet" href="css/video.css" />
+    </noscript>
 
     <script>
       (() => {
@@ -313,26 +455,36 @@
         <!-- Top-bar sera injectée ici par le composant TopBar -->
         <div class="content-card p-responsive">
           <!-- Re-added wrapper with responsive padding -->
-          <h1 data-translate="user_selection_title">Sélection d'utilisateur</h1>
-          <p data-translate="user_selection_desc">
-            Choisis un utilisateur existant ou crée-en un nouveau.
-          </p>
-
           <!-- SEO Content Block: Visible before JS execution -->
           <div class="seo-intro">
+            <img
+              class="seo-hero"
+              src="assets/social/leapmultix-social-card.webp"
+              width="1200"
+              height="630"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+              data-responsive="false"
+              data-skip-version="true"
+              alt="Illustration LeapMultix avec les mascottes Panda, Renard, Dragon, Astronaute et Licorne"
+            />
             <p data-translate="app_intro_p1">
               <strong>LeapMultix</strong> est une application éducative interactive gratuite pour
               apprendre et maîtriser les <strong>tables de multiplication</strong>. Conçue pour tous
               les âges, elle propose <strong>5 modes de jeu</strong> variés : Découverte, Quiz,
-              Défi, Aventure et Arcade avec <strong>4 mini-jeux éducatifs</strong>
-              (Multimiam, Multisnake, Space Invasion, Memory).
+              Défi, Aventure et Arcade avec <strong>4 mini-jeux éducatifs</strong>.
             </p>
             <p data-translate="app_intro_p2">
-              L'application est entièrement <strong>multilingue</strong> (Français, Anglais,
-              Espagnol) et fonctionne comme une <strong>Progressive Web App</strong> installable sur
-              tous vos appareils. Personnalisez votre expérience avec des avatars, thèmes et suivez
-              votre progression grâce au système de sauvegarde. Projet
-              <strong>open source</strong> sous licence AGPL-3.0.
+              L'application est entièrement <strong>multilingue</strong>. Projet
+              <strong>open source</strong>.
+            </p>
+          </div>
+
+          <div class="user-selection-intro">
+            <h1 data-translate="user_selection_title">Sélection d'utilisateur</h1>
+            <p data-translate="user_selection_desc">
+              Choisis un utilisateur existant ou crée-en un nouveau.
             </p>
           </div>
 
@@ -1390,7 +1542,7 @@
     </main>
     <!-- === ES6 MODULES - ARCHITECTURE MODERNE === -->
     <!-- Point d'entrée unique ES6 - Migration Phase 6 terminée -->
-    <script type="module" src="js/main-es6.js"></script>
+    <script type="module" src="js/bootstrap-critical.js"></script>
 
     <!-- === MODULES DE JEUX (Chargés en lazy loading - 310 KB économisés) === -->
     <!-- 

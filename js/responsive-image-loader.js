@@ -6,6 +6,11 @@
 class ResponsiveImageLoader {
   constructor() {
     this.imageMap = null;
+    this.imageMapPaths = [
+      '/assets/generated-images/image-map.json',
+      '/assets/images/image-map.json',
+    ];
+    this.activeImageMapPath = null;
     this.devicePixelRatio = window.devicePixelRatio || 1;
     this.screenWidth = window.innerWidth;
     this.imageCache = new Map();
@@ -63,14 +68,23 @@ class ResponsiveImageLoader {
   }
 
   async loadImageMap() {
-    try {
-      const response = await fetch('/assets/images/image-map.json');
-      if (!response.ok) throw new Error('Image map non trouvée');
-      this.imageMap = await response.json();
-    } catch {
-      console.warn('⚠️ Image map non disponible, mode fallback');
-      this.imageMap = null;
+    for (const candidate of this.imageMapPaths) {
+      try {
+        const response = await fetch(candidate, { cache: 'reload' });
+        if (!response.ok) {
+          continue;
+        }
+        this.imageMap = await response.json();
+        this.activeImageMapPath = candidate;
+        console.log(`🗺️  Image map chargée depuis ${candidate}`);
+        return;
+      } catch {
+        // essayer prochain candidat
+      }
     }
+
+    console.warn('⚠️ Image map non disponible, mode fallback');
+    this.imageMap = null;
   }
 
   setupEventListeners() {
@@ -118,6 +132,9 @@ class ResponsiveImageLoader {
    */
   async optimizeImage(img, context = null) {
     try {
+      if (img?.dataset?.responsive === 'false') {
+        return;
+      }
       const imagePath = img.src || img.dataset.src;
       if (!imagePath) return;
 
@@ -194,15 +211,20 @@ class ResponsiveImageLoader {
     const bestSize = this.findBestSize(availableSizes, targetSize);
 
     if (bestSize && imageConfig.resolutions[bestSize]) {
-      return `/assets/images/${imageConfig.resolutions[bestSize]}`;
+      return `/assets/generated-images/${imageConfig.resolutions[bestSize]}`;
     }
 
     return originalUrl;
   }
 
   extractBaseName(url) {
-    const filename = url.split('/').pop();
-    return filename.replace(/\.(png|webp|jpg|jpeg)$/i, '');
+    // Extract relative path with directory (e.g., "arcade/monstre04_left_128x128")
+    // Input: "assets/images/arcade/monstre04_left_128x128.png"
+    // Output: "arcade/monstre04_left_128x128"
+    const relativePath = url
+      .replace(/^.*assets\/images\//, '')
+      .replace(/\.(png|webp|jpg|jpeg)$/i, '');
+    return relativePath;
   }
 
   findBestSize(availableSizes, targetSize) {

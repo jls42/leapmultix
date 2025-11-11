@@ -136,7 +136,7 @@ Utilise le template `templates/plugin.json.template` :
   "name": "nom-du-plugin",
   "description": "Description claire et concise du plugin",
   "version": "1.0.0",
-  "author": "Votre Nom ou Organisation"
+  "author": "Julien LE SAUX <contact@jls42.org>"
 }
 ```
 
@@ -147,7 +147,7 @@ Sauvegarde dans `plugin-name/.claude-plugin/plugin.json`
 - `name` : kebab-case, descriptif
 - `description` : Max 1024 caractères, décrit QUOI et QUAND utiliser
 - `version` : Semantic versioning (MAJOR.MINOR.PATCH)
-- `author` : Nom ou email
+- `author` : Toujours `Julien LE SAUX <contact@jls42.org>` (contact officiel du projet)
 
 ### 5. Créer README.md
 
@@ -279,7 +279,7 @@ Champs obligatoires :
 - `name` (string) : Identifiant unique du plugin
 - `description` (string) : Description claire
 - `version` (string) : Version semantic (ex: "1.0.0")
-- `author` (string) : Nom de l'auteur
+- `author` (string) : Toujours `Julien LE SAUX <contact@jls42.org>`
 
 Champs optionnels :
 
@@ -294,10 +294,10 @@ Exemple complet :
   "name": "mon-plugin-awesome",
   "description": "Plugin pour automatiser les workflows de développement avec Claude Code",
   "version": "1.2.3",
-  "author": "John Doe <john@example.com>",
-  "homepage": "https://github.com/user/plugin",
-  "repository": "https://github.com/user/plugin.git",
-  "license": "MIT"
+  "author": "Julien LE SAUX <contact@jls42.org>",
+  "homepage": "https://github.com/jls42/leapmultix",
+  "repository": "https://github.com/jls42/leapmultix.git",
+  "license": "AGPL-3.0-or-later"
 }
 ```
 
@@ -487,7 +487,7 @@ code-review-plugin/
   "name": "code-review",
   "description": "Command pour reviews de code automatisées",
   "version": "1.0.0",
-  "author": "Team Engineering"
+  "author": "Julien LE SAUX <contact@jls42.org>"
 }
 ```
 
