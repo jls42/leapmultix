@@ -5,13 +5,14 @@ let versionImageSrc, updateBackgroundImage;
 
 beforeAll(async () => {
   const testUrl = 'https://leapmultix.jls42.org/index.html';
-  if (global.document) {
-    Object.defineProperty(global.document, 'baseURI', {
+  if (globalThis.document) {
+    Object.defineProperty(globalThis.document, 'baseURI', {
       value: testUrl,
       configurable: true,
     });
   }
-  global.window.getComputedStyle = jest.fn(() => ({ backgroundImage: 'none' }));
+  const windowRef = globalThis.window || globalThis;
+  windowRef.getComputedStyle = jest.fn(() => ({ backgroundImage: 'none' }));
   try {
     const mod = await import(pathToFileURL(path.join(__dirname, '../../js/cache-updater.js')).href);
     versionImageSrc = mod.versionImageSrc;
@@ -82,7 +83,8 @@ describe('cache-updater helpers', () => {
 
   test('updateBackgroundImage adds version to background-image', () => {
     const element = { style: {}, dataset: {} };
-    global.window.getComputedStyle.mockReturnValue({
+    const windowRef = globalThis.window || globalThis;
+    windowRef.getComputedStyle.mockReturnValue({
       backgroundImage: 'url(https://leapmultix.jls42.org/assets/bg.png)',
     });
     updateBackgroundImage(element, '456');

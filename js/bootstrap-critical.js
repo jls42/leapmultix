@@ -26,6 +26,8 @@ import './lazy-loader.js';
 import './mode-orchestrator.js';
 import './bootstrap.js';
 
+const runtime = globalThis;
+
 const loadDeferredModules = (() => {
   let deferredPromise = null;
   return () => {
@@ -39,10 +41,10 @@ const loadDeferredModules = (() => {
 })();
 
 const scheduleDeferredLoad = () => {
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(() => loadDeferredModules(), { timeout: 1500 });
+  if ('requestIdleCallback' in runtime) {
+    runtime.requestIdleCallback(() => loadDeferredModules(), { timeout: 1500 });
   } else {
-    window.addEventListener('load', () => loadDeferredModules(), { once: true });
+    runtime.addEventListener('load', () => loadDeferredModules(), { once: true });
   }
 
   setTimeout(() => {
@@ -52,9 +54,9 @@ const scheduleDeferredLoad = () => {
 
 const primeOnInteraction = () => {
   const trigger = () => loadDeferredModules();
-  ['pointerdown', 'keydown', 'scroll', 'visibilitychange'].forEach(event => {
-    window.addEventListener(event, trigger, { once: true, passive: true });
-  });
+  for (const eventName of ['pointerdown', 'keydown', 'scroll', 'visibilitychange']) {
+    runtime.addEventListener(eventName, trigger, { once: true, passive: true });
+  }
 };
 
 scheduleDeferredLoad();

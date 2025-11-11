@@ -5,8 +5,8 @@
  * Cette étape permet de servir les backgrounds via image-set tout en gardant les PNG legacy.
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 let sharp = null;
 
 try {
@@ -17,7 +17,7 @@ try {
 }
 
 const IMG_DIR = path.resolve('img');
-const QUALITY = parseInt(process.env.BACKGROUND_QUALITY ?? '70', 10);
+const QUALITY = Number.parseInt(process.env.BACKGROUND_QUALITY ?? '70', 10);
 
 function listBackgrounds() {
   return fs

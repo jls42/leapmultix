@@ -10,8 +10,6 @@ describe('resolveMultimemoryTables (ESM)', () => {
   });
 
   test('retourne la base quand toutes les tables sont exclues (sécurité)', () => {
-    expect(
-      resolveMultimemoryTables([2, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    ).toEqual([2, 3]);
+    expect(resolveMultimemoryTables([2, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])).toEqual([2, 3]);
   });
 });

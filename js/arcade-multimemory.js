@@ -31,9 +31,7 @@ const FULL_TABLE_SET = Array.from({ length: 10 }, (_, i) => i + 1);
 
 const sanitizeTableList = list =>
   Array.isArray(list)
-    ? list
-        .map(value => Number(value))
-        .filter(table => Number.isInteger(table) && table >= 1 && table <= 10)
+    ? list.map(Number).filter(table => Number.isInteger(table) && table >= 1 && table <= 10)
     : [];
 
 const sanitizeExclusions = exclusions =>
@@ -41,7 +39,7 @@ const sanitizeExclusions = exclusions =>
     ? Array.from(
         new Set(
           exclusions
-            .map(value => Number(value))
+            .map(Number)
             .filter(table => Number.isInteger(table) && table >= 1 && table <= 10)
         )
       )

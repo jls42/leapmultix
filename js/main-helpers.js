@@ -97,18 +97,18 @@ const normalizeLang = lang => {
   return String(lang).toLowerCase().split('-')[0];
 };
 
-export function updateSeoHeroImage(preferredLang) {
-  const heroImg = document.querySelector('.seo-hero');
-  if (!heroImg) return;
-
+const resolveHeroLanguage = preferredLang => {
   const storedLang = typeof Storage.loadLanguage === 'function' ? Storage.loadLanguage() : null;
-  const lang = normalizeLang(preferredLang || storedLang || HERO_DEFAULT_LANG);
-  const nextSrc = HERO_IMAGE_BY_LANG[lang] || HERO_IMAGE_BY_LANG[HERO_DEFAULT_LANG];
+  return normalizeLang(preferredLang || storedLang || HERO_DEFAULT_LANG);
+};
 
+const updateHeroImageSource = (heroImg, nextSrc) => {
   if (heroImg.getAttribute('src') !== nextSrc) {
     heroImg.setAttribute('src', nextSrc);
   }
+};
 
+const updateHeroImageAlt = heroImg => {
   try {
     const alt = getTranslation('seo_hero_alt');
     if (typeof alt === 'string' && !alt.startsWith('[')) {
@@ -117,6 +117,17 @@ export function updateSeoHeroImage(preferredLang) {
   } catch (error) {
     console.warn('updateSeoHeroImage: impossible de traduire alt', error);
   }
+};
+
+export function updateSeoHeroImage(preferredLang) {
+  const heroImg = document.querySelector('.seo-hero');
+  if (!heroImg) return;
+
+  const lang = resolveHeroLanguage(preferredLang);
+  const nextSrc = HERO_IMAGE_BY_LANG[lang] || HERO_IMAGE_BY_LANG[HERO_DEFAULT_LANG];
+
+  updateHeroImageSource(heroImg, nextSrc);
+  updateHeroImageAlt(heroImg);
 }
 
 // No global exposure; use ES module imports instead

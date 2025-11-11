@@ -259,6 +259,7 @@
     <script type="module">
       import { APP_VERSION, VERSION_PARAM } from './js/cache-updater.js';
       (() => {
+        const runtime = globalThis;
         const optionalStyles = [
           'css/game.css',
           'css/stars.css',
@@ -297,12 +298,11 @@
         };
 
         const resolveVersionParam = () => {
-          const root = typeof globalThis !== 'undefined' ? globalThis : window;
-          const fromGlobalParam = root?.__LEAPMULTIX_VERSION_PARAM__;
+          const fromGlobalParam = runtime?.__LEAPMULTIX_VERSION_PARAM__;
           if (typeof fromGlobalParam === 'string' && fromGlobalParam.length > 0) {
             return toVersionParam(fromGlobalParam);
           }
-          const fromGlobalVersion = root?.__LEAPMULTIX_APP_VERSION__;
+          const fromGlobalVersion = runtime?.__LEAPMULTIX_APP_VERSION__;
           if (typeof fromGlobalVersion === 'string' && fromGlobalVersion.length > 0) {
             return toVersionParam(fromGlobalVersion);
           }
@@ -314,37 +314,39 @@
         };
 
         const withVersion = (href, versionParam) => {
-          if (!versionParam) return href;
-          if (href.includes(versionParam)) {
-            return href;
+          if (versionParam) {
+            if (href.includes(versionParam)) {
+              return href;
+            }
+            const separator = href.includes('?') ? '&' : '?';
+            return `${href}${separator}${versionParam}`;
           }
-          const separator = href.includes('?') ? '&' : '?';
-          return `${href}${separator}${versionParam}`;
+          return href;
         };
 
         const loadOptionalStyles = versionParam => {
-          optionalStyles.forEach(href => {
+          for (const href of optionalStyles) {
             const versionedHref = withVersion(href, versionParam);
             if (document.querySelector(`link[data-optional-css="${href}"]`)) {
-              return;
+              continue;
             }
             if (document.querySelector(`link[href="${versionedHref}"]`)) {
-              return;
+              continue;
             }
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = versionedHref;
             link.dataset.optionalCss = href;
             document.head.appendChild(link);
-          });
+          }
         };
 
         const scheduleLoad = versionParam => {
           const runner = () => loadOptionalStyles(versionParam);
-          if ('requestIdleCallback' in window) {
-            requestIdleCallback(runner, { timeout: 2500 });
+          if ('requestIdleCallback' in runtime) {
+            runtime.requestIdleCallback(runner, { timeout: 2500 });
           } else {
-            window.addEventListener('load', runner, { once: true });
+            runtime.addEventListener('load', runner, { once: true });
           }
         };
 
@@ -352,8 +354,7 @@
           scheduleLoad(resolveVersionParam());
         };
 
-        const root = typeof globalThis !== 'undefined' ? globalThis : window;
-        if (root?.__LEAPMULTIX_VERSION_PARAM__ || root?.__LEAPMULTIX_APP_VERSION__) {
+        if (runtime?.__LEAPMULTIX_VERSION_PARAM__ || runtime?.__LEAPMULTIX_APP_VERSION__) {
           startWithResolvedVersion();
           return;
         }
