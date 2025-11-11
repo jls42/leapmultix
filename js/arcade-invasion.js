@@ -300,24 +300,45 @@ function createSpaceshipSprite(selectedState) {
     return true;
   };
 
+  const canRetryWithBaseSource = source => {
+    if (attemptedOptimizedRecovery) return false;
+    const optimizedUrl = source?.optimizedUrl;
+    if (!optimizedUrl) return false;
+    return optimizedUrl !== source?.basePath;
+  };
+
+  const tryRecoverFromOptimizedFailure = source => {
+    if (!canRetryWithBaseSource(source)) {
+      return false;
+    }
+
+    attemptedOptimizedRecovery = true;
+    spaceshipImg.src = source.basePath;
+    return true;
+  };
+
+  const tryApplyFallbackSprite = () => {
+    const fallbackSource = spaceshipSources.fallback;
+    if (activeSpriteKey !== 'primary' || !fallbackSource || fallbackApplied) {
+      return false;
+    }
+
+    fallbackApplied = true;
+    const fallbackName = fallbackSource.name ?? 'spaceship_default';
+    console.info(
+      `[Arcade] Image du vaisseau personnalisée non trouvée, utilisation de "${fallbackName}" en secours.`
+    );
+    assignSpriteSource('fallback');
+    return true;
+  };
+
   spaceshipImg.onerror = function handleSpaceshipError() {
     const source = spaceshipSources[activeSpriteKey];
-    const optimizedUrl = source?.optimizedUrl;
-    const hasOptimizedVariant = Boolean(optimizedUrl && optimizedUrl !== source?.basePath);
-
-    if (!attemptedOptimizedRecovery && hasOptimizedVariant) {
-      attemptedOptimizedRecovery = true;
-      spaceshipImg.src = source.basePath;
+    if (tryRecoverFromOptimizedFailure(source)) {
       return;
     }
 
-    if (activeSpriteKey === 'primary' && spaceshipSources.fallback && !fallbackApplied) {
-      fallbackApplied = true;
-      const fallbackName = spaceshipSources.fallback?.name ?? 'spaceship_default';
-      console.info(
-        `[Arcade] Image du vaisseau personnalisée non trouvée, utilisation de "${fallbackName}" en secours.`
-      );
-      assignSpriteSource('fallback');
+    if (tryApplyFallbackSprite()) {
       return;
     }
 
