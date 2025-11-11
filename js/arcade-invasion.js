@@ -246,7 +246,7 @@ function createSpaceshipSprite(selectedState) {
   const mainSpriteName = sanitizeSpriteName(mainFile) || 'spaceship_default';
 
   let fallbackSpriteName = null;
-  if (rawFallbackFile && rawFallbackFile.trim() && rawFallbackFile !== mainFile) {
+  if (rawFallbackFile?.trim() && rawFallbackFile !== mainFile) {
     fallbackSpriteName = sanitizeSpriteName(rawFallbackFile);
   } else if (mainSpriteName !== 'spaceship_default') {
     fallbackSpriteName = 'spaceship_default';
