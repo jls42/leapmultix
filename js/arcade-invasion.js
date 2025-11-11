@@ -239,7 +239,7 @@ function computeBaseAlienSpeed(isMobile, difficulty, enemySpeed) {
 function createSpaceshipSprite(selectedState) {
   const playerAvatar = selectedState?.avatar ?? 'fox';
   const spaceshipFile =
-    selectedState.selectedSpaceship || `spaceship_${playerAvatar}.png|spaceship_default.png`;
+    selectedState?.selectedSpaceship || `spaceship_${playerAvatar}.png|spaceship_default.png`;
   const [mainFile, rawFallbackFile] = spaceshipFile.split('|');
 
   const sanitizeSpriteName = fileName => (fileName || '').trim().replace(/\.png$/i, '');

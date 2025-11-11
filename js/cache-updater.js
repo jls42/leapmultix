@@ -149,33 +149,57 @@ export function forceDevCacheClear() {
   }
 }
 
+const getServiceWorkerUrl = () => {
+  const versionSuffix = VERSION_PARAM.startsWith('v=') ? `?${VERSION_PARAM}` : `?v=${APP_VERSION}`;
+  return `/sw.js${versionSuffix}`;
+};
+
+const handleWorkerStateChange = (newWorker, navigatorRef) => {
+  if (newWorker.state !== 'installed') {
+    return;
+  }
+
+  if (!navigatorRef.serviceWorker?.controller) {
+    return;
+  }
+
+  runtime.location?.reload?.();
+};
+
+const handleUpdateFound = (registration, navigatorRef) => {
+  const newWorker = registration.installing;
+  if (!newWorker) {
+    return;
+  }
+
+  const onStateChange = handleWorkerStateChange.bind(null, newWorker, navigatorRef);
+  newWorker.addEventListener('statechange', onStateChange);
+};
+
+const monitorRegistrationUpdates = (registration, navigatorRef) => {
+  const onUpdateFound = handleUpdateFound.bind(null, registration, navigatorRef);
+  registration.addEventListener('updatefound', onUpdateFound);
+};
+
+const registerAfterLoad = navigatorRef => {
+  const swUrl = getServiceWorkerUrl();
+  navigatorRef.serviceWorker
+    .register(swUrl)
+    .then(registration => {
+      monitorRegistrationUpdates(registration, navigatorRef);
+    })
+    .catch(error => {
+      console.error("Échec d'enregistrement du Service Worker:", error);
+    });
+};
+
 // Enregistrement du service worker
 export function registerServiceWorker() {
   const navigatorRef = runtime.navigator;
   if (!navigatorRef?.serviceWorker) return;
 
-  runtime.addEventListener('load', () => {
-    const versionSuffix = VERSION_PARAM.startsWith('v=')
-      ? `?${VERSION_PARAM}`
-      : `?v=${APP_VERSION}`;
-    const swUrl = `/sw.js${versionSuffix}`;
-    navigatorRef.serviceWorker
-      .register(swUrl)
-      .then(registration => {
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-
-          newWorker?.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigatorRef.serviceWorker.controller) {
-              runtime.location?.reload?.();
-            }
-          });
-        });
-      })
-      .catch(error => {
-        console.error("Échec d'enregistrement du Service Worker:", error);
-      });
-  });
+  const loadHandler = registerAfterLoad.bind(null, navigatorRef);
+  runtime.addEventListener('load', loadHandler);
 }
 
 // Ajouter un paramètre de version aux ressources principales
@@ -325,7 +349,7 @@ export function updateBackgroundImage(element, timestamp) {
   if (shouldSkipVersioning(element)) return;
   if (element.dataset.bgProcessed) return; // Déjà traité
   const imageUrl = extractBackgroundImageUrl(getComputedStyleSafe(element));
-  if (!imageUrl || !imageUrl.startsWith('http')) {
+  if (!imageUrl?.startsWith('http')) {
     return;
   }
 

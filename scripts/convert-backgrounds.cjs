@@ -13,6 +13,7 @@ try {
   sharp = require('sharp');
 } catch (error) {
   console.error('❌ Le module "sharp" est requis. Lancez `npm install --save-dev sharp`.');
+  console.error(`Détail: ${error?.message ?? 'Erreur inconnue'}`);
   process.exit(1);
 }
 
