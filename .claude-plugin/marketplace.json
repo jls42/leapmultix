@@ -12,7 +12,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -22,7 +23,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -32,7 +34,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -42,7 +45,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -52,7 +56,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -62,7 +67,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -72,7 +78,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -82,7 +89,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -92,7 +100,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -102,7 +111,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -112,7 +122,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -122,7 +133,8 @@
       "category": "agent",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -132,7 +144,8 @@
       "category": "command",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -142,7 +155,8 @@
       "category": "bundle",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -152,7 +166,8 @@
       "category": "bundle",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -162,7 +177,8 @@
       "category": "bundle",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -172,7 +188,8 @@
       "category": "bundle",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -182,27 +199,8 @@
       "category": "bundle",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
-      }
-    },
-    {
-      "name": "leapmultix-skill-accessibility",
-      "description": "Skill accessibility from LeapMultix",
-      "source": "./leapmultix-marketplace/skills/accessibility",
-      "category": "skill",
-      "version": "1.0.0",
-      "author": {
-        "name": "LeapMultix Team"
-      }
-    },
-    {
-      "name": "leapmultix-skill-animation-system",
-      "description": "Skill animation-system from LeapMultix",
-      "source": "./leapmultix-marketplace/skills/animation-system",
-      "category": "skill",
-      "version": "1.0.0",
-      "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -212,7 +210,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -222,7 +221,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -232,7 +232,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -242,7 +243,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -252,7 +254,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -262,7 +265,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -272,7 +276,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -282,7 +287,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -292,7 +298,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -302,7 +309,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -312,7 +320,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -322,17 +331,19 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
-      "name": "leapmultix-skill-mobile-responsive-testing",
-      "description": "Skill mobile-responsive-testing from LeapMultix",
-      "source": "./leapmultix-marketplace/skills/mobile-responsive-testing",
+      "name": "leapmultix-skill-managing-animations",
+      "description": "Skill managing-animations from LeapMultix",
+      "source": "./leapmultix-marketplace/skills/managing-animations",
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -342,7 +353,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -352,7 +364,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -362,7 +375,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -372,7 +386,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -382,7 +397,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -392,7 +408,8 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
@@ -402,17 +419,41 @@
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     },
     {
-      "name": "leapmultix-skill-visual-regression-testing",
-      "description": "Skill visual-regression-testing from LeapMultix",
-      "source": "./leapmultix-marketplace/skills/visual-regression-testing",
+      "name": "leapmultix-skill-testing-mobile-responsive",
+      "description": "Skill testing-mobile-responsive from LeapMultix",
+      "source": "./leapmultix-marketplace/skills/testing-mobile-responsive",
       "category": "skill",
       "version": "1.0.0",
       "author": {
-        "name": "LeapMultix Team"
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
+      }
+    },
+    {
+      "name": "leapmultix-skill-testing-visual-regression",
+      "description": "Skill testing-visual-regression from LeapMultix",
+      "source": "./leapmultix-marketplace/skills/testing-visual-regression",
+      "category": "skill",
+      "version": "1.0.0",
+      "author": {
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
+      }
+    },
+    {
+      "name": "leapmultix-skill-validating-accessibility",
+      "description": "Skill validating-accessibility from LeapMultix",
+      "source": "./leapmultix-marketplace/skills/validating-accessibility",
+      "category": "skill",
+      "version": "1.0.0",
+      "author": {
+        "name": "Julien LE SAUX",
+        "email": "contact@jls42.org"
       }
     }
   ]

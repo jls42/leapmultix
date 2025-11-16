@@ -37,7 +37,7 @@
       "pwa-expert"
     ],
     "skills": [
-      "accessibility",
+      "validating-accessibility",
       "auditing-security",
       "dependency-management",
       "i18n-sync",
@@ -58,14 +58,14 @@
       "test-writer"
     ],
     "skills": [
-      "animation-system",
+      "managing-animations",
       "bundle-size-optimizer",
       "jsdoc-generator",
-      "mobile-responsive-testing",
+      "testing-mobile-responsive",
       "optimizing-assets",
       "performance-profiler",
       "practicing-tdd-with-jest",
-      "visual-regression-testing"
+      "testing-visual-regression"
     ]
   },
   "arcade": {

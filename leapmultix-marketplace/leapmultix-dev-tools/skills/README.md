@@ -74,7 +74,7 @@ npm run test:verbose       # Output détaillé
 
 #### 5. Accessibility Validator
 
-**Emplacement :** `accessibility/`
+**Emplacement :** `validating-accessibility/`
 **Description :** Valide l'accessibilité web selon les standards WCAG 2.1 niveau AA
 **Utilisation :** Claude active cette skill lors de modifications UI ou audits d'accessibilité
 
@@ -225,7 +225,7 @@ npm run assets:diff          # Comparer avant/après
 
 #### 12. Animation System Helper
 
-**Emplacement :** `animation-system/`
+**Emplacement :** `managing-animations/`
 **Description :** Crée animations CSS et JavaScript (keyframes, transitions, sprite animations)
 **Utilisation :** Claude active cette skill lors d'ajout d'animations visuelles
 
