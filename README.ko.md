@@ -343,6 +343,7 @@ leapmultix/
 이 프로젝트는 기능 브랜치를 기반으로 한 워크플로우를 사용합니다.
 
 1. **브랜치 만들기**:
+
    ```bash
    git checkout -b feat/feature-name
    # 또는
@@ -350,6 +351,7 @@ leapmultix/
    ```
 
 2. **개발 및 테스트**:
+
    ```bash
    npm run format:check  # 항상 먼저 서식 확인
    npm run format        # 필요한 경우 서식 지정
@@ -359,6 +361,7 @@ leapmultix/
    ```
 
 3. **브랜치에 커밋**:
+
    ```bash
    git add .
    git commit -m "feat: 기능 설명"
@@ -444,6 +447,7 @@ CI/CD 파이프라인은 모든 푸시 및 풀 리퀘스트에서 자동으로 �
    - 코어 웹 바이탈 메트릭
 
 **품질 배지**:
+
 - CI 빌드 상태 (GitHub Actions)
 - CodeFactor 등급
 - Codacy 배지
@@ -454,6 +458,7 @@ CI/CD 파이프라인은 모든 푸시 및 풀 리퀘스트에서 자동으로 �
 LeapMultix는 오프라인 지원 및 설치 기능을 갖춘 완전한 기능을 갖춘 PWA입니다.
 
 **서비스 워커** (`sw.js`):
+
 - 탐색: `offline.html`로 오프라인 폴백이 있는 네트워크 우선
 - 이미지: 성능 최적화를 위한 캐시 우선
 - 번역: 백그라운드 업데이트를 위한 Stale-while-revalidate
@@ -461,6 +466,7 @@ LeapMultix는 오프라인 지원 및 설치 기능을 갖춘 완전한 기능�
 - `cache-updater.js`를 통한 자동 버전 관리
 
 **매니페스트** (`manifest.json`):
+
 - 모든 장치용 SVG 및 PNG 아이콘
 - 모바일 설치 가능 (홈 화면에 추가)
 - 앱과 유사한 경험을 위한 독립형 구성
@@ -469,9 +475,11 @@ LeapMultix는 오프라인 지원 및 설치 기능을 갖춘 완전한 기능�
 **오프라인 모드 로컬 테스트**:
 
 1. 개발 서버 시작:
+
    ```bash
    npm run serve
    ```
+
    `http://localhost:8080` (또는 표시된 포트) 열기
 
 2. 수동 테스트:
@@ -484,6 +492,7 @@ LeapMultix는 오프라인 지원 및 설치 기능을 갖춘 완전한 기능�
    ```
 
 **서비스 워커 관리 스크립트**:
+
 ```bash
 npm run sw:disable  # 서비스 워커 비활성화
 npm run sw:fix      # 캐시 문제 해결
@@ -492,12 +501,14 @@ npm run sw:fix      # 캐시 문제 해결
 ### 품질 표준
 
 **코드 품질 도구**:
+
 - **ESLint**: 플랫 구성(`eslint.config.js`), ES2022 지원이 포함된 최신 구성
 - **Prettier**: 자동 코드 서식 (`.prettierrc`)
 - **Stylelint**: CSS 유효성 검사 (`.stylelintrc.json`)
 - **JSDoc**: 커버리지 분석이 포함된 자동 함수 문서
 
 **중요한 코드 규칙**:
+
 - 사용하지 않는 변수 및 매개변수 제거 (`no-unused-vars`)
 - 특정 오류 처리 사용 (빈 catch 블록 없음)
 - `security-utils.js` 함수를 위해 `innerHTML` 피하기
@@ -505,6 +516,7 @@ npm run sw:fix      # 캐시 문제 해결
 - 복잡한 함수를 더 작은 헬퍼로 추출
 
 **보안**:
+
 - **XSS 보호**: `security-utils.js`의 함수 사용:
   - `innerHTML` 대신 `appendSanitizedHTML()`
   - 보안 요소를 만들기 위한 `createSafeElement()`
@@ -514,12 +526,14 @@ npm run sw:fix      # 캐시 문제 해결
 - **콘텐츠 보안 정책**: 스크립트 소스를 제한하기 위한 CSP 헤더
 
 **접근성**:
+
 - WCAG 2.1 AA 준수
 - 전체 키보드 탐색
 - 적절한 ARIA 역할 및 레이블
 - 준수하는 색상 대비
 
 **성능**:
+
 - `lazy-loader.js`를 통한 모듈의 지연 로딩
 - CSS 최적화 및 반응형 자산
 - 스마트 캐싱을 위한 서비스 워커
@@ -580,6 +594,7 @@ npm run sw:fix      # 캐시 문제 해결
 이 스크립트 (`scripts/compare-translations.cjs`)는 모든 언어 파일의 동기화를 보장합니다.
 
 **기능:**
+
 - 누락된 키 감지 (fr.json에는 있지만 다른 언어에는 없음)
 - 추가 키 감지 (다른 언어에는 있지만 fr.json에는 없음)
 - 빈 값 식별 (`""`, `null`, `undefined`, `[]`)

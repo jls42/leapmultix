@@ -343,6 +343,7 @@ Ogni mini-gioco offre:
 Il progetto utilizza un flusso di lavoro basato sui rami di funzionalità:
 
 1. **Crea un ramo**:
+
    ```bash
    git checkout -b feat/nome-della-funzionalità
    # o
@@ -350,6 +351,7 @@ Il progetto utilizza un flusso di lavoro basato sui rami di funzionalità:
    ```
 
 2. **Sviluppa e testa**:
+
    ```bash
    npm run format:check  # Controlla SEMPRE prima la formattazione
    npm run format        # Formatta se necessario
@@ -359,6 +361,7 @@ Il progetto utilizza un flusso di lavoro basato sui rami di funzionalità:
    ```
 
 3. **Fai commit sul ramo**:
+
    ```bash
    git add .
    git commit -m "feat: descrizione della funzionalità"
@@ -444,6 +447,7 @@ La pipeline CI/CD viene eseguita automaticamente ad ogni push e pull request:
    - Metriche Core Web Vitals
 
 **Badge di qualità**:
+
 - Stato della build CI (GitHub Actions)
 - Grado CodeFactor
 - Badge Codacy
@@ -454,6 +458,7 @@ La pipeline CI/CD viene eseguita automaticamente ad ogni push e pull request:
 LeapMultix è una PWA completa con supporto offline e possibilità di installazione.
 
 **Service Worker** (`sw.js`):
+
 - Navigazione: Network-first con fallback offline a `offline.html`
 - Immagini: Cache-first per ottimizzare le prestazioni
 - Traduzioni: Stale-while-revalidate per l'aggiornamento in background
@@ -461,6 +466,7 @@ LeapMultix è una PWA completa con supporto offline e possibilità di installazi
 - Gestione automatica della versione tramite `cache-updater.js`
 
 **Manifest** (`manifest.json`):
+
 - Icone SVG e PNG per tutti i dispositivi
 - Installazione possibile su mobile (Aggiungi a schermata Home)
 - Configurazione standalone per un'esperienza simile a un'app
@@ -469,9 +475,11 @@ LeapMultix è una PWA completa con supporto offline e possibilità di installazi
 **Testare la modalità offline localmente**:
 
 1. Avviare il server di sviluppo:
+
    ```bash
    npm run serve
    ```
+
    Aprire `http://localhost:8080` (o la porta visualizzata)
 
 2. Testare manualmente:
@@ -484,6 +492,7 @@ LeapMultix è una PWA completa con supporto offline e possibilità di installazi
    ```
 
 **Script di gestione del Service Worker**:
+
 ```bash
 npm run sw:disable  # Disabilita il service worker
 npm run sw:fix      # Risolvi i problemi di cache
@@ -492,12 +501,14 @@ npm run sw:fix      # Risolvi i problemi di cache
 ### Standard di qualità
 
 **Strumenti di qualità del codice**:
+
 - **ESLint**: Configurazione moderna con flat config (`eslint.config.js`), supporto ES2022
 - **Prettier**: Formattazione automatica del codice (`.prettierrc`)
 - **Stylelint**: Validazione CSS (`.stylelintrc.json`)
 - **JSDoc**: Documentazione automatica delle funzioni con analisi della copertura
 
 **Regole di codice importanti**:
+
 - Rimuovere variabili e parametri non utilizzati (`no-unused-vars`)
 - Utilizzare una gestione specifica degli errori (nessun blocco catch vuoto)
 - Evitare `innerHTML` a favore delle funzioni di `security-utils.js`
@@ -505,6 +516,7 @@ npm run sw:fix      # Risolvi i problemi di cache
 - Estrarre funzioni complesse in helper più piccoli
 
 **Sicurezza**:
+
 - **Protezione XSS**: Utilizzare le funzioni di `security-utils.js`:
   - `appendSanitizedHTML()` invece di `innerHTML`
   - `createSafeElement()` per creare elementi sicuri
@@ -514,12 +526,14 @@ npm run sw:fix      # Risolvi i problemi di cache
 - **Content Security Policy**: Intestazioni CSP per limitare le fonti degli script
 
 **Accessibilità**:
+
 - Conformità WCAG 2.1 AA
 - Navigazione completa da tastiera
 - Ruoli e etichette ARIA appropriati
 - Contrasti di colore conformi
 
 **Prestazioni**:
+
 - Lazy loading dei moduli tramite `lazy-loader.js`
 - Ottimizzazioni CSS e asset reattivi
 - Service Worker per la memorizzazione nella cache intelligente
@@ -580,6 +594,7 @@ Supporto multilingue completo:
 Questo script (`scripts/compare-translations.cjs`) assicura la sincronizzazione di tutti i file di lingua:
 
 **Funzionalità:**
+
 - Rilevamento delle chiavi mancanti (presenti in fr.json ma assenti in altre lingue)
 - Rilevamento delle chiavi aggiuntive (presenti in altre lingue ma non in fr.json)
 - Identificazione dei valori vuoti (`""`, `null`, `undefined`, `[]`)

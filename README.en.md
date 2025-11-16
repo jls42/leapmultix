@@ -343,6 +343,7 @@ Each mini-game offers:
 The project uses a workflow based on feature branches:
 
 1. **Create a branch**:
+
    ```bash
    git checkout -b feat/feature-name
    # or
@@ -350,6 +351,7 @@ The project uses a workflow based on feature branches:
    ```
 
 2. **Develop and test**:
+
    ```bash
    npm run format:check  # ALWAYS check formatting first
    npm run format        # Format if necessary
@@ -359,6 +361,7 @@ The project uses a workflow based on feature branches:
    ```
 
 3. **Commit on the branch**:
+
    ```bash
    git add .
    git commit -m "feat: description of the feature"
@@ -444,6 +447,7 @@ The CI/CD pipeline runs automatically on every push and pull request:
    - Core Web Vitals metrics
 
 **Quality Badges**:
+
 - CI Build Status (GitHub Actions)
 - CodeFactor Grade
 - Codacy Badge
@@ -454,6 +458,7 @@ The CI/CD pipeline runs automatically on every push and pull request:
 LeapMultix is a full-featured PWA with offline support and installability.
 
 **Service Worker** (`sw.js`):
+
 - Navigation: Network-first with offline fallback to `offline.html`
 - Images: Cache-first to optimize performance
 - Translations: Stale-while-revalidate for background updates
@@ -461,6 +466,7 @@ LeapMultix is a full-featured PWA with offline support and installability.
 - Automatic version management via `cache-updater.js`
 
 **Manifest** (`manifest.json`):
+
 - SVG and PNG icons for all devices
 - Installable on mobile (Add to Home Screen)
 - Standalone configuration for an app-like experience
@@ -469,9 +475,11 @@ LeapMultix is a full-featured PWA with offline support and installability.
 **Testing offline mode locally**:
 
 1. Start the development server:
+
    ```bash
    npm run serve
    ```
+
    Open `http://localhost:8080` (or the displayed port)
 
 2. Test manually:
@@ -484,6 +492,7 @@ LeapMultix is a full-featured PWA with offline support and installability.
    ```
 
 **Service Worker management scripts**:
+
 ```bash
 npm run sw:disable  # Disable the service worker
 npm run sw:fix      # Fix cache issues
@@ -492,12 +501,14 @@ npm run sw:fix      # Fix cache issues
 ### Quality Standards
 
 **Code Quality Tools**:
+
 - **ESLint**: Modern configuration with flat config (`eslint.config.js`), ES2022 support
 - **Prettier**: Automatic code formatting (`.prettierrc`)
 - **Stylelint**: CSS validation (`.stylelintrc.json`)
 - **JSDoc**: Automatic function documentation with coverage analysis
 
 **Important Code Rules**:
+
 - Remove unused variables and parameters (`no-unused-vars`)
 - Use specific error handling (no empty catch blocks)
 - Avoid `innerHTML` in favor of `security-utils.js` functions
@@ -505,6 +516,7 @@ npm run sw:fix      # Fix cache issues
 - Extract complex functions into smaller helpers
 
 **Security**:
+
 - **XSS Protection**: Use functions from `security-utils.js`:
   - `appendSanitizedHTML()` instead of `innerHTML`
   - `createSafeElement()` to create secure elements
@@ -514,12 +526,14 @@ npm run sw:fix      # Fix cache issues
 - **Content Security Policy**: CSP headers to restrict script sources
 
 **Accessibility**:
+
 - WCAG 2.1 AA compliance
 - Full keyboard navigation
 - Appropriate ARIA roles and labels
 - Compliant color contrasts
 
 **Performance**:
+
 - Lazy loading of modules via `lazy-loader.js`
 - CSS optimizations and responsive assets
 - Service Worker for smart caching
@@ -580,6 +594,7 @@ Full multilingual support:
 This script (`scripts/compare-translations.cjs`) ensures the synchronization of all language files:
 
 **Features:**
+
 - Detection of missing keys (present in fr.json but absent in other languages)
 - Detection of extra keys (present in other languages but not in fr.json)
 - Identification of empty values (`""`, `null`, `undefined`, `[]`)

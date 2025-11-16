@@ -343,6 +343,7 @@ Fiecare mini-joc oferă:
 Proiectul utilizează un flux de lucru bazat pe ramuri de funcționalități:
 
 1. **Creează o ramură**:
+
    ```bash
    git checkout -b feat/nume-funcționalitate
    # sau
@@ -350,6 +351,7 @@ Proiectul utilizează un flux de lucru bazat pe ramuri de funcționalități:
    ```
 
 2. **Dezvoltă și testează**:
+
    ```bash
    npm run format:check  # Verifică ÎNTOTDEAUNA formatarea mai întâi
    npm run format        # Formatează dacă este necesar
@@ -359,6 +361,7 @@ Proiectul utilizează un flux de lucru bazat pe ramuri de funcționalități:
    ```
 
 3. **Fă commit pe ramură**:
+
    ```bash
    git add .
    git commit -m "feat: descrierea funcționalității"
@@ -444,6 +447,7 @@ Pipeline-ul CI/CD se execută automat la fiecare push și pull request:
    - Metrici Core Web Vitals
 
 **Insigne de calitate**:
+
 - Starea build-ului CI (GitHub Actions)
 - Grad CodeFactor
 - Insignă Codacy
@@ -454,6 +458,7 @@ Pipeline-ul CI/CD se execută automat la fiecare push și pull request:
 LeapMultix este o PWA completă cu suport offline și posibilitate de instalare.
 
 **Service Worker** (`sw.js`):
+
 - Navigare: Network-first cu fallback offline la `offline.html`
 - Imagini: Cache-first pentru a optimiza performanța
 - Traduceri: Stale-while-revalidate pentru actualizare în fundal
@@ -461,6 +466,7 @@ LeapMultix este o PWA completă cu suport offline și posibilitate de instalare.
 - Gestionare automată a versiunilor prin `cache-updater.js`
 
 **Manifest** (`manifest.json`):
+
 - Icoane SVG și PNG pentru toate dispozitivele
 - Instalare posibilă pe mobil (Adaugă la ecranul de pornire)
 - Configurație standalone pentru o experiență asemănătoare unei aplicații
@@ -469,9 +475,11 @@ LeapMultix este o PWA completă cu suport offline și posibilitate de instalare.
 **Testarea modului offline local**:
 
 1. Porniți serverul de dezvoltare:
+
    ```bash
    npm run serve
    ```
+
    Deschideți `http://localhost:8080` (sau portul afișat)
 
 2. Testați manual:
@@ -484,6 +492,7 @@ LeapMultix este o PWA completă cu suport offline și posibilitate de instalare.
    ```
 
 **Scripturi de gestionare a Service Worker-ului**:
+
 ```bash
 npm run sw:disable  # Dezactivează service worker-ul
 npm run sw:fix      # Remediază problemele de cache
@@ -492,12 +501,14 @@ npm run sw:fix      # Remediază problemele de cache
 ### Standarde de calitate
 
 **Unelte de calitate a codului**:
+
 - **ESLint**: Configurație modernă cu flat config (`eslint.config.js`), suport ES2022
 - **Prettier**: Formatare automată a codului (`.prettierrc`)
 - **Stylelint**: Validare CSS (`.stylelintrc.json`)
 - **JSDoc**: Documentare automată a funcțiilor cu analiză de acoperire
 
 **Reguli de cod importante**:
+
 - Elimină variabilele și parametrii neutilizați (`no-unused-vars`)
 - Utilizează o gestionare specifică a erorilor (fără blocuri catch goale)
 - Evită `innerHTML` în favoarea funcțiilor `security-utils.js`
@@ -505,6 +516,7 @@ npm run sw:fix      # Remediază problemele de cache
 - Extrage funcțiile complexe în ajutoare mai mici
 
 **Securitate**:
+
 - **Protecție XSS**: Utilizează funcțiile din `security-utils.js`:
   - `appendSanitizedHTML()` în loc de `innerHTML`
   - `createSafeElement()` pentru a crea elemente sigure
@@ -514,12 +526,14 @@ npm run sw:fix      # Remediază problemele de cache
 - **Content Security Policy**: Antete CSP pentru a restricționa sursele de scripturi
 
 **Accesibilitate**:
+
 - Conformitate WCAG 2.1 AA
 - Navigare completă de la tastatură
 - Roluri și etichete ARIA corespunzătoare
 - Contrast de culoare conform
 
 **Performanță**:
+
 - Încărcare leneșă a modulelor prin `lazy-loader.js`
 - Optimizări CSS și active responsive
 - Service Worker pentru caching inteligent
@@ -580,6 +594,7 @@ Suport multilingv complet:
 Acest script (`scripts/compare-translations.cjs`) asigură sincronizarea tuturor fișierelor de limbă:
 
 **Caracteristici:**
+
 - Detectarea cheilor lipsă (prezente în fr.json, dar absente în alte limbi)
 - Detectarea cheilor suplimentare (prezente în alte limbi, dar nu în fr.json)
 - Identificarea valorilor goale (`""`, `null`, `undefined`, `[]`)

@@ -343,6 +343,7 @@ Jedes Minispiel bietet:
 Das Projekt verwendet einen auf Feature-Branches basierenden Workflow:
 
 1. **Einen Branch erstellen**:
+
    ```bash
    git checkout -b feat/feature-name
    # oder
@@ -350,6 +351,7 @@ Das Projekt verwendet einen auf Feature-Branches basierenden Workflow:
    ```
 
 2. **Entwickeln und testen**:
+
    ```bash
    npm run format:check  # IMMER zuerst die Formatierung überprüfen
    npm run format        # Bei Bedarf formatieren
@@ -359,6 +361,7 @@ Das Projekt verwendet einen auf Feature-Branches basierenden Workflow:
    ```
 
 3. **Auf dem Branch committen**:
+
    ```bash
    git add .
    git commit -m "feat: Beschreibung der Funktionalität"
@@ -444,6 +447,7 @@ Die CI/CD-Pipeline wird bei jedem Push und Pull Request automatisch ausgeführt:
    - Core Web Vitals-Metriken
 
 **Qualitätsabzeichen**:
+
 - CI Build Status (GitHub Actions)
 - CodeFactor Grade
 - Codacy Badge
@@ -454,6 +458,7 @@ Die CI/CD-Pipeline wird bei jedem Push und Pull Request automatisch ausgeführt:
 LeapMultix ist eine vollständige PWA mit Offline-Unterstützung und Installationsmöglichkeit.
 
 **Service Worker** (`sw.js`):
+
 - Navigation: Network-first mit Offline-Fallback auf `offline.html`
 - Bilder: Cache-first zur Leistungsoptimierung
 - Übersetzungen: Stale-while-revalidate für Hintergrundaktualisierungen
@@ -461,6 +466,7 @@ LeapMultix ist eine vollständige PWA mit Offline-Unterstützung und Installatio
 - Automatische Versionsverwaltung über `cache-updater.js`
 
 **Manifest** (`manifest.json`):
+
 - SVG- und PNG-Symbole für alle Geräte
 - Installation auf Mobilgeräten möglich (Zum Startbildschirm hinzufügen)
 - Standalone-Konfiguration für eine App-ähnliche Erfahrung
@@ -469,9 +475,11 @@ LeapMultix ist eine vollständige PWA mit Offline-Unterstützung und Installatio
 **Offline-Modus lokal testen**:
 
 1. Entwicklungsserver starten:
+
    ```bash
    npm run serve
    ```
+
    Öffnen Sie `http://localhost:8080` (oder den angezeigten Port)
 
 2. Manuell testen:
@@ -484,6 +492,7 @@ LeapMultix ist eine vollständige PWA mit Offline-Unterstützung und Installatio
    ```
 
 **Skripte zur Verwaltung des Service Workers**:
+
 ```bash
 npm run sw:disable  # Service Worker deaktivieren
 npm run sw:fix      # Cache-Probleme beheben
@@ -492,12 +501,14 @@ npm run sw:fix      # Cache-Probleme beheben
 ### Qualitätsstandards
 
 **Code-Qualitätswerkzeuge**:
+
 - **ESLint**: Moderne Konfiguration mit Flat-Config (`eslint.config.js`), ES2022-Unterstützung
 - **Prettier**: Automatische Code-Formatierung (`.prettierrc`)
 - **Stylelint**: CSS-Validierung (`.stylelintrc.json`)
 - **JSDoc**: Automatische Dokumentation von Funktionen mit Abdeckungsanalyse
 
 **Wichtige Code-Regeln**:
+
 - Ungenutzte Variablen und Parameter entfernen (`no-unused-vars`)
 - Spezifische Fehlerbehandlung verwenden (keine leeren catch-Blöcke)
 - `innerHTML` zugunsten von `security-utils.js`-Funktionen vermeiden
@@ -505,6 +516,7 @@ npm run sw:fix      # Cache-Probleme beheben
 - Komplexe Funktionen in kleinere Helfer extrahieren
 
 **Sicherheit**:
+
 - **XSS-Schutz**: Verwenden Sie die Funktionen von `security-utils.js`:
   - `appendSanitizedHTML()` anstelle von `innerHTML`
   - `createSafeElement()` zum Erstellen sicherer Elemente
@@ -514,12 +526,14 @@ npm run sw:fix      # Cache-Probleme beheben
 - **Content Security Policy**: CSP-Header zur Einschränkung von Skriptquellen
 
 **Barrierefreiheit**:
+
 - WCAG 2.1 AA-Konformität
 - Vollständige Tastaturnavigation
 - Geeignete ARIA-Rollen und Labels
 - Konforme Farbkontraste
 
 **Leistung**:
+
 - Lazy Loading von Modulen über `lazy-loader.js`
 - CSS-Optimierungen und responsive Assets
 - Service Worker für intelligentes Caching
@@ -580,6 +594,7 @@ Vollständige mehrsprachige Unterstützung:
 Dieses Skript (`scripts/compare-translations.cjs`) stellt die Synchronisation aller Sprachdateien sicher:
 
 **Funktionen:**
+
 - Erkennung fehlender Schlüssel (in fr.json vorhanden, aber in anderen Sprachen fehlend)
 - Erkennung zusätzlicher Schlüssel (in anderen Sprachen vorhanden, aber nicht in fr.json)
 - Identifizierung leerer Werte (`""`, `null`, `undefined`, `[]`)

@@ -343,6 +343,7 @@ Varje minispel erbjuder:
 Projektet använder ett arbetsflöde baserat på funktionsgrenar:
 
 1. **Skapa en gren**:
+
    ```bash
    git checkout -b feat/funktionsnamn
    # eller
@@ -350,6 +351,7 @@ Projektet använder ett arbetsflöde baserat på funktionsgrenar:
    ```
 
 2. **Utveckla och testa**:
+
    ```bash
    npm run format:check  # Kontrollera ALLTID formateringen först
    npm run format        # Formatera vid behov
@@ -359,6 +361,7 @@ Projektet använder ett arbetsflöde baserat på funktionsgrenar:
    ```
 
 3. **Committa på grenen**:
+
    ```bash
    git add .
    git commit -m "feat: beskrivning av funktionen"
@@ -444,6 +447,7 @@ CI/CD-pipelinen körs automatiskt vid varje push och pull request:
    - Core Web Vitals-mått
 
 **Kvalitetsmärken**:
+
 - CI Build Status (GitHub Actions)
 - CodeFactor Grade
 - Codacy Badge
@@ -454,6 +458,7 @@ CI/CD-pipelinen körs automatiskt vid varje push och pull request:
 LeapMultix är en fullfjädrad PWA med offline-stöd och installerbarhet.
 
 **Service Worker** (`sw.js`):
+
 - Navigering: Network-first med offline-fallback till `offline.html`
 - Bilder: Cache-first för att optimera prestanda
 - Översättningar: Stale-while-revalidate för bakgrundsuppdateringar
@@ -461,6 +466,7 @@ LeapMultix är en fullfjädrad PWA med offline-stöd och installerbarhet.
 - Automatisk versionshantering via `cache-updater.js`
 
 **Manifest** (`manifest.json`):
+
 - SVG- och PNG-ikoner för alla enheter
 - Installerbar på mobil (Lägg till på hemskärmen)
 - Fristående konfiguration för en app-liknande upplevelse
@@ -469,9 +475,11 @@ LeapMultix är en fullfjädrad PWA med offline-stöd och installerbarhet.
 **Testa offline-läge lokalt**:
 
 1. Starta utvecklingsservern:
+
    ```bash
    npm run serve
    ```
+
    Öppna `http://localhost:8080` (eller den visade porten)
 
 2. Testa manuellt:
@@ -484,6 +492,7 @@ LeapMultix är en fullfjädrad PWA med offline-stöd och installerbarhet.
    ```
 
 **Skript för hantering av Service Worker**:
+
 ```bash
 npm run sw:disable  # Inaktivera service worker
 npm run sw:fix      # Åtgärda cacheproblem
@@ -492,12 +501,14 @@ npm run sw:fix      # Åtgärda cacheproblem
 ### Kvalitetsstandarder
 
 **Kodkvalitetsverktyg**:
+
 - **ESLint**: Modern konfiguration med platt konfiguration (`eslint.config.js`), ES2022-stöd
 - **Prettier**: Automatisk kodformatering (`.prettierrc`)
 - **Stylelint**: CSS-validering (`.stylelintrc.json`)
 - **JSDoc**: Automatisk funktionsdokumentation med täckningsanalys
 
 **Viktiga kodregler**:
+
 - Ta bort oanvända variabler och parametrar (`no-unused-vars`)
 - Använd specifik felhantering (inga tomma catch-block)
 - Undvik `innerHTML` till förmån för `security-utils.js`-funktioner
@@ -505,6 +516,7 @@ npm run sw:fix      # Åtgärda cacheproblem
 - Extrahera komplexa funktioner till mindre hjälpare
 
 **Säkerhet**:
+
 - **XSS-skydd**: Använd funktioner från `security-utils.js`:
   - `appendSanitizedHTML()` istället för `innerHTML`
   - `createSafeElement()` för att skapa säkra element
@@ -514,12 +526,14 @@ npm run sw:fix      # Åtgärda cacheproblem
 - **Content Security Policy**: CSP-huvuden för att begränsa skriptkällor
 
 **Tillgänglighet**:
+
 - WCAG 2.1 AA-överensstämmelse
 - Fullständig tangentbordsnavigering
 - Lämpliga ARIA-roller och etiketter
 - Överensstämmande färgkontraster
 
 **Prestanda**:
+
 - Lat laddning av moduler via `lazy-loader.js`
 - CSS-optimeringar och responsiva tillgångar
 - Service Worker för smart cachning
@@ -580,6 +594,7 @@ Fullständigt flerspråkigt stöd:
 Detta skript (`scripts/compare-translations.cjs`) säkerställer synkroniseringen av alla språkfiler:
 
 **Funktioner:**
+
 - Upptäckt av saknade nycklar (finns i fr.json men saknas i andra språk)
 - Upptäckt av extra nycklar (finns i andra språk men inte i fr.json)
 - Identifiering av tomma värden (`""`, `null`, `undefined`, `[]`)

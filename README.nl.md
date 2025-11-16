@@ -343,6 +343,7 @@ Elke minigame biedt:
 Het project maakt gebruik van een workflow gebaseerd op feature-branches:
 
 1. **Maak een branch**:
+
    ```bash
    git checkout -b feat/feature-naam
    # of
@@ -350,6 +351,7 @@ Het project maakt gebruik van een workflow gebaseerd op feature-branches:
    ```
 
 2. **Ontwikkel en test**:
+
    ```bash
    npm run format:check  # ALTIJD eerst de opmaak controleren
    npm run format        # Formatteer indien nodig
@@ -359,6 +361,7 @@ Het project maakt gebruik van een workflow gebaseerd op feature-branches:
    ```
 
 3. **Commit op de branch**:
+
    ```bash
    git add .
    git commit -m "feat: beschrijving van de functionaliteit"
@@ -444,6 +447,7 @@ De CI/CD-pijplijn wordt automatisch uitgevoerd bij elke push en pull request:
    - Core Web Vitals-metrieken
 
 **Kwaliteitsbadges**:
+
 - CI Build Status (GitHub Actions)
 - CodeFactor Grade
 - Codacy Badge
@@ -454,6 +458,7 @@ De CI/CD-pijplijn wordt automatisch uitgevoerd bij elke push en pull request:
 LeapMultix is een volledige PWA met offline ondersteuning en installatiemogelijkheid.
 
 **Service Worker** (`sw.js`):
+
 - Navigatie: Network-first met offline fallback naar `offline.html`
 - Afbeeldingen: Cache-first om de prestaties te optimaliseren
 - Vertalingen: Stale-while-revalidate voor achtergrondupdates
@@ -461,6 +466,7 @@ LeapMultix is een volledige PWA met offline ondersteuning en installatiemogelijk
 - Automatisch versiebeheer via `cache-updater.js`
 
 **Manifest** (`manifest.json`):
+
 - SVG- en PNG-pictogrammen voor alle apparaten
 - Installatie mogelijk op mobiel (Toevoegen aan startscherm)
 - Standalone-configuratie voor een app-achtige ervaring
@@ -469,9 +475,11 @@ LeapMultix is een volledige PWA met offline ondersteuning en installatiemogelijk
 **Offline-modus lokaal testen**:
 
 1. Start de ontwikkelserver:
+
    ```bash
    npm run serve
    ```
+
    Open `http://localhost:8080` (of de weergegeven poort)
 
 2. Handmatig testen:
@@ -484,6 +492,7 @@ LeapMultix is een volledige PWA met offline ondersteuning en installatiemogelijk
    ```
 
 **Scripts voor het beheer van de Service Worker**:
+
 ```bash
 npm run sw:disable  # Schakel de service worker uit
 npm run sw:fix      # Los cacheproblemen op
@@ -492,12 +501,14 @@ npm run sw:fix      # Los cacheproblemen op
 ### Kwaliteitsnormen
 
 **Codekwaliteitstools**:
+
 - **ESLint**: Moderne configuratie met flat config (`eslint.config.js`), ES2022-ondersteuning
 - **Prettier**: Automatische code-opmaak (`.prettierrc`)
 - **Stylelint**: CSS-validatie (`.stylelintrc.json`)
 - **JSDoc**: Automatische documentatie van functies met dekkingsanalyse
 
 **Belangrijke coderegels**:
+
 - Verwijder ongebruikte variabelen en parameters (`no-unused-vars`)
 - Gebruik specifieke foutafhandeling (geen lege catch-blokken)
 - Vermijd `innerHTML` ten gunste van `security-utils.js`-functies
@@ -505,6 +516,7 @@ npm run sw:fix      # Los cacheproblemen op
 - Extraheer complexe functies in kleinere helpers
 
 **Beveiliging**:
+
 - **XSS-bescherming**: Gebruik de functies van `security-utils.js`:
   - `appendSanitizedHTML()` in plaats van `innerHTML`
   - `createSafeElement()` om veilige elementen te maken
@@ -514,12 +526,14 @@ npm run sw:fix      # Los cacheproblemen op
 - **Content Security Policy**: CSP-headers om scriptbronnen te beperken
 
 **Toegankelijkheid**:
+
 - WCAG 2.1 AA-conformiteit
 - Volledige toetsenbordnavigatie
 - Geschikte ARIA-rollen en labels
 - Conforme kleurcontrasten
 
 **Prestaties**:
+
 - Lazy loading van modules via `lazy-loader.js`
 - CSS-optimalisaties en responsieve assets
 - Service Worker voor slimme caching
@@ -580,6 +594,7 @@ Volledige meertalige ondersteuning:
 Dit script (`scripts/compare-translations.cjs`) zorgt voor de synchronisatie van alle taalbestanden:
 
 **Functies:**
+
 - Detectie van ontbrekende sleutels (aanwezig in fr.json maar afwezig in andere talen)
 - Detectie van extra sleutels (aanwezig in andere talen maar niet in fr.json)
 - Identificatie van lege waarden (`""`, `null`, `undefined`, `[]`)

@@ -1,0 +1,12 @@
+{
+  "name": "leapmultix-skill-testing-mobile-responsive",
+  "description": "Skill testing-mobile-responsive from LeapMultix",
+  "version": "1.0.0",
+  "author": {
+    "name": "Julien LE SAUX",
+    "email": "contact@jls42.org"
+  },
+  "homepage": "https://github.com/leapmultix/leapmultix",
+  "repository": "https://github.com/leapmultix/leapmultix.git",
+  "license": "MIT"
+}

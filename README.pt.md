@@ -343,6 +343,7 @@ Cada minijogo oferece:
 O projeto utiliza um fluxo de trabalho baseado em ramos de funcionalidades:
 
 1. **Criar um ramo**:
+
    ```bash
    git checkout -b feat/nome-da-funcionalidade
    # ou
@@ -350,6 +351,7 @@ O projeto utiliza um fluxo de trabalho baseado em ramos de funcionalidades:
    ```
 
 2. **Desenvolver e testar**:
+
    ```bash
    npm run format:check  # SEMPRE verificar a formatação primeiro
    npm run format        # Formatar se necessário
@@ -359,6 +361,7 @@ O projeto utiliza um fluxo de trabalho baseado em ramos de funcionalidades:
    ```
 
 3. **Fazer commit no ramo**:
+
    ```bash
    git add .
    git commit -m "feat: descrição da funcionalidade"
@@ -444,6 +447,7 @@ O pipeline de CI/CD é executado automaticamente em cada push e pull request:
    - Métricas Core Web Vitals
 
 **Emblemas de qualidade**:
+
 - Estado da Build CI (GitHub Actions)
 - Classificação CodeFactor
 - Emblema Codacy
@@ -454,6 +458,7 @@ O pipeline de CI/CD é executado automaticamente em cada push e pull request:
 O LeapMultix é uma PWA completa com suporte offline e capacidade de instalação.
 
 **Service Worker** (`sw.js`):
+
 - Navegação: Network-first com fallback offline para `offline.html`
 - Imagens: Cache-first para otimizar o desempenho
 - Traduções: Stale-while-revalidate para atualização em segundo plano
@@ -461,6 +466,7 @@ O LeapMultix é uma PWA completa com suporte offline e capacidade de instalaçã
 - Gestão automática de versões através do `cache-updater.js`
 
 **Manifesto** (`manifest.json`):
+
 - Ícones SVG e PNG para todos os dispositivos
 - Instalação possível em telemóveis (Adicionar ao ecrã principal)
 - Configuração autónoma para uma experiência semelhante a uma aplicação
@@ -469,9 +475,11 @@ O LeapMultix é uma PWA completa com suporte offline e capacidade de instalaçã
 **Testar o modo offline localmente**:
 
 1. Iniciar o servidor de desenvolvimento:
+
    ```bash
    npm run serve
    ```
+
    Abrir `http://localhost:8080` (ou a porta apresentada)
 
 2. Testar manualmente:
@@ -484,6 +492,7 @@ O LeapMultix é uma PWA completa com suporte offline e capacidade de instalaçã
    ```
 
 **Scripts de gestão do Service Worker**:
+
 ```bash
 npm run sw:disable  # Desativar o service worker
 npm run sw:fix      # Corrigir problemas de cache
@@ -492,12 +501,14 @@ npm run sw:fix      # Corrigir problemas de cache
 ### Padrões de Qualidade
 
 **Ferramentas de Qualidade de Código**:
+
 - **ESLint**: Configuração moderna com configuração plana (`eslint.config.js`), suporte ES2022
 - **Prettier**: Formatação automática de código (`.prettierrc`)
 - **Stylelint**: Validação de CSS (`.stylelintrc.json`)
 - **JSDoc**: Documentação automática de funções com análise de cobertura
 
 **Regras de Código Importantes**:
+
 - Remover variáveis e parâmetros não utilizados (`no-unused-vars`)
 - Utilizar tratamento de erros específico (sem blocos catch vazios)
 - Evitar `innerHTML` em favor das funções de `security-utils.js`
@@ -505,6 +516,7 @@ npm run sw:fix      # Corrigir problemas de cache
 - Extrair funções complexas para ajudantes mais pequenos
 
 **Segurança**:
+
 - **Proteção XSS**: Utilizar as funções de `security-utils.js`:
   - `appendSanitizedHTML()` em vez de `innerHTML`
   - `createSafeElement()` para criar elementos seguros
@@ -514,12 +526,14 @@ npm run sw:fix      # Corrigir problemas de cache
 - **Política de Segurança de Conteúdo (CSP)**: Cabeçalhos CSP para restringir as fontes de scripts
 
 **Acessibilidade**:
+
 - Conformidade com WCAG 2.1 AA
 - Navegação completa por teclado
 - Funções e etiquetas ARIA apropriadas
 - Contrastes de cor conformes
 
 **Desempenho**:
+
 - Carregamento lento de módulos através do `lazy-loader.js`
 - Otimizações de CSS e ativos responsivos
 - Service Worker para cache inteligente
@@ -580,6 +594,7 @@ Suporte multilingue completo:
 Este script (`scripts/compare-translations.cjs`) garante a sincronização de todos os ficheiros de idioma:
 
 **Funcionalidades:**
+
 - Deteção de chaves em falta (presentes em fr.json mas ausentes noutros idiomas)
 - Deteção de chaves extra (presentes noutros idiomas mas não em fr.json)
 - Identificação de valores vazios (`""`, `null`, `undefined`, `[]`)

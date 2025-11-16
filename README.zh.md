@@ -343,6 +343,7 @@ leapmultix/
 项目使用基于功能分支的工作流程：
 
 1. **创建分支**：
+
    ```bash
    git checkout -b feat/feature-name
    # 或
@@ -350,6 +351,7 @@ leapmultix/
    ```
 
 2. **开发和测试**：
+
    ```bash
    npm run format:check  # 始终先检查格式
    npm run format        # 如有必要则格式化
@@ -359,6 +361,7 @@ leapmultix/
    ```
 
 3. **在分支上提交**：
+
    ```bash
    git add .
    git commit -m "feat: 功能描述"
@@ -444,6 +447,7 @@ CI/CD管道在每次推送和拉取请求时自动运行：
    - Core Web Vitals指标
 
 **质量徽章**：
+
 - CI构建状态（GitHub Actions）
 - CodeFactor等级
 - Codacy徽章
@@ -454,6 +458,7 @@ CI/CD管道在每次推送和拉取请求时自动运行：
 LeapMultix是一个功能齐全的PWA，具有离线支持和可安装性。
 
 **服务工作者**（`sw.js`）：
+
 - 导航：网络优先，离线回退到`offline.html`
 - 图像：缓存优先以优化性能
 - 翻译：Stale-while-revalidate用于后台更新
@@ -461,6 +466,7 @@ LeapMultix是一个功能齐全的PWA，具有离线支持和可安装性。
 - 通过`cache-updater.js`进行自动版本管理
 
 **清单**（`manifest.json`）：
+
 - 适用于所有设备的SVG和PNG图标
 - 可在移动设备上安装（添加到主屏幕）
 - 独立配置以获得类似应用的体验
@@ -469,9 +475,11 @@ LeapMultix是一个功能齐全的PWA，具有离线支持和可安装性。
 **在本地测试离线模式**：
 
 1. 启动开发服务器：
+
    ```bash
    npm run serve
    ```
+
    打开`http://localhost:8080`（或显示的端口）
 
 2. 手动测试：
@@ -484,6 +492,7 @@ LeapMultix是一个功能齐全的PWA，具有离线支持和可安装性。
    ```
 
 **服务工作者管理脚本**：
+
 ```bash
 npm run sw:disable  # 禁用服务工作者
 npm run sw:fix      # 修复缓存问题
@@ -492,12 +501,14 @@ npm run sw:fix      # 修复缓存问题
 ### 质量标准
 
 **代码质量工具**：
+
 - **ESLint**：具有平面配置（`eslint.config.js`）、ES2022支持的现代配置
 - **Prettier**：自动代码格式化（`.prettierrc`）
 - **Stylelint**：CSS验证（`.stylelintrc.json`）
 - **JSDoc**：带有覆盖率分析的自动函数文档
 
 **重要代码规则**：
+
 - 删除未使用的变量和参数（`no-unused-vars`）
 - 使用特定的错误处理（无空catch块）
 - 避免使用`innerHTML`，而使用`security-utils.js`函数
@@ -505,6 +516,7 @@ npm run sw:fix      # 修复缓存问题
 - 将复杂的函数提取到更小的助手中
 
 **安全性**：
+
 - **XSS保护**：使用`security-utils.js`中的函数：
   - `appendSanitizedHTML()`而不是`innerHTML`
   - `createSafeElement()`创建安全元素
@@ -514,12 +526,14 @@ npm run sw:fix      # 修复缓存问题
 - **内容安全策略**：CSP标头以限制脚本来源
 
 **可访问性**：
+
 - 符合WCAG 2.1 AA标准
 - 完整的键盘导航
 - 适当的ARIA角色和标签
 - 符合标准的颜色对比度
 
 **性能**：
+
 - 通过`lazy-loader.js`延迟加载模块
 - CSS优化和响应式资产
 - 用于智能缓存的服务工作者
@@ -580,6 +594,7 @@ npm run sw:fix      # 修复缓存问题
 此脚本（`scripts/compare-translations.cjs`）确保所有语言文件的同步：
 
 **功能：**
+
 - 检测缺失的键（存在于fr.json中但在其他语言中不存在）
 - 检测多余的键（存在于其他语言中但不在fr.json中）
 - 识别空值（`""`、`null`、`undefined`、`[]`）

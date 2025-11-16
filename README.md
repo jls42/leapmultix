@@ -107,11 +107,22 @@ python3 -m http.server 8000
 
 ```bash
 # Développement
-npm run serve          # Serveur local
-npm run lint           # Vérification du code
+npm run serve          # Serveur local (http://localhost:8080)
+npm run lint           # Vérification du code avec ESLint
+npm run lint:fix       # Correction automatique des problèmes ESLint
+npm run format:check   # Vérifier le formatage du code (TOUJOURS avant commit)
+npm run format         # Formater le code avec Prettier
+npm run verify         # Quality gate: lint + test + coverage
+
+# Tests
 npm run test           # Lancer tous les tests (CJS)
-npm run test:coverage  # Tests avec couverture
+npm run test:watch     # Tests en mode watch
+npm run test:coverage  # Tests avec rapport de couverture
+npm run test:core      # Tests des modules core uniquement
+npm run test:integration # Tests d'intégration
+npm run test:storage   # Tests du système de stockage
 npm run test:esm       # Tests ESM (dossiers tests-esm/, Jest vm-modules)
+npm run test:verbose   # Tests avec sortie détaillée
 npm run test:pwa-offline # Test offline PWA (nécessite Puppeteer), après `npm run serve`
 
 # Analyse et maintenance
@@ -122,13 +133,26 @@ npm run audit:accessibility # Tests d'accessibilité
 npm run dead-code      # Détection de code non utilisé
 npm run analyze:globals # Analyse des variables globales
 npm run analyze:dependencies # Analyse usage des dépendances
-npm run assets:analyze # Analyse des assets responsive
-npm run assets:diff    # Comparaison des assets
+npm run verify:cleanup # Analyse combinée (dead code + globals)
+
+# Gestion des assets
+npm run assets:generate    # Générer les images responsives
+npm run assets:backgrounds # Convertir les fonds en WebP
+npm run assets:analyze     # Analyse des assets responsive
+npm run assets:diff        # Comparaison des assets
+
+# Internationalisation
+npm run i18n:verify    # Vérifier la cohérence des clés de traduction
+npm run i18n:unused    # Lister les clés de traduction non utilisées
 npm run i18n:compare   # Comparer les traductions (en/es) avec fr.json (référence)
 
 # Build & livraison
 npm run build          # Build de prod (Rollup) + postbuild (dist/ complet)
 npm run serve:dist     # Servir dist/ sur http://localhost:5000 (ou port disponible)
+
+# PWA et Service Worker
+npm run sw:disable     # Désactiver le service worker
+npm run sw:fix         # Corriger les problèmes de service worker
 ```
 
 ## 🏗️ Architecture
@@ -141,48 +165,127 @@ leapmultix/
 ├── js/
 │   ├── core/               # Modules centraux ES6
 │   │   ├── GameMode.js     # Classe de base des modes
-│   │   ├── GameModeManager.js
-│   │   ├── storage.js      # API de stockage
+│   │   ├── GameModeManager.js # Gestion des modes de jeu
+│   │   ├── storage.js      # API de stockage LocalStorage
 │   │   ├── audio.js        # Gestion du son
-│   │   └── utils.js        # Utilitaires génériques
+│   │   ├── utils.js        # Utilitaires génériques (source canonique)
+│   │   ├── eventBus.js     # Communication événementielle
+│   │   ├── userState.js    # Gestion de session utilisateur
+│   │   ├── mainInit.js     # Initialisation DOM-ready
+│   │   ├── theme.js        # Système de thèmes
+│   │   ├── userUi.js       # Utilitaires d'interface utilisateur
+│   │   ├── parental.js     # Contrôles parentaux
+│   │   ├── adventure-data.js # Données du mode Aventure
+│   │   ├── mult-stats.js   # Statistiques de multiplication
+│   │   ├── challenge-stats.js # Statistiques de défi
+│   │   └── daily-challenge.js # Gestion défis quotidiens
 │   ├── components/         # Composants UI réutilisables
 │   │   ├── topBar.js       # Barre de navigation
 │   │   ├── infoBar.js      # Barres d'information des jeux
 │   │   ├── dashboard.js    # Tableau de bord utilisateur
 │   │   └── customization.js # Interface de personnalisation
-│   ├── modes/              # Modes de jeu refactorisés
+│   ├── modes/              # Modes de jeu
 │   │   ├── QuizMode.js
 │   │   ├── ChallengeMode.js
 │   │   ├── AdventureMode.js
 │   │   ├── DiscoveryMode.js
 │   │   └── ArcadeMode.js
-│   ├── arcade-*.js         # Mini-jeux arcade
-│   ├── multimiam-*.js      # Modules du jeu Pac-Man
-│   ├── multisnake.js       # Jeu Snake éducatif
+│   ├── arcade/             # Mini-jeux arcade
+│   │   ├── arcade.js       # Orchestrateur principal arcade
+│   │   ├── arcade-invasion.js # Space Invaders (31 KB)
+│   │   ├── arcade-multimemory.js # Jeu de mémoire (31 KB)
+│   │   ├── arcade-multimiam.js # Intégration Multimiam
+│   │   ├── arcade-multisnake.js # Intégration Snake
+│   │   ├── arcade-common.js, arcade-utils.js # Utilitaires partagés
+│   │   ├── arcade-message.js, arcade-points.js # Composants UI
+│   │   └── arcade-scores.js # Gestion des scores
+│   ├── multimiam/          # Jeu Pac-Man (architecture décomposée)
+│   │   ├── multimiam.js    # Contrôleur principal
+│   │   ├── multimiam-engine.js # Moteur de jeu (15 KB)
+│   │   ├── multimiam-renderer.js # Système de rendu (9 KB)
+│   │   ├── multimiam-controls.js # Gestion des contrôles (7 KB)
+│   │   ├── multimiam-questions.js # Génération de questions (6 KB)
+│   │   └── multimiam-ui.js # Éléments d'interface
+│   ├── multisnake.js       # Jeu Snake (38 KB)
+│   ├── navigation/         # Système de navigation
+│   │   ├── slides.js       # Navigation par slides (goToSlide, showSlide)
+│   │   └── keyboard-navigation.js # Support clavier
+│   ├── ui/                 # Interface utilisateur et feedback
+│   │   ├── uiUtils.js      # Utilitaires d'interface
+│   │   ├── ui-feedback.js  # Mécanismes de feedback
+│   │   ├── touch-support.js # Support tactile (7 KB)
+│   │   ├── virtual-keyboard.js # Clavier virtuel
+│   │   ├── coin-display.js, coin-effects.js # Système de monnaie
+│   │   ├── notifications.js # Système de notifications
+│   │   └── badges.js       # Système de badges
+│   ├── media/              # Gestion des médias
+│   │   ├── VideoManager.js # Gestion de lecture vidéo (12 KB)
+│   │   └── responsive-image-loader.js # Chargement d'images (9 KB)
+│   ├── orchestration/      # Orchestration et chargement
+│   │   ├── mode-orchestrator.js # Changement de modes
+│   │   ├── lazy-loader.js  # Chargement dynamique (10 KB)
+│   │   └── game-cleanup.js # Nettoyage d'état
+│   ├── utils/              # Utilitaires
+│   │   ├── utils-es6.js    # Agrégateur principal (5 KB)
+│   │   ├── main-helpers.js # Helpers de l'application
+│   │   ├── helpers.js      # Fonctions helpers legacy
+│   │   ├── stats-utils.js  # Utilitaires de statistiques
+│   │   ├── difficulty.js   # Gestion de difficulté
+│   │   └── questionGenerator.js # Génération de questions
+│   ├── storage/            # Stockage et état
+│   │   ├── storage.js      # Wrapper de stockage legacy
+│   │   └── userManager.js  # Gestion multi-utilisateurs (19 KB)
+│   ├── i18n/               # Internationalisation
+│   │   ├── i18n.js         # Système i18n
+│   │   └── i18n-store.js   # Stockage des traductions
+│   ├── security/           # Sécurité et gestion d'erreurs
+│   │   ├── security-utils.js # Protection XSS, sanitisation
+│   │   ├── error-handlers.js # Gestion globale d'erreurs
+│   │   └── logger.js       # Système de logging
+│   ├── accessibility/      # Accessibilité
+│   │   ├── accessibility.js # Fonctionnalités d'accessibilité
+│   │   └── speech.js       # Support de synthèse vocale
+│   ├── integration/        # Intégration et analytics
+│   │   ├── plausible-init.js # Analytics Plausible
+│   │   ├── cache-updater.js # Gestion de cache (10 KB)
+│   │   └── imports.js      # Utilitaires d'import
 │   ├── main-es6.js         # Point d'entrée ES6
 │   ├── main.js             # Orchestrateur principal
-│   ├── lazy-loader.js      # Chargement à la demande
-│   └── utils-es6.js        # Utilitaires ES6
+│   ├── bootstrap.js        # Configuration des event handlers ES6
+│   └── game.js             # Gestion d'état et défis quotidiens
 ├── css/                    # Styles modulaires
 ├── assets/                 # Ressources
 │   ├── images/             # Images et sprites
+│   ├── generated-images/   # Images responsives générées
 │   ├── sounds/             # Effets sonores
-│   ├── translations/       # Fichiers de traduction
+│   ├── translations/       # Fichiers de traduction (fr, en, es)
 │   └── videos/             # Vidéos tutoriels
-└── tests/                  # Tests automatisés
+├── tests/                  # Tests automatisés
+│   ├── __tests__/          # Tests unitaires et d'intégration
+│   └── tests-esm/          # Tests ESM (.mjs)
+├── scripts/                # Scripts de maintenance
+│   ├── compare-translations.cjs # Comparaison des traductions
+│   └── cleanup-i18n-keys.cjs # Nettoyage des clés i18n
+└── dist/                   # Build de production (généré)
 ```
 
 ### Architecture technique
 
 **Modules ES6 modernes** : Le projet utilise une architecture modulaire avec des classes ES6 et des imports/exports natifs.
 
-**Composants réutilisables** : Interface construite avec des composants UI centralisés (TopBar, InfoBar, Dashboard).
+**Composants réutilisables** : Interface construite avec des composants UI centralisés (TopBar, InfoBar, Dashboard, Customization).
 
-**Lazy Loading** : Chargement intelligent des modules à la demande pour optimiser les performances.
+**Lazy Loading** : Chargement intelligent des modules à la demande via `lazy-loader.js` pour optimiser les performances initiales.
 
-**Système de stockage unifié** : API centralisée pour la persistance des données utilisateur.
+**Système de stockage unifié** : API centralisée pour la persistance des données utilisateur via LocalStorage avec fallbacks.
 
 **Gestion audio centralisée** : Contrôle du son avec support multilingue et préférences par utilisateur.
+
+**Event Bus** : Communication événementielle découplée entre composants pour une architecture maintenable.
+
+**Navigation par slides** : Système de navigation basé sur des slides numérotés (slide0, slide1, etc.) avec `goToSlide()`.
+
+**Sécurité** : Protection XSS et sanitisation via `security-utils.js` pour toutes les manipulations DOM.
 
 ## 🎯 Modes de Jeu Détaillés
 
@@ -233,6 +336,46 @@ Chaque mini-jeu propose :
 
 ## 🛠️ Développement
 
+### Workflow de développement
+
+**IMPORTANT : Ne jamais commiter directement sur main**
+
+Le projet utilise un workflow basé sur les branches de fonctionnalité :
+
+1. **Créer une branche** :
+
+   ```bash
+   git checkout -b feat/nom-de-la-fonctionnalite
+   # ou
+   git checkout -b fix/nom-du-bug
+   ```
+
+2. **Développer et tester** :
+
+   ```bash
+   npm run format:check  # TOUJOURS vérifier le formatage en premier
+   npm run format        # Formater si nécessaire
+   npm run lint          # Vérifier la qualité du code
+   npm run test          # Lancer les tests
+   npm run test:coverage # Vérifier la couverture
+   ```
+
+3. **Commiter sur la branche** :
+
+   ```bash
+   git add .
+   git commit -m "feat: description de la fonctionnalité"
+   ```
+
+4. **Pousser et créer une Pull Request** :
+   ```bash
+   git push -u origin feat/nom-de-la-fonctionnalite
+   ```
+
+**Style de commit** : Messages concis, mode impératif (ex: "Fix arcade init errors", "Refactor cache updater")
+
+**Quality gate** : S'assurer que `npm run lint`, `npm test` et `npm run test:coverage` passent avant chaque commit
+
 ### Architecture des composants
 
 **GameMode (classe de base)** : Tous les modes héritent d'une classe commune avec méthodes standardisées.
@@ -242,6 +385,8 @@ Chaque mini-jeu propose :
 **Composants UI** : TopBar, InfoBar, Dashboard et Customization fournissent une interface cohérente.
 
 **Lazy Loading** : Les modules sont chargés à la demande pour optimiser les performances initiales.
+
+**Event Bus** : Communication découplée entre composants via le système d'événements.
 
 ### Tests
 
@@ -274,29 +419,125 @@ npm run serve:dist # sert dist/ (port 5000)
 
 ### Intégration Continue
 
-**GitHub Actions** : `.github/workflows/ci.yml`
+**GitHub Actions** : Pipeline automatisé dans `.github/workflows/ci.yml`
 
-- **build-test** : `npm ci`, `lint`, `test`, `audit` + artefact coverage
-- **accessibility** : `npm run audit:accessibility` (non bloquant)
-- **test-esm** : `npm run test:esm` avec VM modules
-- **lighthouse** : Audit performance mobile (non bloquant), rapports artefacts
+Le pipeline CI/CD exécute automatiquement à chaque push et pull request :
 
-### PWA (hors‑ligne et installation)
+**Jobs principaux** :
 
-- Service Worker: navigation réseau d'abord + fallback hors-ligne; images cache-first; traductions stale-while-revalidate; JS/CSS réseau d'abord.
-- Manifest: icônes SVG/PNG; installation possible sur mobile.
-- Tester hors‑ligne localement:
-  1. `npm run serve` et ouvrir `http://localhost:8080` (ou port affiché)
-  2. Couper le réseau et rafraîchir la page → `offline.html` s'affiche
-  3. Test automatisé (Puppeteer installé): `npm run test:pwa-offline`
+1. **build-test** : Job principal de validation
+   - Installation des dépendances : `npm ci`
+   - Vérification du formatage : `npm run format:check`
+   - Analyse statique : `npm run lint`
+   - Tests unitaires : `npm run test`
+   - Audit de sécurité : `npm audit`
+   - Génération de l'artefact de couverture
+
+2. **accessibility** : Audit d'accessibilité (non bloquant)
+   - Exécute `npm run audit:accessibility`
+   - Génère un rapport d'accessibilité WCAG 2.1 AA
+
+3. **test-esm** : Tests des modules ES6
+   - Exécute `npm run test:esm` avec Jest VM modules
+   - Valide les imports/exports ES6
+
+4. **lighthouse** : Audit de performance (non bloquant)
+   - Audit de performance mobile
+   - Génération de rapports Lighthouse artefacts
+   - Métriques Core Web Vitals
+
+**Badges de qualité** :
+
+- CI Build Status (GitHub Actions)
+- CodeFactor Grade
+- Codacy Badge
+- SonarCloud Quality Gate
+
+### PWA (Progressive Web App)
+
+LeapMultix est une PWA complète avec support hors-ligne et possibilité d'installation.
+
+**Service Worker** (`sw.js`) :
+
+- Navigation : Network-first avec fallback hors-ligne vers `offline.html`
+- Images : Cache-first pour optimiser les performances
+- Traductions : Stale-while-revalidate pour mise à jour en arrière-plan
+- JS/CSS : Network-first pour toujours servir la dernière version
+- Gestion de version automatique via `cache-updater.js`
+
+**Manifest** (`manifest.json`) :
+
+- Icônes SVG et PNG pour tous les appareils
+- Installation possible sur mobile (Add to Home Screen)
+- Configuration standalone pour expérience app-like
+- Support des thèmes et couleurs
+
+**Tester le mode hors-ligne localement** :
+
+1. Démarrer le serveur de développement :
+
+   ```bash
+   npm run serve
+   ```
+
+   Ouvrir `http://localhost:8080` (ou le port affiché)
+
+2. Tester manuellement :
+   - Couper le réseau dans les DevTools (Network tab → Offline)
+   - Rafraîchir la page → `offline.html` s'affiche
+
+3. Test automatisé (Puppeteer requis) :
+   ```bash
+   npm run test:pwa-offline
+   ```
+
+**Scripts de gestion du Service Worker** :
+
+```bash
+npm run sw:disable  # Désactiver le service worker
+npm run sw:fix      # Corriger les problèmes de cache
+```
 
 ### Standards de qualité
 
-- **ESLint** : Validation du code JavaScript
-- **Prettier** : Formatage automatique
-- **JSDoc** : Documentation automatique des fonctions
-- **Accessibilité** : Conformité WCAG 2.1 AA
-- **Performance** : Lazy loading, optimisations CSS
+**Outils de qualité du code** :
+
+- **ESLint** : Configuration moderne avec flat config (`eslint.config.js`), support ES2022
+- **Prettier** : Formatage automatique du code (`.prettierrc`)
+- **Stylelint** : Validation CSS (`.stylelintrc.json`)
+- **JSDoc** : Documentation automatique des fonctions avec analyse de couverture
+
+**Règles de code importantes** :
+
+- Supprimer les variables et paramètres non utilisés (`no-unused-vars`)
+- Utiliser une gestion d'erreur spécifique (pas de catch vides)
+- Éviter `innerHTML` en faveur des fonctions `security-utils.js`
+- Maintenir une complexité cognitive < 15 pour les fonctions
+- Extraire les fonctions complexes en helpers plus petits
+
+**Sécurité** :
+
+- **Protection XSS** : Utiliser les fonctions de `security-utils.js` :
+  - `appendSanitizedHTML()` au lieu de `innerHTML`
+  - `createSafeElement()` pour créer des éléments sécurisés
+  - `setSafeMessage()` pour le contenu texte
+- **Scripts externes** : Attribut `crossorigin="anonymous"` obligatoire
+- **Validation des entrées** : Toujours sanitiser les données externes
+- **Content Security Policy** : Headers CSP pour restreindre les sources de scripts
+
+**Accessibilité** :
+
+- Conformité WCAG 2.1 AA
+- Navigation clavier complète
+- Rôles ARIA et labels appropriés
+- Contrastes de couleur conformes
+
+**Performance** :
+
+- Lazy loading des modules via `lazy-loader.js`
+- Optimisations CSS et assets responsives
+- Service Worker pour mise en cache intelligente
+- Code splitting et minification en production
 
 ## 📱 Compatibilité
 
@@ -342,12 +583,49 @@ Support multilingue complet :
 }
 ```
 
-**Scripts de gestion :**
+### Scripts de gestion i18n
 
-```bash
-npm run i18n:verify  # Vérifier clés manquantes/incohérentes
-npm run i18n:unused  # Lister clés non utilisées
-npm run i18n:compare # Comparer en.json/es.json avec fr.json (référence)
+**`npm run i18n:verify`** - Vérifier la cohérence des clés de traduction
+
+**`npm run i18n:unused`** - Lister les clés de traduction non utilisées
+
+**`npm run i18n:compare`** - Comparer les fichiers de traduction avec fr.json (référence)
+
+Ce script (`scripts/compare-translations.cjs`) assure la synchronisation de tous les fichiers de langue :
+
+**Fonctionnalités :**
+
+- Détection des clés manquantes (présentes dans fr.json mais absentes dans d'autres langues)
+- Détection des clés supplémentaires (présentes dans d'autres langues mais pas dans fr.json)
+- Identification des valeurs vides (`""`, `null`, `undefined`, `[]`)
+- Vérification de cohérence des types (string vs array)
+- Aplatissement des structures JSON imbriquées en notation par points (ex: `arcade.multiMemory.title`)
+- Génération d'un rapport console détaillé
+- Sauvegarde du rapport JSON dans `docs/translations-comparison-report.json`
+
+**Exemple de sortie :**
+
+```
+🔍 Analyse comparative des fichiers de traduction
+
+📚 Langue de référence: fr.json
+✅ fr.json: 335 clés
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 Analyse de en.json
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Total de clés: 335
+✅ Aucune clé manquante
+✅ Aucune clé supplémentaire
+✅ Aucune valeur vide
+
+📊 RÉSUMÉ FINAL
+  fr.json: 335 clés
+  en.json: 335 clés
+  es.json: 335 clés
+
+✅ Tous les fichiers de traduction sont parfaitement synchronisés !
 ```
 
 **Couverture des traductions :**
@@ -356,6 +634,8 @@ npm run i18n:compare # Comparer en.json/es.json avec fr.json (référence)
 - Instructions des jeux
 - Messages d'erreur et de feedback
 - Descriptions et aide contextuelle
+- Contenu narratif du mode Aventure
+- Labels d'accessibilité et ARIA
 
 ## 📊 Stockage des données
 

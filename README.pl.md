@@ -343,6 +343,7 @@ Każda minigra oferuje:
 Projekt wykorzystuje przepływ pracy oparty na gałęziach funkcyjnych:
 
 1. **Utwórz gałąź**:
+
    ```bash
    git checkout -b feat/nazwa-funkcjonalnosci
    # lub
@@ -350,6 +351,7 @@ Projekt wykorzystuje przepływ pracy oparty na gałęziach funkcyjnych:
    ```
 
 2. **Rozwijaj i testuj**:
+
    ```bash
    npm run format:check  # ZAWSZE najpierw sprawdzaj formatowanie
    npm run format        # Sformatuj w razie potrzeby
@@ -359,6 +361,7 @@ Projekt wykorzystuje przepływ pracy oparty na gałęziach funkcyjnych:
    ```
 
 3. **Commituj na gałęzi**:
+
    ```bash
    git add .
    git commit -m "feat: opis funkcjonalności"
@@ -444,6 +447,7 @@ Potok CI/CD jest uruchamiany automatycznie przy każdym pushu i pull requeście:
    - Metryki Core Web Vitals
 
 **Odznaki jakości**:
+
 - Status budowania CI (GitHub Actions)
 - Ocena CodeFactor
 - Odznaka Codacy
@@ -454,6 +458,7 @@ Potok CI/CD jest uruchamiany automatycznie przy każdym pushu i pull requeście:
 LeapMultix to w pełni funkcjonalna PWA z obsługą offline i możliwością instalacji.
 
 **Service Worker** (`sw.js`):
+
 - Nawigacja: Network-first z rezerwą offline do `offline.html`
 - Obrazy: Cache-first w celu optymalizacji wydajności
 - Tłumaczenia: Stale-while-revalidate do aktualizacji w tle
@@ -461,6 +466,7 @@ LeapMultix to w pełni funkcjonalna PWA z obsługą offline i możliwością ins
 - Automatyczne zarządzanie wersjami za pomocą `cache-updater.js`
 
 **Manifest** (`manifest.json`):
+
 - Ikony SVG i PNG dla wszystkich urządzeń
 - Możliwość instalacji na urządzeniach mobilnych (Dodaj do ekranu głównego)
 - Konfiguracja standalone dla doświadczenia podobnego do aplikacji
@@ -469,9 +475,11 @@ LeapMultix to w pełni funkcjonalna PWA z obsługą offline i możliwością ins
 **Testowanie trybu offline lokalnie**:
 
 1. Uruchom serwer deweloperski:
+
    ```bash
    npm run serve
    ```
+
    Otwórz `http://localhost:8080` (lub wyświetlony port)
 
 2. Testuj ręcznie:
@@ -484,6 +492,7 @@ LeapMultix to w pełni funkcjonalna PWA z obsługą offline i możliwością ins
    ```
 
 **Skrypty do zarządzania Service Workerem**:
+
 ```bash
 npm run sw:disable  # Wyłącz service workera
 npm run sw:fix      # Napraw problemy z pamięcią podręczną
@@ -492,12 +501,14 @@ npm run sw:fix      # Napraw problemy z pamięcią podręczną
 ### Standardy jakości
 
 **Narzędzia jakości kodu**:
+
 - **ESLint**: Nowoczesna konfiguracja z płaską konfiguracją (`eslint.config.js`), obsługa ES2022
 - **Prettier**: Automatyczne formatowanie kodu (`.prettierrc`)
 - **Stylelint**: Walidacja CSS (`.stylelintrc.json`)
 - **JSDoc**: Automatyczna dokumentacja funkcji z analizą pokrycia
 
 **Ważne zasady kodowania**:
+
 - Usuwaj nieużywane zmienne i parametry (`no-unused-vars`)
 - Używaj specyficznej obsługi błędów (bez pustych bloków catch)
 - Unikaj `innerHTML` na rzecz funkcji `security-utils.js`
@@ -505,6 +516,7 @@ npm run sw:fix      # Napraw problemy z pamięcią podręczną
 - Wyodrębniaj złożone funkcje do mniejszych pomocników
 
 **Bezpieczeństwo**:
+
 - **Ochrona XSS**: Używaj funkcji z `security-utils.js`:
   - `appendSanitizedHTML()` zamiast `innerHTML`
   - `createSafeElement()` do tworzenia bezpiecznych elementów
@@ -514,12 +526,14 @@ npm run sw:fix      # Napraw problemy z pamięcią podręczną
 - **Polityka Bezpieczeństwa Treści (CSP)**: Nagłówki CSP w celu ograniczenia źródeł skryptów
 
 **Dostępność**:
+
 - Zgodność z WCAG 2.1 AA
 - Pełna nawigacja za pomocą klawiatury
 - Odpowiednie role i etykiety ARIA
 - Zgodne kontrasty kolorów
 
 **Wydajność**:
+
 - Leniwe ładowanie modułów za pomocą `lazy-loader.js`
 - Optymalizacje CSS i responsywne zasoby
 - Service Worker do inteligentnego buforowania
@@ -580,6 +594,7 @@ Pełne wsparcie wielojęzyczne:
 Ten skrypt (`scripts/compare-translations.cjs`) zapewnia synchronizację wszystkich plików językowych:
 
 **Funkcje:**
+
 - Wykrywanie brakujących kluczy (obecnych w fr.json, ale nieobecnych w innych językach)
 - Wykrywanie dodatkowych kluczy (obecnych w innych językach, ale nie w fr.json)
 - Identyfikacja pustych wartości (`""`, `null`, `undefined`, `[]`)
