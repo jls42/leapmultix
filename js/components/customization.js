@@ -101,36 +101,38 @@ export const Customization = {
   setupEvents() {
     document.querySelectorAll('.avatar-btn');
 
-    // Sélection d'avatar
-    for (const btn of document.querySelectorAll('.avatar-btn:not(.locked)')) {
-      // Supprimer l'ancien écouteur s'il existe pour éviter les doublons
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-      newBtn.addEventListener('click', () => {
-        const avatarName = newBtn.dataset.avatar;
-        gameState.avatar = avatarName;
-        updateBackgroundByAvatar(avatarName);
-        startBackgroundRotation(avatarName); // Rotation auto après changement d'avatar
+    // Handle avatar selection via radio inputs
+    const avatarInputs = document.querySelectorAll('input[name="avatar"]');
+    avatarInputs.forEach(input => {
+      // Remove existing listeners to avoid duplicates if this is called multiple times
+      const newInput = input.cloneNode(true);
+      input.parentNode.replaceChild(newInput, input);
 
-        // Mettre à jour la sélection visuelle
-        for (const avatarBtn of document.querySelectorAll('.avatar-btn')) {
-          avatarBtn.classList.toggle('active', avatarBtn.dataset.avatar === avatarName);
+      newInput.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          const avatarName = e.target.value;
+          gameState.avatar = avatarName;
+
+          // Update visual state if needed (though CSS :checked should handle most of it)
+          // We might want to update other UI elements that show the current avatar
+          const currentAvatarImg = document.getElementById('current-avatar-img');
+          if (currentAvatarImg) {
+            currentAvatarImg.src = `assets/images/arcade/${avatarName}_head_avatar_128x128.png`;
+          }
+
+          // Save preference
+          if (window.userManager && window.userManager.currentUser) {
+            window.userManager.currentUser.avatar = avatarName;
+            window.userManager.saveUsers();
+          }
+
+          // Play selection sound
+          if (window.audioManager) {
+            window.audioManager.playSound('click');
+          }
         }
-
-        // Mettre à jour l'image d'avatar actuel
-        const currentImg = document.getElementById('current-avatar-img');
-        if (currentImg) {
-          currentImg.src = `assets/images/arcade/${avatarName}_head_avatar_128x128.png`;
-          currentImg.alt = avatarName;
-        }
-
-        // 🔧 FIX: Sauvegarder automatiquement l'avatar sélectionné
-        const userData = UserState.getCurrentUserData();
-        userData.avatar = avatarName;
-        UserState.updateUserData(userData);
       });
-    }
-
+    });
     // Ajouter le clavier virtuel pour le surnom
     const nicknameInput = document.getElementById('nickname-input');
     /**

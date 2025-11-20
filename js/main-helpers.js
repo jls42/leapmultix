@@ -26,43 +26,49 @@ export function renderAvatarSelector(target) {
 
   const userData = UserState.getCurrentUserData();
   const unlocked = userData.unlockedAvatars || ['fox'];
+  const currentAvatar = userData.avatar || 'fox'; // Assuming 'fox' is default if not set
 
   while (avatarSelector.firstChild) avatarSelector.removeChild(avatarSelector.firstChild);
   AVATAR_LIST.forEach(avatarName => {
     const isUnlocked = unlocked.includes(avatarName);
-    const btn = document.createElement('button');
-    btn.className = 'avatar-btn' + (isUnlocked ? '' : ' locked');
-    btn.dataset.avatar = avatarName;
-    const labelRaw = getTranslation(avatarName);
-    const label =
-      typeof labelRaw === 'string' && !/^\[.*\]$/.test(labelRaw) ? labelRaw : avatarName;
-    const lockTipRaw = getTranslation('avatar_locked_tooltip');
-    const lockTip =
-      typeof lockTipRaw === 'string' && !/^\[.*\]$/.test(lockTipRaw)
-        ? lockTipRaw
-        : 'Avatar verrouillé';
+    const label = document.createElement('label');
+    label.className = 'avatar-option';
+
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'avatar';
+    input.value = avatarName;
+    input.className = 'sr-only avatar-radio';
+
+    if (currentAvatar === avatarName) {
+      input.checked = true;
+    }
+
+    input.disabled = !isUnlocked;
+
+    const visualDiv = document.createElement('div');
+    visualDiv.className = 'avatar-visual' + (isUnlocked ? '' : ' locked');
+    if (!isUnlocked) visualDiv.title = getTranslation('avatar_locked_tooltip');
+
     const img = document.createElement('img');
+    img.className = 'img-responsive';
     img.src = `assets/images/arcade/${avatarName}_head_avatar_128x128.png`;
     img.width = 100;
     img.height = 100;
-    img.alt = label;
-    const span = document.createElement('span');
-    span.className = 'avatar-label';
-    span.textContent = label;
-    btn.appendChild(img);
-    btn.appendChild(document.createTextNode(' '));
-    btn.appendChild(span);
+    img.alt = avatarName;
+
+    visualDiv.appendChild(img);
+
     if (!isUnlocked) {
       const lock = document.createElement('span');
       lock.className = 'lock-icon';
-      lock.title = lockTip;
       lock.textContent = '🔒';
-      btn.appendChild(document.createTextNode(' '));
-      btn.appendChild(lock);
+      visualDiv.appendChild(lock);
     }
-    btn.disabled = !isUnlocked;
-    if (!isUnlocked) btn.title = getTranslation('avatar_locked_tooltip');
-    avatarSelector.appendChild(btn);
+
+    label.appendChild(input);
+    label.appendChild(visualDiv);
+    avatarSelector.appendChild(label);
   });
 }
 
