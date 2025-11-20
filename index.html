@@ -1,125 +1,71 @@
 <!doctype html>
 <html lang="fr">
-  <head>
-    <!-- Méta-tags pour contrôler le cache -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0, viewport-fit=cover"
-    />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-touch-fullscreen" content="yes" />
-    <title>LeapMultix - Tables de Multiplication Interactives Gratuites</title>
-    <!-- SEO Meta Tags -->
-    <meta
-      name="description"
-      content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue (FR/EN/ES). Open source."
-    />
-    <meta name="author" content="Julien LS." />
-    <meta
-      name="robots"
-      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
-    />
-    <link rel="canonical" href="https://leapmultix.jls42.org/" />
 
-    <!-- Performance Hints -->
-    <link rel="dns-prefetch" href="https://plausible.io" />
-    <link rel="preconnect" href="https://plausible.io" crossorigin />
-    <link rel="preload" href="/assets/icons/panda-512.png" as="image" fetchpriority="low" />
-    <link
-      rel="preload"
-      href="/assets/social/leapmultix-social-card.webp"
-      as="image"
-      fetchpriority="low"
-    />
-    <link
-      rel="preload"
-      href="assets/fonts/poppins-latin-400.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="assets/fonts/poppins-latin-600.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="assets/fonts/poppins-latin-700.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
+<head>
+  <!-- Méta-tags pour contrôler le cache -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-touch-fullscreen" content="yes" />
+  <title>LeapMultix - Tables de Multiplication Interactives Gratuites</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue (FR/EN/ES). Open source." />
+  <meta name="author" content="Julien LS." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <link rel="canonical" href="https://leapmultix.jls42.org/" />
 
-    <!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://leapmultix.jls42.org/" />
-    <meta property="og:site_name" content="LeapMultix" />
-    <meta
-      property="og:title"
-      content="LeapMultix - Tables de Multiplication Interactives Gratuites"
-    />
-    <meta
-      property="og:description"
-      content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source."
-    />
-    <meta
-      property="og:image"
-      content="https://leapmultix.jls42.org/assets/social/leapmultix-social-card.webp"
-    />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta
-      property="og:image:alt"
-      content="LeapMultix - Personnages colorés (Panda, Dragon, Astronaute, Licorne, Renard) dans l'espace avec la Terre en arrière-plan"
-    />
-    <meta property="og:locale" content="fr_FR" />
-    <meta property="og:locale:alternate" content="en_US" />
-    <meta property="og:locale:alternate" content="es_ES" />
+  <!-- Performance Hints -->
+  <link rel="dns-prefetch" href="https://plausible.io" />
+  <link rel="preconnect" href="https://plausible.io" crossorigin />
+  <link rel="preload" href="/assets/icons/panda-512.png" as="image" fetchpriority="low" />
+  <link rel="preload" href="/assets/social/leapmultix-social-card.webp" as="image" fetchpriority="low" />
+  <link rel="preload" href="assets/fonts/poppins-latin-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/poppins-latin-600.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/poppins-latin-700.woff2" as="font" type="font/woff2" crossorigin />
 
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@JLSX42" />
-    <meta name="twitter:creator" content="@JLSX42" />
-    <meta name="twitter:url" content="https://leapmultix.jls42.org/" />
-    <meta
-      name="twitter:title"
-      content="LeapMultix - Tables de Multiplication Interactives Gratuites"
-    />
-    <meta
-      name="twitter:description"
-      content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source."
-    />
-    <meta
-      name="twitter:image"
-      content="https://leapmultix.jls42.org/assets/social/leapmultix-social-card.webp"
-    />
-    <meta
-      name="twitter:image:alt"
-      content="LeapMultix - Personnages colorés dans l'espace avec la Terre en arrière-plan"
-    />
+  <!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://leapmultix.jls42.org/" />
+  <meta property="og:site_name" content="LeapMultix" />
+  <meta property="og:title" content="LeapMultix - Tables de Multiplication Interactives Gratuites" />
+  <meta property="og:description"
+    content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source." />
+  <meta property="og:image" content="https://leapmultix.jls42.org/assets/social/leapmultix-social-card.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt"
+    content="LeapMultix - Personnages colorés (Panda, Dragon, Astronaute, Licorne, Renard) dans l'espace avec la Terre en arrière-plan" />
+  <meta property="og:locale" content="fr_FR" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta property="og:locale:alternate" content="es_ES" />
 
-    <!-- Schema.org Microdata -->
-    <meta itemprop="name" content="LeapMultix - Tables de Multiplication Interactives Gratuites" />
-    <meta
-      itemprop="description"
-      content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source."
-    />
-    <meta itemprop="url" content="https://leapmultix.jls42.org/" />
-    <meta
-      itemprop="image"
-      content="https://leapmultix.jls42.org/assets/social/leapmultix-social-card.webp"
-    />
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@JLSX42" />
+  <meta name="twitter:creator" content="@JLSX42" />
+  <meta name="twitter:url" content="https://leapmultix.jls42.org/" />
+  <meta name="twitter:title" content="LeapMultix - Tables de Multiplication Interactives Gratuites" />
+  <meta name="twitter:description"
+    content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source." />
+  <meta name="twitter:image" content="https://leapmultix.jls42.org/assets/social/leapmultix-social-card.webp" />
+  <meta name="twitter:image:alt"
+    content="LeapMultix - Personnages colorés dans l'espace avec la Terre en arrière-plan" />
 
-    <!-- Structured Data JSON-LD: WebApplication -->
-    <script type="application/ld+json">
+  <!-- Schema.org Microdata -->
+  <meta itemprop="name" content="LeapMultix - Tables de Multiplication Interactives Gratuites" />
+  <meta itemprop="description"
+    content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source." />
+  <meta itemprop="url" content="https://leapmultix.jls42.org/" />
+  <meta itemprop="image" content="https://leapmultix.jls42.org/assets/social/leapmultix-social-card.webp" />
+
+  <!-- Structured Data JSON-LD: WebApplication -->
+  <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
@@ -164,8 +110,8 @@
       }
     </script>
 
-    <!-- Structured Data JSON-LD: Organization -->
-    <script type="application/ld+json">
+  <!-- Structured Data JSON-LD: Organization -->
+  <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "Organization",
@@ -181,8 +127,8 @@
       }
     </script>
 
-    <!-- Structured Data JSON-LD: FAQPage -->
-    <script type="application/ld+json">
+  <!-- Structured Data JSON-LD: FAQPage -->
+  <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "FAQPage",
@@ -247,61 +193,61 @@
       }
     </script>
 
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/panda-32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/panda-16.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/panda-180.png" />
-    <link rel="stylesheet" href="css/themes.css" data-critical-css="true" />
-    <link rel="stylesheet" href="css/general.css" data-critical-css="true" />
-    <link rel="stylesheet" href="css/users.css" data-critical-css="true" />
-    <link rel="stylesheet" href="css/responsive-unified.css" data-critical-css="true" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/panda-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/panda-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/panda-180.png" />
+  <link rel="stylesheet" href="css/themes.css" data-critical-css="true" />
+  <link rel="stylesheet" href="css/general.css" data-critical-css="true" />
+  <link rel="stylesheet" href="css/users.css" data-critical-css="true" />
+  <link rel="stylesheet" href="css/responsive-unified.css" data-critical-css="true" />
+  <link rel="stylesheet" href="css/game.css" />
+  <link rel="stylesheet" href="css/quiz.css" />
+  <link rel="stylesheet" href="css/table-settings-modal.css" />
+  <link rel="stylesheet" href="css/challenge.css" />
+  <link rel="stylesheet" href="css/adventure.css" />
+  <link rel="stylesheet" href="css/arcade.css" />
+  <link rel="stylesheet" href="css/discovery-mode.css" />
+  <link rel="stylesheet" href="css/multimiam.css" />
+  <link rel="stylesheet" href="css/multisnake.css" />
+  <link rel="stylesheet" href="css/timer.css" />
+  <link rel="stylesheet" href="css/streak-counter.css" />
+  <link rel="stylesheet" href="css/power-ups.css" />
+  <link rel="stylesheet" href="css/celebration.css" />
+  <link rel="stylesheet" href="css/stars.css" />
+
+  <!-- Optional styles loader - CSP-compliant external script -->
+  <script type="module" src="js/optional-styles-loader.js"></script>
+  <noscript>
+    <link rel="stylesheet" href="css/users.css" />
     <link rel="stylesheet" href="css/game.css" />
+    <link rel="stylesheet" href="css/stars.css" />
+    <link rel="stylesheet" href="css/celebration.css" />
+    <link rel="stylesheet" href="css/parent-controls.css" />
+    <link rel="stylesheet" href="css/timer.css" />
+    <link rel="stylesheet" href="css/power-ups.css" />
+    <link rel="stylesheet" href="css/theme-selector.css" />
+    <link rel="stylesheet" href="css/volume-control.css" />
+    <link rel="stylesheet" href="css/streak-counter.css" />
+    <link rel="stylesheet" href="css/progress-dashboard.css" />
+    <link rel="stylesheet" href="css/discovery-mode.css" />
+    <link rel="stylesheet" href="css/discovery-fixes.css" />
     <link rel="stylesheet" href="css/quiz.css" />
     <link rel="stylesheet" href="css/table-settings-modal.css" />
     <link rel="stylesheet" href="css/challenge.css" />
     <link rel="stylesheet" href="css/adventure.css" />
     <link rel="stylesheet" href="css/arcade.css" />
-    <link rel="stylesheet" href="css/discovery-mode.css" />
+    <link rel="stylesheet" href="css/responsive-unified.css" />
     <link rel="stylesheet" href="css/multimiam.css" />
     <link rel="stylesheet" href="css/multisnake.css" />
-    <link rel="stylesheet" href="css/timer.css" />
-    <link rel="stylesheet" href="css/streak-counter.css" />
-    <link rel="stylesheet" href="css/power-ups.css" />
-    <link rel="stylesheet" href="css/celebration.css" />
-    <link rel="stylesheet" href="css/stars.css" />
+    <link rel="stylesheet" href="css/video.css" />
+  </noscript>
 
-    <!-- Optional styles loader - CSP-compliant external script -->
-    <script type="module" src="js/optional-styles-loader.js"></script>
-    <noscript>
-      <link rel="stylesheet" href="css/users.css" />
-      <link rel="stylesheet" href="css/game.css" />
-      <link rel="stylesheet" href="css/stars.css" />
-      <link rel="stylesheet" href="css/celebration.css" />
-      <link rel="stylesheet" href="css/parent-controls.css" />
-      <link rel="stylesheet" href="css/timer.css" />
-      <link rel="stylesheet" href="css/power-ups.css" />
-      <link rel="stylesheet" href="css/theme-selector.css" />
-      <link rel="stylesheet" href="css/volume-control.css" />
-      <link rel="stylesheet" href="css/streak-counter.css" />
-      <link rel="stylesheet" href="css/progress-dashboard.css" />
-      <link rel="stylesheet" href="css/discovery-mode.css" />
-      <link rel="stylesheet" href="css/discovery-fixes.css" />
-      <link rel="stylesheet" href="css/quiz.css" />
-      <link rel="stylesheet" href="css/table-settings-modal.css" />
-      <link rel="stylesheet" href="css/challenge.css" />
-      <link rel="stylesheet" href="css/adventure.css" />
-      <link rel="stylesheet" href="css/arcade.css" />
-      <link rel="stylesheet" href="css/responsive-unified.css" />
-      <link rel="stylesheet" href="css/multimiam.css" />
-      <link rel="stylesheet" href="css/multisnake.css" />
-      <link rel="stylesheet" href="css/video.css" />
-    </noscript>
+  <!-- SEO assets preloader - CSP-compliant external script -->
+  <script type="module" src="js/seo-assets-preloader.js"></script>
 
-    <!-- SEO assets preloader - CSP-compliant external script -->
-    <script type="module" src="js/seo-assets-preloader.js"></script>
-
-    <!-- Analytics Plausible (remplacé par le script de déploiement) -->
-    <!--
+  <!-- Analytics Plausible (remplacé par le script de déploiement) -->
+  <!--
     Note: Integrity hash intentionally omitted for Plausible Analytics script.
     Plausible updates their script periodically and using integrity hashes would break analytics
     when they push updates. This is a common practice for third-party analytics services.
@@ -311,1117 +257,868 @@
     Suppressing static analysis warnings:
     sonarjs:S5725 - External scripts without integrity is acceptable for analytics services that auto-update
     -->
-    <!-- Plausible Analytics initialization -->
-    <script src="js/plausible-init.js"></script>
-    <!-- eslint-disable-next-line sonarjs/no-script-without-integrity -- Analytics script auto-updates, integrity would break functionality -->
-    <script
-      defer
-      data-domain="{{PLAUSIBLE_DOMAIN}}"
-      src="https://plausible.io/js/script.js"
-      crossorigin="anonymous"
-    ></script>
-  </head>
+  <!-- Plausible Analytics initialization -->
+  <script src="js/plausible-init.js"></script>
+  <!-- eslint-disable-next-line sonarjs/no-script-without-integrity -- Analytics script auto-updates, integrity would break functionality -->
+  <script defer data-domain="{{PLAUSIBLE_DOMAIN}}" src="https://plausible.io/js/script.js"
+    crossorigin="anonymous"></script>
+</head>
 
-  <body>
-    <main id="main-content" role="main">
-      <!-- Contrôles globaux et barre d'info retirés d'ici -->
+<body>
+  <main id="main-content" role="main">
+    <!-- Contrôles globaux et barre d'info retirés d'ici -->
 
-      <!-- SLIDE 0: Sélection d'utilisateur -->
-      <section id="slide0" class="slide active-slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <div class="content-card p-responsive">
-          <!-- Re-added wrapper with responsive padding -->
-          <!-- SEO Content Block: Visible before JS execution -->
-          <div class="seo-intro">
-            <img
-              class="seo-hero"
-              src="assets/social/leapmultix-social-card.webp"
-              width="1200"
-              height="630"
-              loading="eager"
-              decoding="async"
-              fetchpriority="high"
-              data-responsive="false"
-              data-skip-version="true"
-              alt="Illustration LeapMultix avec les mascottes Panda, Renard, Dragon, Astronaute et Licorne"
-            />
-            <p data-translate="app_intro_p1">
-              <strong>LeapMultix</strong> est une application éducative interactive gratuite pour
-              apprendre et maîtriser les <strong>tables de multiplication</strong>. Conçue pour tous
-              les âges, elle propose <strong>5 modes de jeu</strong> variés : Découverte, Quiz,
-              Défi, Aventure et Arcade avec <strong>4 mini-jeux éducatifs</strong>.
-            </p>
-            <p data-translate="app_intro_p2">
-              L'application est entièrement <strong>multilingue</strong>. Projet
-              <strong>open source</strong>.
-            </p>
-          </div>
-
-          <div class="user-selection-intro">
-            <h1 data-translate="user_selection_title">Sélection d'utilisateur</h1>
-            <p data-translate="user_selection_desc">
-              Choisis un utilisateur existant ou crée-en un nouveau.
-            </p>
-          </div>
-
-          <div class="user-list" id="user-list"></div>
-          <div id="score-display"></div>
-          <hr />
-
-          <div>
-            <label for="new-user-name" data-translate="new_user_label">Nouveau prénom :</label>
-            <input
-              type="text"
-              id="new-user-name"
-              data-translate-placeholder="new_user_placeholder"
-              placeholder="Entrez un prénom"
-              aria-describedby="new-user-name-help"
-            />
-            <div id="new-user-name-help" class="sr-only" aria-hidden="true">
-              Saisissez votre nom ou surnom
-            </div>
-            <!-- Ajout Sélecteur Avatar Création -->
-            <div class="avatar-selector creation-avatar-selector">
-              <div class="creation-avatar-label" data-translate="choose_first_avatar">
-                Choisis ton premier avatar :
-              </div>
-              <button class="avatar-btn active" data-avatar="fox">
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/fox_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="fox"
-                />
-              </button>
-              <button class="avatar-btn" data-avatar="panda">
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/panda_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="panda"
-                />
-              </button>
-              <button class="avatar-btn" data-avatar="unicorn">
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/unicorn_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="unicorn"
-                />
-              </button>
-              <button class="avatar-btn" data-avatar="dragon">
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/dragon_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="dragon"
-                />
-              </button>
-              <button class="avatar-btn" data-avatar="astronaut">
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/astronaut_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="astronaut"
-                />
-              </button>
-              <!-- Ajoutez d'autres avatars initiaux si souhaité -->
-            </div>
-            <button class="btn" id="create-user-btn" data-translate="create_user">Créer</button>
-          </div>
-        </div>
-        <!-- Re-added wrapper -->
-      </section>
-
-      <!-- SLIDE 1: Écran d'accueil -->
-      <section id="slide1" class="slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <div class="content-card p-responsive">
-          <!-- Re-added wrapper with responsive padding -->
-          <h2 data-translate="app_title">LeapMultix</h2>
-          <!-- Le message d'accueil est géré dynamiquement par JS pour inclure le pseudo -->
-          <p id="welcome-message">
-            <!-- Contenu généré par main.js -> updateUserUI -->
+    <!-- SLIDE 0: Sélection d'utilisateur -->
+    <section id="slide0" class="slide active-slide">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <div class="content-card p-responsive">
+        <!-- Re-added wrapper with responsive padding -->
+        <!-- SEO Content Block: Visible before JS execution -->
+        <div class="seo-intro">
+          <img class="seo-hero" src="assets/social/leapmultix-social-card.webp" width="1200" height="630"
+            loading="eager" decoding="async" fetchpriority="high" data-responsive="false" data-skip-version="true"
+            alt="Illustration LeapMultix avec les mascottes Panda, Renard, Dragon, Astronaute et Licorne" />
+          <p data-translate="app_intro_p1">
+            <strong>LeapMultix</strong> est une application éducative interactive gratuite pour
+            apprendre et maîtriser les <strong>tables de multiplication</strong>. Conçue pour tous
+            les âges, elle propose <strong>5 modes de jeu</strong> variés : Découverte, Quiz,
+            Défi, Aventure et Arcade avec <strong>4 mini-jeux éducatifs</strong>.
           </p>
-          <p class="privacy-info">
-            <strong data-translate="privacy_info_title">Info confidentialité :</strong>
-            <span data-translate="privacy_info_text"
-              >Ta progression et tes préférences sont sauvegardées uniquement dans ton navigateur,
-              sur cet appareil.</span
-            >
+          <p data-translate="app_intro_p2">
+            L'application est entièrement <strong>multilingue</strong>. Projet
+            <strong>open source</strong>.
           </p>
-
-          <div class="game-modes">
-            <h2 data-translate="choose_mode">Choisis ton mode de jeu</h2>
-            <div class="mode-buttons">
-              <button class="btn mode-btn" data-mode="discovery">
-                <div class="mode-icon">
-                  <img
-                    src="assets/images/arcade/logo_mode_decouverte.png"
-                    alt="Découverte"
-                    width="200"
-                    height="200"
-                  />
-                </div>
-                <div class="mode-name" data-translate="discovery_mode_title">Découverte</div>
-                <div class="mode-desc" data-translate="discovery_desc">
-                  Explore et apprends les tables
-                </div>
-              </button>
-
-              <button class="btn mode-btn" data-mode="quiz">
-                <div class="mode-icon">
-                  <img
-                    src="assets/images/arcade/logo_mode_quizz.png"
-                    alt="Quiz"
-                    width="200"
-                    height="200"
-                  />
-                </div>
-                <div class="mode-name" data-translate="quiz_mode_title">Quiz</div>
-                <div class="mode-desc" data-translate="quiz_desc">
-                  Entraîne-toi avec plein de questions variées
-                </div>
-              </button>
-
-              <button class="btn mode-btn" data-mode="challenge">
-                <div class="mode-icon">
-                  <img
-                    src="assets/images/arcade/logo_mode_defi.png"
-                    alt="Défi"
-                    width="200"
-                    height="200"
-                  />
-                </div>
-                <div class="mode-name" data-translate="challenge_mode_title">Défi</div>
-                <div class="mode-desc" data-translate="challenge_desc">
-                  Réponds vite contre la montre
-                </div>
-              </button>
-
-              <button class="btn mode-btn" data-mode="adventure">
-                <div class="mode-icon">
-                  <img
-                    src="assets/images/arcade/logo_mode_aventure.png"
-                    alt="Aventure"
-                    width="200"
-                    height="200"
-                  />
-                </div>
-                <div class="mode-name" data-translate="adventure_mode_title">Aventure</div>
-                <div class="mode-desc" data-translate="adventure_desc">
-                  Débloque les niveaux un par un.
-                </div>
-              </button>
-
-              <button class="btn mode-btn" data-mode="arcade">
-                <div class="mode-icon">
-                  <img
-                    src="assets/images/arcade/logo_mode_arcade.png"
-                    alt="Arcade"
-                    width="200"
-                    height="200"
-                  />
-                </div>
-                <div class="mode-name" data-translate="arcade_mode_title">Arcade</div>
-                <div class="mode-desc" data-translate="arcade_desc">Jeux d'arcade éducatifs</div>
-              </button>
-            </div>
-          </div>
-          <!-- Tâche 2.3: Conteneur pour le défi quotidien -->
-          <div id="daily-challenge-container" class="daily-challenge">
-            <!-- Contenu généré par JS -->
-          </div>
-
-          <button
-            aria-label="Personnalisation"
-            class="btn"
-            data-slide="6"
-            data-translate="personalization"
-          >
-            Personnalisation
-          </button>
-          <button
-            aria-label="Tableau de Bord"
-            class="btn"
-            data-slide="7"
-            data-translate="dashboard"
-          >
-            Tableau de Bord
-          </button>
         </div>
-        <!-- Re-added wrapper -->
-        <!-- Bouton dupliqué supprimé -->
-      </section>
 
-      <!-- SLIDE 2: Supprimée - Ancien workflow obsolète -->
+        <div class="user-selection-intro">
+          <h1 data-translate="user_selection_title">Sélection d'utilisateur</h1>
+          <p data-translate="user_selection_desc">
+            Choisis un utilisateur existant ou crée-en un nouveau.
+          </p>
+        </div>
 
-      <!-- SLIDE 3: Supprimée - Ancien workflow obsolète -->
+        <div class="user-list" id="user-list"></div>
+        <div id="score-display"></div>
+        <hr />
 
-      <!-- SLIDE 4: Zone de jeu (Contenu généré par JS dans #game) -->
-      <section id="slide4" class="slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <!-- Le contenu du jeu sera injecté dans #game -->
-        <div id="game" class="game-content-area"></div>
-      </section>
-
-      <!-- SLIDE 5: Écran de fin (Game Over ou Victoire - Contenu généré par JS dans #results) -->
-      <section id="slide5" class="slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <!-- Le contenu des résultats sera injecté dans #results -->
-        <div id="results" class="results-content-area"></div>
-      </section>
-
-      <!-- SLIDE 6: Personnalisation -->
-      <section id="slide6" class="slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <h2 data-translate="personalization_title">Personnalisation</h2>
-
-        <div class="content-card">
-          <!-- Wrapper added -->
-          <div class="customization-section">
-            <h3 id="avatar-choice-title" data-translate="avatar_choice_title">Avatar</h3>
-            <!-- Affichage Avatar Actuel et Sélecteur -->
-            <div class="current-avatar">
-              <span data-translate="current_avatar_label">Avatar actuel :</span>
-              <img
-                class="img-responsive"
-                id="current-avatar-img"
-                src="assets/images/arcade/fox_head_avatar_128x128.png"
-                alt="Current Avatar"
-                width="64"
-                height="64"
-              />
-            </div>
-            <div class="avatar-selector" role="radiogroup" aria-labelledby="avatar-choice-title">
-              <button
-                class="avatar-btn active"
-                data-avatar="fox"
-                role="radio"
-                aria-checked="true"
-                aria-label="Sélectionner l'avatar Renard"
-              >
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/fox_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="fox"
-                />
-              </button>
-              <button
-                class="avatar-btn"
-                data-avatar="panda"
-                role="radio"
-                aria-checked="false"
-                aria-label="Sélectionner l'avatar Panda"
-              >
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/panda_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="panda"
-                />
-              </button>
-              <button
-                class="avatar-btn"
-                data-avatar="unicorn"
-                role="radio"
-                aria-checked="false"
-                aria-label="Sélectionner l'avatar Licorne"
-              >
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/unicorn_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="unicorn"
-                />
-              </button>
-              <button
-                class="avatar-btn"
-                data-avatar="dragon"
-                role="radio"
-                aria-checked="false"
-                aria-label="Sélectionner l'avatar Dragon"
-              >
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/dragon_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="dragon"
-                />
-              </button>
-              <button
-                class="avatar-btn"
-                data-avatar="astronaut"
-                role="radio"
-                aria-checked="false"
-                aria-label="Sélectionner l'avatar Astronaute"
-              >
-                <img
-                  class="img-responsive"
-                  src="assets/images/arcade/astronaut_head_avatar_128x128.png"
-                  width="100"
-                  height="100"
-                  alt="astronaut"
-                />
-              </button>
-            </div>
+        <div>
+          <label for="new-user-name" data-translate="new_user_label">Nouveau prénom :</label>
+          <input type="text" id="new-user-name" data-translate-placeholder="new_user_placeholder"
+            placeholder="Entrez un prénom" aria-describedby="new-user-name-help" />
+          <div id="new-user-name-help" class="sr-only" aria-hidden="true">
+            Saisissez votre nom ou surnom
           </div>
-          <div class="customization-section">
-            <h3 data-translate="color_theme_title">Thèmes de couleur</h3>
-            <div class="color-theme-selector">
-              <button
-                class="color-theme-btn active"
-                data-color-theme="default"
-                data-translate="color_theme_default"
-                aria-pressed="true"
-              >
-                🎨 Classique
-              </button>
-              <button
-                class="color-theme-btn"
-                data-color-theme="blue"
-                data-translate="color_theme_blue"
-                aria-pressed="false"
-              >
-                🔷 Spatial
-              </button>
-              <button
-                class="color-theme-btn"
-                data-color-theme="green"
-                data-translate="color_theme_green"
-                aria-pressed="false"
-              >
-                🌿 Nature
-              </button>
-              <button
-                class="color-theme-btn"
-                data-color-theme="orange"
-                data-translate="color_theme_orange"
-                aria-pressed="false"
-              >
-                🔶 Orangé
-              </button>
-              <button
-                class="color-theme-btn"
-                data-color-theme="dark"
-                data-translate="color_theme_dark"
-                aria-pressed="false"
-              >
-                🌙 Nuit
-              </button>
+          <!-- Ajout Sélecteur Avatar Création -->
+          <div class="avatar-selector creation-avatar-selector">
+            <div class="creation-avatar-label" data-translate="choose_first_avatar">
+              Choisis ton premier avatar :
             </div>
+            <button class="avatar-btn active" data-avatar="fox">
+              <img class="img-responsive" src="assets/images/arcade/fox_head_avatar_128x128.png" width="100"
+                height="100" alt="fox" />
+            </button>
+            <button class="avatar-btn" data-avatar="panda">
+              <img class="img-responsive" src="assets/images/arcade/panda_head_avatar_128x128.png" width="100"
+                height="100" alt="panda" />
+            </button>
+            <button class="avatar-btn" data-avatar="unicorn">
+              <img class="img-responsive" src="assets/images/arcade/unicorn_head_avatar_128x128.png" width="100"
+                height="100" alt="unicorn" />
+            </button>
+            <button class="avatar-btn" data-avatar="dragon">
+              <img class="img-responsive" src="assets/images/arcade/dragon_head_avatar_128x128.png" width="100"
+                height="100" alt="dragon" />
+            </button>
+            <button class="avatar-btn" data-avatar="astronaut">
+              <img class="img-responsive" src="assets/images/arcade/astronaut_head_avatar_128x128.png" width="100"
+                height="100" alt="astronaut" />
+            </button>
+            <!-- Ajoutez d'autres avatars initiaux si souhaité -->
           </div>
+          <button class="btn" id="create-user-btn" data-translate="create_user">Créer</button>
+        </div>
+      </div>
+      <!-- Re-added wrapper -->
+    </section>
 
-          <div class="customization-section">
-            <!-- Section accessoires supprimée -->
-          </div>
+    <!-- SLIDE 1: Écran d'accueil -->
+    <section id="slide1" class="slide">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <div class="content-card p-responsive">
+        <!-- Re-added wrapper with responsive padding -->
+        <h2 data-translate="app_title">LeapMultix</h2>
+        <!-- Le message d'accueil est géré dynamiquement par JS pour inclure le pseudo -->
+        <p id="welcome-message">
+          <!-- Contenu généré par main.js -> updateUserUI -->
+        </p>
+        <p class="privacy-info">
+          <strong data-translate="privacy_info_title">Info confidentialité :</strong>
+          <span data-translate="privacy_info_text">Ta progression et tes préférences sont sauvegardées uniquement dans
+            ton navigateur,
+            sur cet appareil.</span>
+        </p>
 
-          <!-- Tâche 4.1 & 5.1: Options Accessibilité & Contrôle Parental -->
-          <div class="customization-section">
-            <h3 data-translate="accessibility_controls_title">Accessibilité & Contrôles</h3>
-            <div class="accessibility-options">
-              <label>
-                <input
-                  type="checkbox"
-                  id="high-contrast-toggle"
-                  aria-describedby="high-contrast-toggle-help"
-                />
-                <div id="high-contrast-toggle-help" class="sr-only" aria-hidden="true">
-                  Champ de saisie
-                </div>
-                <span data-translate="high_contrast_mode">Mode Contraste Élevé</span>
-              </label>
-              <!-- Tâche 5.1: Option pour activer le code parental -->
-              <label>
-                <input
-                  type="checkbox"
-                  id="parental-lock-toggle"
-                  aria-describedby="parental-lock-toggle-help"
-                />
-                <div id="parental-lock-toggle-help" class="sr-only" aria-hidden="true">
-                  Champ de saisie
-                </div>
-                <span data-translate="enable_parental_lock"
-                  >Activer code parental (pour Tableau de Bord)</span
-                >
-              </label>
-              <div class="font-size-selector">
-                <span data-translate="text_size_label">Taille du texte :</span>
-                <button class="btn btn btn-sm-desktop font-size-btn" data-size="small">A</button>
-                <button class="btn btn btn-sm-desktop font-size-btn active" data-size="medium">
-                  A
-                </button>
-                <button class="btn btn btn-sm-desktop font-size-btn" data-size="large">A</button>
+        <div class="game-modes">
+          <h2 data-translate="choose_mode">Choisis ton mode de jeu</h2>
+          <div class="mode-buttons">
+            <button class="btn mode-btn" data-mode="discovery">
+              <div class="mode-icon">
+                <img src="assets/images/arcade/logo_mode_decouverte.png" alt="Découverte" width="200" height="200" />
               </div>
-            </div>
+              <div class="mode-name" data-translate="discovery_mode_title">Découverte</div>
+              <div class="mode-desc" data-translate="discovery_desc">
+                Explore et apprends les tables
+              </div>
+            </button>
+
+            <button class="btn mode-btn" data-mode="quiz">
+              <div class="mode-icon">
+                <img src="assets/images/arcade/logo_mode_quizz.png" alt="Quiz" width="200" height="200" />
+              </div>
+              <div class="mode-name" data-translate="quiz_mode_title">Quiz</div>
+              <div class="mode-desc" data-translate="quiz_desc">
+                Entraîne-toi avec plein de questions variées
+              </div>
+            </button>
+
+            <button class="btn mode-btn" data-mode="challenge">
+              <div class="mode-icon">
+                <img src="assets/images/arcade/logo_mode_defi.png" alt="Défi" width="200" height="200" />
+              </div>
+              <div class="mode-name" data-translate="challenge_mode_title">Défi</div>
+              <div class="mode-desc" data-translate="challenge_desc">
+                Réponds vite contre la montre
+              </div>
+            </button>
+
+            <button class="btn mode-btn" data-mode="adventure">
+              <div class="mode-icon">
+                <img src="assets/images/arcade/logo_mode_aventure.png" alt="Aventure" width="200" height="200" />
+              </div>
+              <div class="mode-name" data-translate="adventure_mode_title">Aventure</div>
+              <div class="mode-desc" data-translate="adventure_desc">
+                Débloque les niveaux un par un.
+              </div>
+            </button>
+
+            <button class="btn mode-btn" data-mode="arcade">
+              <div class="mode-icon">
+                <img src="assets/images/arcade/logo_mode_arcade.png" alt="Arcade" width="200" height="200" />
+              </div>
+              <div class="mode-name" data-translate="arcade_mode_title">Arcade</div>
+              <div class="mode-desc" data-translate="arcade_desc">Jeux d'arcade éducatifs</div>
+            </button>
           </div>
-          <!-- Fin Tâches -->
         </div>
-        <!-- Fermeture CORRECTE du conteneur content-card -->
-        <button
-          aria-label="Terminer"
-          class="btn"
-          data-action="save-customization-go-home"
-          data-translate="finish_button"
-        >
-          Terminer
+        <!-- Tâche 2.3: Conteneur pour le défi quotidien -->
+        <div id="daily-challenge-container" class="daily-challenge">
+          <!-- Contenu généré par JS -->
+        </div>
+
+        <button aria-label="Personnalisation" class="btn" data-slide="6" data-translate="personalization">
+          Personnalisation
         </button>
-      </section>
-
-      <!-- SLIDE 7: Tableau de bord -->
-      <section id="slide7" class="slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <h2 data-translate="dashboard_title">Tableau de Bord</h2>
-
-        <div class="dashboard-container content-card">
-          <!-- Ajout de la classe content-card -->
-          <div class="dashboard-header">
-            <div class="avatar-display" id="dashboard-avatar">🦊</div>
-            <button
-              id="replay-avatar-video"
-              class="replay-video-btn"
-              data-translate-title="replay_avatar_video"
-              title="Revoir la vidéo de présentation"
-            >
-              🎬
-            </button>
-            <div class="user-info">
-              <div class="nickname" id="dashboard-nickname">Joueur</div>
-              <div class="stars-summary">
-                <span id="total-stars">0</span>
-                <span data-translate="total_stars_label">étoiles au total</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="star-summary">
-            <h3 data-translate="progress_by_table_title">Progression par table</h3>
-            <div id="dashboard-stars" class="star-grid">
-              <!-- Généré dynamiquement par JS -->
-            </div>
-          </div>
-
-          <div class="history-section">
-            <h3 data-translate="your_journey_title">Ton parcours</h3>
-            <div class="stats-container">
-              <div class="stat-box">
-                <div class="stat-value" id="total-questions">0</div>
-                <div class="stat-label" data-translate="stat_questions">Questions</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-value" id="correct-answers">0</div>
-                <div class="stat-label" data-translate="stat_correct">Correctes</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-value" id="best-streak">0</div>
-                <div class="stat-label" data-translate="stat_best_streak">Meilleur série</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="achievements-section">
-            <h3 data-translate="unlocked_achievements_title">Succès débloqués</h3>
-            <div id="achievements-list" class="achievements-list">
-              <!-- Généré dynamiquement par JS -->
-            </div>
-          </div>
-        </div>
-
-        <button
-          aria-label="Retour à l'accueil"
-          class="btn"
-          data-slide="1"
-          data-translate="back_to_home"
-        >
-          Retour à l'accueil
+        <button aria-label="Tableau de Bord" class="btn" data-slide="7" data-translate="dashboard">
+          Tableau de Bord
         </button>
-      </section>
+      </div>
+      <!-- Re-added wrapper -->
+      <!-- Bouton dupliqué supprimé -->
+    </section>
 
-      <!-- SLIDE 8: À propos de l'application -->
-      <section id="slide8" class="slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <div class="content-card">
-          <h2 data-translate="about_title">À propos de LeapMultix</h2>
-          <div class="about-content">
-            <div class="about-section">
-              <h3 data-translate="about_description_title">Description</h3>
-              <p data-translate="about_description">
-                LeapMultix est une application éducative interactive pour apprendre les tables de
-                multiplication de façon ludique.
-              </p>
-            </div>
+    <!-- SLIDE 2: Supprimée - Ancien workflow obsolète -->
 
-            <div class="about-section">
-              <h3 data-translate="about_features_title">Fonctionnalités</h3>
-              <ul>
-                <li data-translate="about_features_game_modes">
-                  4 modes de jeu classiques (Quiz, Défi, Aventure, Découverte)
-                </li>
-                <li data-translate="about_features_arcade">4 mini-jeux d'arcade éducatifs</li>
-                <li data-translate="about_features_multilingual">
-                  Support multilingue (Français, Anglais, Espagnol)
-                </li>
-                <li data-translate="about_features_customization">
-                  Personnalisation complète (avatars, thèmes)
-                </li>
-                <li data-translate="about_features_progression">
-                  Progression sauvegardée par utilisateur
-                </li>
-              </ul>
-            </div>
+    <!-- SLIDE 3: Supprimée - Ancien workflow obsolète -->
 
-            <div class="about-section">
-              <h3 data-translate="about_opensource_title">Projet Opensource</h3>
-              <p data-translate="about_opensource_desc">
-                Ce projet est opensource sous licence AGPL-3.0.
-              </p>
-              <a
-                href="https://github.com/jls42/leapmultix"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="opensource-link"
-              >
-                <span>🔓</span>
-                <span data-translate="about_github_link">Code source sur GitHub</span>
-              </a>
-            </div>
+    <!-- SLIDE 4: Zone de jeu (Contenu généré par JS dans #game) -->
+    <section id="slide4" class="slide">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <!-- Le contenu du jeu sera injecté dans #game -->
+      <div id="game" class="game-content-area"></div>
+    </section>
 
-            <div class="about-section">
-              <h3 data-translate="about_support_title">Soutenir le projet</h3>
-              <a
-                href="https://paypal.me/jls"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="opensource-link"
-              >
-                <span>☕</span>
-                <span data-translate="about_support_button">Faire un don via PayPal</span>
-              </a>
-            </div>
+    <!-- SLIDE 5: Écran de fin (Game Over ou Victoire - Contenu généré par JS dans #results) -->
+    <section id="slide5" class="slide">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <!-- Le contenu des résultats sera injecté dans #results -->
+      <div id="results" class="results-content-area"></div>
+    </section>
 
-            <div class="about-section">
-              <h3 data-translate="about_useful_links">Liens utiles</h3>
-              <div class="page-links">
-                <div class="page-links">
-                  <button class="btn btn-primary" data-slide="11" data-translate="faq_button">
-                    ❓ Questions Fréquentes
-                  </button>
-                </div>
-                <button
-                  class="btn btn-secondary"
-                  data-slide="9"
-                  data-translate="about_legal_mentions"
-                >
-                  📄 Mentions Légales
-                </button>
-                <button
-                  class="btn btn-secondary"
-                  data-slide="10"
-                  data-translate="about_privacy_policy"
-                >
-                  🔒 Politique de Confidentialité
-                </button>
-              </div>
-            </div>
+    <!-- SLIDE 6: Personnalisation -->
+    <section id="slide6" class="slide">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <h2 data-translate="personalization_title">Personnalisation</h2>
+
+      <div class="content-card">
+        <!-- Wrapper added -->
+        <div class="customization-section">
+          <h3 id="avatar-choice-title" data-translate="avatar_choice_title">Avatar</h3>
+          <!-- Affichage Avatar Actuel et Sélecteur -->
+          <div class="current-avatar">
+            <span data-translate="current_avatar_label">Avatar actuel :</span>
+            <img class="img-responsive" id="current-avatar-img" src="assets/images/arcade/fox_head_avatar_128x128.png"
+              alt="Current Avatar" width="64" height="64" />
           </div>
-        </div>
-      </section>
-
-      <!-- SLIDE 9: Mentions légales -->
-      <section id="slide9" class="slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <div class="content-card">
-          <div class="legal-header">
-            <h2 data-translate="legal_title">Mentions Légales</h2>
-            <p class="last-updated">Dernière mise à jour : 15 septembre 2025</p>
-          </div>
-
-          <div class="legal-content">
-            <div class="legal-section">
-              <h3>Éditeur</h3>
-              <p>
-                Le site « leapmultix.jls42.org » est un service de communication au public en ligne
-                édité à titre non professionnel.
-              </p>
-              <p>
-                Conformément à l'article 1-1, II de la loi n° 2004-575 du 21 juin 2004 (LCEN),
-                l'éditeur a choisi de rester anonyme.
-              </p>
-              <p>
-                À ce titre, seules les coordonnées du fournisseur d'hébergement sont publiées
-                ci-dessous.
-              </p>
-              <p>
-                <strong>Contact éditeur :</strong>
-                <a href="mailto:contact@jls42.org">contact@jls42.org</a>
-              </p>
-            </div>
-
-            <div class="legal-section">
-              <h3>Hébergement</h3>
-              <p>
-                Le site est hébergé sur Amazon Web Services (AWS), avec stockage sur Amazon S3 et
-                diffusion via Amazon CloudFront (CDN).
-              </p>
-              <p>
-                <strong>Hébergeur :</strong> Amazon Web Services EMEA Sàrl<br />
-                <strong>Adresse :</strong> 38 avenue John F. Kennedy, L-1855 Luxembourg<br />
-                <strong>Téléphone :</strong> +352 2789 0057<br />
-                <strong>Site :</strong>
-                <a href="https://aws.amazon.com/" target="_blank" rel="noopener noreferrer"
-                  >https://aws.amazon.com/</a
-                >
-              </p>
-              <p>
-                L'hébergeur détient les éléments d'identification de l'éditeur et est tenu au secret
-                professionnel ; ce secret n'est pas opposable à l'autorité judiciaire.
-              </p>
-            </div>
-
-            <div class="legal-section">
-              <h3>Propriété intellectuelle et licence du code</h3>
-              <p>
-                Sauf indication contraire, le contenu de ce site (textes, images, médias) est
-                protégé par le droit d'auteur. Tous droits réservés.
-              </p>
-              <p>
-                Les marques et logos éventuellement cités demeurent la propriété de leurs titulaires
-                respectifs.
-              </p>
-              <p>
-                Le code source du site est distribué sous licence libre AGPL-3.0 (GNU Affero General
-                Public License).
-              </p>
-              <p>
-                <strong>Texte de la licence :</strong>
-                <a
-                  href="https://www.gnu.org/licenses/agpl-3.0.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >https://www.gnu.org/licenses/agpl-3.0.html</a
-                >
-              </p>
-            </div>
-
-            <div class="legal-section">
-              <h3>Données personnelles et statistiques</h3>
-              <p>
-                Ce site ne dépose aucun cookie à des fins publicitaires et ne collecte pas de
-                données personnelles identifiantes.
-              </p>
-              <p>
-                La mesure d'audience est réalisée avec Plausible Analytics, un outil sans cookies
-                produisant des statistiques agrégées et anonymisées.
-              </p>
-              <p>
-                <strong>Base légale :</strong> intérêt légitime (article 6, §1, f) du RGPD), dans la
-                finalité strictement limitée à la mesure d'audience.
-              </p>
-              <p>
-                Pour toute question ou pour exercer vos droits (accès, opposition, rectification,
-                effacement), écrivez à : <a href="mailto:contact@jls42.org">contact@jls42.org</a>
-              </p>
-              <p>
-                Pour plus d'informations, veuillez consulter la
-                <button class="inline-link" data-slide="10">Politique de confidentialité</button>.
-              </p>
-            </div>
-
-            <div class="legal-section">
-              <h3>Responsabilité</h3>
-              <p>
-                L'éditeur s'efforce d'assurer l'exactitude et la mise à jour des informations
-                publiées, sans garantie d'exhaustivité.
-              </p>
-              <p>
-                L'éditeur ne saurait être tenu responsable des dommages directs ou indirects pouvant
-                résulter de l'accès au site (pannes, bugs, incompatibilités, virus) ni de l'usage
-                des informations qui y sont présentées.
-              </p>
-              <p>
-                Les liens hypertextes vers des sites tiers sont fournis à titre informatif ;
-                l'éditeur n'exerce aucun contrôle sur ces contenus et décline toute responsabilité
-                s'y rapportant.
-              </p>
-            </div>
-
-            <div class="legal-section">
-              <h3>Droit de réponse et signalement</h3>
-              <p>
-                Toute personne nommée ou désignée sur le site dispose d'un droit de réponse
-                conformément à l'article 1-1, III de la LCEN.
-              </p>
-              <p>
-                Si vous souhaitez exercer ce droit ou signaler un contenu potentiellement illicite,
-                écrivez à : <a href="mailto:contact@jls42.org">contact@jls42.org</a>
-              </p>
-              <p>
-                Lorsque l'éditeur non professionnel conserve l'anonymat, la demande peut également
-                être adressée à l'hébergeur, qui la transmet sans délai au directeur de la
-                publication.
-              </p>
-            </div>
-
-            <div class="legal-section">
-              <h3>Droit applicable</h3>
-              <p>
-                Le présent site et les présentes mentions légales sont soumis au droit français.
-              </p>
-            </div>
-
-            <div class="legal-section">
-              <div class="page-links">
-                <button class="btn btn-primary" data-slide="8">← Retour à À propos</button>
-                <button class="btn btn-secondary" data-slide="10">
-                  🔒 Politique de Confidentialité
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- SLIDE 10: Politique de Confidentialité -->
-      <section id="slide10" class="slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <div class="content-card">
-          <div class="privacy-header">
-            <h2 data-translate="privacy_title">Politique de Confidentialité</h2>
-            <p class="last-updated"><strong>Version :</strong> 15 septembre 2025</p>
-          </div>
-
-          <div class="privacy-content">
-            <div class="privacy-section">
-              <h3>1. Responsable du Traitement</h3>
-              <p>
-                L'éditeur anonyme du site personnel <code>leapmultix.jls42.org</code> agit comme
-                responsable du traitement.
-              </p>
-              <ul>
-                <li>
-                  <strong>Contact :</strong>
-                  <a href="mailto:contact@jls42.org">contact@jls42.org</a>
-                </li>
-                <li><strong>Pas de DPO désigné :</strong> traitements simples et non sensibles</li>
-              </ul>
-            </div>
-
-            <div class="privacy-section">
-              <h3>2. Aucune Collecte Intrusive</h3>
-              <ul>
-                <li>Aucune inscription ni formulaire</li>
-                <li>Pas de publicité ni suivi marketing</li>
-                <li>Aucune donnée personnelle identifiante transmise à un serveur</li>
-              </ul>
-            </div>
-
-            <div class="privacy-section">
-              <h3>3. Traitements Strictement Nécessaires</h3>
-
-              <h4>Stockage Local (localStorage)</h4>
-              <ul>
-                <li>
-                  <strong>Usage :</strong> Profils, scores, progression utilisateur dans
-                  l'application, stockés uniquement côté navigateur
-                </li>
-                <li><strong>Base légale :</strong> Nécessité au service (art. 6-1 b RGPD)</li>
-                <li><strong>Partage :</strong> Aucun (données non transmises)</li>
-                <li>
-                  <strong>Durée :</strong> Jusqu'à suppression par l'utilisateur (paramètres
-                  navigateur)
-                </li>
-              </ul>
-
-              <h4>Statistiques Techniques (Plausible Analytics)</h4>
-              <ul>
-                <li>
-                  <strong>Usage :</strong> Mesures anonymisées de fréquentation (pages vues, trafic
-                  approximatif), sans cookies ni IP stockées (hachage journalier + sel éphémère)
-                </li>
-                <li>
-                  <strong>Base légale :</strong> Intérêt légitime (art. 6-1 f RGPD) pour améliorer
-                  stabilité et usage pédagogique
-                </li>
-                <li><strong>Sous-traitant :</strong> Plausible Insights OÜ (UE)</li>
-                <li>
-                  <strong>Durée :</strong> Conservées tant que le site est actif ; suppression
-                  immédiate sur demande ou fermeture du compte
-                </li>
-                <li><strong>Opposition :</strong> Via bloqueurs ou réglages navigateur</li>
-                <li>
-                  <strong>Documentation :</strong>
-                  <a
-                    href="https://plausible.io/data-policy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >Data Policy</a
-                  >
-                  |
-                  <a href="https://plausible.io/dpa" target="_blank" rel="noopener noreferrer"
-                    >DPA</a
-                  >
-                </li>
-              </ul>
-            </div>
-
-            <div class="privacy-section">
-              <h3>4. Cookies et Traceurs</h3>
-              <p>Aucun cookie ni pixel marketing ; seul localStorage fonctionnel est utilisé.</p>
-            </div>
-
-            <div class="privacy-section">
-              <h3>5. Vos Droits RGPD</h3>
-              <p>
-                Si des données personnelles sont traitées (ex. : email envoyé), vous disposez des
-                droits suivants :
-              </p>
-              <ul>
-                <li>Accès / Rectification / Effacement (suppression locale ou email)</li>
-                <li>Opposition (ex. : bloquer les statistiques côté navigateur)</li>
-                <li>Limitation & Portabilité (non pertinentes : pas de base serveur)</li>
-              </ul>
-              <p>
-                <strong>Exercice :</strong>
-                <a href="mailto:contact@jls42.org">contact@jls42.org</a> (réponse sous 1 mois)<br />
-                <strong>Réclamation :</strong>
-                <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">CNIL</a>
-              </p>
-            </div>
-
-            <div class="privacy-section">
-              <h3>6. Sécurité</h3>
-              <p>
-                Contenu statique via CDN (AWS S3/CloudFront). Aucun traitement serveur applicatif ni
-                base de données. Risques limités (pas d'authentification).
-              </p>
-            </div>
-
-            <div class="privacy-section">
-              <h3>7. Mises à Jour</h3>
-              <p>Cette politique peut évoluer ; dernière révision indiquée en tête de page.</p>
-            </div>
-
-            <div class="privacy-section">
-              <div class="page-links">
-                <button class="btn btn-primary" data-slide="8">← Retour à À propos</button>
-                <button class="btn btn-secondary" data-slide="9">📄 Mentions Légales</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- SLIDE 11: FAQ (Questions Fréquentes) -->
-      <section id="slide11" class="slide" itemscope itemtype="https://schema.org/FAQPage">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
-        <div class="content-card">
-          <div class="faq-header">
-            <h2 data-translate="faq_title">Questions Fréquentes</h2>
-            <p class="faq-subtitle" data-translate="faq_subtitle">
-              Tout ce que vous devez savoir sur LeapMultix
-            </p>
-          </div>
-
-          <div class="faq-content">
-            <!-- Question 1 -->
-            <div
-              class="faq-item"
-              itemscope
-              itemprop="mainEntity"
-              itemtype="https://schema.org/Question"
-            >
-              <h3 itemprop="name" data-translate="faq_q1">À quel âge est destiné LeapMultix ?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text" data-translate="faq_a1">
-                  LeapMultix s'adresse principalement aux enfants de 6 à 12 ans (CE1 à 6e), mais
-                  convient à tous ceux qui souhaitent apprendre ou réviser les tables de
-                  multiplication. Les 5 modes de jeu offrent différents niveaux de difficulté
-                  adaptés à chaque âge.
-                </p>
-              </div>
-            </div>
-
-            <!-- Question 2 -->
-            <div
-              class="faq-item"
-              itemscope
-              itemprop="mainEntity"
-              itemtype="https://schema.org/Question"
-            >
-              <h3 itemprop="name" data-translate="faq_q2">LeapMultix est-il vraiment gratuit ?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text" data-translate="faq_a2">
-                  Oui, LeapMultix est 100% gratuit et open source (licence AGPL-3.0). Il n'y a ni
-                  publicité, ni achat intégré, ni abonnement. Tous les modes de jeu et mini-jeux
-                  d'arcade sont accessibles sans restriction.
-                </p>
-              </div>
-            </div>
-
-            <!-- Question 3 -->
-            <div
-              class="faq-item"
-              itemscope
-              itemprop="mainEntity"
-              itemtype="https://schema.org/Question"
-            >
-              <h3 itemprop="name" data-translate="faq_q3">
-                Puis-je utiliser LeapMultix hors ligne ?
-              </h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text" data-translate="faq_a3">
-                  Oui ! LeapMultix est une Progressive Web App (PWA). Une fois installée sur votre
-                  appareil, l'application fonctionne entièrement hors ligne. Votre progression est
-                  sauvegardée localement dans votre navigateur.
-                </p>
-              </div>
-            </div>
-
-            <!-- Question 4 -->
-            <div
-              class="faq-item"
-              itemscope
-              itemprop="mainEntity"
-              itemtype="https://schema.org/Question"
-            >
-              <h3 itemprop="name" data-translate="faq_q4">
-                Quels sont les modes de jeu disponibles ?
-              </h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text" data-translate="faq_a4">
-                  LeapMultix propose 5 modes de jeu : Découverte (apprentissage), Quiz
-                  (entraînement), Défi (contre la montre), Aventure (progression par niveaux) et
-                  Arcade (4 mini-jeux : Multimiam, Multisnake, Space Invasion, Memory).
-                </p>
-              </div>
-            </div>
-
-            <!-- Question 5 -->
-            <div
-              class="faq-item"
-              itemscope
-              itemprop="mainEntity"
-              itemtype="https://schema.org/Question"
-            >
-              <h3 itemprop="name" data-translate="faq_q5">
-                Fonctionne-t-il sur mobile et tablette ?
-              </h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text" data-translate="faq_a5">
-                  Absolument ! LeapMultix est optimisé pour tous les écrans : smartphone, tablette,
-                  ordinateur. L'interface s'adapte automatiquement (responsive design) et vous
-                  pouvez installer l'application comme une vraie app native sur iOS et Android.
-                </p>
-              </div>
-            </div>
-
-            <!-- Question 6 -->
-            <div
-              class="faq-item"
-              itemscope
-              itemprop="mainEntity"
-              itemtype="https://schema.org/Question"
-            >
-              <h3 itemprop="name" data-translate="faq_q6">Mes données sont-elles sécurisées ?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text" data-translate="faq_a6">
-                  Oui, vos données restent 100% sur votre appareil. LeapMultix ne collecte aucune
-                  donnée personnelle et n'envoie rien à des serveurs tiers. Votre progression est
-                  stockée localement dans le navigateur (localStorage).
-                </p>
-              </div>
-            </div>
-
-            <!-- Question 7 -->
-            <div
-              class="faq-item"
-              itemscope
-              itemprop="mainEntity"
-              itemtype="https://schema.org/Question"
-            >
-              <h3 itemprop="name" data-translate="faq_q7">L'application est-elle multilingue ?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text" data-translate="faq_a7">
-                  Oui ! LeapMultix est disponible en 3 langues : Français, Anglais et Espagnol. Vous
-                  pouvez changer de langue à tout moment via le menu en haut de l'écran.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="faq-footer">
-            <p data-translate="faq_contact">
-              Vous avez d'autres questions ? Contactez-nous :
-              <a href="mailto:contact@jls42.org">contact@jls42.org</a>
-            </p>
-          </div>
-
-          <div class="page-links">
-            <button class="btn btn-primary" data-slide="8">
-              ← <span data-translate="back_to_about">Retour à À propos</span>
+          <div class="avatar-selector" role="radiogroup" aria-labelledby="avatar-choice-title">
+            <button class="avatar-btn active" data-avatar="fox" role="radio" aria-checked="true"
+              aria-label="Sélectionner l'avatar Renard">
+              <img class="img-responsive" src="assets/images/arcade/fox_head_avatar_128x128.png" width="100"
+                height="100" alt="fox" />
+            </button>
+            <button class="avatar-btn" data-avatar="panda" role="radio" aria-checked="false"
+              aria-label="Sélectionner l'avatar Panda">
+              <img class="img-responsive" src="assets/images/arcade/panda_head_avatar_128x128.png" width="100"
+                height="100" alt="panda" />
+            </button>
+            <button class="avatar-btn" data-avatar="unicorn" role="radio" aria-checked="false"
+              aria-label="Sélectionner l'avatar Licorne">
+              <img class="img-responsive" src="assets/images/arcade/unicorn_head_avatar_128x128.png" width="100"
+                height="100" alt="unicorn" />
+            </button>
+            <button class="avatar-btn" data-avatar="dragon" role="radio" aria-checked="false"
+              aria-label="Sélectionner l'avatar Dragon">
+              <img class="img-responsive" src="assets/images/arcade/dragon_head_avatar_128x128.png" width="100"
+                height="100" alt="dragon" />
+            </button>
+            <button class="avatar-btn" data-avatar="astronaut" role="radio" aria-checked="false"
+              aria-label="Sélectionner l'avatar Astronaute">
+              <img class="img-responsive" src="assets/images/arcade/astronaut_head_avatar_128x128.png" width="100"
+                height="100" alt="astronaut" />
             </button>
           </div>
         </div>
-      </section>
-
-      <!-- Écran de Game Over (Utilise maintenant la slide 5) -->
-
-      <!-- Zone de célébration (confettis) -->
-      <div class="celebration" id="celebration"></div>
-
-      <!-- Container pour les modes de jeu (maintenant dans slide 4) -->
-      <!-- <div id="game" class="hidden"></div> -->
-      <!-- Container pour les résultats (maintenant dans slide 5) -->
-      <!-- <div id="results" class="hidden"></div> -->
-
-      <!-- Sons (Supprimés car format .ogg non supporté) -->
-
-      <!-- Tâche 5.1: Popup pour le code parental -->
-      <div id="parental-lock-popup" class="popup-overlay hidden">
-        <div class="popup-content">
-          <h3 data-translate="parental_check_title">Vérification Parentale</h3>
-          <p data-translate="parental_check_instruction">
-            Pour continuer, veuillez résoudre cette addition :
-          </p>
-          <p id="parental-question" class="parental-question"></p>
-          <input
-            type="number"
-            id="parental-answer"
-            data-translate-placeholder="parental_answer_placeholder"
-            placeholder="Votre réponse"
-            aria-describedby="parental-answer-help"
-          />
-          <div id="parental-answer-help" class="sr-only" aria-hidden="true">
-            Saisissez un nombre
-          </div>
-          <p id="parental-error" class="error-message"></p>
-          <div class="popup-buttons">
-            <button id="parental-submit" class="btn" data-translate="validate">Valider</button>
-            <button id="parental-cancel" class="btn btn-secondary" data-translate="parental_cancel">
-              Annuler
+        <div class="customization-section">
+          <h3 data-translate="color_theme_title">Thèmes de couleur</h3>
+          <div class="color-theme-selector">
+            <button class="color-theme-btn active" data-color-theme="default" data-translate="color_theme_default"
+              aria-pressed="true">
+              🎨 Classique
             </button>
+            <button class="color-theme-btn" data-color-theme="blue" data-translate="color_theme_blue"
+              aria-pressed="false">
+              🔷 Spatial
+            </button>
+            <button class="color-theme-btn" data-color-theme="green" data-translate="color_theme_green"
+              aria-pressed="false">
+              🌿 Nature
+            </button>
+            <button class="color-theme-btn" data-color-theme="orange" data-translate="color_theme_orange"
+              aria-pressed="false">
+              🔶 Orangé
+            </button>
+            <button class="color-theme-btn" data-color-theme="dark" data-translate="color_theme_dark"
+              aria-pressed="false">
+              🌙 Nuit
+            </button>
+          </div>
+        </div>
+
+        <div class="customization-section">
+          <!-- Section accessoires supprimée -->
+        </div>
+
+        <!-- Tâche 4.1 & 5.1: Options Accessibilité & Contrôle Parental -->
+        <div class="customization-section">
+          <h3 data-translate="accessibility_controls_title">Accessibilité & Contrôles</h3>
+          <div class="accessibility-options">
+            <label>
+              <input type="checkbox" id="high-contrast-toggle" aria-describedby="high-contrast-toggle-help" />
+              <div id="high-contrast-toggle-help" class="sr-only" aria-hidden="true">
+                Champ de saisie
+              </div>
+              <span data-translate="high_contrast_mode">Mode Contraste Élevé</span>
+            </label>
+            <!-- Tâche 5.1: Option pour activer le code parental -->
+            <label>
+              <input type="checkbox" id="parental-lock-toggle" aria-describedby="parental-lock-toggle-help" />
+              <div id="parental-lock-toggle-help" class="sr-only" aria-hidden="true">
+                Champ de saisie
+              </div>
+              <span data-translate="enable_parental_lock">Activer code parental (pour Tableau de Bord)</span>
+            </label>
+            <div class="font-size-selector">
+              <span data-translate="text_size_label">Taille du texte :</span>
+              <button class="btn btn btn-sm-desktop font-size-btn" data-size="small">A</button>
+              <button class="btn btn btn-sm-desktop font-size-btn active" data-size="medium">
+                A
+              </button>
+              <button class="btn btn btn-sm-desktop font-size-btn" data-size="large">A</button>
+            </div>
+          </div>
+        </div>
+        <!-- Fin Tâches -->
+      </div>
+      <!-- Fermeture CORRECTE du conteneur content-card -->
+      <button aria-label="Terminer" class="btn" data-action="save-customization-go-home" data-translate="finish_button">
+        Terminer
+      </button>
+    </section>
+
+    <!-- SLIDE 7: Tableau de bord -->
+    <section id="slide7" class="slide">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <h2 data-translate="dashboard_title">Tableau de Bord</h2>
+
+      <div class="dashboard-container content-card">
+        <!-- Ajout de la classe content-card -->
+        <div class="dashboard-header">
+          <div class="avatar-display" id="dashboard-avatar">🦊</div>
+          <button id="replay-avatar-video" class="replay-video-btn" data-translate-title="replay_avatar_video"
+            title="Revoir la vidéo de présentation">
+            🎬
+          </button>
+          <div class="user-info">
+            <div class="nickname" id="dashboard-nickname">Joueur</div>
+            <div class="stars-summary">
+              <span id="total-stars">0</span>
+              <span data-translate="total_stars_label">étoiles au total</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="star-summary">
+          <h3 data-translate="progress_by_table_title">Progression par table</h3>
+          <div id="dashboard-stars" class="star-grid">
+            <!-- Généré dynamiquement par JS -->
+          </div>
+        </div>
+
+        <div class="history-section">
+          <h3 data-translate="your_journey_title">Ton parcours</h3>
+          <div class="stats-container">
+            <div class="stat-box">
+              <div class="stat-value" id="total-questions">0</div>
+              <div class="stat-label" data-translate="stat_questions">Questions</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="correct-answers">0</div>
+              <div class="stat-label" data-translate="stat_correct">Correctes</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value" id="best-streak">0</div>
+              <div class="stat-label" data-translate="stat_best_streak">Meilleur série</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="achievements-section">
+          <h3 data-translate="unlocked_achievements_title">Succès débloqués</h3>
+          <div id="achievements-list" class="achievements-list">
+            <!-- Généré dynamiquement par JS -->
           </div>
         </div>
       </div>
 
-      <!-- Traductions en ligne (Supprimé - Chargé depuis JSON maintenant) -->
-    </main>
-    <!-- === ES6 MODULES - ARCHITECTURE MODERNE === -->
-    <!-- Point d'entrée unique ES6 - Migration Phase 6 terminée -->
-    <script type="module" src="js/bootstrap-critical.js"></script>
+      <button aria-label="Retour à l'accueil" class="btn" data-slide="1" data-translate="back_to_home">
+        Retour à l'accueil
+      </button>
+    </section>
 
-    <!-- === MODULES DE JEUX (Chargés en lazy loading - 310 KB économisés) === -->
-    <!-- 
+    <!-- SLIDE 8: À propos de l'application -->
+    <section id="slide8" class="slide">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <div class="content-card">
+        <h2 data-translate="about_title">À propos de LeapMultix</h2>
+        <div class="about-content">
+          <div class="about-section">
+            <h3 data-translate="about_description_title">Description</h3>
+            <p data-translate="about_description">
+              LeapMultix est une application éducative interactive pour apprendre les tables de
+              multiplication de façon ludique.
+            </p>
+          </div>
+
+          <div class="about-section">
+            <h3 data-translate="about_features_title">Fonctionnalités</h3>
+            <ul>
+              <li data-translate="about_features_game_modes">
+                4 modes de jeu classiques (Quiz, Défi, Aventure, Découverte)
+              </li>
+              <li data-translate="about_features_arcade">4 mini-jeux d'arcade éducatifs</li>
+              <li data-translate="about_features_multilingual">
+                Support multilingue (Français, Anglais, Espagnol)
+              </li>
+              <li data-translate="about_features_customization">
+                Personnalisation complète (avatars, thèmes)
+              </li>
+              <li data-translate="about_features_progression">
+                Progression sauvegardée par utilisateur
+              </li>
+            </ul>
+          </div>
+
+          <div class="about-section">
+            <h3 data-translate="about_opensource_title">Projet Opensource</h3>
+            <p data-translate="about_opensource_desc">
+              Ce projet est opensource sous licence AGPL-3.0.
+            </p>
+            <a href="https://github.com/jls42/leapmultix" target="_blank" rel="noopener noreferrer"
+              class="opensource-link">
+              <span>🔓</span>
+              <span data-translate="about_github_link">Code source sur GitHub</span>
+            </a>
+          </div>
+
+          <div class="about-section">
+            <h3 data-translate="about_support_title">Soutenir le projet</h3>
+            <a href="https://paypal.me/jls" target="_blank" rel="noopener noreferrer" class="opensource-link">
+              <span>☕</span>
+              <span data-translate="about_support_button">Faire un don via PayPal</span>
+            </a>
+          </div>
+
+          <div class="about-section">
+            <h3 data-translate="about_useful_links">Liens utiles</h3>
+            <div class="page-links">
+              <div class="page-links">
+                <button class="btn btn-primary" data-slide="11" data-translate="faq_button">
+                  ❓ Questions Fréquentes
+                </button>
+              </div>
+              <button class="btn btn-secondary" data-slide="9" data-translate="about_legal_mentions">
+                📄 Mentions Légales
+              </button>
+              <button class="btn btn-secondary" data-slide="10" data-translate="about_privacy_policy">
+                🔒 Politique de Confidentialité
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: Mentions légales -->
+    <section id="slide9" class="slide">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <div class="content-card">
+        <div class="legal-header">
+          <h2 data-translate="legal_title">Mentions Légales</h2>
+          <p class="last-updated">Dernière mise à jour : 15 septembre 2025</p>
+        </div>
+
+        <div class="legal-content">
+          <div class="legal-section">
+            <h3>Éditeur</h3>
+            <p>
+              Le site « leapmultix.jls42.org » est un service de communication au public en ligne
+              édité à titre non professionnel.
+            </p>
+            <p>
+              Conformément à l'article 1-1, II de la loi n° 2004-575 du 21 juin 2004 (LCEN),
+              l'éditeur a choisi de rester anonyme.
+            </p>
+            <p>
+              À ce titre, seules les coordonnées du fournisseur d'hébergement sont publiées
+              ci-dessous.
+            </p>
+            <p>
+              <strong>Contact éditeur :</strong>
+              <a href="mailto:contact@jls42.org">contact@jls42.org</a>
+            </p>
+          </div>
+
+          <div class="legal-section" data-nosnippet>
+            <h3>Hébergement</h3>
+            <p>
+              Le site est hébergé sur Amazon Web Services (AWS), avec stockage sur Amazon S3 et
+              diffusion via Amazon CloudFront (CDN).
+            </p>
+            <p>
+              <strong>Hébergeur :</strong> Amazon Web Services EMEA Sàrl<br />
+              <strong>Adresse :</strong> 38 avenue John F. Kennedy, L-1855 Luxembourg<br />
+              <strong>Téléphone :</strong> +352 2789 0057<br />
+              <strong>Site :</strong>
+              <a href="https://aws.amazon.com/" target="_blank" rel="noopener noreferrer">https://aws.amazon.com/</a>
+            </p>
+            <p>
+              L'hébergeur détient les éléments d'identification de l'éditeur et est tenu au secret
+              professionnel ; ce secret n'est pas opposable à l'autorité judiciaire.
+            </p>
+          </div>
+
+          <div class="legal-section">
+            <h3>Propriété intellectuelle et licence du code</h3>
+            <p>
+              Sauf indication contraire, le contenu de ce site (textes, images, médias) est
+              protégé par le droit d'auteur. Tous droits réservés.
+            </p>
+            <p>
+              Les marques et logos éventuellement cités demeurent la propriété de leurs titulaires
+              respectifs.
+            </p>
+            <p>
+              Le code source du site est distribué sous licence libre AGPL-3.0 (GNU Affero General
+              Public License).
+            </p>
+            <p>
+              <strong>Texte de la licence :</strong>
+              <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank"
+                rel="noopener noreferrer">https://www.gnu.org/licenses/agpl-3.0.html</a>
+            </p>
+          </div>
+
+          <div class="legal-section">
+            <h3>Données personnelles et statistiques</h3>
+            <p>
+              Ce site ne dépose aucun cookie à des fins publicitaires et ne collecte pas de
+              données personnelles identifiantes.
+            </p>
+            <p>
+              La mesure d'audience est réalisée avec Plausible Analytics, un outil sans cookies
+              produisant des statistiques agrégées et anonymisées.
+            </p>
+            <p>
+              <strong>Base légale :</strong> intérêt légitime (article 6, §1, f) du RGPD), dans la
+              finalité strictement limitée à la mesure d'audience.
+            </p>
+            <p>
+              Pour toute question ou pour exercer vos droits (accès, opposition, rectification,
+              effacement), écrivez à : <a href="mailto:contact@jls42.org">contact@jls42.org</a>
+            </p>
+            <p>
+              Pour plus d'informations, veuillez consulter la
+              <button class="inline-link" data-slide="10">Politique de confidentialité</button>.
+            </p>
+          </div>
+
+          <div class="legal-section">
+            <h3>Responsabilité</h3>
+            <p>
+              L'éditeur s'efforce d'assurer l'exactitude et la mise à jour des informations
+              publiées, sans garantie d'exhaustivité.
+            </p>
+            <p>
+              L'éditeur ne saurait être tenu responsable des dommages directs ou indirects pouvant
+              résulter de l'accès au site (pannes, bugs, incompatibilités, virus) ni de l'usage
+              des informations qui y sont présentées.
+            </p>
+            <p>
+              Les liens hypertextes vers des sites tiers sont fournis à titre informatif ;
+              l'éditeur n'exerce aucun contrôle sur ces contenus et décline toute responsabilité
+              s'y rapportant.
+            </p>
+          </div>
+
+          <div class="legal-section">
+            <h3>Droit de réponse et signalement</h3>
+            <p>
+              Toute personne nommée ou désignée sur le site dispose d'un droit de réponse
+              conformément à l'article 1-1, III de la LCEN.
+            </p>
+            <p>
+              Si vous souhaitez exercer ce droit ou signaler un contenu potentiellement illicite,
+              écrivez à : <a href="mailto:contact@jls42.org">contact@jls42.org</a>
+            </p>
+            <p>
+              Lorsque l'éditeur non professionnel conserve l'anonymat, la demande peut également
+              être adressée à l'hébergeur, qui la transmet sans délai au directeur de la
+              publication.
+            </p>
+          </div>
+
+          <div class="legal-section">
+            <h3>Droit applicable</h3>
+            <p>
+              Le présent site et les présentes mentions légales sont soumis au droit français.
+            </p>
+          </div>
+
+          <div class="legal-section">
+            <div class="page-links">
+              <button class="btn btn-primary" data-slide="8">← Retour à À propos</button>
+              <button class="btn btn-secondary" data-slide="10">
+                🔒 Politique de Confidentialité
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 10: Politique de Confidentialité -->
+    <section id="slide10" class="slide">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <div class="content-card">
+        <div class="privacy-header">
+          <h2 data-translate="privacy_title">Politique de Confidentialité</h2>
+          <p class="last-updated"><strong>Version :</strong> 15 septembre 2025</p>
+        </div>
+
+        <div class="privacy-content">
+          <div class="privacy-section">
+            <h3>1. Responsable du Traitement</h3>
+            <p>
+              L'éditeur anonyme du site personnel <code>leapmultix.jls42.org</code> agit comme
+              responsable du traitement.
+            </p>
+            <ul>
+              <li>
+                <strong>Contact :</strong>
+                <a href="mailto:contact@jls42.org">contact@jls42.org</a>
+              </li>
+              <li><strong>Pas de DPO désigné :</strong> traitements simples et non sensibles</li>
+            </ul>
+          </div>
+
+          <div class="privacy-section">
+            <h3>2. Aucune Collecte Intrusive</h3>
+            <ul>
+              <li>Aucune inscription ni formulaire</li>
+              <li>Pas de publicité ni suivi marketing</li>
+              <li>Aucune donnée personnelle identifiante transmise à un serveur</li>
+            </ul>
+          </div>
+
+          <div class="privacy-section">
+            <h3>3. Traitements Strictement Nécessaires</h3>
+
+            <h4>Stockage Local (localStorage)</h4>
+            <ul>
+              <li>
+                <strong>Usage :</strong> Profils, scores, progression utilisateur dans
+                l'application, stockés uniquement côté navigateur
+              </li>
+              <li><strong>Base légale :</strong> Nécessité au service (art. 6-1 b RGPD)</li>
+              <li><strong>Partage :</strong> Aucun (données non transmises)</li>
+              <li>
+                <strong>Durée :</strong> Jusqu'à suppression par l'utilisateur (paramètres
+                navigateur)
+              </li>
+            </ul>
+
+            <h4>Statistiques Techniques (Plausible Analytics)</h4>
+            <ul>
+              <li>
+                <strong>Usage :</strong> Mesures anonymisées de fréquentation (pages vues, trafic
+                approximatif), sans cookies ni IP stockées (hachage journalier + sel éphémère)
+              </li>
+              <li>
+                <strong>Base légale :</strong> Intérêt légitime (art. 6-1 f RGPD) pour améliorer
+                stabilité et usage pédagogique
+              </li>
+              <li><strong>Sous-traitant :</strong> Plausible Insights OÜ (UE)</li>
+              <li>
+                <strong>Durée :</strong> Conservées tant que le site est actif ; suppression
+                immédiate sur demande ou fermeture du compte
+              </li>
+              <li><strong>Opposition :</strong> Via bloqueurs ou réglages navigateur</li>
+              <li>
+                <strong>Documentation :</strong>
+                <a href="https://plausible.io/data-policy" target="_blank" rel="noopener noreferrer">Data Policy</a>
+                |
+                <a href="https://plausible.io/dpa" target="_blank" rel="noopener noreferrer">DPA</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="privacy-section">
+            <h3>4. Cookies et Traceurs</h3>
+            <p>Aucun cookie ni pixel marketing ; seul localStorage fonctionnel est utilisé.</p>
+          </div>
+
+          <div class="privacy-section">
+            <h3>5. Vos Droits RGPD</h3>
+            <p>
+              Si des données personnelles sont traitées (ex. : email envoyé), vous disposez des
+              droits suivants :
+            </p>
+            <ul>
+              <li>Accès / Rectification / Effacement (suppression locale ou email)</li>
+              <li>Opposition (ex. : bloquer les statistiques côté navigateur)</li>
+              <li>Limitation & Portabilité (non pertinentes : pas de base serveur)</li>
+            </ul>
+            <p>
+              <strong>Exercice :</strong>
+              <a href="mailto:contact@jls42.org">contact@jls42.org</a> (réponse sous 1 mois)<br />
+              <strong>Réclamation :</strong>
+              <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">CNIL</a>
+            </p>
+          </div>
+
+          <div class="privacy-section">
+            <h3>6. Sécurité</h3>
+            <p>
+              Contenu statique via CDN (AWS S3/CloudFront). Aucun traitement serveur applicatif ni
+              base de données. Risques limités (pas d'authentification).
+            </p>
+          </div>
+
+          <div class="privacy-section">
+            <h3>7. Mises à Jour</h3>
+            <p>Cette politique peut évoluer ; dernière révision indiquée en tête de page.</p>
+          </div>
+
+          <div class="privacy-section">
+            <div class="page-links">
+              <button class="btn btn-primary" data-slide="8">← Retour à À propos</button>
+              <button class="btn btn-secondary" data-slide="9">📄 Mentions Légales</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 11: FAQ (Questions Fréquentes) -->
+    <section id="slide11" class="slide" itemscope itemtype="https://schema.org/FAQPage">
+      <!-- Top-bar sera injectée ici par le composant TopBar -->
+      <div class="content-card">
+        <div class="faq-header">
+          <h2 data-translate="faq_title">Questions Fréquentes</h2>
+          <p class="faq-subtitle" data-translate="faq_subtitle">
+            Tout ce que vous devez savoir sur LeapMultix
+          </p>
+        </div>
+
+        <div class="faq-content">
+          <!-- Question 1 -->
+          <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <h3 itemprop="name" data-translate="faq_q1">À quel âge est destiné LeapMultix ?</h3>
+            <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p itemprop="text" data-translate="faq_a1">
+                LeapMultix s'adresse principalement aux enfants de 6 à 12 ans (CE1 à 6e), mais
+                convient à tous ceux qui souhaitent apprendre ou réviser les tables de
+                multiplication. Les 5 modes de jeu offrent différents niveaux de difficulté
+                adaptés à chaque âge.
+              </p>
+            </div>
+          </div>
+
+          <!-- Question 2 -->
+          <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <h3 itemprop="name" data-translate="faq_q2">LeapMultix est-il vraiment gratuit ?</h3>
+            <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p itemprop="text" data-translate="faq_a2">
+                Oui, LeapMultix est 100% gratuit et open source (licence AGPL-3.0). Il n'y a ni
+                publicité, ni achat intégré, ni abonnement. Tous les modes de jeu et mini-jeux
+                d'arcade sont accessibles sans restriction.
+              </p>
+            </div>
+          </div>
+
+          <!-- Question 3 -->
+          <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <h3 itemprop="name" data-translate="faq_q3">
+              Puis-je utiliser LeapMultix hors ligne ?
+            </h3>
+            <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p itemprop="text" data-translate="faq_a3">
+                Oui ! LeapMultix est une Progressive Web App (PWA). Une fois installée sur votre
+                appareil, l'application fonctionne entièrement hors ligne. Votre progression est
+                sauvegardée localement dans votre navigateur.
+              </p>
+            </div>
+          </div>
+
+          <!-- Question 4 -->
+          <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <h3 itemprop="name" data-translate="faq_q4">
+              Quels sont les modes de jeu disponibles ?
+            </h3>
+            <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p itemprop="text" data-translate="faq_a4">
+                LeapMultix propose 5 modes de jeu : Découverte (apprentissage), Quiz
+                (entraînement), Défi (contre la montre), Aventure (progression par niveaux) et
+                Arcade (4 mini-jeux : Multimiam, Multisnake, Space Invasion, Memory).
+              </p>
+            </div>
+          </div>
+
+          <!-- Question 5 -->
+          <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <h3 itemprop="name" data-translate="faq_q5">
+              Fonctionne-t-il sur mobile et tablette ?
+            </h3>
+            <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p itemprop="text" data-translate="faq_a5">
+                Absolument ! LeapMultix est optimisé pour tous les écrans : smartphone, tablette,
+                ordinateur. L'interface s'adapte automatiquement (responsive design) et vous
+                pouvez installer l'application comme une vraie app native sur iOS et Android.
+              </p>
+            </div>
+          </div>
+
+          <!-- Question 6 -->
+          <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <h3 itemprop="name" data-translate="faq_q6">Mes données sont-elles sécurisées ?</h3>
+            <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p itemprop="text" data-translate="faq_a6">
+                Oui, vos données restent 100% sur votre appareil. LeapMultix ne collecte aucune
+                donnée personnelle et n'envoie rien à des serveurs tiers. Votre progression est
+                stockée localement dans le navigateur (localStorage).
+              </p>
+            </div>
+          </div>
+
+          <!-- Question 7 -->
+          <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <h3 itemprop="name" data-translate="faq_q7">L'application est-elle multilingue ?</h3>
+            <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p itemprop="text" data-translate="faq_a7">
+                Oui ! LeapMultix est disponible en 3 langues : Français, Anglais et Espagnol. Vous
+                pouvez changer de langue à tout moment via le menu en haut de l'écran.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-footer">
+          <p data-translate="faq_contact">
+            Vous avez d'autres questions ? Contactez-nous :
+            <a href="mailto:contact@jls42.org">contact@jls42.org</a>
+          </p>
+        </div>
+
+        <div class="page-links">
+          <button class="btn btn-primary" data-slide="8">
+            ← <span data-translate="back_to_about">Retour à À propos</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Écran de Game Over (Utilise maintenant la slide 5) -->
+
+    <!-- Zone de célébration (confettis) -->
+    <div class="celebration" id="celebration"></div>
+
+    <!-- Container pour les modes de jeu (maintenant dans slide 4) -->
+    <!-- <div id="game" class="hidden"></div> -->
+    <!-- Container pour les résultats (maintenant dans slide 5) -->
+    <!-- <div id="results" class="hidden"></div> -->
+
+    <!-- Sons (Supprimés car format .ogg non supporté) -->
+
+    <!-- Tâche 5.1: Popup pour le code parental -->
+    <div id="parental-lock-popup" class="popup-overlay hidden">
+      <div class="popup-content">
+        <h3 data-translate="parental_check_title">Vérification Parentale</h3>
+        <p data-translate="parental_check_instruction">
+          Pour continuer, veuillez résoudre cette addition :
+        </p>
+        <p id="parental-question" class="parental-question"></p>
+        <input type="number" id="parental-answer" data-translate-placeholder="parental_answer_placeholder"
+          placeholder="Votre réponse" aria-describedby="parental-answer-help" />
+        <div id="parental-answer-help" class="sr-only" aria-hidden="true">
+          Saisissez un nombre
+        </div>
+        <p id="parental-error" class="error-message"></p>
+        <div class="popup-buttons">
+          <button id="parental-submit" class="btn" data-translate="validate">Valider</button>
+          <button id="parental-cancel" class="btn btn-secondary" data-translate="parental_cancel">
+            Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Traductions en ligne (Supprimé - Chargé depuis JSON maintenant) -->
+  </main>
+  <!-- === ES6 MODULES - ARCHITECTURE MODERNE === -->
+  <!-- Point d'entrée unique ES6 - Migration Phase 6 terminée -->
+  <script type="module" src="js/bootstrap-critical.js"></script>
+
+  <!-- === MODULES DE JEUX (Chargés en lazy loading - 310 KB économisés) === -->
+  <!-- 
   Phase 4.1a: Les scripts suivants sont maintenant chargés à la demande via LazyLoader
   
   JEUX PRINCIPAUX (91 KB):
@@ -1452,17 +1149,18 @@
   TOTAL ÉCONOMISÉ: 310 KB (70% de réduction du chargement initial)
   -->
 
-    <!-- Gestionnaire de cache et de mise à jour déjà inclus dans main-es6.js -->
+  <!-- Gestionnaire de cache et de mise à jour déjà inclus dans main-es6.js -->
 
-    <!-- Zones d'annonces pour lecteurs d'écran -->
-    <div id="aria-announcements" aria-live="polite" aria-atomic="true" class="sr-only"></div>
-    <div id="aria-alerts" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+  <!-- Zones d'annonces pour lecteurs d'écran -->
+  <div id="aria-announcements" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+  <div id="aria-alerts" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
 
-    <!-- Modules d'accessibilité déjà inclus dans main-es6.js -->
+  <!-- Modules d'accessibilité déjà inclus dans main-es6.js -->
 
-    <!-- PWA Manifest & theme-color -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0a0a0a" />
-    <!-- Service Worker already managed by js/cache-updater.js -->
-  </body>
+  <!-- PWA Manifest & theme-color -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <!-- Service Worker already managed by js/cache-updater.js -->
+</body>
+
 </html>
