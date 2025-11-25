@@ -342,6 +342,16 @@
     "Hay {table} grupos de {num} niños. ¿Cuántos niños en total?",
     "Un cohete hace {table} saltos de {num} casillas. ¿Cuál es la distancia total?"
   ],
+  "problem_templates_addition": [
+    "Tengo {a} peras en mi cesta y añado {b} más. ¿Cuántas peras tengo?",
+    "Hay {a} pájaros en una rama, luego {b} pájaros se unen. ¿Cuántos pájaros en total?",
+    "Tienes {a} canicas rojas y {b} canicas azules. ¿Cuántas canicas tienes en total?"
+  ],
+  "problem_templates_subtraction": [
+    "Tengo {a} caramelos y me como {b}. ¿Cuántos caramelos me quedan?",
+    "Hay {a} globos y {b} explotan. ¿Cuántos globos quedan?",
+    "Tienes {a} lápices y le das {b} a tu amigo. ¿Cuántos lápices te quedan?"
+  ],
   "daily_challenge_completed": "¡Desafío diario completado! Recompensa: +{reward} monedas",
   "daily_challenge_finished_message": "¡Bien hecho! ¡Has completado el desafío diario! Ganas +{reward} monedas.",
   "adventure_level_success": "¡Nivel completado! Aquí está tu tesoro ✨",

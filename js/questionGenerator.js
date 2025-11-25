@@ -124,21 +124,37 @@ export function generateQuestion(options = {}) {
       break;
     }
 
-    case 'problem':
-      // Problème de mots localisé (pour l'instant multiplication uniquement)
+    case 'problem': {
+      // Problème de mots localisé
+      let templateKey = null;
+      let params = {};
+
       if (operator === '×') {
+        templateKey = 'problem_templates';
+        params = { table: a, num: b };
+      } else if (operator === '+') {
+        templateKey = 'problem_templates_addition';
+        params = { a, b };
+      } else if (operator === '−') {
+        templateKey = 'problem_templates_subtraction';
+        params = { a, b };
+      }
+
+      if (templateKey) {
         try {
-          question = getTranslation('problem_templates', { table: a, num: b });
-        } catch {
+          question = getTranslation(templateKey, params);
+        } catch (error) {
+          console.warn(`[generateQuestion] Template '${templateKey}' non trouvé:`, error);
           question = `Problem: ${a} ${operation.symbol} ${b} = ?`;
         }
       } else {
-        // R2: ajouter templates pour autres opérations
-        console.warn(`[generateQuestion] Type 'problem' non supporté pour ${operator}, fallback classic`);
+        // Fallback pour opérations non supportées (division R3+)
         question = operation.formatQuestion(a, b, 'classic');
       }
+
       answer = result;
       break;
+    }
 
     default:
       question = operation.formatQuestion(a, b, 'classic');

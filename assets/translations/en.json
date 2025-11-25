@@ -336,6 +336,16 @@
     "There are {table} groups of {num} children. How many children in total?",
     "A rocket makes {table} jumps of {num} squares. What is the total distance?"
   ],
+  "problem_templates_addition": [
+    "I have {a} pears in my basket and I add {b} more. How many pears do I have?",
+    "There are {a} birds on a branch, then {b} birds join them. How many birds in total?",
+    "You have {a} red marbles and {b} blue marbles. How many marbles do you have in total?"
+  ],
+  "problem_templates_subtraction": [
+    "I have {a} candies and I eat {b}. How many candies do I have left?",
+    "There are {a} balloons and {b} pop. How many balloons are left?",
+    "You have {a} pencils and you give {b} to your friend. How many pencils do you have left?"
+  ],
   "daily_challenge_completed": "Daily challenge completed! Reward: +{reward} coins",
   "daily_challenge_finished_message": "Great job! You completed the daily challenge! You earn +{reward} coins.",
   "adventure_level_success": "Level completed! Here's your treasure ✨",

@@ -79,13 +79,13 @@ export class Subtraction extends Operation {
   }
 
   /**
-   * Types de questions supportés pour la soustraction (R1: limité)
+   * Types de questions supportés pour la soustraction
    * @returns {string[]}
    */
   getSupportedTypes() {
-    // R1: classic et mcq uniquement
-    // R2: ajouter 'gap' (avec attention: 2 positions possibles)
-    // R2: ajouter 'true_false', 'problem'
-    return ['classic', 'mcq'];
+    // R1: classic, mcq, gap, problem
+    // R2: ajouter 'true_false'
+    // Note: 'gap' pour soustraction a 2 positions possibles (a − _ = c ou _ − b = c)
+    return ['classic', 'mcq', 'gap', 'problem'];
   }
 }

@@ -346,6 +346,16 @@
     "Il y a {table} groupes de {num} enfants. Combien d'enfants au total ?",
     "Une fusée fait {table} sauts de {num} cases. Quelle distance totale ?"
   ],
+  "problem_templates_addition": [
+    "J'ai {a} poires dans mon panier et j'en ajoute {b} autres. Combien de poires ai-je ?",
+    "Il y a {a} oiseaux sur une branche, puis {b} oiseaux les rejoignent. Combien d'oiseaux au total ?",
+    "Tu as {a} billes rouges et {b} billes bleues. Combien de billes as-tu en tout ?"
+  ],
+  "problem_templates_subtraction": [
+    "J'ai {a} bonbons et j'en mange {b}. Combien de bonbons me reste-t-il ?",
+    "Il y a {a} ballons et {b} éclatent. Combien de ballons reste-t-il ?",
+    "Tu as {a} crayons et tu en donnes {b} à ton ami. Combien de crayons te reste-t-il ?"
+  ],
   "daily_challenge_completed": "Défi du jour terminé ! Récompense : +{reward} pièces",
   "daily_challenge_finished_message": "Bravo ! Tu as terminé le défi du jour ! Tu gagnes +{reward} pièces.",
   "adventure_level_success": "Niveau terminé ! Voici ton trésor ✨",

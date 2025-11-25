@@ -81,13 +81,13 @@ export class Addition extends Operation {
   }
 
   /**
-   * Types de questions supportés pour l'addition (R1: limité)
+   * Types de questions supportés pour l'addition
    * @returns {string[]}
    */
   getSupportedTypes() {
-    // R1: classic et mcq uniquement
-    // R2: ajouter 'gap', 'true_false', 'problem'
-    return ['classic', 'mcq'];
+    // R1: classic, mcq, gap, problem
+    // R2: ajouter 'true_false'
+    return ['classic', 'mcq', 'gap', 'problem'];
   }
 
   /**

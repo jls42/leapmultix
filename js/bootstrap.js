@@ -174,6 +174,11 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.warn('updateModeButtonsAvailability failed during language change', err);
       }
+      try {
+        TopBar.updateTableSettingsButtonVisibility?.();
+      } catch (err) {
+        console.warn('TopBar.updateTableSettingsButtonVisibility failed during language change', err);
+      }
     };
     try {
       eventBus.on('languageChanged', handler);
