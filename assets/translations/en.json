@@ -337,7 +337,7 @@
     "A rocket makes {table} jumps of {num} squares. What is the total distance?"
   ],
   "problem_templates_addition": [
-    "I have {a} pears in my basket and I add {b} more. How many pears do I have?",
+    "I have {a} chocolates in my basket and I add {b} more. How many chocolates do I have?",
     "There are {a} birds on a branch, then {b} birds join them. How many birds in total?",
     "You have {a} red marbles and {b} blue marbles. How many marbles do you have in total?"
   ],

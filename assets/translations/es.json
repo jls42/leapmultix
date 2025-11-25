@@ -343,7 +343,7 @@
     "Un cohete hace {table} saltos de {num} casillas. ¿Cuál es la distancia total?"
   ],
   "problem_templates_addition": [
-    "Tengo {a} peras en mi cesta y añado {b} más. ¿Cuántas peras tengo?",
+    "Tengo {a} chocolates en mi cesta y añado {b} más. ¿Cuántos chocolates tengo?",
     "Hay {a} pájaros en una rama, luego {b} pájaros se unen. ¿Cuántos pájaros en total?",
     "Tienes {a} canicas rojas y {b} canicas azules. ¿Cuántas canicas tienes en total?"
   ],
