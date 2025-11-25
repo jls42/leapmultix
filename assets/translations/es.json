@@ -484,5 +484,21 @@
   "faq_a7": "¡Sí! LeapMultix está disponible en 3 idiomas: Francés, Inglés y Español. Puedes cambiar el idioma en cualquier momento a través del menú en la parte superior de la pantalla.",
   "faq_contact": "¿Tienes otras preguntas? Contáctanos:",
   "back_to_about": "Volver a Acerca de",
-  "faq_button": "❓ Preguntas Frecuentes"
+  "faq_button": "❓ Preguntas Frecuentes",
+  "operation_selector_title": "Elegir operación",
+  "operation_multiplication": "Multiplicación (×)",
+  "operation_addition": "Adición (+)",
+  "operation_subtraction": "Sustracción (−)",
+  "operation_division": "División (÷)",
+  "operation_division_coming_soon": "División (÷) - Próximamente",
+  "mode_not_available_for_operation": "Este modo solo está disponible para la multiplicación por ahora",
+  "discovery_multiplication_only": "Modo Descubrimiento disponible solo para tablas de multiplicar",
+  "adventure_multiplication_only": "Modo Aventura disponible solo para tablas de multiplicar",
+  "arcade_multiplication_only": "Modo Arcade disponible solo para tablas de multiplicar",
+  "quiz_mode_generic": "Modo Prueba",
+  "challenge_mode_generic": "Modo Desafío",
+  "feedback_correct_operation": "¡Correcto! +{points} puntos",
+  "feedback_incorrect_operation": "Incorrecto. La respuesta correcta es {correctAnswer}.",
+  "current_operation": "Operación actual",
+  "switch_operation": "Cambiar operación"
 }
