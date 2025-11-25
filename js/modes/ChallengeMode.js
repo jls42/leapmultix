@@ -21,6 +21,8 @@ import { checkAndUnlockBadge } from '../badges.js';
 import { updateDailyChallengeProgress } from '../game.js';
 import { TablePreferences } from '../core/tablePreferences.js';
 import { UserManager } from '../userManager.js';
+import { getOperation } from '../core/operations/OperationRegistry.js';
+import { recordOperationResult } from '../core/operation-stats.js';
 
 export class ChallengeMode extends GameMode {
   /**
@@ -170,20 +172,28 @@ export class ChallengeMode extends GameMode {
   onQuestionGenerated() {
     // Synthèse vocale de la question (ne jamais révéler la bonne réponse)
     if (this.state.currentQuestion) {
-      const { table, num, type, question } = this.state.currentQuestion;
+      const { operator, a, b, type, question } = this.state.currentQuestion;
+      const operation = getOperation(operator);
 
       if (type === 'true_false') {
         // Lire exactement l'énoncé affiché (ex: "8 × 6 = 47")
-        const spoken = String(question).replace(/×/g, ' fois ').replace(/=/g, ' égale ');
+        const spoken = String(question)
+          .replace(/×/g, ' fois ')
+          .replace(/\+/g, ' plus ')
+          .replace(/−/g, ' moins ')
+          .replace(/÷/g, ' divisé par ')
+          .replace(/=/g, ' égale ');
         speak(spoken);
       } else if (type === 'gap') {
         // Pour "2 × ? = 18", ne dire que la partie connue
-        speak(`${table} fois`);
+        speak(`${a} ${operation.spokenForm}`);
       } else {
         // Pour classic, mcq, problem: lire l'énoncé sans donner la réponse
-        // Préfère l'énoncé si disponible, sinon fallback simple
-        const spoken = (question ? String(question) : `${table} × ${num} = ?`)
+        const spoken = (question ? String(question) : `${a} ${operator} ${b} = ?`)
           .replace(/×/g, ' fois ')
+          .replace(/\+/g, ' plus ')
+          .replace(/−/g, ' moins ')
+          .replace(/÷/g, ' divisé par ')
           .replace(/=/g, ' égale ');
         speak(spoken);
       }
@@ -260,21 +270,37 @@ export class ChallengeMode extends GameMode {
    */
   getQuestionOptions() {
     const currentUser = UserManager.getCurrentUser();
-    const excluded = TablePreferences.isGlobalEnabled(currentUser)
-      ? TablePreferences.getActiveExclusions(currentUser)
-      : [];
+    const userData = UserState.getCurrentUserData();
 
-    const allowed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(t => !excluded.includes(t));
+    // NOUVEAU: Récupérer l'opérateur sélectionné
+    const operator = userData.preferredOperator || '×';
 
-    return {
-      type: 'mcq', // Toujours QCM pour la rapidité
-      tables: allowed,
-      excludeTables: excluded,
-      minTable: 1,
-      maxTable: 10,
-      minNum: 1,
-      maxNum: 10,
-    };
+    // Pour multiplication: filtrage tables
+    if (operator === '×') {
+      const excluded = TablePreferences.isGlobalEnabled(currentUser)
+        ? TablePreferences.getActiveExclusions(currentUser)
+        : [];
+
+      const allowed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(t => !excluded.includes(t));
+
+      return {
+        operator,
+        type: 'mcq', // Toujours QCM pour la rapidité
+        tables: allowed,
+        excludeTables: excluded,
+        minTable: 1,
+        maxTable: 10,
+        minNum: 1,
+        maxNum: 10,
+      };
+    } else {
+      // Autres opérations: pas de filtrage tables
+      return {
+        operator,
+        type: 'mcq', // Toujours QCM
+        difficulty: 'medium',
+      };
+    }
   }
 
   /**
@@ -329,6 +355,11 @@ export class ChallengeMode extends GameMode {
    * Logique spécifique après soumission de réponse
    */
   onAnswerSubmitted(isCorrect, userAnswer) {
+    const { operator, a, b, table, num } = this.state.currentQuestion;
+
+    // Enregistrer stats opération
+    recordOperationResult(operator, a, b, isCorrect);
+
     if (isCorrect) {
       // Gestion des pièces avec bonus de série
       let coinsEarned = 1; // 1 coin de base
@@ -344,11 +375,6 @@ export class ChallengeMode extends GameMode {
 
       // Ajouter du temps bonus pour les séries
       let timeBonus = 0;
-      /**
-       * Fonction if
-       * @param {*} this.state.streak - Description du paramètre
-       * @returns {*} Description du retour
-       */
       if (this.state.streak >= 3) {
         timeBonus = Math.min(5, Math.floor(this.state.streak / 3));
         this.state.timeLeft += timeBonus;
@@ -357,22 +383,23 @@ export class ChallengeMode extends GameMode {
         console.log(`⏰ Bonus temps: +${timeBonus}s (total: +${this.bonusTimeEarned}s)`);
       }
 
-      // Mettre à jour le défi quotidien
-      const { table, num } = this.state.currentQuestion;
-      updateDailyChallengeProgress(table, num);
+      // Mettre à jour le défi quotidien (seulement pour multiplication)
+      if (operator === '×' && table !== undefined && num !== undefined) {
+        updateDailyChallengeProgress(table, num);
+      }
     }
 
     // Enregistrer dans l'historique utilisateur
     const userData = UserState.getCurrentUserData();
     if (!userData.progressHistory) userData.progressHistory = [];
 
-    const { table, num } = this.state.currentQuestion;
     userData.progressHistory.push({
-      question: `${table} × ${num} = ?`,
+      question: `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
       mode: 'challenge',
       difficulty: this.difficulty,
+      operator, // NOUVEAU
       userAnswer: userAnswer,
       correctAnswer: this.state.currentQuestion.answer,
     });

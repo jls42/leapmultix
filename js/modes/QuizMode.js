@@ -21,6 +21,8 @@ import { updateDailyChallengeProgress } from '../game.js';
 import { generateMCQOptions } from '../uiUtils.js';
 import { TablePreferences } from '../core/tablePreferences.js';
 import { UserManager } from '../userManager.js';
+import { getOperation } from '../core/operations/OperationRegistry.js';
+import { recordOperationResult } from '../core/operation-stats.js';
 
 export class QuizMode extends GameMode {
   constructor() {
@@ -114,37 +116,51 @@ export class QuizMode extends GameMode {
   getQuestionOptions() {
     const weakTables = getWeakTables();
     const currentUser = UserManager.getCurrentUser();
+    const userData = UserState.getCurrentUserData();
 
-    const globalExclusions = TablePreferences.isGlobalEnabled(currentUser)
-      ? TablePreferences.getActiveExclusions(currentUser)
-      : [];
+    // NOUVEAU: Récupérer l'opérateur sélectionné
+    const operator = userData.preferredOperator || '×';
 
-    // Filtrer les tables autorisées
-    const allowedTables = Array.from({ length: 10 }, (_, i) => i + 1).filter(
-      t => !globalExclusions.includes(t)
-    );
+    // Pour multiplication: filtrage tables
+    if (operator === '×') {
+      const globalExclusions = TablePreferences.isGlobalEnabled(currentUser)
+        ? TablePreferences.getActiveExclusions(currentUser)
+        : [];
 
-    // Si aucune table n'est disponible, réinitialiser les exclusions
-    if (allowedTables.length === 0) {
-      console.warn('⚠️ Aucune table disponible pour le quiz, utilisation du jeu complet.');
+      const allowedTables = Array.from({ length: 10 }, (_, i) => i + 1).filter(
+        t => !globalExclusions.includes(t)
+      );
+
+      if (allowedTables.length === 0) {
+        console.warn('⚠️ Aucune table disponible pour le quiz, utilisation du jeu complet.');
+        return {
+          operator,
+          weakTables,
+          tables: Array.from({ length: 10 }, (_, i) => i + 1),
+          excludeTables: [],
+          type: 'auto',
+          minNum: 1,
+          maxNum: 10,
+        };
+      }
+
       return {
+        operator,
         weakTables,
-        tables: Array.from({ length: 10 }, (_, i) => i + 1),
-        excludeTables: [],
+        tables: allowedTables,
+        excludeTables: globalExclusions,
         type: 'auto',
         minNum: 1,
         maxNum: 10,
       };
+    } else {
+      // Autres opérations: pas de filtrage tables, utiliser difficulty
+      return {
+        operator,
+        type: 'auto',
+        difficulty: 'medium',
+      };
     }
-
-    return {
-      weakTables,
-      tables: allowedTables,
-      excludeTables: globalExclusions,
-      type: 'auto',
-      minNum: 1,
-      maxNum: 10,
-    };
   }
 
   /**
@@ -323,26 +339,32 @@ export class QuizMode extends GameMode {
    * Logique spécifique après soumission de réponse
    */
   onAnswerSubmitted(isCorrect, userAnswer) {
+    const { operator, a, b, table, num } = this.state.currentQuestion;
+
+    // Enregistrer stats opération
+    recordOperationResult(operator, a, b, isCorrect);
+
     // Enregistrer dans l'historique utilisateur
     const userData = UserState.getCurrentUserData();
     if (!userData.progressHistory) userData.progressHistory = [];
 
-    const { table, num } = this.state.currentQuestion;
     userData.progressHistory.push({
-      question: `${table} × ${num} = ?`,
+      question: `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
       mode: 'quiz',
+      operator, // NOUVEAU
       userAnswer: userAnswer,
       correctAnswer: this.state.currentQuestion.answer,
     });
 
     // Sauvegarder immédiatement
-    const userData2 = UserState.getCurrentUserData();
-    UserState.updateUserData(userData2);
+    UserState.updateUserData(userData);
 
-    // Mettre à jour le défi quotidien
-    updateDailyChallengeProgress(table, num);
+    // Mettre à jour le défi quotidien (seulement pour multiplication)
+    if (operator === '×' && table !== undefined && num !== undefined) {
+      updateDailyChallengeProgress(table, num);
+    }
   }
 
   /**
@@ -509,20 +531,28 @@ export class QuizMode extends GameMode {
 
     // Synthèse vocale de la question (ne jamais révéler la bonne réponse)
     if (this.state.currentQuestion) {
-      const { table, num, type, question } = this.state.currentQuestion;
+      const { operator, a, b, type, question } = this.state.currentQuestion;
+      const operation = getOperation(operator);
 
       if (type === 'true_false') {
         // Lire exactement l'énoncé affiché (ex: "8 × 6 = 47")
-        const spoken = String(question).replace(/×/g, ' fois ').replace(/=/g, ' égale ');
+        const spoken = String(question)
+          .replace(/×/g, ' fois ')
+          .replace(/\+/g, ' plus ')
+          .replace(/−/g, ' moins ')
+          .replace(/÷/g, ' divisé par ')
+          .replace(/=/g, ' égale ');
         speak(spoken);
       } else if (type === 'gap') {
         // Pour "2 × ? = 18", ne dire que la partie connue
-        speak(`${table} fois`);
+        speak(`${a} ${operation.spokenForm}`);
       } else {
         // Pour classic, mcq, problem: lire l'énoncé sans donner la réponse
-        // Préfère l'énoncé si disponible, sinon fallback simple
-        const spoken = (question ? String(question) : `${table} × ${num} = ?`)
+        const spoken = (question ? String(question) : `${a} ${operator} ${b} = ?`)
           .replace(/×/g, ' fois ')
+          .replace(/\+/g, ' plus ')
+          .replace(/−/g, ' moins ')
+          .replace(/÷/g, ' divisé par ')
           .replace(/=/g, ' égale ');
         speak(spoken);
       }
