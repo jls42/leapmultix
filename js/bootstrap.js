@@ -7,6 +7,8 @@ import { TopBar } from './components/topBar.js';
 import { updateCoinDisplay, updateWelcomeMessageUI, updateSeoHeroImage } from './utils-es6.js';
 import { gameState } from './game.js';
 import { eventBus } from './core/eventBus.js';
+import { OperationSelector } from './components/operationSelector.js';
+import { updateModeButtonsAvailability } from './components/operationModeAvailability.js';
 
 function rewireSetGameModeButtons(root = document) {
   const nodes = root.querySelectorAll('[onclick]');
@@ -161,6 +163,16 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSeoHeroImage(lang);
       } catch (err) {
         console.warn('updateSeoHeroImage failed during language change', err);
+      }
+      try {
+        OperationSelector.refresh('operation-selector-container');
+      } catch (err) {
+        console.warn('OperationSelector.refresh failed during language change', err);
+      }
+      try {
+        updateModeButtonsAvailability();
+      } catch (err) {
+        console.warn('updateModeButtonsAvailability failed during language change', err);
       }
     };
     try {

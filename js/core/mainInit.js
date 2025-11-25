@@ -23,6 +23,8 @@ import {
   updateSeoHeroImage,
 } from '../utils-es6.js';
 import { VideoManager } from '../VideoManager.js';
+import { OperationSelector } from '../components/operationSelector.js';
+import { initModeAvailability } from '../components/operationModeAvailability.js';
 
 const avatarAvailableImages = {
   fox: [1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17],
@@ -281,6 +283,18 @@ function initComponentModules() {
     VideoManager.init();
   } catch (error) {
     console.warn('VideoManager init failed', error);
+  }
+
+  try {
+    OperationSelector.inject('operation-selector-container');
+  } catch (error) {
+    logInitWarning('Initialisation OperationSelector impossible', error);
+  }
+
+  try {
+    initModeAvailability();
+  } catch (error) {
+    logInitWarning('Initialisation ModeAvailability impossible', error);
   }
 }
 
