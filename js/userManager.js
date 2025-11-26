@@ -285,6 +285,40 @@ export const UserManager = {
      */
     updateCoinDisplay();
 
+    // Rafraîchir le sélecteur d'opération avec les données de l'utilisateur
+    try {
+      const operationSelectorContainer = document.getElementById('operation-selector-container');
+      if (operationSelectorContainer && operationSelectorContainer.children.length > 0) {
+        // Dynamically import to avoid circular dependency
+        import('./components/operationSelector.js')
+          .then(module => {
+            module.OperationSelector.refresh('operation-selector-container');
+          })
+          .catch(e => {
+            console.warn('OperationSelector refresh failed:', e);
+          });
+
+        // Refresh mode availability and table settings button visibility
+        import('./components/operationModeAvailability.js')
+          .then(module => {
+            module.updateModeButtonsAvailability();
+          })
+          .catch(e => {
+            console.warn('updateModeButtonsAvailability failed:', e);
+          });
+
+        import('./components/topBar.js')
+          .then(module => {
+            module.TopBar.updateTableSettingsButtonVisibility?.();
+          })
+          .catch(e => {
+            console.warn('TopBar.updateTableSettingsButtonVisibility failed:', e);
+          });
+      }
+    } catch (e) {
+      void e;
+    }
+
     // Afficher le défi quotidien si disponible
     /**
      * Fonction if
