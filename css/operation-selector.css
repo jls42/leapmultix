@@ -7,7 +7,7 @@
   margin: 20px auto;
   padding: 20px;
   max-width: 600px;
-  background: var(--card-bg, #f9f9f9);
+  background: rgb(255 255 255 / 0.9);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
   text-align: center;
@@ -111,21 +111,21 @@
   }
 }
 
-/* Mode dark (si activé dans le projet) */
+/* Mode dark adapté pour harmonie visuelle */
 @media (prefers-color-scheme: dark) {
   .operation-selector-wrapper {
-    background: var(--card-bg-dark, #2c2c2c);
+    background: rgb(255 255 255 / 0.85);
   }
 
   .operation-btn {
-    background: var(--input-bg-dark, #3c3c3c);
-    color: var(--text-color-dark, #e0e0e0);
-    border-color: var(--border-color-dark, #555);
+    background: rgb(255 255 255 / 0.95);
+    color: #333;
+    border-color: #ccc;
   }
 
   .operation-btn:disabled {
-    background: #444;
-    color: #777;
+    background: #e0e0e0;
+    color: #999;
   }
 }
 
