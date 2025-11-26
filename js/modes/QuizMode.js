@@ -304,13 +304,18 @@ export class QuizMode extends GameMode {
    * Affiche le feedback complexe pour une réponse incorrecte
    */
   _displayIncorrectFeedback(message) {
-    const { table, num } = this.state.currentQuestion;
-    const hintText = this._getHintText(table);
-    const numberLineText = this.generateNumberLineText(
-      table,
-      num,
-      this.state.currentQuestion.answer
-    );
+    const { operator, a, b, table, num } = this.state.currentQuestion;
+
+    // Utiliser a/b (nouveau format) ou table/num (ancien format) pour compatibilité
+    const firstOperand = a ?? table;
+    const secondOperand = b ?? num;
+
+    // Hint et ligne numérique uniquement pour multiplication
+    const hintText = operator === '×' ? this._getHintText(firstOperand) : '';
+    const numberLineText =
+      operator === '×'
+        ? this.generateNumberLineText(firstOperand, secondOperand, this.state.currentQuestion.answer)
+        : '';
 
     setSafeComplexFeedback(this.feedbackElement, message, hintText, numberLineText);
   }

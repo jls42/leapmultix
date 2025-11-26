@@ -39,6 +39,7 @@ const DEFAULT_USER_DATA = Object.freeze({
   parentalLockEnabled: false,
   starsByTable: {},
   coins: 0,
+  preferredOperator: '×',
 });
 
 const ensureArray = (value, fallback = []) => (Array.isArray(value) ? [...value] : [...fallback]);
@@ -56,6 +57,7 @@ const createDefaultUserData = (nickname = '') => ({
   unlockedBadges: [],
   starsByTable: {},
   tablePreferences: { ...DEFAULT_TABLE_PREFERENCES, globalExclusions: [] },
+  preferredOperator: '×',
   nickname,
 });
 
@@ -89,6 +91,7 @@ const normalizeUserData = (rawData, currentUser) => {
     parentalLockEnabled: rawData?.parentalLockEnabled === true,
     starsByTable,
     coins: ensureNumber(rawData?.coins, 0),
+    preferredOperator: rawData?.preferredOperator || '×',
     tablePreferences: {
       ...DEFAULT_TABLE_PREFERENCES,
       ...tablePreferences,
