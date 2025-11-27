@@ -372,52 +372,65 @@ git log --oneline main..HEAD  # Commits à merger
 
 ---
 
-## 📌 Checklist avant PR
+## 📌 Checklist avant PR finale (après R2/R3/R4)
 
-- [x] Phase 1.7 : Tests unitaires écrits et passent ✅
-- [ ] Phase 1.8 : QA complète (lint, format, i18n, manuel)
-- [ ] Tous les commits sont propres et cohérents
+- [x] Phase 1 (R1) : Architecture + Quiz/Challenge pour ×, +, − ✅
+- [ ] Phase 2 (R2) : Discovery/Adventure pour +/−
+- [ ] Phase 3 (R3) : Division (÷)
+- [ ] Phase 4 (R4) : Arcade multi-opérations
 - [ ] README.md mis à jour (nouvelles features)
-- [ ] CHANGELOG.md mis à jour
-- [ ] Aucun console.log de debug
-- [ ] Aucun TODO/FIXME non traité
-- [ ] Test sur Chrome + Firefox minimum
+- [ ] Tests manuels sur Chrome + Firefox
 - [ ] Validation accessibilité (Tab, ARIA)
 
 ---
 
 ## 📞 Contact et reprise
 
-**État actuel de la branche (2025-01-27) :**
+**État actuel de la branche (2025-01-27 23:30) :**
 
-- ✅ Phase 1.1-1.6 : Complètes (architecture + UI)
-- ✅ Phase 1.7 : Tests unitaires complétés (59/59 tests passent)
-- ⏳ Phase 1.8 : QA et validation finale - EN COURS
-- 6 commits locaux propres + modifications tests non commitées
-- Pas encore pushée (remote supprimé)
+- ✅ **Phase 1 (R1) : COMPLÈTE** - Architecture + Quiz/Challenge pour ×, +, −
+  - Phase 1.1-1.6 : Architecture OOP + UI ✅
+  - Phase 1.7 : Tests unitaires (59/59) ✅
+  - Phase 1.8 : QA complète (format, lint, i18n) ✅
+- ⏳ **Phase 2 (R2)** : Discovery/Adventure pour +/− - À FAIRE
+- ⏳ **Phase 3 (R3)** : Division (÷) - À FAIRE
+- ⏳ **Phase 4 (R4)** : Arcade multi-opérations - À FAIRE
 
-**État des tests :**
+**Derniers commits (17 commits locaux non pushés) :**
 
 ```bash
-npm run test:esm
-✅ Test Suites: 11 passed, 11 total
-✅ Tests:       59 passed, 59 total
-⏱️  Time:        ~1.75s
+4ceaa67 chore: apply prettier formatting and fix eslint warnings
+33d6a50 tests 1.7
+2285fab docs: add comprehensive multi-operations implementation status
+2e17622 style: harmonize operation selector background with interface
+... (13 commits précédents)
 ```
 
-**Prochaines étapes (Phase 1.8) :**
+**État des tests et qualité :**
 
-1. ✅ Lancer `npm run serve` (déjà en cours)
-2. ⏳ Vérifier qualité du code (format:check, lint)
-3. ⏳ Tests manuels (×, +, − sur Quiz/Challenge)
-4. ⏳ Vérifier i18n:compare
-5. ⏳ Commit des tests + message de commit
-6. ⏳ Prêt pour PR vers main
+```bash
+✅ npm run format:check    # Tous fichiers formatés
+✅ npm run lint            # 0 erreurs, 0 warnings
+✅ npm test                # 138/138 tests passent
+✅ npm run test:coverage   # Coverage OK
+✅ npm run test:esm        # 59/59 tests ESM passent
+✅ npm run i18n:compare    # 478 clés synchronisées (fr/en/es)
+```
+
+**Prochaines étapes (R2/R3/R4) :**
+
+1. **R2** : Étendre Discovery/Adventure pour +/−
+2. **R3** : Implémenter Division (÷)
+3. **R4** : Adapter les 4 jeux arcade (Multimiam, Invasion, Memory, Snake)
+4. Tests manuels navigateurs
+5. Mise à jour README.md
+6. **Puis** : Créer PR vers main
 
 **Fichiers clés :**
 
-- `js/core/operations/` : Architecture OOP (4 classes)
-- `js/core/operation-stats.js` : Stats unifiées + double-write
+- `js/core/operations/` : Architecture OOP (Operation, Multiplication, Addition, Subtraction)
+- `js/core/operation-stats.js` : Stats unifiées + double-write (migration R2)
 - `js/questionGenerator.js` : Génération multi-op
 - `js/components/operationSelector.js` : Sélecteur UI
+- `js/components/operationModeAvailability.js` : Restriction modes par opération
 - `tests-esm/operations/Operation.test.mjs` : 36 tests unitaires
