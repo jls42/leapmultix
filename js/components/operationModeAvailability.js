@@ -107,7 +107,6 @@ export function canLaunchMode(mode) {
 
   if (!isModeAvailable(mode, operator)) {
     const message = getUnavailableMessage(mode);
-    // eslint-disable-next-line no-alert -- User feedback for unavailable mode
     alert(message);
     return false;
   }

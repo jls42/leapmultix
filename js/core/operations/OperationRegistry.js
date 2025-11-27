@@ -58,7 +58,9 @@ class OperationRegistryClass {
     const operation = this.operations.get(symbol);
 
     if (!operation) {
-      console.warn(`[OperationRegistry] Opération '${symbol}' non trouvée, fallback multiplication`);
+      console.warn(
+        `[OperationRegistry] Opération '${symbol}' non trouvée, fallback multiplication`
+      );
       return this.operations.get('×'); // Fallback sécurisé
     }
 

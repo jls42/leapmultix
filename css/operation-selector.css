@@ -45,7 +45,7 @@
 .operation-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
-  border-color: var(--primary-color, #4CAF50);
+  border-color: var(--primary-color, #4caf50);
 }
 
 .operation-btn:active:not(:disabled) {
@@ -53,10 +53,10 @@
 }
 
 .operation-btn.active {
-  background-color: var(--primary-color, #4CAF50);
+  background-color: var(--primary-color, #4caf50);
   color: white;
   font-weight: bold;
-  border-color: var(--primary-color, #4CAF50);
+  border-color: var(--primary-color, #4caf50);
   box-shadow: 0 4px 12px rgb(76 175 80 / 0.3);
 }
 
@@ -147,6 +147,6 @@
 
 /* Focus accessible au clavier */
 .operation-btn:focus {
-  outline: 3px solid var(--focus-color, #2196F3);
+  outline: 3px solid var(--focus-color, #2196f3);
   outline-offset: 2px;
 }

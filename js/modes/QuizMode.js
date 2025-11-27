@@ -314,7 +314,11 @@ export class QuizMode extends GameMode {
     const hintText = operator === '×' ? this._getHintText(firstOperand) : '';
     const numberLineText =
       operator === '×'
-        ? this.generateNumberLineText(firstOperand, secondOperand, this.state.currentQuestion.answer)
+        ? this.generateNumberLineText(
+            firstOperand,
+            secondOperand,
+            this.state.currentQuestion.answer
+          )
         : '';
 
     setSafeComplexFeedback(this.feedbackElement, message, hintText, numberLineText);

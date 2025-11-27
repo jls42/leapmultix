@@ -373,9 +373,7 @@ export function migrateMultiplicationStats() {
  */
 export function cleanupOldMultiplicationStats(confirmDelete = false) {
   if (!confirmDelete) {
-    console.warn(
-      '⚠️ cleanupOldMultiplicationStats() nécessite confirmDelete=true pour exécuter'
-    );
+    console.warn('⚠️ cleanupOldMultiplicationStats() nécessite confirmDelete=true pour exécuter');
     return false;
   }
 

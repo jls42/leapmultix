@@ -177,7 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         TopBar.updateTableSettingsButtonVisibility?.();
       } catch (err) {
-        console.warn('TopBar.updateTableSettingsButtonVisibility failed during language change', err);
+        console.warn(
+          'TopBar.updateTableSettingsButtonVisibility failed during language change',
+          err
+        );
       }
     };
     try {

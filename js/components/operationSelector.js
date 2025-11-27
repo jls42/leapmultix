@@ -5,7 +5,6 @@
 
 import { getTranslation } from '../utils-es6.js';
 import { UserState } from '../core/userState.js';
-import { getSupportedOperators } from '../core/operations/OperationRegistry.js';
 import { createSafeElement } from '../security-utils.js';
 
 export class OperationSelector {
@@ -121,6 +120,7 @@ export class OperationSelector {
     if (!container) return;
 
     // Vider et réinjecter
+    // eslint-disable-next-line no-restricted-properties -- Safe: clearing with empty string
     container.innerHTML = '';
     OperationSelector.inject(containerId);
   }

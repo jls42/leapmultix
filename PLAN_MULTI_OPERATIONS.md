@@ -1,4 +1,5 @@
 # Plan d'Implémentation Multi-Opérations
+
 **Branch:** `feat/multi-operations-support`
 **Objectif:** Étendre LeapMultix pour supporter ×, +, −, ÷ sans duplication de code
 **Architecte/Dev:** Claude Code
@@ -9,6 +10,7 @@
 ## 🎯 Vision Globale
 
 ### Objectifs R1 (Release 1 - Livraison rapide)
+
 - ✅ Support multiplication (×), addition (+), soustraction (−) dans Quiz et Défi
 - ✅ Sélecteur d'opération avec persistance utilisateur
 - ✅ Stats unifiées avec migration transparente
@@ -17,6 +19,7 @@
 - ✅ Tests unitaires et non-régression
 
 ### Phases futures
+
 - **R2** (3-4 semaines) : Étendre Découverte/Aventure + migration stats complète
 - **R3** (1-2 semaines) : Division (÷) avec contraintes résultats entiers
 - **R4** (2-3 semaines) : Arcade multi-opérations
@@ -26,6 +29,7 @@
 ## 📐 Architecture Technique
 
 ### Principes de Conception
+
 1. **Extensibilité** : Pattern OOP pour ajouter opérations sans toucher code existant
 2. **Compatibilité** : Double-write temporaire pour migration stats douce
 3. **Réutilisation** : Mutualisation maximale via classe abstraite Operation
@@ -62,6 +66,7 @@ leapmultix/
 ### Phase 1.1 : Architecture Operations (OOP) ⏱️ J1-J2
 
 #### Fichier: `js/core/operations/Operation.js`
+
 **Classe abstraite définissant le contrat**
 
 ```javascript
@@ -70,9 +75,9 @@ leapmultix/
  */
 export class Operation {
   constructor() {
-    this.symbol = '';        // Ex: '×', '+', '-', '÷'
-    this.name = '';          // Ex: 'multiplication', 'addition'
-    this.spokenForm = '';    // Ex: 'fois', 'plus', 'moins'
+    this.symbol = ''; // Ex: '×', '+', '-', '÷'
+    this.name = ''; // Ex: 'multiplication', 'addition'
+    this.spokenForm = ''; // Ex: 'fois', 'plus', 'moins'
     this.unicodeSymbol = ''; // Ex: '\u00D7' pour ×
   }
 
@@ -126,8 +131,7 @@ export class Operation {
    * @returns {boolean}
    */
   isValid(a, b) {
-    return typeof a === 'number' && typeof b === 'number' &&
-           !isNaN(a) && !isNaN(b);
+    return typeof a === 'number' && typeof b === 'number' && !isNaN(a) && !isNaN(b);
   }
 
   /**
@@ -162,7 +166,7 @@ export class Multiplication extends Operation {
     const ranges = {
       easy: { min: 1, max: 5 },
       medium: { min: 1, max: 10 },
-      hard: { min: 1, max: 12 }
+      hard: { min: 1, max: 12 },
     };
 
     const range = ranges[difficulty] || ranges.medium;
@@ -201,7 +205,7 @@ export class Addition extends Operation {
     const constraints = {
       easy: { minA: 1, maxA: 5, minB: 1, maxB: 5, maxResult: 10 },
       medium: { minA: 1, maxA: 10, minB: 1, maxB: 10, maxResult: 20 },
-      hard: { minA: 1, maxA: 20, minB: 1, maxB: 20, maxResult: 40 }
+      hard: { minA: 1, maxA: 20, minB: 1, maxB: 20, maxResult: 40 },
     };
 
     const c = constraints[difficulty] || constraints.medium;
@@ -232,7 +236,7 @@ import { Operation } from './Operation.js';
 export class Subtraction extends Operation {
   constructor() {
     super();
-    this.symbol = '−';  // Unicode minus (U+2212), pas hyphen-minus
+    this.symbol = '−'; // Unicode minus (U+2212), pas hyphen-minus
     this.name = 'subtraction';
     this.spokenForm = 'moins';
     this.unicodeSymbol = '\u2212';
@@ -247,7 +251,7 @@ export class Subtraction extends Operation {
     const ranges = {
       easy: { minuend: [1, 10], maxSubtrahend: 10 },
       medium: { minuend: [1, 20], maxSubtrahend: 20 },
-      hard: { minuend: [1, 50], maxSubtrahend: 50 }
+      hard: { minuend: [1, 50], maxSubtrahend: 50 },
     };
 
     const range = ranges[difficulty] || ranges.medium;
@@ -323,12 +327,13 @@ class OperationRegistryClass {
 export const OperationRegistry = new OperationRegistryClass();
 
 // Convenience exports
-export const getOperation = (symbol) => OperationRegistry.get(symbol);
+export const getOperation = symbol => OperationRegistry.get(symbol);
 export const getAllOperations = () => OperationRegistry.getAll();
 export const getSupportedOperators = () => OperationRegistry.getAllSymbols();
 ```
 
 **Tests associés:**
+
 - Vérifier compute() pour chaque opération
 - Vérifier generateOperands() respecte contraintes
 - Vérifier isValid()
@@ -373,7 +378,7 @@ export function recordOperationResult(operator, a, b, isCorrect) {
         b,
         attempts: 0,
         errors: 0,
-        lastAttempt: null
+        lastAttempt: null,
       };
     }
 
@@ -502,7 +507,7 @@ export function migrateMultiplicationStats() {
           b,
           attempts: stats.attempts || 0,
           errors: stats.errors || 0,
-          lastAttempt: null
+          lastAttempt: null,
         };
         migrated++;
       }
@@ -519,6 +524,7 @@ export function migrateMultiplicationStats() {
 ```
 
 **Tests associés:**
+
 - Test recordOperationResult pour chaque opérateur
 - Test getOperationStats
 - Test double-write (vérifier les deux structures)
@@ -579,7 +585,13 @@ export function generateQuestion(options = {}) {
   let a, b;
   if (operator === '×' && (forceTable !== null || tables.length > 0)) {
     // Mode multiplication classique (compatibilité)
-    const eligibleTables = getEligibleTables({ forceTable, tables, excludeTables, minTable, maxTable });
+    const eligibleTables = getEligibleTables({
+      forceTable,
+      tables,
+      excludeTables,
+      minTable,
+      maxTable,
+    });
     const eligibleNums = getEligibleNums({ forceNum, minNum, maxNum });
     if (eligibleTables.length === 0 || eligibleNums.length === 0) {
       throw new Error(`generateQuestion: aucune combinaison possible`);
@@ -603,7 +615,9 @@ export function generateQuestion(options = {}) {
     // Vérifier que le type est supporté
     const supportedTypes = operation.getSupportedTypes();
     if (!supportedTypes.includes(type)) {
-      console.warn(`[generateQuestion] Type '${type}' non supporté pour ${operator}, fallback 'classic'`);
+      console.warn(
+        `[generateQuestion] Type '${type}' non supporté pour ${operator}, fallback 'classic'`
+      );
       chosenType = 'classic';
     }
   }
@@ -655,9 +669,9 @@ export function generateQuestion(options = {}) {
     question,
     answer,
     type: chosenType,
-    operator,      // NOUVEAU
-    a,             // NOUVEAU (au lieu de table)
-    b,             // NOUVEAU (au lieu de num)
+    operator, // NOUVEAU
+    a, // NOUVEAU (au lieu de table)
+    b, // NOUVEAU (au lieu de num)
     // Compatibilité multiplication
     table: operator === '×' ? a : undefined,
     num: operator === '×' ? b : undefined,
@@ -668,6 +682,7 @@ export function generateQuestion(options = {}) {
 ```
 
 **Tests associés:**
+
 - Test génération pour chaque opérateur
 - Test type 'auto' respecte supportedTypes
 - Test fallback type non supporté → 'classic'
@@ -874,7 +889,7 @@ export class OperationSelector {
       { symbol: '×', key: 'operation_multiplication', enabled: true },
       { symbol: '+', key: 'operation_addition', enabled: true },
       { symbol: '−', key: 'operation_subtraction', enabled: true },
-      { symbol: '÷', key: 'operation_division_coming_soon', enabled: false } // R3
+      { symbol: '÷', key: 'operation_division_coming_soon', enabled: false }, // R3
     ];
 
     operations.forEach(op => {
@@ -890,7 +905,9 @@ export class OperationSelector {
           OperationSelector.selectOperation(op.symbol);
 
           // Mettre à jour visuellement
-          buttonsContainer.querySelectorAll('.operation-btn').forEach(b => b.classList.remove('active'));
+          buttonsContainer
+            .querySelectorAll('.operation-btn')
+            .forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
         });
       } else {
@@ -983,7 +1000,7 @@ function initializeApp() {
 }
 
 .operation-btn.active {
-  background-color: var(--primary-color, #4CAF50);
+  background-color: var(--primary-color, #4caf50);
   color: white;
   font-weight: bold;
 }
@@ -1076,7 +1093,12 @@ describe('Operations', () => {
 #### Fichier: `tests/__tests__/operation-stats.test.js`
 
 ```javascript
-import { recordOperationResult, getOperationStats, recordMultiplicationResult, getMultiplicationStats } from '../../js/core/operation-stats.js';
+import {
+  recordOperationResult,
+  getOperationStats,
+  recordMultiplicationResult,
+  getMultiplicationStats,
+} from '../../js/core/operation-stats.js';
 
 describe('Operation Stats', () => {
   beforeEach(() => {
@@ -1130,6 +1152,7 @@ describe('Operation Stats', () => {
 #### Checklist QA
 
 **Tests automatiques:**
+
 - [ ] `npm run format:check` → PASS
 - [ ] `npm run lint` → PASS
 - [ ] `npm test` → PASS (tous les tests)
@@ -1137,6 +1160,7 @@ describe('Operation Stats', () => {
 - [ ] `npm run i18n:compare` → 0 clés manquantes
 
 **Tests manuels Quiz:**
+
 - [ ] Quiz multiplication (×) fonctionne comme avant
 - [ ] Quiz addition (+) génère questions valides
 - [ ] Quiz soustraction (−) jamais de résultats négatifs
@@ -1146,6 +1170,7 @@ describe('Operation Stats', () => {
 - [ ] Stats enregistrées correctement (vérifier localStorage)
 
 **Tests manuels Défi:**
+
 - [ ] Défi multiplication (×)
 - [ ] Défi addition (+)
 - [ ] Défi soustraction (−)
@@ -1153,22 +1178,26 @@ describe('Operation Stats', () => {
 - [ ] Bonus temps fonctionne
 
 **Tests multi-environnements:**
+
 - [ ] Desktop Chrome
 - [ ] Desktop Firefox ou Safari
 - [ ] Mobile Chrome (responsive)
 - [ ] Mobile Safari (iOS si possible)
 
 **Tests i18n:**
+
 - [ ] Français complet
 - [ ] Anglais complet
 - [ ] Espagnol complet
 
 **Tests accessibilité:**
+
 - [ ] Navigation clavier sélecteur opération
 - [ ] ARIA labels corrects
 - [ ] Contraste couleurs OK
 
 **Tests modes non supportés:**
+
 - [ ] Découverte grisée si operator ≠ ×
 - [ ] Aventure grisée si operator ≠ ×
 - [ ] Arcade grisé si operator ≠ ×
@@ -1179,12 +1208,14 @@ describe('Operation Stats', () => {
 ## 📊 Critères de Succès R1
 
 ✅ **Fonctionnels:**
+
 - Quiz/Défi fonctionnent pour ×, +, −
 - Sélecteur opération persiste
 - Modes non supportés clairement signalés
 - Aucune régression multiplication
 
 ✅ **Techniques:**
+
 - Architecture OOP extensible
 - Stats migrées sans perte
 - Tests >80% coverage
@@ -1192,6 +1223,7 @@ describe('Operation Stats', () => {
 - Code formaté et linté
 
 ✅ **Qualité:**
+
 - Pas de duplication de code
 - Séparation des responsabilités
 - Documentation complète
@@ -1226,17 +1258,20 @@ describe('Operation Stats', () => {
 ## 🔮 Roadmap Future
 
 ### R2 (3-4 semaines)
+
 - Migration stats complète (supprimer double-write)
 - Étendre Découverte/Aventure
 - Types de questions complets (gap, true_false pour +/−)
 - Templates problem pour +/−
 
 ### R3 (1-2 semaines)
+
 - Division (÷) avec résultats entiers
 - Contraintes spécifiques division
 - Tests exhaustifs edge cases
 
 ### R4 (2-3 semaines)
+
 - Arcade multi-opérations
 - Injection operator dans mini-jeux
 - Pas de duplication jeux

@@ -24,6 +24,7 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 ```
 
 ### Dernière Action
+
 **Date:** 2025-11-25
 **Action:** Création architecture OOP operations
 **Status:** ✅ Complété
@@ -36,11 +37,13 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 ### ✅ Phase 0: Préparation (2025-11-25)
 
 #### Actions réalisées:
+
 1. ✅ Création branche `feat/multi-operations-support`
 2. ✅ Création `PLAN_MULTI_OPERATIONS.md` (plan détaillé 1248 lignes)
 3. ✅ Commit plan: `49e39f1`
 
 #### Décisions architecturales:
+
 - **Pattern OOP** retenu vs approche fonctionnelle
   - **Raison:** Extensibilité (ajout opérations futures sans toucher code existant)
   - **Alternative rejetée:** Fonctions avec switch/case (rigide, duplication)
@@ -52,6 +55,7 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
   - **Avantage:** Facilite tests et extensions futures
 
 #### Problèmes identifiés:
+
 - ❌ Aucun pour l'instant
 
 ---
@@ -59,6 +63,7 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 ### ✅ Phase 1.1: Architecture Operations (OOP) (2025-11-25)
 
 #### Actions réalisées:
+
 1. ✅ Création dossier `js/core/operations/`
 2. ✅ `Operation.js` (classe abstraite, 120 lignes)
    - Contrat: `compute()`, `generateOperands()`, `formatQuestion()`
@@ -84,6 +89,7 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
    - Convenience exports: `getOperation()`, `getAllOperations()`, etc.
 
 #### Décisions techniques:
+
 - **Unicode minus (−)** pour soustraction au lieu de hyphen (-)
   - **Raison:** Cohérence typographique mathématique
   - **Impact:** Affichage + lisible, distinction claire
@@ -95,6 +101,7 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
   - **Utilisation future:** Analytics, rapports de progrès
 
 #### Problèmes résolus:
+
 1. **Problème:** Comment gérer gap pour soustraction (2 positions possibles) ?
    - **Solution:** Reporter à R2, R1 n'active que classic/mcq
    - **Justification:** Éviter complexité prématurée
@@ -108,12 +115,14 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
    - **Log:** Warning console pour debug
 
 #### Métriques:
+
 - **Fichiers créés:** 5
 - **Lignes de code:** ~500 lignes
 - **Classes:** 1 abstraite + 3 concrètes + 1 registry
 - **Temps estimé:** 2h réel vs 2j prévu (avance!)
 
 #### Prochaines étapes:
+
 - [ ] Phase 1.2: Créer `operation-stats.js` avec double-write
 - [ ] Tests unitaires Phase 1.1 (peut être fait en // avec 1.2)
 
@@ -122,21 +131,26 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 ## 🔧 Décisions Architecturales Majeures
 
 ### 1. Pattern OOP vs Fonctionnel
+
 **Choix:** Pattern OOP (classes + héritage)
 **Raison:**
+
 - Extensibilité: ajouter Division = 1 nouvelle classe, 0 modif code existant
 - Encapsulation: chaque opération gère ses propres règles
 - Testabilité: mock/stub facile par opération
 
 **Alternative rejetée:** Approche fonctionnelle avec `operation-utils.js`
 **Pourquoi rejeté:**
+
 - Switch/case qui grossit à chaque opération
 - Duplication logique difficile à maintenir
 - Couplage fort entre opérations
 
 ### 2. Double-Write Stats (Temporaire R1)
+
 **Choix:** Écriture simultanée anciennes + nouvelles stats
 **Raison:**
+
 - Migration douce (0 risque casse données existantes)
 - Rollback possible si problème détecté
 - Validation parallèle des deux systèmes
@@ -145,8 +159,10 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 **Plan suppression:** R2 (après validation 2-4 semaines usage)
 
 ### 3. Compatibilité Multiplication
+
 **Choix:** Garder `table` et `num` en plus de `a`, `b`
 **Raison:**
+
 - Compatibilité stricte avec code existant
 - Évite refactoring massif en R1
 - Permet tests de non-régression
@@ -154,8 +170,10 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 **Plan migration:** R2 (suppression progressive `table`/`num`)
 
 ### 4. Limitation Types Questions R1
+
 **Choix:** Addition/Soustraction → classic et mcq uniquement
 **Raison:**
+
 - Gap ambigu pour soustraction (2 positions)
 - Problem templates manquants (nécessite traductions)
 - True_false nécessite génération réponses fausses adaptées
@@ -167,18 +185,21 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 ## 🚨 Problèmes Rencontrés et Solutions
 
 ### Problème 1: Symbole soustraction
+
 **Contexte:** Différence entre hyphen (-) et minus (−)
 **Impact:** Affichage incohérent, confusion visuelle
 **Solution appliquée:** Unicode minus (U+2212) partout
 **Validation:** À vérifier en test visuel Phase 1.8
 
 ### Problème 2: Boucle infinie génération addition
+
 **Contexte:** Si maxResult trop strict, boucle while infinie
 **Impact:** Freeze application
 **Solution appliquée:** Max 1000 tentatives + fallback
 **Tests requis:** Edge cases contraintes impossibles
 
 ### Problème 3: Stats multiplication existantes
+
 **Contexte:** ~100+ utilisateurs avec historique stats
 **Impact:** Ne pas perdre données utilisateurs
 **Solution appliquée:** Double-write R1 + migration R2
@@ -189,6 +210,7 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 ## 📚 Connaissances Techniques Acquises
 
 ### Structure Stats Actuelle
+
 ```javascript
 // localStorage.multiplicationStats
 {
@@ -198,6 +220,7 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 ```
 
 ### Nouvelle Structure Stats (R1)
+
 ```javascript
 // localStorage.operationStats
 {
@@ -208,24 +231,26 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 ```
 
 **Différences clés:**
+
 - Clé format change: `3x5` → `3×5` (symbole Unicode)
 - Ajout champs: `operator`, `a`, `b`, `lastAttempt`
 - Pas de fusion paires commutatives (3×5 ≠ 5×3)
 
 ### Contraintes Opérations
 
-| Opération | Contraintes Génération | Raison |
-|-----------|------------------------|--------|
-| × | Aucune | Tables classiques |
-| + | a + b ≤ maxResult | Limiter taille résultat |
-| − | a ≥ b (résultat ≥ 0) | Éviter négatifs (trop dur débutants) |
-| ÷ (R3) | b ≠ 0, a % b = 0 | Division entière uniquement |
+| Opération | Contraintes Génération | Raison                               |
+| --------- | ---------------------- | ------------------------------------ |
+| ×         | Aucune                 | Tables classiques                    |
+| +         | a + b ≤ maxResult      | Limiter taille résultat              |
+| −         | a ≥ b (résultat ≥ 0)   | Éviter négatifs (trop dur débutants) |
+| ÷ (R3)    | b ≠ 0, a % b = 0       | Division entière uniquement          |
 
 ---
 
 ## 🎯 Objectifs Prochaine Session
 
 ### Priorité 1: Phase 1.2 - Stats Unifiées
+
 - [ ] Créer `js/core/operation-stats.js`
 - [ ] Implémenter `recordOperationResult(operator, a, b, isCorrect)`
 - [ ] Implémenter `getOperationStats(operator, a, b)`
@@ -234,6 +259,7 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 - [ ] Script migration `migrateMultiplicationStats()`
 
 ### Priorité 2: Tests Phase 1.1 (peut être //)
+
 - [ ] Tests unitaires Operation.js (classe abstraite)
 - [ ] Tests Multiplication.compute() et generateOperands()
 - [ ] Tests Addition contraintes maxResult
@@ -245,6 +271,7 @@ Phase 1.8: QA finale               [░░░░░░░░░░░░░░�
 ## 📋 Checklist Avant Commit
 
 Avant chaque commit, vérifier:
+
 - [ ] Code formaté (`npm run format`)
 - [ ] Pas d'erreurs lint (`npm run lint`)
 - [ ] JSDoc complet sur fonctions publiques
@@ -256,6 +283,7 @@ Avant chaque commit, vérifier:
 ## 🔗 Fichiers Clés du Projet
 
 ### Créés dans cette branche
+
 - `PLAN_MULTI_OPERATIONS.md` - Plan détaillé complet
 - `SUIVI_MULTI_OPERATIONS.md` - Ce fichier (journal de bord)
 - `js/core/operations/Operation.js` - Classe abstraite
@@ -265,6 +293,7 @@ Avant chaque commit, vérifier:
 - `js/core/operations/OperationRegistry.js`
 
 ### À modifier prochainement
+
 - `js/questionGenerator.js` - Phase 1.3
 - `js/modes/QuizMode.js` - Phase 1.4
 - `js/modes/ChallengeMode.js` - Phase 1.4
@@ -273,6 +302,7 @@ Avant chaque commit, vérifier:
 - `assets/translations/es.json` - Phase 1.5
 
 ### Référence architecture existante
+
 - `js/core/GameMode.js` - Classe de base modes
 - `js/core/mult-stats.js` - Stats multiplication actuelles
 - `js/core/storage.js` - Abstraction localStorage
