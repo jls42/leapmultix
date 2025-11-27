@@ -62,6 +62,7 @@ describe('Speech audio sync initialization', () => {
       speak: speakMock,
       speaking: false,
       pending: false,
+      getVoices: jest.fn(() => []),
     };
     globalThis.SpeechSynthesisUtterance = function SpeechSynthesisUtterance(text) {
       this.text = String(text ?? '');

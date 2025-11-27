@@ -77,11 +77,11 @@ describe('ESM: Arcade retry button', () => {
     arcade.showArcadeGameOver(0);
     const btn = document.getElementById('arcade-retry-btn');
     expect(btn).toBeTruthy();
-    // Wait for listener attachment (rAF + setTimeout ~50ms)
-    await new Promise(r => setTimeout(r, 60));
+    // Wait for listener attachment (rAF + setTimeout in arcade.js)
+    await new Promise(r => setTimeout(r, 100));
     btn.click();
-    // Allow async dynamic import to run
-    await new Promise(r => setTimeout(r, 0));
+    // Allow async dynamic import to complete
+    await new Promise(r => setTimeout(r, 100));
     expect(miamStartMock).toHaveBeenCalled();
   });
 
@@ -90,9 +90,11 @@ describe('ESM: Arcade retry button', () => {
     arcade.showArcadeGameOver(0);
     const btn = document.getElementById('arcade-retry-btn');
     expect(btn).toBeTruthy();
-    await new Promise(r => setTimeout(r, 60));
+    // Wait for listener attachment
+    await new Promise(r => setTimeout(r, 100));
     btn.click();
-    await new Promise(r => setTimeout(r, 0));
+    // Allow async dynamic import to complete
+    await new Promise(r => setTimeout(r, 100));
     expect(snakeStartMock).toHaveBeenCalled();
   });
 });

@@ -1,8 +1,8 @@
 # Statut d'implémentation : Support Multi-Opérations
 
 **Branche :** `feat/multi-operations-support`
-**Date :** 2025-01-26
-**Statut global :** ✅ Phase 1.6 complète, Phase 1.7-1.8 à faire
+**Date :** 2025-01-27
+**Statut global :** ✅ Phase 1.7 complète, Phase 1.8 en cours
 
 ---
 
@@ -152,40 +152,69 @@ js/userManager.js                 # Refresh sélecteur sur selectUser()
 
 ---
 
-## ⏳ Phase 1.7-1.8 : À faire (R1 final)
+## ✅ Phase 1.7 : Tests unitaires - COMPLÈTE
 
-### Phase 1.7 : Tests unitaires
-```bash
-# Tests à écrire dans tests/__tests__/
-
-# 1. Operations
-tests/__tests__/operations/Operation.test.js
-  - compute() pour ×, +, −
-  - generateOperands() avec contraintes
-  - isValid() pour chaque opération
-  - getSupportedTypes()
-
-# 2. Stats
-tests/__tests__/operation-stats.test.js
-  - recordOperationResult()
-  - getOperationStats()
-  - Double-write multiplication (legacy compat)
-
-# 3. QuestionGenerator
-tests/__tests__/questionGenerator-multiop.test.js
-  - Génération avec operator='×', '+', '−'
-  - Respect des contraintes par opération
-  - Backward compatibility (table/num vs a/b)
-  - Type 'auto' avec getSupportedTypes()
-
-# 4. Modes
-tests/__tests__/modes/QuizMode-multiop.test.js
-  - Opérateur injecté dans options
-  - Stats recording correct
-  - Feedback adapté (ligne numérique uniquement pour ×)
+**Fichiers créés :**
+```
+tests-esm/operations/
+  └── Operation.test.mjs (36 tests)
 ```
 
-### Phase 1.8 : QA et validation finale
+**Fichiers corrigés :**
+```
+tests-esm/speech.init.test.mjs     # Fix: ajout getVoices() mock
+tests-esm/arcade-retry.esm.test.mjs # Fix: augmentation timeouts (flaky → stable)
+```
+
+**Résultats tests :**
+```bash
+npm run test:esm
+
+Test Suites: 11 passed, 11 total ✅
+Tests:       59 passed, 59 total ✅
+Snapshots:   0 total
+Time:        ~1.75s
+```
+
+**Détails des tests créés :**
+
+### 1. Operation.test.mjs - Classe abstraite (6 tests)
+- ✅ Ne peut pas être instanciée directement
+- ✅ compute() doit être implémentée
+- ✅ generateOperands() doit être implémentée
+- ✅ isValid() valide les opérandes numériques
+- ✅ getSupportedTypes() retourne minimum classic/mcq
+- ✅ formatQuestion() formate selon le type
+
+### 2. Multiplication (10 tests)
+- ✅ Propriétés (symbol, name, spokenForm, unicodeSymbol)
+- ✅ compute() calcule correctement le produit
+- ✅ generateOperands() respecte contraintes easy/medium/hard (1-5, 1-10, 1-12)
+- ✅ getSupportedTypes() inclut tous types (classic, gap, mcq, true_false, problem)
+- ✅ formatQuestion() type problem retourne PROBLEM_TEMPLATE
+
+### 3. Addition (10 tests)
+- ✅ Propriétés et compute()
+- ✅ generateOperands() respecte maxResult (≤10, ≤20, ≤40)
+- ✅ isValid() valide opérandes positifs
+- ✅ isValid() rejette négatifs et overflow
+- ✅ getSupportedTypes() exclut true_false (R1)
+
+### 4. Soustraction (10 tests)
+- ✅ Propriétés et compute()
+- ✅ generateOperands() garantit a ≥ b (pas de négatifs)
+- ✅ isValid() valide uniquement a ≥ b
+- ✅ isValid() rejette opérandes négatifs
+- ✅ getSupportedTypes() exclut true_false (R1)
+
+**Tests corrigés (préexistants) :**
+- ✅ speech.init.test.mjs : Fix getVoices mock (était cassé avant R1)
+- ✅ arcade-retry.esm.test.mjs : Fix timeouts pour stabilité (était flaky)
+
+---
+
+## ⏳ Phase 1.8 : QA et validation finale - EN COURS
+
 ```bash
 # 1. Qualité du code
 npm run format:check    # Prettier
@@ -311,7 +340,7 @@ git log --oneline main..HEAD  # Commits à merger
 
 ## 📌 Checklist avant PR
 
-- [ ] Phase 1.7 : Tests unitaires écrits et passent
+- [x] Phase 1.7 : Tests unitaires écrits et passent ✅
 - [ ] Phase 1.8 : QA complète (lint, format, i18n, manuel)
 - [ ] Tous les commits sont propres et cohérents
 - [ ] README.md mis à jour (nouvelles features)
@@ -325,20 +354,32 @@ git log --oneline main..HEAD  # Commits à merger
 
 ## 📞 Contact et reprise
 
-**État de la branche :**
-- 6 commits locaux propres
-- Pas encore pushée (user a supprimé remote)
-- Prête pour Phase 1.7-1.8
+**État actuel de la branche (2025-01-27) :**
+- ✅ Phase 1.1-1.6 : Complètes (architecture + UI)
+- ✅ Phase 1.7 : Tests unitaires complétés (59/59 tests passent)
+- ⏳ Phase 1.8 : QA et validation finale - EN COURS
+- 6 commits locaux propres + modifications tests non commitées
+- Pas encore pushée (remote supprimé)
 
-**Pour reprendre :**
-1. Lire ce fichier en entier
-2. Exécuter `git log --oneline -10` pour voir les commits
-3. Lancer `npm run serve` et tester manuellement
-4. Commencer Phase 1.7 (tests unitaires)
+**État des tests :**
+```bash
+npm run test:esm
+✅ Test Suites: 11 passed, 11 total
+✅ Tests:       59 passed, 59 total
+⏱️  Time:        ~1.75s
+```
 
-**Fichiers clés à connaître :**
-- `js/core/operations/` : Architecture OOP
-- `js/core/operation-stats.js` : Stats unifiées
+**Prochaines étapes (Phase 1.8) :**
+1. ✅ Lancer `npm run serve` (déjà en cours)
+2. ⏳ Vérifier qualité du code (format:check, lint)
+3. ⏳ Tests manuels (×, +, − sur Quiz/Challenge)
+4. ⏳ Vérifier i18n:compare
+5. ⏳ Commit des tests + message de commit
+6. ⏳ Prêt pour PR vers main
+
+**Fichiers clés :**
+- `js/core/operations/` : Architecture OOP (4 classes)
+- `js/core/operation-stats.js` : Stats unifiées + double-write
 - `js/questionGenerator.js` : Génération multi-op
 - `js/components/operationSelector.js` : Sélecteur UI
-- `js/components/operationModeAvailability.js` : Restrictions modes
+- `tests-esm/operations/Operation.test.mjs` : 36 tests unitaires
