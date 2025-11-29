@@ -682,7 +682,7 @@ export function startMultiplicationInvasion() {
     const questionSpan = document.querySelector('.arcade-mobile-top .arcade-question');
     if (questionSpan) {
       if (currentProblem && currentProblem.a !== undefined && currentProblem.b !== undefined) {
-        questionSpan.textContent = `${currentProblem.a} × ${currentProblem.b} = ?`;
+        questionSpan.textContent = `${currentProblem.a} ${operator} ${currentProblem.b} = ?`;
       } else {
         questionSpan.textContent = '';
       }
@@ -727,6 +727,21 @@ export function startMultiplicationInvasion() {
       Math.min(canvas.width - 64 * (displayWidth / baseWidth), player.x)
     );
   }
+
+  // Helper function to compute correct answer based on operator
+  const computeCorrectAnswer = (op, a, b) => {
+    switch (op) {
+      case '+':
+        return a + b;
+      case '−':
+        return a - b;
+      case '÷':
+        return a / b;
+      case '×':
+      default:
+        return a * b;
+    }
+  };
 
   function handleWrongAlienHit(bIndex, aIndex) {
     if (!isArcadeActive()) return;
@@ -790,7 +805,7 @@ export function startMultiplicationInvasion() {
           bullet.y < alien.y + alienWidth
         ) {
           createExplosion(alien.x + alienWidth / 2, alien.y + alienWidth / 2);
-          const correctVal = currentProblem.a * currentProblem.b;
+          const correctVal = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
           if (alien.value !== correctVal) {
             handleWrongAlienHit(bIndex, aIndex);
           } else {
@@ -813,21 +828,6 @@ export function startMultiplicationInvasion() {
   }
 
   function handleAvatarTransformation() {
-    // Calculer la réponse correcte selon l'opérateur
-    const computeCorrectAnswer = (op, a, b) => {
-      switch (op) {
-        case '+':
-          return a + b;
-        case '−':
-          return a - b;
-        case '÷':
-          return a / b;
-        case '×':
-        default:
-          return a * b;
-      }
-    };
-
     const correctAnswer = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
 
     if (aliens.length === 1 && aliens[0].value === correctAnswer && !showingAvatar && lives > 0) {

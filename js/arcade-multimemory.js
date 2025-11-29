@@ -956,7 +956,7 @@ class MemoryGame {
 
   drawCardFront(card, cardX, cardY, cardWidth, cardHeight) {
     this.ctx.fillStyle = '#FFFFFF';
-    let fontSize = Math.floor(card.type === 'multiplication' ? cardHeight / 3 : cardHeight / 2.5);
+    let fontSize = Math.floor(card.type === 'operation' ? cardHeight / 3 : cardHeight / 2.5);
     this.ctx.font = `bold ${fontSize}px Arial`;
     while (this.ctx.measureText(card.content).width > cardWidth * 0.8 && fontSize > 10) {
       fontSize--;
