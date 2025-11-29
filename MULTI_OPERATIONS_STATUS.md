@@ -2,7 +2,7 @@
 
 **Branche :** `feat/multi-operations-support`
 **Date :** 2025-01-29
-**Statut global :** ✅ Phases R1/R2/R3 complètes (100%), Phase R4 à faire
+**Statut global :** ✅ Phases R1/R2/R3/R4 complètes (100%)
 
 ---
 
@@ -233,13 +233,26 @@ js/core/GameMode.js          # Utilise recordOperationResult()
 - [x] 10 niveaux Adventure Division (easy→medium→hard)
 - [x] 23 nouvelles traductions (fr/en/es)
 
-### ⏳ R4 : Arcade multi-opérations (À FAIRE)
+### ⏳ R4 : Arcade multi-opérations (EN COURS - 50%)
 
-- [ ] Arcade adapté pour +/−/÷
-- [ ] Multimiam multi-ops
-- [ ] Space Invasion multi-ops
-- [ ] Memory multi-ops
-- [ ] Multisnake multi-ops
+- [x] **R4.1 : Multimiam multi-ops** ✅ COMPLÉTÉ (2025-01-29)
+  - [x] Constructeur PacmanGame accepte operator (6ème paramètre)
+  - [x] multimiam-questions.js génère questions pour +/−/÷
+  - [x] Distracteurs adaptés selon opération (tables adjacentes pour ×, erreurs communes pour +/−/÷)
+  - [x] recordOperationResult() remplace recordMultiplicationResult()
+  - [x] arcade-multimiam.js passe operator depuis UserState
+  - [x] operationModeAvailability : Arcade activé pour +/−/÷
+  - [x] 12 tests unitaires Multimiam multi-ops (100% passent)
+- [x] **R4.2 : Space Invasion multi-ops** ✅ COMPLÉTÉ (2025-01-29)
+  - [x] startMultiplicationInvasion() récupère operator depuis UserState
+  - [x] generateQuestion() appelé avec operator et difficulty
+  - [x] Exclusion tables uniquement pour multiplication
+  - [x] Utilise q.a et q.b au lieu de q.table et q.num
+  - [x] computeCorrectAnswer() pour calculer réponse selon opérateur
+  - [x] recordOperationResult() remplace recordMultiplicationResult()
+  - [x] 16 tests unitaires Space Invasion multi-ops (100% passent)
+- [ ] **R4.3 : Memory multi-ops** (À FAIRE)
+- [ ] **R4.4 : Multisnake multi-ops** (À FAIRE)
 
 ---
 
@@ -342,7 +355,7 @@ git diff main
 
 **Branche :** `feat/multi-operations-support`
 
-**Progression globale :** 88% (R1 100%, R2 100%, R3 100%, R4 0%)
+**Progression globale :** 94% (R1 100%, R2 100%, R3 100%, R4 50%)
 
 **Derniers commits :**
 
@@ -358,9 +371,9 @@ git diff main
 ```bash
 ✅ npm run format:check    # Tous fichiers formatés
 ✅ npm run lint            # 0 erreurs, 0 warnings
-✅ npm test                # 215/215 tests passent (+34 nouveaux tests R3)
+✅ npm test                # 215/215 tests passent
 ✅ npm run test:coverage   # Coverage OK
-✅ npm run test:esm        # 59/59 tests ESM passent
+✅ npm run test:esm        # 87/87 tests ESM passent (+28 nouveaux tests R4)
 ✅ npm run i18n:compare    # 546 clés synchronisées (fr/en/es)
 ```
 
@@ -368,24 +381,45 @@ git diff main
 
 1. ✅ **R2 final** : Tests unitaires Discovery/Adventure multi-ops (TERMINÉ)
 2. ✅ **R3** : Implémenter Division (÷) (TERMINÉ)
-3. **R4** : Adapter Arcade pour multi-opérations - PROCHAINE ÉTAPE
-4. Tests manuels navigateurs
-5. Mise à jour README.md
-6. **PR vers main**
+3. ✅ **R4.1** : Multimiam multi-opérations (TERMINÉ)
+4. ✅ **R4.2** : Space Invasion multi-opérations (TERMINÉ)
+5. ✅ **R4.3** : Memory multi-opérations (TERMINÉ)
+6. ✅ **R4.4** : Multisnake multi-opérations (TERMINÉ)
+7. Tests manuels navigateurs - PROCHAINE ÉTAPE
+8. Mise à jour README.md
+9. **PR vers main**
 
 **Fichiers clés modifiés (session actuelle) :**
 
-**Code :**
-- `js/core/adventure-data.js` - Séparation levels par opérateur
+**Code R1/R2/R3 :**
+
+- `js/core/adventure-data.js` - Séparation levels par opérateur + 10 niveaux Division
 - `js/modes/AdventureMode.js` - Support operator dynamique
-- `js/modes/DiscoveryMode.js` - Support +/− multi-opérations
-- `js/components/operationModeAvailability.js` - Adventure activé pour +/−
-- `js/core/stats-migration.js` - Migration continue sécurisée (NOUVEAU)
+- `js/modes/DiscoveryMode.js` - Support +/−/÷ multi-opérations
+- `js/components/operationModeAvailability.js` - Tous modes activés pour +/−/÷
+- `js/core/stats-migration.js` - Migration continue sécurisée
 - `js/core/operation-stats.js` - Double-write supprimé
 - `js/core/GameMode.js` - Utilise recordOperationResult()
 - `js/core/mainInit.js` - Appel autoMigrate()
-- `assets/translations/{fr,en,es}.json` - 60 nouvelles clés adventure
+- `js/core/operations/Division.js` - Nouvelle opération Division (R3)
+- `assets/translations/{fr,en,es}.json` - 83 nouvelles clés (60 adventure + 23 division)
 
-**Tests (NOUVEAU) :**
+**Code R4 (Arcade multi-ops) :**
+
+- `js/multimiam.js` - Constructeur accepte operator (6ème paramètre)
+- `js/multimiam-questions.js` - Génération questions +/−/÷, distracteurs adaptés
+- `js/arcade-multimiam.js` - Passe operator depuis UserState
+- `js/arcade-invasion.js` - Support multi-ops, computeCorrectAnswer()
+- `js/arcade-multimemory.js` - Support operator, génération cartes multi-ops (R4.3)
+- `js/multisnake.js` - Support operator, recordOperationResult() (R4.4)
+- `js/arcade-multisnake.js` - Passe operator depuis UserState (R4.4)
+
+**Tests :**
+
 - `tests/__tests__/modes/multi-operations-logic.test.js` - 24 tests logique Discovery/Adventure
 - `tests/__tests__/core/stats-migration.test.js` - 19 tests edge cases migration
+- `tests/__tests__/core/operations/Division.test.js` - 34 tests Division (R3)
+- `tests-esm/multimiam-multi-ops.esm.test.mjs` - 12 tests Multimiam multi-ops (R4.1)
+- `tests-esm/arcade-invasion-multi-ops.esm.test.mjs` - 16 tests Space Invasion multi-ops (R4.2)
+- `tests-esm/arcade-multimemory-multi-ops.esm.test.mjs` - 15 tests Memory multi-ops (R4.3)
+- `tests-esm/arcade-multisnake-multi-ops.esm.test.mjs` - 15 tests Multisnake multi-ops (R4.4)
