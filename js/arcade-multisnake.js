@@ -13,6 +13,7 @@ import { InfoBar } from './components/infoBar.js';
 import { getDifficultySettings } from './difficulty.js';
 import { startArcadeTimer, showArcadeGameOver, stopArcadeMode } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
+import { UserState } from './core/userState.js';
 // Utilise les helpers arcades via window (arcade.js expose des ponts globaux)
 
 // Instance locale du jeu (remplace window._multisnakeInstance)
@@ -57,6 +58,12 @@ export function startSnakeArcade() {
   setStartingMode('multisnake');
   gameState.gameMode = 'multisnake';
   goToSlide(4);
+
+  // Récupérer l'opérateur sélectionné (support multi-opérations R4.4)
+  const userData = UserState.getCurrentUserData();
+  const operator = userData.preferredOperator || '×';
+
+  console.log('MultiSnake lancé avec opérateur:', operator);
 
   // Nettoyer les anciennes instances de jeux et leurs ressources
   if (_snakeInstance) {
@@ -114,12 +121,13 @@ export function startSnakeArcade() {
 
   // Initialiser le jeu Snake via le module multisnake
   console.log('Initialisation du jeu Snake');
-  _snakeInstance = new SnakeGame('multisnake-canvas', {
+  _snakeInstance = new SnakeGame('multisnake-canvas', 'operation', {
     difficulty: gameState.difficulty || 'moyen',
     speed: 100 + difficultySettings.enemySpeed * 50,
     penaltyPoints: difficultySettings.penalty,
     tables: difficultySettings.tables,
     distractorDistance: difficultySettings.distractorDistance,
+    operator, // R4.4: Support multi-opérations (+, −, ×, ÷)
   });
   console.log('Jeu Snake démarré avec le niveau:', gameState.difficulty || 'moyen');
   _snakeInstance.start();
