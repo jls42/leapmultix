@@ -36,12 +36,12 @@ export class OperationSelector {
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'operation-selector-buttons';
 
-    // Opérations disponibles (R1: ×, +, −)
+    // Opérations disponibles (R1-R3: ×, +, −, ÷)
     const operations = [
       { symbol: '×', key: 'operation_multiplication', enabled: true },
       { symbol: '+', key: 'operation_addition', enabled: true },
       { symbol: '−', key: 'operation_subtraction', enabled: true },
-      { symbol: '÷', key: 'operation_division_coming_soon', enabled: false }, // R3
+      { symbol: '÷', key: 'operation_division', enabled: true }, // R3: Division activée
     ];
 
     operations.forEach(op => {
