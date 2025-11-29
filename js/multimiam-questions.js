@@ -24,39 +24,48 @@ const isFreeLabyrinthCell = (labyrinth, x, y) => {
 export const PacmanQuestions = {
   generateOperation(game) {
     try {
-      // Appliquer l'exclusion globale de tables
+      // Récupérer l'opérateur depuis le jeu (multi-opérations support)
+      const operator = game?.operator || '×';
+
+      // Appliquer l'exclusion globale de tables (uniquement pour multiplication)
       const currentUser = UserManager.getCurrentUser();
-      const excluded = TablePreferences.isGlobalEnabled(currentUser)
-        ? TablePreferences.getActiveExclusions(currentUser)
-        : [];
+      const excluded =
+        operator === '×' && TablePreferences.isGlobalEnabled(currentUser)
+          ? TablePreferences.getActiveExclusions(currentUser)
+          : [];
 
       // Utiliser generateQuestion pour cohérence avec le système centralisé
       const questionData = generateQuestion({
         type: 'classic',
-        excludeTables: excluded,
-        tables: Array.isArray(game?.tables) && game.tables.length > 0 ? game.tables : undefined,
-        forceTable: game?.mode === 'table' && game?.tableNumber ? game.tableNumber : null,
-        minTable: 1,
-        maxTable: 10,
-        minNum: 1,
-        maxNum: 10,
+        operator, // Support multi-opérations (+, −, ×, ÷)
+        difficulty: game?.difficulty || 'medium',
+        excludeTables: operator === '×' ? excluded : [],
+        tables:
+          operator === '×' && Array.isArray(game?.tables) && game.tables.length > 0
+            ? game.tables
+            : undefined,
+        forceTable:
+          operator === '×' && game?.mode === 'table' && game?.tableNumber ? game.tableNumber : null,
       });
 
       return {
-        num1: questionData.table,
-        num2: questionData.num,
-        operator: 'x',
+        num1: questionData.a,
+        num2: questionData.b,
+        operator,
         result: questionData.answer,
       };
     } catch (e) {
       console.error('Erreur generateOperation', e);
-      return { num1: 1, num2: 1, operator: 'x', result: 1 };
+      const operator = game?.operator || '×';
+      return { num1: 1, num2: 1, operator, result: operator === '×' ? 1 : 2 };
     }
   },
 
   generateAnswers(game, correctResult) {
     const answers = [{ value: correctResult, isCorrect: true }];
     const used = new Set([correctResult]);
+    const operator = game?.operator || '×';
+
     const pushIf = v => {
       if (v > 0 && !used.has(v)) {
         answers.push({ value: v, isCorrect: false });
@@ -64,33 +73,54 @@ export const PacmanQuestions = {
       }
     };
 
-    // leurre +/-1
+    // Distracteurs communs à toutes les opérations : ±1, ±2
     pushIf(correctResult - 1);
     pushIf(correctResult + 1);
+    pushIf(correctResult - 2);
+    pushIf(correctResult + 2);
 
-    // inversion chiffres
-    if (correctResult >= 10) {
-      const rev = parseInt(correctResult.toString().split('').reverse().join(''), 10);
-      pushIf(rev);
-    }
-
-    // erreurs tables adjacentes
-    if (game.currentOperation) {
+    // Distracteurs spécifiques à chaque opération
+    if (operator === '×' && game.currentOperation) {
       const { num1, num2 } = game.currentOperation;
+      // Erreurs tables adjacentes
       [(num1 + 1) * num2, (num1 - 1) * num2, num1 * (num2 + 1), num1 * (num2 - 1)].forEach(pushIf);
+      // Inversion chiffres (pour résultats ≥ 10)
+      if (correctResult >= 10) {
+        const rev = parseInt(correctResult.toString().split('').reverse().join(''), 10);
+        pushIf(rev);
+      }
+    } else if (operator === '+' && game.currentOperation) {
+      const { num1, num2 } = game.currentOperation;
+      // Erreurs communes en addition : somme partielle, oubli retenue
+      pushIf(num1 + num2 - 10); // Oubli dizaine
+      pushIf(num1); // Oubli du second terme
+      pushIf(num2); // Oubli du premier terme
+    } else if (operator === '−' && game.currentOperation) {
+      const { num1, num2 } = game.currentOperation;
+      // Erreurs communes en soustraction : inversion (b-a au lieu de a-b)
+      pushIf(num2 - num1);
+      pushIf(num1); // Pas de soustraction
+      pushIf(num1 + num2); // Addition au lieu de soustraction
+    } else if (operator === '÷' && game.currentOperation) {
+      const { num1, num2 } = game.currentOperation;
+      // Erreurs communes en division : inversion, multiples
+      pushIf(num1); // Pas de division
+      pushIf(num2); // Diviseur au lieu du quotient
+      pushIf(correctResult * 2); // Double du quotient
     }
 
-    // erreurs communes
-    [correctResult + 10, correctResult - 10, correctResult + 2, correctResult - 2].forEach(pushIf);
+    // Erreurs communes (tous opérateurs) : ±10
+    pushIf(correctResult + 10);
+    pushIf(correctResult - 10);
 
-    // compléter aléatoire
+    // Compléter avec des valeurs aléatoires proches
     while (answers.length < 4) {
       const rand =
         correctResult + (Math.random() < 0.5 ? -1 : 1) * (Math.floor(Math.random() * 5) + 3);
       pushIf(rand);
     }
 
-    // mélanger sauf la vraie
+    // Mélanger sauf la vraie réponse
     const correct = answers.shift();
     safeShuffleArray(answers);
     answers.splice(Math.floor(Math.random() * 4), 0, correct);

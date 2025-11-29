@@ -15,6 +15,7 @@ import { startArcadeTimer, showArcadeGameOver, stopArcadeMode } from './arcade.j
 import { eventBus } from './core/eventBus.js';
 import { showGameInstructions } from './arcade-common.js';
 import { InfoBar } from './components/infoBar.js';
+import { UserState } from './core/userState.js';
 // Utilise les helpers ESM
 
 // Instance locale du jeu (remplace window.multimiamGame)
@@ -134,6 +135,10 @@ export function startPacmanArcade() {
     const tableNumber = gameState.tableNumber || null;
     const mode = tableNumber ? 'table' : 'operation';
 
+    // Récupérer l'opérateur sélectionné (support multi-opérations)
+    const userData = UserState.getCurrentUserData();
+    const operator = userData.preferredOperator || '×';
+
     // Récupérer l'avatar courant
     const playerAvatar =
       typeof gameState !== 'undefined' && gameState.avatar ? gameState.avatar : 'fox';
@@ -143,11 +148,19 @@ export function startPacmanArcade() {
       gameState.difficulty,
       '(valeur:',
       difficultyValue,
-      ')'
+      '), opérateur:',
+      operator
     );
 
-    // Passage des paramètres au constructeur PacmanGame
-    _pacmanGame = new PacmanGame('multimiam-canvas', difficultyValue, mode, tableNumber);
+    // Passage des paramètres au constructeur PacmanGame (avec operator pour multi-ops)
+    _pacmanGame = new PacmanGame(
+      'multimiam-canvas',
+      difficultyValue,
+      mode,
+      tableNumber,
+      0,
+      operator
+    );
 
     // Ajout des paramètres de difficulté avancés
     _pacmanGame.difficultySettings = difficultySettings;

@@ -486,14 +486,16 @@ describe('Multi-Operations Logic Validation', () => {
     it('devrait isoler données par opération', () => {
       const verifyIsolation = (progress, operator) => {
         const operatorProgress = progress.adventureProgressByOperator[operator];
-        return Object.keys(operatorProgress).length === 0 ||
+        return (
+          Object.keys(operatorProgress).length === 0 ||
           Object.values(operatorProgress).every(level => {
             if (operator === '×') {
               return level.table !== undefined;
             } else {
               return level.difficulty !== undefined;
             }
-          });
+          })
+        );
       };
 
       const progress = {

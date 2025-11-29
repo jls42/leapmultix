@@ -12,17 +12,25 @@ import { initPacmanEngine } from './multimiam-engine.js';
 import { initPacmanControls } from './multimiam-controls.js';
 import { initPacmanUI } from './multimiam-ui.js';
 import { showArcadeGameOver } from './arcade.js';
-import { recordMultiplicationResult } from './core/mult-stats.js';
+import { recordOperationResult } from './core/operation-stats.js';
 import { cleanupGameResources } from './game-cleanup.js';
 
 export class PacmanGame {
-  constructor(canvasId, difficulty = 1, mode = 'operation', tableNumber = null, levelIndex = 0) {
+  constructor(
+    canvasId,
+    difficulty = 1,
+    mode = 'operation',
+    tableNumber = null,
+    levelIndex = 0,
+    operator = '×'
+  ) {
     // Initialisation du jeu
     this.canvasId = canvasId;
     this.difficulty = difficulty;
     this.mode = mode;
     this.tableNumber = tableNumber;
     this.levelIndex = levelIndex;
+    this.operator = operator; // Support multi-opérations (+, −, ×, ÷)
 
     // NE PLUS lire l'avatar ici, se fier à updatePlayerAvatar
     // this.avatarName = window.gameState ? window.gameState.avatar : 'fox';
@@ -630,11 +638,21 @@ export class PacmanGame {
       // Correct dot (should be pellet representing answer)
       if (eaten.isCorrect) {
         // Adaptive learning: record correct result
-        recordMultiplicationResult(this.currentOperation.num1, this.currentOperation.num2, true);
+        recordOperationResult(
+          this.operator,
+          this.currentOperation.num1,
+          this.currentOperation.num2,
+          true
+        );
         this.score += eaten.points;
       } else {
         // Adaptive learning: record incorrect result
-        recordMultiplicationResult(this.currentOperation.num1, this.currentOperation.num2, false);
+        recordOperationResult(
+          this.operator,
+          this.currentOperation.num1,
+          this.currentOperation.num2,
+          false
+        );
         this.lives -= eaten.penalty;
       }
       this.multimiam.isEatingDot = false;

@@ -91,7 +91,7 @@ describe('Stats Migration - Edge Cases', () => {
         '3x5': { attempts: 10, errors: 2 },
         invalid_key: { attempts: 5 },
         '': { attempts: 3 },
-        '999': { attempts: 1 },
+        999: { attempts: 1 },
       };
 
       const migrateMultiplicationStats = () => {
@@ -397,7 +397,8 @@ describe('Stats Migration - Edge Cases', () => {
           return false;
         }
 
-        const lastMigrationDate = migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
+        const lastMigrationDate =
+          migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
         const inactivityThreshold = INACTIVITY_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
         const inactiveSinceLastMigration = now - lastMigrationDate >= inactivityThreshold;
 
@@ -428,7 +429,8 @@ describe('Stats Migration - Edge Cases', () => {
           return false;
         }
 
-        const lastMigrationDate = migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
+        const lastMigrationDate =
+          migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
         const inactivityThreshold = INACTIVITY_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
         const inactiveSinceLastMigration = now - lastMigrationDate >= inactivityThreshold;
 
@@ -456,7 +458,8 @@ describe('Stats Migration - Edge Cases', () => {
         const retentionPeriodElapsed = now >= (migrationFlag.retentionUntil || 0);
         if (!retentionPeriodElapsed) return false;
 
-        const lastMigrationDate = migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
+        const lastMigrationDate =
+          migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
         const inactivityThreshold = INACTIVITY_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
         const inactiveSinceLastMigration = now - lastMigrationDate >= inactivityThreshold;
 
@@ -555,7 +558,8 @@ describe('Stats Migration - Edge Cases', () => {
           return;
         }
 
-        const lastMigrationDate = migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
+        const lastMigrationDate =
+          migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
         const inactivityThreshold = INACTIVITY_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
         const inactiveSinceLastMigration = now - lastMigrationDate >= inactivityThreshold;
 

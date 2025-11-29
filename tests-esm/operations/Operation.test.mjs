@@ -270,13 +270,13 @@ describe('Addition', () => {
   });
 
   describe('getSupportedTypes()', () => {
-    test('supporte classic, mcq, gap, problem (pas true_false en R1)', () => {
+    test('supporte classic, mcq, gap, problem, true_false (R2+)', () => {
       const types = add.getSupportedTypes();
       expect(types).toContain('classic');
       expect(types).toContain('mcq');
       expect(types).toContain('gap');
       expect(types).toContain('problem');
-      expect(types).not.toContain('true_false'); // R2
+      expect(types).toContain('true_false'); // R2: ajouté
     });
   });
 });
@@ -367,13 +367,13 @@ describe('Subtraction', () => {
   });
 
   describe('getSupportedTypes()', () => {
-    test('supporte classic, mcq, gap, problem (pas true_false en R1)', () => {
+    test('supporte classic, mcq, gap, problem, true_false (R2+)', () => {
       const types = sub.getSupportedTypes();
       expect(types).toContain('classic');
       expect(types).toContain('mcq');
       expect(types).toContain('gap');
       expect(types).toContain('problem');
-      expect(types).not.toContain('true_false'); // R2
+      expect(types).toContain('true_false'); // R2: ajouté
     });
   });
 });

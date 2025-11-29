@@ -139,7 +139,9 @@ function updateMigrationFlag(migrated, skipped, errors) {
       totalErrors: errors,
       migrationCount: 1,
     });
-    console.log(`📅 Première migration enregistrée (rétention jusqu'au ${new Date(now + RETENTION_DAYS * 24 * 60 * 60 * 1000).toLocaleDateString()})`);
+    console.log(
+      `📅 Première migration enregistrée (rétention jusqu'au ${new Date(now + RETENTION_DAYS * 24 * 60 * 60 * 1000).toLocaleDateString()})`
+    );
     return;
   }
 

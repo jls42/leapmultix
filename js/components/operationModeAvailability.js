@@ -1,18 +1,18 @@
 /**
  * Gère la disponibilité des modes de jeu selon l'opération sélectionnée
- * R2: Discovery et Adventure disponibles pour ×, +, −
- * Arcade reste exclusif à la multiplication (R4)
+ * R2: Discovery et Adventure disponibles pour ×, +, −, ÷
+ * R4: Arcade disponible pour toutes les opérations
  */
 
 import { UserState } from '../core/userState.js';
 import { getTranslation } from '../utils-es6.js';
 
-// Modes disponibles par opération (R2/R3)
+// Modes disponibles par opération (R2/R3/R4)
 const MODE_AVAILABILITY = {
   '×': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'],
-  '+': ['discovery', 'quiz', 'challenge', 'adventure'],
-  '−': ['discovery', 'quiz', 'challenge', 'adventure'],
-  '÷': ['discovery', 'quiz', 'challenge', 'adventure'], // R3: Division activée
+  '+': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'], // R4: Arcade multi-ops
+  '−': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'], // R4: Arcade multi-ops
+  '÷': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'], // R4: Arcade multi-ops
 };
 
 // Messages d'indisponibilité
