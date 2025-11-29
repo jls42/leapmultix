@@ -2,7 +2,7 @@
 
 **Branche :** `feat/multi-operations-support`
 **Date :** 2025-01-29
-**Statut global :** ✅ Phase R1 complète (100%), Phase R2 complète (100%)
+**Statut global :** ✅ Phases R1/R2/R3 complètes (100%), Phase R4 à faire
 
 ---
 
@@ -221,14 +221,17 @@ js/core/GameMode.js          # Utilise recordOperationResult()
 - [x] Tests unitaires Discovery/Adventure multi-ops (24 tests logiques)
 - [x] Tests migration stats edge cases (19 tests)
 
-### ⏳ R3 : Division (À FAIRE)
+### ✅ R3 : Division (COMPLÈTE - 100%)
 
-- [ ] Division.js implémentation
-- [ ] Contraintes : résultat entier uniquement (a % b = 0)
-- [ ] Questions division (classic, mcq, gap, problem)
-- [ ] Templates problem division (traductions)
-- [ ] Tests division
-- [ ] Quiz/Challenge/Discovery/Adventure division
+- [x] Division.js avec contrainte a % b = 0 (résultat entier uniquement)
+- [x] Génération opérandes: b (diviseur) × q (quotient) = a (dividende)
+- [x] Ranges par difficulté: easy (÷2-5), medium (÷2-10), hard (÷2-12)
+- [x] questionGenerator adapté pour division
+- [x] Templates problem division (3 templates × 3 langues)
+- [x] 34 tests unitaires Division (100% passent)
+- [x] Division activée dans tous les modes (Quiz/Challenge/Discovery/Adventure)
+- [x] 10 niveaux Adventure Division (easy→medium→hard)
+- [x] 23 nouvelles traductions (fr/en/es)
 
 ### ⏳ R4 : Arcade multi-opérations (À FAIRE)
 
@@ -339,7 +342,7 @@ git diff main
 
 **Branche :** `feat/multi-operations-support`
 
-**Progression globale :** 75% (R1 100%, R2 100%, R3 0%, R4 0%)
+**Progression globale :** 88% (R1 100%, R2 100%, R3 100%, R4 0%)
 
 **Derniers commits :**
 
@@ -355,17 +358,17 @@ git diff main
 ```bash
 ✅ npm run format:check    # Tous fichiers formatés
 ✅ npm run lint            # 0 erreurs, 0 warnings
-✅ npm test                # 181/181 tests passent (+43 nouveaux tests R2)
+✅ npm test                # 215/215 tests passent (+34 nouveaux tests R3)
 ✅ npm run test:coverage   # Coverage OK
 ✅ npm run test:esm        # 59/59 tests ESM passent
-✅ npm run i18n:compare    # 525 clés synchronisées (fr/en/es)
+✅ npm run i18n:compare    # 546 clés synchronisées (fr/en/es)
 ```
 
 **Prochaines étapes :**
 
 1. ✅ **R2 final** : Tests unitaires Discovery/Adventure multi-ops (TERMINÉ)
-2. **R3** : Implémenter Division (÷) - PROCHAINE ÉTAPE
-3. **R4** : Adapter Arcade pour multi-opérations
+2. ✅ **R3** : Implémenter Division (÷) (TERMINÉ)
+3. **R4** : Adapter Arcade pour multi-opérations - PROCHAINE ÉTAPE
 4. Tests manuels navigateurs
 5. Mise à jour README.md
 6. **PR vers main**
