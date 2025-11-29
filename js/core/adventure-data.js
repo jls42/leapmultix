@@ -1,4 +1,5 @@
-export const ADVENTURE_LEVELS = [
+// Niveaux d'aventure pour la multiplication (tables 1-10)
+export const ADVENTURE_LEVELS_MULTIPLICATION = [
   {
     id: 1,
     table: 1,
@@ -80,3 +81,191 @@ export const ADVENTURE_LEVELS = [
     requiredStars: 18,
   },
 ];
+
+// Niveaux d'aventure pour l'addition (progression de difficulté)
+export const ADVENTURE_LEVELS_ADDITION = [
+  {
+    id: 1,
+    difficulty: 'easy',
+    nameKey: 'addition_level_1_name',
+    descKey: 'addition_level_1_desc',
+    image: 'forest.png',
+    requiredStars: 0,
+  },
+  {
+    id: 2,
+    difficulty: 'easy',
+    nameKey: 'addition_level_2_name',
+    descKey: 'addition_level_2_desc',
+    image: 'river.png',
+    requiredStars: 2,
+  },
+  {
+    id: 3,
+    difficulty: 'easy',
+    nameKey: 'addition_level_3_name',
+    descKey: 'addition_level_3_desc',
+    image: 'forest.png',
+    requiredStars: 4,
+  },
+  {
+    id: 4,
+    difficulty: 'medium',
+    nameKey: 'addition_level_4_name',
+    descKey: 'addition_level_4_desc',
+    image: 'river.png',
+    requiredStars: 6,
+  },
+  {
+    id: 5,
+    difficulty: 'medium',
+    nameKey: 'addition_level_5_name',
+    descKey: 'addition_level_5_desc',
+    image: 'forest.png',
+    requiredStars: 8,
+  },
+  {
+    id: 6,
+    difficulty: 'medium',
+    nameKey: 'addition_level_6_name',
+    descKey: 'addition_level_6_desc',
+    image: 'river.png',
+    requiredStars: 10,
+  },
+  {
+    id: 7,
+    difficulty: 'hard',
+    nameKey: 'addition_level_7_name',
+    descKey: 'addition_level_7_desc',
+    image: 'forest.png',
+    requiredStars: 12,
+  },
+  {
+    id: 8,
+    difficulty: 'hard',
+    nameKey: 'addition_level_8_name',
+    descKey: 'addition_level_8_desc',
+    image: 'river.png',
+    requiredStars: 14,
+  },
+  {
+    id: 9,
+    difficulty: 'hard',
+    nameKey: 'addition_level_9_name',
+    descKey: 'addition_level_9_desc',
+    image: 'forest.png',
+    requiredStars: 16,
+  },
+  {
+    id: 10,
+    difficulty: 'hard',
+    nameKey: 'addition_level_10_name',
+    descKey: 'addition_level_10_desc',
+    image: 'river.png',
+    requiredStars: 18,
+  },
+];
+
+// Niveaux d'aventure pour la soustraction (progression de difficulté)
+export const ADVENTURE_LEVELS_SUBTRACTION = [
+  {
+    id: 1,
+    difficulty: 'easy',
+    nameKey: 'subtraction_level_1_name',
+    descKey: 'subtraction_level_1_desc',
+    image: 'forest.png',
+    requiredStars: 0,
+  },
+  {
+    id: 2,
+    difficulty: 'easy',
+    nameKey: 'subtraction_level_2_name',
+    descKey: 'subtraction_level_2_desc',
+    image: 'river.png',
+    requiredStars: 2,
+  },
+  {
+    id: 3,
+    difficulty: 'easy',
+    nameKey: 'subtraction_level_3_name',
+    descKey: 'subtraction_level_3_desc',
+    image: 'forest.png',
+    requiredStars: 4,
+  },
+  {
+    id: 4,
+    difficulty: 'medium',
+    nameKey: 'subtraction_level_4_name',
+    descKey: 'subtraction_level_4_desc',
+    image: 'river.png',
+    requiredStars: 6,
+  },
+  {
+    id: 5,
+    difficulty: 'medium',
+    nameKey: 'subtraction_level_5_name',
+    descKey: 'subtraction_level_5_desc',
+    image: 'forest.png',
+    requiredStars: 8,
+  },
+  {
+    id: 6,
+    difficulty: 'medium',
+    nameKey: 'subtraction_level_6_name',
+    descKey: 'subtraction_level_6_desc',
+    image: 'river.png',
+    requiredStars: 10,
+  },
+  {
+    id: 7,
+    difficulty: 'hard',
+    nameKey: 'subtraction_level_7_name',
+    descKey: 'subtraction_level_7_desc',
+    image: 'forest.png',
+    requiredStars: 12,
+  },
+  {
+    id: 8,
+    difficulty: 'hard',
+    nameKey: 'subtraction_level_8_name',
+    descKey: 'subtraction_level_8_desc',
+    image: 'river.png',
+    requiredStars: 14,
+  },
+  {
+    id: 9,
+    difficulty: 'hard',
+    nameKey: 'subtraction_level_9_name',
+    descKey: 'subtraction_level_9_desc',
+    image: 'forest.png',
+    requiredStars: 16,
+  },
+  {
+    id: 10,
+    difficulty: 'hard',
+    nameKey: 'subtraction_level_10_name',
+    descKey: 'subtraction_level_10_desc',
+    image: 'river.png',
+    requiredStars: 18,
+  },
+];
+
+// Export par défaut pour compatibilité (multiplication)
+export const ADVENTURE_LEVELS = ADVENTURE_LEVELS_MULTIPLICATION;
+
+/**
+ * Récupère les niveaux d'aventure selon l'opération
+ * @param {string} operator - Symbole de l'opération ('×', '+', '−')
+ * @returns {Array} Liste des niveaux
+ */
+export function getAdventureLevelsByOperator(operator) {
+  switch (operator) {
+    case '+':
+      return ADVENTURE_LEVELS_ADDITION;
+    case '−':
+      return ADVENTURE_LEVELS_SUBTRACTION;
+    case '×':
+    default:
+      return ADVENTURE_LEVELS_MULTIPLICATION;
+  }
+}

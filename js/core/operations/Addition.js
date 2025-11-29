@@ -85,9 +85,8 @@ export class Addition extends Operation {
    * @returns {string[]}
    */
   getSupportedTypes() {
-    // R1: classic, mcq, gap, problem
-    // R2: ajouter 'true_false'
-    return ['classic', 'mcq', 'gap', 'problem'];
+    // R2: ajout de 'true_false'
+    return ['classic', 'mcq', 'gap', 'problem', 'true_false'];
   }
 
   /**

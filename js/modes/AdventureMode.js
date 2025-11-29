@@ -10,7 +10,7 @@
  */
 
 import { GameMode } from '../core/GameMode.js';
-import { ADVENTURE_LEVELS } from '../core/adventure-data.js';
+import { getAdventureLevelsByOperator } from '../core/adventure-data.js';
 import { createSafeImage, createSafeElement } from '../security-utils.js';
 import {
   getTranslation,
@@ -41,13 +41,18 @@ export class AdventureMode extends GameMode {
       initialLives: 3,
     });
 
-    // Définition des niveaux d'aventure
-    this.adventureLevels = ADVENTURE_LEVELS.map(level => ({ ...level, completed: false }));
+    // Récupérer l'opérateur actuel depuis UserState
+    const userData = UserState.getCurrentUserData();
+    this.operator = userData?.preferredOperator || '×';
+
+    // Charger les niveaux appropriés selon l'opération
+    const levels = getAdventureLevelsByOperator(this.operator);
+    this.adventureLevels = levels.map(level => ({ ...level, completed: false }));
 
     // État spécifique à l'Adventure
     this.currentLevel = null;
     this.totalStars = 0;
-    this.remainingMultiplicands = [];
+    this.remainingOperands = []; // Plus générique que remainingMultiplicands
     this.phase = 'selection'; // selection, playing
   }
 
@@ -234,12 +239,23 @@ export class AdventureMode extends GameMode {
     this.currentLevel = this.adventureLevels.find(level => level.id === levelId);
     if (!this.currentLevel) return;
 
-    console.log(`🏰 Démarrage niveau Adventure ${levelId} (table ${this.currentLevel.table})`);
+    const levelInfo =
+      this.operator === '×'
+        ? `table ${this.currentLevel.table}`
+        : `difficulté ${this.currentLevel.difficulty}`;
+    console.log(`🏰 Démarrage niveau Adventure ${levelId} (${levelInfo})`);
 
     // Réinitialiser l'état pour le niveau
     this.resetState();
     this.state.lives = this.config.initialLives;
-    this.remainingMultiplicands = Array.from({ length: 10 }, (_, i) => i + 1);
+
+    // Pour la multiplication: multiplicandes 1-10
+    // Pour addition/soustraction: on génère différemment (voir getQuestionOptions)
+    if (this.operator === '×') {
+      this.remainingOperands = Array.from({ length: 10 }, (_, i) => i + 1);
+    } else {
+      this.remainingOperands = Array.from({ length: 10 }, (_, i) => i + 1);
+    }
 
     // Passer en phase de jeu
     this.phase = 'playing';
@@ -316,18 +332,29 @@ export class AdventureMode extends GameMode {
   getQuestionOptions() {
     if (!this.currentLevel) return super.getQuestionOptions();
 
-    // Choisir un multiplicande parmi ceux restants
-    if (this.remainingMultiplicands.length === 0) {
-      this.remainingMultiplicands = Array.from({ length: 10 }, (_, i) => i + 1);
+    // Pour la multiplication: utiliser table et multiplicande
+    if (this.operator === '×') {
+      // Choisir un multiplicande parmi ceux restants
+      if (this.remainingOperands.length === 0) {
+        this.remainingOperands = Array.from({ length: 10 }, (_, i) => i + 1);
+      }
+
+      const randomIndex = Math.floor(Math.random() * this.remainingOperands.length);
+      const multiplicand = this.remainingOperands.splice(randomIndex, 1)[0];
+
+      return {
+        type: 'mcq',
+        operator: this.operator,
+        forceTable: this.currentLevel.table,
+        forceNum: multiplicand,
+      };
     }
 
-    const randomIndex = Math.floor(Math.random() * this.remainingMultiplicands.length);
-    const multiplicand = this.remainingMultiplicands.splice(randomIndex, 1)[0];
-
+    // Pour addition et soustraction: utiliser la difficulté du niveau
     return {
       type: 'mcq',
-      forceTable: this.currentLevel.table,
-      forceNum: multiplicand,
+      operator: this.operator,
+      difficulty: this.currentLevel.difficulty || 'easy',
     };
   }
 
@@ -370,13 +397,23 @@ export class AdventureMode extends GameMode {
   displayQuestion() {
     if (!this.state.currentQuestion || !this.questionElement) return;
 
-    const { table, num } = this.state.currentQuestion;
+    const question = this.state.currentQuestion;
+    const operator = question.operator || this.operator;
 
-    // Inversion aléatoire pour commutativité
-    if (Math.random() < 0.5) {
-      this.questionElement.textContent = `${num} × ${table} = ?`;
+    // Récupérer a et b avec fallback pour compatibilité multiplication
+    const a = question.a ?? question.table;
+    const b = question.b ?? question.num;
+
+    // Pour la multiplication et l'addition: inversion aléatoire (commutativité)
+    if (operator === '×' || operator === '+') {
+      if (Math.random() < 0.5) {
+        this.questionElement.textContent = `${b} ${operator} ${a} = ?`;
+      } else {
+        this.questionElement.textContent = `${a} ${operator} ${b} = ?`;
+      }
     } else {
-      this.questionElement.textContent = `${table} × ${num} = ?`;
+      // Pour la soustraction: pas d'inversion (non commutative)
+      this.questionElement.textContent = `${a} ${operator} ${b} = ?`;
     }
 
     this.displayOptions();
@@ -419,9 +456,11 @@ export class AdventureMode extends GameMode {
       // Déplacer le personnage
       this.moveAdventureCharacter();
 
-      // Mettre à jour le défi quotidien
-      const { table, num } = this.state.currentQuestion;
-      updateDailyChallengeProgress(table, num);
+      // Mettre à jour le défi quotidien (seulement pour multiplication)
+      if (this.operator === '×') {
+        const { table, num } = this.state.currentQuestion;
+        updateDailyChallengeProgress(table, num);
+      }
 
       // Vérifier si le niveau est terminé
       if (this.state.questionCount >= this.config.maxQuestions) {
@@ -561,26 +600,36 @@ export class AdventureMode extends GameMode {
   saveAdventureProgress(stars) {
     const userData = UserState.getCurrentUserData();
 
-    if (!userData.adventureProgress) {
-      userData.adventureProgress = {};
+    // Séparer la progression par opération
+    if (!userData.adventureProgressByOperator) {
+      userData.adventureProgressByOperator = {};
+    }
+    if (!userData.adventureProgressByOperator[this.operator]) {
+      userData.adventureProgressByOperator[this.operator] = {};
     }
 
+    const operatorProgress = userData.adventureProgressByOperator[this.operator];
+
     // Sauvegarder ou mettre à jour le niveau
-    const existingProgress = userData.adventureProgress[this.currentLevel.id];
+    const existingProgress = operatorProgress[this.currentLevel.id];
     const bestStars = existingProgress ? Math.max(existingProgress.stars, stars) : stars;
 
-    userData.adventureProgress[this.currentLevel.id] = {
+    operatorProgress[this.currentLevel.id] = {
       completed: stars > 0,
       stars: bestStars,
-      table: this.currentLevel.table,
+      table: this.currentLevel.table, // Pour multiplication
+      difficulty: this.currentLevel.difficulty, // Pour addition/soustraction
       lastPlayed: Date.now(),
       attempts: (existingProgress?.attempts || 0) + 1,
     };
 
-    if (!userData.starsByTable) userData.starsByTable = {};
-    const currentTableStars = Number(userData.starsByTable[this.currentLevel.table]) || 0;
-    if (bestStars > currentTableStars) {
-      userData.starsByTable[this.currentLevel.table] = bestStars;
+    // Pour la multiplication: conserver l'ancien système starsByTable (compatibilité)
+    if (this.operator === '×') {
+      if (!userData.starsByTable) userData.starsByTable = {};
+      const currentTableStars = Number(userData.starsByTable[this.currentLevel.table]) || 0;
+      if (bestStars > currentTableStars) {
+        userData.starsByTable[this.currentLevel.table] = bestStars;
+      }
     }
 
     // Marquer le niveau comme complété dans la liste
@@ -589,7 +638,9 @@ export class AdventureMode extends GameMode {
     // Sauvegarder
     UserState.updateUserData(userData);
 
-    console.log(`💾 Progression sauvegardée: Niveau ${this.currentLevel.id}, ${stars} étoiles`);
+    console.log(
+      `💾 Progression sauvegardée: ${this.operator} Niveau ${this.currentLevel.id}, ${stars} étoiles`
+    );
     // Mettre à jour le total d'étoiles après sauvegarde
     try {
       this.calculateTotalStars();
@@ -734,15 +785,20 @@ export class AdventureMode extends GameMode {
     const userData = UserState.getCurrentUserData();
     if (!userData.progressHistory) userData.progressHistory = [];
 
-    const { table, num } = this.state.currentQuestion;
+    const question = this.state.currentQuestion;
+    const a = question.a ?? question.table;
+    const b = question.b ?? question.num;
+    const operator = question.operator || this.operator;
+
     userData.progressHistory.push({
-      question: `${table} × ${num} = ?`,
+      question: `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
       mode: 'adventure',
+      operator: operator,
       level: this.currentLevel.id,
       userAnswer: userAnswer,
-      correctAnswer: this.state.currentQuestion.answer,
+      correctAnswer: question.answer,
     });
 
     // Sauvegarder immédiatement
@@ -755,9 +811,13 @@ export class AdventureMode extends GameMode {
   loadAdventureProgress() {
     const userData = UserState.getCurrentUserData();
 
+    // Charger la progression selon l'opération actuelle
+    const operatorProgress =
+      userData.adventureProgressByOperator?.[this.operator] || userData.adventureProgress || {};
+
     // Mettre à jour l'état des niveaux
     this.adventureLevels.forEach(level => {
-      level.completed = userData.adventureProgress?.[level.id]?.completed || false;
+      level.completed = operatorProgress[level.id]?.completed || false;
     });
   }
 
@@ -768,8 +828,12 @@ export class AdventureMode extends GameMode {
     const userData = UserState.getCurrentUserData();
     this.totalStars = 0;
 
-    if (userData.adventureProgress) {
-      Object.values(userData.adventureProgress).forEach(progress => {
+    // Calculer les étoiles pour l'opération actuelle
+    const operatorProgress =
+      userData.adventureProgressByOperator?.[this.operator] || userData.adventureProgress || {};
+
+    if (operatorProgress) {
+      Object.values(operatorProgress).forEach(progress => {
         this.totalStars += progress.stars || 0;
       });
     }
@@ -803,12 +867,22 @@ export class AdventureMode extends GameMode {
           statusIcon = '🎯';
         }
 
+        // Pour la multiplication: afficher "Table X"
+        // Pour addition/soustraction: afficher "Difficulté: facile/moyen/difficile"
+        let levelSubtitle = '';
+        if (this.operator === '×' && level.table) {
+          levelSubtitle = `${getTranslation('table_label')} ${level.table}`;
+        } else if (level.difficulty) {
+          const difficultyKey = `difficulty_${level.difficulty}`;
+          levelSubtitle = `${getTranslation('difficulty_label')}: ${getTranslation(difficultyKey)}`;
+        }
+
         return `
                 <div class="level-card ${statusClass}" data-level="${level.id}">
                     <div class="level-icon">${statusIcon}</div>
                     <div class="level-info">
                         <h4>${getTranslation(level.nameKey)}</h4>
-                        <p class="level-table">${getTranslation('table_label')} ${level.table}</p>
+                        <p class="level-table">${levelSubtitle}</p>
                         ${isLocked ? `<p class="level-requirement">${level.requiredStars} ⭐</p>` : ''}
                     </div>
                 </div>
@@ -890,7 +964,7 @@ export class AdventureMode extends GameMode {
   cleanup() {
     super.cleanup();
     this.currentLevel = null;
-    this.remainingMultiplicands = [];
+    this.remainingOperands = [];
   }
 }
 

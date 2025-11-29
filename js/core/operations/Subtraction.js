@@ -83,9 +83,8 @@ export class Subtraction extends Operation {
    * @returns {string[]}
    */
   getSupportedTypes() {
-    // R1: classic, mcq, gap, problem
-    // R2: ajouter 'true_false'
+    // R2: ajout de 'true_false'
     // Note: 'gap' pour soustraction a 2 positions possibles (a − _ = c ou _ − b = c)
-    return ['classic', 'mcq', 'gap', 'problem'];
+    return ['classic', 'mcq', 'gap', 'problem', 'true_false'];
   }
 }

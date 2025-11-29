@@ -25,6 +25,7 @@ import {
 import { VideoManager } from '../VideoManager.js';
 import { OperationSelector } from '../components/operationSelector.js';
 import { initModeAvailability } from '../components/operationModeAvailability.js';
+import { autoMigrate } from './stats-migration.js';
 
 const avatarAvailableImages = {
   fox: [1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17],
@@ -320,6 +321,14 @@ async function runInit() {
   const resolvedLang = await prepareLanguage();
   safeUpdateSeoHeroImage(resolvedLang);
   refreshAudioControls();
+
+  // Migration des anciennes stats vers le nouveau format (sécurisé)
+  try {
+    autoMigrate();
+  } catch (error) {
+    logInitWarning('Migration stats échouée (données anciennes préservées)', error);
+  }
+
   initThemes();
   initUserSystems();
   initComponentModules();

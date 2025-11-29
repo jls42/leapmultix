@@ -13,6 +13,7 @@
 import { GameMode } from '../core/GameMode.js';
 import { getTranslation, speak, addArrowKeyNavigation } from '../utils-es6.js';
 import { UserState } from '../core/userState.js';
+import { getOperation } from '../core/operations/OperationRegistry.js';
 
 export class DiscoveryMode extends GameMode {
   constructor() {
@@ -27,27 +28,46 @@ export class DiscoveryMode extends GameMode {
 
     // État spécifique au Discovery
     this.currentTable = null;
+    this.currentLevel = null; // Pour +/− : 'easy', 'medium', 'hard'
     this.phase = 'selection'; // selection, exploration
     this.exploredTables = [];
     this.draggedElement = null;
     this.touchClone = null;
+
+    // Opération courante (injectée depuis UserState)
+    this.operator = '×'; // Default
+    this.operation = null;
   }
 
   /**
    * Initialisation spécifique du Discovery
    */
   async onStart() {
-    // Commencer par la sélection de table
+    // Récupérer l'opérateur depuis UserState
+    const userData = UserState.getCurrentUserData();
+    this.operator = userData?.preferredOperator || '×';
+    this.operation = getOperation(this.operator);
+
+    // Commencer par la sélection de table/niveau
     this.phase = 'selection';
     this.loadExploredTables();
 
-    console.log('🧪 Mode Discovery démarré - Laboratoire des multiplications');
+    console.log(
+      `🧪 Mode Discovery démarré - Laboratoire ${this.operation.name} (${this.operator})`
+    );
   }
 
   /**
    * HTML personnalisé pour le Discovery
    */
   async getCustomHTML() {
+    // S'assurer que l'opérateur est initialisé
+    if (!this.operation) {
+      const userData = UserState.getCurrentUserData();
+      this.operator = userData?.preferredOperator || '×';
+      this.operation = getOperation(this.operator);
+    }
+
     if (this.phase === 'selection') {
       return this.getTableSelectionHTML();
     } else {
@@ -56,10 +76,14 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * HTML de sélection de table
+   * HTML de sélection de table (×) ou niveau (+/−)
    */
   getTableSelectionHTML() {
-    return `
+    const isMultiplication = this.operator === '×';
+
+    if (isMultiplication) {
+      // Mode multiplication : sélection de tables 1-10
+      return `
             <div class="discovery-container">
                 <div class="discovery-intro">
                     <p>${getTranslation('discovery_lab_intro')}</p>
@@ -79,41 +103,101 @@ export class DiscoveryMode extends GameMode {
                 </div>
             </div>
         `;
+    } else {
+      // Mode addition/soustraction : sélection de niveaux de difficulté
+      const levels = [
+        { id: 'easy', icon: '🌱', range: this.operator === '+' ? '≤10' : '1-10' },
+        { id: 'medium', icon: '🌿', range: this.operator === '+' ? '≤20' : '1-20' },
+        { id: 'hard', icon: '🌳', range: this.operator === '+' ? '≤40' : '1-50' },
+      ];
+
+      return `
+            <div class="discovery-container">
+                <div class="discovery-intro">
+                    <p>${getTranslation('discovery_lab_intro_operations')}</p>
+                </div>
+                <div class="lab-selector" id="level-selector">
+                    ${levels
+                      .map(
+                        level => `
+                            <div class="lab-item" data-level="${level.id}">
+                                <div class="lab-icon">${level.icon}</div>
+                                <div class="lab-name">${getTranslation(`difficulty_${level.id}`)}</div>
+                                <div class="lab-range">${level.range}</div>
+                                ${this.exploredTables.includes(level.id) ? '<div class="explored-badge">✅</div>' : ''}
+                            </div>
+                        `
+                      )
+                      .join('')}
+                </div>
+            </div>
+        `;
+    }
   }
 
   /**
-   * HTML d'exploration de table
+   * HTML d'exploration de table (×) ou niveau (+/−)
    */
   getTableExplorationHTML() {
-    if (!this.currentTable) return '';
+    const isMultiplication = this.operator === '×';
+    const identifier = this.currentTable || this.currentLevel;
+
+    // Si pas de table ni de niveau sélectionné, retourner vide (on reste en sélection)
+    if (!identifier) {
+      console.warn('⚠️ getTableExplorationHTML appelé sans table ni niveau');
+      return '';
+    }
+
+    let title, intro;
+
+    if (isMultiplication && this.currentTable) {
+      title = getTranslation('discovery_lab_title', { table: this.currentTable });
+      intro = getTranslation('discovery_explore_intro', { table: this.currentTable });
+    } else if (this.currentLevel) {
+      const operationName =
+        this.operator === '+' ? getTranslation('addition') : getTranslation('subtraction');
+      title = `${getTranslation('discovery_lab_intro_operations')} - ${getTranslation(`difficulty_${this.currentLevel}`)}`;
+      intro = getTranslation('discovery_explore_intro_operation', { operation: operationName });
+    } else {
+      // Fallback si les conditions ne matchent pas
+      console.error('❌ État incohérent dans getTableExplorationHTML');
+      title = 'Discovery';
+      intro = '';
+    }
 
     return `
             <div class="discovery-container">
-                <h2>${getTranslation('discovery_lab_title', { table: this.currentTable })}</h2>
+                <h2>${title}</h2>
                 <div class="lab-experiment">
                     <div class="experiment-intro">
-                        <p class="experiment-description">${getTranslation('discovery_explore_intro', { table: this.currentTable })}</p>
+                        <p class="experiment-description">${intro}</p>
                     </div>
 
-                    <!-- Carrousel des multiplications -->
+                    <!-- Carrousel des opérations -->
                     <div class="multiplication-carousel">
                         ${this.generateCarouselHTML()}
                     </div>
 
                     <!-- Zone d'animation dynamique -->
                     <div class="animation-area">
-                        <div class="animation-title">${getTranslation('discovery_click_multiplication')}</div>
+                        <div class="animation-title">${getTranslation('discovery_click_operation')}</div>
                         <div id="animation-container" class="animation-container">
                             <!-- L'animation sera insérée ici dynamiquement -->
                         </div>
                     </div>
 
-                    <!-- Astuce mnémotechnique -->
+                    ${
+                      isMultiplication && this.currentTable
+                        ? `
+                    <!-- Astuce mnémotechnique (multiplication seulement) -->
                     <div class="mnemonic-card">
                         <h3>${getTranslation('hint')}</h3>
                         <div class="mnemonic-character">🧙‍♂️</div>
                         <p>${getTranslation(`mnemonic_${this.currentTable}`)}</p>
                     </div>
+                    `
+                        : ''
+                    }
                 </div>
 
                 ${this.generateNumberLineHTML()}
@@ -122,7 +206,7 @@ export class DiscoveryMode extends GameMode {
 
                 <div class="button-row">
                     <button id="discovery-table-back-btn" class="btn">
-                        ${getTranslation('back_to_tables')}
+                        ${isMultiplication ? getTranslation('back_to_tables') : getTranslation('back_to_levels')}
                     </button>
                     <button id="discovery-home-btn" class="btn">
                         ${getTranslation('back_to_home')}
@@ -133,43 +217,84 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * Générer le carrousel des multiplications
+   * Générer le carrousel des opérations
    */
   generateCarouselHTML() {
     let html = '';
-    for (let i = 1; i <= 10; i++) {
-      html += `
-                <div class="carousel-item" data-row="${i}" data-action="trigger-animation" data-a="${this.currentTable}" data-b="${i}">
+    const isMultiplication = this.operator === '×';
+
+    if (isMultiplication) {
+      // Mode multiplication : table × 1, table × 2, ..., table × 10
+      for (let i = 1; i <= 10; i++) {
+        const a = this.currentTable;
+        const b = i;
+        const result = this.operation.compute(a, b);
+
+        html += `
+                <div class="carousel-item" data-row="${i}" data-action="trigger-animation" data-a="${a}" data-b="${b}">
                     <div class="card-base card-base--clickable equation-card">
-                        <div class="equation-display">${this.currentTable} × ${i} = ${this.currentTable * i}</div>
+                        <div class="equation-display">${a} ${this.operation.symbol} ${b} = ${result}</div>
                     </div>
                 </div>
             `;
+      }
+    } else {
+      // Mode addition/soustraction : génération d'exemples variés selon le niveau
+      const examples = this.generateOperationExamples(10);
+      examples.forEach((ex, index) => {
+        html += `
+                <div class="carousel-item" data-row="${index + 1}" data-action="trigger-animation" data-a="${ex.a}" data-b="${ex.b}">
+                    <div class="card-base card-base--clickable equation-card">
+                        <div class="equation-display">${ex.a} ${this.operation.symbol} ${ex.b} = ${ex.result}</div>
+                    </div>
+                </div>
+            `;
+      });
     }
+
     return html;
+  }
+
+  /**
+   * Générer des exemples d'opérations pour +/− selon le niveau
+   * @param {number} count - Nombre d'exemples à générer
+   * @returns {Array<{a: number, b: number, result: number}>}
+   */
+  generateOperationExamples(count) {
+    const examples = [];
+    for (let i = 0; i < count; i++) {
+      const { a, b } = this.operation.generateOperands(this.currentLevel);
+      const result = this.operation.compute(a, b);
+      examples.push({ a, b, result });
+    }
+    return examples;
   }
 
   /**
    * Générer la ligne numérique
    */
   generateNumberLineHTML() {
-    const table = this.currentTable;
-    const maxValue = table * 10;
+    const isMultiplication = this.operator === '×';
 
-    return `
+    if (isMultiplication) {
+      const table = this.currentTable;
+      const maxValue = table * 10;
+
+      // Multiplication : afficher les multiples
+      return `
             <div class="number-line-section">
                 <h3>${getTranslation('number_line_title')}</h3>
                 <div class="number-line-container">
                     <div class="number-line">
                         ${Array.from({ length: 11 }, (_, i) => {
-                          const value = table * i;
+                          const value = this.operation.compute(table, i);
                           return `
-                                <div class="number-point ${i === 0 ? 'start' : ''}" 
-                                     data-value="${value}" 
+                                <div class="number-point ${i === 0 ? 'start' : ''}"
+                                     data-value="${value}"
                                      style="left: ${(value / maxValue) * 100}%">
                                     <div class="point-marker"></div>
                                     <div class="point-label">${value}</div>
-                                    <div class="point-equation">${table}×${i}</div>
+                                    <div class="point-equation">${table}${this.operation.symbol}${i}</div>
                                 </div>
                             `;
                         }).join('')}
@@ -177,6 +302,39 @@ export class DiscoveryMode extends GameMode {
                 </div>
             </div>
         `;
+    } else {
+      // Addition/Soustraction : afficher une progression séquentielle
+      const maxValue = this.operator === '+' ? 20 : 10;
+      const step = this.operator === '+' ? 2 : 1;
+      const points = [];
+
+      for (let i = 0; i <= maxValue; i += step) {
+        points.push(i);
+      }
+
+      return `
+            <div class="number-line-section">
+                <h3>${getTranslation('number_line_title')}</h3>
+                <div class="number-line-container">
+                    <div class="number-line">
+                        ${points
+                          .map((value, i) => {
+                            return `
+                                <div class="number-point ${i === 0 ? 'start' : ''}"
+                                     data-value="${value}"
+                                     style="left: ${(value / maxValue) * 100}%">
+                                    <div class="point-marker"></div>
+                                    <div class="point-label">${value}</div>
+                                </div>
+                            `;
+                          })
+                          .join('')}
+                    </div>
+                </div>
+                <p class="number-line-explanation">${this.operator === '+' ? getTranslation('number_line_addition_help') : getTranslation('number_line_subtraction_help')}</p>
+            </div>
+        `;
+    }
   }
 
   /**
@@ -197,40 +355,139 @@ export class DiscoveryMode extends GameMode {
    * Générer l'aide visuelle
    */
   generateVisualAid() {
-    const table = this.currentTable;
+    const isMultiplication = this.operator === '×';
     let html = '';
 
-    for (let multiplicand = 1; multiplicand <= 10; multiplicand++) {
-      const result = table * multiplicand;
-      html += `
-                <div class="visual-item" data-multiplicand="${multiplicand}" data-table="${table}">
-                    <div class="visual-equation">${table} × ${multiplicand} = ${result}</div>
+    if (isMultiplication && this.currentTable) {
+      // Multiplication : afficher table × 1 à table × 10
+      for (let multiplicand = 1; multiplicand <= 10; multiplicand++) {
+        const result = this.operation.compute(this.currentTable, multiplicand);
+        html += `
+                <div class="visual-item" data-multiplicand="${multiplicand}" data-table="${this.currentTable}">
+                    <div class="visual-equation">${this.currentTable} ${this.operation.symbol} ${multiplicand} = ${result}</div>
                     <div class="visual-representation">
-                        ${this.generateVisualObjects(table, multiplicand)}
+                        ${this.generateVisualObjects(this.currentTable, multiplicand)}
                     </div>
                 </div>
             `;
+      }
+    } else if (this.currentLevel) {
+      // Addition/Soustraction : afficher seulement des petits exemples pour la visualisation
+      const examples = this.generateSmallOperationExamples(10);
+      examples.forEach((ex, index) => {
+        html += `
+                <div class="visual-item" data-index="${index}" data-a="${ex.a}" data-b="${ex.b}">
+                    <div class="visual-equation">${ex.a} ${this.operation.symbol} ${ex.b} = ${ex.result}</div>
+                    <div class="visual-representation">
+                        ${this.generateVisualObjects(ex.a, ex.b)}
+                    </div>
+                </div>
+            `;
+      });
     }
 
     return html;
   }
 
   /**
-   * Générer les objets visuels
+   * Générer des exemples avec petits nombres pour la visualisation
+   * @param {number} count - Nombre d'exemples
+   * @returns {Array<{a: number, b: number, result: number}>}
    */
-  generateVisualObjects(table, multiplicand) {
-    let html = '<div class="visual-groups">';
+  generateSmallOperationExamples(count) {
+    const examples = [];
+    for (let i = 0; i < count; i++) {
+      let a, b;
+      // Limiter à des petits nombres pour une visualisation claire (≤10)
+      if (this.operator === '+') {
+        a = this.randomInt(1, 5);
+        b = this.randomInt(1, 5);
+      } else {
+        // Soustraction : a entre 2 et 10, b < a
+        a = this.randomInt(2, 10);
+        b = this.randomInt(1, Math.min(a - 1, 5));
+      }
+      const result = this.operation.compute(a, b);
+      examples.push({ a, b, result });
+    }
+    return examples;
+  }
 
-    // Créer multiplicand groupes de table objets
-    for (let group = 0; group < multiplicand; group++) {
-      html += '<div class="visual-group">';
-      for (let item = 0; item < table; item++) {
+  /**
+   * Générer un nombre aléatoire entre min et max (inclusif)
+   * @param {number} min - Valeur minimale
+   * @param {number} max - Valeur maximale
+   * @returns {number} Nombre aléatoire
+   */
+  randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  /**
+   * Générer les objets visuels selon l'opération
+   */
+  generateVisualObjects(a, b) {
+    const isMultiplication = this.operator === '×';
+    let html = '';
+
+    if (isMultiplication) {
+      // Multiplication : groupes d'objets (limité à 10×10 max)
+      if (a > 10 || b > 10) {
+        return `<div class="visual-message">${a} ${this.operation.symbol} ${b} = ${this.operation.compute(a, b)}</div>`;
+      }
+      html = '<div class="visual-groups">';
+      for (let group = 0; group < b; group++) {
+        html += '<div class="visual-group">';
+        for (let item = 0; item < a; item++) {
+          html += '<span class="visual-object">🔵</span>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+    } else if (this.operator === '+') {
+      // Addition : deux groupes séparés (limité à 10+10 max)
+      if (a > 10 || b > 10) {
+        return `<div class="visual-message">${a} ${this.operation.symbol} ${b} = ${this.operation.compute(a, b)}</div>`;
+      }
+      html = '<div class="visual-groups visual-addition">';
+      html += '<div class="visual-group visual-group-first">';
+      for (let i = 0; i < a; i++) {
+        html += '<span class="visual-object">🟢</span>';
+      }
+      html += '</div>';
+      html += '<div class="visual-operator">+</div>';
+      html += '<div class="visual-group visual-group-second">';
+      for (let i = 0; i < b; i++) {
         html += '<span class="visual-object">🔵</span>';
       }
       html += '</div>';
+      html += '</div>';
+    } else {
+      // Soustraction : afficher `a` objets dont `b` sont barrés, laissant `result` visibles
+      const result = this.operation.compute(a, b);
+
+      // Limiter à des valeurs raisonnables pour la visualisation
+      if (a > 10) {
+        return `<div class="visual-message">${a} ${this.operation.symbol} ${b} = ${result}</div>`;
+      }
+
+      html = '<div class="visual-groups visual-subtraction">';
+      html += '<div class="visual-group visual-group-initial">';
+
+      // Afficher les objets restants (result) en normal
+      for (let i = 0; i < result; i++) {
+        html += '<span class="visual-object">🔵</span>';
+      }
+
+      // Afficher les objets retirés (b) barrés
+      for (let i = 0; i < b; i++) {
+        html += '<span class="visual-object visual-object-removed">🔵</span>';
+      }
+
+      html += '</div>';
+      html += '</div>';
     }
 
-    html += '</div>';
     return html;
   }
 
@@ -238,6 +495,9 @@ export class DiscoveryMode extends GameMode {
    * Générer l'interaction glisser-déposer
    */
   generateInteractionHTML() {
+    const isMultiplication = this.operator === '×';
+    const identifier = this.currentTable || this.currentLevel;
+
     return `
             <div class="optional-interaction">
                 <h3>${getTranslation('manipulation_title')}</h3>
@@ -253,8 +513,8 @@ export class DiscoveryMode extends GameMode {
                       )
                       .join('')}
                 </div>
-                <div class="lab-dropzone" id="drop-zone" data-table="${this.currentTable}">
-                    <div class="dropzone-content">${this.currentTable} × ? = ?</div>
+                <div class="lab-dropzone" id="drop-zone" data-identifier="${identifier}" data-operator="${this.operator}">
+                    <div class="dropzone-content">${isMultiplication ? this.currentTable : '?'} ${this.operation.symbol} ? = ?</div>
                     <div class="dropzone-flask">🧪</div>
                 </div>
             </div>
@@ -275,19 +535,34 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * Configurer la sélection de table
+   * Configurer la sélection de table (×) ou niveau (+/−)
    */
   setupTableSelection() {
-    // Ajouter les écouteurs pour les tables
-    document.querySelectorAll('.lab-item[data-table]').forEach(item => {
-      item.addEventListener('click', () => {
-        const tableNum = parseInt(item.dataset.table);
-        this.showTable(tableNum);
-      });
-    });
+    const isMultiplication = this.operator === '×';
 
-    // Navigation clavier
-    addArrowKeyNavigation(document.getElementById('table-selector'), '.lab-item');
+    if (isMultiplication) {
+      // Mode multiplication : sélection de tables
+      document.querySelectorAll('.lab-item[data-table]').forEach(item => {
+        item.addEventListener('click', () => {
+          const tableNum = parseInt(item.dataset.table);
+          this.showTable(tableNum);
+        });
+      });
+
+      // Navigation clavier
+      addArrowKeyNavigation(document.getElementById('table-selector'), '.lab-item');
+    } else {
+      // Mode addition/soustraction : sélection de niveaux
+      document.querySelectorAll('.lab-item[data-level]').forEach(item => {
+        item.addEventListener('click', () => {
+          const level = item.dataset.level;
+          this.showLevel(level);
+        });
+      });
+
+      // Navigation clavier
+      addArrowKeyNavigation(document.getElementById('level-selector'), '.lab-item');
+    }
   }
 
   /**
@@ -344,10 +619,11 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * Afficher une table spécifique
+   * Afficher une table spécifique (×)
    */
   async showTable(table) {
     this.currentTable = table;
+    this.currentLevel = null;
     this.phase = 'exploration';
 
     // Sauvegarder comme explorée
@@ -363,6 +639,27 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
+   * Afficher un niveau spécifique (+/−)
+   */
+  async showLevel(level) {
+    this.currentLevel = level;
+    this.currentTable = null;
+    this.phase = 'exploration';
+
+    // Sauvegarder comme exploré
+    this.saveExploredTable(level);
+
+    // Mettre à jour l'interface
+    await this.initializeUI();
+
+    // Parler
+    const levelName = getTranslation(`difficulty_${level}`);
+    speak(levelName);
+
+    console.log(`🧪 Exploration du niveau ${level} (${this.operation.name})`);
+  }
+
+  /**
    * Retourner à la sélection de table
    */
   async returnToTableSelection() {
@@ -372,10 +669,10 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * Déclencher l'animation d'une multiplication
+   * Déclencher l'animation d'une opération
    */
   triggerAnimation(a, b) {
-    const result = a * b;
+    const result = this.operation.compute(a, b);
     const animContainer = document.getElementById('animation-container');
 
     if (!animContainer) return;
@@ -392,11 +689,13 @@ export class DiscoveryMode extends GameMode {
 
     const text = document.createElement('div');
     text.className = 'animation-text';
-    text.textContent = a <= 5 ? `${a} × ${b} = ?` : `${a} × ${b}`;
+    text.textContent = `${a} ${this.operation.symbol} ${b} = ?`;
     step.appendChild(text);
 
-    if (a <= 5) {
-      // Petites tables: objets groupés
+    const isMultiplication = this.operator === '×';
+
+    if (isMultiplication && a <= 5) {
+      // Petites tables multiplication: objets groupés
       const objects = document.createElement('div');
       objects.className = 'animation-objects';
       for (let i = 0; i < b; i++) {
@@ -411,8 +710,8 @@ export class DiscoveryMode extends GameMode {
         objects.appendChild(group);
       }
       step.appendChild(objects);
-    } else {
-      // Grandes tables: séquence de calcul
+    } else if (isMultiplication) {
+      // Grandes tables multiplication: séquence de calcul
       const calc = document.createElement('div');
       calc.className = 'animation-calculation';
       const cap = document.createElement('div');
@@ -432,6 +731,13 @@ export class DiscoveryMode extends GameMode {
           calc.appendChild(arrow);
         }
       }
+      step.appendChild(calc);
+    } else {
+      // Addition/Soustraction: affichage simple avec objets
+      const calc = document.createElement('div');
+      calc.className = 'animation-objects';
+      // eslint-disable-next-line no-restricted-properties -- Safe: generateVisualObjects returns internal trusted HTML
+      calc.innerHTML = this.generateVisualObjects(a, b);
       step.appendChild(calc);
     }
 
@@ -461,26 +767,26 @@ export class DiscoveryMode extends GameMode {
     }
 
     // Parler le résultat
-    this.speakMultiplication(a, b);
+    this.speakOperation(a, b);
   }
 
   /**
    * Mettre en évidence l'aide visuelle
    */
-  highlightVisualAid(table, multiplicand) {
+  highlightVisualAid(a, b) {
     // Retirer les highlights précédents
     document.querySelectorAll('.visual-item').forEach(item => {
       item.classList.remove('highlighted');
     });
 
     // Ajouter le highlight à l'élément sélectionné
-    const targetItem = document.querySelector(`[data-multiplicand="${multiplicand}"]`);
+    const targetItem = document.querySelector(`[data-multiplicand="${b}"]`);
     if (targetItem) {
       targetItem.classList.add('highlighted');
     }
 
     // Parler l'équation
-    this.speakMultiplication(table, multiplicand);
+    this.speakOperation(a, b);
   }
 
   /**
@@ -540,12 +846,27 @@ export class DiscoveryMode extends GameMode {
   handleDrop(e) {
     e.preventDefault();
     const dropZone = document.getElementById('drop-zone');
-
     if (!dropZone) return;
 
     dropZone.classList.remove('drag-over');
 
-    // Récupérer le nombre depuis dataTransfer, sinon fallback élément glissé
+    const number = this._extractDroppedNumber(e);
+    if (!number) return;
+
+    const operands = this._calculateDropOperands(dropZone, number);
+    if (!operands) return;
+
+    this._updateDropZone(dropZone, operands);
+    this._showDropSuccess(dropZone);
+    this.speakOperation(operands.a, operands.b);
+    this.draggedElement = null;
+  }
+
+  /**
+   * Extraire le nombre glissé depuis l'événement
+   * @private
+   */
+  _extractDroppedNumber(e) {
     let numberStr = '';
     try {
       if (e.dataTransfer) {
@@ -559,27 +880,53 @@ export class DiscoveryMode extends GameMode {
     if (Number.isNaN(number)) {
       number = parseInt(this.draggedElement?.dataset?.number || '0', 10);
     }
-    if (Number.isNaN(number) || number <= 0) return;
 
-    const table = parseInt(dropZone.dataset.table, 10);
-    if (Number.isNaN(table) || table <= 0) return;
+    return Number.isNaN(number) || number <= 0 ? null : number;
+  }
 
-    const result = table * number;
+  /**
+   * Calculer les opérandes pour le drop
+   * @private
+   */
+  _calculateDropOperands(dropZone, number) {
+    const isMultiplication = this.operator === '×';
+    let a, b;
 
-    // Mettre à jour la zone de dépôt
+    if (isMultiplication) {
+      const table = parseInt(dropZone.dataset.identifier, 10);
+      if (Number.isNaN(table) || table <= 0) return null;
+      a = table;
+      b = number;
+    } else {
+      const { a: genA } = this.operation.generateOperands(this.currentLevel);
+      a = genA;
+      b = number;
+    }
+
+    const result = this.operation.compute(a, b);
+    return { a, b, result };
+  }
+
+  /**
+   * Mettre à jour la zone de dépôt
+   * @private
+   */
+  _updateDropZone(dropZone, operands) {
     const label = dropZone.querySelector('.dropzone-content');
-    if (label) label.textContent = `${table} × ${number} = ${result}`;
+    if (label) {
+      label.textContent = `${operands.a} ${this.operation.symbol} ${operands.b} = ${operands.result}`;
+    }
+  }
 
-    // Animation de succès
+  /**
+   * Afficher l'animation de succès
+   * @private
+   */
+  _showDropSuccess(dropZone) {
     dropZone.classList.add('success');
     setTimeout(() => {
       dropZone.classList.remove('success');
     }, 1000);
-
-    // Parler le résultat
-    this.speakMultiplication(table, number);
-
-    this.draggedElement = null;
   }
 
   /**
@@ -650,12 +997,12 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * Parler une multiplication
+   * Parler une opération
    */
-  speakMultiplication(a, b) {
+  speakOperation(a, b) {
     // En mode Découverte, on veut révéler le résultat à l'élocution
-    const result = a * b;
-    speak(`${a} fois ${b} égale ${result}`);
+    const result = this.operation.compute(a, b);
+    speak(`${a} ${this.operation.spokenForm} ${b} égale ${result}`);
   }
 
   /**

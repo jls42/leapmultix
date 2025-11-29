@@ -1,0 +1,23 @@
+{
+  "summary": {
+    "fr": 525,
+    "en": 525,
+    "es": 525
+  },
+  "missingKeys": {
+    "en": [],
+    "es": []
+  },
+  "extraKeys": {
+    "en": [],
+    "es": []
+  },
+  "emptyValues": {
+    "en": [],
+    "es": []
+  },
+  "typeMismatches": {
+    "en": [],
+    "es": []
+  }
+}

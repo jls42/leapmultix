@@ -1,15 +1,18 @@
 /**
  * Statistiques unifiées pour toutes les opérations arithmétiques
  *
- * Architecture R1 (double-write):
- * - Nouvelle structure: operationStats avec clés "a×b", "a+b", "a−b"
- * - Double écriture temporaire dans multiplicationStats (compatibilité)
- * - Wrappers pour transition douce depuis mult-stats.js
+ * Architecture R2 (migration automatique):
+ * - Structure unique: operationStats avec clés "a×b", "a+b", "a−b"
+ * - Migration automatique stats-migration.js convertit anciennes données au démarrage
+ * - Plus de double-write (supprimé après R1)
+ * - Wrappers de compatibilité conservés pour code legacy
  *
- * R2 (migration complète):
- * - Script de migration one-shot multiplicationStats → operationStats
- * - Suppression double-write et wrappers
- * - Nettoyage ancienne structure
+ * Format des stats:
+ * {
+ *   "3×5": { operator: "×", a: 3, b: 5, attempts: 10, errors: 2, lastAttempt: 1732492800000 },
+ *   "7+4": { operator: "+", a: 7, b: 4, attempts: 5, errors: 0, lastAttempt: 1732493200000 },
+ *   "10−3": { operator: "−", a: 10, b: 3, attempts: 8, errors: 1, lastAttempt: 1732493600000 }
+ * }
  *
  * @module operation-stats
  */
@@ -214,7 +217,7 @@ export function getWeakOperations(operator, threshold = 0.3, minAttempts = 3) {
 
 /**
  * Wrapper de compatibilité pour recordMultiplicationResult
- * R1: Double-write dans les deux structures (nouvelle + ancienne)
+ * R2: Migration automatique gère la conversion, plus besoin de double-write
  *
  * @deprecated Utiliser recordOperationResult('×', table, num, isCorrect) à la place
  * @param {number} table - Table de multiplication (ex: 7 pour table de 7)
@@ -223,30 +226,8 @@ export function getWeakOperations(operator, threshold = 0.3, minAttempts = 3) {
  * @returns {boolean} True si sauvegarde réussie
  */
 export function recordMultiplicationResult(table, num, isCorrect) {
-  // 1. Écriture nouvelle structure
-  const newSuccess = recordOperationResult('×', table, num, isCorrect);
-
-  // 2. Écriture ancienne structure (temporaire R1)
-  try {
-    const old = Storage.loadMultiplicationStats() || {};
-    const key = `${table}x${num}`;
-
-    if (!old[key]) {
-      old[key] = { attempts: 0, errors: 0 };
-    }
-
-    old[key].attempts++;
-    if (!isCorrect) {
-      old[key].errors++;
-    }
-
-    const oldSuccess = Storage.saveMultiplicationStats(old);
-
-    return newSuccess && oldSuccess;
-  } catch (err) {
-    console.warn('[operation-stats] Erreur écriture format ancien (non-bloquant):', err);
-    return newSuccess; // Si échec ancien format, on continue avec nouveau
-  }
+  // Simple wrapper vers le nouveau système (plus de double-write)
+  return recordOperationResult('×', table, num, isCorrect);
 }
 
 /**

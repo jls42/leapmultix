@@ -17,7 +17,7 @@ import {
   updateInfoBar as _updateInfoBar,
   addArrowKeyNavigation as _addArrowKeyNavigation,
 } from '../utils-es6.js';
-import { recordMultiplicationResult } from './mult-stats.js';
+import { recordOperationResult } from './operation-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
 import { AudioManager } from './audio.js';
@@ -734,16 +734,16 @@ export class GameMode {
    * Enregistrer une réponse (à surcharger pour logique spécifique)
    */
   recordAnswer(isCorrect) {
-    const { table, num } = this.state.currentQuestion;
+    const question = this.state.currentQuestion;
 
-    // Enregistrement adaptatif de base
-    /**
-     * Fonction if
-     * @param {*} window.recordMultiplicationResult - Description du paramètre
-     * @returns {*} Description du retour
-     */
+    // Support nouveau format (operator, a, b) et ancien (table, num)
+    const operator = question.operator || '×';
+    const a = question.a ?? question.table;
+    const b = question.b ?? question.num;
+
+    // Enregistrement stats multi-opérations
     try {
-      recordMultiplicationResult(table, num, isCorrect);
+      recordOperationResult(operator, a, b, isCorrect);
     } catch {
       /* no-op: stats optional */
     }
