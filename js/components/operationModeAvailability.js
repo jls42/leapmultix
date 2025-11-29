@@ -7,12 +7,12 @@
 import { UserState } from '../core/userState.js';
 import { getTranslation } from '../utils-es6.js';
 
-// Modes disponibles par opération (R2)
+// Modes disponibles par opération (R2/R3)
 const MODE_AVAILABILITY = {
   '×': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'],
   '+': ['discovery', 'quiz', 'challenge', 'adventure'],
   '−': ['discovery', 'quiz', 'challenge', 'adventure'],
-  '÷': ['quiz', 'challenge'], // R3+
+  '÷': ['discovery', 'quiz', 'challenge', 'adventure'], // R3: Division activée
 };
 
 // Messages d'indisponibilité

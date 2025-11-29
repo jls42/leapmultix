@@ -250,12 +250,96 @@ export const ADVENTURE_LEVELS_SUBTRACTION = [
   },
 ];
 
+// Niveaux d'aventure pour la division (progression de difficulté) - R3
+export const ADVENTURE_LEVELS_DIVISION = [
+  {
+    id: 1,
+    difficulty: 'easy',
+    nameKey: 'division_level_1_name',
+    descKey: 'division_level_1_desc',
+    image: 'forest.png',
+    requiredStars: 0,
+  },
+  {
+    id: 2,
+    difficulty: 'easy',
+    nameKey: 'division_level_2_name',
+    descKey: 'division_level_2_desc',
+    image: 'river.png',
+    requiredStars: 2,
+  },
+  {
+    id: 3,
+    difficulty: 'easy',
+    nameKey: 'division_level_3_name',
+    descKey: 'division_level_3_desc',
+    image: 'forest.png',
+    requiredStars: 4,
+  },
+  {
+    id: 4,
+    difficulty: 'medium',
+    nameKey: 'division_level_4_name',
+    descKey: 'division_level_4_desc',
+    image: 'river.png',
+    requiredStars: 6,
+  },
+  {
+    id: 5,
+    difficulty: 'medium',
+    nameKey: 'division_level_5_name',
+    descKey: 'division_level_5_desc',
+    image: 'forest.png',
+    requiredStars: 8,
+  },
+  {
+    id: 6,
+    difficulty: 'medium',
+    nameKey: 'division_level_6_name',
+    descKey: 'division_level_6_desc',
+    image: 'river.png',
+    requiredStars: 10,
+  },
+  {
+    id: 7,
+    difficulty: 'hard',
+    nameKey: 'division_level_7_name',
+    descKey: 'division_level_7_desc',
+    image: 'forest.png',
+    requiredStars: 12,
+  },
+  {
+    id: 8,
+    difficulty: 'hard',
+    nameKey: 'division_level_8_name',
+    descKey: 'division_level_8_desc',
+    image: 'river.png',
+    requiredStars: 14,
+  },
+  {
+    id: 9,
+    difficulty: 'hard',
+    nameKey: 'division_level_9_name',
+    descKey: 'division_level_9_desc',
+    image: 'forest.png',
+    requiredStars: 16,
+  },
+  {
+    id: 10,
+    difficulty: 'hard',
+    nameKey: 'division_level_10_name',
+    descKey: 'division_level_10_desc',
+    image: 'river.png',
+    requiredStars: 18,
+  },
+];
+
 // Export par défaut pour compatibilité (multiplication)
 export const ADVENTURE_LEVELS = ADVENTURE_LEVELS_MULTIPLICATION;
 
 /**
  * Récupère les niveaux d'aventure selon l'opération
- * @param {string} operator - Symbole de l'opération ('×', '+', '−')
+ * @param {string} operator - Symbole de l'opération ('×', '+', '−', '÷')
  * @returns {Array} Liste des niveaux
  */
 export function getAdventureLevelsByOperator(operator) {
@@ -264,6 +348,8 @@ export function getAdventureLevelsByOperator(operator) {
       return ADVENTURE_LEVELS_ADDITION;
     case '−':
       return ADVENTURE_LEVELS_SUBTRACTION;
+    case '÷':
+      return ADVENTURE_LEVELS_DIVISION;
     case '×':
     default:
       return ADVENTURE_LEVELS_MULTIPLICATION;

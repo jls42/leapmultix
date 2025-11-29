@@ -6,7 +6,7 @@
 import { Multiplication } from './Multiplication.js';
 import { Addition } from './Addition.js';
 import { Subtraction } from './Subtraction.js';
-// R3: import { Division } from './Division.js';
+import { Division } from './Division.js';
 
 /**
  * Classe singleton qui gère l'enregistrement et l'accès aux opérations
@@ -31,9 +31,7 @@ class OperationRegistryClass {
     this.register(new Multiplication());
     this.register(new Addition());
     this.register(new Subtraction());
-
-    // R3: Activer division
-    // this.register(new Division());
+    this.register(new Division()); // R3: Division activée
   }
 
   /**

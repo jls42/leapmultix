@@ -138,6 +138,9 @@ export function generateQuestion(options = {}) {
       } else if (operator === '−') {
         templateKey = 'problem_templates_subtraction';
         params = { a, b };
+      } else if (operator === '÷') {
+        templateKey = 'problem_templates_division';
+        params = { a, b };
       }
 
       if (templateKey) {
@@ -148,7 +151,7 @@ export function generateQuestion(options = {}) {
           question = `Problem: ${a} ${operation.symbol} ${b} = ?`;
         }
       } else {
-        // Fallback pour opérations non supportées (division R3+)
+        // Fallback pour opérations futures
         question = operation.formatQuestion(a, b, 'classic');
       }
 
