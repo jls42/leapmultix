@@ -343,26 +343,29 @@ export function getAdventureLevelsByOperator(operator) {
 
 ## 🎯 Objectifs Prochaine Session
 
-### Priorité 1: Finaliser R2 (10% restant)
+### Priorité 1: ✅ R2 Finalisée (TERMINÉ)
 
-- [ ] Tests unitaires Discovery multi-opérations
-- [ ] Tests unitaires Adventure multi-opérations
-- [ ] Tests migration stats (edge cases)
+- [x] Tests unitaires Discovery multi-opérations (24 tests)
+- [x] Tests unitaires Adventure multi-opérations (intégrés dans les 24 tests)
+- [x] Tests migration stats (edge cases) (19 tests)
 
-### Priorité 2: R3 - Division
+### Priorité 2: ✅ R3 Division (TERMINÉ)
 
-- [ ] Créer Division.js (avec contrainte a % b = 0)
-- [ ] Adapter questionGenerator pour division
-- [ ] Templates problem division (traductions)
-- [ ] Tests unitaires division
-- [ ] Activer bouton ÷ dans sélecteur
+- [x] Créer Division.js (avec contrainte a % b = 0)
+- [x] Adapter questionGenerator pour division
+- [x] Templates problem division (traductions)
+- [x] Tests unitaires division (34 tests)
+- [x] Activer bouton ÷ dans sélecteur
+- [x] 10 niveaux Adventure Division
+- [x] 23 nouvelles traductions
 
-### Priorité 3: R4 - Arcade (après R3)
+### Priorité 3: ⏳ R4 - Arcade multi-opérations (EN COURS)
 
-- [ ] Adapter Multimiam
-- [ ] Adapter Space Invasion
-- [ ] Adapter Memory
-- [ ] Adapter Multisnake
+- [ ] Adapter Multimiam pour +/−/÷
+- [ ] Adapter Space Invasion pour +/−/÷
+- [ ] Adapter Memory pour +/−/÷
+- [ ] Adapter Multisnake pour +/−/÷
+- [ ] operationModeAvailability : Arcade pour tous opérateurs
 
 ---
 
@@ -420,6 +423,18 @@ Avant chaque commit, vérifier:
 - `assets/translations/en.json` - +20 clés adventure
 - `assets/translations/es.json` - +20 clés adventure
 
+**R3:**
+- `js/core/operations/Division.js` - NOUVEAU
+- `js/core/operations/OperationRegistry.js` - Division enregistrée
+- `js/questionGenerator.js` - Support templates division
+- `js/core/adventure-data.js` - +10 niveaux Division
+- `js/components/operationModeAvailability.js` - Division pour tous modes
+- `js/components/operationSelector.js` - Bouton ÷ activé
+- `assets/translations/fr.json` - +23 clés division
+- `assets/translations/en.json` - +23 clés division
+- `assets/translations/es.json` - +23 clés division
+- `tests/__tests__/core/operations/Division.test.js` - NOUVEAU (34 tests)
+
 ---
 
 ## 💡 Notes pour Reprise Contexte
@@ -439,36 +454,55 @@ Avant chaque commit, vérifier:
 - `js/core/operation-stats.js` - Stats unifiées
 - `js/core/stats-migration.js` - Migration continue
 
-**Modes de jeu (travail R2 en cours):**
-- `js/modes/DiscoveryMode.js` - Déjà multi-ops
-- `js/modes/AdventureMode.js` - Adapté R2
-- `js/core/adventure-data.js` - Niveaux par opérateur
+**Modes de jeu (R2/R3 complétés):**
+- `js/modes/DiscoveryMode.js` - Multi-ops complet (×, +, −, ÷)
+- `js/modes/AdventureMode.js` - Multi-ops complet (×, +, −, ÷)
+- `js/core/adventure-data.js` - Niveaux par opérateur (4 opérations)
+
+**Opérations (R3 complété):**
+- `js/core/operations/Division.js` - Division avec contrainte a % b = 0
+- `tests/__tests__/core/operations/Division.test.js` - 34 tests Division
 
 #### 2. **Contexte à donner:**
 
 "Je continue le travail sur la branche `feat/multi-operations-support`.
 
 **Contexte :**
-- Phase R1 (Fondations) : ✅ COMPLÈTE - Architecture OOP + Quiz/Challenge pour ×, +, −
-- Phase R2 (Discovery/Adventure) : ✅ 90% COMPLÈTE
+- Phase R1 (Fondations) : ✅ COMPLÈTE (100%) - Architecture OOP + Quiz/Challenge pour ×, +, −
+- Phase R2 (Discovery/Adventure) : ✅ COMPLÈTE (100%)
   - ✅ Adventure adapté pour +/− (niveaux séparés par opérateur)
   - ✅ Migration continue sécurisée implémentée (90j rétention + 30j inactivité)
   - ✅ Double-write supprimé
   - ✅ 60 nouvelles traductions adventure
-  - ⏳ 10% restant : Tests unitaires Discovery/Adventure multi-ops
-- Phase R3 (Division) : À FAIRE
-- Phase R4 (Arcade) : À FAIRE
+  - ✅ Tests unitaires Discovery/Adventure multi-ops (43 tests)
+- Phase R3 (Division) : ✅ COMPLÈTE (100%)
+  - ✅ Division.js avec contrainte a % b = 0
+  - ✅ questionGenerator adapté pour division
+  - ✅ Templates problem division (3 templates × 3 langues)
+  - ✅ 34 tests unitaires Division
+  - ✅ Division activée dans tous les modes (Quiz/Challenge/Discovery/Adventure)
+  - ✅ 10 niveaux Adventure Division (easy→medium→hard)
+  - ✅ Bouton ÷ activé dans operationSelector
+  - ✅ 23 nouvelles traductions (fr/en/es)
+- Phase R4 (Arcade multi-ops) : ⏳ À FAIRE (0%)
+  - [ ] Adapter Multimiam pour +/−/÷
+  - [ ] Adapter Space Invasion pour +/−/÷
+  - [ ] Adapter Memory pour +/−/÷
+  - [ ] Adapter Multisnake pour +/−/÷
 
 **Derniers changements (2025-01-29) :**
-- Implémentation migration continue sécurisée (stats-migration.js)
-- Adaptation Adventure pour +/− avec niveaux thématiques
-- Suppression double-write dans operation-stats.js
-- 60 nouvelles clés traduction (adventure_addition_*, adventure_subtraction_*)
+- R3 complété : Division implémentée avec contrainte a % b = 0
+- Division.js créé avec stratégie génération inverse (b × q = a)
+- 34 tests unitaires Division (100% passent)
+- 10 niveaux Adventure Division ajoutés
+- Bouton ÷ activé dans operationSelector
+- 23 nouvelles clés traduction (problem_templates_division + division_level_*)
+
+**Progression globale : 88%** (R1 100%, R2 100%, R3 100%, R4 0%)
 
 **Prochaine étape :**
-- [Option 1] Finaliser R2 : Tests unitaires Discovery/Adventure multi-ops
-- [Option 2] Démarrer R3 : Implémenter Division
-- [Option 3] Autre (préciser)"
+- **R4** : Adapter Arcade pour multi-opérations (+/−/÷)
+  - Prioriser : Multimiam (plus simple) → Space Invasion → Memory → Multisnake
 
 #### 3. **Commandes utiles pour démarrer:**
 
@@ -516,10 +550,19 @@ R: Utilisateur a raison, redondant si migration continue active
 **Q: Comment tester migration ?**
 R: localStorage.removeItem('_statsMigrated') + F5 → relance migration
 
-**Q: Où sont les tests R2 ?**
-R: À créer (10% restant) : tests/__tests__/modes/DiscoveryMode.test.js et AdventureMode.test.js
+**Q: Où sont les tests R2/R3 ?**
+R:
+- R2: `tests/__tests__/modes/multi-operations-logic.test.js` (24 tests)
+- R2: `tests/__tests__/core/stats-migration.test.js` (19 tests)
+- R3: `tests/__tests__/core/operations/Division.test.js` (34 tests)
+
+**Q: Comment tester Division dans le navigateur ?**
+R:
+1. Sélectionner bouton ÷ sur page accueil
+2. Tester Quiz/Challenge/Discovery/Adventure
+3. Vérifier que toutes les divisions donnent des résultats entiers
 
 ---
 
-**Dernière mise à jour:** 2025-01-29 - Phase R2 90% complète
-**Prochaine mise à jour:** Après finalisation R2 ou démarrage R3
+**Dernière mise à jour:** 2025-01-29 - Phases R1/R2/R3 complètes (88%)
+**Prochaine mise à jour:** Après démarrage/finalisation R4 (Arcade)
