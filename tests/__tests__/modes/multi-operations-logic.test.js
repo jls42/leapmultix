@@ -1,10 +1,18 @@
 /* eslint-env jest */
 /* eslint-disable sonarjs/no-nested-functions -- Test file: Jest describe/it nesting is standard practice */
-/* eslint-disable sonarjs/no-duplicate-functions -- Test file: isolated calculateStars functions in each test for clarity */
 /**
  * Tests de validation logique - Multi-opérations Discovery/Adventure
  * Phase R2 - Tests unitaires pour vérifier la logique multi-opérations
  */
+
+// Helper partagé pour calculer les étoiles
+function calculateStars(correct, total) {
+  const rate = correct / total;
+  if (rate >= 0.9) return 3;
+  if (rate >= 0.7) return 2;
+  if (rate >= 0.5) return 1;
+  return 0;
+}
 
 describe('Multi-Operations Logic Validation', () => {
   describe('Discovery Mode - Logic Tests', () => {
@@ -233,53 +241,21 @@ describe('Multi-Operations Logic Validation', () => {
 
     describe('Calcul étoiles', () => {
       it('devrait attribuer 3 étoiles pour 90%+ succès', () => {
-        const calculateStars = (correct, total) => {
-          const rate = correct / total;
-          if (rate >= 0.9) return 3;
-          if (rate >= 0.7) return 2;
-          if (rate >= 0.5) return 1;
-          return 0;
-        };
-
         expect(calculateStars(9, 10)).toBe(3);
         expect(calculateStars(10, 10)).toBe(3);
       });
 
       it('devrait attribuer 2 étoiles pour 70-89% succès', () => {
-        const calculateStars = (correct, total) => {
-          const rate = correct / total;
-          if (rate >= 0.9) return 3;
-          if (rate >= 0.7) return 2;
-          if (rate >= 0.5) return 1;
-          return 0;
-        };
-
         expect(calculateStars(8, 10)).toBe(2);
         expect(calculateStars(7, 10)).toBe(2);
       });
 
       it('devrait attribuer 1 étoile pour 50-69% succès', () => {
-        const calculateStars = (correct, total) => {
-          const rate = correct / total;
-          if (rate >= 0.9) return 3;
-          if (rate >= 0.7) return 2;
-          if (rate >= 0.5) return 1;
-          return 0;
-        };
-
         expect(calculateStars(6, 10)).toBe(1);
         expect(calculateStars(5, 10)).toBe(1);
       });
 
       it('devrait attribuer 0 étoile pour moins de 50% succès', () => {
-        const calculateStars = (correct, total) => {
-          const rate = correct / total;
-          if (rate >= 0.9) return 3;
-          if (rate >= 0.7) return 2;
-          if (rate >= 0.5) return 1;
-          return 0;
-        };
-
         expect(calculateStars(4, 10)).toBe(0);
         expect(calculateStars(0, 10)).toBe(0);
       });

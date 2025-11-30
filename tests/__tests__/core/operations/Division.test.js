@@ -99,10 +99,9 @@ describe('Division Operation', () => {
       expect(division.spokenForm).toBe('divisé par');
     });
 
-    // eslint-disable-next-line no-useless-escape -- Test name intentionally shows Unicode escape sequence
-    it('devrait avoir unicodeSymbol \\u00F7', () => {
+    it('devrait avoir unicodeSymbol ÷ (U+00F7)', () => {
       const division = new Division();
-      expect(division.unicodeSymbol).toBe('\u00F7');
+      expect(division.unicodeSymbol).toBe('÷');
     });
   });
 

@@ -2,10 +2,32 @@
  * Tests ESM - Multimiam Multi-Opérations (R4)
  * Vérifie que Multimiam supporte correctement +, −, ×, ÷
  */
-/* eslint-disable sonarjs/no-nested-functions -- Test file: helper functions inside describe are standard practice */
-/* eslint-disable sonarjs/no-duplicate-functions -- Test file: similar distractor generator patterns are intentional for each operation type */
 
 import { describe, it, expect } from '@jest/globals';
+
+// Helper pour créer un générateur de distracteurs avec logique commune
+function createDistractorGenerator(correctResult, specificDistractors) {
+  const distractors = [];
+  const used = new Set([correctResult]);
+
+  const pushIf = v => {
+    if (v > 0 && !used.has(v)) {
+      distractors.push(v);
+      used.add(v);
+    }
+  };
+
+  // Distracteurs communs : ±1, ±2
+  pushIf(correctResult - 1);
+  pushIf(correctResult + 1);
+  pushIf(correctResult - 2);
+  pushIf(correctResult + 2);
+
+  // Distracteurs spécifiques à l'opération
+  specificDistractors.forEach(d => pushIf(d));
+
+  return distractors;
+}
 
 // Test de la logique métier multi-opérations
 describe('Multimiam Multi-Opérations (R4) - Logique métier', () => {
@@ -48,161 +70,78 @@ describe('Multimiam Multi-Opérations (R4) - Logique métier', () => {
   });
 
   describe('Génération de distracteurs adaptés', () => {
-    function generateMultiplicationDistractors(correctResult, num1, num2) {
-      const distractors = [];
-      const used = new Set([correctResult]);
-
-      const pushIf = v => {
-        if (v > 0 && !used.has(v)) {
-          distractors.push(v);
-          used.add(v);
-        }
-      };
-
-      // Distracteurs communs : ±1, ±2
-      pushIf(correctResult - 1);
-      pushIf(correctResult + 1);
-      pushIf(correctResult - 2);
-      pushIf(correctResult + 2);
-
-      // Tables adjacentes (spécifique ×)
-      pushIf((num1 + 1) * num2);
-      pushIf((num1 - 1) * num2);
-      pushIf(num1 * (num2 + 1));
-      pushIf(num1 * (num2 - 1));
-
-      return distractors;
-    }
-
-    function generateAdditionDistractors(correctResult, num1, num2) {
-      const distractors = [];
-      const used = new Set([correctResult]);
-
-      const pushIf = v => {
-        if (v > 0 && !used.has(v)) {
-          distractors.push(v);
-          used.add(v);
-        }
-      };
-
-      // Distracteurs communs : ±1, ±2
-      pushIf(correctResult - 1);
-      pushIf(correctResult + 1);
-      pushIf(correctResult - 2);
-      pushIf(correctResult + 2);
-
-      // Erreurs communes addition
-      pushIf(num1); // Oubli num2
-      pushIf(num2); // Oubli num1
-      pushIf(num1 + num2 - 10); // Oubli dizaine
-
-      return distractors;
-    }
-
-    function generateSubtractionDistractors(correctResult, num1, num2) {
-      const distractors = [];
-      const used = new Set([correctResult]);
-
-      const pushIf = v => {
-        if (v > 0 && !used.has(v)) {
-          distractors.push(v);
-          used.add(v);
-        }
-      };
-
-      // Distracteurs communs : ±1, ±2
-      pushIf(correctResult - 1);
-      pushIf(correctResult + 1);
-      pushIf(correctResult - 2);
-      pushIf(correctResult + 2);
-
-      // Erreurs communes soustraction
-      if (num2 > num1) pushIf(num2 - num1); // Inversion (b-a)
-      pushIf(num1); // Pas de soustraction
-      pushIf(num1 + num2); // Addition au lieu de soustraction
-
-      return distractors;
-    }
-
-    function generateDivisionDistractors(correctResult, num1, num2) {
-      const distractors = [];
-      const used = new Set([correctResult]);
-
-      const pushIf = v => {
-        if (v > 0 && !used.has(v)) {
-          distractors.push(v);
-          used.add(v);
-        }
-      };
-
-      // Distracteurs communs : ±1, ±2
-      pushIf(correctResult - 1);
-      pushIf(correctResult + 1);
-      pushIf(correctResult - 2);
-      pushIf(correctResult + 2);
-
-      // Erreurs communes division
-      pushIf(num1); // Pas de division
-      pushIf(num2); // Diviseur au lieu du quotient
-      pushIf(correctResult * 2); // Double du quotient
-
-      return distractors;
-    }
-
     it('devrait générer distracteurs pour multiplication (3 × 5 = 15)', () => {
-      const distractors = generateMultiplicationDistractors(15, 3, 5);
+      const num1 = 3;
+      const num2 = 5;
+      const correctResult = 15;
+      // Tables adjacentes (spécifique ×)
+      const specificDistractors = [
+        (num1 + 1) * num2,
+        (num1 - 1) * num2,
+        num1 * (num2 + 1),
+        num1 * (num2 - 1),
+      ];
+      const distractors = createDistractorGenerator(correctResult, specificDistractors);
       expect(distractors.length).toBeGreaterThan(0);
-      // Vérifier qu'au moins un distracteur proche existe
       const hasCloseDistractor =
         distractors.includes(14) || distractors.includes(16) || distractors.includes(13);
       expect(hasCloseDistractor).toBe(true);
-      // Pas de négatifs ou zéro
       distractors.forEach(d => expect(d).toBeGreaterThan(0));
     });
 
     it('devrait générer distracteurs pour addition (7 + 8 = 15)', () => {
-      const distractors = generateAdditionDistractors(15, 7, 8);
+      const num1 = 7;
+      const num2 = 8;
+      const correctResult = 15;
+      // Erreurs communes addition
+      const specificDistractors = [num1, num2, num1 + num2 - 10];
+      const distractors = createDistractorGenerator(correctResult, specificDistractors);
       expect(distractors.length).toBeGreaterThan(0);
-      // Vérifier qu'au moins un distracteur proche existe
       const hasCloseDistractor =
         distractors.includes(14) || distractors.includes(16) || distractors.includes(7);
       expect(hasCloseDistractor).toBe(true);
-      // Pas de négatifs ou zéro
       distractors.forEach(d => expect(d).toBeGreaterThan(0));
     });
 
     it('devrait générer distracteurs pour soustraction (10 − 3 = 7)', () => {
-      const distractors = generateSubtractionDistractors(7, 10, 3);
+      const num1 = 10;
+      const num2 = 3;
+      const correctResult = 7;
+      // Erreurs communes soustraction
+      const specificDistractors = [num1, num1 + num2];
+      if (num2 > num1) specificDistractors.push(num2 - num1);
+      const distractors = createDistractorGenerator(correctResult, specificDistractors);
       expect(distractors.length).toBeGreaterThan(0);
-      // Vérifier qu'au moins un distracteur proche existe
       const hasCloseDistractor =
         distractors.includes(6) || distractors.includes(8) || distractors.includes(13);
       expect(hasCloseDistractor).toBe(true);
-      // Pas de négatifs ou zéro
       distractors.forEach(d => expect(d).toBeGreaterThan(0));
     });
 
     it('devrait générer distracteurs pour division (20 ÷ 4 = 5)', () => {
-      const distractors = generateDivisionDistractors(5, 20, 4);
+      const num1 = 20;
+      const num2 = 4;
+      const correctResult = 5;
+      // Erreurs communes division
+      const specificDistractors = [num1, num2, correctResult * 2];
+      const distractors = createDistractorGenerator(correctResult, specificDistractors);
       expect(distractors.length).toBeGreaterThan(0);
-      // Vérifier qu'au moins un distracteur proche existe
       const hasCloseDistractor =
         distractors.includes(4) || distractors.includes(6) || distractors.includes(10);
       expect(hasCloseDistractor).toBe(true);
-      // Pas de négatifs ou zéro
       distractors.forEach(d => expect(d).toBeGreaterThan(0));
     });
 
     it('ne devrait jamais générer de distracteurs négatifs ou nuls', () => {
-      const operations = [
-        { fn: generateMultiplicationDistractors, result: 15, num1: 3, num2: 5 },
-        { fn: generateAdditionDistractors, result: 15, num1: 7, num2: 8 },
-        { fn: generateSubtractionDistractors, result: 7, num1: 10, num2: 3 },
-        { fn: generateDivisionDistractors, result: 5, num1: 20, num2: 4 },
+      const testCases = [
+        { result: 15, specifics: [20, 10, 18, 12] }, // multiplication-like
+        { result: 15, specifics: [7, 8, 5] }, // addition-like
+        { result: 7, specifics: [10, 13] }, // subtraction-like
+        { result: 5, specifics: [20, 4, 10] }, // division-like
       ];
 
-      operations.forEach(({ fn, result, num1, num2 }) => {
-        const distractors = fn(result, num1, num2);
+      testCases.forEach(({ result, specifics }) => {
+        const distractors = createDistractorGenerator(result, specifics);
         distractors.forEach(d => {
           expect(d).toBeGreaterThan(0);
         });

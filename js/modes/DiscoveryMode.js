@@ -427,70 +427,88 @@ export class DiscoveryMode extends GameMode {
 
   /**
    * Générer les objets visuels selon l'opération
-   * @SuppressWarnings("javascript:S3776") Complex but intentional: distinct visual representation for each operation
    */
   generateVisualObjects(a, b) {
-    const isMultiplication = this.operator === '×';
-    let html = '';
+    if (this.operator === '×') {
+      return this._generateMultiplicationVisual(a, b);
+    }
+    if (this.operator === '+') {
+      return this._generateAdditionVisual(a, b);
+    }
+    return this._generateSubtractionVisual(a, b);
+  }
 
-    if (isMultiplication) {
-      // Multiplication : groupes d'objets (limité à 10×10 max)
-      if (a > 10 || b > 10) {
-        return `<div class="visual-message">${a} ${this.operation.symbol} ${b} = ${this.operation.compute(a, b)}</div>`;
-      }
-      html = '<div class="visual-groups">';
-      for (let group = 0; group < b; group++) {
-        html += '<div class="visual-group">';
-        for (let item = 0; item < a; item++) {
-          html += '<span class="visual-object">🔵</span>';
-        }
-        html += '</div>';
-      }
-      html += '</div>';
-    } else if (this.operator === '+') {
-      // Addition : deux groupes séparés (limité à 10+10 max)
-      if (a > 10 || b > 10) {
-        return `<div class="visual-message">${a} ${this.operation.symbol} ${b} = ${this.operation.compute(a, b)}</div>`;
-      }
-      html = '<div class="visual-groups visual-addition">';
-      html += '<div class="visual-group visual-group-first">';
-      for (let i = 0; i < a; i++) {
-        html += '<span class="visual-object">🟢</span>';
-      }
-      html += '</div>';
-      html += '<div class="visual-operator">+</div>';
-      html += '<div class="visual-group visual-group-second">';
-      for (let i = 0; i < b; i++) {
+  /**
+   * Générer un message simple pour les grandes valeurs
+   * @private
+   */
+  _generateSimpleMessage(a, b) {
+    return `<div class="visual-message">${a} ${this.operation.symbol} ${b} = ${this.operation.compute(a, b)}</div>`;
+  }
+
+  /**
+   * Générer la visualisation de multiplication
+   * @private
+   */
+  _generateMultiplicationVisual(a, b) {
+    if (a > 10 || b > 10) {
+      return this._generateSimpleMessage(a, b);
+    }
+    let html = '<div class="visual-groups">';
+    for (let group = 0; group < b; group++) {
+      html += '<div class="visual-group">';
+      for (let item = 0; item < a; item++) {
         html += '<span class="visual-object">🔵</span>';
       }
-      html += '</div>';
-      html += '</div>';
-    } else {
-      // Soustraction : afficher `a` objets dont `b` sont barrés, laissant `result` visibles
-      const result = this.operation.compute(a, b);
-
-      // Limiter à des valeurs raisonnables pour la visualisation
-      if (a > 10) {
-        return `<div class="visual-message">${a} ${this.operation.symbol} ${b} = ${result}</div>`;
-      }
-
-      html = '<div class="visual-groups visual-subtraction">';
-      html += '<div class="visual-group visual-group-initial">';
-
-      // Afficher les objets restants (result) en normal
-      for (let i = 0; i < result; i++) {
-        html += '<span class="visual-object">🔵</span>';
-      }
-
-      // Afficher les objets retirés (b) barrés
-      for (let i = 0; i < b; i++) {
-        html += '<span class="visual-object visual-object-removed">🔵</span>';
-      }
-
-      html += '</div>';
       html += '</div>';
     }
+    html += '</div>';
+    return html;
+  }
 
+  /**
+   * Générer la visualisation d'addition
+   * @private
+   */
+  _generateAdditionVisual(a, b) {
+    if (a > 10 || b > 10) {
+      return this._generateSimpleMessage(a, b);
+    }
+    let html = '<div class="visual-groups visual-addition">';
+    html += '<div class="visual-group visual-group-first">';
+    for (let i = 0; i < a; i++) {
+      html += '<span class="visual-object">🟢</span>';
+    }
+    html += '</div>';
+    html += '<div class="visual-operator">+</div>';
+    html += '<div class="visual-group visual-group-second">';
+    for (let i = 0; i < b; i++) {
+      html += '<span class="visual-object">🔵</span>';
+    }
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  /**
+   * Générer la visualisation de soustraction
+   * @private
+   */
+  _generateSubtractionVisual(a, b) {
+    const result = this.operation.compute(a, b);
+    if (a > 10) {
+      return this._generateSimpleMessage(a, b);
+    }
+    let html = '<div class="visual-groups visual-subtraction">';
+    html += '<div class="visual-group visual-group-initial">';
+    for (let i = 0; i < result; i++) {
+      html += '<span class="visual-object">🔵</span>';
+    }
+    for (let i = 0; i < b; i++) {
+      html += '<span class="visual-object visual-object-removed">🔵</span>';
+    }
+    html += '</div>';
+    html += '</div>';
     return html;
   }
 
@@ -673,94 +691,126 @@ export class DiscoveryMode extends GameMode {
 
   /**
    * Déclencher l'animation d'une opération
-   * @SuppressWarnings("javascript:S3776") Complex but intentional: animation varies per operation type and size
    */
   triggerAnimation(a, b) {
-    const result = this.operation.compute(a, b);
     const animContainer = document.getElementById('animation-container');
-
     if (!animContainer) return;
 
-    // Effacer le contenu précédent (sans innerHTML)
     animContainer.textContent = '';
+    const { root, step } = this._createAnimationContainer(a, b);
+    this._appendAnimationContent(step, a, b);
+    this._appendAnimationResult(step, a, b);
+    animContainer.appendChild(root);
+    this._triggerAnimationClasses(animContainer);
+    this.speakOperation(a, b);
+  }
 
+  /**
+   * Créer le conteneur d'animation
+   * @private
+   */
+  _createAnimationContainer(a, b) {
     const root = document.createElement('div');
     root.className = 'animated-equation';
-
     const step = document.createElement('div');
     step.className = 'animation-step';
     root.appendChild(step);
-
     const text = document.createElement('div');
     text.className = 'animation-text';
     text.textContent = `${a} ${this.operation.symbol} ${b} = ?`;
     step.appendChild(text);
+    return { root, step };
+  }
 
-    const isMultiplication = this.operator === '×';
-
-    if (isMultiplication && a <= 5) {
-      // Petites tables multiplication: objets groupés
-      const objects = document.createElement('div');
-      objects.className = 'animation-objects';
-      for (let i = 0; i < b; i++) {
-        const group = document.createElement('div');
-        group.className = 'object-group';
-        for (let j = 0; j < a; j++) {
-          const span = document.createElement('span');
-          span.className = 'object';
-          span.textContent = '🍎';
-          group.appendChild(span);
-        }
-        objects.appendChild(group);
-      }
-      step.appendChild(objects);
-    } else if (isMultiplication) {
-      // Grandes tables multiplication: séquence de calcul
-      const calc = document.createElement('div');
-      calc.className = 'animation-calculation';
-      const cap = document.createElement('div');
-      cap.className = 'calc-step';
-      cap.textContent = `Compter par ${a} : `;
-      calc.appendChild(cap);
-      let current = 0;
-      for (let i = 1; i <= b; i++) {
-        current += a;
-        const num = document.createElement('span');
-        num.className = 'calc-number';
-        num.textContent = String(current);
-        calc.appendChild(num);
-        if (i < b) {
-          const arrow = document.createElement('span');
-          arrow.textContent = ' → ';
-          calc.appendChild(arrow);
-        }
-      }
-      step.appendChild(calc);
+  /**
+   * Ajouter le contenu d'animation selon l'opération
+   * @private
+   */
+  _appendAnimationContent(step, a, b) {
+    if (this.operator === '×' && a <= 5) {
+      step.appendChild(this._createSmallMultiplicationAnimation(a, b));
+    } else if (this.operator === '×') {
+      step.appendChild(this._createLargeMultiplicationAnimation(a, b));
     } else {
-      // Addition/Soustraction: affichage simple avec objets
       const calc = document.createElement('div');
       calc.className = 'animation-objects';
       appendSanitizedHTML(calc, this.generateVisualObjects(a, b));
       step.appendChild(calc);
     }
+  }
 
+  /**
+   * Créer animation pour petites multiplications
+   * @private
+   */
+  _createSmallMultiplicationAnimation(a, b) {
+    const objects = document.createElement('div');
+    objects.className = 'animation-objects';
+    for (let i = 0; i < b; i++) {
+      const group = document.createElement('div');
+      group.className = 'object-group';
+      for (let j = 0; j < a; j++) {
+        const span = document.createElement('span');
+        span.className = 'object';
+        span.textContent = '🍎';
+        group.appendChild(span);
+      }
+      objects.appendChild(group);
+    }
+    return objects;
+  }
+
+  /**
+   * Créer animation pour grandes multiplications
+   * @private
+   */
+  _createLargeMultiplicationAnimation(a, b) {
+    const calc = document.createElement('div');
+    calc.className = 'animation-calculation';
+    const cap = document.createElement('div');
+    cap.className = 'calc-step';
+    cap.textContent = `Compter par ${a} : `;
+    calc.appendChild(cap);
+    let current = 0;
+    for (let i = 1; i <= b; i++) {
+      current += a;
+      const num = document.createElement('span');
+      num.className = 'calc-number';
+      num.textContent = String(current);
+      calc.appendChild(num);
+      if (i < b) {
+        const arrow = document.createElement('span');
+        arrow.textContent = ' → ';
+        calc.appendChild(arrow);
+      }
+    }
+    return calc;
+  }
+
+  /**
+   * Ajouter le résultat de l'animation
+   * @private
+   */
+  _appendAnimationResult(step, a, b) {
+    const result = this.operation.compute(a, b);
     const resultEl = document.createElement('div');
     resultEl.className = 'animation-result';
     resultEl.textContent = `= ${result}`;
     step.appendChild(resultEl);
+  }
 
-    animContainer.appendChild(root);
-
-    // Déclencher les animations CSS (rendre visible)
+  /**
+   * Déclencher les classes d'animation CSS
+   * @private
+   */
+  _triggerAnimationClasses(animContainer) {
     try {
       const root2 = animContainer.querySelector('.animated-equation');
       const step2 = animContainer.querySelector('.animation-step');
       const result2 = animContainer.querySelector('.animation-result');
-      // Utiliser rAF pour garantir l'insertion avant d'ajouter les classes
       requestAnimationFrame(() => {
         root2?.classList.add('animate');
         step2?.classList.add('animate');
-        // Délai léger pour un effet progressif
         setTimeout(() => {
           result2?.classList.add('animate');
         }, 50);
@@ -768,9 +818,6 @@ export class DiscoveryMode extends GameMode {
     } catch {
       /* no-op: animation fallback */
     }
-
-    // Parler le résultat
-    this.speakOperation(a, b);
   }
 
   /**

@@ -330,11 +330,14 @@ describe('Stats Migration - Edge Cases', () => {
     const INACTIVITY_THRESHOLD_DAYS = 30;
 
     it('devrait retourner false si pas de migration', () => {
-      // eslint-disable-next-line sonarjs/prefer-single-boolean-return -- Intentionally simplified mock that always returns false for this test case
       const canSafelyDeleteOldStats = () => {
         const migrationFlag = mockStorage._statsMigrated;
         // Without migration flag, deletion is never safe
-        return Boolean(migrationFlag?.firstMigrationDate) && false;
+        if (!migrationFlag?.firstMigrationDate) {
+          return false;
+        }
+        // Additional checks would go here in production code
+        return false;
       };
 
       expect(canSafelyDeleteOldStats()).toBe(false);

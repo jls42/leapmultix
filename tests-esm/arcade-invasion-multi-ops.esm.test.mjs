@@ -2,27 +2,27 @@
  * Tests ESM - Space Invasion Multi-Opérations (R4.2)
  * Vérifie que Space Invasion supporte correctement +, −, ×, ÷
  */
-/* eslint-disable sonarjs/no-duplicate-functions -- Test file: similar helper patterns acceptable for test isolation */
 
 import { describe, it, expect } from '@jest/globals';
+
+// Helper partagé pour calculer la réponse correcte
+function computeCorrectAnswer(op, a, b) {
+  switch (op) {
+    case '+':
+      return a + b;
+    case '−':
+      return a - b;
+    case '÷':
+      return a / b;
+    case '×':
+    default:
+      return a * b;
+  }
+}
 
 // Test de la logique métier multi-opérations pour Space Invasion
 describe('Space Invasion Multi-Opérations (R4.2) - Logique métier', () => {
   describe('Calcul de la réponse correcte par opération', () => {
-    const computeCorrectAnswer = (op, a, b) => {
-      switch (op) {
-        case '+':
-          return a + b;
-        case '−':
-          return a - b;
-        case '÷':
-          return a / b;
-        case '×':
-        default:
-          return a * b;
-      }
-    };
-
     it('devrait calculer correctement pour multiplication (3 × 5 = 15)', () => {
       const result = computeCorrectAnswer('×', 3, 5);
       expect(result).toBe(15);
@@ -88,20 +88,6 @@ describe('Space Invasion Multi-Opérations (R4.2) - Logique métier', () => {
   });
 
   describe('Condition de victoire (dernier alien = bonne réponse)', () => {
-    const computeCorrectAnswer = (op, a, b) => {
-      switch (op) {
-        case '+':
-          return a + b;
-        case '−':
-          return a - b;
-        case '÷':
-          return a / b;
-        case '×':
-        default:
-          return a * b;
-      }
-    };
-
     it('devrait identifier le bon alien pour multiplication', () => {
       const operator = '×';
       const problem = { a: 3, b: 5 };
