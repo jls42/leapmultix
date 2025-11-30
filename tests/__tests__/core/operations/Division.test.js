@@ -7,12 +7,10 @@
 describe('Division Operation', () => {
   // Mock Division class (logique pure sans imports ESM)
   class Division {
-    constructor() {
-      this.symbol = '÷';
-      this.name = 'division';
-      this.spokenForm = 'divisé par';
-      this.unicodeSymbol = '\u00F7';
-    }
+    symbol = '÷';
+    name = 'division';
+    spokenForm = 'divisé par';
+    unicodeSymbol = '\u00F7';
 
     compute(a, b) {
       if (b === 0) {
@@ -101,6 +99,7 @@ describe('Division Operation', () => {
       expect(division.spokenForm).toBe('divisé par');
     });
 
+    // eslint-disable-next-line no-useless-escape -- Test name intentionally shows Unicode escape sequence
     it('devrait avoir unicodeSymbol \\u00F7', () => {
       const division = new Division();
       expect(division.unicodeSymbol).toBe('\u00F7');

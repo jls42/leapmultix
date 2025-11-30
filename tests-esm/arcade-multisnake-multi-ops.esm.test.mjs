@@ -2,6 +2,7 @@
  * Tests ESM - MultiSnake Multi-Opérations (R4.4)
  * Vérifie que MultiSnake supporte correctement +, −, ×, ÷
  */
+/* eslint-disable sonarjs/no-duplicate-functions -- Test file: computeCorrectAnswer helper repeated for test isolation */
 
 import { describe, it, expect } from '@jest/globals';
 

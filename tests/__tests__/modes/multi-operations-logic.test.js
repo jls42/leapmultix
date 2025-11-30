@@ -1,5 +1,6 @@
 /* eslint-env jest */
 /* eslint-disable sonarjs/no-nested-functions -- Test file: Jest describe/it nesting is standard practice */
+/* eslint-disable sonarjs/no-duplicate-functions -- Test file: isolated calculateStars functions in each test for clarity */
 /**
  * Tests de validation logique - Multi-opérations Discovery/Adventure
  * Phase R2 - Tests unitaires pour vérifier la logique multi-opérations
@@ -86,10 +87,11 @@ describe('Multi-Operations Logic Validation', () => {
       it('devrait générer exemples avec difficulté pour soustraction', () => {
         const generateExamples = (operator, difficulty, count) => {
           const examples = [];
+          const difficultyMaxMap = { easy: 10, medium: 20, hard: 50 };
           for (let i = 0; i < count; i++) {
             let a, b;
             if (operator === '−') {
-              const max = difficulty === 'easy' ? 10 : difficulty === 'medium' ? 20 : 50;
+              const max = difficultyMaxMap[difficulty] || 50;
               a = Math.floor(Math.random() * max) + 1;
               b = Math.floor(Math.random() * Math.min(a, max)) + 1;
               // Assurer a >= b

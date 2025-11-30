@@ -258,12 +258,10 @@ function displayDailyChallenge() {
   } else {
     const pTable = document.createElement('p');
 
-     
     const translatedHTML = getTranslation('daily_challenge_table_of_day', {
       table: challengeStatus.table,
     });
 
-     
     appendSanitizedHTML(pTable, translatedHTML);
     container.appendChild(pTable);
 

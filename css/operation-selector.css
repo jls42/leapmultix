@@ -150,8 +150,8 @@
 }
 
 .theme-dark .operation-btn {
-  background: rgb(255 255 255 / 0.15);
-  color: #fff;
+  background: rgb(30 40 50 / 0.9);
+  color: #f5f5f5;
   border-color: rgb(255 255 255 / 0.3);
 }
 
@@ -162,8 +162,8 @@
 }
 
 .theme-dark .operation-btn:disabled {
-  background: rgb(255 255 255 / 0.08);
-  color: rgb(255 255 255 / 0.65);
+  background: rgb(30 40 50 / 0.6);
+  color: rgb(180 180 180);
 }
 
 /* Animation d'apparition */

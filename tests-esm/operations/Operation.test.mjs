@@ -18,11 +18,8 @@ describe('Operation (classe abstraite)', () => {
 
   test('compute() doit être implémentée par les sous-classes', () => {
     class TestOperation extends Operation {
-      constructor() {
-        super();
-        this.symbol = 'TEST';
-        this.name = 'test';
-      }
+      symbol = 'TEST';
+      name = 'test';
     }
     const op = new TestOperation();
     expect(() => op.compute(1, 2)).toThrow('compute() must be implemented');
@@ -30,11 +27,8 @@ describe('Operation (classe abstraite)', () => {
 
   test('generateOperands() doit être implémentée par les sous-classes', () => {
     class TestOperation extends Operation {
-      constructor() {
-        super();
-        this.symbol = 'TEST';
-        this.name = 'test';
-      }
+      symbol = 'TEST';
+      name = 'test';
     }
     const op = new TestOperation();
     expect(() => op.generateOperands('easy')).toThrow('generateOperands() must be implemented');
@@ -42,10 +36,7 @@ describe('Operation (classe abstraite)', () => {
 
   test('isValid() valide les opérandes numériques', () => {
     class TestOperation extends Operation {
-      constructor() {
-        super();
-        this.symbol = 'TEST';
-      }
+      symbol = 'TEST';
     }
     const op = new TestOperation();
 
@@ -65,10 +56,7 @@ describe('Operation (classe abstraite)', () => {
 
   test('getSupportedTypes() retourne au minimum classic et mcq', () => {
     class TestOperation extends Operation {
-      constructor() {
-        super();
-        this.symbol = 'TEST';
-      }
+      symbol = 'TEST';
     }
     const op = new TestOperation();
     const types = op.getSupportedTypes();
@@ -78,10 +66,7 @@ describe('Operation (classe abstraite)', () => {
 
   test('formatQuestion() formate correctement selon le type', () => {
     class TestOperation extends Operation {
-      constructor() {
-        super();
-        this.symbol = '+';
-      }
+      symbol = '+';
       compute(a, b) {
         return a + b;
       }

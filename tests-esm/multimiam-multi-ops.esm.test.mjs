@@ -3,6 +3,7 @@
  * Vérifie que Multimiam supporte correctement +, −, ×, ÷
  */
 /* eslint-disable sonarjs/no-nested-functions -- Test file: helper functions inside describe are standard practice */
+/* eslint-disable sonarjs/no-duplicate-functions -- Test file: similar distractor generator patterns are intentional for each operation type */
 
 import { describe, it, expect } from '@jest/globals';
 

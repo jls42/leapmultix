@@ -212,7 +212,8 @@ export function getWeakOperations(operator, threshold = 0.3, minAttempts = 3) {
 
 // ========================================
 // WRAPPERS DE COMPATIBILITÉ (R1 temporaire)
-// TODO R2: Supprimer après migration complète
+// NOTE: Ces wrappers seront supprimés dans une release future après validation de la migration R2
+// Tracker: Maintenir tant que du code legacy utilise recordMultiplicationResult/getMultiplicationStats
 // ========================================
 
 /**

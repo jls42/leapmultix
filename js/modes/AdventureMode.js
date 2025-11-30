@@ -249,13 +249,9 @@ export class AdventureMode extends GameMode {
     this.resetState();
     this.state.lives = this.config.initialLives;
 
-    // Pour la multiplication: multiplicandes 1-10
-    // Pour addition/soustraction: on génère différemment (voir getQuestionOptions)
-    if (this.operator === '×') {
-      this.remainingOperands = Array.from({ length: 10 }, (_, i) => i + 1);
-    } else {
-      this.remainingOperands = Array.from({ length: 10 }, (_, i) => i + 1);
-    }
+    // Pour toutes opérations: initialiser les operandes 1-10
+    // La différenciation se fait dans getQuestionOptions() selon l'opérateur
+    this.remainingOperands = Array.from({ length: 10 }, (_, i) => i + 1);
 
     // Passer en phase de jeu
     this.phase = 'playing';

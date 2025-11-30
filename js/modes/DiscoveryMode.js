@@ -157,7 +157,8 @@ export class DiscoveryMode extends GameMode {
     } else if (this.currentLevel) {
       const operationName =
         this.operator === '+' ? getTranslation('addition') : getTranslation('subtraction');
-      title = `${getTranslation('discovery_lab_intro_operations')} - ${getTranslation(`difficulty_${this.currentLevel}`)}`;
+      const difficultyKey = `difficulty_${this.currentLevel}`;
+      title = `${getTranslation('discovery_lab_intro_operations')} - ${getTranslation(difficultyKey)}`;
       intro = getTranslation('discovery_explore_intro_operation', { operation: operationName });
     } else {
       // Fallback si les conditions ne matchent pas
@@ -426,6 +427,7 @@ export class DiscoveryMode extends GameMode {
 
   /**
    * Générer les objets visuels selon l'opération
+   * @SuppressWarnings("javascript:S3776") Complex but intentional: distinct visual representation for each operation
    */
   generateVisualObjects(a, b) {
     const isMultiplication = this.operator === '×';
@@ -671,8 +673,8 @@ export class DiscoveryMode extends GameMode {
 
   /**
    * Déclencher l'animation d'une opération
+   * @SuppressWarnings("javascript:S3776") Complex but intentional: animation varies per operation type and size
    */
-   
   triggerAnimation(a, b) {
     const result = this.operation.compute(a, b);
     const animContainer = document.getElementById('animation-container');
@@ -894,7 +896,7 @@ export class DiscoveryMode extends GameMode {
     let a, b;
 
     if (isMultiplication) {
-      const table = parseInt(dropZone.dataset.identifier, 10);
+      const table = Number.parseInt(dropZone.dataset.identifier, 10);
       if (Number.isNaN(table) || table <= 0) return null;
       a = table;
       b = number;
