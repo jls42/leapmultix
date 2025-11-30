@@ -53,7 +53,7 @@ export function updateModeButtonsAvailability() {
   const modeButtons = document.querySelectorAll('.mode-btn[data-mode]');
 
   modeButtons.forEach(btn => {
-    const mode = btn.getAttribute('data-mode');
+    const mode = btn.dataset.mode;
     if (!mode) return;
 
     const available = isModeAvailable(mode, operator);
@@ -87,8 +87,8 @@ export function initModeAvailability() {
   updateModeButtonsAvailability();
 
   // Écouter les changements d'opération
-  if (typeof window !== 'undefined' && window.addEventListener) {
-    window.addEventListener('operation-changed', event => {
+  if (typeof globalThis.window !== 'undefined' && globalThis.window.addEventListener) {
+    globalThis.addEventListener('operation-changed', event => {
       console.log('Événement operation-changed détecté:', event.detail);
       updateModeButtonsAvailability();
     });

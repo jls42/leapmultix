@@ -28,12 +28,8 @@ const INACTIVITY_THRESHOLD_DAYS = 30;
  */
 export function needsMigration() {
   const oldStats = Storage.get('multiplicationStats');
-  if (!oldStats || typeof oldStats !== 'object' || Object.keys(oldStats).length === 0) {
-    return false;
-  }
-
   // Migration nécessaire si anciennes données présentes (peu importe le flag)
-  return true;
+  return oldStats && typeof oldStats === 'object' && Object.keys(oldStats).length > 0;
 }
 
 /**
@@ -61,15 +57,15 @@ export function migrateMultiplicationStats() {
   Object.entries(oldStats).forEach(([key, value]) => {
     try {
       // Parse l'ancienne clé "3x5" ou "3×5"
-      const match = key.match(/^(\d+)[x×](\d+)$/);
+      const match = /^(\d+)[x×](\d+)$/.exec(key);
       if (!match) {
         console.warn(`⚠️ Clé invalide ignorée: ${key}`);
         skipped++;
         return;
       }
 
-      const table = parseInt(match[1], 10);
-      const num = parseInt(match[2], 10);
+      const table = Number.parseInt(match[1], 10);
+      const num = Number.parseInt(match[2], 10);
 
       // Nouvelle clé avec symbole Unicode "3×5"
       const newKey = `${table}×${num}`;
@@ -127,7 +123,7 @@ function updateMigrationFlag(migrated, skipped, errors) {
   const existingFlag = Storage.get('_statsMigrated');
 
   // Première migration : initialiser le flag avec timestamp
-  if (!existingFlag || !existingFlag.firstMigrationDate) {
+  if (!existingFlag?.firstMigrationDate) {
     const now = Date.now();
     Storage.set('_statsMigrated', {
       done: true,
@@ -166,7 +162,7 @@ function updateMigrationFlag(migrated, skipped, errors) {
 export function canSafelyDeleteOldStats() {
   const migrationFlag = Storage.get('_statsMigrated');
 
-  if (!migrationFlag || !migrationFlag.firstMigrationDate) {
+  if (!migrationFlag?.firstMigrationDate) {
     // Pas encore de migration, ne rien supprimer
     return false;
   }
@@ -194,7 +190,7 @@ export function canSafelyDeleteOldStats() {
 export function cleanupOldStatsIfSafe() {
   const migrationFlag = Storage.get('_statsMigrated');
 
-  if (!migrationFlag || !migrationFlag.done) {
+  if (!migrationFlag?.done) {
     // Pas encore migré, ne rien supprimer
     return;
   }

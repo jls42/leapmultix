@@ -178,11 +178,11 @@ export class ChallengeMode extends GameMode {
       if (type === 'true_false') {
         // Lire exactement l'énoncé affiché (ex: "8 × 6 = 47")
         const spoken = String(question)
-          .replace(/×/g, ' fois ')
-          .replace(/\+/g, ' plus ')
-          .replace(/−/g, ' moins ')
-          .replace(/÷/g, ' divisé par ')
-          .replace(/=/g, ' égale ');
+          .replaceAll('×', ' fois ')
+          .replaceAll('+', ' plus ')
+          .replaceAll('−', ' moins ')
+          .replaceAll('÷', ' divisé par ')
+          .replaceAll('=', ' égale ');
         speak(spoken);
       } else if (type === 'gap') {
         // Pour "2 × ? = 18", ne dire que la partie connue
@@ -190,11 +190,11 @@ export class ChallengeMode extends GameMode {
       } else {
         // Pour classic, mcq, problem: lire l'énoncé sans donner la réponse
         const spoken = (question ? String(question) : `${a} ${operator} ${b} = ?`)
-          .replace(/×/g, ' fois ')
-          .replace(/\+/g, ' plus ')
-          .replace(/−/g, ' moins ')
-          .replace(/÷/g, ' divisé par ')
-          .replace(/=/g, ' égale ');
+          .replaceAll('×', ' fois ')
+          .replaceAll('+', ' plus ')
+          .replaceAll('−', ' moins ')
+          .replaceAll('÷', ' divisé par ')
+          .replaceAll('=', ' égale ');
         speak(spoken);
       }
     }

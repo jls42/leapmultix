@@ -5,18 +5,8 @@
  */
 
 describe('Stats Migration - Edge Cases', () => {
-  // Mock Storage
+  // Mock Storage - tests access mockStorage directly to simulate storage behavior
   let mockStorage = {};
-
-  const Storage = {
-    get: jest.fn(key => mockStorage[key] || null),
-    set: jest.fn((key, value) => {
-      mockStorage[key] = value;
-    }),
-    remove: jest.fn(key => {
-      delete mockStorage[key];
-    }),
-  };
 
   beforeEach(() => {
     mockStorage = {};
@@ -334,7 +324,7 @@ describe('Stats Migration - Edge Cases', () => {
   });
 
   describe('canSafelyDeleteOldStats() - Double Protection', () => {
-    const RETENTION_DAYS = 90;
+    // Constants used in safety checks
     const INACTIVITY_THRESHOLD_DAYS = 30;
 
     it('devrait retourner false si pas de migration', () => {

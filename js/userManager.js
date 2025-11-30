@@ -315,20 +315,15 @@ export const UserManager = {
             console.warn('TopBar.updateTableSettingsButtonVisibility failed:', e);
           });
       }
-    } catch (e) {
-      void e;
+    } catch {
+      // Ignoré silencieusement - TopBar peut ne pas être initialisé
     }
 
     // Afficher le défi quotidien si disponible
-    /**
-     * Fonction if
-     * @param {*} typeof - Description du paramètre
-     * @returns {*} Description du retour
-     */
     try {
       displayDailyChallenge();
-    } catch (e) {
-      void e;
+    } catch {
+      // Ignoré silencieusement - défi quotidien peut ne pas être disponible
     }
 
     // Nettoyer les scores par défaut pour éviter l'affichage de scores par défaut

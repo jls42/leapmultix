@@ -3,7 +3,7 @@
  * Vérifie que Multimiam supporte correctement +, −, ×, ÷
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 
 // Test de la logique métier multi-opérations
 describe('Multimiam Multi-Opérations (R4) - Logique métier', () => {

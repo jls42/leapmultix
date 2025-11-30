@@ -12,6 +12,7 @@
   box-shadow: 0 8px 16px rgb(0 0 0 / 0.1);
   border: 1px solid rgb(52 152 219 / 0.5);
   text-align: center;
+  animation: fade-in-up 0.3s ease-out;
 }
 
 .operation-selector-wrapper h3 {
@@ -108,7 +109,7 @@
   opacity: 0.5;
   cursor: not-allowed;
   background: #e0e0e0;
-  color: #999;
+  color: #666;
 }
 
 .operation-btn:disabled:hover {
@@ -150,7 +151,7 @@
 
 .theme-dark .operation-btn {
   background: rgb(255 255 255 / 0.15);
-  color: #e0e0e0;
+  color: #fff;
   border-color: rgb(255 255 255 / 0.3);
 }
 
@@ -162,11 +163,11 @@
 
 .theme-dark .operation-btn:disabled {
   background: rgb(255 255 255 / 0.05);
-  color: rgb(255 255 255 / 0.3);
+  color: rgb(255 255 255 / 0.5);
 }
 
 /* Animation d'apparition */
-@keyframes fadeInUp {
+@keyframes fade-in-up {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -175,10 +176,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.operation-selector-wrapper {
-  animation: fadeInUp 0.3s ease-out;
 }
 
 /* Focus accessible au clavier */

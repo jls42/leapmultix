@@ -299,7 +299,7 @@ export function migrateMultiplicationStats() {
       const b = Number(bStr);
 
       // Valider parsing
-      if (isNaN(a) || isNaN(b)) {
+      if (Number.isNaN(a) || Number.isNaN(b)) {
         console.warn(`⚠️ Clé invalide ignorée: ${key}`);
         skipped++;
         continue;

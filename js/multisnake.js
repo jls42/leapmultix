@@ -11,7 +11,7 @@ import { Utils } from './utils-es6.js';
 import { InfoBar } from './components/infoBar.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
-import { UserState } from './core/userState.js';
+// UserState removed - unused import
 // Utilisation de la fonction shuffleArray centralisée via Utils
 
 class SnakeGame {

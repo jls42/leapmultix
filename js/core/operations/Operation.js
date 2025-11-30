@@ -96,8 +96,8 @@ export class Operation {
     return (
       typeof a === 'number' &&
       typeof b === 'number' &&
-      !isNaN(a) &&
-      !isNaN(b) &&
+      !Number.isNaN(a) &&
+      !Number.isNaN(b) &&
       Number.isFinite(a) &&
       Number.isFinite(b)
     );

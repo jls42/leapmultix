@@ -122,7 +122,7 @@ describe('Multi-Operations Logic Validation', () => {
       });
 
       it('devrait calculer groupes pour addition', () => {
-        const getGroupCount = (operator, a, b) => {
+        const getGroupCount = operator => {
           if (operator === '+') {
             return 2; // Addition: toujours 2 groupes (a et b)
           }

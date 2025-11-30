@@ -309,8 +309,8 @@ export const TopBar = {
     this.updateTableSettingsButtonVisibility();
 
     // Écouter les changements d'opération pour mettre à jour la visibilité
-    if (typeof window !== 'undefined' && window.addEventListener) {
-      window.addEventListener('operation-changed', () => {
+    if (typeof globalThis.window !== 'undefined' && globalThis.addEventListener) {
+      globalThis.addEventListener('operation-changed', () => {
         this.updateTableSettingsButtonVisibility();
       });
     }
