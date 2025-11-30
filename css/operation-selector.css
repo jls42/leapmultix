@@ -7,7 +7,7 @@
   margin: 20px auto;
   padding: 20px;
   max-width: 600px;
-  background: var(--card-bg, #f9f9f9);
+  background: rgb(255 255 255 / 0.85);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
   text-align: center;
@@ -111,22 +111,31 @@
   }
 }
 
-/* Mode dark (si activé dans le projet) */
-@media (prefers-color-scheme: dark) {
-  .operation-selector-wrapper {
-    background: var(--card-bg-dark, #2c2c2c);
-  }
+/* Mode dark - cohérent avec .content-card */
+.theme-dark .operation-selector-wrapper {
+  background: rgb(44 62 80 / 0.7);
+  border-color: rgb(52 152 219 / 0.5);
+}
 
-  .operation-btn {
-    background: var(--input-bg-dark, #3c3c3c);
-    color: var(--text-color-dark, #e0e0e0);
-    border-color: var(--border-color-dark, #555);
-  }
+.theme-dark .operation-selector-wrapper h3 {
+  color: #e0e0e0;
+}
 
-  .operation-btn:disabled {
-    background: #444;
-    color: #777;
-  }
+.theme-dark .operation-btn {
+  background: rgb(255 255 255 / 0.15);
+  color: #e0e0e0;
+  border-color: rgb(255 255 255 / 0.3);
+}
+
+.theme-dark .operation-btn.active {
+  background-color: var(--primary-color, #4caf50);
+  color: white;
+  border-color: var(--primary-color, #4caf50);
+}
+
+.theme-dark .operation-btn:disabled {
+  background: rgb(255 255 255 / 0.05);
+  color: rgb(255 255 255 / 0.3);
 }
 
 /* Animation d'apparition */
