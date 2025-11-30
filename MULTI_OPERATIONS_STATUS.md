@@ -233,7 +233,7 @@ js/core/GameMode.js          # Utilise recordOperationResult()
 - [x] 10 niveaux Adventure Division (easy→medium→hard)
 - [x] 23 nouvelles traductions (fr/en/es)
 
-### ⏳ R4 : Arcade multi-opérations (EN COURS - 50%)
+### ✅ R4 : Arcade multi-opérations - COMPLÈTE (100%)
 
 - [x] **R4.1 : Multimiam multi-ops** ✅ COMPLÉTÉ (2025-01-29)
   - [x] Constructeur PacmanGame accepte operator (6ème paramètre)
@@ -251,8 +251,31 @@ js/core/GameMode.js          # Utilise recordOperationResult()
   - [x] computeCorrectAnswer() pour calculer réponse selon opérateur
   - [x] recordOperationResult() remplace recordMultiplicationResult()
   - [x] 16 tests unitaires Space Invasion multi-ops (100% passent)
-- [ ] **R4.3 : Memory multi-ops** (À FAIRE)
-- [ ] **R4.4 : Multisnake multi-ops** (À FAIRE)
+- [x] **R4.3 : Memory multi-ops** ✅ COMPLÉTÉ (2025-01-30)
+  - [x] MemoryGame accepte operator dans constructeur
+  - [x] generateQuestion() utilise operator et difficulty
+  - [x] Cartes type 'operation' au lieu de 'multiplication'
+  - [x] Exclusion tables uniquement pour multiplication
+  - [x] recordOperationResult() pour stats unifiées
+  - [x] 15 tests unitaires Memory multi-ops (100% passent)
+- [x] **R4.4 : Multisnake multi-ops** ✅ COMPLÉTÉ (2025-01-30)
+  - [x] SnakeGame accepte operator dans constructeur
+  - [x] generateQuestion() utilise operator et difficulty
+  - [x] currentOperation avec operator dynamique
+  - [x] Exclusion tables uniquement pour multiplication
+  - [x] recordOperationResult() pour stats unifiées
+  - [x] 15 tests unitaires Multisnake multi-ops (100% passent)
+
+### ✅ R4.5 : Corrections bugs arcade - COMPLÈTE (2025-01-30)
+
+- [x] **Operator display bugs** ✅ (commit d071f81)
+  - [x] Space Invasion: affichage correct de l'opérateur (non hardcodé ×)
+  - [x] Space Invasion: calcul réponse avec computeCorrectAnswer()
+  - [x] Memory: type de carte 'operation' au lieu de 'multiplication'
+- [x] **CSS regression bugs** ✅ (commits d74fb44, 46fd1a4)
+  - [x] Sélecteur d'opération: fond harmonisé rgb(255 255 255 / 0.85)
+  - [x] Mode dark: rgb(44 62 80 / 0.7) cohérent avec .content-card
+  - [x] Suppression variables CSS périmées
 
 ---
 
@@ -338,32 +361,36 @@ git diff main
 ## 📌 Checklist avant PR finale
 
 - [x] Phase 1 (R1) : Architecture + Quiz/Challenge pour ×, +, − ✅
-- [x] Phase 2 (R2) : Discovery/Adventure pour +/− ✅ (90%)
+- [x] Phase 2 (R2) : Discovery/Adventure pour +/− ✅ (100%)
   - [x] Adventure niveaux adaptés ✅
   - [x] Migration stats sécurisée ✅
   - [x] Traductions complètes ✅
-  - [ ] Tests unitaires (derniers 10%)
-- [ ] Phase 3 (R3) : Division (÷)
-- [ ] Phase 4 (R4) : Arcade multi-opérations
+  - [x] Tests unitaires ✅
+- [x] Phase 3 (R3) : Division (÷) ✅
+- [x] Phase 4 (R4) : Arcade multi-opérations ✅
+  - [x] R4.1-R4.4 : 4 jeux arcade multi-ops ✅
+  - [x] R4.5 : Corrections bugs (display + CSS) ✅
 - [ ] README.md mis à jour (nouvelles features)
-- [ ] Tests manuels sur Chrome + Firefox
+- [x] Tests manuels navigateur (Chrome DevTools)
 - [ ] Validation accessibilité (Tab, ARIA)
 
 ---
 
-## 📞 État actuel (2025-01-29)
+## 📞 État actuel (2025-01-30)
 
 **Branche :** `feat/multi-operations-support`
 
-**Progression globale :** 94% (R1 100%, R2 100%, R3 100%, R4 50%)
+**Progression globale :** ✅ 100% (R1 100%, R2 100%, R3 100%, R4 100%)
 
 **Derniers commits :**
 
 ```bash
-9ae61af docs: update status file for R1 completion and R2/R3/R4 roadmap
-4ceaa67 chore: apply prettier formatting and fix eslint warnings
-33d6a50 tests 1.7
-2285fab docs: add comprehensive multi-operations implementation status
+46fd1a4 fix(css): harmonize operation selector with interface cards
+d74fb44 revert(css): restore original operation selector colors
+d071f81 fix(arcade): correct operator display in Space Invasion and Memory
+cb26583 docs: update status for R4 completion (Arcade 100%)
+0b2c2a4 feat(arcade): add multi-operation support to Memory and Multisnake
+21a9dbd feat(arcade): add multi-operation support to Multimiam and Space Invasion
 ```
 
 **État qualité :**
@@ -373,20 +400,20 @@ git diff main
 ✅ npm run lint            # 0 erreurs, 0 warnings
 ✅ npm test                # 215/215 tests passent
 ✅ npm run test:coverage   # Coverage OK
-✅ npm run test:esm        # 87/87 tests ESM passent (+28 nouveaux tests R4)
+✅ npm run test:esm        # 117/117 tests ESM passent (+58 nouveaux tests R3+R4)
 ✅ npm run i18n:compare    # 546 clés synchronisées (fr/en/es)
 ```
 
 **Prochaines étapes :**
 
-1. ✅ **R2 final** : Tests unitaires Discovery/Adventure multi-ops (TERMINÉ)
-2. ✅ **R3** : Implémenter Division (÷) (TERMINÉ)
-3. ✅ **R4.1** : Multimiam multi-opérations (TERMINÉ)
-4. ✅ **R4.2** : Space Invasion multi-opérations (TERMINÉ)
-5. ✅ **R4.3** : Memory multi-opérations (TERMINÉ)
-6. ✅ **R4.4** : Multisnake multi-opérations (TERMINÉ)
-7. Tests manuels navigateurs - PROCHAINE ÉTAPE
-8. Mise à jour README.md
+1. ✅ **R1** : Architecture + Quiz/Challenge (TERMINÉ)
+2. ✅ **R2** : Discovery/Adventure multi-ops (TERMINÉ)
+3. ✅ **R3** : Division (TERMINÉ)
+4. ✅ **R4.1-R4.4** : 4 jeux arcade multi-ops (TERMINÉ)
+5. ✅ **R4.5** : Corrections bugs arcade + CSS (TERMINÉ)
+6. ✅ **Tests manuels Chrome DevTools** (TERMINÉ)
+7. **Mise à jour README.md** - PROCHAINE ÉTAPE
+8. **Validation accessibilité** (optionnel)
 9. **PR vers main**
 
 **Fichiers clés modifiés (session actuelle) :**

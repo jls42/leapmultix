@@ -9,28 +9,29 @@
 
 ## 📊 État Actuel du Projet
 
-### Avancement Global: 94% (R1/R2/R3 complètes, R4 50%)
+### Avancement Global: ✅ 100% (R1/R2/R3/R4 complètes)
 
 ```
-[██████████████████░░] 94%
+[████████████████████] 100% ✅
 
 Phase R1: Architecture + Quiz/Challenge  [████████████████████] 100% ✅
 Phase R2: Discovery/Adventure            [████████████████████] 100% ✅
 Phase R3: Division                       [████████████████████] 100% ✅
-Phase R4: Arcade multi-ops               [██████████░░░░░░░░░░]  50%
+Phase R4: Arcade multi-ops               [████████████████████] 100% ✅
   R4.1: Multimiam                        [████████████████████] 100% ✅
   R4.2: Space Invasion                   [████████████████████] 100% ✅
-  R4.3: Memory                           [░░░░░░░░░░░░░░░░░░░░]   0%
-  R4.4: Multisnake                       [░░░░░░░░░░░░░░░░░░░░]   0%
+  R4.3: Memory                           [████████████████████] 100% ✅
+  R4.4: Multisnake                       [████████████████████] 100% ✅
+  R4.5: Corrections bugs                 [████████████████████] 100% ✅
 ```
 
 ### Dernière Action
 
-**Date:** 2025-01-29
-**Action:** R4.2 Complété - Space Invasion multi-opérations (+/−/÷)
+**Date:** 2025-01-30
+**Action:** R4.5 Complété - Corrections bugs arcade + CSS
 **Status:** ✅ Complété
-**Fichiers modifiés:** 1 fichier (arcade-invasion.js)
-**Tests ajoutés:** 16 tests ESM Space Invasion multi-ops
+**Fichiers modifiés:** 3 fichiers (arcade-invasion.js, arcade-multimemory.js, operation-selector.css)
+**Bugs corrigés:** 5 (operator display, collision detection, duplicate helper, card type, CSS regression)
 
 ---
 
@@ -305,6 +306,61 @@ Phase R4: Arcade multi-ops               [██████████░░�
 - **Lignes ajoutées:** ~40 lignes (support multi-ops + imports)
 - **Lignes tests ajoutées:** ~200 lignes (15 nouveaux tests ESM)
 - **Tests passants:** 117/117 ESM (+15 nouveaux tests)
+
+#### R4.5: Corrections bugs arcade + CSS ✅ COMPLÉTÉ (2025-01-30)
+
+**Phase:** Corrections post-implémentation (bugs détectés en tests manuels Chrome DevTools)
+
+**Actions réalisées:**
+
+1. ✅ **Bug operator display - Space Invasion** (commit d071f81)
+   - **Problème:** Question affichait hardcodé "7 × 1 = ?" au lieu de "7 + 1 = ?" avec Addition
+   - **Cause:** Ligne 685 utilisait hardcodé `${currentProblem.a} × ${currentProblem.b} = ?`
+   - **Solution:** Remplacé par variable dynamique `${currentProblem.a} ${operator} ${currentProblem.b} = ?`
+
+2. ✅ **Bug collision detection - Space Invasion** (commit d071f81)
+   - **Problème:** Calcul réponse correcte utilisait hardcodé `a * b`
+   - **Cause:** Ligne 793 ne tenait pas compte de l'opérateur sélectionné
+   - **Solution:** Fonction helper `computeCorrectAnswer(op, a, b)` avec switch (+/−/×/÷)
+
+3. ✅ **Bug duplicate helper - Space Invasion** (commit d071f81)
+   - **Problème:** Fonction `computeCorrectAnswer` définie deux fois (scope global + fonction locale)
+   - **Solution:** Supprimé la duplication dans `handleAvatarTransformation()`, utilise helper global
+
+4. ✅ **Bug card type - Memory** (commit d071f81)
+   - **Problème:** Référence carte `card.type === 'multiplication'` alors que type changé en 'operation'
+   - **Cause:** Ligne 959 non mise à jour lors de R4.3
+   - **Solution:** Changé en `card.type === 'operation'`
+
+5. ✅ **Régression CSS - Sélecteur d'opération** (commits d74fb44, 46fd1a4)
+   - **Problème:** Fond noir du sélecteur non cohérent avec reste de l'interface
+   - **Cause:** Commit 2e17622 avait changé var(--card-bg) en blanc transparent puis en noir
+   - **Solution:**
+     - Fond principal: `rgb(255 255 255 / 0.85)` (cohérent avec .content-card)
+     - Mode dark: `rgb(44 62 80 / 0.7)` (cohérent avec theme-dark .content-card)
+     - Supprimé `@media (prefers-color-scheme: dark)` au profit de `.theme-dark`
+
+**Décisions techniques:**
+
+- **Helper function pattern** : Extraction computeCorrectAnswer() pour DRY
+- **CSS harmonization** : Alignement sur les valeurs existantes de .content-card
+- **Browser testing** : Tests manuels Chrome DevTools pour chaque correction
+
+**Métriques:**
+
+- **Bugs détectés:** 5 (4 fonctionnels + 1 CSS)
+- **Fichiers modifiés:** 3 (arcade-invasion.js, arcade-multimemory.js, operation-selector.css)
+- **Lignes modifiées:** ~30 lignes
+- **Commits:** 3 commits de correction
+- **Tests manuels:** Vérification navigateur pour chaque correction
+
+**Tests manuels effectués (Chrome DevTools):**
+
+1. ✅ Sélection Addition (+) → Space Invasion affiche "9 + 9 = ?"
+2. ✅ Sélection Soustraction (−) → Multimiam affiche opérations correctes
+3. ✅ Sélection Division (÷) → Memory affiche cartes division
+4. ✅ Sélecteur d'opération avec fond cohérent (blanc transparent)
+5. ✅ Cartes arcade avec fond gris (design voulu)
 
 ---
 
