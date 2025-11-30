@@ -2,6 +2,7 @@
  * Tests ESM - Space Invasion Multi-Opérations (R4.2)
  * Vérifie que Space Invasion supporte correctement +, −, ×, ÷
  */
+/* eslint-disable sonarjs/no-duplicate-functions -- Test file: similar helper patterns acceptable for test isolation */
 
 import { describe, it, expect } from '@jest/globals';
 

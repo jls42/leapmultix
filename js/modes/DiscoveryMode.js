@@ -14,6 +14,7 @@ import { GameMode } from '../core/GameMode.js';
 import { getTranslation, speak, addArrowKeyNavigation } from '../utils-es6.js';
 import { UserState } from '../core/userState.js';
 import { getOperation } from '../core/operations/OperationRegistry.js';
+import { appendSanitizedHTML } from '../security-utils.js';
 
 export class DiscoveryMode extends GameMode {
   constructor() {
@@ -671,6 +672,7 @@ export class DiscoveryMode extends GameMode {
   /**
    * Déclencher l'animation d'une opération
    */
+   
   triggerAnimation(a, b) {
     const result = this.operation.compute(a, b);
     const animContainer = document.getElementById('animation-container');
@@ -736,8 +738,7 @@ export class DiscoveryMode extends GameMode {
       // Addition/Soustraction: affichage simple avec objets
       const calc = document.createElement('div');
       calc.className = 'animation-objects';
-      // eslint-disable-next-line no-restricted-properties -- Safe: generateVisualObjects returns internal trusted HTML
-      calc.innerHTML = this.generateVisualObjects(a, b);
+      appendSanitizedHTML(calc, this.generateVisualObjects(a, b));
       step.appendChild(calc);
     }
 

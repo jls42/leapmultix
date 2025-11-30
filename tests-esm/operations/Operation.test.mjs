@@ -1,4 +1,5 @@
 /* eslint-env jest, node */
+/* eslint-disable sonarjs/no-duplicate-functions -- Test file: similar operation test patterns for different operations */
 /**
  * Tests pour les classes d'opération (Operation, Multiplication, Addition, Subtraction)
  * Phase 1.7 - Tests unitaires R1
@@ -56,8 +57,8 @@ describe('Operation (classe abstraite)', () => {
     // Invalides
     expect(op.isValid('5', 3)).toBe(false);
     expect(op.isValid(5, '3')).toBe(false);
-    expect(op.isValid(NaN, 3)).toBe(false);
-    expect(op.isValid(5, NaN)).toBe(false);
+    expect(op.isValid(Number.NaN, 3)).toBe(false);
+    expect(op.isValid(5, Number.NaN)).toBe(false);
     expect(op.isValid(Infinity, 3)).toBe(false);
     expect(op.isValid(5, Infinity)).toBe(false);
   });

@@ -1,4 +1,5 @@
 /* eslint-env jest */
+/* eslint-disable sonarjs/no-nested-functions -- Test file: Jest describe/it nesting is standard practice */
 /**
  * Tests de validation logique - Multi-opérations Discovery/Adventure
  * Phase R2 - Tests unitaires pour vérifier la logique multi-opérations
@@ -56,12 +57,13 @@ describe('Multi-Operations Logic Validation', () => {
 
     describe('Génération exemples opérations', () => {
       it('devrait générer exemples avec difficulté pour addition', () => {
+        const difficultyMax = { easy: 5, medium: 10, hard: 20 };
         const generateExamples = (operator, difficulty, count) => {
           const examples = [];
           for (let i = 0; i < count; i++) {
             let a, b;
             if (operator === '+') {
-              const max = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 10 : 20;
+              const max = difficultyMax[difficulty] || 10;
               a = Math.floor(Math.random() * max) + 1;
               b = Math.floor(Math.random() * max) + 1;
             }

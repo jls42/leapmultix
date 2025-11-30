@@ -1,4 +1,5 @@
 /* eslint-env jest */
+/* eslint-disable sonarjs/no-nested-functions -- Test file: Jest describe/it nesting is standard practice */
 /**
  * Tests pour stats-migration.js - Edge cases
  * Phase R2 - Tests migration stats multi-opérations
@@ -98,8 +99,8 @@ describe('Stats Migration - Edge Cases', () => {
             return;
           }
 
-          const table = parseInt(match[1], 10);
-          const num = parseInt(match[2], 10);
+          const table = Number.parseInt(match[1], 10);
+          const num = Number.parseInt(match[2], 10);
           const newKey = `${table}×${num}`;
 
           newStats[newKey] = {
@@ -144,8 +145,8 @@ describe('Stats Migration - Edge Cases', () => {
             return;
           }
 
-          const table = parseInt(match[1], 10);
-          const num = parseInt(match[2], 10);
+          const table = Number.parseInt(match[1], 10);
+          const num = Number.parseInt(match[2], 10);
           const newKey = `${table}×${num}`;
 
           newStats[newKey] = {
@@ -186,8 +187,8 @@ describe('Stats Migration - Edge Cases', () => {
           const match = key.match(/^(\d+)[x×](\d+)$/);
           if (!match) return;
 
-          const table = parseInt(match[1], 10);
-          const num = parseInt(match[2], 10);
+          const table = Number.parseInt(match[1], 10);
+          const num = Number.parseInt(match[2], 10);
           const newKey = `${table}×${num}`;
 
           // Skip si déjà migré
@@ -248,8 +249,8 @@ describe('Stats Migration - Edge Cases', () => {
           const match = key.match(/^(\d+)[x×](\d+)$/);
           if (!match) return;
 
-          const table = parseInt(match[1], 10);
-          const num = parseInt(match[2], 10);
+          const table = Number.parseInt(match[1], 10);
+          const num = Number.parseInt(match[2], 10);
           const newKey = `${table}×${num}`;
 
           if (newStats[newKey]) {
@@ -296,8 +297,8 @@ describe('Stats Migration - Edge Cases', () => {
           const match = key.match(/^(\d+)[x×](\d+)$/);
           if (!match) return;
 
-          const table = parseInt(match[1], 10);
-          const num = parseInt(match[2], 10);
+          const table = Number.parseInt(match[1], 10);
+          const num = Number.parseInt(match[2], 10);
           const newKey = `${table}×${num}`; // Toujours Unicode dans nouveau format
 
           newStats[newKey] = {
@@ -330,7 +331,7 @@ describe('Stats Migration - Edge Cases', () => {
     it('devrait retourner false si pas de migration', () => {
       const canSafelyDeleteOldStats = () => {
         const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag || !migrationFlag.firstMigrationDate) {
+        if (!migrationFlag?.firstMigrationDate) {
           return false;
         }
         return false;
@@ -349,7 +350,7 @@ describe('Stats Migration - Edge Cases', () => {
 
       const canSafelyDeleteOldStats = () => {
         const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag || !migrationFlag.firstMigrationDate) {
+        if (!migrationFlag?.firstMigrationDate) {
           return false;
         }
 
@@ -376,7 +377,7 @@ describe('Stats Migration - Edge Cases', () => {
 
       const canSafelyDeleteOldStats = () => {
         const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag || !migrationFlag.firstMigrationDate) {
+        if (!migrationFlag?.firstMigrationDate) {
           return false;
         }
 
@@ -408,7 +409,7 @@ describe('Stats Migration - Edge Cases', () => {
 
       const canSafelyDeleteOldStats = () => {
         const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag || !migrationFlag.firstMigrationDate) {
+        if (!migrationFlag?.firstMigrationDate) {
           return false;
         }
 
@@ -442,7 +443,7 @@ describe('Stats Migration - Edge Cases', () => {
 
       const canSafelyDeleteOldStats = () => {
         const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag || !migrationFlag.firstMigrationDate) return false;
+        if (!migrationFlag?.firstMigrationDate) return false;
 
         const now = Date.now();
         const retentionPeriodElapsed = now >= (migrationFlag.retentionUntil || 0);
@@ -496,7 +497,7 @@ describe('Stats Migration - Edge Cases', () => {
 
       const cleanupOldStatsIfSafe = () => {
         const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag || !migrationFlag.done) return;
+        if (!migrationFlag?.done) return;
 
         const oldStats = mockStorage.multiplicationStats;
         if (!oldStats) return;
@@ -539,7 +540,7 @@ describe('Stats Migration - Edge Cases', () => {
 
       const cleanupOldStatsIfSafe = () => {
         const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag || !migrationFlag.done) return;
+        if (!migrationFlag?.done) return;
 
         const now = Date.now();
         const retentionPeriodElapsed = now >= (migrationFlag.retentionUntil || 0);

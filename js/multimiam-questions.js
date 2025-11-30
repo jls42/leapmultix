@@ -8,6 +8,30 @@ import { UserManager } from './userManager.js';
 
 const isValidIndex = (value, size) => Number.isInteger(value) && value >= 0 && value < size;
 
+/**
+ * Détermine les tables à utiliser pour la génération de question
+ * @param {Object} game - État du jeu
+ * @param {string} operator - Opérateur mathématique
+ * @returns {number[]|undefined} Tables à utiliser ou undefined
+ */
+const getTablesForQuestion = (game, operator) => {
+  if (operator !== '×') return undefined;
+  if (!Array.isArray(game?.tables)) return undefined;
+  return game.tables.length > 0 ? game.tables : undefined;
+};
+
+/**
+ * Détermine la table forcée pour la génération de question
+ * @param {Object} game - État du jeu
+ * @param {string} operator - Opérateur mathématique
+ * @returns {number|null} Numéro de table forcée ou null
+ */
+const getForceTable = (game, operator) => {
+  if (operator !== '×') return null;
+  if (game?.mode !== 'table') return null;
+  return game?.tableNumber ?? null;
+};
+
 const isFreeLabyrinthCell = (labyrinth, x, y) => {
   if (!Array.isArray(labyrinth) || !isValidIndex(y, labyrinth.length)) {
     return false;
@@ -40,12 +64,8 @@ export const PacmanQuestions = {
         operator, // Support multi-opérations (+, −, ×, ÷)
         difficulty: game?.difficulty || 'medium',
         excludeTables: operator === '×' ? excluded : [],
-        tables:
-          operator === '×' && Array.isArray(game?.tables) && game.tables.length > 0
-            ? game.tables
-            : undefined,
-        forceTable:
-          operator === '×' && game?.mode === 'table' && game?.tableNumber ? game.tableNumber : null,
+        tables: getTablesForQuestion(game, operator),
+        forceTable: getForceTable(game, operator),
       });
 
       return {

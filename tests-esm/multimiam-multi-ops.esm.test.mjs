@@ -2,6 +2,7 @@
  * Tests ESM - Multimiam Multi-Opérations (R4)
  * Vérifie que Multimiam supporte correctement +, −, ×, ÷
  */
+/* eslint-disable sonarjs/no-nested-functions -- Test file: helper functions inside describe are standard practice */
 
 import { describe, it, expect } from '@jest/globals';
 

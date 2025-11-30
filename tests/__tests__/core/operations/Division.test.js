@@ -53,12 +53,9 @@ describe('Division Operation', () => {
     }
 
     isValid(a, b) {
-      if (typeof a !== 'number' || typeof b !== 'number') return false;
-      if (isNaN(a) || isNaN(b)) return false;
-      if (b === 0) return false;
-      if (a < 0 || b < 0) return false;
-      if (a % b !== 0) return false;
-      return true;
+      const isNumber = v => typeof v === 'number' && !Number.isNaN(v);
+      if (!isNumber(a) || !isNumber(b)) return false;
+      return b !== 0 && a >= 0 && b >= 0 && a % b === 0;
     }
 
     getSupportedTypes() {
@@ -216,8 +213,8 @@ describe('Division Operation', () => {
 
     it('devrait invalider NaN', () => {
       const division = new Division();
-      expect(division.isValid(NaN, 3)).toBe(false);
-      expect(division.isValid(12, NaN)).toBe(false);
+      expect(division.isValid(Number.NaN, 3)).toBe(false);
+      expect(division.isValid(12, Number.NaN)).toBe(false);
     });
 
     it('devrait invalider non-nombres', () => {

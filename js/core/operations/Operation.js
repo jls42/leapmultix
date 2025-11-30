@@ -38,23 +38,25 @@ export class Operation {
   /**
    * Calcule le résultat de l'opération
    * @abstract
-   * @param {number} _a - Premier opérande (utilisé par les sous-classes)
-   * @param {number} _b - Second opérande (utilisé par les sous-classes)
+   * @param {number} a - Premier opérande (utilisé par les sous-classes)
+   * @param {number} b - Second opérande (utilisé par les sous-classes)
    * @returns {number} Résultat de l'opération
    * @throws {Error} Si la méthode n'est pas implémentée
    */
-  compute(_a, _b) {
+  // eslint-disable-next-line no-unused-vars -- Abstract method: parameters used by subclasses
+  compute(a, b) {
     throw new Error(`compute() must be implemented in ${this.constructor.name}`);
   }
 
   /**
    * Génère des opérandes aléatoires selon la difficulté
    * @abstract
-   * @param {string} _difficulty - Niveau de difficulté (utilisé par les sous-classes)
+   * @param {string} difficulty - Niveau de difficulté (utilisé par les sous-classes)
    * @returns {{ a: number, b: number }} Paire d'opérandes générés
    * @throws {Error} Si la méthode n'est pas implémentée
    */
-  generateOperands(_difficulty = 'medium') {
+  // eslint-disable-next-line no-unused-vars -- Abstract method: parameter used by subclasses
+  generateOperands(difficulty = 'medium') {
     throw new Error(`generateOperands() must be implemented in ${this.constructor.name}`);
   }
 
