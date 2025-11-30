@@ -1,7 +1,6 @@
 <details>
-<summary>Detta dokument finns även tillgängligt på andra språk</summary>
+<summary>Detta dokument finns även på andra språk</summary>
 
-- [Français](./README.md)
 - [English](./README.en.md)
 - [Español](./README.es.md)
 - [Português](./README.pt.md)
@@ -9,6 +8,7 @@
 - [中文](./README.zh.md)
 - [हिन्दी](./README.hi.md)
 - [العربية](./README.ar.md)
+- [Français](./README.md)
 - [Italiano](./README.it.md)
 - [Polski](./README.pl.md)
 - [Nederlands](./README.nl.md)
@@ -20,7 +20,7 @@
 
 # LeapMultix
 
-<!-- Märken (uppdatera <owner>/<repo> efter GitHub-migrering) -->
+<!-- Badges (uppdatera <owner>/<repo> efter GitHub-migrering) -->
 
 ![CI](https://img.shields.io/github/actions/workflow/status/jls42/leapmultix/ci.yml?branch=main)
 
@@ -28,7 +28,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-![Licens: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
+![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
 
 ## Innehållsförteckning
 
@@ -46,53 +46,49 @@
 
 ## Beskrivning
 
-LeapMultix är en modern interaktiv pedagogisk webbapplikation utformad för barn (8–12 år) för att bemästra de 4 aritmetiska operationerna: multiplikation (×), addition (+), subtraktion (−) och division (÷). Appen erbjuder **5 spellägen** och **4 arkadminispel** i ett intuitivt, tillgängligt och flerspråkigt gränssnitt.
+LeapMultix är en modern interaktiv pedagogisk webbapplikation utformad för barn (8–12 år) att bemästra de 4 räknesätten: multiplikation (×), addition (+), subtraktion (−) och division (÷). Applikationen erbjuder **5 spellägen** och **4 arkadminispel** i ett intuitivt, tillgängligt och flerspråkigt gränssnitt.
 
-**Stöd för flera operationer:** Frågesport- och Utmaningslägen möjliggör övning av alla operationer. Upptäckts-, Äventyrs- och Arkadlägen fokuserar på multiplikation.
+**Stöd för flera räknesätt:** Quiz- och Utmaningslägen tillåter övning av alla räknesätt. Upptäckts-, Äventyrs- och Arkadlägen fokuserar på multiplikation men är utformade för att stödja alla räknesätt.
 
 **Utvecklad av:** Julien LS (contact@jls42.org)
 
-**Online URL:** https://leapmultix.jls42.org/
+**URL Online:** https://leapmultix.jls42.org/
 
 ## ✨ Funktioner
 
 ### 🎮 Spellägen
 
-- **Upptäcktsläge**: Visuell och interaktiv utforskning av multiplikationstabellerna
-- **Frågesportläge** ⭐: Flervalsfrågor med stöd för de 4 operationerna (×, +, −, ÷) och adaptiv progression
-- **Utmaningsläge** ⭐: Tävling mot klockan med de 4 operationerna (×, +, −, ÷) och olika svårighetsgrader
-- **Äventyrsläge**: Narrativ progression genom nivåer med interaktiv karta (multiplikation)
-
-⭐ = Fullt stöd för alla 4 aritmetiska operationer
+- **Upptäcktsläge**: Visuell och interaktiv utforskning anpassad till varje räknesätt
+- **Quizläge**: Flervalsfrågor med stöd för alla 4 räknesätt (×, +, −, ÷) och adaptiv progression
+- **Utmaningsläge**: Race mot klockan med alla 4 räknesätt (×, +, −, ÷) och olika svårighetsgrader
+- **Äventyrsläge**: Berättande progression via nivåer med stöd för alla 4 räknesätt
 
 ### 🕹️ Arkadminispel
 
-- **MultiInvaders**: Pedagogiskt Space Invaders - Förstör fel svar (multiplikation)
-- **MultiMiam**: Matematisk Pac-Man - Samla rätt svar (multiplikation)
-- **MultiMemory**: Minnesspel - Matcha multiplikationer med deras resultat
-- **MultiSnake**: Pedagogiskt Snake - Väx genom att äta rätt nummer (multiplikation)
+- **MultiInvaders**: Pedagogiskt Space Invaders - Förstör fel svar
+- **MultiMiam**: Matematisk Pac-Man - Samla de rätta svaren
+- **MultiMemory**: Minnesspel - Matcha operationer och resultat
+- **MultiSnake**: Pedagogisk Snake - Väx genom att äta rätt nummer
 
-### ➕ Stöd för Flera Operationer
+### ➕ Stöd för Flera Räknesätt
 
-LeapMultix går längre än enkel multiplikation genom att erbjuda komplett träning för de 4 aritmetiska operationerna:
+LeapMultix erbjuder komplett träning för de 4 räknesätten i **alla lägen**:
 
-| Läge       | ×   | +   | −   | ÷   |
-| ---------- | --- | --- | --- | --- |
-| Frågesport | ✅  | ✅  | ✅  | ✅  |
-| Utmaning   | ✅  | ✅  | ✅  | ✅  |
-| Upptäckt   | ✅  | ❌  | ❌  | ❌  |
-| Äventyr    | ✅  | ❌  | ❌  | ❌  |
-| Arkad      | ✅  | ❌  | ❌  | ❌  |
+| Läge     | ×   | +   | −   | ÷   |
+| -------- | --- | --- | --- | --- |
+| Quiz     | ✅  | ✅  | ✅  | ✅  |
+| Utmaning | ✅  | ✅  | ✅  | ✅  |
+| Upptäckt | ✅  | ✅  | ✅  | ✅  |
+| Äventyr  | ✅  | ✅  | ✅  | ✅  |
+| Arkad    | ✅  | ✅  | ✅  | ✅  |
 
-**Obs:** Stöd för operationer för Upptäckts-, Äventyrs- och Arkadlägen planeras i en framtida version.
+### 🌍 Övergripande Funktioner
 
-### 🌍 Tvärfunktionella Funktioner
-
-- **Fleranvändare**: Hantering av individuella profiler med sparade framsteg
+- **Fleranvändare**: Hantering av individuella profiler med sparad progression
 - **Flerspråkig**: Stöd för franska, engelska och spanska
 - **Anpassning**: Avatarer, färgteman, bakgrunder
 - **Tillgänglighet**: Tangentbordsnavigering, touchstöd, WCAG 2.1 AA-efterlevnad
-- **Mobilresponsiv**: Optimerat gränssnitt för surfplattor och smartphones
+- **Mobilanpassad**: Gränssnitt optimerat för surfplattor och smartphones
 - **Progressionssystem**: Poäng, märken, dagliga utmaningar
 
 ## 🚀 Snabbstart
@@ -114,19 +110,19 @@ npm install
 
 # Starta utvecklingsservern (alternativ 1)
 npm run serve
-# Applikationen kommer att vara tillgänglig på http://localhost:8080 (eller nästa lediga port)
+# Applikationen kommer att vara tillgänglig på http://localhost:8080 (eller nästa tillgängliga port)
 
 # Eller med Python (alternativ 2)
 python3 -m http.server 8000
 # Applikationen kommer att vara tillgänglig på http://localhost:8000
 ```
 
-### Tillgängliga skript
+### Tillgängliga Skript
 
 ```bash
 # Utveckling
 npm run serve          # Lokal server (http://localhost:8080)
-npm run lint           # Kodkontroll med ESLint
+npm run lint           # Kodverifiering med ESLint
 npm run lint:fix       # Automatisk korrigering av ESLint-problem
 npm run format:check   # Kontrollera kodformatering (ALLTID före commit)
 npm run format         # Formatera kod med Prettier
@@ -138,12 +134,12 @@ npm run test:watch     # Tester i watch-läge
 npm run test:coverage  # Tester med täckningsrapport
 npm run test:core      # Tester endast för kärnmoduler
 npm run test:integration # Integrationstester
-npm run test:storage   # Tester för lagringssystem
-npm run test:esm       # ESM-tester (mappen tests-esm/, Jest vm-modules)
+npm run test:storage   # Lagringssystemtester
+npm run test:esm       # ESM-tester (mappar tests-esm/, Jest vm-modules)
 npm run test:verbose   # Tester med detaljerad utdata
 npm run test:pwa-offline # PWA offline-test (kräver Puppeteer), efter `npm run serve`
 
-# Analys och underhåll
+# Analys och Underhåll
 npm run analyze:jsdoc  # Dokumentationsanalys
 npm run improve:jsdoc  # Automatisk JSDoc-förbättring
 npm run audit:mobile   # Mobil responsivitetstester
@@ -160,17 +156,17 @@ npm run assets:analyze     # Analys av responsiva tillgångar
 npm run assets:diff        # Jämförelse av tillgångar
 
 # Internationalisering
-npm run i18n:verify    # Verifiera konsistens för översättningsnycklar
+npm run i18n:verify    # Verifiera konsistens av översättningsnycklar
 npm run i18n:unused    # Lista oanvända översättningsnycklar
 npm run i18n:compare   # Jämför översättningar (en/es) med fr.json (referens)
 
-# Bygge & leverans
+# Bygg & Leverans
 npm run build          # Produktionsbygge (Rollup) + postbuild (komplett dist/)
-npm run serve:dist     # Servera dist/ på http://localhost:5000 (eller ledig port)
+npm run serve:dist     # Servera dist/ på http://localhost:5000 (eller tillgänglig port)
 
 # PWA och Service Worker
 npm run sw:disable     # Inaktivera service worker
-npm run sw:fix         # Åtgärda problem med service worker
+npm run sw:fix         # Åtgärda service worker-problem
 ```
 
 ## 🏗️ Arkitektur
@@ -183,24 +179,24 @@ leapmultix/
 ├── js/
 │   ├── core/               # ES6 kärnmoduler
 │   │   ├── GameMode.js     # Basklass för lägen
-│   │   ├── GameModeManager.js # Hantering av spellägen
+│   │   ├── GameModeManager.js # Spellägeshantering
 │   │   ├── storage.js      # LocalStorage API
 │   │   ├── audio.js        # Ljudhantering
 │   │   ├── utils.js        # Generiska verktyg (kanonisk källa)
-│   │   ├── eventBus.js     # Händelsebaserad kommunikation
-│   │   ├── userState.js    # Hantering av användarsession
+│   │   ├── eventBus.js     # Händelsekommunikation
+│   │   ├── userState.js    # Användarsessionshantering
 │   │   ├── mainInit.js     # DOM-ready initialisering
 │   │   ├── theme.js        # Temasystem
 │   │   ├── userUi.js       # Användargränssnittsverktyg
-│   │   ├── parental.js     # Föräldrakontroller
-│   │   ├── adventure-data.js # Data för äventyrsläge
+│   │   ├── parental.js     # Föräldrakontroll
+│   │   ├── adventure-data.js # Äventyrslägesdata
 │   │   ├── mult-stats.js   # Multiplikationsstatistik
 │   │   ├── challenge-stats.js # Utmaningsstatistik
 │   │   └── daily-challenge.js # Hantering av dagliga utmaningar
 │   ├── components/         # Återanvändbara UI-komponenter
-│   │   ├── topBar.js       # Navigationsfält
-│   │   ├── infoBar.js      # Spelinformationsfält
-│   │   ├── dashboard.js    # Användardashboard
+│   │   ├── topBar.js       # Navigeringsfält
+│   │   ├── infoBar.js      # Spelinfofält
+│   │   ├── dashboard.js    # Användarpanel
 │   │   └── customization.js # Anpassningsgränssnitt
 │   ├── modes/              # Spellägen
 │   │   ├── QuizMode.js
@@ -212,41 +208,41 @@ leapmultix/
 │   │   ├── arcade.js       # Huvudarkadorkestrator
 │   │   ├── arcade-invasion.js # Space Invaders (31 KB)
 │   │   ├── arcade-multimemory.js # Minnesspel (31 KB)
-│   │   ├── arcade-multimiam.js # Multimiam-integration
+│   │   ├── arcade-multimiam.js # MultiMiam-integration
 │   │   ├── arcade-multisnake.js # Snake-integration
 │   │   ├── arcade-common.js, arcade-utils.js # Delade verktyg
 │   │   ├── arcade-message.js, arcade-points.js # UI-komponenter
 │   │   └── arcade-scores.js # Poänghantering
-│   ├── multimiam/          # Pac-Man-spel (uppdelad arkitektur)
+│   ├── multimiam/          # Pac-Man spel (uppdelad arkitektur)
 │   │   ├── multimiam.js    # Huvudkontroller
 │   │   ├── multimiam-engine.js # Spelmotor (15 KB)
 │   │   ├── multimiam-renderer.js # Renderingssystem (9 KB)
 │   │   ├── multimiam-controls.js # Kontrollhantering (7 KB)
 │   │   ├── multimiam-questions.js # Frågegenerering (6 KB)
 │   │   └── multimiam-ui.js # Gränssnittselement
-│   ├── multisnake.js       # Snake-spel (38 KB)
+│   ├── multisnake.js       # Snake spel (38 KB)
 │   ├── navigation/         # Navigeringssystem
 │   │   ├── slides.js       # Slide-baserad navigering (goToSlide, showSlide)
 │   │   └── keyboard-navigation.js # Tangentbordsstöd
-│   ├── ui/                 # Användargränssnitt och återkoppling
+│   ├── ui/                 # Användargränssnitt och feedback
 │   │   ├── uiUtils.js      # Gränssnittsverktyg
-│   │   ├── ui-feedback.js  # Mekanismer för återkoppling
+│   │   ├── ui-feedback.js  # Feedbackmekanismer
 │   │   ├── touch-support.js # Touchstöd (7 KB)
 │   │   ├── virtual-keyboard.js # Virtuellt tangentbord
 │   │   ├── coin-display.js, coin-effects.js # Valutasystem
 │   │   ├── notifications.js # Aviseringssystem
 │   │   └── badges.js       # Märkessystem
-│   ├── media/              # Mediahantering
+│   ├── media/              # Mediehantering
 │   │   ├── VideoManager.js # Videouppspelningshantering (12 KB)
-│   │   └── responsive-image-loader.js # Bildinläsning (9 KB)
+│   │   └── responsive-image-loader.js # Bildladdning (9 KB)
 │   ├── orchestration/      # Orkestrering och laddning
 │   │   ├── mode-orchestrator.js # Lägesväxling
 │   │   ├── lazy-loader.js  # Dynamisk laddning (10 KB)
-│   │   └── game-cleanup.js # Tillståndsrensning
+│   │   └── game-cleanup.js # Tillståndsstädning
 │   ├── utils/              # Verktyg
 │   │   ├── utils-es6.js    # Huvudaggregator (5 KB)
 │   │   ├── main-helpers.js # Applikationshjälpare
-│   │   ├── helpers.js      # Äldre hjälparfunktioner
+│   │   ├── helpers.js      # Äldre hjälpfunktioner
 │   │   ├── stats-utils.js  # Statistikverktyg
 │   │   ├── difficulty.js   # Svårighetshantering
 │   │   └── questionGenerator.js # Frågegenerering
@@ -262,14 +258,14 @@ leapmultix/
 │   │   └── logger.js       # Loggningssystem
 │   ├── accessibility/      # Tillgänglighet
 │   │   ├── accessibility.js # Tillgänglighetsfunktioner
-│   │   └── speech.js       # Text-till-tal-stöd
+│   │   └── speech.js       # Stöd för talsyntes
 │   ├── integration/        # Integration och analys
-│   │   ├── plausible-init.js # Plausible analytics
+│   │   ├── plausible-init.js # Plausible analys
 │   │   ├── cache-updater.js # Cachehantering (10 KB)
 │   │   └── imports.js      # Importverktyg
-│   ├── main-es6.js         # ES6-ingångspunkt
+│   ├── main-es6.js         # ES6 ingångspunkt
 │   ├── main.js             # Huvudorkestrator
-│   ├── bootstrap.js        # ES6 händelsehanterarkonfiguration
+│   ├── bootstrap.js        # ES6 händelsehanterare inställning
 │   └── game.js             # Tillståndshantering och dagliga utmaningar
 ├── css/                    # Modulära stilar
 ├── assets/                 # Resurser
@@ -277,31 +273,31 @@ leapmultix/
 │   ├── generated-images/   # Genererade responsiva bilder
 │   ├── sounds/             # Ljudeffekter
 │   ├── translations/       # Översättningsfiler (fr, en, es)
-│   └── videos/             # Instruktionsvideor
+│   └── videos/             # Handledningsvideor
 ├── tests/                  # Automatiserade tester
 │   ├── __tests__/          # Enhets- och integrationstester
 │   └── tests-esm/          # ESM-tester (.mjs)
 ├── scripts/                # Underhållsskript
-│   ├── compare-translations.cjs # Jämförelse av översättningar
-│   └── cleanup-i18n-keys.cjs # Rensning av i18n-nycklar
+│   ├── compare-translations.cjs # Översättningsjämförelse
+│   └── cleanup-i18n-keys.cjs # i18n nyckelstädning
 └── dist/                   # Produktionsbygge (genererat)
 ```
 
 ### Teknisk Arkitektur
 
-**Moderna ES6-moduler**: Projektet använder en modulär arkitektur med ES6-klasser och inbyggda importer/exporter.
+**Moderna ES6-moduler**: Projektet använder en modulär arkitektur med ES6-klasser och inbyggd import/export.
 
 **Återanvändbara Komponenter**: Gränssnitt byggt med centraliserade UI-komponenter (TopBar, InfoBar, Dashboard, Customization).
 
 **Lazy Loading**: Intelligent laddning av moduler på begäran via `lazy-loader.js` för att optimera initial prestanda.
 
-**Enhetligt Lagringssystem**: Centraliserat API för persistens av användardata via LocalStorage med reservlösningar.
+**Enhetligt Lagringssystem**: Centraliserat API för persistens av användardata via LocalStorage med fallbacks.
 
 **Centraliserad Ljudhantering**: Ljudkontroll med flerspråkigt stöd och preferenser per användare.
 
-**Event Bus**: Frikopplad händelsebaserad kommunikation mellan komponenter för en underhållbar arkitektur.
+**Händelsebuss**: Frikopplad händelsestyrd kommunikation mellan komponenter för en underhållbar arkitektur.
 
-**Slide-navigering**: Navigeringssystem baserat på numrerade slides (slide0, slide1, etc.) med `goToSlide()`.
+**Slidenavigering**: Navigeringssystem baserat på numrerade slides (slide0, slide1, etc.) med `goToSlide()`.
 
 **Säkerhet**: XSS-skydd och sanering via `security-utils.js` för alla DOM-manipulationer.
 
@@ -309,48 +305,48 @@ leapmultix/
 
 ### Upptäcktsläge
 
-Visuellt gränssnitt för att utforska multiplikationstabeller med:
+Visuellt utforskningsgränssnitt för multiplikationstabeller med:
 
-- Interaktiv multiplikationsvisualisering
-- Animationer och minnesstöd
-- Pedagogisk dra-och-släpp
+- Interaktiv visualisering av multiplikationer
+- Animationer och minneshjälpmedel
+- Pedagogisk drag-and-drop
 - Fri progression per tabell
 
-### Frågesportläge
+### Quizläge
 
 Flervalsfrågor med:
 
 - 10 frågor per session
-- Adaptiv progression baserat på framgång
-- Virtuellt numeriskt tangentbord
-- Streak-system (serie av rätta svar)
+- Adaptiv progression baserad på framgång
+- Virtuell numerisk knappsats
+- Streak-system (serie av korrekta svar)
 
 ### Utmaningsläge
 
-Lopp mot klockan med:
+Race mot klockan med:
 
 - 3 svårighetsgrader (Nybörjare, Medel, Svår)
-- Tidsbonus för rätta svar
+- Tidsbonus för korrekta svar
 - Livssystem
-- Rankning av bästa poäng
+- Topplista över bästa poäng
 
 ### Äventyrsläge
 
-Narrativ progression med:
+Berättande progression med:
 
 - 12 upplåsbara tematiska nivåer
 - Interaktiv karta med visuell progression
 - Uppslukande berättelse med karaktärer
-- Stjärn- och belöningssystem
+- Stjärnsystem och belöningar
 
 ### Arkadminispel
 
 Varje minispel erbjuder:
 
-- Val av svårighet och anpassning
-- Liv- och poängsystem
+- Val av svårighetsgrad och anpassning
+- Livssystem och poäng
 - Tangentbords- och touchkontroller
-- Individuella rankningar per användare
+- Individuella topplistor per användare
 
 ## 🛠️ Utveckling
 
@@ -360,39 +356,39 @@ Varje minispel erbjuder:
 
 Projektet använder ett arbetsflöde baserat på funktionsgrenar:
 
-1. **Skapa en gren**:
+1.  **Skapa en gren**:
 
-   ```bash
-   git checkout -b feat/funktionsnamn
-   # eller
-   git checkout -b fix/buggnamn
-   ```
+    ```bash
+    git checkout -b feat/funktionsnamn
+    # eller
+    git checkout -b fix/buggnamn
+    ```
 
-2. **Utveckla och testa**:
+2.  **Utveckla och testa**:
 
-   ```bash
-   npm run format:check  # Kontrollera ALLTID formatering först
-   npm run format        # Formatera om nödvändigt
-   npm run lint          # Kontrollera kodkvalitet
-   npm run test          # Kör tester
-   npm run test:coverage # Kontrollera täckning
-   ```
+    ```bash
+    npm run format:check  # Kontrollera ALLTID formatering först
+    npm run format        # Formatera om det behövs
+    npm run lint          # Kontrollera kodkvalitet
+    npm run test          # Kör tester
+    npm run test:coverage # Kontrollera täckning
+    ```
 
-3. **Committa på grenen**:
+3.  **Committa till grenen**:
 
-   ```bash
-   git add .
-   git commit -m "feat: beskrivning av funktionen"
-   ```
+    ```bash
+    git add .
+    git commit -m "feat: beskrivning av funktionen"
+    ```
 
-4. **Pusha och skapa en Pull Request**:
-   ```bash
-   git push -u origin feat/funktionsnamn
-   ```
+4.  **Pusha och skapa en Pull Request**:
+    ```bash
+    git push -u origin feat/funktionsnamn
+    ```
 
-**Commit-stil**: Kortfattad, imperativ form (t.ex. "Fix arcade init errors", "Refactor cache updater")
+**Commit-stil**: Kortfattad, imperativt läge (t.ex. "Fix arcade init errors", "Refactor cache updater")
 
-**Quality gate**: Säkerställ att `npm run lint`, `npm test` och `npm run test:coverage` passerar före varje commit
+**Quality gate**: Se till att `npm run lint`, `npm test` och `npm run test:coverage` passerar före varje commit
 
 ### Komponentarkitektur
 
@@ -404,20 +400,20 @@ Projektet använder ett arbetsflöde baserat på funktionsgrenar:
 
 **Lazy Loading**: Moduler laddas på begäran för att optimera initial prestanda.
 
-**Event Bus**: Frikopplad kommunikation mellan komponenter via händelsesystemet.
+**Händelsebuss**: Frikopplad kommunikation mellan komponenter via händelsesystemet.
 
 ### Tester
 
-Projektet inkluderar en omfattande testsvit:
+Projektet innehåller en omfattande testsvit:
 
-- Enhetstester av kärnmoduler
-- Integrationstester av komponenter
-- Tester av spellägen
+- Enhetstester för kärnmoduler
+- Integrationstester för komponenter
+- Spellägestester
 - Automatiserad kodtäckning
 
 ```bash
 npm test              # Alla tester (CJS)
-npm test:core         # Tester av centrala moduler
+npm test:core         # Kärnmodultester
 npm test:integration  # Integrationstester
 npm test:coverage     # Täckningsrapport
 npm run test:esm      # ESM-tester (t.ex. components/dashboard) via vm-modules
@@ -425,17 +421,17 @@ npm run test:esm      # ESM-tester (t.ex. components/dashboard) via vm-modules
 
 ### Produktionsbygge
 
-- **Rollup**: Buntar `js/main-es6.js` i ESM med koduppdelning och källkartor
+- **Rollup**: Bundlar `js/main-es6.js` till ESM med koduppdelning och källkartor
 - **Terser**: Automatisk minifiering för optimering
 - **Post-build**: Kopierar `css/` och `assets/`, favicons (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, och skriver om `dist/index.html` till den hashade ingångsfilen (t.ex. `main-es6-*.js`)
-- **Slutlig mapp**: `dist/` redo att serveras statiskt
+- **Slutmapp**: `dist/` redo att serveras statiskt
 
 ```bash
 npm run build      # genererar dist/
 npm run serve:dist # serverar dist/ (port 5000)
 ```
 
-### Kontinuerlig Integration (CI)
+### Kontinuerlig Integration
 
 **GitHub Actions**: Automatiserad pipeline i `.github/workflows/ci.yml`
 
@@ -443,26 +439,26 @@ CI/CD-pipelinen körs automatiskt vid varje push och pull request:
 
 **Huvudjobb**:
 
-1. **build-test**: Huvudvalideringsjobb
-   - Installation av beroenden: `npm ci`
-   - Formateringskontroll: `npm run format:check`
-   - Statisk analys: `npm run lint`
-   - Enhetstester: `npm run test`
-   - Säkerhetsrevision: `npm audit`
-   - Generering av täckningsartefakt
+1.  **build-test**: Huvudvalideringsjobb
+    - Beroendeinstallation: `npm ci`
+    - Formateringskontroll: `npm run format:check`
+    - Statisk analys: `npm run lint`
+    - Enhetstester: `npm run test`
+    - Säkerhetsrevision: `npm audit`
+    - Generering av täckningsartefakt
 
-2. **accessibility**: Tillgänglighetsrevision (icke-blockerande)
-   - Kör `npm run audit:accessibility`
-   - Genererar WCAG 2.1 AA tillgänglighetsrapport
+2.  **accessibility**: Tillgänglighetsrevision (icke-blockerande)
+    - Kör `npm run audit:accessibility`
+    - Genererar WCAG 2.1 AA tillgänglighetsrapport
 
-3. **test-esm**: ES6-modultester
-   - Kör `npm run test:esm` med Jest VM-moduler
-   - Validerar ES6-importer/exporter
+3.  **test-esm**: ES6-modultester
+    - Kör `npm run test:esm` med Jest VM-moduler
+    - Validerar ES6 import/export
 
-4. **lighthouse**: Prestandarevision (icke-blockerande)
-   - Mobil prestandarevision
-   - Generering av Lighthouse-rapportartefakter
-   - Core Web Vitals-mätvärden
+4.  **lighthouse**: Prestandarevision (icke-blockerande)
+    - Mobil prestandarevision
+    - Genererar Lighthouse-rapportartefakter
+    - Core Web Vitals-mätvärden
 
 **Kvalitetsmärken**:
 
@@ -479,37 +475,37 @@ LeapMultix är en fullständig PWA med offline-stöd och installationsmöjlighet
 
 - Navigering: Network-first med offline-fallback till `offline.html`
 - Bilder: Cache-first för att optimera prestanda
-- Översättningar: Stale-while-revalidate för bakgrundsuppdatering
+- Översättningar: Stale-while-revalidate för bakgrundsuppdateringar
 - JS/CSS: Network-first för att alltid servera den senaste versionen
 - Automatisk versionshantering via `cache-updater.js`
 
 **Manifest** (`manifest.json`):
 
 - SVG- och PNG-ikoner för alla enheter
-- Installerbar på mobil (Lägg till på hemskärmen)
-- Standalone-konfiguration för app-liknande upplevelse
+- Installation möjlig på mobil (Lägg till på hemskärmen)
+- Fristående konfiguration för app-liknande upplevelse
 - Stöd för teman och färger
 
 **Testa offline-läge lokalt**:
 
-1. Starta utvecklingsservern:
+1.  Starta utvecklingsservern:
 
-   ```bash
-   npm run serve
-   ```
+    ```bash
+    npm run serve
+    ```
 
-   Öppna `http://localhost:8080` (eller den visade porten)
+    Öppna `http://localhost:8080` (eller den visade porten)
 
-2. Manuellt test:
-   - Stäng av nätverket i DevTools (Fliken Network → Offline)
-   - Uppdatera sidan → `offline.html` visas
+2.  Testa manuellt:
+    - Klipp nätverket i DevTools (Fliken Network → Offline)
+    - Uppdatera sidan → `offline.html` visas
 
-3. Automatiserat test (Kräver Puppeteer):
-   ```bash
-   npm run test:pwa-offline
-   ```
+3.  Automatiserat test (kräver Puppeteer):
+    ```bash
+    npm run test:pwa-offline
+    ```
 
-**Hanteringsskript för Service Worker**:
+**Service Worker Hanteringsskript**:
 
 ```bash
 npm run sw:disable  # Inaktivera service worker
@@ -518,48 +514,48 @@ npm run sw:fix      # Åtgärda cacheproblem
 
 ### Kvalitetsstandarder
 
-**Verktyg för kodkvalitet**:
+**Kodkvalitetsverktyg**:
 
 - **ESLint**: Modern konfiguration med flat config (`eslint.config.js`), ES2022-stöd
 - **Prettier**: Automatisk kodformatering (`.prettierrc`)
 - **Stylelint**: CSS-validering (`.stylelintrc.json`)
 - **JSDoc**: Automatisk funktionsdokumentation med täckningsanalys
 
-**Viktiga kodregler**:
+**Viktiga Kodregler**:
 
 - Ta bort oanvända variabler och parametrar (`no-unused-vars`)
-- Använd specifik felhantering (inga tomma catch-block)
+- Använd specifik felhantering (inga tomma catch)
 - Undvik `innerHTML` till förmån för `security-utils.js`-funktioner
-- Håll kognitiv komplexitet under 15 för funktioner
+- Håll kognitiv komplexitet < 15 för funktioner
 - Extrahera komplexa funktioner till mindre hjälpare
 
 **Säkerhet**:
 
-- **XSS-skydd**: Använd `security-utils.js`-funktioner:
+- **XSS-skydd**: Använd funktioner från `security-utils.js`:
   - `appendSanitizedHTML()` istället för `innerHTML`
-  - `createSafeElement()` för säkert elementskapande
+  - `createSafeElement()` för att skapa säkra element
   - `setSafeMessage()` för textinnehåll
-- **Externa Skript**: Attributet `crossorigin="anonymous"` obligatoriskt
-- **Indatavalidering**: Sanera alltid externa data
-- **Content Security Policy**: CSP-headers för att begränsa skriptkällor
+- **Externa Skript**: `crossorigin="anonymous"` attribut obligatoriskt
+- **Indatavalidering**: Sanera alltid extern data
+- **Content Security Policy**: CSP-rubriker för att begränsa skriptkällor
 
 **Tillgänglighet**:
 
 - WCAG 2.1 AA-efterlevnad
 - Full tangentbordsnavigering
 - ARIA-roller och lämpliga etiketter
-- Efterlevande färgkontraster
+- Efterlevande färgkontrast
 
 **Prestanda**:
 
 - Lazy loading av moduler via `lazy-loader.js`
-- CSS och responsiva tillgångsoptimeringar
+- CSS- och responsiva tillgångsoptimeringar
 - Service Worker för intelligent cachning
 - Koduppdelning och minifiering i produktion
 
 ## 📱 Kompatibilitet
 
-### Stödda webbläsare
+### Stödda Webbläsare
 
 - Chrome/Chromium 90+
 - Firefox 88+
@@ -568,16 +564,16 @@ npm run sw:fix      # Åtgärda cacheproblem
 
 ### Enheter
 
-- **Desktop**: Tangentbords- och muskontroller
+- **Skrivbord**: Tangentbords- och muskontroller
 - **Surfplattor**: Optimerat touchgränssnitt
 - **Smartphones**: Adaptiv responsiv design
 
 ### Tillgänglighet
 
-- Full tangentbordsnavigering (Tab, pilar, Esc)
+- Full tangentbordsnavigering (Tab, Pilar, Escape)
 - ARIA-roller och etiketter för skärmläsare
-- Efterlevande färgkontraster
-- Stöd för hjälpmedelstekniker
+- Efterlevande färgkontrast
+- Stöd för hjälpmedelsteknik
 
 ## 🌍 Lokalisering
 
@@ -601,9 +597,9 @@ Fullt flerspråkigt stöd:
 }
 ```
 
-### i18n-hanteringsskript
+### i18n Hanteringsskript
 
-**`npm run i18n:verify`** - Verifiera konsistens för översättningsnycklar
+**`npm run i18n:verify`** - Verifiera konsistens av översättningsnycklar
 
 **`npm run i18n:unused`** - Lista oanvända översättningsnycklar
 
@@ -616,10 +612,10 @@ Detta skript (`scripts/compare-translations.cjs`) säkerställer synkronisering 
 - Detektering av saknade nycklar (finns i fr.json men saknas på andra språk)
 - Detektering av extra nycklar (finns på andra språk men inte i fr.json)
 - Identifiering av tomma värden (`""`, `null`, `undefined`, `[]`)
-- Kontroll av typkonsistens (sträng vs array)
-- Utjämning av kapslade JSON-strukturer till punktnotation (t.ex. `arcade.multiMemory.title`)
+- Typkonsistenskontroll (sträng vs array)
+- Utplattning av kapslade JSON-strukturer till punktnotation (t.ex. `arcade.multiMemory.title`)
 - Generering av detaljerad konsolrapport
-- Sparande av JSON-rapport till `docs/translations-comparison-report.json`
+- Spara JSON-rapport till `docs/translations-comparison-report.json`
 
 **Exempelutdata:**
 
@@ -638,7 +634,7 @@ Detta skript (`scripts/compare-translations.cjs`) säkerställer synkronisering 
 ✅ Inga extra nycklar
 ✅ Inga tomma värden
 
-📊 SLUTSAMMANFATTNING
+📊 SLUTLIG SAMMANFATTNING
   fr.json: 335 nycklar
   en.json: 335 nycklar
   es.json: 335 nycklar
@@ -650,25 +646,25 @@ Detta skript (`scripts/compare-translations.cjs`) säkerställer synkronisering 
 
 - Komplett användargränssnitt
 - Spelinstruktioner
-- Fel- och återkopplingsmeddelanden
-- Beskrivningar och kontextkänslig hjälp
-- Narrativt innehåll i äventyrsläge
-- Tillgänglighetsetiketter och ARIA
+- Fel- och feedbackmeddelanden
+- Beskrivningar och kontextuell hjälp
+- Berättande innehåll i äventyrsläge
+- Tillgänglighets- och ARIA-etiketter
 
 ## 📊 Datalagring
 
 ### Användardata
 
 - Profiler och preferenser
-- Framsteg per spelläge
-- Poäng och statistik för arkadspel
+- Progression per spelläge
+- Arkadspelpoäng och statistik
 - Anpassningsinställningar
 
-### Tekniska funktioner
+### Tekniska Funktioner
 
-- Lokal lagring (localStorage) med reservlösningar
+- Lokal lagring (localStorage) med fallbacks
 - Dataisolering per användare
-- Automatisk sparande av framsteg
+- Automatisk progressionssparning
 - Automatisk migrering av gamla data
 
 ## 🐛 Rapportera ett problem
@@ -676,18 +672,18 @@ Detta skript (`scripts/compare-translations.cjs`) säkerställer synkronisering 
 Problem kan rapporteras via GitHub issues. Vänligen inkludera:
 
 - Detaljerad beskrivning av problemet
-- Steg för att reproducera
+- Steg för att återskapa
 - Webbläsare och version
 - Skärmdumpar om relevant
 
-## 💝 Stöd projektet
+## 💝 Stöd Projektet
 
 **[☕ Donera via PayPal](https://paypal.me/jls)**
 
 ## 📄 Licens
 
-Detta projekt är licensierat under AGPL v3. Se filen `LICENSE` för mer information.
+Detta projekt är licensierat under AGPL v3-licensen. Se filen `LICENSE` för mer information.
 
 ---
 
-_LeapMultix - Modern utbildningsapplikation för att lära sig multiplikationstabeller_
+_LeapMultix - Modern pedagogisk applikation för att lära sig multiplikationstabeller_

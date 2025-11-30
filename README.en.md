@@ -46,9 +46,9 @@
 
 ## Description
 
-LeapMultix is a modern interactive educational web application designed for children (ages 8–12) to master the 4 arithmetic operations: multiplication (×), addition (+), subtraction (−), and division (÷). The app offers **5 game modes** and **4 arcade mini-games** in an intuitive, accessible, and multilingual interface.
+LeapMultix is a modern interactive educational web application designed for children (ages 8–12) to master the 4 arithmetic operations: multiplication (×), addition (+), subtraction (−), and division (÷). The application offers **5 game modes** and **4 arcade mini-games** in an intuitive, accessible, and multilingual interface.
 
-**Multi-operation support:** Quiz and Challenge modes allow practice of all operations. Discovery, Adventure, and Arcade modes focus on multiplication.
+**Multi-operation support:** Quiz and Challenge modes allow practicing all operations. Discovery, Adventure, and Arcade modes focus on multiplication but are designed to support all operations.
 
 **Developed by:** Julien LS (contact@jls42.org)
 
@@ -58,41 +58,37 @@ LeapMultix is a modern interactive educational web application designed for chil
 
 ### 🎮 Game Modes
 
-- **Discovery Mode**: Visual and interactive exploration of multiplication tables
-- **Quiz Mode** ⭐: Multiple-choice questions supporting all 4 operations (×, +, −, ÷) with adaptive progression
-- **Challenge Mode** ⭐: Time attack race with all 4 operations (×, +, −, ÷) and different difficulty levels
-- **Adventure Mode**: Narrative progression through levels with an interactive map (multiplication)
-
-⭐ = Full support for all 4 arithmetic operations
+- **Discovery Mode**: Visual and interactive exploration adapted to each operation
+- **Quiz Mode**: Multiple choice questions with support for all 4 operations (×, +, −, ÷) and adaptive progression
+- **Challenge Mode**: Race against time with all 4 operations (×, +, −, ÷) and different difficulty levels
+- **Adventure Mode**: Narrative progression by levels with support for all 4 operations
 
 ### 🕹️ Arcade Mini-games
 
-- **MultiInvaders**: Educational Space Invaders - Destroy the wrong answers (multiplication)
-- **MultiMiam**: Mathematical Pac-Man - Collect the correct answers (multiplication)
-- **MultiMemory**: Memory game - Match multiplications with their results
-- **MultiSnake**: Educational Snake - Grow by eating the correct numbers (multiplication)
+- **MultiInvaders**: Educational Space Invaders - Destroy the wrong answers
+- **MultiMiam**: Mathematical Pac-Man - Collect the correct answers
+- **MultiMemory**: Memory game - Match operations and results
+- **MultiSnake**: Educational Snake - Grow by eating the correct numbers
 
-### ➕ Multi-Operation Support
+### ➕ Multi-Operations Support
 
-LeapMultix goes beyond simple multiplication by offering complete training for the 4 arithmetic operations:
+LeapMultix offers complete training for the 4 arithmetic operations in **all modes**:
 
 | Mode      | ×   | +   | −   | ÷   |
 | --------- | --- | --- | --- | --- |
 | Quiz      | ✅  | ✅  | ✅  | ✅  |
 | Challenge | ✅  | ✅  | ✅  | ✅  |
-| Discovery | ✅  | ❌  | ❌  | ❌  |
-| Adventure | ✅  | ❌  | ❌  | ❌  |
-| Arcade    | ✅  | ❌  | ❌  | ❌  |
+| Discovery | ✅  | ✅  | ✅  | ✅  |
+| Adventure | ✅  | ✅  | ✅  | ✅  |
+| Arcade    | ✅  | ✅  | ✅  | ✅  |
 
-**Note:** Operation support for Discovery, Adventure, and Arcade modes is planned for a future release.
-
-### 🌍 Cross-Functional Features
+### 🌍 Cross-Cutting Features
 
 - **Multi-user**: Management of individual profiles with saved progression
-- **Multilingual**: French, English, and Spanish support
+- **Multilingual**: Support for French, English, and Spanish
 - **Customization**: Avatars, color themes, backgrounds
 - **Accessibility**: Keyboard navigation, touch support, WCAG 2.1 AA compliance
-- **Mobile responsive**: Optimized interface for tablets and smartphones
+- **Mobile responsive**: Interface optimized for tablets and smartphones
 - **Progression system**: Scores, badges, daily challenges
 
 ## 🚀 Quick Start
@@ -112,7 +108,7 @@ cd leapmultix
 # Install dependencies
 npm install
 
-# Start development server (option 1)
+# Start the development server (option 1)
 npm run serve
 # The application will be accessible at http://localhost:8080 (or next available port)
 
@@ -126,8 +122,8 @@ python3 -m http.server 8000
 ```bash
 # Development
 npm run serve          # Local server (http://localhost:8080)
-npm run lint           # Check code with ESLint
-npm run lint:fix       # Automatically fix ESLint issues
+npm run lint           # Code verification with ESLint
+npm run lint:fix       # Automatic fix of ESLint issues
 npm run format:check   # Check code formatting (ALWAYS before commit)
 npm run format         # Format code with Prettier
 npm run verify         # Quality gate: lint + test + coverage
@@ -139,11 +135,11 @@ npm run test:coverage  # Tests with coverage report
 npm run test:core      # Tests for core modules only
 npm run test:integration # Integration tests
 npm run test:storage   # Storage system tests
-npm run test:esm       # ESM tests (tests-esm/ folder, Jest vm-modules)
+npm run test:esm       # ESM tests (tests-esm/ folders, Jest vm-modules)
 npm run test:verbose   # Tests with detailed output
 npm run test:pwa-offline # PWA offline test (requires Puppeteer), after `npm run serve`
 
-# Analysis and maintenance
+# Analysis and Maintenance
 npm run analyze:jsdoc  # Documentation analysis
 npm run improve:jsdoc  # Automatic JSDoc improvement
 npm run audit:mobile   # Mobile responsiveness tests
@@ -153,18 +149,18 @@ npm run analyze:globals # Global variables analysis
 npm run analyze:dependencies # Dependency usage analysis
 npm run verify:cleanup # Combined analysis (dead code + globals)
 
-# Asset management
+# Asset Management
 npm run assets:generate    # Generate responsive images
 npm run assets:backgrounds # Convert backgrounds to WebP
-npm run assets:analyze     # Analyze responsive assets
-npm run assets:diff        # Compare assets
+npm run assets:analyze     # Responsive asset analysis
+npm run assets:diff        # Asset comparison
 
 # Internationalization
-npm run i18n:verify    # Verify translation keys consistency
+npm run i18n:verify    # Verify translation key consistency
 npm run i18n:unused    # List unused translation keys
 npm run i18n:compare   # Compare translations (en/es) with fr.json (reference)
 
-# Build & delivery
+# Build & Delivery
 npm run build          # Production build (Rollup) + postbuild (complete dist/)
 npm run serve:dist     # Serve dist/ on http://localhost:5000 (or available port)
 
@@ -181,7 +177,7 @@ npm run sw:fix         # Fix service worker issues
 leapmultix/
 ├── index.html              # Main entry point
 ├── js/
-│   ├── core/               # Core ES6 modules
+│   ├── core/               # ES6 core modules
 │   │   ├── GameMode.js     # Base class for modes
 │   │   ├── GameModeManager.js # Game mode management
 │   │   ├── storage.js      # LocalStorage API
@@ -199,7 +195,7 @@ leapmultix/
 │   │   └── daily-challenge.js # Daily challenge management
 │   ├── components/         # Reusable UI components
 │   │   ├── topBar.js       # Navigation bar
-│   │   ├── infoBar.js      # Game information bars
+│   │   ├── infoBar.js      # Game info bars
 │   │   ├── dashboard.js    # User dashboard
 │   │   └── customization.js # Customization interface
 │   ├── modes/              # Game modes
@@ -212,7 +208,7 @@ leapmultix/
 │   │   ├── arcade.js       # Main arcade orchestrator
 │   │   ├── arcade-invasion.js # Space Invaders (31 KB)
 │   │   ├── arcade-multimemory.js # Memory game (31 KB)
-│   │   ├── arcade-multimiam.js # Multimiam integration
+│   │   ├── arcade-multimiam.js # MultiMiam integration
 │   │   ├── arcade-multisnake.js # Snake integration
 │   │   ├── arcade-common.js, arcade-utils.js # Shared utilities
 │   │   ├── arcade-message.js, arcade-points.js # UI components
@@ -262,7 +258,7 @@ leapmultix/
 │   │   └── logger.js       # Logging system
 │   ├── accessibility/      # Accessibility
 │   │   ├── accessibility.js # Accessibility features
-│   │   └── speech.js       # Text-to-speech support
+│   │   └── speech.js       # Speech synthesis support
 │   ├── integration/        # Integration and analytics
 │   │   ├── plausible-init.js # Plausible analytics
 │   │   ├── cache-updater.js # Cache management (10 KB)
@@ -283,7 +279,7 @@ leapmultix/
 │   └── tests-esm/          # ESM tests (.mjs)
 ├── scripts/                # Maintenance scripts
 │   ├── compare-translations.cjs # Translation comparison
-│   └── cleanup-i18n-keys.cjs # i18n keys cleanup
+│   └── cleanup-i18n-keys.cjs # i18n key cleanup
 └── dist/                   # Production build (generated)
 ```
 
@@ -299,9 +295,9 @@ leapmultix/
 
 **Centralized Audio Management**: Sound control with multilingual support and per-user preferences.
 
-**Event Bus**: Decoupled event-based communication between components for a maintainable architecture.
+**Event Bus**: Decoupled event-driven communication between components for a maintainable architecture.
 
-**Slide Navigation**: Slide-based navigation system (slide0, slide1, etc.) with `goToSlide()`.
+**Slide Navigation**: Navigation system based on numbered slides (slide0, slide1, etc.) with `goToSlide()`.
 
 **Security**: XSS protection and sanitization via `security-utils.js` for all DOM manipulations.
 
@@ -309,16 +305,16 @@ leapmultix/
 
 ### Discovery Mode
 
-Visual interface for exploring multiplication tables with:
+Visual exploration interface for multiplication tables with:
 
-- Interactive multiplication visualization
+- Interactive visualization of multiplications
 - Animations and memory aids
 - Educational drag-and-drop
-- Free progression by table
+- Free progression per table
 
 ### Quiz Mode
 
-Multiple-choice questions with:
+Multiple choice questions with:
 
 - 10 questions per session
 - Adaptive progression based on success
@@ -327,30 +323,30 @@ Multiple-choice questions with:
 
 ### Challenge Mode
 
-Time attack race with:
+Race against time with:
 
 - 3 difficulty levels (Beginner, Medium, Hard)
 - Time bonus for correct answers
-- Life system
-- High score ranking
+- Lives system
+- Leaderboard of best scores
 
 ### Adventure Mode
 
 Narrative progression with:
 
-- 12 unlockable themed levels
+- 12 unlockable thematic levels
 - Interactive map with visual progression
 - Immersive story with characters
-- Star and reward system
+- Star system and rewards
 
 ### Arcade Mini-games
 
 Each mini-game offers:
 
 - Choice of difficulty and customization
-- Life and score system
+- Lives system and score
 - Keyboard and touch controls
-- Individual rankings per user
+- Individual leaderboards per user
 
 ## 🛠️ Development
 
@@ -358,47 +354,47 @@ Each mini-game offers:
 
 **IMPORTANT: Never commit directly to main**
 
-The project uses a feature branch workflow:
+The project uses a workflow based on feature branches:
 
-1. **Create a branch**:
+1.  **Create a branch**:
 
-   ```bash
-   git checkout -b feat/feature-name
-   # or
-   git checkout -b fix/bug-name
-   ```
+    ```bash
+    git checkout -b feat/feature-name
+    # or
+    git checkout -b fix/bug-name
+    ```
 
-2. **Develop and test**:
+2.  **Develop and test**:
 
-   ```bash
-   npm run format:check  # ALWAYS check formatting first
-   npm run format        # Format if necessary
-   npm run lint          # Check code quality
-   npm run test          # Run tests
-   npm run test:coverage # Check coverage
-   ```
+    ```bash
+    npm run format:check  # ALWAYS check formatting first
+    npm run format        # Format if necessary
+    npm run lint          # Check code quality
+    npm run test          # Run tests
+    npm run test:coverage # Check coverage
+    ```
 
-3. **Commit on the branch**:
+3.  **Commit to the branch**:
 
-   ```bash
-   git add .
-   git commit -m "feat: feature description"
-   ```
+    ```bash
+    git add .
+    git commit -m "feat: description of the feature"
+    ```
 
-4. **Push and create a Pull Request**:
-   ```bash
-   git push -u origin feat/feature-name
-   ```
+4.  **Push and create a Pull Request**:
+    ```bash
+    git push -u origin feat/feature-name
+    ```
 
 **Commit style**: Concise, imperative mood (e.g., "Fix arcade init errors", "Refactor cache updater")
 
-**Quality gate**: Ensure `npm run lint`, `npm test`, and `npm run test:coverage` pass before every commit
+**Quality gate**: Ensure `npm run lint`, `npm test`, and `npm run test:coverage` pass before each commit
 
 ### Component Architecture
 
 **GameMode (base class)**: All modes inherit from a common class with standardized methods.
 
-**GameModeManager**: Centralized orchestration of launching and managing modes.
+**GameModeManager**: Centralized orchestration of mode launching and management.
 
 **UI Components**: TopBar, InfoBar, Dashboard, and Customization provide a consistent interface.
 
@@ -420,7 +416,7 @@ npm test              # All tests (CJS)
 npm test:core         # Core module tests
 npm test:integration  # Integration tests
 npm test:coverage     # Coverage report
-npm run test:esm      # ESM tests (e.g., components/dashboard) via vm-modules
+npm run test:esm      # ESM tests (e.g. components/dashboard) via vm-modules
 ```
 
 ### Production Build
@@ -439,30 +435,30 @@ npm run serve:dist # serves dist/ (port 5000)
 
 **GitHub Actions**: Automated pipeline in `.github/workflows/ci.yml`
 
-The CI/CD pipeline runs automatically on every push and pull request:
+The CI/CD pipeline automatically runs on every push and pull request:
 
 **Main Jobs**:
 
-1. **build-test**: Main validation job
-   - Dependency installation: `npm ci`
-   - Formatting check: `npm run format:check`
-   - Static analysis: `npm run lint`
-   - Unit tests: `npm run test`
-   - Security audit: `npm audit`
-   - Coverage artifact generation
+1.  **build-test**: Main validation job
+    - Install dependencies: `npm ci`
+    - Check formatting: `npm run format:check`
+    - Static analysis: `npm run lint`
+    - Unit tests: `npm run test`
+    - Security audit: `npm audit`
+    - Coverage artifact generation
 
-2. **accessibility**: Accessibility audit (non-blocking)
-   - Runs `npm run audit:accessibility`
-   - Generates WCAG 2.1 AA accessibility report
+2.  **accessibility**: Accessibility audit (non-blocking)
+    - Runs `npm run audit:accessibility`
+    - Generates WCAG 2.1 AA accessibility report
 
-3. **test-esm**: ES6 module tests
-   - Runs `npm run test:esm` with Jest VM modules
-   - Validates ES6 imports/exports
+3.  **test-esm**: ES6 module tests
+    - Runs `npm run test:esm` with Jest VM modules
+    - Validates ES6 imports/exports
 
-4. **lighthouse**: Performance audit (non-blocking)
-   - Mobile performance audit
-   - Lighthouse report artifacts generation
-   - Core Web Vitals metrics
+4.  **lighthouse**: Performance audit (non-blocking)
+    - Mobile performance audit
+    - Generates Lighthouse report artifacts
+    - Core Web Vitals metrics
 
 **Quality Badges**:
 
@@ -473,7 +469,7 @@ The CI/CD pipeline runs automatically on every push and pull request:
 
 ### PWA (Progressive Web App)
 
-LeapMultix is a full PWA with offline support and installability.
+LeapMultix is a full PWA with offline support and installation capability.
 
 **Service Worker** (`sw.js`):
 
@@ -486,30 +482,30 @@ LeapMultix is a full PWA with offline support and installability.
 **Manifest** (`manifest.json`):
 
 - SVG and PNG icons for all devices
-- Mobile installation capable (Add to Home Screen)
+- Installation possible on mobile (Add to Home Screen)
 - Standalone configuration for app-like experience
-- Theme and color support
+- Support for themes and colors
 
 **Testing offline mode locally**:
 
-1. Start the development server:
+1.  Start the development server:
 
-   ```bash
-   npm run serve
-   ```
+    ```bash
+    npm run serve
+    ```
 
-   Open `http://localhost:8080` (or the displayed port)
+    Open `http://localhost:8080` (or the displayed port)
 
-2. Manual test:
-   - Disable network in DevTools (Network tab → Offline)
-   - Refresh the page → `offline.html` is displayed
+2.  Test manually:
+    - Cut the network in DevTools (Network tab → Offline)
+    - Refresh the page → `offline.html` is displayed
 
-3. Automated test (Puppeteer required):
-   ```bash
-   npm run test:pwa-offline
-   ```
+3.  Automated test (Puppeteer required):
+    ```bash
+    npm run test:pwa-offline
+    ```
 
-**Service Worker management scripts**:
+**Service Worker Management Scripts**:
 
 ```bash
 npm run sw:disable  # Disable service worker
@@ -528,16 +524,16 @@ npm run sw:fix      # Fix cache issues
 **Important Code Rules**:
 
 - Remove unused variables and parameters (`no-unused-vars`)
-- Use specific error handling (no empty catch blocks)
+- Use specific error handling (no empty catches)
 - Avoid `innerHTML` in favor of `security-utils.js` functions
-- Keep function cognitive complexity under 15
+- Keep cognitive complexity < 15 for functions
 - Extract complex functions into smaller helpers
 
 **Security**:
 
-- **XSS Protection**: Use `security-utils.js` functions:
+- **XSS Protection**: Use functions from `security-utils.js`:
   - `appendSanitizedHTML()` instead of `innerHTML`
-  - `createSafeElement()` for safe element creation
+  - `createSafeElement()` to create safe elements
   - `setSafeMessage()` for text content
 - **External Scripts**: `crossorigin="anonymous"` attribute mandatory
 - **Input Validation**: Always sanitize external data
@@ -548,7 +544,7 @@ npm run sw:fix      # Fix cache issues
 - WCAG 2.1 AA compliance
 - Full keyboard navigation
 - ARIA roles and appropriate labels
-- Compliant color contrasts
+- Compliant color contrast
 
 **Performance**:
 
@@ -574,9 +570,9 @@ npm run sw:fix      # Fix cache issues
 
 ### Accessibility
 
-- Full keyboard navigation (Tab, arrows, Esc)
+- Full keyboard navigation (Tab, Arrows, Escape)
 - ARIA roles and labels for screen readers
-- Compliant color contrasts
+- Compliant color contrast
 - Assistive technology support
 
 ## 🌍 Localization
@@ -589,7 +585,7 @@ Full multilingual support:
 
 ### Translation Management
 
-**Translation files:** `assets/translations/*.json`
+**Translation Files:** `assets/translations/*.json`
 
 **Format:**
 
@@ -619,7 +615,7 @@ This script (`scripts/compare-translations.cjs`) ensures synchronization of all 
 - Type consistency check (string vs array)
 - Flattening of nested JSON structures to dot notation (e.g., `arcade.multiMemory.title`)
 - Generation of detailed console report
-- JSON report saved to `docs/translations-comparison-report.json`
+- Saving of JSON report to `docs/translations-comparison-report.json`
 
 **Output Example:**
 
@@ -651,9 +647,9 @@ This script (`scripts/compare-translations.cjs`) ensures synchronization of all 
 - Complete user interface
 - Game instructions
 - Error and feedback messages
-- Descriptions and context-sensitive help
+- Descriptions and contextual help
 - Adventure mode narrative content
-- Accessibility labels and ARIA
+- Accessibility and ARIA labels
 
 ## 📊 Data Storage
 
@@ -686,7 +682,7 @@ Issues can be reported via GitHub issues. Please include:
 
 ## 📄 License
 
-This project is licensed under the AGPL v3. See the `LICENSE` file for more details.
+This project is licensed under the AGPL v3 license. See the `LICENSE` file for more details.
 
 ---
 

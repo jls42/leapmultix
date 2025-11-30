@@ -58,33 +58,29 @@ LeapMultix est une application web éducative interactive moderne destinée aux 
 
 ### 🎮 Modes de Jeu
 
-- **Mode Découverte** : Exploration visuelle et interactive des tables de multiplication
-- **Mode Quiz** ⭐ : Questions à choix multiples avec support des 4 opérations (×, +, −, ÷) et progression adaptative
-- **Mode Défi** ⭐ : Course contre la montre avec les 4 opérations (×, +, −, ÷) et différents niveaux de difficulté
-- **Mode Aventure** : Progression narrative par niveaux avec carte interactive (multiplication)
-
-⭐ = Support complet des 4 opérations arithmétiques
+- **Mode Découverte** : Exploration visuelle et interactive adaptée à chaque opération
+- **Mode Quiz** : Questions à choix multiples avec support des 4 opérations (×, +, −, ÷) et progression adaptative
+- **Mode Défi** : Course contre la montre avec les 4 opérations (×, +, −, ÷) et différents niveaux de difficulté
+- **Mode Aventure** : Progression narrative par niveaux avec support des 4 opérations
 
 ### 🕹️ Mini-jeux Arcade
 
-- **MultiInvaders** : Space Invaders éducatif - Détruire les mauvaises réponses (multiplication)
-- **MultiMiam** : Pac-Man mathématique - Collecter les bonnes réponses (multiplication)
-- **MultiMemory** : Jeu de mémoire - Associer multiplications et résultats
-- **MultiSnake** : Snake éducatif - Grandir en mangeant les bons nombres (multiplication)
+- **MultiInvaders** : Space Invaders éducatif - Détruire les mauvaises réponses
+- **MultiMiam** : Pac-Man mathématique - Collecter les bonnes réponses
+- **MultiMemory** : Jeu de mémoire - Associer opérations et résultats
+- **MultiSnake** : Snake éducatif - Grandir en mangeant les bons nombres
 
 ### ➕ Support Multi-Opérations
 
-LeapMultix va au-delà de la simple multiplication en offrant un entraînement complet aux 4 opérations arithmétiques :
+LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans **tous les modes** :
 
 | Mode       | ×   | +   | −   | ÷   |
 | ---------- | --- | --- | --- | --- |
 | Quiz       | ✅  | ✅  | ✅  | ✅  |
 | Défi       | ✅  | ✅  | ✅  | ✅  |
-| Découverte | ✅  | ❌  | ❌  | ❌  |
-| Aventure   | ✅  | ❌  | ❌  | ❌  |
-| Arcade     | ✅  | ❌  | ❌  | ❌  |
-
-**Note :** Le support des opérations pour les modes Découverte, Aventure et Arcade est prévu dans une version ultérieure.
+| Découverte | ✅  | ✅  | ✅  | ✅  |
+| Aventure   | ✅  | ✅  | ✅  | ✅  |
+| Arcade     | ✅  | ✅  | ✅  | ✅  |
 
 ### 🌍 Fonctionnalités Transversales
 
