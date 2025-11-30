@@ -1,6 +1,4 @@
 /* eslint-env jest */
-/* eslint-disable sonarjs/no-nested-functions -- Test file: Jest describe/it nesting is standard practice */
-/* eslint-disable sonarjs/no-duplicate-functions -- Test file: isolated test functions with same logic is intentional for test clarity */
 /**
  * Tests pour stats-migration.js - Edge cases
  * Phase R2 - Tests migration stats multi-opérations
@@ -9,6 +7,113 @@
 describe('Stats Migration - Edge Cases', () => {
   // Mock Storage - tests access mockStorage directly to simulate storage behavior
   let mockStorage = {};
+
+  // Constants used across tests
+  const INACTIVITY_THRESHOLD_DAYS = 30;
+  const RETENTION_DAYS = 90;
+
+  // Helper: Check if migration is needed
+  const needsMigration = () => {
+    const oldStats = mockStorage.multiplicationStats;
+    return !!(oldStats && typeof oldStats === 'object' && Object.keys(oldStats).length > 0);
+  };
+
+  // Helper: Migrate old multiplication stats to new format
+  const migrateMultiplicationStats = (options = {}) => {
+    const { skipExisting = true, validateData = false } = options;
+    const oldStats = mockStorage.multiplicationStats || {};
+    const newStats = mockStorage.operationStats || {};
+
+    let migrated = 0;
+    let skipped = 0;
+    let errors = 0;
+
+    Object.entries(oldStats).forEach(([key, value]) => {
+      const match = /^(\d+)[x×](\d+)$/.exec(key);
+      if (!match) {
+        skipped++;
+        return;
+      }
+
+      if (validateData && (!value || typeof value !== 'object')) {
+        errors++;
+        return;
+      }
+
+      const table = Number.parseInt(match[1], 10);
+      const num = Number.parseInt(match[2], 10);
+      const newKey = `${table}×${num}`;
+
+      if (skipExisting && newStats[newKey]) {
+        skipped++;
+        return;
+      }
+
+      newStats[newKey] = {
+        operator: '×',
+        a: table,
+        b: num,
+        attempts: value?.attempts || 0,
+        errors: value?.errors || 0,
+        lastAttempt: value?.lastAttempt || Date.now(),
+      };
+
+      migrated++;
+    });
+
+    mockStorage.operationStats = newStats;
+    return { migrated, skipped, errors };
+  };
+
+  // Helper: Check if old stats can be safely deleted
+  const canSafelyDeleteOldStats = () => {
+    const migrationFlag = mockStorage._statsMigrated;
+    if (!migrationFlag?.firstMigrationDate) {
+      return false;
+    }
+
+    const now = Date.now();
+    const retentionPeriodElapsed = now >= (migrationFlag.retentionUntil || 0);
+
+    if (!retentionPeriodElapsed) {
+      return false;
+    }
+
+    const lastMigrationDate = migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
+    const inactivityThreshold = INACTIVITY_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
+    const inactiveSinceLastMigration = now - lastMigrationDate >= inactivityThreshold;
+
+    return retentionPeriodElapsed && inactiveSinceLastMigration;
+  };
+
+  // Helper: Update migration flag
+  const updateMigrationFlag = (migrated, skipped, errors) => {
+    const existingFlag = mockStorage._statsMigrated;
+
+    if (!existingFlag?.firstMigrationDate) {
+      const now = Date.now();
+      mockStorage._statsMigrated = {
+        done: true,
+        firstMigrationDate: now,
+        lastMigrationDate: now,
+        retentionUntil: now + RETENTION_DAYS * 24 * 60 * 60 * 1000,
+        totalMigrated: migrated,
+        totalSkipped: skipped,
+        totalErrors: errors,
+        migrationCount: 1,
+      };
+      return;
+    }
+
+    mockStorage._statsMigrated = {
+      ...existingFlag,
+      lastMigrationDate: Date.now(),
+      totalMigrated: (existingFlag.totalMigrated || 0) + migrated,
+      totalSkipped: (existingFlag.totalSkipped || 0) + skipped,
+      totalErrors: (existingFlag.totalErrors || 0) + errors,
+      migrationCount: (existingFlag.migrationCount || 1) + 1,
+    };
+  };
 
   beforeEach(() => {
     mockStorage = {};
@@ -24,55 +129,26 @@ describe('Stats Migration - Edge Cases', () => {
 
   describe('needsMigration()', () => {
     it('devrait retourner false si pas anciennes données', () => {
-      const needsMigration = () => {
-        const oldStats = mockStorage.multiplicationStats;
-        return !!(oldStats && typeof oldStats === 'object' && Object.keys(oldStats).length > 0);
-      };
-
       expect(needsMigration()).toBe(false);
     });
 
     it('devrait retourner true si anciennes données présentes', () => {
       mockStorage.multiplicationStats = { '3x5': { attempts: 10 } };
-
-      const needsMigration = () => {
-        const oldStats = mockStorage.multiplicationStats;
-        return !!(oldStats && typeof oldStats === 'object' && Object.keys(oldStats).length > 0);
-      };
-
       expect(needsMigration()).toBe(true);
     });
 
     it('devrait retourner false si anciennes données vides', () => {
       mockStorage.multiplicationStats = {};
-
-      const needsMigration = () => {
-        const oldStats = mockStorage.multiplicationStats;
-        return !!(oldStats && typeof oldStats === 'object' && Object.keys(oldStats).length > 0);
-      };
-
       expect(needsMigration()).toBe(false);
     });
 
     it('devrait retourner false si anciennes données corrompues (null)', () => {
       mockStorage.multiplicationStats = null;
-
-      const needsMigration = () => {
-        const oldStats = mockStorage.multiplicationStats;
-        return !!(oldStats && typeof oldStats === 'object' && Object.keys(oldStats).length > 0);
-      };
-
       expect(needsMigration()).toBe(false);
     });
 
     it('devrait retourner false si anciennes données corrompues (string)', () => {
       mockStorage.multiplicationStats = 'invalid';
-
-      const needsMigration = () => {
-        const oldStats = mockStorage.multiplicationStats;
-        return !!(oldStats && typeof oldStats === 'object' && Object.keys(oldStats).length > 0);
-      };
-
       expect(needsMigration()).toBe(false);
     });
   });
@@ -86,41 +162,7 @@ describe('Stats Migration - Edge Cases', () => {
         999: { attempts: 1 },
       };
 
-      const migrateMultiplicationStats = () => {
-        const oldStats = mockStorage.multiplicationStats || {};
-        const newStats = mockStorage.operationStats || {};
-
-        let migrated = 0;
-        let skipped = 0;
-
-        Object.entries(oldStats).forEach(([key, value]) => {
-          const match = /^(\d+)[x×](\d+)$/.exec(key);
-          if (!match) {
-            skipped++;
-            return;
-          }
-
-          const table = Number.parseInt(match[1], 10);
-          const num = Number.parseInt(match[2], 10);
-          const newKey = `${table}×${num}`;
-
-          newStats[newKey] = {
-            operator: '×',
-            a: table,
-            b: num,
-            attempts: value.attempts || 0,
-            errors: value.errors || 0,
-            lastAttempt: value.lastAttempt || Date.now(),
-          };
-
-          migrated++;
-        });
-
-        mockStorage.operationStats = newStats;
-        return { migrated, skipped };
-      };
-
-      const result = migrateMultiplicationStats();
+      const result = migrateMultiplicationStats({ skipExisting: false });
       expect(result.migrated).toBe(1); // Seulement '3x5'
       expect(result.skipped).toBe(3); // 3 clés invalides
     });
@@ -132,41 +174,7 @@ describe('Stats Migration - Edge Cases', () => {
         '5x2': undefined, // Corrompu
       };
 
-      const migrateMultiplicationStats = () => {
-        const oldStats = mockStorage.multiplicationStats || {};
-        const newStats = mockStorage.operationStats || {};
-
-        let migrated = 0;
-        let errors = 0;
-
-        Object.entries(oldStats).forEach(([key, value]) => {
-          const match = /^(\d+)[x×](\d+)$/.exec(key);
-          if (!match || !value || typeof value !== 'object') {
-            errors++;
-            return;
-          }
-
-          const table = Number.parseInt(match[1], 10);
-          const num = Number.parseInt(match[2], 10);
-          const newKey = `${table}×${num}`;
-
-          newStats[newKey] = {
-            operator: '×',
-            a: table,
-            b: num,
-            attempts: value.attempts || 0,
-            errors: value.errors || 0,
-            lastAttempt: value.lastAttempt || Date.now(),
-          };
-
-          migrated++;
-        });
-
-        mockStorage.operationStats = newStats;
-        return { migrated, errors };
-      };
-
-      const result = migrateMultiplicationStats();
+      const result = migrateMultiplicationStats({ validateData: true });
       expect(result.migrated).toBe(1); // Seulement '4x7'
       expect(result.errors).toBe(2); // null et undefined
     });
@@ -175,43 +183,6 @@ describe('Stats Migration - Edge Cases', () => {
       mockStorage.multiplicationStats = {
         '3x5': { attempts: 10, errors: 2 },
         '4x7': { attempts: 5, errors: 1 },
-      };
-
-      const migrateMultiplicationStats = () => {
-        const oldStats = mockStorage.multiplicationStats || {};
-        const newStats = mockStorage.operationStats || {};
-
-        let migrated = 0;
-        let skipped = 0;
-
-        Object.entries(oldStats).forEach(([key, value]) => {
-          const match = /^(\d+)[x×](\d+)$/.exec(key);
-          if (!match) return;
-
-          const table = Number.parseInt(match[1], 10);
-          const num = Number.parseInt(match[2], 10);
-          const newKey = `${table}×${num}`;
-
-          // Skip si déjà migré
-          if (newStats[newKey]) {
-            skipped++;
-            return;
-          }
-
-          newStats[newKey] = {
-            operator: '×',
-            a: table,
-            b: num,
-            attempts: value.attempts || 0,
-            errors: value.errors || 0,
-            lastAttempt: value.lastAttempt || Date.now(),
-          };
-
-          migrated++;
-        });
-
-        mockStorage.operationStats = newStats;
-        return { migrated, skipped };
       };
 
       // Première migration
@@ -239,42 +210,6 @@ describe('Stats Migration - Edge Cases', () => {
         '5x2': { attempts: 3, errors: 0 }, // NOUVELLE donnée
       };
 
-      const migrateMultiplicationStats = () => {
-        const oldStats = mockStorage.multiplicationStats || {};
-        const newStats = mockStorage.operationStats || {};
-
-        let migrated = 0;
-        let skipped = 0;
-
-        Object.entries(oldStats).forEach(([key, value]) => {
-          const match = /^(\d+)[x×](\d+)$/.exec(key);
-          if (!match) return;
-
-          const table = Number.parseInt(match[1], 10);
-          const num = Number.parseInt(match[2], 10);
-          const newKey = `${table}×${num}`;
-
-          if (newStats[newKey]) {
-            skipped++;
-            return;
-          }
-
-          newStats[newKey] = {
-            operator: '×',
-            a: table,
-            b: num,
-            attempts: value.attempts || 0,
-            errors: value.errors || 0,
-            lastAttempt: value.lastAttempt || Date.now(),
-          };
-
-          migrated++;
-        });
-
-        mockStorage.operationStats = newStats;
-        return { migrated, skipped };
-      };
-
       const result = migrateMultiplicationStats();
       expect(result.migrated).toBe(1); // Seulement '5x2'
       expect(result.skipped).toBe(2); // '3x5' et '4x7' déjà migrées
@@ -287,38 +222,7 @@ describe('Stats Migration - Edge Cases', () => {
         '4×7': { attempts: 5 }, // Unicode ×
       };
 
-      const migrateMultiplicationStats = () => {
-        const oldStats = mockStorage.multiplicationStats || {};
-        const newStats = mockStorage.operationStats || {};
-
-        let migrated = 0;
-
-        Object.entries(oldStats).forEach(([key, value]) => {
-          // Accepter BOTH 'x' (ASCII) et '×' (Unicode)
-          const match = /^(\d+)[x×](\d+)$/.exec(key);
-          if (!match) return;
-
-          const table = Number.parseInt(match[1], 10);
-          const num = Number.parseInt(match[2], 10);
-          const newKey = `${table}×${num}`; // Toujours Unicode dans nouveau format
-
-          newStats[newKey] = {
-            operator: '×',
-            a: table,
-            b: num,
-            attempts: value.attempts || 0,
-            errors: value.errors || 0,
-            lastAttempt: value.lastAttempt || Date.now(),
-          };
-
-          migrated++;
-        });
-
-        mockStorage.operationStats = newStats;
-        return { migrated };
-      };
-
-      const result = migrateMultiplicationStats();
+      const result = migrateMultiplicationStats({ skipExisting: false });
       expect(result.migrated).toBe(2);
       expect(mockStorage.operationStats['3×5']).toBeDefined(); // Converti en Unicode
       expect(mockStorage.operationStats['4×7']).toBeDefined();
@@ -326,20 +230,7 @@ describe('Stats Migration - Edge Cases', () => {
   });
 
   describe('canSafelyDeleteOldStats() - Double Protection', () => {
-    // Constants used in safety checks
-    const INACTIVITY_THRESHOLD_DAYS = 30;
-
     it('devrait retourner false si pas de migration', () => {
-      const canSafelyDeleteOldStats = () => {
-        const migrationFlag = mockStorage._statsMigrated;
-        // Without migration flag, deletion is never safe
-        if (!migrationFlag?.firstMigrationDate) {
-          return false;
-        }
-        // Additional checks would go here in production code
-        return false;
-      };
-
       expect(canSafelyDeleteOldStats()).toBe(false);
     });
 
@@ -349,19 +240,6 @@ describe('Stats Migration - Edge Cases', () => {
         firstMigrationDate: now - 50 * 24 * 60 * 60 * 1000, // 50 jours
         lastMigrationDate: now,
         retentionUntil: now + 40 * 24 * 60 * 60 * 1000, // Encore 40 jours
-      };
-
-      const canSafelyDeleteOldStats = () => {
-        const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag?.firstMigrationDate) {
-          return false;
-        }
-
-        const now = Date.now();
-        const retentionPeriodElapsed = now >= (migrationFlag.retentionUntil || 0);
-
-        // This test case intentionally has retention period NOT elapsed
-        return retentionPeriodElapsed;
       };
 
       expect(canSafelyDeleteOldStats()).toBe(false);
@@ -375,27 +253,6 @@ describe('Stats Migration - Edge Cases', () => {
         retentionUntil: now - 10 * 24 * 60 * 60 * 1000, // Rétention écoulée
       };
 
-      const canSafelyDeleteOldStats = () => {
-        const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag?.firstMigrationDate) {
-          return false;
-        }
-
-        const now = Date.now();
-        const retentionPeriodElapsed = now >= (migrationFlag.retentionUntil || 0);
-
-        if (!retentionPeriodElapsed) {
-          return false;
-        }
-
-        const lastMigrationDate =
-          migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
-        const inactivityThreshold = INACTIVITY_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
-        const inactiveSinceLastMigration = now - lastMigrationDate >= inactivityThreshold;
-
-        return retentionPeriodElapsed && inactiveSinceLastMigration;
-      };
-
       expect(canSafelyDeleteOldStats()).toBe(false); // Activité récente
     });
 
@@ -405,27 +262,6 @@ describe('Stats Migration - Edge Cases', () => {
         firstMigrationDate: now - 100 * 24 * 60 * 60 * 1000, // 100 jours
         lastMigrationDate: now - 40 * 24 * 60 * 60 * 1000, // Inactif depuis 40 jours
         retentionUntil: now - 10 * 24 * 60 * 60 * 1000, // Rétention écoulée
-      };
-
-      const canSafelyDeleteOldStats = () => {
-        const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag?.firstMigrationDate) {
-          return false;
-        }
-
-        const now = Date.now();
-        const retentionPeriodElapsed = now >= (migrationFlag.retentionUntil || 0);
-
-        if (!retentionPeriodElapsed) {
-          return false;
-        }
-
-        const lastMigrationDate =
-          migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
-        const inactivityThreshold = INACTIVITY_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
-        const inactiveSinceLastMigration = now - lastMigrationDate >= inactivityThreshold;
-
-        return retentionPeriodElapsed && inactiveSinceLastMigration;
       };
 
       expect(canSafelyDeleteOldStats()).toBe(true);
@@ -439,22 +275,6 @@ describe('Stats Migration - Edge Cases', () => {
         firstMigrationDate: now - 100 * 24 * 60 * 60 * 1000,
         lastMigrationDate: now - 10 * 24 * 60 * 60 * 1000, // Récent
         retentionUntil: now - 10 * 24 * 60 * 60 * 1000, // OK
-      };
-
-      const canSafelyDeleteOldStats = () => {
-        const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag?.firstMigrationDate) return false;
-
-        const now = Date.now();
-        const retentionPeriodElapsed = now >= (migrationFlag.retentionUntil || 0);
-        if (!retentionPeriodElapsed) return false;
-
-        const lastMigrationDate =
-          migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
-        const inactivityThreshold = INACTIVITY_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
-        const inactiveSinceLastMigration = now - lastMigrationDate >= inactivityThreshold;
-
-        return retentionPeriodElapsed && inactiveSinceLastMigration; // AND logic
       };
 
       expect(canSafelyDeleteOldStats()).toBe(false);
@@ -495,30 +315,28 @@ describe('Stats Migration - Edge Cases', () => {
       let backupCreated = false;
       let statsDeleted = false;
 
-      const cleanupOldStatsIfSafe = () => {
-        const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag?.done) return;
-
+      // Inline cleanup logic for this specific test
+      const migrationFlag = mockStorage._statsMigrated;
+      if (migrationFlag?.done) {
         const oldStats = mockStorage.multiplicationStats;
-        if (!oldStats) return;
+        if (oldStats) {
+          // Backup avant suppression
+          const backup = JSON.stringify(oldStats);
+          backupCreated = !!backup;
 
-        // Backup avant suppression
-        const backup = JSON.stringify(oldStats);
-        backupCreated = !!backup;
+          // Suppression
+          delete mockStorage.multiplicationStats;
+          statsDeleted = true;
 
-        // Suppression
-        delete mockStorage.multiplicationStats;
-        statsDeleted = true;
+          // Marquer suppression
+          mockStorage._statsMigrated = {
+            ...migrationFlag,
+            oldStatsDeleted: true,
+            deletionDate: Date.now(),
+          };
+        }
+      }
 
-        // Marquer suppression
-        mockStorage._statsMigrated = {
-          ...migrationFlag,
-          oldStatsDeleted: true,
-          deletionDate: Date.now(),
-        };
-      };
-
-      cleanupOldStatsIfSafe();
       expect(backupCreated).toBe(true);
       expect(statsDeleted).toBe(true);
       expect(mockStorage._statsMigrated.oldStatsDeleted).toBe(true);
@@ -536,71 +354,17 @@ describe('Stats Migration - Edge Cases', () => {
         '3×5': { attempts: 10 },
       };
 
-      const INACTIVITY_THRESHOLD_DAYS = 30;
-
-      const cleanupOldStatsIfSafe = () => {
-        const migrationFlag = mockStorage._statsMigrated;
-        if (!migrationFlag?.done) return;
-
-        const now = Date.now();
-        const retentionPeriodElapsed = now >= (migrationFlag.retentionUntil || 0);
-        if (!retentionPeriodElapsed) {
-          console.log('Rétention non écoulée');
-          return;
-        }
-
-        const lastMigrationDate =
-          migrationFlag.lastMigrationDate || migrationFlag.firstMigrationDate;
-        const inactivityThreshold = INACTIVITY_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
-        const inactiveSinceLastMigration = now - lastMigrationDate >= inactivityThreshold;
-
-        if (!inactiveSinceLastMigration) {
-          console.log('Activité récente');
-          return;
-        }
-
-        // Suppression
+      // Only cleanup if safe
+      if (canSafelyDeleteOldStats()) {
         delete mockStorage.multiplicationStats;
-      };
+      }
 
-      cleanupOldStatsIfSafe();
       expect(mockStorage.multiplicationStats).toBeDefined(); // PAS supprimé
     });
   });
 
   describe('Migration Flag Updates', () => {
     it('devrait initialiser flag à première migration', () => {
-      const RETENTION_DAYS = 90;
-
-      const updateMigrationFlag = (migrated, skipped, errors) => {
-        const existingFlag = mockStorage._statsMigrated;
-
-        if (!existingFlag?.firstMigrationDate) {
-          const now = Date.now();
-          mockStorage._statsMigrated = {
-            done: true,
-            firstMigrationDate: now,
-            lastMigrationDate: now,
-            retentionUntil: now + RETENTION_DAYS * 24 * 60 * 60 * 1000,
-            totalMigrated: migrated,
-            totalSkipped: skipped,
-            totalErrors: errors,
-            migrationCount: 1,
-          };
-          return;
-        }
-
-        // Mise à jour migrations suivantes
-        mockStorage._statsMigrated = {
-          ...existingFlag,
-          lastMigrationDate: Date.now(),
-          totalMigrated: (existingFlag.totalMigrated || 0) + migrated,
-          totalSkipped: (existingFlag.totalSkipped || 0) + skipped,
-          totalErrors: (existingFlag.totalErrors || 0) + errors,
-          migrationCount: (existingFlag.migrationCount || 1) + 1,
-        };
-      };
-
       updateMigrationFlag(10, 0, 0);
       expect(mockStorage._statsMigrated.firstMigrationDate).toBeDefined();
       expect(mockStorage._statsMigrated.retentionUntil).toBeDefined();
@@ -618,34 +382,6 @@ describe('Stats Migration - Edge Cases', () => {
         totalSkipped: 2,
         totalErrors: 0,
         migrationCount: 1,
-      };
-
-      const updateMigrationFlag = (migrated, skipped, errors) => {
-        const existingFlag = mockStorage._statsMigrated;
-
-        if (!existingFlag?.firstMigrationDate) {
-          const now = Date.now();
-          mockStorage._statsMigrated = {
-            done: true,
-            firstMigrationDate: now,
-            lastMigrationDate: now,
-            retentionUntil: now + 90 * 24 * 60 * 60 * 1000,
-            totalMigrated: migrated,
-            totalSkipped: skipped,
-            totalErrors: errors,
-            migrationCount: 1,
-          };
-          return;
-        }
-
-        mockStorage._statsMigrated = {
-          ...existingFlag,
-          lastMigrationDate: Date.now(),
-          totalMigrated: (existingFlag.totalMigrated || 0) + migrated,
-          totalSkipped: (existingFlag.totalSkipped || 0) + skipped,
-          totalErrors: (existingFlag.totalErrors || 0) + errors,
-          migrationCount: (existingFlag.migrationCount || 1) + 1,
-        };
       };
 
       updateMigrationFlag(5, 3, 1);

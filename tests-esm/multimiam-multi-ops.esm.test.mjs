@@ -133,18 +133,15 @@ describe('Multimiam Multi-Opérations (R4) - Logique métier', () => {
     });
 
     it('ne devrait jamais générer de distracteurs négatifs ou nuls', () => {
-      const testCases = [
-        { result: 15, specifics: [20, 10, 18, 12] }, // multiplication-like
-        { result: 15, specifics: [7, 8, 5] }, // addition-like
-        { result: 7, specifics: [10, 13] }, // subtraction-like
-        { result: 5, specifics: [20, 4, 10] }, // division-like
+      const allDistractors = [
+        ...createDistractorGenerator(15, [20, 10, 18, 12]), // multiplication-like
+        ...createDistractorGenerator(15, [7, 8, 5]), // addition-like
+        ...createDistractorGenerator(7, [10, 13]), // subtraction-like
+        ...createDistractorGenerator(5, [20, 4, 10]), // division-like
       ];
 
-      testCases.forEach(({ result, specifics }) => {
-        const distractors = createDistractorGenerator(result, specifics);
-        distractors.forEach(d => {
-          expect(d).toBeGreaterThan(0);
-        });
+      allDistractors.forEach(d => {
+        expect(d).toBeGreaterThan(0);
       });
     });
   });
