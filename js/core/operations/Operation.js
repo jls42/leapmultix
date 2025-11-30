@@ -38,23 +38,23 @@ export class Operation {
   /**
    * Calcule le résultat de l'opération
    * @abstract
-   * @param {number} a - Premier opérande
-   * @param {number} b - Second opérande
+   * @param {number} _a - Premier opérande (utilisé par les sous-classes)
+   * @param {number} _b - Second opérande (utilisé par les sous-classes)
    * @returns {number} Résultat de l'opération
    * @throws {Error} Si la méthode n'est pas implémentée
    */
-  compute(a, b) {
+  compute(_a, _b) {
     throw new Error(`compute() must be implemented in ${this.constructor.name}`);
   }
 
   /**
    * Génère des opérandes aléatoires selon la difficulté
    * @abstract
-   * @param {string} difficulty - Niveau de difficulté ('easy', 'medium', 'hard')
+   * @param {string} _difficulty - Niveau de difficulté (utilisé par les sous-classes)
    * @returns {{ a: number, b: number }} Paire d'opérandes générés
    * @throws {Error} Si la méthode n'est pas implémentée
    */
-  generateOperands(difficulty = 'medium') {
+  generateOperands(_difficulty = 'medium') {
     throw new Error(`generateOperands() must be implemented in ${this.constructor.name}`);
   }
 

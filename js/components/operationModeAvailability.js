@@ -87,8 +87,8 @@ export function initModeAvailability() {
   updateModeButtonsAvailability();
 
   // Écouter les changements d'opération
-  if (typeof globalThis.window !== 'undefined' && globalThis.window.addEventListener) {
-    globalThis.addEventListener('operation-changed', event => {
+  if (globalThis.window !== undefined) {
+    globalThis.addEventListener?.('operation-changed', event => {
       console.log('Événement operation-changed détecté:', event.detail);
       updateModeButtonsAvailability();
     });

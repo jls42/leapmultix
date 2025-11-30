@@ -129,8 +129,8 @@ describe('Multi-Operations Logic Validation', () => {
           return 0;
         };
 
-        expect(getGroupCount('+', 3, 4)).toBe(2);
-        expect(getGroupCount('+', 10, 5)).toBe(2);
+        expect(getGroupCount('+')).toBe(2);
+        expect(getGroupCount('+')).toBe(2);
       });
 
       it('devrait calculer objets visibles/barrés pour soustraction', () => {

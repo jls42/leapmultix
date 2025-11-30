@@ -113,8 +113,8 @@ export class OperationSelector {
     console.log(`✓ Opération changée: ${oldOperator} → ${operator}`);
 
     // Déclencher événement personnalisé pour réactivité
-    if (typeof globalThis.window !== 'undefined' && globalThis.dispatchEvent) {
-      globalThis.dispatchEvent(
+    if (globalThis.window !== undefined) {
+      globalThis.dispatchEvent?.(
         new CustomEvent('operation-changed', {
           detail: { operator, oldOperator },
         })
