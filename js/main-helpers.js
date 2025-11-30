@@ -7,8 +7,8 @@ import Storage from './core/storage.js';
 const AVATAR_LIST = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
 const HERO_IMAGE_BY_LANG = {
   fr: 'assets/social/leapmultix-social-card.webp',
-  en: 'assets/social/leapmultix-social-card-en.webp',
-  es: 'assets/social/leapmultix-social-card-es.webp',
+  en: 'assets/social/leapmultix-social-card.webp',
+  es: 'assets/social/leapmultix-social-card.webp',
 };
 const HERO_DEFAULT_LANG = 'fr';
 
