@@ -38,20 +38,40 @@ export class OperationSelector {
 
     // Opérations disponibles (R1-R3: ×, +, −, ÷)
     const operations = [
-      { symbol: '×', key: 'operation_multiplication', enabled: true },
-      { symbol: '+', key: 'operation_addition', enabled: true },
-      { symbol: '−', key: 'operation_subtraction', enabled: true },
-      { symbol: '÷', key: 'operation_division', enabled: true }, // R3: Division activée
+      { symbol: '×', key: 'operation_multiplication', image: 'multiplication', enabled: true },
+      { symbol: '+', key: 'operation_addition', image: 'addition', enabled: true },
+      { symbol: '−', key: 'operation_subtraction', image: 'soustraction', enabled: true },
+      { symbol: '÷', key: 'operation_division', image: 'division', enabled: true }, // R3: Division activée
     ];
 
     operations.forEach(op => {
       const btn = document.createElement('button');
       btn.className = `btn operation-btn ${currentOp === op.symbol ? 'active' : ''}`;
-      btn.textContent = getTranslation(op.key);
       btn.dataset.operator = op.symbol;
       btn.disabled = !op.enabled;
       btn.setAttribute('aria-label', getTranslation(op.key));
       btn.setAttribute('aria-pressed', currentOp === op.symbol ? 'true' : 'false');
+
+      // Icône de l'opération (responsive avec srcset)
+      const icon = document.createElement('img');
+      icon.src = `assets/images/operators/${op.image}-64.webp`;
+      icon.srcset = `
+        assets/images/operators/${op.image}-32.webp 32w,
+        assets/images/operators/${op.image}-64.webp 64w,
+        assets/images/operators/${op.image}-128.webp 128w
+      `;
+      icon.sizes = '64px';
+      icon.alt = op.symbol;
+      icon.className = 'operation-icon';
+      icon.width = 64;
+      icon.height = 64;
+      btn.appendChild(icon);
+
+      // Nom de l'opération (sans le symbole)
+      const label = document.createElement('span');
+      label.textContent = getTranslation(op.key);
+      label.className = 'operation-label';
+      btn.appendChild(label);
 
       if (op.enabled) {
         btn.addEventListener('click', () => {

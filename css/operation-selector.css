@@ -7,17 +7,19 @@
   margin: 20px auto;
   padding: 20px;
   max-width: 600px;
-  background: rgb(255 255 255 / 0.85);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+  background-color: rgb(52 152 219 / 0.85);
+  border-radius: 20px;
+  box-shadow: 0 8px 16px rgb(0 0 0 / 0.1);
+  border: 1px solid rgb(52 152 219 / 0.5);
   text-align: center;
 }
 
 .operation-selector-wrapper h3 {
   margin: 0 0 16px 0;
   font-size: 1.2rem;
-  color: var(--text-color, #333);
+  color: white;
   font-weight: 600;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
 }
 
 .operation-selector-buttons {
@@ -40,6 +42,31 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.operation-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.1));
+  transition: transform 0.2s ease;
+}
+
+.operation-btn:hover:not(:disabled) .operation-icon {
+  transform: scale(1.1);
+}
+
+.operation-btn.active .operation-icon {
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.2)) brightness(1.1);
+}
+
+.operation-label {
+  font-size: 0.9rem;
+  line-height: 1.2;
 }
 
 .operation-btn:hover:not(:disabled) {
