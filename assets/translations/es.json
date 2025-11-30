@@ -572,7 +572,6 @@
   "operation_addition": "Adición (+)",
   "operation_subtraction": "Sustracción (−)",
   "operation_division": "División (÷)",
-  "operation_division_coming_soon": "División (÷) - Próximamente",
   "mode_not_available_for_operation": "Este modo solo está disponible para la multiplicación por ahora",
   "discovery_multiplication_only": "Modo Descubrimiento disponible solo para tablas de multiplicar",
   "adventure_multiplication_only": "Modo Aventura disponible solo para tablas de multiplicar",
@@ -582,5 +581,14 @@
   "feedback_correct_operation": "¡Correcto! +{points} puntos",
   "feedback_incorrect_operation": "Incorrecto. La respuesta correcta es {correctAnswer}.",
   "current_operation": "Operación actual",
-  "switch_operation": "Cambiar operación"
+  "switch_operation": "Cambiar operación",
+  "quiz_supports_all_operations": "Modo Quiz: practica multiplicación ×, adición +, sustracción − y división ÷",
+  "challenge_supports_all_operations": "Modo Desafío: desafíate en las 4 operaciones",
+  "discovery_multiplication_focus": "Modo Descubrimiento: exploración de las tablas de multiplicar",
+  "adventure_multiplication_focus": "Modo Aventura: progresión narrativa en multiplicación",
+  "arcade_multiplication_focus": "Modo Arcade: minijuegos para dominar la multiplicación",
+  "operations_supported": "Operaciones disponibles",
+  "all_four_operations": "Las 4 operaciones (×, +, −, ÷)",
+  "select_operation": "Elige tu operación",
+  "practice_arithmetic": "Practica cálculo mental"
 }

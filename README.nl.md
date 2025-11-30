@@ -1,6 +1,7 @@
 <details>
 <summary>Dit document is ook beschikbaar in andere talen</summary>
 
+- [Français](./README.md)
 - [English](./README.en.md)
 - [Español](./README.es.md)
 - [Português](./README.pt.md)
@@ -11,7 +12,6 @@
 - [Italiano](./README.it.md)
 - [Svenska](./README.sv.md)
 - [Polski](./README.pl.md)
-- [Nederlands](./README.nl.md)
 - [Română](./README.ro.md)
 - [日本語](./README.ja.md)
 - [한국어](./README.ko.md)
@@ -20,7 +20,7 @@
 
 # LeapMultix
 
-<!-- Badges (update <owner>/<repo> na GitHub-migratie) -->
+<!-- Badges (update <owner>/<repo> na GitHub migratie) -->
 
 ![CI](https://img.shields.io/github/actions/workflow/status/jls42/leapmultix/ci.yml?branch=main)
 
@@ -34,19 +34,21 @@
 
 - [Beschrijving](#beschrijving)
 - [Functies](#-functies)
-- [Snelstart](#-snelstart)
+- [Snel aan de slag](#-snel-aan-de-slag)
 - [Architectuur](#-architectuur)
 - [Gedetailleerde Spelmodi](#-gedetailleerde-spelmodi)
 - [Ontwikkeling](#-ontwikkeling)
 - [Compatibiliteit](#-compatibiliteit)
 - [Lokalisatie](#-lokalisatie)
 - [Gegevensopslag](#-gegevensopslag)
-- [Een probleem melden](#-een-probleem-melden)
+- [Probleem melden](#-probleem-melden)
 - [Licentie](#-licentie)
 
 ## Beschrijving
 
-LeapMultix is een moderne, interactieve educatieve webapplicatie voor kinderen (8-12 jaar) om de tafels van vermenigvuldiging onder de knie te krijgen. De applicatie biedt **4 klassieke spelmodi** en **4 arcade-minigames** in een intuïtieve, toegankelijke en meertalige interface.
+LeapMultix is een moderne interactieve educatieve webapplicatie ontworpen voor kinderen (8–12 jaar) om de 4 rekenkundige bewerkingen te beheersen: vermenigvuldigen (×), optellen (+), aftrekken (−) en delen (÷). De app biedt **5 spelmodi** en **4 arcade minigames** in een intuïtieve, toegankelijke en meertalige interface.
+
+**Ondersteuning voor meerdere bewerkingen:** Quiz- en Uitdagingsmodi maken oefenen met alle bewerkingen mogelijk. Ontdekkings-, Avonturen- en Arcademodi richten zich op vermenigvuldigen.
 
 **Ontwikkeld door:** Julien LS (contact@jls42.org)
 
@@ -57,27 +59,43 @@ LeapMultix is een moderne, interactieve educatieve webapplicatie voor kinderen (
 ### 🎮 Spelmodi
 
 - **Ontdekkingsmodus**: Visuele en interactieve verkenning van de tafels van vermenigvuldiging
-- **Quizmodus**: Meerkeuzevragen met adaptieve voortgang
-- **Uitdagingsmodus**: Race tegen de klok met verschillende moeilijkheidsgraden
-- **Avontuurmodus**: Verhalende voortgang door levels met een interactieve kaart
+- **Quizmodus** ⭐: Meerkeuzevragen met ondersteuning voor alle 4 bewerkingen (×, +, −, ÷) en adaptieve voortgang
+- **Uitdagingsmodus** ⭐: Race tegen de klok met alle 4 bewerkingen (×, +, −, ÷) en verschillende moeilijkheidsgraden
+- **Avonturenmodus**: Verhalende voortgang door niveaus met interactieve kaart (vermenigvuldigen)
 
-### 🕹️ Arcade-minigames
+⭐ = Volledige ondersteuning voor alle 4 rekenkundige bewerkingen
 
-- **MultiInvaders**: Educatieve Space Invaders - Vernietig de foute antwoorden
-- **MultiMiam**: Wiskundige Pac-Man - Verzamel de juiste antwoorden
-- **MultiMemory**: Geheugenspel - Koppel vermenigvuldigingen aan resultaten
-- **MultiSnake**: Educatieve Snake - Groei door de juiste getallen te eten
+### 🕹️ Arcade Minigames
 
-### 🌍 Overkoepelende functies
+- **MultiInvaders**: Educatieve Space Invaders - Vernietig de foute antwoorden (vermenigvuldigen)
+- **MultiMiam**: Wiskundige Pac-Man - Verzamel de juiste antwoorden (vermenigvuldigen)
+- **MultiMemory**: Geheugenspel - Combineer vermenigvuldigingen met hun uitkomsten
+- **MultiSnake**: Educatieve Snake - Groei door de juiste getallen te eten (vermenigvuldigen)
 
-- **Multi-user**: Beheer van individuele profielen met opgeslagen voortgang
+### ➕ Ondersteuning voor Meerdere Bewerkingen
+
+LeapMultix gaat verder dan simpel vermenigvuldigen door een complete training voor de 4 rekenkundige bewerkingen aan te bieden:
+
+| Modus      | ×   | +   | −   | ÷   |
+| ---------- | --- | --- | --- | --- |
+| Quiz       | ✅  | ✅  | ✅  | ✅  |
+| Uitdaging  | ✅  | ✅  | ✅  | ✅  |
+| Ontdekking | ✅  | ❌  | ❌  | ❌  |
+| Avontuur   | ✅  | ❌  | ❌  | ❌  |
+| Arcade     | ✅  | ❌  | ❌  | ❌  |
+
+**Opmerking:** Ondersteuning voor bewerkingen voor Ontdekkings-, Avonturen- en Arcademodi is gepland voor een toekomstige versie.
+
+### 🌍 Cross-functionele Functies
+
+- **Multi-gebruiker**: Beheer van individuele profielen met opgeslagen voortgang
 - **Meertalig**: Ondersteuning voor Frans, Engels en Spaans
-- **Personalisatie**: Avatars, kleurenthema's, achtergronden
-- **Toegankelijkheid**: Toetsenbordnavigatie, touch-ondersteuning, WCAG 2.1 AA-conformiteit
+- **Aanpassing**: Avatars, kleurthema's, achtergronden
+- **Toegankelijkheid**: Toetsenbordnavigatie, aanraakondersteuning, WCAG 2.1 AA-conformiteit
 - **Mobiel responsief**: Geoptimaliseerde interface voor tablets en smartphones
 - **Voortgangssysteem**: Scores, badges, dagelijkse uitdagingen
 
-## 🚀 Snelstart
+## 🚀 Snel aan de slag
 
 ### Vereisten
 
@@ -91,16 +109,16 @@ LeapMultix is een moderne, interactieve educatieve webapplicatie voor kinderen (
 git clone https://github.com/jls42/leapmultix.git
 cd leapmultix
 
-# Installeer de afhankelijkheden
+# Installeer afhankelijkheden
 npm install
 
-# Start de ontwikkelserver (optie 1)
+# Start ontwikkelserver (optie 1)
 npm run serve
-# De applicatie is toegankelijk op http://localhost:8080 (of de volgende beschikbare poort)
+# De applicatie zal toegankelijk zijn op http://localhost:8080 (of volgende beschikbare poort)
 
 # Of met Python (optie 2)
 python3 -m http.server 8000
-# De applicatie is toegankelijk op http://localhost:8000
+# De applicatie zal toegankelijk zijn op http://localhost:8000
 ```
 
 ### Beschikbare scripts
@@ -108,51 +126,51 @@ python3 -m http.server 8000
 ```bash
 # Ontwikkeling
 npm run serve          # Lokale server (http://localhost:8080)
-npm run lint           # Codecontrole met ESLint
-npm run lint:fix       # Automatische correctie van ESLint-problemen
-npm run format:check   # Controleer de code-opmaak (ALTIJD voor het committen)
-npm run format         # Code opmaken met Prettier
-npm run verify         # Kwaliteitspoort: lint + test + coverage
+npm run lint           # Code controleren met ESLint
+npm run lint:fix       # ESLint-problemen automatisch oplossen
+npm run format:check   # Codeformattering controleren (ALTIJD voor commit)
+npm run format         # Code formatteren met Prettier
+npm run verify         # Quality gate: lint + test + coverage
 
 # Tests
-npm run test           # Voer alle tests uit (CJS)
+npm run test           # Alle tests uitvoeren (CJS)
 npm run test:watch     # Tests in watch-modus
 npm run test:coverage  # Tests met dekkingsrapport
-npm run test:core      # Alleen tests van de kernmodules
+npm run test:core      # Alleen tests voor core-modules
 npm run test:integration # Integratietests
-npm run test:storage   # Tests van het opslagsysteem
-npm run test:esm       # ESM-tests (mappen tests-esm/, Jest vm-modules)
+npm run test:storage   # Opslagsysteemtests
+npm run test:esm       # ESM tests (tests-esm/ map, Jest vm-modules)
 npm run test:verbose   # Tests met gedetailleerde uitvoer
 npm run test:pwa-offline # PWA offline test (vereist Puppeteer), na `npm run serve`
 
 # Analyse en onderhoud
-npm run analyze:jsdoc  # Documentatieanalyse
+npm run analyze:jsdoc  # Documentatie-analyse
 npm run improve:jsdoc  # Automatische JSDoc-verbetering
-npm run audit:mobile   # Tests voor mobiele responsiviteit
+npm run audit:mobile   # Mobiele responsiviteitstests
 npm run audit:accessibility # Toegankelijkheidstests
-npm run dead-code      # Detectie van ongebruikte code
-npm run analyze:globals # Analyse van globale variabelen
-npm run analyze:dependencies # Analyse van afhankelijkheidsgebruik
-npm run verify:cleanup # Gecombineerde analyse (ongebruikte code + globale variabelen)
+npm run dead-code      # Ongebruikte code detectie
+npm run analyze:globals # Analyse globale variabelen
+npm run analyze:dependencies # Analyse afhankelijkheidsgebruik
+npm run verify:cleanup # Gecombineerde analyse (dode code + globals)
 
 # Assetbeheer
-npm run assets:generate    # Genereer responsieve afbeeldingen
-npm run assets:backgrounds # Converteer achtergronden naar WebP
-npm run assets:analyze     # Analyse van responsieve assets
-npm run assets:diff        # Vergelijking van assets
+npm run assets:generate    # Responsieve afbeeldingen genereren
+npm run assets:backgrounds # Achtergronden converteren naar WebP
+npm run assets:analyze     # Analyse responsieve assets
+npm run assets:diff        # Vergelijking assets
 
 # Internationalisatie
-npm run i18n:verify    # Controleer de consistentie van vertaalsleutels
-npm run i18n:unused    # Lijst van ongebruikte vertaalsleutels
-npm run i18n:compare   # Vergelijk vertalingen (en/es) met fr.json (referentie)
+npm run i18n:verify    # Consistentie vertaalsleutels verifiëren
+npm run i18n:unused    # Ongebruikte vertaalsleutels oplijsten
+npm run i18n:compare   # Vertalingen vergelijken (en/es) met fr.json (referentie)
 
 # Build & levering
 npm run build          # Productiebuild (Rollup) + postbuild (volledige dist/)
-npm run serve:dist     # Serveer dist/ op http://localhost:5000 (of beschikbare poort)
+npm run serve:dist     # dist/ serveren op http://localhost:5000 (of beschikbare poort)
 
 # PWA en Service Worker
-npm run sw:disable     # Schakel de service worker uit
-npm run sw:fix         # Los problemen met de service worker op
+npm run sw:disable     # Service worker uitschakelen
+npm run sw:fix         # Service worker problemen oplossen
 ```
 
 ## 🏗️ Architectuur
@@ -163,25 +181,25 @@ npm run sw:fix         # Los problemen met de service worker op
 leapmultix/
 ├── index.html              # Hoofdingangspunt
 ├── js/
-│   ├── core/               # Centrale ES6-modules
-│   │   ├── GameMode.js     # Basisklasse van de modi
-│   │   ├── GameModeManager.js # Beheer van spelmodi
-│   │   ├── storage.js      # LocalStorage-opslag-API
+│   ├── core/               # Core ES6 modules
+│   │   ├── GameMode.js     # Basisklasse voor modi
+│   │   ├── GameModeManager.js # Spelmodusbeheer
+│   │   ├── storage.js      # LocalStorage API
 │   │   ├── audio.js        # Geluidsbeheer
-│   │   ├── utils.js        # Algemene hulpprogramma's (canonieke bron)
-│   │   ├── eventBus.js     # Gebeurtenisgestuurde communicatie
-│   │   ├── userState.js    # Beheer van gebruikerssessies
+│   │   ├── utils.js        # Generieke hulpprogramma's (canonieke bron)
+│   │   ├── eventBus.js     # Event-communicatie
+│   │   ├── userState.js    # Gebruikerssessiebeheer
 │   │   ├── mainInit.js     # DOM-ready initialisatie
 │   │   ├── theme.js        # Themasysteem
-│   │   ├── userUi.js       # Hulpprogramma's voor de gebruikersinterface
+│   │   ├── userUi.js       # Gebruikersinterface hulpprogramma's
 │   │   ├── parental.js     # Ouderlijk toezicht
-│   │   ├── adventure-data.js # Gegevens van de avontuurmodus
+│   │   ├── adventure-data.js # Gegevens avonturenmodus
 │   │   ├── mult-stats.js   # Vermenigvuldigingsstatistieken
 │   │   ├── challenge-stats.js # Uitdagingsstatistieken
-│   │   └── daily-challenge.js # Beheer van dagelijkse uitdagingen
+│   │   └── daily-challenge.js # Beheer dagelijkse uitdagingen
 │   ├── components/         # Herbruikbare UI-componenten
 │   │   ├── topBar.js       # Navigatiebalk
-│   │   ├── infoBar.js      # Informatiebalken van de spellen
+│   │   ├── infoBar.js      # Spelinformatiebalken
 │   │   ├── dashboard.js    # Gebruikersdashboard
 │   │   └── customization.js # Aanpassingsinterface
 │   ├── modes/              # Spelmodi
@@ -190,68 +208,68 @@ leapmultix/
 │   │   ├── AdventureMode.js
 │   │   ├── DiscoveryMode.js
 │   │   └── ArcadeMode.js
-│   ├── arcade/             # Arcade-minigames
-│   │   ├── arcade.js       # Hoofd-arcade-orkestrator
+│   ├── arcade/             # Arcade minigames
+│   │   ├── arcade.js       # Hoofd arcade-orkestrator
 │   │   ├── arcade-invasion.js # Space Invaders (31 KB)
 │   │   ├── arcade-multimemory.js # Geheugenspel (31 KB)
-│   │   ├── arcade-multimiam.js # Multimiam-integratie
-│   │   ├── arcade-multisnake.js # Snake-integratie
+│   │   ├── arcade-multimiam.js # Multimiam integratie
+│   │   ├── arcade-multisnake.js # Snake integratie
 │   │   ├── arcade-common.js, arcade-utils.js # Gedeelde hulpprogramma's
 │   │   ├── arcade-message.js, arcade-points.js # UI-componenten
 │   │   └── arcade-scores.js # Scorebeheer
-│   ├── multimiam/          # Pac-Man-spel (opgedeelde architectuur)
+│   ├── multimiam/          # Pac-Man spel (ontbonden architectuur)
 │   │   ├── multimiam.js    # Hoofdcontroller
-│   │   ├── multimiam-engine.js # Spelengine (15 KB)
-│   │   ├── multimiam-renderer.js # Renderingsysteem (9 KB)
+│   │   ├── multimiam-engine.js # Game-engine (15 KB)
+│   │   ├── multimiam-renderer.js # Rendersysteem (9 KB)
 │   │   ├── multimiam-controls.js # Besturingsbeheer (7 KB)
 │   │   ├── multimiam-questions.js # Vragengeneratie (6 KB)
 │   │   └── multimiam-ui.js # Interface-elementen
-│   ├── multisnake.js       # Snake-spel (38 KB)
+│   ├── multisnake.js       # Snake spel (38 KB)
 │   ├── navigation/         # Navigatiesysteem
-│   │   ├── slides.js       # Navigatie per dia (goToSlide, showSlide)
+│   │   ├── slides.js       # Slide-gebaseerde navigatie (goToSlide, showSlide)
 │   │   └── keyboard-navigation.js # Toetsenbordondersteuning
 │   ├── ui/                 # Gebruikersinterface en feedback
-│   │   ├── uiUtils.js      # Interface-hulpprogramma's
+│   │   ├── uiUtils.js      # Interface hulpprogramma's
 │   │   ├── ui-feedback.js  # Feedbackmechanismen
-│   │   ├── touch-support.js # Touch-ondersteuning (7 KB)
+│   │   ├── touch-support.js # Aanraakondersteuning (7 KB)
 │   │   ├── virtual-keyboard.js # Virtueel toetsenbord
 │   │   ├── coin-display.js, coin-effects.js # Valutasysteem
-│   │   ├── notifications.js # Meldingssysteem
+│   │   ├── notifications.js # Notificatiesysteem
 │   │   └── badges.js       # Badgesysteem
 │   ├── media/              # Mediabeheer
 │   │   ├── VideoManager.js # Videoweergavebeheer (12 KB)
-│   │   └── responsive-image-loader.js # Laden van afbeeldingen (9 KB)
+│   │   └── responsive-image-loader.js # Afbeeldingen laden (9 KB)
 │   ├── orchestration/      # Orkestratie en laden
 │   │   ├── mode-orchestrator.js # Moduswisseling
 │   │   ├── lazy-loader.js  # Dynamisch laden (10 KB)
 │   │   └── game-cleanup.js # Statusopschoning
 │   ├── utils/              # Hulpprogramma's
 │   │   ├── utils-es6.js    # Hoofdaggregator (5 KB)
-│   │   ├── main-helpers.js # Helpers van de applicatie
-│   │   ├── helpers.js      # Legacy-helperfuncties
+│   │   ├── main-helpers.js # Applicatiehelpers
+│   │   ├── helpers.js      # Legacy helperfuncties
 │   │   ├── stats-utils.js  # Statistiekhulpprogramma's
-│   │   ├── difficulty.js   # Moeilijkheidsbeheer
+│   │   ├── difficulty.js   # Moeilijkheidsgraadbeheer
 │   │   └── questionGenerator.js # Vragengeneratie
 │   ├── storage/            # Opslag en status
-│   │   ├── storage.js      # Legacy-opslagwrapper
-│   │   └── userManager.js  # Multi-userbeheer (19 KB)
+│   │   ├── storage.js      # Legacy opslagwrapper
+│   │   └── userManager.js  # Multi-gebruikersbeheer (19 KB)
 │   ├── i18n/               # Internationalisatie
 │   │   ├── i18n.js         # i18n-systeem
-│   │   └── i18n-store.js   # Opslag van vertalingen
+│   │   └── i18n-store.js   # Vertalingenopslag
 │   ├── security/           # Beveiliging en foutafhandeling
-│   │   ├── security-utils.js # XSS-bescherming, sanering
+│   │   ├── security-utils.js # XSS-bescherming, opschoning
 │   │   ├── error-handlers.js # Globale foutafhandeling
 │   │   └── logger.js       # Loggingsysteem
 │   ├── accessibility/      # Toegankelijkheid
 │   │   ├── accessibility.js # Toegankelijkheidsfuncties
-│   │   └── speech.js       # Ondersteuning voor spraaksynthese
-│   ├── integration/        # Integratie en analyse
-│   │   ├── plausible-init.js # Plausible-analyse
+│   │   └── speech.js       # Tekst-naar-spraak ondersteuning
+│   ├── integration/        # Integratie en analytics
+│   │   ├── plausible-init.js # Plausible analytics
 │   │   ├── cache-updater.js # Cachebeheer (10 KB)
 │   │   └── imports.js      # Importhulpprogramma's
 │   ├── main-es6.js         # ES6-ingangspunt
 │   ├── main.js             # Hoofdorkestrator
-│   ├── bootstrap.js        # Configuratie van ES6-eventhandlers
+│   ├── bootstrap.js        # ES6 event handlers setup
 │   └── game.js             # Statusbeheer en dagelijkse uitdagingen
 ├── css/                    # Modulaire stijlen
 ├── assets/                 # Bronnen
@@ -259,43 +277,43 @@ leapmultix/
 │   ├── generated-images/   # Gegenereerde responsieve afbeeldingen
 │   ├── sounds/             # Geluidseffecten
 │   ├── translations/       # Vertaalbestanden (fr, en, es)
-│   └── videos/             # Tutorialvideo's
+│   └── videos/             # Instructievideo's
 ├── tests/                  # Geautomatiseerde tests
 │   ├── __tests__/          # Unit- en integratietests
-│   └── tests-esm/          # ESM-tests (.mjs)
+│   └── tests-esm/          # ESM tests (.mjs)
 ├── scripts/                # Onderhoudsscripts
-│   ├── compare-translations.cjs # Vergelijking van vertalingen
-│   └── cleanup-i18n-keys.cjs # Opschoning van i18n-sleutels
+│   ├── compare-translations.cjs # Vertalingen vergelijken
+│   └── cleanup-i18n-keys.cjs # i18n-sleutels opschonen
 └── dist/                   # Productiebuild (gegenereerd)
 ```
 
-### Technische architectuur
+### Technische Architectuur
 
-**Moderne ES6-modules**: Het project maakt gebruik van een modulaire architectuur met native ES6-klassen en imports/exports.
+**Moderne ES6 Modules**: Het project gebruikt een modulaire architectuur met ES6-klassen en native imports/exports.
 
-**Herbruikbare componenten**: Interface gebouwd met gecentraliseerde UI-componenten (TopBar, InfoBar, Dashboard, Customization).
+**Herbruikbare Componenten**: Interface gebouwd met gecentraliseerde UI-componenten (TopBar, InfoBar, Dashboard, Customization).
 
-**Lazy Loading**: Slim laden van modules op aanvraag via `lazy-loader.js` om de initiële prestaties te optimaliseren.
+**Lazy Loading**: Intelligent laden van modules op aanvraag via `lazy-loader.js` om initiële prestaties te optimaliseren.
 
-**Verenigd opslagsysteem**: Gecentraliseerde API voor persistentie van gebruikersgegevens via LocalStorage met fallbacks.
+**Verenigd Opslagsysteem**: Gecentraliseerde API voor persistentie van gebruikersgegevens via LocalStorage met fallbacks.
 
-**Gecentraliseerd audiobeheer**: Geluidsregeling met meertalige ondersteuning en voorkeuren per gebruiker.
+**Gecentraliseerd Audiobeheer**: Geluidscontrole met meertalige ondersteuning en voorkeuren per gebruiker.
 
-**Event Bus**: Ontkoppelde gebeurtenisgestuurde communicatie tussen componenten voor een onderhoudbare architectuur.
+**Event Bus**: Losgekoppelde event-gebaseerde communicatie tussen componenten voor een onderhoudbare architectuur.
 
-**Navigatie per dia**: Navigatiesysteem gebaseerd op genummerde dia's (slide0, slide1, etc.) met `goToSlide()`.
+**Slide Navigatie**: Op slides gebaseerd navigatiesysteem (slide0, slide1, enz.) met `goToSlide()`.
 
-**Beveiliging**: XSS-bescherming en sanering via `security-utils.js` voor alle DOM-manipulaties.
+**Beveiliging**: XSS-bescherming en opschoning via `security-utils.js` voor alle DOM-manipulaties.
 
 ## 🎯 Gedetailleerde Spelmodi
 
 ### Ontdekkingsmodus
 
-Visuele verkenningsinterface van de tafels van vermenigvuldiging met:
+Visuele interface voor het verkennen van vermenigvuldigingstabellen met:
 
-- Interactieve visualisatie van vermenigvuldigingen
-- Animaties en ezelsbruggetjes
-- Educatieve slepen-en-neerzetten
+- Interactieve vermenigvuldigingsvisualisatie
+- Animaties en geheugensteuntjes
+- Educatieve drag-and-drop
 - Vrije voortgang per tafel
 
 ### Quizmodus
@@ -303,8 +321,8 @@ Visuele verkenningsinterface van de tafels van vermenigvuldiging met:
 Meerkeuzevragen met:
 
 - 10 vragen per sessie
-- Adaptieve voortgang op basis van successen
-- Virtueel numeriek toetsenbord
+- Adaptieve voortgang op basis van succes
+- Virtueel numeriek toetsenblok
 - Streak-systeem (reeks juiste antwoorden)
 
 ### Uitdagingsmodus
@@ -314,103 +332,103 @@ Race tegen de klok met:
 - 3 moeilijkheidsgraden (Beginner, Gemiddeld, Moeilijk)
 - Tijd bonus voor juiste antwoorden
 - Levenssysteem
-- Ranglijst van de beste scores
+- Highscore-ranglijst
 
-### Avontuurmodus
+### Avonturenmodus
 
 Verhalende voortgang met:
 
-- 12 ontgrendelbare thematische levels
+- 12 vrij te spelen thematische niveaus
 - Interactieve kaart met visuele voortgang
 - Meeslepend verhaal met personages
 - Sterren- en beloningssysteem
 
-### Arcade-minigames
+### Arcade Minigames
 
 Elke minigame biedt:
 
-- Keuze van moeilijkheidsgraad en personalisatie
+- Keuze uit moeilijkheidsgraad en aanpassing
 - Levens- en scoresysteem
-- Toetsenbord- en touch-bediening
+- Toetsenbord- en aanraakbediening
 - Individuele ranglijsten per gebruiker
 
 ## 🛠️ Ontwikkeling
 
 ### Ontwikkelingsworkflow
 
-**BELANGRIJK: Nooit rechtstreeks op main committen**
+**BELANGRIJK: Nooit rechtstreeks naar main committen**
 
-Het project maakt gebruik van een workflow gebaseerd op feature-branches:
+Het project gebruikt een workflow gebaseerd op feature branches:
 
 1. **Maak een branch**:
 
    ```bash
-   git checkout -b feat/feature-naam
+   git checkout -b feat/naam-van-functie
    # of
-   git checkout -b fix/bug-naam
+   git checkout -b fix/naam-van-bug
    ```
 
 2. **Ontwikkel en test**:
 
    ```bash
-   npm run format:check  # ALTIJD eerst de opmaak controleren
-   npm run format        # Formatteer indien nodig
-   npm run lint          # Controleer de codekwaliteit
-   npm run test          # Voer de tests uit
-   npm run test:coverage # Controleer de dekking
+   npm run format:check  # ALTIJD eerst formattering controleren
+   npm run format        # Formatteren indien nodig
+   npm run lint          # Codekwaliteit controleren
+   npm run test          # Tests uitvoeren
+   npm run test:coverage # Dekking controleren
    ```
 
 3. **Commit op de branch**:
 
    ```bash
    git add .
-   git commit -m "feat: beschrijving van de functionaliteit"
+   git commit -m "feat: beschrijving van de functie"
    ```
 
 4. **Push en maak een Pull Request**:
    ```bash
-   git push -u origin feat/feature-naam
+   git push -u origin feat/naam-van-functie
    ```
 
-**Commit-stijl**: Beknopte berichten, imperatieve modus (bijv. "Fix arcade init errors", "Refactor cache updater")
+**Commit-stijl**: Beknopt, gebiedende wijs (bijv. "Fix arcade init errors", "Refactor cache updater")
 
-**Kwaliteitspoort**: Zorg ervoor dat `npm run lint`, `npm run test` en `npm run test:coverage` slagen voor elke commit
+**Quality gate**: Zorg ervoor dat `npm run lint`, `npm test` en `npm run test:coverage` slagen voor elke commit
 
-### Componentenarchitectuur
+### Componentarchitectuur
 
 **GameMode (basisklasse)**: Alle modi erven van een gemeenschappelijke klasse met gestandaardiseerde methoden.
 
-**GameModeManager**: Gecentraliseerde orkestratie van het starten en beheren van de modi.
+**GameModeManager**: Gecentraliseerde orkestratie van starten en beheren van modi.
 
 **UI-componenten**: TopBar, InfoBar, Dashboard en Customization bieden een consistente interface.
 
-**Lazy Loading**: Modules worden op aanvraag geladen om de initiële prestaties te optimaliseren.
+**Lazy Loading**: Modules worden op aanvraag geladen om initiële prestaties te optimaliseren.
 
-**Event Bus**: Ontkoppelde communicatie tussen componenten via het gebeurtenissysteem.
+**Event Bus**: Losgekoppelde communicatie tussen componenten via het eventsysteem.
 
 ### Tests
 
-Het project omvat een volledige testsuite:
+Het project bevat een uitgebreide testsuite:
 
-- Unit-tests van de kernmodules
-- Integratietests van de componenten
-- Tests van de spelmodi
-- Geautomatiseerde codedekking
+- Unittests voor core-modules
+- Integratietests voor componenten
+- Spelmodustests
+- Geautomatiseerde code-dekking
 
 ```bash
 npm test              # Alle tests (CJS)
-npm test:core         # Tests van de kernmodules
+npm test:core         # Core module tests
 npm test:integration  # Integratietests
 npm test:coverage     # Dekkingsrapport
-npm run test:esm      # ESM-tests (bijv. components/dashboard) via vm-modules
+npm run test:esm      # ESM tests (bijv. components/dashboard) via vm-modules
 ```
 
 ### Productiebuild
 
 - **Rollup**: Bundelt `js/main-es6.js` in ESM met code-splitting en sourcemaps
 - **Terser**: Automatische minificatie voor optimalisatie
-- **Post-build**: Kopieert `css/` en `assets/`, de favicons (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, en herschrijft `dist/index.html` naar het gehashte invoerbestand (bijv. `main-es6-*.js`)
-- **Eindmap**: `dist/` klaar om statisch te worden geserveerd
+- **Post-build**: Kopieert `css/` en `assets/`, favicons (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, en herschrijft `dist/index.html` naar het gehashte invoerbestand (bijv. `main-es6-*.js`)
+- **Eindmap**: `dist/` klaar om statisch geserveerd te worden
 
 ```bash
 npm run build      # genereert dist/
@@ -421,30 +439,30 @@ npm run serve:dist # serveert dist/ (poort 5000)
 
 **GitHub Actions**: Geautomatiseerde pijplijn in `.github/workflows/ci.yml`
 
-De CI/CD-pijplijn wordt automatisch uitgevoerd bij elke push en pull request:
+De CI/CD-pijplijn draait automatisch bij elke push en pull request:
 
 **Hoofdtaken**:
 
 1. **build-test**: Hoofdvalidatietaak
-   - Installatie van afhankelijkheden: `npm ci`
-   - Controle van de opmaak: `npm run format:check`
+   - Installatie afhankelijkheden: `npm ci`
+   - Formatteringscontrole: `npm run format:check`
    - Statische analyse: `npm run lint`
-   - Unit-tests: `npm run test`
+   - Unittests: `npm run test`
    - Beveiligingsaudit: `npm audit`
-   - Generatie van het dekkingsartefact
+   - Generatie dekkingsartefact
 
 2. **accessibility**: Toegankelijkheidsaudit (niet-blokkerend)
    - Voert `npm run audit:accessibility` uit
-   - Genereert een WCAG 2.1 AA-toegankelijkheidsrapport
+   - Genereert WCAG 2.1 AA toegankelijkheidsrapport
 
-3. **test-esm**: Tests van de ES6-modules
-   - Voert `npm run test:esm` uit met Jest VM-modules
-   - Valideert ES6-imports/exports
+3. **test-esm**: ES6 module tests
+   - Voert `npm run test:esm` uit met Jest VM modules
+   - Valideert ES6 imports/exports
 
 4. **lighthouse**: Prestatie-audit (niet-blokkerend)
    - Mobiele prestatie-audit
-   - Generatie van Lighthouse-rapportartefacten
-   - Core Web Vitals-metrieken
+   - Generatie Lighthouse rapport artefacten
+   - Core Web Vitals statistieken
 
 **Kwaliteitsbadges**:
 
@@ -455,24 +473,24 @@ De CI/CD-pijplijn wordt automatisch uitgevoerd bij elke push en pull request:
 
 ### PWA (Progressive Web App)
 
-LeapMultix is een volledige PWA met offline ondersteuning en installatiemogelijkheid.
+LeapMultix is een volledige PWA met offline ondersteuning en installeerbaarheid.
 
 **Service Worker** (`sw.js`):
 
 - Navigatie: Network-first met offline fallback naar `offline.html`
-- Afbeeldingen: Cache-first om de prestaties te optimaliseren
-- Vertalingen: Stale-while-revalidate voor achtergrondupdates
-- JS/CSS: Network-first om altijd de nieuwste versie te serveren
+- Afbeeldingen: Cache-first om prestaties te optimaliseren
+- Vertalingen: Stale-while-revalidate voor updates op de achtergrond
+- JS/CSS: Network-first om altijd de laatste versie te serveren
 - Automatisch versiebeheer via `cache-updater.js`
 
 **Manifest** (`manifest.json`):
 
 - SVG- en PNG-pictogrammen voor alle apparaten
-- Installatie mogelijk op mobiel (Toevoegen aan startscherm)
-- Standalone-configuratie voor een app-achtige ervaring
-- Ondersteuning voor thema's en kleuren
+- Installeerbaar op mobiel (Toevoegen aan startscherm)
+- Standalone configuratie voor app-achtige ervaring
+- Thema- en kleurondersteuning
 
-**Offline-modus lokaal testen**:
+**Offline modus lokaal testen**:
 
 1. Start de ontwikkelserver:
 
@@ -482,20 +500,20 @@ LeapMultix is een volledige PWA met offline ondersteuning en installatiemogelijk
 
    Open `http://localhost:8080` (of de weergegeven poort)
 
-2. Handmatig testen:
-   - Verbreek het netwerk in de DevTools (tabblad Netwerk → Offline)
-   - Ververs de pagina → `offline.html` wordt weergegeven
+2. Handmatige test:
+   - Schakel netwerk uit in DevTools (Tabblad Network → Offline)
+   - Vernieuw de pagina → `offline.html` wordt weergegeven
 
-3. Geautomatiseerde test (Puppeteer vereist):
+3. Geautomatiseerde test (Vereist Puppeteer):
    ```bash
    npm run test:pwa-offline
    ```
 
-**Scripts voor het beheer van de Service Worker**:
+**Service Worker beheerscripts**:
 
 ```bash
-npm run sw:disable  # Schakel de service worker uit
-npm run sw:fix      # Los cacheproblemen op
+npm run sw:disable  # Service worker uitschakelen
+npm run sw:fix      # Cacheproblemen oplossen
 ```
 
 ### Kwaliteitsnormen
@@ -503,41 +521,41 @@ npm run sw:fix      # Los cacheproblemen op
 **Codekwaliteitstools**:
 
 - **ESLint**: Moderne configuratie met flat config (`eslint.config.js`), ES2022-ondersteuning
-- **Prettier**: Automatische code-opmaak (`.prettierrc`)
+- **Prettier**: Automatische codeformattering (`.prettierrc`)
 - **Stylelint**: CSS-validatie (`.stylelintrc.json`)
-- **JSDoc**: Automatische documentatie van functies met dekkingsanalyse
+- **JSDoc**: Automatische functiedocumentatie met dekkingsanalyse
 
 **Belangrijke coderegels**:
 
 - Verwijder ongebruikte variabelen en parameters (`no-unused-vars`)
 - Gebruik specifieke foutafhandeling (geen lege catch-blokken)
-- Vermijd `innerHTML` ten gunste van `security-utils.js`-functies
-- Houd een cognitieve complexiteit < 15 voor functies
+- Vermijd `innerHTML` ten gunste van `security-utils.js` functies
+- Houd cognitieve complexiteit voor functies onder 15
 - Extraheer complexe functies in kleinere helpers
 
 **Beveiliging**:
 
-- **XSS-bescherming**: Gebruik de functies van `security-utils.js`:
+- **XSS-bescherming**: Gebruik `security-utils.js` functies:
   - `appendSanitizedHTML()` in plaats van `innerHTML`
-  - `createSafeElement()` om veilige elementen te maken
+  - `createSafeElement()` voor veilig elementen maken
   - `setSafeMessage()` voor tekstinhoud
-- **Externe scripts**: Attribuut `crossorigin="anonymous"` verplicht
-- **Invoervalidatie**: Externe gegevens altijd saneren
+- **Externe Scripts**: Attribuut `crossorigin="anonymous"` verplicht
+- **Invoervalidatie**: Sanitize altijd externe gegevens
 - **Content Security Policy**: CSP-headers om scriptbronnen te beperken
 
 **Toegankelijkheid**:
 
-- WCAG 2.1 AA-conformiteit
+- WCAG 2.1 AA conformiteit
 - Volledige toetsenbordnavigatie
-- Geschikte ARIA-rollen en labels
+- ARIA-rollen en passende labels
 - Conforme kleurcontrasten
 
 **Prestaties**:
 
 - Lazy loading van modules via `lazy-loader.js`
-- CSS-optimalisaties en responsieve assets
-- Service Worker voor slimme caching
-- Code-splitting en minificatie in productie
+- CSS en responsieve asset-optimalisaties
+- Service Worker voor intelligente caching
+- Code splitting en minificatie in productie
 
 ## 📱 Compatibiliteit
 
@@ -551,7 +569,7 @@ npm run sw:fix      # Los cacheproblemen op
 ### Apparaten
 
 - **Desktop**: Toetsenbord- en muisbediening
-- **Tablets**: Geoptimaliseerde touch-interface
+- **Tablets**: Geoptimaliseerde aanraakinterface
 - **Smartphones**: Adaptief responsief ontwerp
 
 ### Toegankelijkheid
@@ -559,7 +577,7 @@ npm run sw:fix      # Los cacheproblemen op
 - Volledige toetsenbordnavigatie (Tab, pijlen, Esc)
 - ARIA-rollen en labels voor schermlezers
 - Conforme kleurcontrasten
-- Ondersteuning van ondersteunende technologieën
+- Ondersteuning voor ondersteunende technologieën
 
 ## 🌍 Lokalisatie
 
@@ -577,55 +595,55 @@ Volledige meertalige ondersteuning:
 
 ```json
 {
-  "menu_start": "Commencer",
-  "quiz_correct": "Bravo !",
+  "menu_start": "Starten",
+  "quiz_correct": "Goed gedaan!",
   "arcade_invasion_title": "MultiInvaders"
 }
 ```
 
-### i18n-beheerscripts
+### i18n beheerscripts
 
-**`npm run i18n:verify`** - Controleer de consistentie van vertaalsleutels
+**`npm run i18n:verify`** - Vertaalsleutelconsistentie verifiëren
 
-**`npm run i18n:unused`** - Lijst van ongebruikte vertaalsleutels
+**`npm run i18n:unused`** - Ongebruikte vertaalsleutels oplijsten
 
-**`npm run i18n:compare`** - Vergelijk vertaalbestanden met fr.json (referentie)
+**`npm run i18n:compare`** - Vertaalbestanden vergelijken met fr.json (referentie)
 
-Dit script (`scripts/compare-translations.cjs`) zorgt voor de synchronisatie van alle taalbestanden:
+Dit script (`scripts/compare-translations.cjs`) zorgt voor synchronisatie van alle taalbestanden:
 
 **Functies:**
 
 - Detectie van ontbrekende sleutels (aanwezig in fr.json maar afwezig in andere talen)
 - Detectie van extra sleutels (aanwezig in andere talen maar niet in fr.json)
 - Identificatie van lege waarden (`""`, `null`, `undefined`, `[]`)
-- Controle van typeconsistentie (string vs array)
+- Consistentiecontrole van typen (string vs array)
 - Afvlakken van geneste JSON-structuren naar puntnotatie (bijv. `arcade.multiMemory.title`)
-- Generatie van een gedetailleerd console-rapport
-- Opslaan van het JSON-rapport in `docs/translations-comparison-report.json`
+- Generatie van gedetailleerd consolerapport
+- JSON-rapport opslaan in `docs/translations-comparison-report.json`
 
 **Voorbeelduitvoer:**
 
 ```
-🔍 Analyse comparative des fichiers de traduction
+🔍 Vergelijkende analyse van vertaalbestanden
 
-📚 Langue de référence: fr.json
-✅ fr.json: 335 clés
+📚 Referentietaal: fr.json
+✅ fr.json: 335 sleutels
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 Analyse de en.json
+📝 Analyse van en.json
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 Total de clés: 335
-✅ Aucune clé manquante
-✅ Aucune clé supplémentaire
-✅ Aucune valeur vide
+📊 Totaal sleutels: 335
+✅ Geen ontbrekende sleutels
+✅ Geen extra sleutels
+✅ Geen lege waarden
 
-📊 RÉSUMÉ FINAL
-  fr.json: 335 clés
-  en.json: 335 clés
-  es.json: 335 clés
+📊 EINDSAMENVATTING
+  fr.json: 335 sleutels
+  en.json: 335 sleutels
+  es.json: 335 sleutels
 
-✅ Tous les fichiers de traduction sont parfaitement synchronisés !
+✅ Alle vertaalbestanden zijn perfect gesynchroniseerd!
 ```
 
 **Vertaaldekking:**
@@ -633,9 +651,9 @@ Dit script (`scripts/compare-translations.cjs`) zorgt voor de synchronisatie van
 - Volledige gebruikersinterface
 - Spelinstructies
 - Fout- en feedbackberichten
-- Beschrijvingen en contextuele hulp
-- Verhalende inhoud van de avontuurmodus
-- Toegankelijkheids- en ARIA-labels
+- Beschrijvingen en contextgevoelige hulp
+- Verhalende inhoud avonturenmodus
+- Toegankelijkheidslabels en ARIA
 
 ## 📊 Gegevensopslag
 
@@ -643,32 +661,32 @@ Dit script (`scripts/compare-translations.cjs`) zorgt voor de synchronisatie van
 
 - Profielen en voorkeuren
 - Voortgang per spelmodus
-- Scores en statistieken van de arcadespellen
+- Scores en statistieken arcade games
 - Aanpassingsinstellingen
 
 ### Technische functies
 
 - Lokale opslag (localStorage) met fallbacks
-- Isolatie van gegevens per gebruiker
-- Automatische opslag van de voortgang
+- Gegevensisolatie per gebruiker
+- Automatisch opslaan van voortgang
 - Automatische migratie van oude gegevens
 
-## 🐛 Een probleem melden
+## 🐛 Probleem melden
 
-Problemen kunnen worden gemeld via de GitHub-issues. Gelieve op te nemen:
+Problemen kunnen gemeld worden via GitHub issues. Vermeld alstublieft:
 
 - Gedetailleerde beschrijving van het probleem
 - Stappen om het te reproduceren
 - Browser en versie
 - Screenshots indien relevant
 
-## 💝 Het project ondersteunen
+## 💝 Steun het project
 
 **[☕ Doneer via PayPal](https://paypal.me/jls)**
 
 ## 📄 Licentie
 
-Dit project is gelicentieerd onder de AGPL v3-licentie. Zie het `LICENSE`-bestand voor meer details.
+Dit project valt onder de AGPL v3 licentie. Zie het bestand `LICENSE` voor meer details.
 
 ---
 

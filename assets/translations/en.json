@@ -566,7 +566,6 @@
   "operation_addition": "Addition (+)",
   "operation_subtraction": "Subtraction (−)",
   "operation_division": "Division (÷)",
-  "operation_division_coming_soon": "Division (÷) - Coming Soon",
   "mode_not_available_for_operation": "This mode is only available for multiplication at the moment",
   "discovery_multiplication_only": "Discovery mode available only for multiplication tables",
   "adventure_multiplication_only": "Adventure mode available only for multiplication tables",
@@ -576,5 +575,14 @@
   "feedback_correct_operation": "Correct! +{points} points",
   "feedback_incorrect_operation": "Incorrect. The correct answer is {correctAnswer}.",
   "current_operation": "Current operation",
-  "switch_operation": "Switch operation"
+  "switch_operation": "Switch operation",
+  "quiz_supports_all_operations": "Quiz Mode: practice multiplication ×, addition +, subtraction − and division ÷",
+  "challenge_supports_all_operations": "Challenge Mode: challenge yourself on the 4 operations",
+  "discovery_multiplication_focus": "Discovery Mode: explore multiplication tables",
+  "adventure_multiplication_focus": "Adventure Mode: narrative progression in multiplication",
+  "arcade_multiplication_focus": "Arcade Mode: mini-games to master multiplication",
+  "operations_supported": "Supported operations",
+  "all_four_operations": "All 4 operations (×, +, −, ÷)",
+  "select_operation": "Choose your operation",
+  "practice_arithmetic": "Practice mental math"
 }

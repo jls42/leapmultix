@@ -46,7 +46,9 @@
 
 ## Description
 
-LeapMultix est une application web éducative interactive moderne destinée aux enfants (8–12 ans) pour maîtriser les tables de multiplication. L'application propose **4 modes de jeu classiques** et **4 mini-jeux d'arcade** dans une interface intuitive, accessible et multilingue.
+LeapMultix est une application web éducative interactive moderne destinée aux enfants (8–12 ans) pour maîtriser les 4 opérations arithmétiques : multiplication (×), addition (+), soustraction (−) et division (÷). L'application propose **5 modes de jeu** et **4 mini-jeux d'arcade** dans une interface intuitive, accessible et multilingue.
+
+**Support multi-opérations :** Les modes Quiz et Défi permettent de pratiquer toutes les opérations. Les modes Découverte, Aventure et Arcade se concentrent sur la multiplication.
 
 **Développé par :** Julien LS (contact@jls42.org)
 
@@ -57,16 +59,32 @@ LeapMultix est une application web éducative interactive moderne destinée aux 
 ### 🎮 Modes de Jeu
 
 - **Mode Découverte** : Exploration visuelle et interactive des tables de multiplication
-- **Mode Quiz** : Questions à choix multiples avec progression adaptative
-- **Mode Défi** : Course contre la montre avec différents niveaux de difficulté
-- **Mode Aventure** : Progression narrative par niveaux avec carte interactive
+- **Mode Quiz** ⭐ : Questions à choix multiples avec support des 4 opérations (×, +, −, ÷) et progression adaptative
+- **Mode Défi** ⭐ : Course contre la montre avec les 4 opérations (×, +, −, ÷) et différents niveaux de difficulté
+- **Mode Aventure** : Progression narrative par niveaux avec carte interactive (multiplication)
+
+⭐ = Support complet des 4 opérations arithmétiques
 
 ### 🕹️ Mini-jeux Arcade
 
-- **MultiInvaders** : Space Invaders éducatif - Détruire les mauvaises réponses
-- **MultiMiam** : Pac-Man mathématique - Collecter les bonnes réponses
+- **MultiInvaders** : Space Invaders éducatif - Détruire les mauvaises réponses (multiplication)
+- **MultiMiam** : Pac-Man mathématique - Collecter les bonnes réponses (multiplication)
 - **MultiMemory** : Jeu de mémoire - Associer multiplications et résultats
-- **MultiSnake** : Snake éducatif - Grandir en mangeant les bons nombres
+- **MultiSnake** : Snake éducatif - Grandir en mangeant les bons nombres (multiplication)
+
+### ➕ Support Multi-Opérations
+
+LeapMultix va au-delà de la simple multiplication en offrant un entraînement complet aux 4 opérations arithmétiques :
+
+| Mode       | ×   | +   | −   | ÷   |
+| ---------- | --- | --- | --- | --- |
+| Quiz       | ✅  | ✅  | ✅  | ✅  |
+| Défi       | ✅  | ✅  | ✅  | ✅  |
+| Découverte | ✅  | ❌  | ❌  | ❌  |
+| Aventure   | ✅  | ❌  | ❌  | ❌  |
+| Arcade     | ✅  | ❌  | ❌  | ❌  |
+
+**Note :** Le support des opérations pour les modes Découverte, Aventure et Arcade est prévu dans une version ultérieure.
 
 ### 🌍 Fonctionnalités Transversales
 

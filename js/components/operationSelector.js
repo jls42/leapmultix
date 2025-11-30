@@ -66,7 +66,7 @@ export class OperationSelector {
           btn.setAttribute('aria-pressed', 'true');
         });
       } else {
-        btn.title = getTranslation('operation_division_coming_soon');
+        // Opération désactivée (ne devrait plus arriver maintenant que toutes sont enabled)
         btn.style.cursor = 'not-allowed';
       }
 

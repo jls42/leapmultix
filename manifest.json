@@ -1,7 +1,7 @@
 {
-  "name": "LeapMultix - Tables de Multiplication Interactives",
+  "name": "LeapMultix - Opérations Arithmétiques Interactives",
   "short_name": "LeapMultix",
-  "description": "Application web éducative interactive pour apprendre les tables de multiplication avec des jeux, des défis et du suivi de progression.",
+  "description": "Application éducative pour maîtriser les 4 opérations (×, +, −, ÷) avec 5 modes de jeu et 4 mini-jeux d'arcade. Gratuit et open source.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
