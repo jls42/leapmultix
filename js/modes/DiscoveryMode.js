@@ -422,6 +422,7 @@ export class DiscoveryMode extends GameMode {
    * @returns {number} Nombre aléatoire
    */
   randomInt(min, max) {
+    // NOSONAR - Safe: educational game randomization, not security-sensitive
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 

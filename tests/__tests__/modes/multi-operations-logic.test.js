@@ -73,6 +73,7 @@ describe('Multi-Operations Logic Validation', () => {
             let a, b;
             if (operator === '+') {
               const max = difficultyMax[difficulty] || 10;
+              // NOSONAR - Safe: test data generation, not security-sensitive
               a = Math.floor(Math.random() * max) + 1;
               b = Math.floor(Math.random() * max) + 1;
             }
@@ -100,6 +101,7 @@ describe('Multi-Operations Logic Validation', () => {
             let a, b;
             if (operator === '−') {
               const max = difficultyMaxMap[difficulty] || 50;
+              // NOSONAR - Safe: test data generation, not security-sensitive
               a = Math.floor(Math.random() * max) + 1;
               b = Math.floor(Math.random() * Math.min(a, max)) + 1;
               // Assurer a >= b

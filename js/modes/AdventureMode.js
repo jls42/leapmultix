@@ -335,6 +335,7 @@ export class AdventureMode extends GameMode {
         this.remainingOperands = Array.from({ length: 10 }, (_, i) => i + 1);
       }
 
+      // NOSONAR - Safe: educational game randomization, not security-sensitive
       const randomIndex = Math.floor(Math.random() * this.remainingOperands.length);
       const multiplicand = this.remainingOperands.splice(randomIndex, 1)[0];
 
