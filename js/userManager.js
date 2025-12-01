@@ -261,6 +261,13 @@ export const UserManager = {
      */
     updateBackgroundByAvatar(userData.avatar || 'fox');
 
+    // Mettre à jour la mascotte hero
+    const heroMascotImg = document.getElementById('hero-mascot-img');
+    if (heroMascotImg) {
+      heroMascotImg.src = `assets/images/arcade/${userData.avatar || 'fox'}_head_avatar.png`;
+      heroMascotImg.alt = userData.avatar || 'fox';
+    }
+
     // Démarrer la rotation automatique de l'arrière-plan
     /**
      * Fonction if

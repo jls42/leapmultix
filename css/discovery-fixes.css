@@ -41,8 +41,9 @@
 }
 
 .number-point .point-equation {
-  font-size: 0.8em;
-  color: var(--neutral-dark);
+  font-size: 0.85em;
+  color: var(--candy-blue-dark, #0077b6);
+  font-weight: 600;
 }
 
 /* Visual exploration */
@@ -94,6 +95,39 @@
   font-size: 13px;
   line-height: 1.1;
   flex-shrink: 0;
+}
+
+/* Soustraction - boules retirées (grande croix rouge) */
+.visual-object-removed {
+  opacity: 0.45;
+  position: relative;
+}
+
+.visual-object-removed::after {
+  content: '✕';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  font-weight: bold;
+  color: #e63946;
+  text-shadow:
+    0 0 3px #fff,
+    0 0 5px #fff;
+  z-index: 1;
+}
+
+/* Division visual - groupes de partage */
+.visual-division {
+  gap: 8px 12px;
+}
+
+.visual-group-share {
+  background: rgb(var(--candy-pink-rgb, 255 143 171) / 0.15);
+  border: 1px solid rgb(var(--candy-pink-rgb, 255 143 171) / 0.4);
+  border-radius: 8px;
+  padding: 4px 6px;
 }
 
 /* Drag and drop zone */

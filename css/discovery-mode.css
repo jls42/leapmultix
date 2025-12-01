@@ -514,7 +514,7 @@
 .reset-btn {
   display: block;
   margin: 15px auto 0;
-  background-color: #4caf50;
+  background-color: var(--primary-color, #00bbf9);
   color: white;
   padding: 10px 15px;
   font-size: 16px;
@@ -637,10 +637,13 @@
   left: 50%;
   transform: translateX(-50%);
   font-size: 11px;
-  color: var(--primary-dark);
+  color: var(--candy-blue-dark, #0077b6);
   background-color: white;
-  padding: 0 3px;
+  padding: 2px 5px;
   white-space: nowrap;
+  font-weight: 600;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
 }
 .visual-separator {
   border: none;
@@ -658,5 +661,317 @@
   .arc-label {
     font-size: 9px;
     top: -15px;
+  }
+}
+
+/* ========================================
+   ADDITION/SOUSTRACTION - Ligne interactive
+   ======================================== */
+
+.operation-explanation {
+  text-align: center;
+  color: var(--candy-blue-dark, #0077b6);
+  font-size: 1.1em;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.number-line-interactive {
+  padding-bottom: 60px;
+  margin-top: 20px;
+}
+
+.number-point.highlight-start .point-marker {
+  background: var(--candy-lime, #9be564);
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--candy-lime-dark, #7bc44a);
+  box-shadow: 0 0 10px var(--candy-lime, #9be564);
+}
+
+.number-point.highlight-end .point-marker {
+  background: var(--candy-pink, #ff6b9d);
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--candy-pink-dark, #e85a8a);
+  box-shadow: 0 0 10px var(--candy-pink, #ff6b9d);
+}
+
+.number-point.in-path .point-marker {
+  background: var(--candy-yellow, #ffe66d);
+  border-color: var(--candy-yellow-dark, #e6cf5a);
+}
+
+.number-point.highlight-start .point-label,
+.number-point.highlight-end .point-label {
+  font-weight: 700;
+  font-size: 1em;
+}
+
+/* Flèches de saut */
+.jump-arrow {
+  position: absolute;
+  bottom: -35px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jump-arrow-right {
+  background: linear-gradient(
+    90deg,
+    var(--candy-lime, #9be564) 0%,
+    var(--candy-pink, #ff6b9d) 100%
+  );
+  border-radius: 15px;
+  animation: pulse-arrow 1.5s ease-in-out infinite;
+}
+
+.jump-arrow-right::after {
+  content: '→';
+  position: absolute;
+  right: -15px;
+  font-size: 24px;
+  color: var(--candy-pink-dark, #e85a8a);
+}
+
+.jump-arrow-left {
+  background: linear-gradient(
+    90deg,
+    var(--candy-pink, #ff6b9d) 0%,
+    var(--candy-lime, #9be564) 100%
+  );
+  border-radius: 15px;
+  animation: pulse-arrow 1.5s ease-in-out infinite;
+}
+
+.jump-arrow-left::before {
+  content: '←';
+  position: absolute;
+  left: -15px;
+  font-size: 24px;
+  color: var(--candy-pink-dark, #e85a8a);
+}
+
+.jump-label {
+  color: white;
+  font-weight: 700;
+  font-size: 1.1em;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  padding: 0 10px;
+}
+
+@keyframes pulse-arrow {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scaleX(1.05);
+    opacity: 1;
+  }
+}
+
+/* Équation exemple */
+.example-equation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+  padding: 15px 25px;
+  background: white;
+  border-radius: 20px;
+  box-shadow:
+    0 4px 0 var(--candy-blue-dark, #00a3d9),
+    0 8px 20px rgb(0 187 249 / 0.2);
+  font-size: 1.4em;
+  font-weight: 600;
+  max-width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.eq-number {
+  background: var(--candy-blue, #00bbf9);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 10px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.eq-operator {
+  color: var(--candy-pink-dark, #e85a8a);
+  font-size: 1.2em;
+}
+
+.eq-equals {
+  color: var(--neutral-dark, #666);
+}
+
+.eq-result {
+  background: var(--candy-pink, #ff6b9d);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 10px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.eq-explanation {
+  font-size: 0.7em;
+  color: var(--neutral-dark, #888);
+  font-weight: 400;
+}
+
+/* ========================================
+   DIVISION - Visualisation de partage
+   ======================================== */
+
+.division-visualization {
+  background: linear-gradient(135deg, rgb(255 230 109 / 0.1) 0%, rgb(255 107 157 / 0.1) 100%);
+  border-radius: 20px;
+  padding: 25px;
+}
+
+.division-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.division-total {
+  text-align: center;
+}
+
+.total-label {
+  display: block;
+  font-weight: 600;
+  color: var(--candy-blue-dark, #0077b6);
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.total-items {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 15px;
+  box-shadow:
+    0 3px 0 var(--candy-yellow-dark, #e6cf5a),
+    0 6px 15px rgb(230 207 90 / 0.3);
+  max-width: 300px;
+}
+
+.share-item {
+  font-size: 1.8em;
+  animation: bounce-item 0.5s ease-out;
+}
+
+@keyframes bounce-item {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.division-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.arrow-symbol {
+  font-size: 2em;
+  color: var(--candy-pink, #ff6b9d);
+  animation: bounce-arrow 1s ease-in-out infinite;
+}
+
+@keyframes bounce-arrow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+.arrow-label {
+  font-size: 0.95em;
+  color: var(--candy-pink-dark, #e85a8a);
+  font-weight: 500;
+}
+
+.division-groups {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+}
+
+.share-group {
+  background: white;
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow:
+    0 4px 0 var(--candy-lime-dark, #7bc44a),
+    0 8px 15px rgb(123 196 74 / 0.3);
+  text-align: center;
+  min-width: 80px;
+}
+
+.share-items {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.share-label {
+  font-size: 0.85em;
+  color: var(--candy-lime-dark, #6aad3a);
+  font-weight: 600;
+}
+
+/* Responsive pour petits écrans */
+@media (max-width: 480px) {
+  .example-equation {
+    font-size: 1.1em;
+    padding: 10px 15px;
+    gap: 6px;
+  }
+
+  .eq-number,
+  .eq-result {
+    padding: 6px 10px;
+    min-width: 30px;
+  }
+
+  .division-groups {
+    gap: 10px;
+  }
+
+  .share-group {
+    padding: 10px;
+    min-width: 70px;
+  }
+
+  .share-item {
+    font-size: 1.4em;
   }
 }

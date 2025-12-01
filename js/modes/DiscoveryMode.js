@@ -155,11 +155,22 @@ export class DiscoveryMode extends GameMode {
       title = getTranslation('discovery_lab_title', { table: this.currentTable });
       intro = getTranslation('discovery_explore_intro', { table: this.currentTable });
     } else if (this.currentLevel) {
-      const operationName =
-        this.operator === '+' ? getTranslation('addition') : getTranslation('subtraction');
+      // Déterminer le nom de l'opération avec l'article approprié
+      let operationWithArticle;
+      if (this.operator === '+') {
+        operationWithArticle = getTranslation('the_addition', { default: "l'addition" });
+      } else if (this.operator === '−') {
+        operationWithArticle = getTranslation('the_subtraction', { default: 'la soustraction' });
+      } else if (this.operator === '÷') {
+        operationWithArticle = getTranslation('the_division', { default: 'la division' });
+      } else {
+        operationWithArticle = this.operation.name;
+      }
       const difficultyKey = `difficulty_${this.currentLevel}`;
       title = `${getTranslation('discovery_lab_intro_operations')} - ${getTranslation(difficultyKey)}`;
-      intro = getTranslation('discovery_explore_intro_operation', { operation: operationName });
+      intro = getTranslation('discovery_explore_intro_operation', {
+        operation: operationWithArticle,
+      });
     } else {
       // Fallback si les conditions ne matchent pas
       console.error('❌ État incohérent dans getTableExplorationHTML');
@@ -273,70 +284,194 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * Générer la ligne numérique
+   * Générer la ligne numérique ou visualisation adaptée selon l'opération
    */
   generateNumberLineHTML() {
-    const isMultiplication = this.operator === '×';
-
-    if (isMultiplication) {
-      const table = this.currentTable;
-      const maxValue = table * 10;
-
-      // Multiplication : afficher les multiples
-      return `
-            <div class="number-line-section">
-                <h3>${getTranslation('number_line_title')}</h3>
-                <div class="number-line-container">
-                    <div class="number-line">
-                        ${Array.from({ length: 11 }, (_, i) => {
-                          const value = this.operation.compute(table, i);
-                          return `
-                                <div class="number-point ${i === 0 ? 'start' : ''}"
-                                     data-value="${value}"
-                                     style="left: ${(value / maxValue) * 100}%">
-                                    <div class="point-marker"></div>
-                                    <div class="point-label">${value}</div>
-                                    <div class="point-equation">${table}${this.operation.symbol}${i}</div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-    } else {
-      // Addition/Soustraction : afficher une progression séquentielle
-      const maxValue = this.operator === '+' ? 20 : 10;
-      const step = this.operator === '+' ? 2 : 1;
-      const points = [];
-
-      for (let i = 0; i <= maxValue; i += step) {
-        points.push(i);
-      }
-
-      return `
-            <div class="number-line-section">
-                <h3>${getTranslation('number_line_title')}</h3>
-                <div class="number-line-container">
-                    <div class="number-line">
-                        ${points
-                          .map((value, i) => {
-                            return `
-                                <div class="number-point ${i === 0 ? 'start' : ''}"
-                                     data-value="${value}"
-                                     style="left: ${(value / maxValue) * 100}%">
-                                    <div class="point-marker"></div>
-                                    <div class="point-label">${value}</div>
-                                </div>
-                            `;
-                          })
-                          .join('')}
-                    </div>
-                </div>
-                <p class="number-line-explanation">${this.operator === '+' ? getTranslation('number_line_addition_help') : getTranslation('number_line_subtraction_help')}</p>
-            </div>
-        `;
+    if (this.operator === '×') {
+      return this._generateMultiplicationNumberLine();
+    } else if (this.operator === '+') {
+      return this._generateAdditionNumberLine();
+    } else if (this.operator === '−') {
+      return this._generateSubtractionNumberLine();
+    } else if (this.operator === '÷') {
+      return this._generateDivisionVisualization();
     }
+    return '';
+  }
+
+  /**
+   * Ligne numérique pour multiplication (sauts de multiples)
+   * @private
+   */
+  _generateMultiplicationNumberLine() {
+    const table = this.currentTable;
+    const maxValue = table * 10;
+
+    return `
+      <div class="number-line-section">
+        <h3>${getTranslation('number_line_title')}</h3>
+        <div class="number-line-container">
+          <div class="number-line">
+            ${Array.from({ length: 11 }, (_, i) => {
+              const value = this.operation.compute(table, i);
+              return `
+                <div class="number-point ${i === 0 ? 'start' : ''}"
+                     data-value="${value}"
+                     style="left: ${(value / maxValue) * 100}%">
+                  <div class="point-marker"></div>
+                  <div class="point-label">${value}</div>
+                  <div class="point-equation">${table}${this.operation.symbol}${i}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Ligne numérique pour addition (déplacement vers la droite)
+   * @private
+   */
+  _generateAdditionNumberLine() {
+    const maxValue = 15;
+    const a = 5; // Exemple : 5 + 4 = 9
+    const b = 4;
+    const result = a + b;
+
+    return `
+      <div class="number-line-section">
+        <h3>${getTranslation('number_line_addition_title', { default: 'Comment ça marche ?' })}</h3>
+        <p class="operation-explanation">${getTranslation('number_line_addition_explanation', { default: "Additionner, c'est avancer sur la ligne numérique !" })}</p>
+        <div class="number-line-container number-line-interactive">
+          <div class="number-line">
+            ${Array.from({ length: maxValue + 1 }, (_, i) => {
+              const isStart = i === a;
+              const isEnd = i === result;
+              const isInPath = i > a && i <= result;
+              return `
+                <div class="number-point ${isStart ? 'highlight-start' : ''} ${isEnd ? 'highlight-end' : ''} ${isInPath ? 'in-path' : ''}"
+                     data-value="${i}"
+                     style="left: ${(i / maxValue) * 100}%">
+                  <div class="point-marker"></div>
+                  <div class="point-label">${i}</div>
+                </div>
+              `;
+            }).join('')}
+            <div class="jump-arrow jump-arrow-right" style="left: ${(a / maxValue) * 100}%; width: ${((result - a) / maxValue) * 100}%;">
+              <span class="jump-label">+${b}</span>
+            </div>
+          </div>
+        </div>
+        <div class="example-equation">
+          <span class="eq-number">${a}</span>
+          <span class="eq-operator">+</span>
+          <span class="eq-number">${b}</span>
+          <span class="eq-equals">=</span>
+          <span class="eq-result">${result}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Ligne numérique pour soustraction (déplacement vers la gauche)
+   * @private
+   */
+  _generateSubtractionNumberLine() {
+    const maxValue = 15;
+    const a = 9; // Exemple : 9 - 4 = 5
+    const b = 4;
+    const result = a - b;
+
+    return `
+      <div class="number-line-section">
+        <h3>${getTranslation('number_line_subtraction_title', { default: 'Comment ça marche ?' })}</h3>
+        <p class="operation-explanation">${getTranslation('number_line_subtraction_explanation', { default: "Soustraire, c'est reculer sur la ligne numérique !" })}</p>
+        <div class="number-line-container number-line-interactive">
+          <div class="number-line">
+            ${Array.from({ length: maxValue + 1 }, (_, i) => {
+              const isStart = i === a;
+              const isEnd = i === result;
+              const isInPath = i >= result && i < a;
+              return `
+                <div class="number-point ${isStart ? 'highlight-start' : ''} ${isEnd ? 'highlight-end' : ''} ${isInPath ? 'in-path' : ''}"
+                     data-value="${i}"
+                     style="left: ${(i / maxValue) * 100}%">
+                  <div class="point-marker"></div>
+                  <div class="point-label">${i}</div>
+                </div>
+              `;
+            }).join('')}
+            <div class="jump-arrow jump-arrow-left" style="left: ${(result / maxValue) * 100}%; width: ${((a - result) / maxValue) * 100}%;">
+              <span class="jump-label">−${b}</span>
+            </div>
+          </div>
+        </div>
+        <div class="example-equation">
+          <span class="eq-number">${a}</span>
+          <span class="eq-operator">−</span>
+          <span class="eq-number">${b}</span>
+          <span class="eq-equals">=</span>
+          <span class="eq-result">${result}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Visualisation de partage pour division (pas de ligne numérique)
+   * @private
+   */
+  _generateDivisionVisualization() {
+    const dividend = 12; // Exemple : 12 ÷ 3 = 4
+    const divisor = 3;
+    const quotient = dividend / divisor;
+
+    // Générer les groupes de partage
+    let groupsHTML = '';
+    for (let g = 0; g < divisor; g++) {
+      let itemsHTML = '';
+      for (let i = 0; i < quotient; i++) {
+        itemsHTML += '<span class="share-item">🍎</span>';
+      }
+      groupsHTML += `<div class="share-group"><div class="share-items">${itemsHTML}</div><div class="share-label">${getTranslation('group', { default: 'Groupe' })} ${g + 1}</div></div>`;
+    }
+
+    return `
+      <div class="number-line-section division-visualization">
+        <h3>${getTranslation('division_sharing_title', { default: 'Le partage équitable' })}</h3>
+        <p class="operation-explanation">${getTranslation('division_sharing_explanation', { default: "Diviser, c'est partager en parts égales !" })}</p>
+
+        <div class="division-demo">
+          <div class="division-total">
+            <span class="total-label">${dividend} ${getTranslation('items_to_share', { default: 'objets à partager' })}</span>
+            <div class="total-items">
+              ${Array.from({ length: dividend }, () => '<span class="share-item">🍎</span>').join('')}
+            </div>
+          </div>
+
+          <div class="division-arrow">
+            <span class="arrow-symbol">↓</span>
+            <span class="arrow-label">${getTranslation('share_in', { default: 'Partager en' })} ${divisor} ${getTranslation('groups', { default: 'groupes' })}</span>
+          </div>
+
+          <div class="division-groups">
+            ${groupsHTML}
+          </div>
+        </div>
+
+        <div class="example-equation">
+          <span class="eq-number">${dividend}</span>
+          <span class="eq-operator">÷</span>
+          <span class="eq-number">${divisor}</span>
+          <span class="eq-equals">=</span>
+          <span class="eq-result">${quotient}</span>
+          <span class="eq-explanation">(${quotient} ${getTranslation('per_group', { default: 'par groupe' })})</span>
+        </div>
+      </div>
+    `;
   }
 
   /**
@@ -404,10 +539,19 @@ export class DiscoveryMode extends GameMode {
       if (this.operator === '+') {
         a = this.randomInt(1, 5);
         b = this.randomInt(1, 5);
-      } else {
+      } else if (this.operator === '−') {
         // Soustraction : a entre 2 et 10, b < a
         a = this.randomInt(2, 10);
         b = this.randomInt(1, Math.min(a - 1, 5));
+      } else if (this.operator === '÷') {
+        // Division : résultat entier uniquement (a = b × quotient)
+        b = this.randomInt(2, 5); // diviseur
+        const quotient = this.randomInt(1, 4); // quotient
+        a = b * quotient; // dividende = diviseur × quotient
+      } else {
+        // Fallback pour autres opérations
+        a = this.randomInt(1, 5);
+        b = this.randomInt(1, 5);
       }
       const result = this.operation.compute(a, b);
       examples.push({ a, b, result });
@@ -434,6 +578,9 @@ export class DiscoveryMode extends GameMode {
     }
     if (this.operator === '+') {
       return this._generateAdditionVisual(a, b);
+    }
+    if (this.operator === '÷') {
+      return this._generateDivisionVisual(a, b);
     }
     return this._generateSubtractionVisual(a, b);
   }
@@ -492,6 +639,8 @@ export class DiscoveryMode extends GameMode {
 
   /**
    * Générer la visualisation de soustraction
+   * Montre le total (a) avec : [ce qui reste 🟢] + [ce qu'on enlève barré 🔵]
+   * L'enfant voit le total et comprend qu'on "retire" les barrés
    * @private
    */
   _generateSubtractionVisual(a, b) {
@@ -500,14 +649,39 @@ export class DiscoveryMode extends GameMode {
       return this._generateSimpleMessage(a, b);
     }
     let html = '<div class="visual-groups visual-subtraction">';
-    html += '<div class="visual-group visual-group-initial">';
+    html += '<div class="visual-group">';
+    // Ce qui reste (en vert) - affiché en premier
     for (let i = 0; i < result; i++) {
-      html += '<span class="visual-object">🔵</span>';
+      html += '<span class="visual-object">🟢</span>';
     }
+    // Ce qu'on enlève (barré) - affiché après
     for (let i = 0; i < b; i++) {
       html += '<span class="visual-object visual-object-removed">🔵</span>';
     }
     html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  /**
+   * Générer la visualisation de division (groupes de partage)
+   * @private
+   */
+  _generateDivisionVisual(a, b) {
+    const quotient = this.operation.compute(a, b);
+    // Limiter pour éviter trop d'objets visuels
+    if (a > 20 || !Number.isInteger(quotient)) {
+      return this._generateSimpleMessage(a, b);
+    }
+    // Afficher b groupes contenant chacun (quotient) objets
+    let html = '<div class="visual-groups visual-division">';
+    for (let group = 0; group < b; group++) {
+      html += '<div class="visual-group visual-group-share">';
+      for (let item = 0; item < quotient; item++) {
+        html += '<span class="visual-object">🔵</span>';
+      }
+      html += '</div>';
+    }
     html += '</div>';
     return html;
   }
@@ -628,13 +802,21 @@ export class DiscoveryMode extends GameMode {
       visualGrid.addEventListener('click', e => {
         const item = e.target.closest('.visual-item');
         if (!item) return;
-        const table = parseInt(
-          item.getAttribute('data-table') || String(this.currentTable || 0),
-          10
-        );
-        const multiplicand = parseInt(item.getAttribute('data-multiplicand') || '0', 10);
-        if (!Number.isNaN(table) && !Number.isNaN(multiplicand))
-          this.highlightVisualAid(table, multiplicand);
+
+        let a, b;
+        // Pour addition/soustraction : utiliser data-a et data-b
+        if (item.hasAttribute('data-a') && item.hasAttribute('data-b')) {
+          a = parseInt(item.getAttribute('data-a'), 10);
+          b = parseInt(item.getAttribute('data-b'), 10);
+        } else {
+          // Pour multiplication : utiliser data-table et data-multiplicand
+          a = parseInt(item.getAttribute('data-table') || String(this.currentTable || 0), 10);
+          b = parseInt(item.getAttribute('data-multiplicand') || '0', 10);
+        }
+
+        if (!Number.isNaN(a) && !Number.isNaN(b)) {
+          this.highlightVisualAid(a, b);
+        }
       });
     }
   }
@@ -947,7 +1129,14 @@ export class DiscoveryMode extends GameMode {
       if (Number.isNaN(table) || table <= 0) return null;
       a = table;
       b = number;
+    } else if (this.operator === '÷') {
+      // Division : générer un dividende qui tombe juste avec le diviseur déposé
+      // a = b × quotient (quotient aléatoire entre 1 et 10)
+      b = number;
+      const quotient = this.randomInt(1, 10);
+      a = b * quotient;
     } else {
+      // Addition/Soustraction
       const { a: genA } = this.operation.generateOperands(this.currentLevel);
       a = genA;
       b = number;

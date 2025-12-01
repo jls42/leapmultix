@@ -73,7 +73,7 @@
 .operation-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
-  border-color: var(--primary-color, #4caf50);
+  border-color: var(--primary-color, #00bbf9);
 }
 
 .operation-btn:active:not(:disabled) {
@@ -81,10 +81,10 @@
 }
 
 .operation-btn.active {
-  background-color: var(--primary-color, #4caf50);
+  background-color: var(--primary-color, #00bbf9);
   color: white;
   font-weight: bold;
-  border-color: var(--primary-color, #4caf50);
+  border-color: var(--primary-color, #00bbf9);
   box-shadow: 0 4px 12px rgb(76 175 80 / 0.3);
 }
 
@@ -156,9 +156,9 @@
 }
 
 .theme-dark .operation-btn.active {
-  background-color: var(--primary-color, #4caf50);
+  background-color: var(--primary-color, #00bbf9);
   color: white;
-  border-color: var(--primary-color, #4caf50);
+  border-color: var(--primary-color, #00bbf9);
 }
 
 .theme-dark .operation-btn:disabled {

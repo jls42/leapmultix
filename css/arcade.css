@@ -80,7 +80,7 @@
 .improved-difficulty-select .difficulty-selected-label {
   margin-left: 10px;
   font-weight: bold;
-  color: #4caf50;
+  color: var(--primary-color, #00bbf9);
   font-size: 1em;
 }
 
@@ -345,12 +345,15 @@ body.night .arcade-dev-banner,
   max-width: 800px;
 }
 
-/* Espacement géré par gap du grid/flex parent */
+/* === PLAYFUL ARCADE GAME CARDS (TOY-BOX EFFECT) === */
 .arcade-game-card {
-  background: rgb(0 0 0 / 0.7);
-  /* Restauré la transparence des cartes */
-  border-radius: 18px;
-  box-shadow: 0 2px 12px rgb(0 0 0 / 0.12);
+  background: linear-gradient(145deg, #1a1a2e 0%, #16162a 100%);
+  border-radius: var(--radius-card, 28px);
+  box-shadow:
+    0 8px 0 var(--candy-purple-dark, #7a4ab8),
+    0 16px 32px rgb(0 0 0 / 0.3),
+    inset 0 1px 0 rgb(255 255 255 / 0.1);
+  border: 2px solid var(--candy-purple, #9b5de5);
   padding: 24px 32px;
   min-width: 320px;
   width: 90%;
@@ -361,15 +364,29 @@ body.night .arcade-dev-banner,
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  transition:
-    transform 0.2s,
-    max-height 0.3s ease,
-    box-shadow 0.3s ease;
+  transition: all 0.3s var(--ease-bounce);
   cursor: pointer;
   margin-left: auto;
   margin-right: auto;
   position: relative;
   overflow: visible;
+}
+
+/* Gradient bar at top */
+.arcade-game-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--candy-pink, #ff6b9d),
+    var(--candy-purple, #9b5de5),
+    var(--candy-blue, #00bbf9)
+  );
+  border-radius: var(--radius-card, 28px) var(--radius-card, 28px) 0 0;
 }
 
 .game-title {
@@ -396,20 +413,40 @@ body.night .arcade-dev-banner,
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
 }
 
+/* === PLAYFUL ARCADE PLAY BUTTON === */
 .play-arcade-btn {
-  font-size: 1.2em;
-  padding: 12px 30px;
-  border-radius: 14px;
-  background: var(--primary-color, #4caf50);
-  color: #fff;
+  font-family: var(--font-display, 'Baloo2'), cursive;
+  font-size: 1.3em;
+  font-weight: 700;
+  padding: 14px 36px;
+  border-radius: var(--radius-pill, 100px);
+  background: linear-gradient(
+    145deg,
+    var(--candy-lime, #9be564) 0%,
+    var(--candy-lime-dark, #7bc44a) 100%
+  );
+  color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.08);
-  transition: background 0.2s;
+  box-shadow:
+    0 5px 0 var(--candy-lime-dark, #6aad3a),
+    0 10px 20px rgb(155 229 100 / 0.35);
+  transition: all 0.25s var(--ease-bounce);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
 }
 
 .play-arcade-btn:hover {
-  background: var(--primary-color-dark, #388e3c);
+  transform: translateY(-4px) scale(1.05);
+  box-shadow:
+    0 8px 0 var(--candy-lime-dark, #6aad3a),
+    0 16px 28px rgb(155 229 100 / 0.45);
+}
+
+.play-arcade-btn:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 var(--candy-lime-dark, #6aad3a),
+    0 4px 8px rgb(155 229 100 / 0.25);
 }
 
 /* Desktop par défaut */
@@ -554,7 +591,7 @@ body.night .arcade-dev-banner,
 
 #arcade-question {
   font-weight: bold;
-  color: var(--primary-color, #4caf50);
+  color: var(--primary-color, #00bbf9);
   font-size: 1.2em;
 }
 
@@ -623,7 +660,7 @@ body.night .arcade-dev-banner,
 .arcade-next-round {
   margin-top: 18px;
   font-size: 1.1em;
-  color: #4caf50;
+  color: var(--primary-color, #00bbf9);
   font-weight: bold;
 }
 
@@ -966,7 +1003,7 @@ body.night .arcade-dev-banner,
   padding: 10px 20px;
   width: auto;
   min-width: 150px;
-  background-color: #4caf50;
+  background-color: var(--primary-color, #00bbf9);
   color: white;
   border: none;
   border-radius: 4px;
@@ -1055,7 +1092,7 @@ body.night .arcade-dev-banner,
 
 .arcade-game-card .arcade-controls-help li::before {
   content: '🎮 ';
-  color: #4caf50;
+  color: var(--primary-color, #00bbf9);
   font-size: 1em;
 }
 
@@ -1109,7 +1146,7 @@ body.night .arcade-dev-banner,
 }
 
 .arcade-game-card .spaceship-option input[type='radio']:checked + .spaceship-thumb {
-  border-color: #4caf50;
+  border-color: var(--primary-color, #00bbf9);
   transform: scale(1.1);
   background-color: rgb(255 255 255 / 0.3);
 }
@@ -1222,7 +1259,19 @@ body.night .arcade-game-card {
   box-shadow: 0 4px 20px rgb(0 0 0 / 0.3);
 }
 
+/* === PLAYFUL ARCADE CARD HOVER === */
 .arcade-game-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgb(0 0 0 / 0.25);
+  transform: translateY(-12px) scale(1.02);
+  box-shadow:
+    0 16px 0 var(--candy-purple-dark, #7a4ab8),
+    0 24px 48px rgb(155 93 229 / 0.4),
+    inset 0 1px 0 rgb(255 255 255 / 0.15);
+  border-color: var(--candy-pink, #ff6b9d);
+}
+
+.arcade-game-card:active {
+  transform: translateY(-2px) scale(0.98);
+  box-shadow:
+    0 4px 0 var(--candy-purple-dark, #7a4ab8),
+    0 8px 16px rgb(155 93 229 / 0.3);
 }

@@ -28,9 +28,9 @@
 
 .theme-btn.active,
 .level-btn.active {
-  background-color: #4caf50;
+  background-color: var(--primary-color, #00bbf9);
   color: white;
-  border-color: #45a049;
+  border-color: var(--primary-dark, #00a3d9);
   transform: translateY(-3px);
   box-shadow: 0 4px 8px rgb(0 0 0 / 0.2);
 }

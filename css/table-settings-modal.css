@@ -338,12 +338,13 @@
 .table-settings-btn {
   transition:
     transform 0.3s ease,
-    color 0.3s ease;
+    filter 0.3s ease;
   font-size: 1.2rem;
 }
 
 .table-settings-btn:hover {
   transform: rotate(45deg) scale(1.1);
+  filter: brightness(1.2);
 }
 
 .table-settings-btn:active {
