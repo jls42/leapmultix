@@ -47,7 +47,7 @@ describe.each(arcadeGames)(
     describe(`Condition de victoire (${element})`, () => {
       it.each(victoryConditionTestData)(
         `devrait identifier le bon ${element} pour $op ($a $op $b = $answer)`,
-        createVictoryConditionTest(element)
+        createVictoryConditionTest()
       );
     });
 
