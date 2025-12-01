@@ -127,3 +127,60 @@ export const correctAnswerTestData = [
   { op: '−', a: 10, b: 3, expected: 7 },
   { op: '÷', a: 20, b: 4, expected: 5 },
 ];
+
+/**
+ * Tests de validation des contraintes par opération (réutilisables)
+ */
+export function createConstraintValidationTests() {
+  return {
+    multiplication: () => {
+      expect(3 * 5).toBe(15);
+      expect(3).toBeGreaterThanOrEqual(1);
+      expect(5).toBeGreaterThanOrEqual(1);
+    },
+    addition: () => {
+      expect(7 + 8).toBe(15);
+      expect(7).toBeGreaterThanOrEqual(1);
+      expect(8).toBeGreaterThanOrEqual(1);
+    },
+    subtraction: () => {
+      expect(10 - 3).toBe(7);
+      expect(10).toBeGreaterThanOrEqual(3);
+      expect(7).toBeGreaterThanOrEqual(0);
+    },
+    division: () => {
+      expect(20 / 4).toBe(5);
+      expect(20 % 4).toBe(0);
+      expect(4).toBeGreaterThanOrEqual(2);
+    },
+  };
+}
+
+/**
+ * Données de test pour la condition de victoire
+ */
+export const victoryConditionTestData = [
+  { op: '×', a: 3, b: 5, answer: 15 },
+  { op: '+', a: 7, b: 8, answer: 15 },
+  { op: '−', a: 10, b: 3, answer: 7 },
+  { op: '÷', a: 20, b: 4, answer: 5 },
+];
+
+/**
+ * Crée un test de condition de victoire paramétré
+ * @param {string} elementName - Nom de l'élément (alien, bulle, etc.)
+ */
+export function createVictoryConditionTest(elementName) {
+  return ({ op, a, b, answer }) => {
+    const correctAnswer = computeCorrectAnswer(op, a, b);
+    const elements = [
+      { value: answer - 1, isCorrect: false },
+      { value: answer, isCorrect: true },
+      { value: answer + 1, isCorrect: false },
+      { value: answer + 5, isCorrect: false },
+    ];
+    const found = elements.find(el => el.value === correctAnswer);
+    expect(found).toBeDefined();
+    expect(found.value).toBe(answer);
+  };
+}

@@ -8,6 +8,9 @@ import {
   computeCorrectAnswer,
   testTableExclusions,
   correctAnswerTestData,
+  createConstraintValidationTests,
+  victoryConditionTestData,
+  createVictoryConditionTest,
 } from './helpers/arcade-test-helpers.mjs';
 
 describe('MultiSnake Multi-Opérations (R4.4) - Logique métier', () => {
@@ -25,58 +28,22 @@ describe('MultiSnake Multi-Opérations (R4.4) - Logique métier', () => {
   });
 
   describe('Validation des contraintes par opération', () => {
-    it('devrait valider multiplication (a × b)', () => {
-      expect(3 * 5).toBe(15);
-      expect(3).toBeGreaterThanOrEqual(1);
-      expect(5).toBeGreaterThanOrEqual(1);
-    });
-
-    it('devrait valider addition (a + b)', () => {
-      expect(7 + 8).toBe(15);
-      expect(7).toBeGreaterThanOrEqual(1);
-      expect(8).toBeGreaterThanOrEqual(1);
-    });
-
-    it('devrait valider soustraction (a − b, a ≥ b)', () => {
-      expect(10 - 3).toBe(7);
-      expect(10).toBeGreaterThanOrEqual(3);
-      expect(7).toBeGreaterThanOrEqual(0);
-    });
-
-    it('devrait valider division (a ÷ b, a % b = 0)', () => {
-      expect(20 / 4).toBe(5);
-      expect(20 % 4).toBe(0);
-      expect(4).toBeGreaterThanOrEqual(2);
-    });
+    const tests = createConstraintValidationTests();
+    it('devrait valider multiplication (a × b)', tests.multiplication);
+    it('devrait valider addition (a + b)', tests.addition);
+    it('devrait valider soustraction (a − b, a ≥ b)', tests.subtraction);
+    it('devrait valider division (a ÷ b, a % b = 0)', tests.division);
   });
 
   describe('Condition de victoire (manger la bonne réponse)', () => {
-    it.each([
-      { op: '×', a: 3, b: 5, answer: 15 },
-      { op: '+', a: 7, b: 8, answer: 15 },
-      { op: '−', a: 10, b: 3, answer: 7 },
-      { op: '÷', a: 20, b: 4, answer: 5 },
-    ])(
+    it.each(victoryConditionTestData)(
       'devrait identifier la bonne bulle pour $op ($a $op $b = $answer)',
-      ({ op, a, b, answer }) => {
-        const correctAnswer = computeCorrectAnswer(op, a, b);
-        const bubbles = [
-          { value: answer - 1, isCorrect: false },
-          { value: answer, isCorrect: true },
-          { value: answer + 1, isCorrect: false },
-          { value: answer + 5, isCorrect: false },
-        ];
-
-        const correctBubble = bubbles.find(bubble => bubble.value === correctAnswer);
-        expect(correctBubble).toBeDefined();
-        expect(correctBubble.value).toBe(answer);
-      }
+      createVictoryConditionTest('bulle')
     );
   });
 
   describe('Gestion des exclusions de tables', () => {
     const tableTests = testTableExclusions();
-
     it('ne devrait exclure des tables que pour multiplication', tableTests.onlyForMultiplication);
     it('ne devrait pas passer tables pour +/−/÷', tableTests.noTablesForOtherOps);
     it('devrait passer tables pour ×', tableTests.tablesForMultiplication);

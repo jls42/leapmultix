@@ -8,6 +8,7 @@ import {
   computeCorrectAnswer,
   testTableExclusions,
   correctAnswerTestData,
+  createConstraintValidationTests,
 } from './helpers/arcade-test-helpers.mjs';
 
 describe('MultiMemory Multi-Opérations (R4.3) - Logique métier', () => {
@@ -25,29 +26,11 @@ describe('MultiMemory Multi-Opérations (R4.3) - Logique métier', () => {
   });
 
   describe('Validation des contraintes par opération', () => {
-    it('devrait valider multiplication (a × b)', () => {
-      expect(3 * 5).toBe(15);
-      expect(3).toBeGreaterThanOrEqual(1);
-      expect(5).toBeGreaterThanOrEqual(1);
-    });
-
-    it('devrait valider addition (a + b)', () => {
-      expect(7 + 8).toBe(15);
-      expect(7).toBeGreaterThanOrEqual(1);
-      expect(8).toBeGreaterThanOrEqual(1);
-    });
-
-    it('devrait valider soustraction (a − b, a ≥ b)', () => {
-      expect(10 - 3).toBe(7);
-      expect(10).toBeGreaterThanOrEqual(3);
-      expect(7).toBeGreaterThanOrEqual(0);
-    });
-
-    it('devrait valider division (a ÷ b, a % b = 0)', () => {
-      expect(20 / 4).toBe(5);
-      expect(20 % 4).toBe(0);
-      expect(4).toBeGreaterThanOrEqual(2);
-    });
+    const tests = createConstraintValidationTests();
+    it('devrait valider multiplication (a × b)', tests.multiplication);
+    it('devrait valider addition (a + b)', tests.addition);
+    it('devrait valider soustraction (a − b, a ≥ b)', tests.subtraction);
+    it('devrait valider division (a ÷ b, a % b = 0)', tests.division);
   });
 
   describe('Structure des cartes Memory', () => {
@@ -82,7 +65,6 @@ describe('MultiMemory Multi-Opérations (R4.3) - Logique métier', () => {
 
   describe('Gestion des exclusions de tables', () => {
     const tableTests = testTableExclusions();
-
     it('ne devrait exclure des tables que pour multiplication', tableTests.onlyForMultiplication);
     it('ne devrait pas passer tables pour +/−/÷', tableTests.noTablesForOtherOps);
     it('devrait passer tables pour ×', tableTests.tablesForMultiplication);

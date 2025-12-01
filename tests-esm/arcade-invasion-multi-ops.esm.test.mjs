@@ -8,6 +8,9 @@ import {
   computeCorrectAnswer,
   testTableExclusions,
   correctAnswerTestData,
+  createConstraintValidationTests,
+  victoryConditionTestData,
+  createVictoryConditionTest,
 } from './helpers/arcade-test-helpers.mjs';
 
 describe('Space Invasion Multi-Opérations (R4.2) - Logique métier', () => {
@@ -25,56 +28,22 @@ describe('Space Invasion Multi-Opérations (R4.2) - Logique métier', () => {
   });
 
   describe('Validation des contraintes par opération', () => {
-    it('devrait valider multiplication (a × b)', () => {
-      expect(3 * 5).toBe(15);
-      expect(3).toBeGreaterThanOrEqual(1);
-      expect(5).toBeGreaterThanOrEqual(1);
-    });
-
-    it('devrait valider addition (a + b)', () => {
-      expect(7 + 8).toBe(15);
-      expect(7).toBeGreaterThanOrEqual(1);
-      expect(8).toBeGreaterThanOrEqual(1);
-    });
-
-    it('devrait valider soustraction (a − b, a ≥ b)', () => {
-      expect(10 - 3).toBe(7);
-      expect(10).toBeGreaterThanOrEqual(3);
-      expect(7).toBeGreaterThanOrEqual(0);
-    });
-
-    it('devrait valider division (a ÷ b, a % b = 0)', () => {
-      expect(20 / 4).toBe(5);
-      expect(20 % 4).toBe(0);
-      expect(4).toBeGreaterThanOrEqual(2);
-    });
+    const tests = createConstraintValidationTests();
+    it('devrait valider multiplication (a × b)', tests.multiplication);
+    it('devrait valider addition (a + b)', tests.addition);
+    it('devrait valider soustraction (a − b, a ≥ b)', tests.subtraction);
+    it('devrait valider division (a ÷ b, a % b = 0)', tests.division);
   });
 
   describe('Condition de victoire (dernier alien = bonne réponse)', () => {
-    it.each([
-      { op: '×', a: 3, b: 5, answer: 15 },
-      { op: '+', a: 7, b: 8, answer: 15 },
-      { op: '−', a: 10, b: 3, answer: 7 },
-      { op: '÷', a: 20, b: 4, answer: 5 },
-    ])('devrait identifier le bon alien pour $op ($a $op $b = $answer)', ({ op, a, b, answer }) => {
-      const correctAnswer = computeCorrectAnswer(op, a, b);
-      const aliens = [
-        { value: answer - 1, isCorrect: false },
-        { value: answer, isCorrect: true },
-        { value: answer + 1, isCorrect: false },
-        { value: answer + 5, isCorrect: false },
-        { value: answer * 2, isCorrect: false },
-      ];
-
-      const lastAlien = aliens.find(alien => alien.value === correctAnswer);
-      expect(lastAlien).toBeDefined();
-      expect(lastAlien.value).toBe(answer);
-    });
+    it.each(victoryConditionTestData)(
+      'devrait identifier le bon alien pour $op ($a $op $b = $answer)',
+      createVictoryConditionTest('alien')
+    );
   });
 
   describe('Gestion des exclusions de tables', () => {
     const tableTests = testTableExclusions();
-
     it('ne devrait exclure des tables que pour multiplication', tableTests.onlyForMultiplication);
     it('ne devrait pas passer tables pour +/−/÷', tableTests.noTablesForOtherOps);
     it('devrait passer tables pour ×', tableTests.tablesForMultiplication);
