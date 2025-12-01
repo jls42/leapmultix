@@ -813,13 +813,12 @@
 }
 
 .eq-result {
-  background: var(--candy-pink-dark, #e0527e);
+  background: var(--candy-pink-accessible, #a53860);
   color: white;
   padding: 8px 15px;
   border-radius: 10px;
   min-width: 40px;
   text-align: center;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
 }
 
 .eq-explanation {

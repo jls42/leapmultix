@@ -62,9 +62,8 @@
     0 8px 0 var(--candy-blue-dark, #00a3d9),
     0 16px 24px var(--shadow-blue);
   border-color: var(--candy-purple, #9b5de5);
-  background: var(--candy-blue-dark, #0099d6);
+  background: var(--candy-blue-accessible, #0070a8);
   color: white;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
 }
 
 .option:active {
@@ -86,27 +85,25 @@
   color: white;
   background: linear-gradient(
     135deg,
-    var(--candy-lime-dark, #6ab83d) 0%,
-    var(--success-dark, #4a9c2e) 100%
+    var(--success-accessible, #2e7d32) 0%,
+    var(--success-accessible-dark, #1b5e20) 100%
   );
   border-radius: var(--radius-btn, 20px);
   box-shadow:
-    0 4px 0 var(--success-dark, #4a9c2e),
-    0 8px 16px rgb(106 184 61 / 0.3);
+    0 4px 0 var(--success-accessible-dark, #1b5e20),
+    0 8px 16px rgb(46 125 50 / 0.3);
   animation: celebrate-burst 0.6s var(--ease-bounce);
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
 }
 
 .feedback.incorrect {
   will-change: transform;
   color: white;
-  background: linear-gradient(135deg, #e05555 0%, #c94444 100%);
+  background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
   border-radius: var(--radius-btn, 20px);
   box-shadow:
-    0 4px 0 #b33a3a,
-    0 8px 16px rgb(224 85 85 / 0.3);
+    0 4px 0 #8e0000,
+    0 8px 16px rgb(198 40 40 / 0.3);
   animation: shake-error 0.5s var(--ease-bounce);
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
 }
 @keyframes feedback-pop {
   0% {
