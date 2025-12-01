@@ -1,6 +1,10 @@
 /* ======================
    Module de génération de questions (centralisé)
    Supporte toutes les opérations: ×, +, −, ÷
+
+   Security note: This module uses Math.random() for generating random math problems
+   and shuffling answer options. This is intentional and safe - it's an educational
+   math game for children, not a security-sensitive application.
    ====================== */
 
 import Storage from './core/storage.js';

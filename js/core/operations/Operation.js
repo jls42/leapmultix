@@ -116,12 +116,18 @@ export class Operation {
 
   /**
    * Génère un nombre aléatoire entre min et max (inclusif)
+   *
+   * Security note: Math.random() is intentionally used here as this is an educational
+   * math game for children. The randomness is only for generating practice problems,
+   * not for any security-sensitive purpose (authentication, tokens, cryptography).
+   * Cryptographic randomness would be overkill and unnecessary for this use case.
+   *
    * @protected
    * @param {number} min - Valeur minimale
    * @param {number} max - Valeur maximale
    * @returns {number} Nombre aléatoire
    */
   _randomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.floor(Math.random() * (max - min + 1)) + min; // NOSONAR - Safe: educational game, not security-sensitive
   }
 }

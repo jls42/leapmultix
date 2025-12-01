@@ -2,6 +2,11 @@
  * Module utilitaires centralisé
  * Centralise toutes les fonctions utilitaires génériques
  * Phase 2.2 - Consolidation des utilitaires
+ *
+ * Security note: This module uses Math.random() for various randomization functions.
+ * This is intentional and safe because this is an educational math game for children.
+ * The randomness is only used for shuffling UI elements, generating practice problems,
+ * and game mechanics - not for any security-sensitive purposes.
  */
 
 /**
@@ -17,7 +22,7 @@ export const Utils = {
    */
   shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(Math.random() * (i + 1)); // NOSONAR - Safe: game shuffling, not security-sensitive
 
       [array[i], array[j]] = [array[j], array[i]];
     }
@@ -31,7 +36,7 @@ export const Utils = {
    */
   getRandomElement(array) {
     if (!array || array.length === 0) return null;
-    return array[Math.floor(Math.random() * array.length)];
+    return array[Math.floor(Math.random() * array.length)]; // NOSONAR - Safe: game randomization
   },
 
   /**

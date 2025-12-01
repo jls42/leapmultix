@@ -8,6 +8,9 @@
  * - Génération et validation des questions
  * - Feedback et résultats
  * - Interface avec InfoBar et utils
+ *
+ * Security note: Math.random() is used for generating random questions and shuffling
+ * answer options. This is safe - it's an educational game, not security-sensitive.
  */
 
 import {
