@@ -22,7 +22,7 @@ const arcadeGames = [
 
 describe.each(arcadeGames)(
   '$name Multi-Opérations ($requirement) - Logique métier',
-  ({ name, element }) => {
+  ({ element }) => {
     describe('Calcul de la réponse correcte par opération', () => {
       it.each(correctAnswerTestData)(
         'devrait calculer correctement $op avec $a et $b = $expected',

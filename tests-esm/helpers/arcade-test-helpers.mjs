@@ -170,7 +170,7 @@ export const victoryConditionTestData = [
  * Crée un test de condition de victoire paramétré
  * @param {string} elementName - Nom de l'élément (alien, bulle, etc.)
  */
-export function createVictoryConditionTest(elementName) {
+export function createVictoryConditionTest(_elementName) {
   return ({ op, a, b, answer }) => {
     const correctAnswer = computeCorrectAnswer(op, a, b);
     const elements = [
