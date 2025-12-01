@@ -1,3 +1,66 @@
+/* ===========================================
+   PLAYFUL REDESIGN - Typography System
+   Baloo 2 (display) + Quicksand (body)
+   =========================================== */
+
+/* Baloo 2 - Display Font (headings, buttons) */
+@font-face {
+  font-family: 'Baloo2';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src:
+    local('Baloo 2 SemiBold'),
+    local('Baloo2-SemiBold'),
+    url('../assets/fonts/baloo2-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Baloo2';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    local('Baloo 2 Bold'),
+    local('Baloo2-Bold'),
+    url('../assets/fonts/baloo2-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Baloo2';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src:
+    local('Baloo 2 ExtraBold'),
+    local('Baloo2-ExtraBold'),
+    url('../assets/fonts/baloo2-800.woff2') format('woff2');
+}
+
+/* Quicksand - Body Font (readable, friendly) */
+@font-face {
+  font-family: 'Quicksand';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    local('Quicksand Medium'),
+    local('Quicksand-Medium'),
+    url('../assets/fonts/quicksand-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Quicksand';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src:
+    local('Quicksand SemiBold'),
+    local('Quicksand-SemiBold'),
+    url('../assets/fonts/quicksand-600.woff2') format('woff2');
+}
+
+/* Legacy Poppins - kept for fallback during transition */
 @font-face {
   font-family: 'Poppins';
   font-style: normal;
@@ -256,7 +319,8 @@
 }
 
 body {
-  font-family: Poppins, Arial, sans-serif;
+  font-family: var(--font-body, 'Quicksand'), 'Arial Rounded MT Bold', sans-serif;
+  font-weight: 500;
   color: var(--text-color);
   line-height: 1.6;
   transition:
@@ -269,7 +333,7 @@ body {
   background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  background-color: var(--bg-color, #e6f7ff);
+  background-color: var(--bg-color, #fff8f0);
 }
 
 body.font-size-small {
@@ -298,16 +362,34 @@ body.font-size-medium {
   display: none !important;
 }
 
+/* === PLAYFUL CONTENT CARDS === */
 .content-card {
-  background-color: rgb(255 255 255 / 0.7);
-  padding: 25px;
-  border-radius: 20px;
-  box-shadow: 0 8px 16px rgb(0 0 0 / 0.1);
+  background: linear-gradient(135deg, white 0%, var(--cream, #fff8f0) 100%);
+  padding: 28px;
+  border-radius: var(--radius-card, 28px);
+  box-shadow:
+    0 4px 0 rgb(0 0 0 / 0.05),
+    0 20px 40px rgb(0 0 0 / 0.08);
   max-width: 800px;
   margin: 0 auto;
-  border: 1px solid rgb(200 200 200 / 0.5);
+  border: 2px solid rgb(255 107 157 / 0.1);
   text-align: center;
   width: 90%;
+  position: relative;
+}
+
+/* Decorative corner accent */
+.content-card::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: var(--candy-yellow, #ffd23f);
+  border-radius: 50%;
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 /* Content-card spécial pour les cartes arcade plus larges */
@@ -368,10 +450,14 @@ body.font-size-large {
 
 h1,
 h2,
-h3 {
+h3,
+h4,
+h5,
+h6 {
   margin-bottom: 15px;
   color: var(--heading-color);
-  font-family: Poppins, sans-serif;
+  font-family: var(--font-display, 'Baloo2'), 'Comic Sans MS', cursive, sans-serif;
+  font-weight: 700;
 }
 
 p {
@@ -448,63 +534,99 @@ p {
   text-shadow: none;
 }
 
+/* === PLAYFUL BUTTON REDESIGN === */
 .btn {
-  background-color: rgb(52 152 219 / 0.85);
+  background: var(--primary-color);
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 24px;
   margin: 5px;
-  border-radius: 20px;
+  border-radius: var(--radius-btn, 20px);
   cursor: pointer;
   font-size: 1em;
-  font-family: Poppins, sans-serif;
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+  font-family: var(--font-display, 'Baloo2'), cursive;
+  font-weight: 600;
+  /* Toy-like 3D shadow: pink underline for blue/pink contrast */
+  box-shadow:
+    0 4px 0 var(--candy-pink-dark, #e85a8a),
+    0 8px 16px var(--shadow-pink);
   transition:
-    background-color 0.3s,
-    box-shadow 0.3s,
-    transform 0.3s;
+    transform 0.2s var(--ease-bounce),
+    box-shadow 0.2s var(--ease-bounce),
+    background-color 0.2s;
   min-height: 44px;
+  position: relative;
 }
 
 .btn-secondary {
-  background-color: var(--danger-color);
-  color: white;
+  background: var(--secondary-color);
+  box-shadow:
+    0 4px 0 var(--candy-blue-dark, #00a3d9),
+    0 8px 16px var(--shadow-blue);
 }
 
 .btn-secondary:hover {
-  background-color: var(--danger-dark) !important;
+  background: var(--secondary-dark) !important;
+  box-shadow:
+    0 6px 0 var(--candy-blue-dark, #00a3d9),
+    0 12px 24px var(--shadow-blue);
 }
 
 .btn:hover {
-  background-color: var(--primary-dark);
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgb(0 0 0 / 0.15);
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 0 var(--candy-pink-dark, #e85a8a),
+    0 12px 24px var(--shadow-pink);
 }
 
+.btn:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 var(--candy-pink-dark, #e85a8a),
+    0 4px 8px var(--shadow-pink);
+}
+
+/* === PLAYFUL AVATAR BUTTONS === */
 .avatar-btn {
-  background-color: var(--neutral-light);
-  border: 2px solid var(--neutral-medium);
+  background: white;
+  border: 3px solid transparent;
   color: var(--text-color);
-  padding: 10px;
+  padding: 8px;
   border-radius: 50%;
   font-size: 2em;
-  min-width: 55px;
-  min-height: 55px;
+  min-width: 70px;
+  min-height: 70px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  margin: 5px;
-  box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
+  margin: 8px;
+  box-shadow:
+    0 4px 0 var(--candy-purple-dark, #7a4ab8),
+    0 8px 16px var(--shadow-purple);
   transition:
-    background-color 0.3s,
-    box-shadow 0.3s,
-    transform 0.3s;
+    transform 0.3s var(--ease-bounce),
+    box-shadow 0.3s var(--ease-bounce),
+    border-color 0.3s;
+  cursor: pointer;
 }
 
 .avatar-btn:hover {
-  background-color: var(--neutral-medium);
-  transform: translateY(-2px);
+  transform: translateY(-6px) scale(1.05);
+  box-shadow:
+    0 8px 0 var(--candy-purple-dark, #7a4ab8),
+    0 16px 24px var(--shadow-purple);
+}
+
+.avatar-btn.active {
+  border-color: var(--candy-yellow, #ffd23f);
+  transform: scale(1.15);
+  box-shadow:
+    0 0 0 4px var(--candy-yellow, #ffd23f),
+    0 4px 0 var(--candy-purple-dark, #7a4ab8),
+    0 12px 24px var(--shadow-purple);
+  animation: selected-pulse 1.5s ease-in-out infinite;
 }
 
 .avatar-btn.locked {
@@ -535,13 +657,6 @@ p {
   transform: none;
 }
 
-.avatar-btn.active {
-  border: 3px solid var(--accent-color);
-  transform: scale(1.1);
-  box-shadow: 0 0 10px var(--accent-color);
-  background-color: var(--neutral-light);
-}
-
 .btn-sm {
   padding: 5px 10px;
   font-size: 0.9em;
@@ -561,14 +676,189 @@ p {
   }
 }
 
+/* === PLAYFUL MODE SELECTION CARDS === */
+.mode-btn {
+  background: white;
+  border-radius: var(--radius-card, 28px);
+  padding: 20px 16px;
+  border: 3px solid transparent;
+  box-shadow:
+    0 6px 0 var(--candy-blue-dark, #00a3d9),
+    0 16px 32px var(--shadow-blue);
+  transition: all 0.3s var(--ease-bounce);
+  position: relative;
+  overflow: hidden;
+  /* Keep inline-flex to allow 2 cards per row on desktop */
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140px;
+  vertical-align: top;
+}
+
+/* Asymmetric playful layout - slight rotations */
+.mode-btn:nth-child(2) {
+  transform: rotate(-1deg);
+}
+
+.mode-btn:nth-child(4) {
+  transform: rotate(1deg);
+}
+
+.mode-btn:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: var(--candy-pink, #ff6b9d);
+  box-shadow:
+    0 12px 0 var(--candy-blue-dark, #00a3d9),
+    0 24px 48px var(--shadow-blue);
+}
+
+.mode-btn:nth-child(2):hover {
+  transform: translateY(-8px) scale(1.02) rotate(-1deg);
+}
+
+.mode-btn:nth-child(4):hover {
+  transform: translateY(-8px) scale(1.02) rotate(1deg);
+}
+
+.mode-btn:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 var(--candy-blue-dark, #00a3d9),
+    0 8px 16px var(--shadow-blue);
+}
+
+.mode-icon {
+  margin-bottom: 10px;
+}
+
+.mode-icon img {
+  width: 200px;
+  height: 200px;
+  transition: transform 0.3s var(--ease-elastic);
+  filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.1));
+}
+
+.mode-btn:hover .mode-icon img {
+  transform: scale(1.1) rotate(-5deg);
+}
+
 .mode-name {
-  color: var(--neutral-light);
-  font-weight: bold;
+  color: var(--heading-color);
+  font-family: var(--font-display, 'Baloo2'), cursive;
+  font-weight: 700;
+  font-size: 1.1em;
   margin-top: 8px;
 }
 
 .mode-desc {
-  font-style: italic;
+  font-style: normal;
+  font-size: 0.85em;
+  color: var(--warm-gray, #8b8589);
+  margin-top: 4px;
+}
+
+/* === PLAYFUL MASCOT HERO === */
+.mascot-hero-container {
+  position: relative;
+  width: 100%;
+  max-width: 450px;
+  margin: 20px auto 30px;
+  z-index: 5;
+}
+
+.mascot-hero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  margin-left: 50px;
+}
+
+.mascot-image {
+  width: 160px;
+  height: 160px;
+  filter: drop-shadow(0 20px 30px rgb(0 0 0 / 0.15));
+  transition: transform 0.3s var(--ease-elastic);
+  animation: mascot-bounce 2s var(--ease-bounce) infinite;
+}
+
+.mascot-hero:hover .mascot-image {
+  transform: scale(1.1) rotate(-8deg);
+  animation-play-state: paused;
+}
+
+.mascot-speech-bubble {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 10px);
+  transform: translateY(-50%);
+  background: white;
+  padding: 12px 18px;
+  border-radius: 20px 20px 20px 5px;
+  box-shadow:
+    0 4px 0 var(--candy-pink-dark, #e85a8a),
+    0 8px 24px var(--shadow-pink);
+  max-width: 180px;
+  font-family: var(--font-display, 'Baloo2'), cursive;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--candy-pink, #ff6b9d);
+  animation: pop-in 0.5s var(--ease-bounce) 0.5s both;
+  white-space: nowrap;
+}
+
+.mascot-speech-bubble::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -10px;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-right-color: white;
+}
+
+.mascot-speech-bubble p {
+  margin: 0;
+}
+
+/* Mobile: stack bubble above mascot */
+@media (max-width: 480px) {
+  .mascot-hero-container {
+    max-width: 280px;
+  }
+
+  .mascot-hero {
+    flex-direction: column-reverse;
+    align-items: center;
+    margin-left: 0;
+  }
+
+  .mascot-image {
+    width: 120px;
+    height: 120px;
+  }
+
+  .mascot-speech-bubble {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin-bottom: 10px;
+    padding: 10px 14px;
+    font-size: 0.85em;
+    max-width: none;
+    border-radius: 20px 20px 5px 20px;
+  }
+
+  .mascot-speech-bubble::after {
+    top: auto;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+  }
 }
 
 @keyframes fade-out {
@@ -1080,11 +1370,7 @@ p {
   background-color: rgb(0 0 0 / 0.3);
 }
 
-:root {
-  --primary-color: #4caf50;
-  --primary-color-dark: #388e3c;
-  --bg-color: #181818;
-}
+/* Legacy :root variables removed - now defined in themes.css */
 
 .coin-gain-anim {
   will-change: transform;
@@ -1204,7 +1490,7 @@ p {
 .scores-title {
   font-size: 1.6em;
   font-weight: 700;
-  color: var(--primary-color, #4caf50);
+  color: var(--primary-color, #00bbf9);
   margin-bottom: 18px;
   letter-spacing: 1px;
 }
@@ -1334,7 +1620,7 @@ p {
 
 .quiz-percent {
   font-weight: 700;
-  color: var(--primary-color, #4caf50);
+  color: var(--primary-color, #00bbf9);
   margin-left: 2px;
 }
 
@@ -1515,5 +1801,142 @@ button:hover,
   .top-bar-nav .btn {
     width: 100%;
     text-align: left;
+  }
+}
+
+/* ===========================================
+   PLAYFUL REDESIGN - Animation Keyframes
+   Spring/bounce physics for toy-like feel
+   =========================================== */
+
+/* Mascot idle bounce */
+@keyframes mascot-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* Pop-in elastic entrance */
+@keyframes pop-in {
+  0% {
+    transform: scale(0) rotate(-10deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1) rotate(3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Celebrate burst for correct answers */
+@keyframes celebrate-burst {
+  0% {
+    transform: scale(0.8);
+    filter: brightness(1);
+  }
+  30% {
+    transform: scale(1.3);
+    filter: brightness(1.2);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* Enhanced shake for errors */
+@keyframes shake-error {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+  20% {
+    transform: translateX(-8px) rotate(-2deg);
+  }
+  40% {
+    transform: translateX(8px) rotate(2deg);
+  }
+  60% {
+    transform: translateX(-6px) rotate(-1deg);
+  }
+  80% {
+    transform: translateX(6px) rotate(1deg);
+  }
+}
+
+/* Squish press effect for buttons */
+@keyframes squish-press {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(0.95, 1.05) translateY(4px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Card wobble on hover */
+@keyframes wobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+/* Gentle float for idle elements */
+@keyframes gentle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Pulse glow effect */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--shadow-pink);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgb(255 107 157 / 0);
+  }
+}
+
+/* Selected item pulse */
+@keyframes selected-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px var(--candy-yellow),
+      var(--shadow-toy-sm);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgb(255 210 63 / 0.5),
+      var(--shadow-toy-sm);
   }
 }

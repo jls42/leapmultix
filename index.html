@@ -40,23 +40,31 @@
       as="image"
       fetchpriority="low"
     />
+    <!-- Playful Redesign Fonts - Baloo2 (display) + Quicksand (body) -->
     <link
       rel="preload"
-      href="assets/fonts/poppins-latin-400.woff2"
+      href="assets/fonts/baloo2-600.woff2"
       as="font"
       type="font/woff2"
       crossorigin
     />
     <link
       rel="preload"
-      href="assets/fonts/poppins-latin-600.woff2"
+      href="assets/fonts/baloo2-700.woff2"
       as="font"
       type="font/woff2"
       crossorigin
     />
     <link
       rel="preload"
-      href="assets/fonts/poppins-latin-700.woff2"
+      href="assets/fonts/quicksand-500.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/quicksand-600.woff2"
       as="font"
       type="font/woff2"
       crossorigin
@@ -480,6 +488,23 @@
               sur cet appareil.</span
             >
           </p>
+
+          <!-- Mascotte Hero - Playful Redesign -->
+          <div class="mascot-hero-container" id="mascot-hero-container">
+            <div class="mascot-hero" id="mascot-hero">
+              <img
+                class="mascot-image"
+                id="hero-mascot-img"
+                src="assets/images/arcade/fox_head_avatar.png"
+                alt="Ta mascotte"
+                width="160"
+                height="160"
+              />
+              <div class="mascot-speech-bubble" id="mascot-speech">
+                <p data-translate="mascot_greeting">Salut ! Prêt à apprendre ?</p>
+              </div>
+            </div>
+          </div>
 
           <!-- Sélecteur d'opération arithmétique -->
           <div id="operation-selector-container"></div>

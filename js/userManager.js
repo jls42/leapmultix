@@ -210,14 +210,85 @@ export const UserManager = {
   },
 
   /**
+   * Met à jour les paramètres audio pour l'utilisateur
+   * @param {Object} userData - Données de l'utilisateur
+   * @private
+   */
+  _updateAudioSettings(userData) {
+    try {
+      AudioManager.loadPreferences();
+      AudioManager.updateVolumeControls();
+      const vol = userData.volume !== undefined ? userData.volume : 1;
+      AudioManager.setVolume(vol);
+    } catch {
+      // AudioManager peut ne pas être initialisé
+    }
+  },
+
+  /**
+   * Met à jour l'interface utilisateur pour l'utilisateur sélectionné
+   * @param {Object} userData - Données de l'utilisateur
+   * @private
+   */
+  _updateUIForUser(userData) {
+    const avatar = userData.avatar || 'fox';
+    updateBackgroundByAvatar(avatar);
+    startBackgroundRotation(avatar);
+    updateWelcomeMessageUI();
+    updateCoinDisplay();
+
+    const heroMascotImg = document.getElementById('hero-mascot-img');
+    if (heroMascotImg) {
+      heroMascotImg.src = `assets/images/arcade/${avatar}_head_avatar.png`;
+      heroMascotImg.alt = avatar;
+    }
+  },
+
+  /**
+   * Rafraîchit les composants liés aux opérations
+   * @private
+   */
+  _refreshOperationComponents() {
+    try {
+      const container = document.getElementById('operation-selector-container');
+      if (!container || container.children.length === 0) return;
+
+      import('./components/operationSelector.js')
+        .then(module => module.OperationSelector.refresh('operation-selector-container'))
+        .catch(e => console.warn('OperationSelector refresh failed:', e));
+
+      import('./components/operationModeAvailability.js')
+        .then(module => module.updateModeButtonsAvailability())
+        .catch(e => console.warn('updateModeButtonsAvailability failed:', e));
+
+      import('./components/topBar.js')
+        .then(module => module.TopBar.updateTableSettingsButtonVisibility?.())
+        .catch(e => console.warn('TopBar.updateTableSettingsButtonVisibility failed:', e));
+    } catch {
+      // Composants peuvent ne pas être initialisés
+    }
+  },
+
+  /**
+   * Nettoie les scores par défaut du localStorage
+   * @private
+   */
+  _cleanupDefaultScores() {
+    localStorage.removeItem('arcadeScores_default');
+    localStorage.removeItem('arcadeScores_multisnake_default');
+    localStorage.removeItem('arcadeScores_multimiam_default');
+  },
+
+  /**
    * Sélectionner un utilisateur
    * @param {string} name - Nom de l'utilisateur
-   * @returns {Object} Données de l'utilisateur sélectionné
+   * @returns {Object|null} Données de l'utilisateur sélectionné ou null si non trouvé
    */
   selectUser(name) {
     const raw = typeof name === 'string' ? name : '';
     const safe = sanitizeUsername(raw);
     const key = Object.prototype.hasOwnProperty.call(this._players, raw) ? raw : safe;
+
     if (!Object.prototype.hasOwnProperty.call(this._players, key)) {
       console.error(`Utilisateur "${name}" non trouvé`);
       return null;
@@ -226,121 +297,30 @@ export const UserManager = {
     this._currentUser = key;
     const userData = this.getCurrentUserData();
 
-    // Mettre à jour gameState global si disponible
-    /**
-     * Fonction if
-     * @param {*} typeof - Description du paramètre
-     * @returns {*} Description du retour
-     */
+    // Mettre à jour gameState global
     try {
       gameState.avatar = userData.avatar || 'fox';
       gameState.nickname = userData.nickname || name;
-    } catch (e) {
-      void e;
-    }
-
-    // Mettre à jour le volume avec le système audio centralisé (ESM)
-    try {
-      AudioManager.loadPreferences();
-      AudioManager.updateVolumeControls();
-    } catch (e) {
-      void e;
-    }
-    try {
-      const vol = userData.volume !== undefined ? userData.volume : 1;
-      AudioManager.setVolume(vol);
-    } catch (e) {
-      void e;
-    }
-
-    // Mettre à jour l'arrière-plan selon l'avatar
-    /**
-     * Fonction if
-     * @param {*} typeof - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    updateBackgroundByAvatar(userData.avatar || 'fox');
-
-    // Démarrer la rotation automatique de l'arrière-plan
-    /**
-     * Fonction if
-     * @param {*} typeof - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    startBackgroundRotation(userData.avatar || 'fox');
-
-    // Mettre à jour l'interface utilisateur
-    /**
-     * Fonction if
-     * @param {*} typeof - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    updateWelcomeMessageUI();
-
-    // Mettre à jour l'affichage des pièces
-    /**
-     * Fonction if
-     * @param {*} typeof - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    updateCoinDisplay();
-
-    // Rafraîchir le sélecteur d'opération avec les données de l'utilisateur
-    try {
-      const operationSelectorContainer = document.getElementById('operation-selector-container');
-      if (operationSelectorContainer && operationSelectorContainer.children.length > 0) {
-        // Dynamically import to avoid circular dependency
-        import('./components/operationSelector.js')
-          .then(module => {
-            module.OperationSelector.refresh('operation-selector-container');
-          })
-          .catch(e => {
-            console.warn('OperationSelector refresh failed:', e);
-          });
-
-        // Refresh mode availability and table settings button visibility
-        import('./components/operationModeAvailability.js')
-          .then(module => {
-            module.updateModeButtonsAvailability();
-          })
-          .catch(e => {
-            console.warn('updateModeButtonsAvailability failed:', e);
-          });
-
-        import('./components/topBar.js')
-          .then(module => {
-            module.TopBar.updateTableSettingsButtonVisibility?.();
-          })
-          .catch(e => {
-            console.warn('TopBar.updateTableSettingsButtonVisibility failed:', e);
-          });
-      }
     } catch {
-      // Ignoré silencieusement - TopBar peut ne pas être initialisé
+      // gameState peut ne pas être disponible
     }
+
+    // Mettre à jour les paramètres et l'interface
+    this._updateAudioSettings(userData);
+    this._updateUIForUser(userData);
+    this._refreshOperationComponents();
 
     // Afficher le défi quotidien si disponible
     try {
       displayDailyChallenge();
     } catch {
-      // Ignoré silencieusement - défi quotidien peut ne pas être disponible
+      // Défi quotidien peut ne pas être disponible
     }
 
-    // Nettoyer les scores par défaut pour éviter l'affichage de scores par défaut
-    localStorage.removeItem('arcadeScores_default');
-    localStorage.removeItem('arcadeScores_multisnake_default');
-    localStorage.removeItem('arcadeScores_multimiam_default');
-
-    // Naviguer vers l'écran d'accueil
-    /**
-     * Fonction if
-     * @param {*} typeof - Description du paramètre
-     * @returns {*} Description du retour
-     */
+    this._cleanupDefaultScores();
     goToSlide(1);
-
-    // Émettre un événement pour notifier le changement d'utilisateur
     this.emitUserChanged(userData);
+
     return userData;
   },
 

@@ -94,7 +94,7 @@
   margin-top: 15px;
   padding: 10px 20px;
   font-size: 1.1em;
-  background-color: #4caf50;
+  background-color: var(--primary-color, #00bbf9);
   color: white;
   border: none;
   border-radius: 8px;

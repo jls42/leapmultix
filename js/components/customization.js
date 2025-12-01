@@ -41,10 +41,16 @@ export const Customization = {
 
     // Mettre à jour l'affichage de l'avatar actuel (image + bouton actif)
     const currentImg = document.getElementById('current-avatar-img');
+    const heroMascotImg = document.getElementById('hero-mascot-img');
+    const current = gameState.avatar || 'fox';
     if (currentImg) {
-      const current = gameState.avatar || 'fox';
       currentImg.src = `assets/images/arcade/${current}_head_avatar_128x128.png`;
       currentImg.alt = current;
+    }
+    // Mettre à jour la mascotte hero (haute résolution)
+    if (heroMascotImg) {
+      heroMascotImg.src = `assets/images/arcade/${current}_head_avatar.png`;
+      heroMascotImg.alt = current;
     }
     for (const btn of document.querySelectorAll('.avatar-btn')) {
       btn.classList.toggle('active', btn.dataset.avatar === (gameState.avatar || 'fox'));
@@ -122,6 +128,13 @@ export const Customization = {
         if (currentImg) {
           currentImg.src = `assets/images/arcade/${avatarName}_head_avatar_128x128.png`;
           currentImg.alt = avatarName;
+        }
+
+        // Mettre à jour la mascotte hero (haute résolution)
+        const heroMascotImg = document.getElementById('hero-mascot-img');
+        if (heroMascotImg) {
+          heroMascotImg.src = `assets/images/arcade/${avatarName}_head_avatar.png`;
+          heroMascotImg.alt = avatarName;
         }
 
         // 🔧 FIX: Sauvegarder automatiquement l'avatar sélectionné

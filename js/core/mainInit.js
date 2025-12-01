@@ -115,6 +115,8 @@ function wireCreationAvatarSelector() {
     btn.classList.add('active');
     const selectedAvatarId = btn.dataset.avatar;
     updateBackgroundByAvatar(selectedAvatarId);
+    // Mettre à jour la mascotte hero avec l'avatar sélectionné
+    updateHeroMascot(selectedAvatarId);
     try {
       const name = UserManager.getCurrentUser?.();
       if (name) {
@@ -316,6 +318,25 @@ function safeRemoveAvatarAfterCadenas() {
   }
 }
 
+/**
+ * Met à jour l'image de la mascotte hero avec l'avatar spécifié ou fox par défaut
+ * @param {string} [avatarId] - ID de l'avatar à afficher (optionnel)
+ */
+function updateHeroMascot(avatarId) {
+  try {
+    const heroMascotImg = document.getElementById('hero-mascot-img');
+    if (!heroMascotImg) return;
+
+    // Si un avatar est spécifié, l'utiliser directement
+    const currentAvatar = avatarId || 'fox';
+
+    heroMascotImg.src = `assets/images/arcade/${currentAvatar}_head_avatar.png`;
+    heroMascotImg.alt = currentAvatar;
+  } catch (error) {
+    logInitWarning('Mise à jour mascotte hero impossible', error);
+  }
+}
+
 async function runInit() {
   scheduleBackgroundRotationTask();
   const resolvedLang = await prepareLanguage();
@@ -332,6 +353,7 @@ async function runInit() {
   initThemes();
   initUserSystems();
   initComponentModules();
+  updateHeroMascot();
   wireUiHandlers();
   safeRemoveAvatarAfterCadenas();
 }
