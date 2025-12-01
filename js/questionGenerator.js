@@ -52,8 +52,7 @@ function isMultiplicationTableMode(operator, forceTable, tables, weakTables) {
 function determineQuestionType(type, operation, operator) {
   if (type === 'auto') {
     const supportedTypes = operation.getSupportedTypes();
-    // NOSONAR - Safe: educational game randomization, not security-sensitive
-    return supportedTypes[Math.floor(Math.random() * supportedTypes.length)];
+    return supportedTypes[Math.floor(Math.random() * supportedTypes.length)]; // NOSONAR - Safe: educational game
   }
 
   const supportedTypes = operation.getSupportedTypes();
@@ -81,10 +80,9 @@ function handleMcqQuestion(operation, a, b, result) {
 }
 
 function handleTrueFalseQuestion(operation, a, b, result) {
-  // NOSONAR - Safe: educational game randomization for true/false questions, not security-sensitive
-  const isTrue = Math.random() > 0.5;
-  const offset = Math.random() > 0.5 ? 1 : -1;
-  const magnitude = Math.random() > 0.5 ? 1 : 2;
+  const isTrue = Math.random() > 0.5; // NOSONAR - Safe: educational game
+  const offset = Math.random() > 0.5 ? 1 : -1; // NOSONAR
+  const magnitude = Math.random() > 0.5 ? 1 : 2; // NOSONAR
   const proposedAnswer = isTrue ? result : result + offset * magnitude;
   return { question: operation.formatQuestion(a, b, 'true_false', proposedAnswer), answer: isTrue };
 }

@@ -73,9 +73,8 @@ describe('Multi-Operations Logic Validation', () => {
             let a, b;
             if (operator === '+') {
               const max = difficultyMax[difficulty] || 10;
-              // NOSONAR - Safe: test data generation, not security-sensitive
-              a = Math.floor(Math.random() * max) + 1;
-              b = Math.floor(Math.random() * max) + 1;
+              a = Math.floor(Math.random() * max) + 1; // NOSONAR
+              b = Math.floor(Math.random() * max) + 1; // NOSONAR
             }
             examples.push({ a, b, result: a + b });
           }
@@ -101,9 +100,8 @@ describe('Multi-Operations Logic Validation', () => {
             let a, b;
             if (operator === '−') {
               const max = difficultyMaxMap[difficulty] || 50;
-              // NOSONAR - Safe: test data generation, not security-sensitive
-              a = Math.floor(Math.random() * max) + 1;
-              b = Math.floor(Math.random() * Math.min(a, max)) + 1;
+              a = Math.floor(Math.random() * max) + 1; // NOSONAR
+              b = Math.floor(Math.random() * Math.min(a, max)) + 1; // NOSONAR
               // Assurer a >= b
               if (b > a) [a, b] = [b, a];
             }

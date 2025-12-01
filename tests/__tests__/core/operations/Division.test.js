@@ -42,10 +42,9 @@ describe('Division Operation', () => {
       };
 
       const c = constraints[difficulty] || constraints.medium;
-      // NOSONAR - Safe: test data generation, not security-sensitive
-      const b = Math.floor(Math.random() * (c.maxDivisor - c.minDivisor + 1)) + c.minDivisor;
+      const b = Math.floor(Math.random() * (c.maxDivisor - c.minDivisor + 1)) + c.minDivisor; // NOSONAR
       const quotient =
-        Math.floor(Math.random() * (c.maxQuotient - c.minQuotient + 1)) + c.minQuotient;
+        Math.floor(Math.random() * (c.maxQuotient - c.minQuotient + 1)) + c.minQuotient; // NOSONAR
       const a = b * quotient;
 
       return { a, b };
@@ -74,8 +73,7 @@ describe('Division Operation', () => {
       }
 
       while (distractors.size < count) {
-        // NOSONAR - Safe: test data generation, not security-sensitive
-        const random = Math.floor(Math.random() * Math.max(correctAnswer * 2, 12)) + 1;
+        const random = Math.floor(Math.random() * Math.max(correctAnswer * 2, 12)) + 1; // NOSONAR
         if (random !== correctAnswer) {
           distractors.add(random);
         }
