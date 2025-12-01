@@ -657,13 +657,6 @@ p {
   transform: none;
 }
 
-.avatar-btn.active {
-  border: 3px solid var(--accent-color);
-  transform: scale(1.1);
-  box-shadow: 0 0 10px var(--accent-color);
-  background-color: var(--neutral-light);
-}
-
 .btn-sm {
   padding: 5px 10px;
   font-size: 0.9em;

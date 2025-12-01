@@ -536,10 +536,7 @@ export class DiscoveryMode extends GameMode {
     for (let i = 0; i < count; i++) {
       let a, b;
       // Limiter à des petits nombres pour une visualisation claire (≤10)
-      if (this.operator === '+') {
-        a = this.randomInt(1, 5);
-        b = this.randomInt(1, 5);
-      } else if (this.operator === '−') {
+      if (this.operator === '−') {
         // Soustraction : a entre 2 et 10, b < a
         a = this.randomInt(2, 10);
         b = this.randomInt(1, Math.min(a - 1, 5));
@@ -549,7 +546,7 @@ export class DiscoveryMode extends GameMode {
         const quotient = this.randomInt(1, 4); // quotient
         a = b * quotient; // dividende = diviseur × quotient
       } else {
-        // Fallback pour autres opérations
+        // Addition, multiplication et autres : petits nombres simples
         a = this.randomInt(1, 5);
         b = this.randomInt(1, 5);
       }
@@ -805,13 +802,13 @@ export class DiscoveryMode extends GameMode {
 
         let a, b;
         // Pour addition/soustraction : utiliser data-a et data-b
-        if (item.hasAttribute('data-a') && item.hasAttribute('data-b')) {
-          a = parseInt(item.getAttribute('data-a'), 10);
-          b = parseInt(item.getAttribute('data-b'), 10);
+        if (item.dataset.a !== undefined && item.dataset.b !== undefined) {
+          a = Number.parseInt(item.dataset.a, 10);
+          b = Number.parseInt(item.dataset.b, 10);
         } else {
           // Pour multiplication : utiliser data-table et data-multiplicand
-          a = parseInt(item.getAttribute('data-table') || String(this.currentTable || 0), 10);
-          b = parseInt(item.getAttribute('data-multiplicand') || '0', 10);
+          a = Number.parseInt(item.dataset.table || String(this.currentTable || 0), 10);
+          b = Number.parseInt(item.dataset.multiplicand || '0', 10);
         }
 
         if (!Number.isNaN(a) && !Number.isNaN(b)) {
