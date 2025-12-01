@@ -84,6 +84,46 @@ export default [
     rules: {
       'no-undef': 'off',
       'no-restricted-properties': 'off',
+      // Permettre les helpers de tests ESM (tests-esm/helpers/ n'est pas le helpers.js legacy)
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../modes/*', './modes/*', 'modes/*'],
+              message: 'Legacy modes archivés; utiliser les entrées ESM actives ou lazy-loader.',
+            },
+            {
+              group: ['../uiHandlers', './uiHandlers', 'uiHandlers'],
+              message: 'uiHandlers legacy déprécié.',
+            },
+            {
+              group: ['../domUtils', './domUtils', 'domUtils'],
+              message: 'domUtils legacy déprécié.',
+            },
+            // Note: ./helpers/arcade-test-helpers.mjs est autorisé (helpers de tests valides)
+            {
+              group: [
+                '../helpers.js',
+                './helpers.js',
+                'helpers.js',
+                '../js/helpers',
+                './js/helpers',
+              ],
+              message: 'js/helpers.js legacy déprécié.',
+            },
+            {
+              group: ['../core/GameModeManager', './core/GameModeManager', 'core/GameModeManager'],
+              message: 'GameModeManager non utilisé.',
+            },
+            {
+              group: ['./utils.js', '../utils.js'],
+              message:
+                'Importer depuis utils-es6.js (agrégateur) ou core/utils.js (source canonique). utils.js est déprécié.',
+            },
+          ],
+        },
+      ],
     },
   },
   eslintConfigPrettier,

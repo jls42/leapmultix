@@ -3,6 +3,7 @@
 
 import { lazyLoader } from './lazy-loader.js';
 import { getTranslation, showMessage } from './utils-es6.js';
+import { canLaunchMode } from './components/operationModeAvailability.js';
 // gameState import removed as it's unused
 
 // Keep import() arguments literal to avoid security tool false-positives.
@@ -60,6 +61,12 @@ export function setStartingMode(mode) {
 
 export async function setGameMode(mode) {
   try {
+    // Vérifier si le mode est disponible pour l'opération actuelle
+    if (!canLaunchMode(mode)) {
+      console.warn(`[ModeOrchestrator] Mode ${mode} non disponible pour l'opération actuelle`);
+      return;
+    }
+
     // Ignore duplicate, in-flight requests for the same mode
     if (startingMode === mode) {
       console.warn(`[ModeOrchestrator] Duplicate setGameMode(${mode}) ignored (in flight).`);

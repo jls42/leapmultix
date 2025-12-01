@@ -39,6 +39,7 @@ const DEFAULT_USER_DATA = Object.freeze({
   parentalLockEnabled: false,
   starsByTable: {},
   coins: 0,
+  preferredOperator: '×',
 });
 
 const ensureArray = (value, fallback = []) => (Array.isArray(value) ? [...value] : [...fallback]);
@@ -56,6 +57,7 @@ const createDefaultUserData = (nickname = '') => ({
   unlockedBadges: [],
   starsByTable: {},
   tablePreferences: { ...DEFAULT_TABLE_PREFERENCES, globalExclusions: [] },
+  preferredOperator: '×',
   nickname,
 });
 
@@ -89,6 +91,7 @@ const normalizeUserData = (rawData, currentUser) => {
     parentalLockEnabled: rawData?.parentalLockEnabled === true,
     starsByTable,
     coins: ensureNumber(rawData?.coins, 0),
+    preferredOperator: rawData?.preferredOperator || '×',
     tablePreferences: {
       ...DEFAULT_TABLE_PREFERENCES,
       ...tablePreferences,
@@ -282,16 +285,45 @@ export const UserManager = {
      */
     updateCoinDisplay();
 
+    // Rafraîchir le sélecteur d'opération avec les données de l'utilisateur
+    try {
+      const operationSelectorContainer = document.getElementById('operation-selector-container');
+      if (operationSelectorContainer && operationSelectorContainer.children.length > 0) {
+        // Dynamically import to avoid circular dependency
+        import('./components/operationSelector.js')
+          .then(module => {
+            module.OperationSelector.refresh('operation-selector-container');
+          })
+          .catch(e => {
+            console.warn('OperationSelector refresh failed:', e);
+          });
+
+        // Refresh mode availability and table settings button visibility
+        import('./components/operationModeAvailability.js')
+          .then(module => {
+            module.updateModeButtonsAvailability();
+          })
+          .catch(e => {
+            console.warn('updateModeButtonsAvailability failed:', e);
+          });
+
+        import('./components/topBar.js')
+          .then(module => {
+            module.TopBar.updateTableSettingsButtonVisibility?.();
+          })
+          .catch(e => {
+            console.warn('TopBar.updateTableSettingsButtonVisibility failed:', e);
+          });
+      }
+    } catch {
+      // Ignoré silencieusement - TopBar peut ne pas être initialisé
+    }
+
     // Afficher le défi quotidien si disponible
-    /**
-     * Fonction if
-     * @param {*} typeof - Description du paramètre
-     * @returns {*} Description du retour
-     */
     try {
       displayDailyChallenge();
-    } catch (e) {
-      void e;
+    } catch {
+      // Ignoré silencieusement - défi quotidien peut ne pas être disponible
     }
 
     // Nettoyer les scores par défaut pour éviter l'affichage de scores par défaut

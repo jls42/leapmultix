@@ -391,6 +391,13 @@ p {
   display: block;
 }
 
+/* Fond bleu transparent pour le slide d'accueil */
+#slide1 {
+  background-color: rgb(173 216 230 / 0.3);
+  border-radius: 20px;
+  padding: 30px 20px;
+}
+
 .top-bar {
   display: flex;
   justify-content: space-between;

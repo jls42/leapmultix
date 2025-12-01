@@ -13,11 +13,15 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-touch-fullscreen" content="yes" />
-    <title>LeapMultix - Tables de Multiplication Interactives Gratuites</title>
+    <title>LeapMultix - Apprentissage Interactif des Opérations Arithmétiques (×, +, −, ÷)</title>
     <!-- SEO Meta Tags -->
     <meta
       name="description"
-      content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue (FR/EN/ES). Open source."
+      content="Application gratuite pour s'entraîner au calcul mental : +, −, ×, ÷ et tables de multiplication. 5 modes de jeu, 4 mini-jeux éducatifs. Multilingue et open source."
+    />
+    <meta
+      name="keywords"
+      content="tables de multiplication, addition, soustraction, division, opérations arithmétiques, calcul mental, mathématiques CE1 CE2 CM1 CM2, apprentissage ludique, jeux éducatifs, PWA, gratuit, open source, RGPD"
     />
     <meta name="author" content="Julien LS." />
     <meta
@@ -64,11 +68,11 @@
     <meta property="og:site_name" content="LeapMultix" />
     <meta
       property="og:title"
-      content="LeapMultix - Tables de Multiplication Interactives Gratuites"
+      content="LeapMultix - Apprentissage Interactif des Opérations Arithmétiques (×, +, −, ÷)"
     />
     <meta
       property="og:description"
-      content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source."
+      content="Application éducative interactive gratuite pour maîtriser les 4 opérations arithmétiques : multiplication, addition, soustraction, division. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source et conforme RGPD."
     />
     <meta
       property="og:image"
@@ -91,11 +95,11 @@
     <meta name="twitter:url" content="https://leapmultix.jls42.org/" />
     <meta
       name="twitter:title"
-      content="LeapMultix - Tables de Multiplication Interactives Gratuites"
+      content="LeapMultix - Apprentissage Interactif des Opérations Arithmétiques (×, +, −, ÷)"
     />
     <meta
       name="twitter:description"
-      content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source."
+      content="Application éducative interactive gratuite pour maîtriser les 4 opérations arithmétiques : multiplication, addition, soustraction, division. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source."
     />
     <meta
       name="twitter:image"
@@ -107,10 +111,13 @@
     />
 
     <!-- Schema.org Microdata -->
-    <meta itemprop="name" content="LeapMultix - Tables de Multiplication Interactives Gratuites" />
+    <meta
+      itemprop="name"
+      content="LeapMultix - Apprentissage Interactif des Opérations Arithmétiques (×, +, −, ÷)"
+    />
     <meta
       itemprop="description"
-      content="Application interactive gratuite pour maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source."
+      content="Application éducative interactive gratuite pour maîtriser les 4 opérations arithmétiques : multiplication, addition, soustraction, division. 5 modes de jeu, 4 mini-jeux d'arcade, multilingue. Open source."
     />
     <meta itemprop="url" content="https://leapmultix.jls42.org/" />
     <meta
@@ -124,7 +131,7 @@
         "@context": "https://schema.org",
         "@type": "WebApplication",
         "name": "LeapMultix",
-        "description": "Application éducative interactive gratuite pour apprendre et maîtriser les tables de multiplication. 5 modes de jeu, 4 mini-jeux d'arcade, support multilingue (Français, Anglais, Espagnol). Progressive Web App installable.",
+        "description": "Application éducative interactive gratuite pour apprendre et maîtriser les 4 opérations arithmétiques : multiplication (×), addition (+), soustraction (−), division (÷). 5 modes de jeu, 4 mini-jeux d'arcade, support multilingue (Français, Anglais, Espagnol). Progressive Web App installable.",
         "url": "https://leapmultix.jls42.org/",
         "image": "https://leapmultix.jls42.org/assets/social/leapmultix-social-card.webp",
         "applicationCategory": "EducationalApplication",
@@ -142,10 +149,11 @@
           "url": "https://jls42.org/"
         },
         "featureList": [
-          "Mode Découverte : Exploration interactive des tables",
-          "Mode Quiz : Entraînement avec questions variées",
-          "Mode Défi : Chronomètre et scoring",
-          "Mode Aventure : Progression par niveaux",
+          "Support des 4 opérations arithmétiques (multiplication, addition, soustraction, division)",
+          "Mode Découverte : Exploration interactive des tables de multiplication",
+          "Mode Quiz : Entraînement multi-opérations avec questions variées (×, +, −, ÷)",
+          "Mode Défi : Chronomètre et scoring avec toutes les opérations",
+          "Mode Aventure : Progression par niveaux (multiplication)",
           "Mode Arcade : 4 mini-jeux éducatifs (Multimiam, Multisnake, Space Invasion, Memory)",
           "Support multilingue (FR/EN/ES)",
           "Progressive Web App (PWA) installable",
@@ -242,6 +250,22 @@
               "@type": "Answer",
               "text": "Oui ! LeapMultix est disponible en 3 langues : Français, Anglais et Espagnol. Vous pouvez changer de langue à tout moment via le menu en haut de l'écran."
             }
+          },
+          {
+            "@type": "Question",
+            "name": "Quelles opérations arithmétiques sont disponibles ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LeapMultix supporte les 4 opérations arithmétiques fondamentales : multiplication (×), addition (+), soustraction (−) et division (÷). Les modes Quiz et Défi permettent de pratiquer toutes les opérations. Les modes Découverte, Aventure et Arcade se concentrent actuellement sur la multiplication."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment choisir l'opération à pratiquer ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Dans les modes Quiz et Défi, utilisez le sélecteur d'opération pour choisir entre multiplication (×), addition (+), soustraction (−) ou division (÷). Vous pouvez combiner plusieurs opérations pour un entraînement complet au calcul mental."
+            }
           }
         ]
       }
@@ -255,6 +279,7 @@
     <link rel="stylesheet" href="css/general.css" data-critical-css="true" />
     <link rel="stylesheet" href="css/users.css" data-critical-css="true" />
     <link rel="stylesheet" href="css/responsive-unified.css" data-critical-css="true" />
+    <link rel="stylesheet" href="css/operation-selector.css" />
     <link rel="stylesheet" href="css/game.css" />
     <link rel="stylesheet" href="css/quiz.css" />
     <link rel="stylesheet" href="css/table-settings-modal.css" />
@@ -455,6 +480,9 @@
               sur cet appareil.</span
             >
           </p>
+
+          <!-- Sélecteur d'opération arithmétique -->
+          <div id="operation-selector-container"></div>
 
           <div class="game-modes">
             <h2 data-translate="choose_mode">Choisis ton mode de jeu</h2>
@@ -865,9 +893,13 @@
               <h3 data-translate="about_features_title">Fonctionnalités</h3>
               <ul>
                 <li data-translate="about_features_game_modes">
-                  4 modes de jeu classiques (Quiz, Défi, Aventure, Découverte)
+                  5 modes de jeu : Découverte, Quiz ⭐, Défi ⭐, Aventure, Arcade
                 </li>
                 <li data-translate="about_features_arcade">4 mini-jeux d'arcade éducatifs</li>
+                <li>
+                  <strong>Multi-opérations :</strong> Pratique les 4 opérations (×, +, −, ÷) dans
+                  Quiz et Défi
+                </li>
                 <li data-translate="about_features_multilingual">
                   Support multilingue (Français, Anglais, Espagnol)
                 </li>

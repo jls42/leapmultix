@@ -1,7 +1,10 @@
 import { describe, test, expect, beforeAll, jest } from '@jest/globals';
 
 // Mock UserState to avoid depending on full UserManager/Storage stack
-const userStore = { adventureProgress: {} };
+const userStore = {
+  preferredOperator: '×',
+  adventureProgressByOperator: {},
+};
 jest.unstable_mockModule('../js/core/userState.js', () => ({
   UserState: {
     getCurrentUserData: () => userStore,
@@ -23,10 +26,11 @@ describe('ESM: Adventure persistence', () => {
     adv.currentLevel = adv.adventureLevels[0]; // level id 1
     adv.saveAdventureProgress(3);
 
-    expect(userStore.adventureProgress).toBeDefined();
-    expect(userStore.adventureProgress[1]).toBeDefined();
-    expect(userStore.adventureProgress[1].stars).toBe(3);
-    expect(userStore.adventureProgress[1].completed).toBe(true);
+    expect(userStore.adventureProgressByOperator).toBeDefined();
+    expect(userStore.adventureProgressByOperator['×']).toBeDefined();
+    expect(userStore.adventureProgressByOperator['×'][1]).toBeDefined();
+    expect(userStore.adventureProgressByOperator['×'][1].stars).toBe(3);
+    expect(userStore.adventureProgressByOperator['×'][1].completed).toBe(true);
   });
 
   test('loads progress and computes total stars', () => {

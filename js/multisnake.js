@@ -4,13 +4,14 @@
 import { generateQuestion } from './questionGenerator.js';
 import { showArcadeMessage, showArcadePoints, getTranslation } from './utils-es6.js';
 import { showGameInstructions } from './arcade-common.js';
-import { recordMultiplicationResult } from './core/mult-stats.js';
+import { recordOperationResult } from './core/operation-stats.js';
 import { showArcadeGameOver } from './arcade.js';
 import { cleanupGameResources } from './game-cleanup.js';
 import { Utils } from './utils-es6.js';
 import { InfoBar } from './components/infoBar.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
+// UserState removed - unused import
 // Utilisation de la fonction shuffleArray centralisée via Utils
 
 class SnakeGame {
@@ -19,6 +20,7 @@ class SnakeGame {
     this.canvasId = canvasId;
     this.mode = mode;
     this.tableNumber = options.tableNumber || null;
+    this.operator = options.operator || '×'; // R4.4: Support multi-opérations (+, −, ×, ÷)
     this.isDefi = mode === 'defi';
     this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       globalThis.navigator?.userAgent || ''
@@ -648,12 +650,20 @@ class SnakeGame {
         ? TablePreferences.getActiveExclusions(currentUser)
         : [];
 
-      // Utiliser generateQuestion pour cohérence avec le système centralisé
+      // Utiliser generateQuestion pour cohérence avec le système centralisé (R4.4: multi-ops)
       const questionData = generateQuestion({
         type: 'classic',
-        excludeTables: excluded,
-        tables: Array.isArray(this.tables) && this.tables.length > 0 ? this.tables : undefined,
-        forceTable: this.mode === 'table' && this.tableNumber ? this.tableNumber : null,
+        operator: this.operator, // Support +, −, ×, ÷
+        difficulty: 'medium',
+        excludeTables: this.operator === '×' ? excluded : [],
+        tables:
+          this.operator === '×' && Array.isArray(this.tables) && this.tables.length > 0
+            ? this.tables
+            : undefined,
+        forceTable:
+          this.operator === '×' && this.mode === 'table' && this.tableNumber
+            ? this.tableNumber
+            : null,
         minTable: 1,
         maxTable: 10,
         minNum: 1,
@@ -661,9 +671,9 @@ class SnakeGame {
       });
 
       this.currentOperation = {
-        num1: questionData.table,
-        num2: questionData.num,
-        operator: 'x',
+        num1: questionData.a,
+        num2: questionData.b,
+        operator: this.operator,
         result: questionData.answer,
       };
 
@@ -671,7 +681,7 @@ class SnakeGame {
       this.displayOperation();
     } catch (error) {
       console.error("Erreur lors de la génération de l'opération:", error);
-      this.currentOperation = { num1: 1, num2: 1, operator: 'x', result: 1 };
+      this.currentOperation = { num1: 1, num2: 1, operator: this.operator, result: 1 };
       this.displayOperation();
     }
   }
@@ -817,7 +827,12 @@ class SnakeGame {
         numberEaten = true;
 
         if (pos.isCorrect) {
-          recordMultiplicationResult(this.currentOperation.num1, this.currentOperation.num2, true);
+          recordOperationResult(
+            this.operator,
+            this.currentOperation.num1,
+            this.currentOperation.num2,
+            true
+          );
           // bonne réponse mangée
           this.score += 100;
           // Affichage du gain de points
@@ -832,7 +847,12 @@ class SnakeGame {
           this.generateOperation();
           this.placeNumbers();
         } else {
-          recordMultiplicationResult(this.currentOperation.num1, this.currentOperation.num2, false);
+          recordOperationResult(
+            this.operator,
+            this.currentOperation.num1,
+            this.currentOperation.num2,
+            false
+          );
           // Mauvaise réponse : on perd 50 points mais pas de vie, et on retire la bulle
           this.score = Math.max(0, this.score - 50);
           // Affichage de la perte de points

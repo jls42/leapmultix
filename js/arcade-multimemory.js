@@ -25,6 +25,7 @@ import { showGameInstructions } from './arcade-common.js';
 import { getDifficultySettings } from './difficulty.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
+import { UserState } from './core/userState.js';
 // Dépend des helpers ESM (plus d'assignations window.*)
 
 const FULL_TABLE_SET = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -98,6 +99,12 @@ export function startMemoryArcade() {
   gameState.gameMode = 'multimemory';
   goToSlide(4);
   // arcadeActive basculé au démarrage du timer (startArcadeTimer)
+
+  // Récupérer l'opérateur sélectionné (support multi-opérations R4.3)
+  const userData = UserState.getCurrentUserData();
+  const operator = userData.preferredOperator || '×';
+
+  console.log('MultiMemory lancé avec opérateur:', operator);
 
   // S'assurer que la difficulté est définie et valide
   if (!['debutant', 'moyen', 'difficile'].includes(gameState.difficulty)) {
@@ -180,6 +187,7 @@ export function startMemoryArcade() {
     excludedTables: globalExclusions,
     lives: difficultySettings.lives || 3,
     pairs: difficultySettings.pairs,
+    operator, // R4.3: Support multi-opérations (+, −, ×, ÷)
   });
   _memoryGameInstance.start();
 
@@ -222,6 +230,7 @@ class MemoryGame {
 
     // Options et difficulté
     this.difficulty = options.difficulty || 'moyen';
+    this.operator = options.operator || '×'; // R4.3: Support multi-opérations
     const sanitizedTables = sanitizeTableList(options.tables);
     this.tables = sanitizedTables.length > 0 ? [...new Set(sanitizedTables)] : FULL_TABLE_SET;
     this.excludedTables = sanitizeExclusions(options.excludedTables);
@@ -481,30 +490,33 @@ class MemoryGame {
     for (let i = 0; i < this.pairs; i++) {
       if (i >= selectedTables.length) this.shuffleArray(selectedTables);
 
-      // Utiliser generateQuestion pour génération cohérente
+      // Utiliser generateQuestion pour génération cohérente (R4.3: support multi-ops)
       const questionData = generateQuestion({
         type: 'classic',
-        tables: this.tables,
-        excludeTables: this.excludedTables,
+        operator: this.operator, // Support +, −, ×, ÷
+        difficulty: this.difficulty,
+        tables: this.operator === '×' ? this.tables : undefined,
+        excludeTables: this.operator === '×' ? this.excludedTables : [],
         minNum: 1,
         maxNum: 10,
       });
 
-      const table = questionData.table;
-      const multiplicand = questionData.num;
+      const num1 = questionData.a;
+      const num2 = questionData.b;
       const result = questionData.answer;
       // Tirer des indices uniques
 
       const monsterMul = monsterIndices.pop();
 
       const monsterRes = monsterIndices.pop();
-      // Carte multiplication
+      // Carte opération (R4.3: adapté pour +, −, ×, ÷)
       this.cards.push({
         id: i * 2,
-        type: 'multiplication',
-        content: `${table}×${multiplicand}`,
-        table,
-        multiplicand,
+        type: 'operation',
+        content: `${num1} ${this.operator} ${num2}`,
+        num1,
+        num2,
+        operator: this.operator,
         result,
         x: 0,
         y: 0,
@@ -520,8 +532,9 @@ class MemoryGame {
         id: i * 2 + 1,
         type: 'result',
         content: `${result}`,
-        table,
-        multiplicand,
+        num1,
+        num2,
+        operator: this.operator,
         result,
         x: 0,
         y: 0,
@@ -943,7 +956,7 @@ class MemoryGame {
 
   drawCardFront(card, cardX, cardY, cardWidth, cardHeight) {
     this.ctx.fillStyle = '#FFFFFF';
-    let fontSize = Math.floor(card.type === 'multiplication' ? cardHeight / 3 : cardHeight / 2.5);
+    let fontSize = Math.floor(card.type === 'operation' ? cardHeight / 3 : cardHeight / 2.5);
     this.ctx.font = `bold ${fontSize}px Arial`;
     while (this.ctx.measureText(card.content).width > cardWidth * 0.8 && fontSize > 10) {
       fontSize--;

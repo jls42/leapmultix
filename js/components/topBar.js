@@ -15,6 +15,7 @@ import { goToSlide } from '../slides.js';
 import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
+import { UserState } from '../core/userState.js';
 
 const tableSettingsListeners = new WeakSet();
 
@@ -303,6 +304,16 @@ export const TopBar = {
     this.attachTableSettingsButtons();
     this.attachBurgerMenus();
     this.attachOutsideClickWatcher();
+
+    // Mise à jour initiale de la visibilité du bouton de paramètres de tables
+    this.updateTableSettingsButtonVisibility();
+
+    // Écouter les changements d'opération pour mettre à jour la visibilité
+    if (globalThis.window !== undefined) {
+      globalThis.addEventListener?.('operation-changed', () => {
+        this.updateTableSettingsButtonVisibility();
+      });
+    }
   },
 
   attachHomeButtons() {
@@ -391,6 +402,27 @@ export const TopBar = {
       });
       tableSettingsListeners.add(btn);
     }
+  },
+
+  /**
+   * Met à jour la visibilité du bouton de paramètres de tables
+   * Masque le bouton si l'opération n'est pas la multiplication
+   */
+  updateTableSettingsButtonVisibility() {
+    const operator = UserState.getCurrentUserData().preferredOperator || '×';
+    const buttons = document.querySelectorAll('.table-settings-btn');
+
+    buttons.forEach(btn => {
+      if (operator === '×') {
+        // Multiplication : afficher le bouton
+        btn.style.display = '';
+        btn.disabled = false;
+      } else {
+        // Autres opérations : masquer le bouton
+        btn.style.display = 'none';
+        btn.disabled = true;
+      }
+    });
   },
 
   attachBurgerMenus() {

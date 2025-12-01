@@ -32,8 +32,9 @@ import {
   stopArcadeMode,
   isArcadeActive,
 } from './arcade.js';
-import { recordMultiplicationResult } from './core/mult-stats.js';
+import { recordOperationResult } from './core/operation-stats.js';
 import { showGameInstructions } from './arcade-common.js';
+import { UserState } from './core/userState.js';
 // Utilise les helpers arcades via window (arcade.js expose des ponts globaux)
 
 // Constants for canvas dimensions
@@ -357,6 +358,10 @@ export function startMultiplicationInvasion() {
   const difficultySettings = setupGameUI();
   const Root = getRootObject();
 
+  // Récupérer l'opérateur sélectionné (support multi-opérations R4)
+  const userData = UserState.getCurrentUserData();
+  const operator = userData.preferredOperator || '×';
+
   // Variables that are reassigned
   let {
     avatarErrorAnim,
@@ -583,22 +588,23 @@ export function startMultiplicationInvasion() {
     // Génération des questions selon le niveau de difficulté (Cascade 2025)
     // Récupération des paramètres de difficulté
 
-    // Appliquer l'exclusion globale de tables
+    // Appliquer l'exclusion globale de tables (uniquement pour multiplication)
     const currentUser = UserManager.getCurrentUser();
-    const excluded = TablePreferences.isGlobalEnabled(currentUser)
-      ? TablePreferences.getActiveExclusions(currentUser)
-      : [];
+    const excluded =
+      operator === '×' && TablePreferences.isGlobalEnabled(currentUser)
+        ? TablePreferences.getActiveExclusions(currentUser)
+        : [];
 
     const q = generateQuestion({
       type: 'mcq',
-      tables: difficultySettings.tables,
-      excludeTables: excluded,
-      minNum: 2,
-      maxNum: 10,
+      operator, // Support multi-opérations (+, −, ×, ÷)
+      difficulty: globalGameState?.difficulty || 'moyen',
+      tables: operator === '×' ? difficultySettings.tables : undefined,
+      excludeTables: operator === '×' ? excluded : [],
       distractorDistance: difficultySettings.distractorDistance,
     });
-    currentProblem.a = q.table;
-    currentProblem.b = q.num;
+    currentProblem.a = q.a;
+    currentProblem.b = q.b;
     const correctAnswer = q.answer;
     aliens = [];
     const nbAliens = 5;
@@ -638,12 +644,12 @@ export function startMultiplicationInvasion() {
     let options = [correctAnswer];
     while (options.length < nbAliens) {
       // Génération des distracteurs selon le niveau de difficulté (Cascade 2025)
-      // Réutilisation des paramètres de difficulté
+      // Réutilisation des paramètres de difficulté + support multi-opérations
       const wrong = generateQuestion({
         type: 'mcq',
-        tables: difficultySettings.tables,
-        minNum: 2,
-        maxNum: 10,
+        operator, // Support multi-opérations (+, −, ×, ÷)
+        difficulty: globalGameState?.difficulty || 'moyen',
+        tables: operator === '×' ? difficultySettings.tables : undefined,
         distractorDistance: difficultySettings.distractorDistance,
       }).answer;
       if (!options.includes(wrong)) options.push(wrong);
@@ -676,7 +682,7 @@ export function startMultiplicationInvasion() {
     const questionSpan = document.querySelector('.arcade-mobile-top .arcade-question');
     if (questionSpan) {
       if (currentProblem && currentProblem.a !== undefined && currentProblem.b !== undefined) {
-        questionSpan.textContent = `${currentProblem.a} × ${currentProblem.b} = ?`;
+        questionSpan.textContent = `${currentProblem.a} ${operator} ${currentProblem.b} = ?`;
       } else {
         questionSpan.textContent = '';
       }
@@ -722,6 +728,21 @@ export function startMultiplicationInvasion() {
     );
   }
 
+  // Helper function to compute correct answer based on operator
+  const computeCorrectAnswer = (op, a, b) => {
+    switch (op) {
+      case '+':
+        return a + b;
+      case '−':
+        return a - b;
+      case '÷':
+        return a / b;
+      case '×':
+      default:
+        return a * b;
+    }
+  };
+
   function handleWrongAlienHit(bIndex, aIndex) {
     if (!isArcadeActive()) return;
     score += 100;
@@ -737,7 +758,7 @@ export function startMultiplicationInvasion() {
 
   function handleCorrectAlienHit(alien, bIndex) {
     if (!isArcadeActive()) return;
-    recordMultiplicationResult(currentProblem.a, currentProblem.b, false);
+    recordOperationResult(operator, currentProblem.a, currentProblem.b, false);
     score = Math.max(0, score - difficultySettings.penalty);
     if (typeof showArcadePoints === 'function') {
       showArcadePoints(-50, canvas);
@@ -784,7 +805,7 @@ export function startMultiplicationInvasion() {
           bullet.y < alien.y + alienWidth
         ) {
           createExplosion(alien.x + alienWidth / 2, alien.y + alienWidth / 2);
-          const correctVal = currentProblem.a * currentProblem.b;
+          const correctVal = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
           if (alien.value !== correctVal) {
             handleWrongAlienHit(bIndex, aIndex);
           } else {
@@ -807,13 +828,10 @@ export function startMultiplicationInvasion() {
   }
 
   function handleAvatarTransformation() {
-    if (
-      aliens.length === 1 &&
-      aliens[0].value === currentProblem.a * currentProblem.b &&
-      !showingAvatar &&
-      lives > 0
-    ) {
-      recordMultiplicationResult(currentProblem.a, currentProblem.b, true);
+    const correctAnswer = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
+
+    if (aliens.length === 1 && aliens[0].value === correctAnswer && !showingAvatar && lives > 0) {
+      recordOperationResult(operator, currentProblem.a, currentProblem.b, true);
       showingAvatar = true;
 
       const avatarKeys = ['panda', 'fox', 'astronaut', 'unicorn', 'dragon'];

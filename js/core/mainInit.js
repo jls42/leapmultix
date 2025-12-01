@@ -23,6 +23,9 @@ import {
   updateSeoHeroImage,
 } from '../utils-es6.js';
 import { VideoManager } from '../VideoManager.js';
+import { OperationSelector } from '../components/operationSelector.js';
+import { initModeAvailability } from '../components/operationModeAvailability.js';
+import { autoMigrate } from './stats-migration.js';
 
 const avatarAvailableImages = {
   fox: [1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17],
@@ -282,6 +285,18 @@ function initComponentModules() {
   } catch (error) {
     console.warn('VideoManager init failed', error);
   }
+
+  try {
+    OperationSelector.inject('operation-selector-container');
+  } catch (error) {
+    logInitWarning('Initialisation OperationSelector impossible', error);
+  }
+
+  try {
+    initModeAvailability();
+  } catch (error) {
+    logInitWarning('Initialisation ModeAvailability impossible', error);
+  }
 }
 
 function wireUiHandlers() {
@@ -306,6 +321,14 @@ async function runInit() {
   const resolvedLang = await prepareLanguage();
   safeUpdateSeoHeroImage(resolvedLang);
   refreshAudioControls();
+
+  // Migration des anciennes stats vers le nouveau format (sécurisé)
+  try {
+    autoMigrate();
+  } catch (error) {
+    logInitWarning('Migration stats échouée (données anciennes préservées)', error);
+  }
+
   initThemes();
   initUserSystems();
   initComponentModules();

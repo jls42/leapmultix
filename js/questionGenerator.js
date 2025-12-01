@@ -1,31 +1,25 @@
 /* ======================
    Module de génération de questions (centralisé)
+   Supporte toutes les opérations: ×, +, −, ÷
+
+   Security note: This module uses Math.random() for generating random math problems
+   and shuffling answer options. This is intentional and safe - it's an educational
+   math game for children, not a security-sensitive application.
    ====================== */
 
 import Storage from './core/storage.js';
 import { getTranslation } from './utils-es6.js';
+import { getOperation } from './core/operations/OperationRegistry.js';
+
+// --- Helpers pour génération d'opérandes ---
 
 /**
- * Génère une question de multiplication selon les options fournies.
- * @param {Object} options - Options de génération (type, tables faibles, exclusions, etc.)
- * @returns {Object} { question, answer, type, table, num, ... }
+ * Génère des opérandes pour la multiplication (mode tables)
  */
-export function generateQuestion(options = {}) {
-  // Options par défaut
-  const {
-    type = 'auto', // 'classic', 'gap', 'mcq', 'true_false', 'problem', ou 'auto'
-    weakTables = [],
-    excludeTables = [], // Array<number>
-    tables = [], // Nouvel argument : liste des tables à piocher
-    minTable = 1,
-    maxTable = 10,
-    minNum = 1,
-    maxNum = 10,
-    forceTable = null, // Pour forcer une table précise
-    forceNum = null, // Pour forcer un multiplicande précis
-  } = options;
+function generateMultiplicationOperands(config, weakTables) {
+  const { forceTable, tables, excludeTables, minTable, maxTable, forceNum, minNum, maxNum } =
+    config;
 
-  // Échantillonnage adaptatif par paire selon l'historique
   const eligibleTables = getEligibleTables({
     forceTable,
     tables,
@@ -34,62 +28,176 @@ export function generateQuestion(options = {}) {
     maxTable,
   });
   const eligibleNums = getEligibleNums({ forceNum, minNum, maxNum });
+
   if (eligibleTables.length === 0 || eligibleNums.length === 0) {
     throw new Error(
       `generateQuestion: aucune combinaison possible (tables=${eligibleTables.length}, nums=${eligibleNums.length})`
     );
   }
-  const { t: table, n: num } = pickWeightedPair(eligibleTables, eligibleNums, weakTables);
 
-  // Déterminer le type de question
-  let chosenType = type;
+  const { t, n } = pickWeightedPair(eligibleTables, eligibleNums, weakTables);
+  return { a: t, b: n };
+}
+
+/**
+ * Vérifie si le mode multiplication avec tables est actif
+ */
+function isMultiplicationTableMode(operator, forceTable, tables, weakTables) {
+  return operator === '×' && (forceTable !== null || tables.length > 0 || weakTables.length > 0);
+}
+
+/**
+ * Détermine le type de question à utiliser
+ */
+function determineQuestionType(type, operation, operator) {
   if (type === 'auto') {
-    const types = ['classic', 'gap', 'mcq', 'true_false', 'problem'];
-    chosenType = types[Math.floor(Math.random() * types.length)];
+    const supportedTypes = operation.getSupportedTypes();
+    return supportedTypes[Math.floor(Math.random() * supportedTypes.length)]; // NOSONAR - Safe: educational game
   }
 
-  // Générer la question selon le type
-  let question, answer;
+  const supportedTypes = operation.getSupportedTypes();
+  if (!supportedTypes.includes(type)) {
+    console.warn(
+      `[generateQuestion] Type '${type}' non supporté pour ${operator}, fallback 'classic'`
+    );
+    return 'classic';
+  }
+  return type;
+}
+
+// --- Handlers pour chaque type de question ---
+
+function handleClassicQuestion(operation, a, b, result) {
+  return { question: operation.formatQuestion(a, b, 'classic'), answer: result };
+}
+
+function handleGapQuestion(operation, a, b, result) {
+  return { question: operation.formatQuestion(a, b, 'gap', result), answer: b };
+}
+
+function handleMcqQuestion(operation, a, b, result) {
+  return { question: operation.formatQuestion(a, b, 'mcq'), answer: result };
+}
+
+function handleTrueFalseQuestion(operation, a, b, result) {
+  const isTrue = Math.random() > 0.5; // NOSONAR - Safe: educational game
+  const offset = Math.random() > 0.5 ? 1 : -1; // NOSONAR
+  const magnitude = Math.random() > 0.5 ? 1 : 2; // NOSONAR
+  const proposedAnswer = isTrue ? result : result + offset * magnitude;
+  return { question: operation.formatQuestion(a, b, 'true_false', proposedAnswer), answer: isTrue };
+}
+
+function handleProblemQuestion(operation, operator, a, b, result) {
+  const templateMap = {
+    '×': { key: 'problem_templates', params: { table: a, num: b } },
+    '+': { key: 'problem_templates_addition', params: { a, b } },
+    '−': { key: 'problem_templates_subtraction', params: { a, b } },
+    '÷': { key: 'problem_templates_division', params: { a, b } },
+  };
+
+  const template = templateMap[operator];
+  if (!template) {
+    return { question: operation.formatQuestion(a, b, 'classic'), answer: result };
+  }
+
+  try {
+    return { question: getTranslation(template.key, template.params), answer: result };
+  } catch (error) {
+    console.warn(`[generateQuestion] Template '${template.key}' non trouvé:`, error);
+    return { question: `Problem: ${a} ${operation.symbol} ${b} = ?`, answer: result };
+  }
+}
+
+/**
+ * Génère la question et la réponse selon le type
+ */
+function generateQuestionByType(chosenType, operation, operator, a, b, result) {
   switch (chosenType) {
     case 'classic':
-      question = `${table} × ${num} = ?`;
-      answer = table * num;
-      break;
+      return handleClassicQuestion(operation, a, b, result);
     case 'gap':
-      question = `${table} × ? = ${table * num}`;
-      answer = num;
-      break;
+      return handleGapQuestion(operation, a, b, result);
     case 'mcq':
-      question = `${table} × ${num} = ?`;
-      answer = table * num;
-      break;
-    case 'true_false': {
-      const isTrue = Math.random() > 0.5;
-      const proposedAnswer = isTrue ? table * num : table * num + (Math.random() > 0.5 ? 1 : -1);
-      question = `${table} × ${num} = ${proposedAnswer}`;
-      answer = isTrue;
-      break;
-    }
+      return handleMcqQuestion(operation, a, b, result);
+    case 'true_false':
+      return handleTrueFalseQuestion(operation, a, b, result);
     case 'problem':
-      // Problème de mots localisé via le système de traduction
-      try {
-        question = getTranslation('problem_templates', { table, num });
-      } catch {
-        question = `Problem: ${table} × ${num} = ?`;
-      }
-      answer = table * num;
-      break;
+      return handleProblemQuestion(operation, operator, a, b, result);
     default:
-      question = `${table} × ${num} = ?`;
-      answer = table * num;
+      return handleClassicQuestion(operation, a, b, result);
   }
+}
+
+/**
+ * Génère une question arithmétique selon les options fournies.
+ * @param {Object} options - Options de génération
+ * @param {string} options.operator - Opérateur (×, +, −, ÷) - défaut: '×'
+ * @param {string} options.type - Type de question ('classic', 'gap', 'mcq', 'true_false', 'problem', ou 'auto')
+ * @param {string} options.difficulty - Difficulté ('easy', 'medium', 'hard') - défaut: 'medium'
+ * @param {Array<number>} options.weakTables - Tables faibles (multiplication uniquement)
+ * @param {Array<number>} options.excludeTables - Tables à exclure (multiplication uniquement)
+ * @param {Array<number>} options.tables - Tables spécifiques (multiplication uniquement)
+ * @param {number} options.minTable - Table min (multiplication)
+ * @param {number} options.maxTable - Table max (multiplication)
+ * @param {number} options.minNum - Num min (multiplication)
+ * @param {number} options.maxNum - Num max (multiplication)
+ * @param {number|null} options.forceTable - Forcer une table (multiplication)
+ * @param {number|null} options.forceNum - Forcer un num (multiplication)
+ * @returns {Object} { question, answer, type, operator, a, b, table, num }
+ */
+export function generateQuestion(options = {}) {
+  const {
+    operator = '×',
+    type = 'auto',
+    difficulty = 'medium',
+    weakTables = [],
+    excludeTables = [],
+    tables = [],
+    minTable = 1,
+    maxTable = 10,
+    minNum = 1,
+    maxNum = 10,
+    forceTable = null,
+    forceNum = null,
+  } = options;
+
+  const operation = getOperation(operator);
+
+  // Générer opérandes selon l'opération
+  let a, b;
+  if (isMultiplicationTableMode(operator, forceTable, tables, weakTables)) {
+    const operands = generateMultiplicationOperands(
+      { forceTable, tables, excludeTables, minTable, maxTable, forceNum, minNum, maxNum },
+      weakTables
+    );
+    a = operands.a;
+    b = operands.b;
+  } else {
+    const operands = operation.generateOperands(difficulty);
+    a = operands.a;
+    b = operands.b;
+  }
+
+  const chosenType = determineQuestionType(type, operation, operator);
+  const result = operation.compute(a, b);
+  const { question, answer } = generateQuestionByType(
+    chosenType,
+    operation,
+    operator,
+    a,
+    b,
+    result
+  );
 
   return {
     question,
     answer,
     type: chosenType,
-    table,
-    num,
+    operator,
+    a,
+    b,
+    table: operator === '×' ? a : undefined,
+    num: operator === '×' ? b : undefined,
   };
 }
 

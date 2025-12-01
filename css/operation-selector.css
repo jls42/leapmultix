@@ -1,0 +1,185 @@
+/**
+ * Styles pour le sélecteur d'opération arithmétique
+ * Composant permettant de choisir entre ×, +, −, ÷
+ */
+
+.operation-selector-wrapper {
+  margin: 20px auto;
+  padding: 20px;
+  max-width: 600px;
+  background-color: rgb(52 152 219 / 0.85);
+  border-radius: 20px;
+  box-shadow: 0 8px 16px rgb(0 0 0 / 0.1);
+  border: 1px solid rgb(52 152 219 / 0.5);
+  text-align: center;
+  animation: fade-in-up 0.3s ease-out;
+}
+
+.operation-selector-wrapper h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+}
+
+.operation-selector-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.operation-btn {
+  min-width: 140px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  border: 2px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  background: white;
+  color: var(--text-color, #333);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.operation-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.1));
+  transition: transform 0.2s ease;
+}
+
+.operation-btn:hover:not(:disabled) .operation-icon {
+  transform: scale(1.1);
+}
+
+.operation-btn.active .operation-icon {
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.2)) brightness(1.1);
+}
+
+.operation-label {
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.operation-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+  border-color: var(--primary-color, #4caf50);
+}
+
+.operation-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.operation-btn.active {
+  background-color: var(--primary-color, #4caf50);
+  color: white;
+  font-weight: bold;
+  border-color: var(--primary-color, #4caf50);
+  box-shadow: 0 4px 12px rgb(76 175 80 / 0.3);
+}
+
+.operation-btn.active::before {
+  content: '✓';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: var(--success-color, #2e7d32);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.operation-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #e0e0e0;
+  color: #555;
+}
+
+.operation-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive mobile */
+@media (max-width: 600px) {
+  .operation-selector-wrapper {
+    padding: 16px;
+    margin: 16px 12px;
+  }
+
+  .operation-selector-wrapper h3 {
+    font-size: 1.1rem;
+  }
+
+  .operation-selector-buttons {
+    gap: 10px;
+  }
+
+  .operation-btn {
+    min-width: 120px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Mode dark - cohérent avec .content-card */
+.theme-dark .operation-selector-wrapper {
+  background: rgb(44 62 80 / 0.7);
+  border-color: rgb(52 152 219 / 0.5);
+}
+
+.theme-dark .operation-selector-wrapper h3 {
+  color: #e0e0e0;
+}
+
+.theme-dark .operation-btn {
+  background: rgb(30 40 50 / 0.9);
+  color: #f5f5f5;
+  border-color: rgb(255 255 255 / 0.3);
+}
+
+.theme-dark .operation-btn.active {
+  background-color: var(--primary-color, #4caf50);
+  color: white;
+  border-color: var(--primary-color, #4caf50);
+}
+
+.theme-dark .operation-btn:disabled {
+  background: rgb(30 40 50 / 0.6);
+  color: rgb(180 180 180);
+}
+
+/* Animation d'apparition */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus accessible au clavier */
+.operation-btn:focus {
+  outline: 3px solid var(--focus-color, #2196f3);
+  outline-offset: 2px;
+}
