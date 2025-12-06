@@ -1,9 +1,34 @@
+/* Playful design variables - aligned with main app */
 body.static-page {
+  /* Candy color palette */
+  --candy-pink: #ff6b9d;
+  --candy-pink-dark: #e85a8a;
+  --candy-blue: #00bbf9;
+  --candy-blue-dark: #00a0d4;
+  --shadow-pink: rgb(255 107 157 / 0.35);
+  --cream: #fff8f0;
+  --soft-white: #fffaf5;
+
+  /* Theme colors */
+  --primary-color: var(--candy-blue);
+  --primary-dark: var(--candy-blue-dark);
+  --text-color: #2c3e50;
+  --heading-color: var(--candy-blue);
+
+  /* Playful radius */
+  --radius-btn: 20px;
+  --radius-card: 24px;
+
+  /* Fonts */
+  --font-display: 'Baloo2', cursive;
+  --font-body: 'Quicksand', sans-serif;
+
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   color: var(--text-color);
-  background-color: var(--bg-color, #e6f7ff);
+  /* Playful pastel gradient background */
+  background: linear-gradient(135deg, var(--cream) 0%, #e8f8ff 50%, #fff0f5 100%);
   position: relative;
 }
 
@@ -11,27 +36,31 @@ body.static-page::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at top, rgb(5 7 20 / 0.6), transparent 60%);
+  /* Subtle warm overlay for depth */
+  background: radial-gradient(ellipse at top, rgb(255 200 220 / 0.15), transparent 70%);
   z-index: -1;
   pointer-events: none;
 }
 
+/* Override theme-blue to use playful colors */
 .static-page.theme-blue {
-  --primary-color: #3498db;
-  --primary-dark: #2980b9;
+  --primary-color: var(--candy-blue);
+  --primary-dark: var(--candy-blue-dark);
   --text-color: #2c3e50;
-  --heading-color: #3498db;
-  --neutral-dark: #1f2a40;
+  --heading-color: var(--candy-blue);
 }
 
 .site-header {
   width: min(1200px, 100%);
   margin: clamp(16px, 4vw, 32px) auto 0;
   padding: clamp(18px, 3vw, 36px);
-  border-radius: 24px;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border-radius: var(--radius-card, 24px);
+  background: linear-gradient(135deg, var(--candy-blue) 0%, var(--candy-blue-dark) 100%);
   border: 1px solid rgb(255 255 255 / 0.4);
-  box-shadow: 0 30px 55px rgb(63 81 181 / 0.35);
+  /* Playful shadow with pink accent */
+  box-shadow:
+    0 4px 0 var(--candy-pink-dark),
+    0 20px 40px var(--shadow-pink);
   display: flex;
   align-items: center;
   gap: 18px;
@@ -80,27 +109,42 @@ body.static-page::before {
 
 .nav-link:hover,
 .nav-link.active {
-  background: var(--primary-color);
+  background: var(--candy-pink);
   color: #fff;
-  box-shadow: 0 12px 22px rgb(63 81 181 / 0.35);
+  box-shadow:
+    0 4px 0 var(--candy-pink-dark),
+    0 8px 16px var(--shadow-pink);
 }
 
 .cta {
-  padding: 10px 22px;
-  border-radius: 999px;
-  background: #3f51b5;
+  padding: 12px 24px;
+  border-radius: var(--radius-btn, 20px);
+  background: var(--primary-color, #00bbf9);
   color: #fff;
   text-decoration: none;
+  font-family: var(--font-display, 'Baloo2'), cursive;
   font-weight: 600;
-  box-shadow: 0 20px 32px rgb(63 81 181 / 0.35);
+  /* Toy-like 3D shadow: pink underline for playful effect */
+  box-shadow:
+    0 4px 0 var(--candy-pink-dark, #e85a8a),
+    0 8px 16px var(--shadow-pink, rgb(255 107 157 / 0.35));
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 26px 40px rgb(63 81 181 / 0.45);
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 var(--candy-pink-dark, #e85a8a),
+    0 4px 8px var(--shadow-pink, rgb(255 107 157 / 0.35));
+}
+
+.cta:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 0 0 var(--candy-pink-dark, #e85a8a),
+    0 2px 4px var(--shadow-pink, rgb(255 107 157 / 0.35));
 }
 
 .static-page main {
