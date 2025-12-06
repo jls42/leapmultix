@@ -452,6 +452,7 @@ cp .claude/agents/<agent-name>.md \
 
 ### Commit and Quality Guidelines
 
+- **Commit workflow**: **ALWAYS use the `helping-with-commits` skill** to propose commits. Never commit directly - wait for user validation before committing.
 - **Branch workflow**: **NEVER commit directly to main**. Always create a feature branch first
   - Create branch: `git checkout -b feat/your-feature-name`
   - Commit on branch: `git commit -m "Your message"`
