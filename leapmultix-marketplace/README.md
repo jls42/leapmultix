@@ -1,53 +1,99 @@
 # LeapMultix Marketplace
 
-Ce répertoire regroupe les plugins distribués par le projet LeapMultix pour Claude Code. Chaque plugin est empaqueté dans son propre dossier avec un manifeste `.claude-plugin/plugin.json` et un sous-ensemble d'agents/skills/commands issus de `.claude/`.
+Claude Code plugins for development workflows.
 
-## Plugins disponibles
+## Available Plugins
 
-| Plugin                  | Description                                                | Contenu principal                                                                                      |
-| ----------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `leapmultix-dev-tools`  | Suite complète (tous les agents, skills et slash commands) | 12 agents, 20+ skills, `/audit-config`                                                                 |
-| `leapmultix-dev-core`   | Workflow quotidien (code review, plugin manager, qualité)  | Agents `code-reviewer`, `plugin-manager`, skills qualité/PR                                            |
-| `leapmultix-dev-audit`  | Audits et conformité (accessibilité, i18n, sécurité, PWA)  | Agents `accessibility-auditor`, `i18n-coordinator`, `web-research-specialist`, `pwa-expert`            |
-| `leapmultix-dev-qa`     | Tests et performance                                       | Agents `agent-architecte`, `chrome-devtools-tester`, `debugger`, `performance-analyzer`, `test-writer` |
-| `leapmultix-dev-arcade` | Aide au développement des modes arcade                     | Agent `arcade-specialist`, skills `creating-arcade-games`, `sprite-management`, etc.                   |
+### chrome-devtools-tester
 
-### Plugins unitaires (1 composant = 1 plugin)
-
-Chaque agent, skill et slash command est aussi empaqueté individuellement pour que tu puisses installer exactement ce qu’il te faut. Les plugins suivent la nomenclature :
-
-- `leapmultix-agent-<nom>` – agents (`./leapmultix-marketplace/agents/<nom>`)
-- `leapmultix-skill-<nom>` – skills (`./leapmultix-marketplace/skills/<nom>`)
-- `leapmultix-command-<nom>` – commandes (`./leapmultix-marketplace/commands/<nom>`)
-
-Exemples :
+Agent for testing web application features in Chrome browser using DevTools MCP integration.
 
 ```bash
-/plugin install leapmultix-agent-code-reviewer@leapmultix-marketplace
-/plugin install leapmultix-skill-checking-code-quality@leapmultix-marketplace
-/plugin install leapmultix-command-audit-config@leapmultix-marketplace
+/plugin install chrome-devtools-tester@leapmultix-marketplace
 ```
 
-Ces plugins unitaires sont générés automatiquement par `npm run plugin:sync` : le script copie le composant depuis `.claude/` vers le dossier `leapmultix-marketplace/<type>/<nom>` et maintient les manifests à jour.
+**Features:**
 
-## Synchronisation depuis `.claude`
+- Automated browser testing via Chrome DevTools Protocol
+- Page navigation, screenshots, element interaction
+- Console and network request monitoring
+- Performance tracing
 
-Utiliser `npm run plugin:sync` pour copier les composants locaux dans un plugin ciblé. Quelques exemples :
+### expert-claude-code
+
+Expert Claude Code agent that consults official documentation to help create skills, agents, plugins, hooks, and configure Claude Code.
 
 ```bash
-# Mettre à jour la suite complète uniquement
-npm run plugin:sync -- --profile=all
-
-# Mettre à jour les plugins core + audit + QA d'un coup
-npm run plugin:sync -- --profile=core,audit,qa
-
-# Forcer un chemin personnalisé (comportement historique)
-npm run plugin:sync -- --target=leapmultix-marketplace/leapmultix-dev-tools
+/plugin install expert-claude-code@leapmultix-marketplace
 ```
 
-Les profils sont définis dans `leapmultix-marketplace/plugin-profiles.json`. Chaque profil liste :
+**Features:**
 
-- `target` : dossier plugin à alimenter
-- `commands` / `agents` / `skills` : listes à inclure (`[]` pour aucun, `"*"` pour tout)
+- Consults official Claude Code documentation
+- Helps create and configure skills, agents, plugins
+- Guides on hooks, MCP servers, and CI/CD integration
+- Answers questions about Claude Code CLI and configuration
 
-Tu peux ajouter/ajuster des profils pour créer de nouveaux plugins, puis référencer ces dossiers dans `.claude-plugin/marketplace.json`.
+### helping-with-commits
+
+Skill for automating Git commits with Conventional Commits format and project-specific rules.
+
+```bash
+/plugin install helping-with-commits@leapmultix-marketplace
+```
+
+**Features:**
+
+- Conventional Commits format enforcement
+- Automatic diff analysis
+- Quality checks before commit (format, lint, tests)
+- Project-specific rules (no AI mentions in commits)
+
+### web-research-specialist
+
+Research agent for documentation and technical information. Uses Context7 MCP first, falls back to WebSearch/WebFetch on official sources only.
+
+```bash
+/plugin install web-research-specialist@leapmultix-marketplace
+```
+
+**Features:**
+
+- Context7 MCP integration for library documentation
+- Falls back to WebSearch/WebFetch on official sources
+- Avoids polluting main conversation context
+- Focused on authoritative documentation sources
+
+## Installation
+
+Add this marketplace:
+
+```bash
+/plugin marketplace add jls42/leapmultix
+```
+
+Then install plugins:
+
+```bash
+/plugin install chrome-devtools-tester@leapmultix-marketplace
+/plugin install expert-claude-code@leapmultix-marketplace
+/plugin install helping-with-commits@leapmultix-marketplace
+/plugin install web-research-specialist@leapmultix-marketplace
+```
+
+### Local Development
+
+For local testing, use the local path instead:
+
+```bash
+/plugin marketplace add ./leapmultix-marketplace
+```
+
+## License
+
+AGPL-3.0 © Julien LE SAUX
+
+## Links
+
+- **Homepage**: https://github.com/leapmultix/leapmultix
+- **Repository**: https://github.com/leapmultix/leapmultix.git
