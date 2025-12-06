@@ -119,7 +119,7 @@ body.static-page::before {
 .cta {
   padding: 12px 24px;
   border-radius: var(--radius-btn, 20px);
-  background: var(--primary-color, #00bbf9);
+  background: var(--candy-blue-dark, #0088cc);
   color: #fff;
   text-decoration: none;
   font-family: var(--font-display, 'Baloo2'), cursive;
