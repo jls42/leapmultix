@@ -1,0 +1,13 @@
+{
+  "name": "chrome-devtools-tester",
+  "description": "Test web application features in Chrome browser using DevTools MCP. Use proactively after implementing features or bug fixes.",
+  "version": "1.1.0",
+  "author": {
+    "name": "Julien LE SAUX",
+    "email": "contact@jls42.org"
+  },
+  "homepage": "https://github.com/leapmultix/leapmultix",
+  "repository": "https://github.com/leapmultix/leapmultix.git",
+  "license": "AGPL-3.0",
+  "keywords": ["chrome", "devtools", "testing", "mcp", "browser"]
+}

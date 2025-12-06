@@ -1,0 +1,13 @@
+{
+  "name": "helping-with-commits",
+  "description": "Automates Git commit creation with Conventional Commits. Use when user wants to commit changes.",
+  "version": "1.1.0",
+  "author": {
+    "name": "Julien LE SAUX",
+    "email": "contact@jls42.org"
+  },
+  "homepage": "https://github.com/leapmultix/leapmultix",
+  "repository": "https://github.com/leapmultix/leapmultix.git",
+  "license": "AGPL-3.0",
+  "keywords": ["git", "commits", "conventional-commits", "automation"]
+}
