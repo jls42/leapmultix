@@ -381,9 +381,13 @@ export class AdventureMode extends GameMode {
         }).answer
     );
 
+    // Afficher les nombres en lettres uniquement pour × et ÷ (pas pour + et −)
+    const operator = this.state.currentQuestion?.operator;
+    const shouldUseWords = Math.random() < 0.2 && ['×', '÷'].includes(operator);
+
     return options.map(value => ({
       value: value,
-      display: Math.random() < 0.2 ? numberToWords(value) : value.toString(),
+      display: shouldUseWords ? numberToWords(value) : value.toString(),
     }));
   }
 
