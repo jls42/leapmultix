@@ -1,0 +1,620 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-19T00:00:00Z",
+  "title": "Design System: LeapMultix",
+  "extensions": {
+    "colorMeta": {
+      "page": {
+        "role": "neutral",
+        "displayName": "Page",
+        "canonical": "oklch(93% 0.02 235deg)",
+        "tonalRamp": [
+          "oklch(15% 0.02 235deg)",
+          "oklch(25% 0.02 235deg)",
+          "oklch(35% 0.02 235deg)",
+          "oklch(45% 0.02 235deg)",
+          "oklch(55% 0.02 235deg)",
+          "oklch(70% 0.02 235deg)",
+          "oklch(85% 0.02 235deg)",
+          "oklch(95% 0.02 235deg)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "oklch(99.5% 0.001 248deg)",
+        "tonalRamp": [
+          "oklch(15% 0.001 248deg)",
+          "oklch(25% 0.001 248deg)",
+          "oklch(35% 0.001 248deg)",
+          "oklch(45% 0.001 248deg)",
+          "oklch(55% 0.001 248deg)",
+          "oklch(70% 0.001 248deg)",
+          "oklch(85% 0.001 248deg)",
+          "oklch(95% 0.001 248deg)"
+        ]
+      },
+      "surface-sunken": {
+        "role": "neutral",
+        "displayName": "Surface creusée",
+        "canonical": "oklch(96.5% 0.008 248deg)",
+        "tonalRamp": [
+          "oklch(15% 0.008 248deg)",
+          "oklch(25% 0.008 248deg)",
+          "oklch(35% 0.008 248deg)",
+          "oklch(45% 0.008 248deg)",
+          "oklch(55% 0.008 248deg)",
+          "oklch(70% 0.008 248deg)",
+          "oklch(85% 0.008 248deg)",
+          "oklch(95% 0.008 248deg)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Filet",
+        "canonical": "oklch(88.5% 0.014 248deg)",
+        "tonalRamp": [
+          "oklch(15% 0.014 248deg)",
+          "oklch(25% 0.014 248deg)",
+          "oklch(35% 0.014 248deg)",
+          "oklch(45% 0.014 248deg)",
+          "oklch(55% 0.014 248deg)",
+          "oklch(70% 0.014 248deg)",
+          "oklch(85% 0.014 248deg)",
+          "oklch(95% 0.014 248deg)"
+        ]
+      },
+      "border-strong": {
+        "role": "neutral",
+        "displayName": "Contour",
+        "canonical": "oklch(64% 0.02 248deg)",
+        "tonalRamp": [
+          "oklch(15% 0.02 248deg)",
+          "oklch(25% 0.02 248deg)",
+          "oklch(35% 0.02 248deg)",
+          "oklch(45% 0.02 248deg)",
+          "oklch(55% 0.02 248deg)",
+          "oklch(70% 0.02 248deg)",
+          "oklch(85% 0.02 248deg)",
+          "oklch(95% 0.02 248deg)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Encre",
+        "canonical": "oklch(29% 0.03 248deg)",
+        "tonalRamp": [
+          "oklch(15% 0.03 248deg)",
+          "oklch(25% 0.03 248deg)",
+          "oklch(35% 0.03 248deg)",
+          "oklch(45% 0.03 248deg)",
+          "oklch(55% 0.03 248deg)",
+          "oklch(70% 0.03 248deg)",
+          "oklch(85% 0.03 248deg)",
+          "oklch(95% 0.03 248deg)"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Encre atténuée",
+        "canonical": "oklch(49% 0.025 248deg)",
+        "tonalRamp": [
+          "oklch(15% 0.025 248deg)",
+          "oklch(25% 0.025 248deg)",
+          "oklch(35% 0.025 248deg)",
+          "oklch(45% 0.025 248deg)",
+          "oklch(55% 0.025 248deg)",
+          "oklch(70% 0.025 248deg)",
+          "oklch(85% 0.025 248deg)",
+          "oklch(95% 0.025 248deg)"
+        ]
+      },
+      "ink-heading": {
+        "role": "neutral",
+        "displayName": "Encre des titres",
+        "canonical": "oklch(42% 0.106 245deg)",
+        "tonalRamp": [
+          "oklch(15% 0.106 245deg)",
+          "oklch(25% 0.106 245deg)",
+          "oklch(35% 0.106 245deg)",
+          "oklch(45% 0.106 245deg)",
+          "oklch(55% 0.106 245deg)",
+          "oklch(70% 0.106 245deg)",
+          "oklch(85% 0.106 245deg)",
+          "oklch(95% 0.106 245deg)"
+        ]
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "Bleu d'action",
+        "canonical": "oklch(52% 0.131 245deg)",
+        "tonalRamp": [
+          "oklch(15% 0.131 245deg)",
+          "oklch(25% 0.131 245deg)",
+          "oklch(35% 0.131 245deg)",
+          "oklch(45% 0.131 245deg)",
+          "oklch(55% 0.131 245deg)",
+          "oklch(70% 0.131 245deg)",
+          "oklch(85% 0.131 245deg)",
+          "oklch(95% 0.131 245deg)"
+        ]
+      },
+      "action-hover": {
+        "role": "primary",
+        "displayName": "Bleu appuyé",
+        "canonical": "oklch(47% 0.117 245deg)",
+        "tonalRamp": [
+          "oklch(15% 0.117 245deg)",
+          "oklch(25% 0.117 245deg)",
+          "oklch(35% 0.117 245deg)",
+          "oklch(45% 0.117 245deg)",
+          "oklch(55% 0.117 245deg)",
+          "oklch(70% 0.117 245deg)",
+          "oklch(85% 0.117 245deg)",
+          "oklch(95% 0.117 245deg)"
+        ]
+      },
+      "action-edge": {
+        "role": "primary",
+        "displayName": "Bleu profond",
+        "canonical": "oklch(38% 0.095 245deg)",
+        "tonalRamp": [
+          "oklch(15% 0.095 245deg)",
+          "oklch(25% 0.095 245deg)",
+          "oklch(35% 0.095 245deg)",
+          "oklch(45% 0.095 245deg)",
+          "oklch(55% 0.095 245deg)",
+          "oklch(70% 0.095 245deg)",
+          "oklch(85% 0.095 245deg)",
+          "oklch(95% 0.095 245deg)"
+        ]
+      },
+      "action-ink": {
+        "role": "primary",
+        "displayName": "Encre d'action",
+        "canonical": "oklch(47% 0.118 245deg)",
+        "tonalRamp": [
+          "oklch(15% 0.118 245deg)",
+          "oklch(25% 0.118 245deg)",
+          "oklch(35% 0.118 245deg)",
+          "oklch(45% 0.118 245deg)",
+          "oklch(55% 0.118 245deg)",
+          "oklch(70% 0.118 245deg)",
+          "oklch(85% 0.118 245deg)",
+          "oklch(95% 0.118 245deg)"
+        ]
+      },
+      "action-tint": {
+        "role": "primary",
+        "displayName": "Voile d'action",
+        "canonical": "oklch(94.5% 0.027 245deg)",
+        "tonalRamp": [
+          "oklch(15% 0.027 245deg)",
+          "oklch(25% 0.027 245deg)",
+          "oklch(35% 0.027 245deg)",
+          "oklch(45% 0.027 245deg)",
+          "oklch(55% 0.027 245deg)",
+          "oklch(70% 0.027 245deg)",
+          "oklch(85% 0.027 245deg)",
+          "oklch(95% 0.027 245deg)"
+        ]
+      },
+      "on-action": {
+        "role": "primary",
+        "displayName": "Blanc sur l'action",
+        "canonical": "oklch(100% 0 0deg)",
+        "tonalRamp": [
+          "oklch(15% 0.0 0deg)",
+          "oklch(25% 0.0 0deg)",
+          "oklch(35% 0.0 0deg)",
+          "oklch(45% 0.0 0deg)",
+          "oklch(55% 0.0 0deg)",
+          "oklch(70% 0.0 0deg)",
+          "oklch(85% 0.0 0deg)",
+          "oklch(95% 0.0 0deg)"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Anneau de focus",
+        "canonical": "oklch(58% 0.156 245deg)",
+        "tonalRamp": [
+          "oklch(15% 0.156 245deg)",
+          "oklch(25% 0.156 245deg)",
+          "oklch(35% 0.156 245deg)",
+          "oklch(45% 0.156 245deg)",
+          "oklch(55% 0.156 245deg)",
+          "oklch(70% 0.156 245deg)",
+          "oklch(85% 0.156 245deg)",
+          "oklch(95% 0.156 245deg)"
+        ]
+      },
+      "success-tint": {
+        "role": "tertiary",
+        "displayName": "Voile succès",
+        "canonical": "oklch(95.5% 0.045 155deg)",
+        "tonalRamp": [
+          "oklch(15% 0.045 155deg)",
+          "oklch(25% 0.045 155deg)",
+          "oklch(35% 0.045 155deg)",
+          "oklch(45% 0.045 155deg)",
+          "oklch(55% 0.045 155deg)",
+          "oklch(70% 0.045 155deg)",
+          "oklch(85% 0.045 155deg)",
+          "oklch(95% 0.045 155deg)"
+        ]
+      },
+      "success-edge": {
+        "role": "tertiary",
+        "displayName": "Contour succès",
+        "canonical": "oklch(60% 0.15 152deg)",
+        "tonalRamp": [
+          "oklch(15% 0.15 152deg)",
+          "oklch(25% 0.15 152deg)",
+          "oklch(35% 0.15 152deg)",
+          "oklch(45% 0.15 152deg)",
+          "oklch(55% 0.15 152deg)",
+          "oklch(70% 0.15 152deg)",
+          "oklch(85% 0.15 152deg)",
+          "oklch(95% 0.15 152deg)"
+        ]
+      },
+      "success-ink": {
+        "role": "tertiary",
+        "displayName": "Encre succès",
+        "canonical": "oklch(44% 0.11 152deg)",
+        "tonalRamp": [
+          "oklch(15% 0.11 152deg)",
+          "oklch(25% 0.11 152deg)",
+          "oklch(35% 0.11 152deg)",
+          "oklch(45% 0.11 152deg)",
+          "oklch(55% 0.11 152deg)",
+          "oklch(70% 0.11 152deg)",
+          "oklch(85% 0.11 152deg)",
+          "oklch(95% 0.11 152deg)"
+        ]
+      },
+      "danger-tint": {
+        "role": "tertiary",
+        "displayName": "Voile attention",
+        "canonical": "oklch(95.5% 0.021 25deg)",
+        "tonalRamp": [
+          "oklch(15% 0.021 25deg)",
+          "oklch(25% 0.021 25deg)",
+          "oklch(35% 0.021 25deg)",
+          "oklch(45% 0.021 25deg)",
+          "oklch(55% 0.021 25deg)",
+          "oklch(70% 0.021 25deg)",
+          "oklch(85% 0.021 25deg)",
+          "oklch(95% 0.021 25deg)"
+        ]
+      },
+      "danger-edge": {
+        "role": "tertiary",
+        "displayName": "Contour attention",
+        "canonical": "oklch(62% 0.17 27deg)",
+        "tonalRamp": [
+          "oklch(15% 0.17 27deg)",
+          "oklch(25% 0.17 27deg)",
+          "oklch(35% 0.17 27deg)",
+          "oklch(45% 0.17 27deg)",
+          "oklch(55% 0.17 27deg)",
+          "oklch(70% 0.17 27deg)",
+          "oklch(85% 0.17 27deg)",
+          "oklch(95% 0.17 27deg)"
+        ]
+      },
+      "danger-ink": {
+        "role": "tertiary",
+        "displayName": "Encre attention",
+        "canonical": "oklch(50% 0.17 27deg)",
+        "tonalRamp": [
+          "oklch(15% 0.17 27deg)",
+          "oklch(25% 0.17 27deg)",
+          "oklch(35% 0.17 27deg)",
+          "oklch(45% 0.17 27deg)",
+          "oklch(55% 0.17 27deg)",
+          "oklch(70% 0.17 27deg)",
+          "oklch(85% 0.17 27deg)",
+          "oklch(95% 0.17 27deg)"
+        ]
+      },
+      "warning-tint": {
+        "role": "tertiary",
+        "displayName": "Voile avertissement",
+        "canonical": "oklch(96% 0.042 85deg)",
+        "tonalRamp": [
+          "oklch(15% 0.042 85deg)",
+          "oklch(25% 0.042 85deg)",
+          "oklch(35% 0.042 85deg)",
+          "oklch(45% 0.042 85deg)",
+          "oklch(55% 0.042 85deg)",
+          "oklch(70% 0.042 85deg)",
+          "oklch(85% 0.042 85deg)",
+          "oklch(95% 0.042 85deg)"
+        ]
+      },
+      "warning-edge": {
+        "role": "tertiary",
+        "displayName": "Contour avertissement",
+        "canonical": "oklch(66% 0.14 72deg)",
+        "tonalRamp": [
+          "oklch(15% 0.14 72deg)",
+          "oklch(25% 0.14 72deg)",
+          "oklch(35% 0.14 72deg)",
+          "oklch(45% 0.14 72deg)",
+          "oklch(55% 0.14 72deg)",
+          "oklch(70% 0.14 72deg)",
+          "oklch(85% 0.14 72deg)",
+          "oklch(95% 0.14 72deg)"
+        ]
+      },
+      "warning-ink": {
+        "role": "tertiary",
+        "displayName": "Encre avertissement",
+        "canonical": "oklch(46% 0.1 70deg)",
+        "tonalRamp": [
+          "oklch(15% 0.1 70deg)",
+          "oklch(25% 0.1 70deg)",
+          "oklch(35% 0.1 70deg)",
+          "oklch(45% 0.1 70deg)",
+          "oklch(55% 0.1 70deg)",
+          "oklch(70% 0.1 70deg)",
+          "oklch(85% 0.1 70deg)",
+          "oklch(95% 0.1 70deg)"
+        ]
+      },
+      "reward": {
+        "role": "tertiary",
+        "displayName": "Récompense",
+        "canonical": "oklch(84% 0.16 88deg)",
+        "tonalRamp": [
+          "oklch(15% 0.16 88deg)",
+          "oklch(25% 0.16 88deg)",
+          "oklch(35% 0.16 88deg)",
+          "oklch(45% 0.16 88deg)",
+          "oklch(55% 0.16 88deg)",
+          "oklch(70% 0.16 88deg)",
+          "oklch(85% 0.16 88deg)",
+          "oklch(95% 0.16 88deg)"
+        ]
+      },
+      "reward-edge": {
+        "role": "tertiary",
+        "displayName": "Contour récompense",
+        "canonical": "oklch(62% 0.13 70deg)",
+        "tonalRamp": [
+          "oklch(15% 0.13 70deg)",
+          "oklch(25% 0.13 70deg)",
+          "oklch(35% 0.13 70deg)",
+          "oklch(45% 0.13 70deg)",
+          "oklch(55% 0.13 70deg)",
+          "oklch(70% 0.13 70deg)",
+          "oklch(85% 0.13 70deg)",
+          "oklch(95% 0.13 70deg)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Calcul",
+        "purpose": "Le calcul de la question (Baloo 2)."
+      },
+      "headline": {
+        "displayName": "Titre d'écran",
+        "purpose": "Titre principal d’un écran, par exemple « Qui joue ? »."
+      },
+      "title": {
+        "displayName": "Titre de section",
+        "purpose": "Sections et noms de modes (Baloo 2)."
+      },
+      "body": {
+        "displayName": "Texte",
+        "purpose": "Consignes, descriptions, explications (LeapMultix Lecture, dérivée d’Andika)."
+      },
+      "label": {
+        "displayName": "Libellé",
+        "purpose": "Boutons, onglets, libellés de champs (LeapMultix Lecture 700)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-lg",
+        "value": "0 2px 6px oklch(25% 0.03 250deg / 0.08), 0 18px 44px oklch(25% 0.03 250deg / 0.18)",
+        "purpose": "Carte de contenu et fenêtres."
+      },
+      {
+        "name": "shadow-md",
+        "value": "0 1px 3px oklch(25% 0.03 250deg / 0.08), 0 6px 16px oklch(25% 0.03 250deg / 0.1)",
+        "purpose": "Barre du haut, toasts, menus."
+      },
+      {
+        "name": "shadow-sm",
+        "value": "0 1px 2px oklch(25% 0.03 250deg / 0.1)",
+        "purpose": "Bulle de la mascotte, badges."
+      },
+      {
+        "name": "key-edge",
+        "value": "0 4px 0 var(--color-action-edge)",
+        "purpose": "Tranche des touches ; disparaît à l’appui."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Décélération par défaut de tous les changements d’état."
+      },
+      {
+        "name": "ease-out-quint",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Apparitions un peu plus franches."
+      },
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entrées décidées (rare)."
+      },
+      {
+        "name": "dur-fast",
+        "value": "120ms",
+        "purpose": "Appui sur une touche."
+      },
+      {
+        "name": "dur-base",
+        "value": "200ms",
+        "purpose": "Survol, sélection, retour de réponse."
+      },
+      {
+        "name": "dur-slow",
+        "value": "320ms",
+        "purpose": "Changement de slide, voile de jeu."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "480px"
+      },
+      {
+        "name": "tablet",
+        "value": "768px"
+      },
+      {
+        "name": "desktop",
+        "value": "1024px"
+      },
+      {
+        "name": "desktop-lg",
+        "value": "1200px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Touche primaire",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Action principale d’un écran (Créer, Continuer, Rejouer).",
+      "html": "<button class=\"ds-btn-primary\">Continuer</button>",
+      "css": ".ds-btn-primary { min-height: 48px; padding: 0.7em 1.3em; font-family: var(--font-text); font-size: var(--text-base); font-weight: 700; color: var(--color-on-action); background: var(--color-action); border: 0; border-radius: var(--radius-md); box-shadow: 0 4px 0 var(--color-action-edge); cursor: pointer; transition: transform 120ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 120ms cubic-bezier(0.25, 1, 0.5, 1), background-color 200ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-primary:hover { background: var(--color-action-hover); } .ds-btn-primary:active { transform: translateY(4px); box-shadow: 0 0 0 var(--color-action-edge); } .ds-btn-primary:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }"
+    },
+    {
+      "name": "Touche secondaire",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Action d’appoint (Changer de joueur, Tableau de bord).",
+      "html": "<button class=\"ds-btn-secondary\">Tableau de bord</button>",
+      "css": ".ds-btn-secondary { min-height: 48px; padding: 0.7em 1.3em; font-family: var(--font-text); font-weight: 700; color: var(--color-action-ink); background: var(--color-surface); border: 0; border-radius: var(--radius-md); box-shadow: inset 0 0 0 2px var(--color-border-strong), 0 4px 0 var(--color-border-strong); cursor: pointer; } .ds-btn-secondary:hover { background: var(--color-action-tint); } .ds-btn-secondary:active { transform: translateY(4px); box-shadow: inset 0 0 0 2px var(--color-border-strong); } .ds-btn-secondary:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }"
+    },
+    {
+      "name": "Action discrète destructive",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Supprimer un profil : lisible, jamais le plus visible.",
+      "html": "<button class=\"ds-btn-quiet\">Supprimer</button>",
+      "css": ".ds-btn-quiet { min-height: 44px; padding: 0.4em 0.8em; font-family: var(--font-text); font-weight: 700; color: var(--color-danger-ink); background: transparent; border: 0; border-radius: var(--radius-md); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; } .ds-btn-quiet:hover { background: var(--color-danger-tint); } .ds-btn-quiet:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }"
+    },
+    {
+      "name": "Tuile de réponse",
+      "kind": "custom",
+      "refersTo": "tile",
+      "description": "Réponse pressable ; la juste reçoit le vert et une coche.",
+      "html": "<div class=\"ds-tiles\"><button class=\"ds-tile\">12</button><button class=\"ds-tile ds-tile--correct\">15 ✓</button></div>",
+      "css": ".ds-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .ds-tile { min-height: 56px; font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; color: var(--color-ink); background: var(--color-surface); border: 2px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: 0 4px 0 var(--color-border-strong); cursor: pointer; } .ds-tile:hover { border-color: var(--color-action); } .ds-tile--correct { color: var(--color-success-ink); background: var(--color-success-tint); border-color: var(--color-success-edge); box-shadow: 0 4px 0 var(--color-success-edge); } .ds-tile:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }"
+    },
+    {
+      "name": "Carte de contenu",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "La seule surface d’un écran, posée sur l’illustration.",
+      "html": "<section class=\"ds-card\"><h2 class=\"ds-card-title\">Choisis ton mode de jeu</h2><p class=\"ds-card-text\">Une seule surface, jamais de carte dans la carte.</p></section>",
+      "css": ".ds-card { max-width: 32rem; padding: clamp(16px, 4vw, 32px); color: var(--color-ink); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: 0 2px 6px oklch(25% 0.03 250deg / 0.08), 0 18px 44px oklch(25% 0.03 250deg / 0.18); } .ds-card-title { margin: 0 0 8px; font-family: var(--font-display); font-size: var(--text-xl); color: var(--color-ink-heading); } .ds-card-text { margin: 0; font-family: var(--font-text); line-height: 1.5; }"
+    },
+    {
+      "name": "Champ de saisie",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Prénom du joueur : 48 px, texte de 18 px.",
+      "html": "<input class=\"ds-input\" placeholder=\"Entre ton prénom\">",
+      "css": ".ds-input { min-height: 48px; padding: 8px 12px; font-family: var(--font-text); font-size: var(--text-md); color: var(--color-ink); background: var(--color-surface); border: 2px solid var(--color-border-strong); border-radius: var(--radius-md); } .ds-input::placeholder { color: var(--color-ink-muted); opacity: 1; } .ds-input:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }"
+    },
+    {
+      "name": "Sélecteur segmenté",
+      "kind": "chip",
+      "refersTo": "segment",
+      "description": "Opération ou langue : le segment actif est plein.",
+      "html": "<div class=\"ds-segments\" role=\"group\"><button class=\"ds-segment ds-segment--active\" aria-pressed=\"true\">FR</button><button class=\"ds-segment\" aria-pressed=\"false\">EN</button><button class=\"ds-segment\" aria-pressed=\"false\">ES</button></div>",
+      "css": ".ds-segments { display: inline-flex; gap: 2px; padding: 2px; background: var(--color-surface-sunken); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); } .ds-segment { min-width: 44px; min-height: 44px; padding: 0 8px; font-family: var(--font-text); font-size: var(--text-sm); font-weight: 700; color: var(--color-ink-muted); background: transparent; border: 0; border-radius: var(--radius-sm); cursor: pointer; } .ds-segment:hover { color: var(--color-ink); background: var(--color-action-tint); } .ds-segment--active { color: var(--color-on-action); background: var(--color-action); } .ds-segment:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La scène des personnages",
+    "overview": "L'interface est une scène calme et bien éclairée ; les personnages (panda, renard, licorne, dragon, astronaute) et leurs mondes illustrés sont les acteurs. Tout ce qui entoure la question (cartes, boutons, barres) est plein, net et silencieux, pour que l'enfant regarde le calcul et son personnage, rien d'autre. Le jeu se sent dans les mains : chaque élément pressable est une touche avec une tranche qui s'enfonce, chaque réponse donne un retour immédiat, sobre et bienveillant.\n\nLe système refuse explicitement les quatre anti-références de PRODUCT.md : le « bonbon » générique IA, l'appli ludo-éducative criarde, le cahier d'exercices scolaire et le jeu mobile manipulateur. Il se tient entre les deux pentes : assez joyeux pour qu'un enfant de 6 ans ait envie de jouer, assez sobre pour qu'un élève de 6e ne le trouve pas bébé. La couleur vive vient des illustrations ; l'interface garde une seule couleur d'action (le bleu du thème Classique), des neutres teintés et des couleurs d'état réservées à leur sens.\n\nDensité : généreuse. Cibles tactiles de 44 px minimum, tuiles de réponse de 56 px et plus, texte de 16 px minimum, une seule surface (la carte) par écran. Les thèmes Nature, Orangé, Spatial et Nuit ne redéfinissent que les jetons : aucun composant n'a de règle propre à un thème.",
+    "keyCharacteristics": [
+      "Une surface pleine par écran, posée sur l'illustration ; jamais de carte dans la carte.",
+      "Des touches franches : tranche de 4 px de leur propre teinte, qui s'enfonce à l'appui.",
+      "Encre contrastée partout (WCAG 2.1 AA vérifié pour chaque thème).",
+      "Deux familles de caractères : Baloo 2 pour les titres et les nombres, LeapMultix Lecture (Andika) pour tout ce qui se lit.",
+      "Mouvement court (120 à 320 ms), en décélération, uniquement pour un changement d'état.",
+      "Pendant une partie, l'illustration de fond se retire derrière un voile."
+    ],
+    "rules": [
+      {
+        "name": "La règle de l'encre",
+        "body": "Aucun texte n'est écrit dans une couleur de surface ou de récompense : ni jaune, ni rose, ni bleu clair, ni blanc sur fond clair. Chaque texte atteint 4,5:1 (3:1 au-delà de 24 px).",
+        "section": "colors"
+      },
+      {
+        "name": "La règle du sens",
+        "body": "Le vert veut dire « juste », l'orangé « attention au temps », le rouge « action destructive ». Une erreur de l'enfant n'est jamais rouge.",
+        "section": "colors"
+      },
+      {
+        "name": "La règle des thèmes",
+        "body": "Un thème ne change que des jetons. Si un composant a besoin d'une règle `.theme-xxx`, c'est qu'il n'utilise pas les jetons.",
+        "section": "colors"
+      },
+      {
+        "name": "La règle des deux familles",
+        "body": "Baloo 2 pour ce qu'on regarde (titres, nombres), LeapMultix Lecture pour ce qu'on lit (phrases, boutons, libellés). Aucune troisième police.",
+        "section": "typography"
+      },
+      {
+        "name": "La règle de la typographie française",
+        "body": "Espace insécable avant « : ; ! ? » et à l'intérieur des guillemets « ». Majuscule en début de libellé seulement (« Tableau de bord »).",
+        "section": "typography"
+      },
+      {
+        "name": "La règle de la carte unique",
+        "body": "Une carte ne contient jamais une autre carte. Si un groupe a besoin de se détacher, il prend la surface creusée, sans ombre ni bordure épaisse.",
+        "section": "elevation"
+      },
+      {
+        "name": "La règle des ombres neutres",
+        "body": "Les ombres sont grises, teintées du bleu de l'encre. Une ombre colorée ou lumineuse est interdite.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** poser chaque écran sur une seule carte pleine et laisser l'illustration visible autour.",
+      "**Do** utiliser uniquement les jetons de `css/themes.css` (`--color-*`, `--space-*`, `--radius-*`, `--shadow-*`, `--ease-*`, `--dur-*`, `--text-*`).",
+      "**Do** marquer la bonne réponse avec le vert de succès et une coche, et laisser l'explication affichée jusqu'à ce que l'enfant appuie sur « Continuer ».",
+      "**Do** garder des animations de 120 à 320 ms en décélération (`--ease-out`), pour un changement d'état seulement, avec leur équivalent en `prefers-reduced-motion`.",
+      "**Do** écrire « Presque ! » plutôt que « Incorrect ! » : une erreur est une étape, pas une sanction.",
+      "**Do** vérifier chaque écran en Classique et en Nuit, et en contraste élevé."
+    ],
+    "donts": [
+      "**Don't** retomber dans le « bonbon » générique IA : fond crème, dégradés pastel, ombres colorées, blobs et rebonds partout.",
+      "**Don't** faire l'appli ludo-éducative criarde : pièces, confettis et récompenses qui clignotent en permanence.",
+      "**Don't** faire le cahier d'exercices scolaire : austère, fait de fiches et de consignes, sans plaisir de jeu.",
+      "**Don't** faire le jeu mobile manipulateur : séries à ne pas casser, culpabilisation, mécanismes addictifs.",
+      "**Don't** utiliser de courbe à rebond ou élastique, ni d'animation infinie décorative (mascotte qui rebondit, pulsation, clignotement).",
+      "**Don't** mettre une bordure latérale colorée de plus de 1 px, un texte en dégradé, du glassmorphism ou un sur-titre en capitales au-dessus des sections.",
+      "**Don't** afficher un gros chiffre décoratif avec une petite étiquette : un résultat s'écrit en phrase (« 7 bonnes réponses sur 10 »).",
+      "**Don't** utiliser un émoji comme icône d'interface : les icônes sont des SVG au trait, nommés pour les lecteurs d'écran.",
+      "**Don't** écrire du texte en jaune, rose ou bleu clair, ni du blanc sur un fond clair.",
+      "**Don't** ajouter une troisième police ni un `z-index` arbitraire (utiliser `--z-*`)."
+    ]
+  }
+}

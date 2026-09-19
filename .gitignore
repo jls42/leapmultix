@@ -71,3 +71,9 @@ pnpm-lock.yaml
 
 # Translation artifacts
 assets/translations/unused_keys.txt
+
+# Impeccable (outil de design) : caches et sessions locales
+.impeccable/hook.cache.json
+.impeccable/live/sessions/
+.impeccable/live/annotations/
+.impeccable/live/server.json
