@@ -14,6 +14,72 @@ import { getTranslation } from '../utils-es6.js';
 import { showArcadeMessage } from '../arcade-message.js';
 import { gameState } from '../game.js';
 
+/* Icônes des lignes « Commandes » : des SVG au trait (couleur du texte), décoratifs,
+   le mot « Clavier », « Souris » ou « Tactile » étant écrit juste après. */
+const CONTROL_ICON_PATHS = {
+  keyboard: [
+    'M3 7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 16.5z',
+    'M7 10h.01M11 10h.01M15 10h.01M7 14h.01M17 10h.01M9 14h6M17 14h.01',
+  ],
+  mouse: ['M12 3a6 6 0 0 1 6 6v6a6 6 0 0 1-12 0V9a6 6 0 0 1 6-6z', 'M12 7v4'],
+  touch: [
+    'M9 11V5.5a1.5 1.5 0 0 1 3 0V11',
+    'M12 10.5a1.5 1.5 0 0 1 3 0V12',
+    'M15 11.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.7a6 6 0 0 1-4.9-2.5L4.2 15.4a1.5 1.5 0 0 1 2.4-1.8L9 16.5',
+  ],
+};
+
+/** Lignes d'aide de chaque jeu : type de commande et clé de traduction */
+const CONTROL_LINES = new Map([
+  [
+    'invasion',
+    [
+      ['keyboard', 'arcade.controls.invasion.keyboard'],
+      ['mouse', 'arcade.controls.invasion.mouse'],
+      ['touch', 'arcade.controls.invasion.touch'],
+    ],
+  ],
+  [
+    'multimiam',
+    [
+      ['keyboard', 'arcade.controls.multimiam.keyboard'],
+      ['touch', 'arcade.controls.multimiam.touch'],
+    ],
+  ],
+  [
+    'multimemory',
+    [
+      ['mouse', 'arcade.controls.multimemory.mouse'],
+      ['touch', 'arcade.controls.multimemory.touch'],
+    ],
+  ],
+  [
+    'multisnake',
+    [
+      ['keyboard', 'arcade.controls.multisnake.keyboard'],
+      ['touch', 'arcade.controls.multisnake.touch'],
+    ],
+  ],
+]);
+
+// Émoji placé en tête d'un ancien texte de traduction (🕹️, ⌨️…) : l'icône est dessinée
+const LEADING_EMOJI = /^(?:[\p{Extended_Pictographic}\uFE0F\u200D]+\s*)+/u;
+
+function controlIconSVG(type) {
+  const paths = CONTROL_ICON_PATHS[type] || [];
+  return `<svg class="arcade-control-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths
+    .map(d => `<path d="${d}"/>`)
+    .join('')}</svg>`;
+}
+
+function prefersReducedMotion() {
+  try {
+    return globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
+  } catch {
+    return false;
+  }
+}
+
 export class ArcadeMode extends GameMode {
   /**
    * Fonction constructor
@@ -92,10 +158,11 @@ export class ArcadeMode extends GameMode {
    * HTML personnalisé pour l'Arcade (menu de sélection)
    */
   async getCustomHTML() {
+    // Le titre « Mode Arcade » et la région principale viennent déjà de GameMode :
+    // ici, seulement l'introduction et la liste des jeux.
     return `
-            <div class="arcade-container arcade-container-wide" role="main" aria-label="${getTranslation('arcade_mode_title')}">
-                <h2><span class="arcade-icon">🕹️</span> ${getTranslation('arcade_mode_title')}</h2>
-                <div class="arcade-intro">${getTranslation('arcade_intro')}</div>
+            <div class="arcade-container arcade-container-wide">
+                <p class="arcade-intro">${getTranslation('arcade_intro')}</p>
                 <div class="arcade-games-list">
                     ${this.generateGamesHTML()}
                 </div>
@@ -112,29 +179,37 @@ export class ArcadeMode extends GameMode {
         game => `
             <div id="${this.getCardId(game.id)}" class="arcade-game-card collapsed" data-game="${game.id}">
                 <div class="game-thumb">
-                    <img src="assets/images/arcade/${game.logo}" alt="${getTranslation(game.nameKey)}" 
+                    <img src="assets/images/arcade/${game.logo}" alt=""
                          class="arcade-logo" onerror="this.src='assets/images/arcade/logo_mode_arcade.png';this.onerror=null;">
                 </div>
-                
+
                 <h3 class="game-title">
-                    ${this.getGameTitle(game.id)}
+                    <button type="button" class="arcade-game-toggle" data-action="arcade-toggle"
+                            aria-expanded="false" aria-controls="${this.getSettingsId(game.id)}"
+                            aria-describedby="${this.getCardId(game.id)}-desc">${this.getGameTitle(game.id)}</button>
                 </h3>
-                
-                <div class="game-desc">
+
+                <p class="game-desc" id="${this.getCardId(game.id)}-desc">
                     ${this.getGameDescription(game.id)}
+                </p>
+
+                <div class="arcade-game-settings" id="${this.getSettingsId(game.id)}">
+                    ${this.getDifficultyHTML(game.id)}
+                    ${game.id === 'invasion' ? this.getSpaceshipHTML(game.id) : ''}
+                    ${this.getControlsHelpHTML(game.id)}
+
+                    <button type="button" class="btn play-arcade-btn" data-action="arcade-play" data-game="${game.id}">
+                        ${getTranslation('play_button')}
+                    </button>
                 </div>
-                
-                ${this.getDifficultyHTML(game.id)}
-                ${game.id === 'invasion' ? this.getSpaceshipHTML(game.id) : ''}
-                ${this.getControlsHelpHTML(game.id)}
-                
-                <button class="play-arcade-btn" data-action="arcade-play" data-game="${game.id}">
-                    ${getTranslation('play_button')}
-                </button>
             </div>
         `
       )
       .join('');
+  }
+
+  getSettingsId(id) {
+    return `${this.getCardId(id)}-settings`;
   }
 
   getCardId(id) {
@@ -202,7 +277,7 @@ export class ArcadeMode extends GameMode {
                     ${difficulties
                       .map(
                         diff => `
-                        <button class="difficulty-btn ${this.selectedDifficulty === diff.key ? 'selected' : ''}"
+                        <button type="button" class="difficulty-btn ${this.selectedDifficulty === diff.key ? 'selected' : ''}"
                                 data-level="${diff.key}"
                                 aria-pressed="${this.selectedDifficulty === diff.key ? 'true' : 'false'}"
                                 data-action="arcade-set-difficulty" data-difficulty="${diff.key}" data-game="${gameId}">
@@ -222,24 +297,29 @@ export class ArcadeMode extends GameMode {
   getSpaceshipHTML(gameId) {
     const avatar = gameState?.avatar || 'fox';
     const spaceshipVariants = this.getSpaceshipVariants(avatar);
+    const valueOf = variant => `${variant.file}|${variant.fallback}`;
+    // La fusée choisie la dernière fois reste cochée (sinon la première)
+    const savedIndex = spaceshipVariants.findIndex(v => valueOf(v) === this.selectedSpaceship);
+    const checkedIndex = savedIndex >= 0 ? savedIndex : 0;
+    const titleId = `${this.getCardId(gameId)}-spaceship-title`;
 
     return `
-            <div class="spaceship-select-block">
-                <div class="spaceship-select-title">${getTranslation('choose_spaceship')}</div>
+            <div class="spaceship-select-block" role="radiogroup" aria-labelledby="${titleId}">
+                <div class="spaceship-select-title" id="${titleId}">${getTranslation('choose_spaceship')}</div>
                 <div class="spaceship-select-row">
                     ${spaceshipVariants
                       .map(
                         (variant, idx) => `
                         <label class="spaceship-option">
-                            <input type="radio" name="spaceship-choice-${gameId}" 
-                                   value="${variant.file}|${variant.fallback}" 
-                                   ${idx === 0 ? 'checked' : ''}
+                            <input type="radio" name="spaceship-choice-${gameId}"
+                                   value="${valueOf(variant)}"
+                                   ${idx === checkedIndex ? 'checked' : ''}
                                    data-action="arcade-set-spaceship" data-game="${gameId}"
-                                   data-value="${variant.file}|${variant.fallback}">
-                            <img class="spaceship-thumb" src="assets/images/arcade/${variant.file}" 
-                                 alt="${variant.name}" 
+                                   data-value="${valueOf(variant)}">
+                            <img class="spaceship-thumb" src="assets/images/arcade/${variant.file}"
+                                 alt=""
                                  onerror="this.src='assets/images/arcade/${variant.fallback}';this.onerror=null;">
-                            <div class="spaceship-label">${variant.name}</div>
+                            <span class="spaceship-label">${variant.name}</span>
                         </label>
                     `
                       )
@@ -324,6 +404,11 @@ export class ArcadeMode extends GameMode {
     const actionEl = e.target.closest('[data-action]');
     if (actionEl) {
       const action = actionEl.getAttribute('data-action');
+      if (action === 'arcade-toggle') {
+        const toggledCard = actionEl.closest('.arcade-game-card');
+        if (toggledCard) this.toggleCard(toggledCard);
+        return;
+      }
       if (action === 'arcade-play') {
         const gameId = actionEl.getAttribute('data-game');
         if (gameId) this.startGame(gameId);
@@ -342,8 +427,9 @@ export class ArcadeMode extends GameMode {
       }
     }
     const card = e.target.closest('.arcade-game-card');
+    // Un clic dans les réglages d'une tuile ouverte ne la referme pas
     const insideControl = e.target.closest(
-      'button,input,label,.difficulty-btn-row,.spaceship-select-block,.arcade-controls-help'
+      'button,input,label,.arcade-game-settings,.difficulty-btn-row,.spaceship-select-block,.arcade-controls-help'
     );
     if (card && !insideControl) {
       this.toggleCard(card);
@@ -353,17 +439,42 @@ export class ArcadeMode extends GameMode {
   toggleCard(card) {
     const all = this.gameScreen.querySelectorAll('.arcade-game-card');
     all.forEach(c => {
-      if (c !== card) {
-        c.classList.remove('expanded');
-        c.classList.add('collapsed');
-      }
+      if (c !== card) this.setCardExpanded(c, false);
     });
-    if (card.classList.contains('expanded')) {
-      card.classList.remove('expanded');
-      card.classList.add('collapsed');
+    const willExpand = !card.classList.contains('expanded');
+    this.setCardExpanded(card, willExpand);
+    if (willExpand) this.revealPlayButton(card);
+  }
+
+  /**
+   * Ouvre ou ferme une tuile et tient à jour l'état annoncé par son bouton.
+   */
+  setCardExpanded(card, expanded) {
+    card.classList.toggle('expanded', expanded);
+    card.classList.toggle('collapsed', !expanded);
+    card.querySelector('.arcade-game-toggle')?.setAttribute('aria-expanded', String(expanded));
+  }
+
+  /**
+   * Tuile ouverte : « Jouer » est ramené à l'écran s'il est en dessous.
+   */
+  revealPlayButton(card) {
+    const play = card.querySelector('.play-arcade-btn');
+    if (!play || typeof play.scrollIntoView !== 'function') return;
+    const reveal = () => {
+      try {
+        play.scrollIntoView({
+          block: 'nearest',
+          behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+        });
+      } catch {
+        play.scrollIntoView(false);
+      }
+    };
+    if (typeof globalThis.requestAnimationFrame === 'function') {
+      globalThis.requestAnimationFrame(reveal);
     } else {
-      card.classList.remove('collapsed');
-      card.classList.add('expanded');
+      reveal();
     }
   }
 
@@ -374,27 +485,16 @@ export class ArcadeMode extends GameMode {
     this.selectedDifficulty = difficulty;
     this.saveArcadePreferences();
 
-    // Mettre à jour l'affichage des boutons
-    const card = document.querySelector(`[data-game="${gameId}"]`);
-    /**
-     * Fonction if
-     * @param {*} card - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (card) {
-      const buttons = card.querySelectorAll('.difficulty-btn');
-      buttons.forEach(btn => {
-        btn.classList.remove('selected');
-        btn.setAttribute('aria-pressed', 'false');
+    // La difficulté est commune aux quatre jeux : toutes les tuiles affichent le même choix
+    const scope =
+      this.gameScreen?.querySelector('.arcade-games-list') ||
+      document.querySelector(`[data-game="${gameId}"]`);
+    if (scope) {
+      scope.querySelectorAll('.difficulty-btn').forEach(btn => {
+        const isSelected = btn.getAttribute('data-difficulty') === difficulty;
+        btn.classList.toggle('selected', isSelected);
+        btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
       });
-
-      const selectedBtn = card.querySelector(
-        `[data-action="arcade-set-difficulty"][data-difficulty="${difficulty}"]`
-      );
-      if (selectedBtn) {
-        selectedBtn.classList.add('selected');
-        selectedBtn.setAttribute('aria-pressed', 'true');
-      }
     }
 
     console.log(`🎯 Difficulté sélectionnée: ${difficulty}`);
@@ -451,11 +551,11 @@ export class ArcadeMode extends GameMode {
             if (typeof mod.startMultiplicationInvasion === 'function')
               return mod.startMultiplicationInvasion();
             console.error('❌ startMultiplicationInvasion non disponible dans arcade-invasion.js');
-            showArcadeMessage('arcade_load_error', '#F44336', 1800);
+            showArcadeMessage('arcade_load_error', 'warning', 1800);
           })
           .catch(err => {
             console.error('❌ Import arcade-invasion failed:', err);
-            showArcadeMessage('arcade_load_error', '#F44336', 1800);
+            showArcadeMessage('arcade_load_error', 'warning', 1800);
           });
         break;
       case 'multimiam':
@@ -463,11 +563,11 @@ export class ArcadeMode extends GameMode {
           .then(mod => {
             if (typeof mod.startPacmanArcade === 'function') return mod.startPacmanArcade();
             console.error('❌ startPacmanArcade non disponible dans arcade-multimiam.js');
-            showArcadeMessage('arcade_load_error', '#F44336', 1800);
+            showArcadeMessage('arcade_load_error', 'warning', 1800);
           })
           .catch(err => {
             console.error('❌ Import arcade-multimiam failed:', err);
-            showArcadeMessage('arcade_load_error', '#F44336', 1800);
+            showArcadeMessage('arcade_load_error', 'warning', 1800);
           });
         break;
       case 'multimemory':
@@ -475,11 +575,11 @@ export class ArcadeMode extends GameMode {
           .then(mod => {
             if (typeof mod.startMemoryArcade === 'function') return mod.startMemoryArcade();
             console.error('❌ startMemoryArcade non disponible dans arcade-multimemory.js');
-            showArcadeMessage('arcade_load_error', '#F44336', 1800);
+            showArcadeMessage('arcade_load_error', 'warning', 1800);
           })
           .catch(err => {
             console.error('❌ Import arcade-multimemory failed:', err);
-            showArcadeMessage('arcade_load_error', '#F44336', 1800);
+            showArcadeMessage('arcade_load_error', 'warning', 1800);
           });
         break;
       case 'multisnake':
@@ -487,11 +587,11 @@ export class ArcadeMode extends GameMode {
           .then(mod => {
             if (typeof mod.startSnakeArcade === 'function') return mod.startSnakeArcade();
             console.error('❌ startSnakeArcade non disponible dans arcade-multisnake.js');
-            showArcadeMessage('arcade_load_error', '#F44336', 1800);
+            showArcadeMessage('arcade_load_error', 'warning', 1800);
           })
           .catch(err => {
             console.error('❌ Import arcade-multisnake failed:', err);
-            showArcadeMessage('arcade_load_error', '#F44336', 1800);
+            showArcadeMessage('arcade_load_error', 'warning', 1800);
           });
         break;
       default:
@@ -609,26 +709,16 @@ export class ArcadeMode extends GameMode {
    */
   getControlsHelpHTML(gameId) {
     const title = getTranslation('arcade.controls.title');
-
-    const KEYS_BY_GAME = new Map([
-      [
-        'invasion',
-        [
-          'arcade.controls.invasion.keyboard',
-          'arcade.controls.invasion.mouse',
-          'arcade.controls.invasion.touch',
-        ],
-      ],
-      ['multimiam', ['arcade.controls.multimiam.keyboard', 'arcade.controls.multimiam.touch']],
-      ['multimemory', ['arcade.controls.multimemory.mouse', 'arcade.controls.multimemory.touch']],
-      ['multisnake', ['arcade.controls.multisnake.keyboard', 'arcade.controls.multisnake.touch']],
-    ]);
-
-    const keys = KEYS_BY_GAME.get(gameId) || [];
-    const lines = keys
-      .map(k => getTranslation(k))
-      .filter(t => t && typeof t === 'string' && !/^arcade\.controls\./.test(t))
-      .map(t => `<li>${t}</li>`)
+    const lines = (CONTROL_LINES.get(gameId) || [])
+      .map(([type, key]) => [type, getTranslation(key)])
+      .filter(
+        ([, text]) => typeof text === 'string' && text && !/^\[?arcade\.controls\./.test(text)
+      )
+      // Chaque ligne dit sa commande (data-input) : le CSS n'affiche que celles de l'appareil
+      .map(
+        ([type, text]) =>
+          `<li class="arcade-control" data-input="${type}">${controlIconSVG(type)}<span>${text.replace(LEADING_EMOJI, '')}</span></li>`
+      )
       .join('');
 
     if (!lines) return '';

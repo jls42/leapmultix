@@ -1,7 +1,7 @@
 /* =====================
    Arcade Snake Launcher (MultiSnake)
    - Contient la fonction startSnakeArcade déplacée depuis arcade.js
-   - Se repose sur getArcadeGameTemplate (défini dans arcade.js) et SnakeGame (multisnake.js)
+   - Se repose sur InfoBar.createArcadeTemplateElement (components/infoBar.js) et SnakeGame (multisnake.js)
    ===================== */
 
 import { SnakeGame } from './multisnake.js';
@@ -14,6 +14,7 @@ import { getDifficultySettings } from './difficulty.js';
 import { startArcadeTimer, showArcadeGameOver, stopArcadeMode } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
 import { UserState } from './core/userState.js';
+import { prepareArcadeStage } from './arcade-common.js';
 // Utilise les helpers arcades via window (arcade.js expose des ponts globaux)
 
 // Instance locale du jeu (remplace window._multisnakeInstance)
@@ -95,6 +96,9 @@ export function startSnakeArcade() {
     showScore: true,
   });
   gameScreen.appendChild(frag);
+  // Haut de page et zone de jeu sans hauteur imposée : le plateau se dimensionne
+  // ensuite pour tenir dans l'écran
+  prepareArcadeStage(document.getElementById('multisnake-canvas'));
   // Utilisation des paramètres de difficulté (Cascade 2025)
   const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
   // Durée de la partie selon le niveau

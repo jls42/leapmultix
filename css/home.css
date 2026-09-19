@@ -1,0 +1,474 @@
+/* ===========================================
+   Accueil : « Qui joue ? » (slide 0) et choix du mode (slide 1)
+   Tuiles des profils : users.css. Sélecteur d'opération : operation-selector.css.
+   Jetons : themes.css. Composants partagés (.btn, .avatar-btn…) : general.css.
+   =========================================== */
+
+/* ========== SLIDE 0 : QUI JOUE ? ========== */
+
+.user-selection-intro {
+  max-width: 520px;
+  margin: 0 auto var(--space-4);
+  text-align: center;
+}
+
+.user-selection-intro h1 {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-2xl);
+}
+
+/* La consigne est lue par des lecteurs débutants : encre pleine, pas atténuée */
+.user-selection-intro p {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-ink);
+}
+
+/* --- Nouveau joueur : groupé par l'espace et un filet, pas une carte dans la carte --- */
+.new-player {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.new-player h2 {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-lg);
+}
+
+.new-player-name {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.new-player-name label {
+  flex-basis: 100%;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* 16 px au moins : iOS ne zoome pas sur le champ */
+#new-user-name {
+  flex: 1 1 14rem;
+  min-width: 0;
+  min-height: 48px;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-md);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+#new-user-name::placeholder {
+  color: var(--color-ink-muted);
+  opacity: 1;
+}
+
+#new-user-name:hover {
+  border-color: var(--color-action);
+}
+
+/* Prénom manquant ou déjà pris : une indication, pas une faute. Jamais de rouge (réservé
+   aux actions destructives) : contour d'action, le message sous le champ explique. */
+#new-user-name[aria-invalid='true'] {
+  border-color: var(--color-action);
+}
+
+.new-player-name .virtual-keyboard-toggle {
+  flex: none;
+  min-height: 48px;
+  margin: 0;
+}
+
+/* Le clavier à l'écran s'ouvre sous le champ, sur toute la largeur */
+.new-player-name .virtual-keyboard {
+  flex-basis: 100%;
+}
+
+.creation-avatar-label {
+  margin: var(--space-4) 0 var(--space-2);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* Les cinq avatars restent sur une ligne, même sur un petit téléphone */
+.creation-avatar-selector {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 70px));
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.creation-avatar-selector .avatar-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: var(--space-1);
+}
+
+.creation-avatar-selector .avatar-btn img {
+  display: block;
+  width: 100%;
+  max-width: 56px;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+/* Prénom manquant ou déjà pris : une indication calme sous le champ, pas une alerte.
+   Le champ est signalé par son contour ; le texte garde l'encre normale. */
+.new-player-message {
+  max-width: 480px;
+  margin: var(--space-2) auto 0;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+#create-user-btn {
+  min-width: 10rem;
+  margin: var(--space-4) auto 0;
+}
+
+/* --- Présentation du projet : indexable, placée après l'action de l'enfant --- */
+.seo-intro {
+  max-width: 62ch;
+  margin: var(--space-7) auto 0;
+  padding-top: var(--space-5);
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Image chargée à la demande : ses proportions sont réservées d'avance (pas de saut) */
+.seo-hero {
+  display: block;
+  width: min(100%, 480px);
+  height: auto;
+  aspect-ratio: 1200 / 630;
+  margin: 0 auto var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+.seo-intro p {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.seo-intro p:last-child {
+  margin-bottom: 0;
+}
+
+/* ========== SLIDE 1 : ACCUEIL ========== */
+
+/* Plus large que les autres écrans : les cinq modes tiennent sur une ligne */
+#slide1 .content-card {
+  width: 100%;
+  max-width: 1080px;
+  padding: var(--space-5) clamp(var(--space-4), 3vw, var(--space-6));
+}
+
+/* --- La mascotte parle en une ligne ; c'est elle qui porte le caractère --- */
+.mascot-hero-container {
+  max-width: 640px;
+  margin: 0 auto var(--space-4);
+}
+
+.mascot-hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.mascot-image {
+  flex: none;
+  width: 72px;
+  height: 72px;
+}
+
+.mascot-speech-bubble {
+  position: relative;
+  min-width: 0;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  text-align: left;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  animation: fade-in var(--dur-slow) var(--ease-out) both;
+}
+
+/* Pointe de la bulle, tournée vers la mascotte */
+.mascot-speech-bubble::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -9px;
+  width: 14px;
+  height: 14px;
+  background-color: var(--color-surface);
+  border-bottom: 2px solid var(--color-border);
+  border-left: 2px solid var(--color-border);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.mascot-speech-bubble p {
+  margin: 0;
+}
+
+/* --- Modes de jeu : de vraies touches, une illustration, un nom --- */
+.game-modes h2 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-xl);
+}
+
+/* Grille régulière, sans tuile orpheline :
+   mobile 2 + 2 + 1 centrée, tablette 3 + 2 centrées, bureau 5 sur une ligne.
+   Toutes les rangées ont la hauteur de la plus haute tuile. */
+.mode-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: var(--space-3);
+}
+
+.mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-column: span 2;
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4) var(--space-3);
+  font: inherit;
+  text-align: center;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+.mode-btn:last-child:nth-child(odd) {
+  grid-column: 2 / span 2;
+}
+
+/* Le survol ne remplit jamais la tuile : le nom reste lisible */
+@media (hover: hover) {
+  .mode-btn:hover {
+    border-color: var(--color-action);
+  }
+}
+
+.mode-btn:active {
+  transform: translateY(var(--key-edge));
+  box-shadow: 0 0 0 var(--color-border-strong);
+}
+
+.mode-btn:disabled {
+  border-style: dashed;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mode-icon {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.mode-icon img {
+  display: block;
+  width: 80px;
+  height: 80px;
+}
+
+.mode-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink-heading);
+}
+
+.mode-desc {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--color-ink-muted);
+  text-wrap: balance;
+}
+
+@media (min-width: 600px) {
+  .mode-buttons {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .mode-btn:last-child:nth-child(odd) {
+    grid-column: span 2;
+  }
+
+  .mode-btn:nth-child(4) {
+    grid-column: 2 / span 2;
+  }
+
+  .mode-icon img {
+    width: 96px;
+    height: 96px;
+  }
+
+  .mode-name {
+    font-size: var(--text-lg);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mode-buttons {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .mode-btn,
+  .mode-btn:nth-child(4),
+  .mode-btn:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  .mode-icon img {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+/* --- Défi du jour : un fond creusé, sans bordure ni ombre --- */
+.daily-challenge {
+  max-width: 640px;
+  margin: var(--space-6) auto 0;
+  padding: var(--space-4) var(--space-5);
+  text-align: center;
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.daily-challenge:empty {
+  display: none;
+}
+
+.daily-challenge h3 {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.daily-challenge p {
+  margin-bottom: var(--space-2);
+  color: var(--color-ink);
+}
+
+.daily-challenge p:last-child {
+  margin-bottom: 0;
+}
+
+.challenge-progress-bar {
+  width: min(80%, 320px);
+  height: 12px;
+  margin: var(--space-2) auto var(--space-3);
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+}
+
+.challenge-progress-bar div {
+  width: 0%;
+  height: 100%;
+  background-color: var(--color-success-edge);
+}
+
+/* Défi réussi : encre de succès et une coche (le sens ne tient pas à la couleur seule).
+   Même spécificité que « .daily-challenge p » est nécessaire, sinon l'encre normale gagne. */
+.daily-challenge .challenge-completed {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-weight: 700;
+  color: var(--color-success-ink);
+}
+
+.daily-challenge .challenge-completed::before {
+  content: '✓';
+  content: '✓' / '';
+  flex: none;
+  font-size: var(--text-md);
+  line-height: 1;
+}
+
+/* --- Réglages et suivi : actions secondaires, sous les modes --- */
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.home-links .btn {
+  margin: 0;
+}
+
+/* --- Confidentialité : une mention discrète, tout en bas --- */
+.privacy-info {
+  max-width: 62ch;
+  margin: var(--space-5) auto 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+@media (max-width: 599px) {
+  .creation-avatar-selector {
+    gap: var(--space-2);
+  }
+
+  #slide1 .content-card {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .mascot-hero {
+    gap: var(--space-3);
+  }
+
+  .mascot-image {
+    width: 56px;
+    height: 56px;
+  }
+
+  .mascot-speech-bubble {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-base);
+  }
+
+  .mode-btn {
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .daily-challenge {
+    padding: var(--space-4) var(--space-3);
+  }
+}

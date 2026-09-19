@@ -12,6 +12,8 @@ import { initPacmanEngine } from './multimiam-engine.js';
 import { initPacmanControls } from './multimiam-controls.js';
 import { initPacmanUI } from './multimiam-ui.js';
 import { showArcadeGameOver } from './arcade.js';
+import { createArcadeToast, getArcadeText } from './arcade-message.js';
+import { getArcadeCanvasBox } from './arcade-common.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { cleanupGameResources } from './game-cleanup.js';
 
@@ -149,92 +151,28 @@ export class PacmanGame {
     this.logoImg = arcadeSpriteLoader.loadSpriteSync('logo_multimiam_128x128', 'logo');
   }
 
-  // Obtenir les dimensions de la fenêtre avec fallback
-  getWindowDimensions() {
-    const getGlobal = () => {
-      if (typeof globalThis !== 'undefined') return globalThis;
-      if (typeof window !== 'undefined') return window;
-      return { innerWidth: 800, innerHeight: 600 };
-    };
-    const global = getGlobal();
-    return {
-      width: global.innerWidth || 800,
-      height: global.innerHeight || 600,
-    };
-  }
-
-  // Calculer les dimensions du canvas selon les ratios
+  // Place disponible pour le labyrinthe : sous le bandeau, avec la consigne et
+  // « Abandonner », sans faire défiler la page (voir js/arcade-common.js)
   calculateCanvasDimensions() {
-    const container = this.canvas.parentElement;
-    if (!container) {
+    if (!this.canvas.parentElement) {
       return { width: 800, height: 600 };
     }
-
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-    const windowDimensions = this.getWindowDimensions();
-
-    // Réserver de l'espace pour les éléments UI (barre info, boutons, marges)
-    // Info bar: ~80px, boutons: ~60px, marges: ~50px
-    // Mobile: réduire l'espace réservé pour maximiser le canvas
-    const uiSpaceReserved = this.isMobile ? 170 : 190;
-    const availableHeight = Math.max(
-      Math.min(containerHeight, windowDimensions.height) - uiSpaceReserved,
-      300 // Hauteur minimum
-    );
-
-    const widthRatio = this.isMobile ? 0.98 : 0.9;
-    const heightRatio = this.isMobile ? 0.98 : 0.95;
-    const maxWidth = Math.min(containerWidth, windowDimensions.width * widthRatio);
-
-    // Calculer les dimensions en respectant le ratio du labyrinthe (19:15)
-    const labyrinthAspectRatio = this.rows / this.cols; // 15/19 = 0.789
-    let canvasWidth, canvasHeight;
-
-    // Stratégie différente selon l'orientation
-    const isPortrait = windowDimensions.height > windowDimensions.width;
-
-    if (isPortrait || this.isMobile) {
-      // Mobile/Portrait: maximiser la hauteur disponible
-      canvasHeight = availableHeight * heightRatio;
-      canvasWidth = canvasHeight / labyrinthAspectRatio;
-
-      // Si la largeur dépasse, ajuster
-      if (canvasWidth > maxWidth) {
-        canvasWidth = maxWidth * widthRatio;
-        canvasHeight = canvasWidth * labyrinthAspectRatio;
-      }
-    } else {
-      // Desktop/Paysage: maximiser la largeur
-      canvasWidth = maxWidth * widthRatio;
-      canvasHeight = canvasWidth * labyrinthAspectRatio;
-
-      // Si la hauteur dépasse l'espace disponible, ajuster
-      if (canvasHeight > availableHeight) {
-        canvasHeight = availableHeight * heightRatio;
-        canvasWidth = canvasHeight / labyrinthAspectRatio;
-      }
-    }
-
-    // S'assurer que les dimensions ne dépassent jamais l'espace disponible
-    canvasWidth = Math.min(canvasWidth, maxWidth);
-    canvasHeight = Math.min(canvasHeight, availableHeight);
-
-    return { width: Math.floor(canvasWidth), height: Math.floor(canvasHeight) };
+    const box = getArcadeCanvasBox(this.canvas);
+    return { width: Math.floor(box.width), height: Math.floor(box.height) };
   }
 
-  // Appliquer les styles visuels au canvas
+  // Appliquer les styles visuels au canvas : taille affichée = taille interne,
+  // pour que les clics et les touchers tombent sur la bonne case
   applyCanvasStyles(width, height) {
-    // IMPORTANT: Utiliser setProperty avec !important pour surcharger le CSS externe
-    // qui définit height: auto et box-sizing: border-box !important
-    this.canvas.style.setProperty('width', width + 'px', 'important');
-    this.canvas.style.setProperty('height', height + 'px', 'important');
-    this.canvas.style.setProperty('box-sizing', 'content-box', 'important');
-    this.canvas.style.setProperty('padding', '0', 'important');
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
+    this.canvas.style.boxSizing = 'content-box';
+    this.canvas.style.padding = '0';
     this.canvas.style.display = 'block';
     this.canvas.style.margin = '0 auto';
-    this.canvas.style.border = '2px solid #3F51B5';
-    this.canvas.style.borderRadius = '8px';
+    // Cadre commun des écrans de jeu (jetons) ; épaisseur fixe, comptée dans les clics
+    this.canvas.style.border = '2px solid var(--color-border-strong)';
+    this.canvas.style.borderRadius = 'var(--radius-md)';
   }
 
   // Redimensionner le canvas pour s'adapter à l'écran
@@ -317,17 +255,6 @@ export class PacmanGame {
     // Mettre à jour l'affichage
     this.displayOperationUI();
     this.updateUI();
-
-    // Test de rendu direct pour vérifier que le contexte canvas fonctionne
-    this.ctx.save();
-    this.ctx.fillStyle = 'red';
-    this.ctx.beginPath();
-    this.ctx.arc(this.canvas.width / 2, this.canvas.height / 2, 20, 0, Math.PI * 2);
-    this.ctx.fill();
-    this.ctx.strokeStyle = 'yellow';
-    this.ctx.lineWidth = 3;
-    this.ctx.stroke();
-    this.ctx.restore();
   }
 
   // Mettre à jour l'avatar du joueur depuis gameState
@@ -490,50 +417,16 @@ export class PacmanGame {
     PacmanQuestions.placeAnswers(this, multimiamX, multimiamY);
   }
 
-  // Afficher un message temporaire
-  showMessage(text, color, duration = 1000) {
+  // Afficher un message temporaire (apparence : .arcade-toast dans css/arcade.css)
+  showMessage(text, tone = 'neutral', duration = 1000) {
     // Ne pas afficher de message si le jeu n'est pas encore démarré
     if (!this.running) return;
 
-    const messageElement = document.createElement('div');
-    messageElement.className = 'multimiam-message';
-    // Style fond blanc semi-transparent et contraste
-    messageElement.style.background = 'rgba(255,255,255,0.92)';
-    messageElement.style.borderRadius = '14px';
-    messageElement.style.padding = '18px 32px';
-    messageElement.style.boxShadow = '0 2px 12px rgba(0,0,0,0.13)';
-    messageElement.style.border = '1px solid #eee';
-    // Couleur texte par défaut sombre, mais laisse la couleur personnalisée si précisée
-    if (!color) messageElement.style.color = '#222';
-    // Pour le mode nuit, ajuster dynamiquement
-    if (document.body.classList.contains('night') || document.body.dataset.theme === 'dark') {
-      messageElement.style.background = 'rgba(255,255,255,0.92)';
-      messageElement.style.color = '#111';
-      messageElement.style.border = '1px solid #444';
-    }
-    // Utiliser i18n ESM; fallback au texte brut si clé absente
-    let displayText = getTranslation(text);
-    if (
-      typeof displayText === 'string' &&
-      displayText.startsWith('[') &&
-      displayText.endsWith(']')
-    ) {
-      displayText = text;
-    }
-    messageElement.textContent = displayText;
-    messageElement.style.color = color;
-    messageElement.style.position = 'absolute';
-    messageElement.style.top = '50%';
-    messageElement.style.left = '50%';
-    messageElement.style.transform = 'translate(-50%, -50%)';
-    messageElement.style.fontSize = '24px';
-    messageElement.style.fontWeight = 'bold';
-    messageElement.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.5)';
-    messageElement.style.zIndex = '100';
-
+    // Clé de traduction, ou texte brut si la clé est absente
+    const messageElement = createArcadeToast(getArcadeText(text), tone);
     this.canvas.parentNode.appendChild(messageElement);
 
-    // Supprimer le message après 1 seconde
+    // Retirer le message après la durée demandée
     setTimeout(() => {
       messageElement.remove();
     }, duration);

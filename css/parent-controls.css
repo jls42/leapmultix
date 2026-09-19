@@ -1,20 +1,101 @@
-/* ========== PARENT CONTROLS ========== */
-.parent-controls {
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  padding: 15px;
-  border-radius: 5px;
-  margin-top: 20px;
-  text-align: left;
-}
+/* ===========================================
+   Personnalisation (slide 6) : accessibilité et contrôle parental
+   Cases à cocher de 24 px, trois « A » de tailles distinctes, « Vider le cache » discret.
+   (composant js/components/customization.js ; état des « A » : js/core/theme.js)
+   =========================================== */
 
-.hidden {
-  display: none;
-}
-
-#tables-selection {
+.accessibility-options {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 10px;
-  margin-bottom: 15px;
+  justify-items: start;
+  gap: var(--space-2);
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  margin-inline: auto;
+  text-align: start;
+}
+
+.accessibility-options label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: 44px;
+  cursor: pointer;
+}
+
+.accessibility-options input[type='checkbox'] {
+  flex: none;
+  inline-size: 24px;
+  block-size: 24px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-action);
+}
+
+/* --- Taille du texte : le « A » montre la taille qu'il donne --- */
+.font-size-selector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.font-size-selector .font-size-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 48px;
+  min-inline-size: 48px;
+  block-size: 48px;
+  min-block-size: 48px;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-text);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-action-ink);
+  background: var(--color-surface);
+  box-shadow:
+    inset 0 0 0 2px var(--color-border-strong),
+    0 var(--key-edge) 0 var(--color-border-strong);
+}
+
+.font-size-selector .font-size-btn:hover {
+  background: var(--color-action-tint);
+}
+
+.font-size-selector .font-size-btn:active {
+  box-shadow:
+    inset 0 0 0 2px var(--color-border-strong),
+    0 0 0 var(--color-border-strong);
+}
+
+.font-size-selector .font-size-btn[data-size='small'] {
+  font-size: var(--text-sm);
+}
+
+.font-size-selector .font-size-btn[data-size='medium'] {
+  font-size: var(--text-lg);
+}
+
+.font-size-selector .font-size-btn[data-size='large'] {
+  font-size: var(--text-2xl);
+}
+
+/* Taille choisie : touche pleine */
+.font-size-selector .font-size-btn.active,
+.font-size-selector .font-size-btn[aria-pressed='true'] {
+  color: var(--color-on-action);
+  background: var(--color-action);
+  box-shadow: 0 var(--key-edge) 0 var(--color-action-edge);
+}
+
+.font-size-selector .font-size-btn.active:active,
+.font-size-selector .font-size-btn[aria-pressed='true']:active {
+  box-shadow: 0 0 0 var(--color-action-edge);
+}
+
+/* --- « Vider le cache » : action d'adulte, discrète, dans la carte --- */
+.accessibility-options .clear-cache-btn {
+  margin: var(--space-3) 0 0;
 }

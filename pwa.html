@@ -19,7 +19,7 @@
     <meta property="og:title" content="Installer LeapMultix en PWA – Mode hors ligne" />
     <meta
       property="og:description"
-      content="Découvrez comment ajouter LeapMultix à votre écran d’accueil, activer le mode hors ligne et profiter des notifications pédagogiques."
+      content="Découvrez comment ajouter LeapMultix à votre écran d’accueil et activer le mode hors ligne."
     />
     <meta
       property="og:image"
@@ -55,7 +55,7 @@
         "name": "Installer LeapMultix en PWA",
         "url": "https://leapmultix.jls42.org/pwa.html",
         "inLanguage": "fr-FR",
-        "description": "Tutoriels d'installation PWA pour iOS, Android, Windows et ChromeOS, avec rappel des avantages hors ligne.",
+        "description": "Tutoriels d’installation PWA pour iOS, Android, Windows et ChromeOS, avec rappel des avantages hors ligne.",
         "publisher": {
           "@type": "Organization",
           "name": "LeapMultix",
@@ -64,131 +64,152 @@
       }
     </script>
   </head>
-  <body class="static-page theme-blue">
+  <body class="static-page">
     <header class="site-header">
       <a class="logo" href="/">
-        <img src="/assets/icons/panda-64.png" alt="" aria-hidden="true" width="64" height="64" />
+        <img src="/assets/icons/panda-64.png" alt="" width="64" height="64" />
         <span>LeapMultix</span>
       </a>
-      <nav class="site-nav">
-        <a class="nav-link" href="/">Application</a>
-        <a class="nav-link" href="/modes.html">Modes</a>
-        <a class="nav-link" href="/parents.html">Parents & enseignants</a>
-        <a class="nav-link active" href="/pwa.html">Installer l'app</a>
+      <nav class="site-nav" aria-label="Pages de LeapMultix">
+        <a href="/">Application</a>
+        <a href="/modes.html">Modes</a>
+        <a href="/parents.html">Parents & enseignants</a>
+        <a href="/pwa.html" aria-current="page">Installer l’app</a>
       </nav>
-      <a class="cta" href="/index.html#slide1">Lancer l'installation</a>
+      <a class="btn" href="/">Ouvrir l’application</a>
     </header>
 
     <main>
-      <section class="hero content-card">
-        <p class="pretitle">Progressive Web App</p>
-        <h1>LeapMultix fonctionne hors ligne en trois gestes</h1>
-        <p>
-          La PWA offre le meilleur des deux mondes : légèreté d’un site web et confort d’une
-          application native. Aucun store à valider, aucune mise à jour à surveiller : les nouvelles
-          versions sont poussées automatiquement via le Service Worker.
-        </p>
-      </section>
-
-      <section class="content-card">
-        <h2 class="section-title">Installation rapide</h2>
-        <div class="grid">
-          <article class="mode-card">
-            <h3>Android</h3>
-            <ol>
-              <li>Ouvrez LeapMultix dans Chrome ou Edge.</li>
-              <li>Appuyez sur « Installer l’application » (icône flèche + écran).</li>
-              <li>Validez : l’icône apparaît sur l’écran d’accueil.</li>
-            </ol>
-          </article>
-          <article class="mode-card">
-            <h3>iOS / iPadOS</h3>
-            <ol>
-              <li>Ouvrez le site dans Safari.</li>
-              <li>Menu « Partager » → « Ajouter à l’écran d’accueil ».</li>
-              <li>Renommez si besoin et confirmez.</li>
-            </ol>
-          </article>
-          <article class="mode-card">
-            <h3>Windows & macOS</h3>
-            <ol>
-              <li>
-                Depuis Chrome/Edge, cliquez sur l’icône « Installer LeapMultix » dans la barre.
-              </li>
-              <li>Autorisez la création du raccourci.</li>
-              <li>L’application se lance dans une fenêtre dédiée.</li>
-            </ol>
-          </article>
-          <article class="mode-card">
-            <h3>Chromebook</h3>
-            <ol>
-              <li>Ouvrez LeapMultix.</li>
-              <li>Dans l’omnibox, choisissez « Installer ».</li>
-              <li>Déployez l’application via Google Admin si nécessaire.</li>
-            </ol>
-          </article>
+      <section class="hero hero--with-art">
+        <img
+          class="hero-art"
+          src="/assets/icons/panda-192.png"
+          alt="L’icône de LeapMultix, une tête de panda, telle qu’elle apparaît une fois installée"
+          width="192"
+          height="192"
+        />
+        <div>
+          <h1>LeapMultix fonctionne hors ligne en trois gestes</h1>
+          <p>
+            La PWA (Progressive Web App) offre le meilleur des deux mondes&nbsp;: la légèreté d’un
+            site web et le confort d’une application installée. Aucun magasin d’applications à
+            passer, aucune mise à jour à surveiller&nbsp;: les nouvelles versions arrivent
+            automatiquement.
+          </p>
         </div>
-        <p>
-          Chaque installation embarque le cache nécessaire (jeux, sons, traductions). Après la
-          première connexion, l’enfant peut jouer dans l’avion ou dans une salle sans wifi.
-        </p>
       </section>
 
-      <section class="content-section alt">
-        <h2 class="section-title">Avantages clés</h2>
-        <ul>
-          <li>Temps de chargement réduit (critical assets préchargés, lazy loading des modes).</li>
-          <li>
-            Service Worker gère la mise à jour silencieuse : l’utilisateur est notifié lors d’une
-            nouvelle version.
-          </li>
-          <li>
-            Paramètres persistants : thème, langue, volume et comptes enfants sont conservés même en
-            mode avion.
-          </li>
-        </ul>
-      </section>
+      <div class="page-sheet">
+        <section class="page-section">
+          <h2>Installation rapide</h2>
+          <div class="install-list">
+            <section class="install-item">
+              <h3>Android</h3>
+              <ol>
+                <li>Ouvrez LeapMultix dans Chrome ou Edge.</li>
+                <li>
+                  Dans le menu du navigateur, touchez «&nbsp;Installer l’application&nbsp;» (ou
+                  «&nbsp;Ajouter à l’écran d’accueil&nbsp;»).
+                </li>
+                <li>Validez&nbsp;: l’icône apparaît sur l’écran d’accueil.</li>
+              </ol>
+            </section>
+            <section class="install-item">
+              <h3>iOS / iPadOS</h3>
+              <ol>
+                <li>Ouvrez le site dans Safari.</li>
+                <li>Menu «&nbsp;Partager&nbsp;» → «&nbsp;Ajouter à l’écran d’accueil&nbsp;».</li>
+                <li>Renommez si besoin et confirmez.</li>
+              </ol>
+            </section>
+            <section class="install-item">
+              <h3>Windows & macOS</h3>
+              <ol>
+                <li>
+                  Depuis Chrome ou Edge, cliquez sur l’icône «&nbsp;Installer LeapMultix&nbsp;» dans
+                  la barre d’adresse.
+                </li>
+                <li>Autorisez la création du raccourci.</li>
+                <li>L’application se lance dans une fenêtre dédiée.</li>
+              </ol>
+            </section>
+            <section class="install-item">
+              <h3>Chromebook</h3>
+              <ol>
+                <li>Ouvrez LeapMultix.</li>
+                <li>Dans la barre d’adresse, choisissez «&nbsp;Installer&nbsp;».</li>
+                <li>Déployez l’application via Google Admin si nécessaire.</li>
+              </ol>
+            </section>
+          </div>
+          <p>
+            Après une première visite en ligne, l’application garde sur l’appareil ce que l’enfant a
+            déjà ouvert&nbsp;: modes, images et traductions. Avant un trajet, ouvrez donc une fois
+            en ligne les modes qu’il utilisera&nbsp;; il pourra ensuite jouer dans l’avion ou dans
+            une salle sans wifi.
+          </p>
+        </section>
 
-      <section class="content-section">
-        <h2 class="section-title">Résolution des problèmes courants</h2>
-        <ul>
-          <li>
-            <strong>L’option installer n’apparaît pas :</strong> assurez-vous d’utiliser un
-            navigateur compatible PWA et que le site est chargé via HTTPS.
-          </li>
-          <li>
-            <strong>L’appli reste blanche hors ligne :</strong> ouvrez LeapMultix en ligne une fois
-            par semaine pour rafraîchir le cache.
-          </li>
-          <li>
-            <strong>Besoin de libérer de l’espace :</strong> supprimez l’application depuis les
-            réglages système, puis réinstallez-la. Les données locales peuvent être exportées via le
-            menu parent.
-          </li>
-        </ul>
-      </section>
+        <section class="page-section">
+          <h2>Avantages clés</h2>
+          <ul>
+            <li>
+              Temps de chargement réduit&nbsp;: l’essentiel est chargé en priorité, et chaque mode
+              seulement au moment où l’enfant l’ouvre.
+            </li>
+            <li>
+              Mise à jour silencieuse&nbsp;: quand une nouvelle version est publiée, l’application
+              la charge d’elle-même.
+            </li>
+            <li>
+              Paramètres persistants&nbsp;: thème, langue, volume et profils des enfants sont
+              conservés même en mode avion.
+            </li>
+          </ul>
+        </section>
 
-      <section class="content-card">
-        <h2 class="section-title">En pratique</h2>
-        <p>
-          Une fois LeapMultix installée, l’icône se comporte comme n’importe quelle application
-          native. Pensez simplement à lancer l’app en ligne une fois par semaine pour récupérer les
-          dernières mises à jour.
-        </p>
-        <p>
-          Si vous administrez plusieurs appareils (classe, médiathèque), gardez à portée les étapes
-          d’installation ci-dessus pour les reproduire rapidement. Tous les profils et paramètres
-          restent stockés sur l’appareil des enfants.
-        </p>
-      </section>
+        <section class="page-section panel">
+          <h2>Résolution des problèmes courants</h2>
+          <ul>
+            <li>
+              <strong>L’option installer n’apparaît pas&nbsp;:</strong> assurez-vous d’utiliser un
+              navigateur compatible PWA et que le site est chargé via HTTPS.
+            </li>
+            <li>
+              <strong>L’appli reste blanche hors ligne&nbsp;:</strong> ouvrez LeapMultix en ligne
+              une fois par semaine pour rafraîchir le cache.
+            </li>
+            <li>
+              <strong>Besoin de libérer de l’espace&nbsp;:</strong> vous pouvez supprimer
+              l’application depuis les réglages de l’appareil, puis la réinstaller.
+              <strong>Attention&nbsp;:</strong> la progression des enfants n’est enregistrée que sur
+              cet appareil, et la désinstallation peut l’effacer.
+            </li>
+          </ul>
+        </section>
+
+        <section class="page-section">
+          <h2>En pratique</h2>
+          <p>
+            Une fois LeapMultix installée, l’icône se comporte comme n’importe quelle application
+            native. Pensez simplement à lancer l’app en ligne une fois par semaine pour récupérer
+            les dernières mises à jour.
+          </p>
+          <p>
+            Si vous administrez plusieurs appareils (classe, médiathèque), gardez à portée les
+            étapes d’installation ci-dessus pour les reproduire rapidement. Tous les profils et
+            paramètres restent stockés sur l’appareil des enfants.
+          </p>
+        </section>
+      </div>
     </main>
 
-    <footer>
+    <footer class="site-footer">
       <p>
-        © 2025 LeapMultix — Projet open source hébergé sur
+        © 2025 LeapMultix — Projet open source (licence AGPL-3.0) hébergé sur
         <a href="https://github.com/jls42/leapmultix" target="_blank" rel="noopener noreferrer"
           >GitHub</a
-        >. Contact : <a href="mailto:contact@jls42.org">contact@jls42.org</a>
+        >. Contact&nbsp;: <a href="mailto:contact@jls42.org">contact@jls42.org</a>
       </p>
     </footer>
   </body>

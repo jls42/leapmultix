@@ -1,83 +1,197 @@
-/* ========== THEME SELECTOR ========== */
-.theme-selector,
-.level-selector,
+/* ===========================================
+   Personnalisation (slide 6) : sections, avatar, thèmes de couleurs
+   (composant js/components/customization.js ; accessibilité : parent-controls.css)
+   =========================================== */
+
+/* Sections à plat dans la carte : un filet les sépare */
+#slide6 .customization-section {
+  padding-block: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+#slide6 .customization-section:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+
+#slide6 .customization-section:last-of-type {
+  padding-bottom: 0;
+}
+
+/* Section vidée (ancienne rubrique accessoires) : rien à afficher */
+#slide6 .customization-section:not(:has(*)) {
+  display: none;
+}
+
+/* Titre en tête de carte, bouton « Terminer » en bas de carte */
+#slide6 .content-card > h2 {
+  margin-bottom: var(--space-4);
+}
+
+#slide6 .content-card > .btn {
+  margin-top: var(--space-5);
+}
+
+/* --- Avatar --- */
+.current-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: var(--color-ink-muted);
+}
+
+.current-avatar img {
+  inline-size: 56px;
+  block-size: 56px;
+}
+
+#slide6 .avatar-selector {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+/* Tuile d'avatar : visage, prénom du personnage, cadenas s'il est verrouillé.
+   Largeur minimale commune ; un nom plus long élargit sa tuile au lieu de déborder. */
+#slide6 .avatar-btn {
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 7.5rem;
+  margin: 0;
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  border-radius: var(--radius-lg);
+}
+
+#slide6 .avatar-btn img {
+  inline-size: 72px;
+  block-size: 72px;
+}
+
+/* Le nom du personnage ne se coupe jamais (« Astronaut-e ») */
+#slide6 .avatar-label {
+  white-space: nowrap;
+}
+
+#slide6 .avatar-btn .lock-icon {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+  display: inline-flex;
+  color: var(--color-ink-muted);
+}
+
+/* Téléphone : trois tuiles par ligne plutôt que deux. Marges intérieures réduites
+   pour que « Astronaute » tienne dans la tuile, y compris en « Grand » texte. */
+@media (max-width: 480px) {
+  #slide6 .avatar-selector {
+    gap: var(--space-2);
+  }
+
+  #slide6 .avatar-btn {
+    min-inline-size: 6.25rem;
+    padding-inline: var(--space-1);
+  }
+
+  #slide6 .avatar-btn img {
+    inline-size: 56px;
+    block-size: 56px;
+  }
+}
+
+/* --- Thèmes de couleurs : pastille du thème + libellé --- */
 .color-theme-selector {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
 }
 
-.theme-btn,
-.level-btn,
 .color-theme-btn {
-  background-color: #f1f1f1;
-  color: #333;
-  border: 2px solid #ddd;
-  border-radius: 15px;
-  padding: 10px 15px;
-  font-family: 'Comic Sans MS', 'Bubblegum Sans', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 48px;
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 0;
+  border-radius: var(--radius-pill);
+  box-shadow:
+    inset 0 0 0 2px var(--color-border),
+    0 var(--key-edge) 0 var(--color-border-strong);
   cursor: pointer;
   transition:
-    transform 0.3s,
-    box-shadow 0.3s,
-    background-color 0.3s,
-    border-color 0.3s;
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
 }
 
-.theme-btn.active,
-.level-btn.active {
-  background-color: var(--primary-color, #00bbf9);
-  color: white;
-  border-color: var(--primary-dark, #00a3d9);
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.2);
+.color-theme-btn:hover {
+  box-shadow:
+    inset 0 0 0 2px var(--color-action),
+    0 var(--key-edge) 0 var(--color-border-strong);
 }
 
-.color-theme-btn {
-  padding: 12px 20px;
-  font-size: 16px;
+.color-theme-btn:active {
+  transform: translateY(var(--key-edge));
+  box-shadow:
+    inset 0 0 0 2px var(--color-action),
+    0 0 0 var(--color-border-strong);
 }
 
-.color-theme-btn.active {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.2);
+/* Thème choisi : anneau d'action, fond teinté (et aria-pressed="true") */
+.color-theme-btn.active,
+.color-theme-btn[aria-pressed='true'] {
+  background-color: var(--color-action-tint);
+  box-shadow:
+    inset 0 0 0 3px var(--color-action),
+    0 var(--key-edge) 0 var(--color-action-edge);
 }
 
-/* Styles spécifiques des boutons de thèmes de couleurs */
-.color-theme-btn[data-color-theme='default'] {
-  background-color: #3498db;
-  color: white;
-  border-color: #2980b9;
+/* Jetons du thème Classique, relevés à la racine : les classes de thème se posent
+   sur le body, donc ces valeurs restent celles du Classique dans tous les thèmes. */
+:root {
+  --swatch-default-page: var(--color-page);
+  --swatch-default-action: var(--color-action);
 }
 
-.color-theme-btn[data-color-theme='pink'] {
-  background-color: #ff85a2;
-  color: white;
-  border-color: #ff6b88;
+/* La pastille garde le contour du thème en cours ; son intérieur porte la classe
+   du thème montré (.theme-xxx), donc ses jetons : fond de page et point d'action. */
+.color-theme-swatch {
+  display: inline-grid;
+  flex: none;
+  inline-size: 32px;
+  block-size: 32px;
+  overflow: hidden;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--color-border-strong);
 }
 
-.color-theme-btn[data-color-theme='blue'] {
-  background-color: #3f51b5;
-  color: white;
-  border-color: #303f9f;
+.color-theme-swatch-fill {
+  display: grid;
+  place-items: center;
+  background-color: var(--color-page);
 }
 
-.color-theme-btn[data-color-theme='green'] {
-  background-color: #4caf50;
-  color: white;
-  border-color: #388e3c;
+.color-theme-swatch-fill[data-theme-preview='default'] {
+  --color-page: var(--swatch-default-page);
+  --color-action: var(--swatch-default-action);
 }
 
-.color-theme-btn[data-color-theme='orange'] {
-  background-color: #ff9800;
-  color: white;
-  border-color: #f57c00;
-}
-
-.color-theme-btn[data-color-theme='dark'] {
-  background-color: #34495e;
-  color: white;
-  border-color: #2c3e50;
+.color-theme-swatch-fill::after {
+  content: '';
+  inline-size: 14px;
+  block-size: 14px;
+  background-color: var(--color-action);
+  border-radius: 50%;
 }

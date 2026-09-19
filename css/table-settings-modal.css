@@ -1,352 +1,250 @@
-/* ====================================
-   Modale de Paramétrage des Tables
-   Design moderne et ludique pour enfants 8-12 ans
-   ==================================== */
+/* ===========================================
+   LeapMultix : fenêtre « Paramètres des tables »
+   Une seule surface posée sur un voile. Les tables sont des touches à bascule :
+   une table exclue reste enfoncée et barrée (la forme double l'état).
+   Le bouton qui ouvre la fenêtre appartient à la barre du haut (css/topbar.css).
+   =========================================== */
 
-/* Modale et overlay */
 .table-settings-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
+  inset: 0;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--space-4);
   opacity: 0;
   visibility: hidden;
   transition:
-    opacity 0.3s ease,
-    visibility 0.3s ease;
+    opacity var(--dur-base) var(--ease-out),
+    visibility 0s linear var(--dur-base);
 }
 
 .table-settings-modal.visible {
   opacity: 1;
   visibility: visible;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    visibility 0s;
 }
 
-/* Overlay semi-transparent */
-.modal-overlay {
+.table-settings-modal .modal-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgb(0 0 0 / 60%);
-  backdrop-filter: blur(4px);
-  animation: fade-in 0.3s ease;
+  inset: 0;
+  background-color: var(--color-scrim-modal);
 }
 
-/* Contenu de la modale */
-.modal-content {
+.table-settings-modal .modal-content {
   position: relative;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgb(0 0 0 / 30%);
-  padding: 2rem;
-  max-width: 600px;
-  width: 90%;
-  max-height: 85vh;
+  width: min(100%, 36rem);
+  max-height: calc(100vh - 2 * var(--space-4));
+  max-height: calc(100dvh - 2 * var(--space-4));
   overflow-y: auto;
-  transform: scale(0.9);
-  animation: pop-in 0.3s ease forwards;
+  padding: var(--space-6);
+  text-align: start;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.96);
+  transition: transform var(--dur-base) var(--ease-out);
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.table-settings-modal.visible .modal-content {
+  transform: scale(1);
 }
 
-@keyframes pop-in {
-  from {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* En-tête */
-.modal-header {
+/* === EN-TÊTE === */
+.table-settings-modal .modal-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e9ecef;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
 }
 
-.modal-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #2c3e50;
+.table-settings-modal .modal-title {
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-size: var(--text-xl);
 }
 
-.modal-close-btn {
-  background: #f8f9fa;
-  border: 2px solid #dee2e6;
-  border-radius: 12px;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  color: #343a40;
+.table-settings-modal .modal-close-btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
 }
 
-.modal-close-btn:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-  transform: rotate(90deg);
+@media (hover: hover) {
+  .table-settings-modal .modal-close-btn:hover {
+    border-color: var(--color-action);
+  }
 }
 
-/* Description */
-.modal-description {
-  font-size: 1rem;
-  color: #495057;
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
+.table-settings-modal .modal-close-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
-/* Toggle principal */
-.toggle-container {
-  margin-bottom: 2rem;
-  padding: 1.25rem;
-  background: linear-gradient(135deg, #4338ca 0%, #5b21b6 100%);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgb(67 56 202 / 35%);
+.table-settings-modal .modal-close-btn path {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
 }
 
-.toggle-label {
+.table-settings-modal .modal-description {
+  margin: 0 0 var(--space-4);
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+/* === INTERRUPTEUR : la position du curseur dit l'état, pas seulement la couleur === */
+.table-settings-modal .toggle-container {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.table-settings-modal .toggle-label {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-3);
+  min-height: 44px;
   cursor: pointer;
   user-select: none;
 }
 
-.toggle-input {
+.table-settings-modal .toggle-input {
   position: relative;
-  width: 60px;
+  flex: none;
+  width: 52px;
   height: 32px;
+  margin: 0;
   appearance: none;
-  background: rgb(255 255 255 / 30%);
-  border-radius: 16px;
+  background-color: var(--color-border-strong);
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition:
-    background-color 0.3s ease,
-    box-shadow 0.3s ease;
-  flex-shrink: 0;
+  transition: background-color var(--dur-base) var(--ease-out);
 }
 
-.toggle-input:checked {
-  background: #48bb78;
-}
-
-.toggle-input::before {
+.table-settings-modal .toggle-input::before {
   content: '';
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: white;
-  top: 3px;
-  left: 3px;
-  transition: transform 0.3s ease;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
-}
-
-.toggle-input:checked::before {
-  transform: translateX(28px);
-}
-
-.toggle-text {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: white;
-  text-shadow: 0 2px 4px rgb(0 0 0 / 20%);
-}
-
-/* Grille de tables */
-.tables-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.table-btn {
-  aspect-ratio: 1;
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
-  color: #f8fafc;
-  border: 3px solid transparent;
-  border-radius: 16px;
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-  box-shadow: 0 4px 12px rgb(30 64 175 / 50%);
-  position: relative;
-  overflow: hidden;
-}
-
-.table-btn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 30%);
-  transform: translate(-50%, -50%);
-  transition:
-    width 0.4s ease,
-    height 0.4s ease;
-}
-
-.table-btn:hover::before {
-  width: 100%;
-  height: 100%;
-}
-
-.table-btn:hover {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 0 8px 20px rgb(79 172 254 / 50%);
-}
-
-.table-btn:active {
-  transform: translateY(-2px) scale(1.02);
-}
-
-.table-btn.excluded {
-  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
-  border-color: #7f1d1d;
-  box-shadow: 0 4px 12px rgb(127 29 29 / 45%);
-}
-
-.table-btn.excluded::after {
-  content: '✕';
   position: absolute;
   top: 4px;
-  right: 6px;
-  font-size: 1rem;
-  opacity: 0.9;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-surface);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-base) var(--ease-out);
 }
 
-.table-btn.excluded:hover {
-  box-shadow: 0 8px 20px rgb(245 87 108 / 50%);
+.table-settings-modal .toggle-input:checked {
+  background-color: var(--color-action);
 }
 
-/* Indicateur des tables exclues */
-.exclusion-status {
-  padding: 1rem;
-  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-  border-radius: 12px;
-  border-left: 4px solid #f39c12;
-  font-size: 1rem;
-  box-shadow: 0 2px 8px rgb(253 203 110 / 40%);
-  animation: slide-in 0.3s ease;
+.table-settings-modal .toggle-input:checked::before {
+  transform: translateX(20px);
 }
 
-@keyframes slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.excluded-list {
-  color: #d63031;
+.table-settings-modal .toggle-text {
   font-weight: 700;
-  font-size: 1.1rem;
+  color: var(--color-ink);
 }
 
-/* Responsive - Mobile */
-@media (max-width: 600px) {
-  .modal-content {
-    padding: 1.5rem;
-    max-width: 95%;
-    border-radius: 20px;
-  }
-
-  .modal-title {
-    font-size: 1.5rem;
-  }
-
-  .tables-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
-  }
-
-  .table-btn {
-    font-size: 1.25rem;
-  }
-
-  .toggle-text {
-    font-size: 1rem;
-  }
+/* === TABLES : touches à bascule === */
+.table-settings-modal .tables-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
-/* Responsive - Très petits écrans */
-@media (max-width: 400px) {
-  .tables-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .table-btn {
-    font-size: 1.1rem;
-  }
-}
-
-/* Amélioration accessibilité */
-.table-btn:focus-visible {
-  outline: 3px solid #ffd700;
-  outline-offset: 2px;
-}
-
-.modal-close-btn:focus-visible {
-  outline: 3px solid #667eea;
-  outline-offset: 2px;
-}
-
-/* Animation du bouton paramètres dans la topBar */
-.table-settings-btn {
+.table-settings-modal .table-btn {
+  aspect-ratio: 1;
+  min-height: 48px;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
+  cursor: pointer;
+  touch-action: manipulation;
   transition:
-    transform 0.3s ease,
-    filter 0.3s ease;
-  font-size: 1.2rem;
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
 }
 
-.table-settings-btn:hover {
-  transform: rotate(45deg) scale(1.1);
-  filter: brightness(1.2);
+@media (hover: hover) {
+  .table-settings-modal .table-btn:hover {
+    border-color: var(--color-action);
+  }
 }
 
-.table-settings-btn:active {
-  transform: rotate(90deg) scale(0.95);
+.table-settings-modal .table-btn:active {
+  transform: translateY(var(--key-edge));
+  box-shadow: 0 0 0 var(--color-border-strong);
+}
+
+/* Exclue : la touche reste enfoncée, le numéro est barré */
+.table-settings-modal .table-btn.excluded {
+  color: var(--color-ink-muted);
+  background-color: var(--color-surface-sunken);
+  border-color: var(--color-border-strong);
+  box-shadow: 0 0 0 var(--color-border-strong);
+  transform: translateY(var(--key-edge));
+  text-decoration: line-through;
+  text-decoration-thickness: 3px;
+}
+
+/* === TABLES EXCLUES === */
+.table-settings-modal .exclusion-status {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-ink);
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.table-settings-modal .excluded-list {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  color: var(--color-ink);
+}
+
+@media (max-width: 600px) {
+  .table-settings-modal .modal-content {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .table-settings-modal .modal-title {
+    font-size: var(--text-lg);
+  }
+}
+
+/* Sous 330 px, cinq touches par rangée passeraient sous 44 px */
+@media (max-width: 330px) {
+  .table-settings-modal .tables-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }

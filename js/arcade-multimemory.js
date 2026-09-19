@@ -1,7 +1,7 @@
 /* =====================
    Arcade Memory Launcher (MultiMemory)
    - Contient la fonction startMemoryArcade pour lancer le jeu MultiMemory
-   - Dépend de getArcadeGameTemplate (arcade.js) et des fonctions communes
+   - Dépend de InfoBar.createArcadeTemplateElement (components/infoBar.js) et des fonctions communes
    ===================== */
 
 import { generateQuestion } from './questionGenerator.js';
@@ -21,7 +21,13 @@ import {
 } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
 import { AudioManager } from './core/audio.js';
-import { showGameInstructions } from './arcade-common.js';
+import {
+  showGameInstructions,
+  getCanvasFont,
+  prepareArcadeStage,
+  getArcadeCanvasBox,
+  clientToCanvasPoint,
+} from './arcade-common.js';
 import { getDifficultySettings } from './difficulty.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
@@ -154,6 +160,11 @@ export function startMemoryArcade() {
     showScore: true, // Activer le score comme dans les autres jeux
   });
   gameScreen.appendChild(frag);
+  // Haut de page, zone de jeu sans hauteur imposée, consigne sous le plateau :
+  // les cartes se dimensionnent ensuite pour que l'ensemble tienne dans l'écran
+  const memoryCanvas = document.getElementById('multimemory-canvas');
+  prepareArcadeStage(memoryCanvas);
+  showGameInstructions(memoryCanvas, getMemoryInstructions());
 
   // Utilisation des paramètres de difficulté (Cascade 2025)
   const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
@@ -203,6 +214,23 @@ export function startMemoryArcade() {
   } catch {
     // Erreur ignorée (non-critique)
   }
+}
+
+// Consigne du jeu, selon l'appareil (doigt ou souris)
+function getMemoryInstructions() {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    globalThis.navigator?.userAgent || ''
+  );
+  if (isMobile) {
+    return (
+      getTranslation('arcade.multiMemory.controls.mobile') ||
+      'Touche les cartes pour les retourner et trouver les paires\u00a0!'
+    );
+  }
+  return (
+    getTranslation('arcade.multiMemory.controls.desktop') ||
+    'Clique sur les cartes pour les retourner et trouver les paires\u00a0!'
+  );
 }
 
 // Gestionnaire d'événement pour le bouton abandon
@@ -326,30 +354,22 @@ class MemoryGame {
     const container = this.canvas.parentElement;
     if (!container) return; // Protection supplémentaire
 
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-
-    // Réserver de l'espace pour les éléments UI (score en haut + bouton en bas)
-    const uiSpaceReserved = 185; // pixels réservés pour UI (score: ~133px + button: 52px)
-    const availableHeight = Math.max(containerHeight - uiSpaceReserved, 300);
+    // Place réelle des cartes : sous le bandeau, avec la consigne et « Abandonner »
+    const box = getArcadeCanvasBox(this.canvas);
+    const containerWidth = box.width;
+    const availableHeight = box.height;
 
     // Garder un ratio d'affichage correct
     const aspectRatio = this.isMobile ? 0.75 : 1.33; // hauteur / largeur
 
-    let canvasWidth, canvasHeight;
-    if (containerWidth * aspectRatio <= availableHeight) {
-      canvasWidth = containerWidth * 0.95;
-      canvasHeight = canvasWidth * aspectRatio;
-    } else {
-      canvasHeight = availableHeight * 0.95;
+    let canvasWidth = containerWidth;
+    let canvasHeight = canvasWidth * aspectRatio;
+    if (canvasHeight > availableHeight) {
+      canvasHeight = availableHeight;
       canvasWidth = canvasHeight / aspectRatio;
     }
-
-    // Garantir que le canvas ne dépasse JAMAIS la hauteur disponible
-    if (canvasHeight > availableHeight * 0.95) {
-      canvasHeight = availableHeight * 0.95;
-      canvasWidth = canvasHeight / aspectRatio;
-    }
+    canvasWidth = Math.floor(canvasWidth);
+    canvasHeight = Math.floor(canvasHeight);
 
     this.canvas.width = canvasWidth;
     this.canvas.height = canvasHeight;
@@ -386,9 +406,8 @@ class MemoryGame {
       e.stopImmediatePropagation();
       if (e.changedTouches && e.changedTouches.length > 0) {
         const touch = e.changedTouches[0];
-        const rect = self.canvas.getBoundingClientRect();
-        const x = (touch.clientX - rect.left) * (self.canvas.width / rect.width);
-        const y = (touch.clientY - rect.top) * (self.canvas.height / rect.height);
+        // Coordonnées écran -> cartes (cadre du canevas et réduction éventuelle compris)
+        const { x, y } = clientToCanvasPoint(self.canvas, touch.clientX, touch.clientY);
 
         self.handleDirectTouch(x, y);
       }
@@ -407,11 +426,7 @@ class MemoryGame {
 
     // Suivi de la position de la souris pour desktop
     this.boundHandleMouseMove = e => {
-      const rect = self.canvas.getBoundingClientRect();
-      self.lastMousePos = {
-        x: (e.clientX - rect.left) * (self.canvas.width / rect.width),
-        y: (e.clientY - rect.top) * (self.canvas.height / rect.height),
-      };
+      self.lastMousePos = clientToCanvasPoint(self.canvas, e.clientX, e.clientY);
 
       // Redessiner seulement si nous sommes en hover sur une carte (desktop uniquement)
       if (!self.isMobile && self.getCardAtPosition(self.lastMousePos.x, self.lastMousePos.y)) {
@@ -442,26 +457,8 @@ class MemoryGame {
     this.shuffleCards();
     this.draw();
 
-    // Démarrer la boucle de jeu
+    // Démarrer la boucle de jeu (la consigne est déjà affichée par le lanceur)
     this.gameLoop();
-
-    // Utiliser la fonction commune pour afficher les instructions au-dessus du canvas
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      globalThis.navigator?.userAgent || ''
-    );
-    let instructions;
-
-    if (isMobile) {
-      instructions =
-        getTranslation('arcade.multiMemory.controls.mobile') ||
-        'Touchez les cartes pour les retourner et trouver les paires !';
-    } else {
-      instructions =
-        getTranslation('arcade.multiMemory.controls.desktop') ||
-        'Cliquez sur les cartes pour les retourner et trouver les paires !';
-    }
-
-    showGameInstructions(this.canvas, instructions, '#4CAF50', 5000);
   }
 
   // Crée les cartes pour le jeu
@@ -627,9 +624,7 @@ class MemoryGame {
       y = e.clientY;
     } else {
       // Pour les clics de souris normaux
-      const rect = this.canvas.getBoundingClientRect();
-      x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
-      y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+      ({ x, y } = clientToCanvasPoint(this.canvas, e.clientX, e.clientY));
     }
 
     const clickedCard = this.getCardAtPosition(x, y);
@@ -734,7 +729,7 @@ class MemoryGame {
         }
 
         // Afficher un message de félicitations
-        showArcadeMessage('arcade.multiMemory.match', '#4CAF50', 1000);
+        showArcadeMessage('arcade.multiMemory.match', 'success', 1000);
 
         // Vérifier si toutes les paires ont été trouvées
         if (this.matchedPairs === this.pairs) {
@@ -755,8 +750,8 @@ class MemoryGame {
           this.failureSound.play().catch(() => {});
         }
 
-        // Afficher un message d'échec
-        showArcadeMessage('arcade.multiMemory.mismatch', '#F44336', 1000);
+        // Pas une paire : une étape, pas une sanction (ton neutre, le texte encourage)
+        showArcadeMessage('arcade.multiMemory.mismatch', 'neutral', 1000);
       }
 
       // Réinitialiser pour le prochain tour
@@ -784,7 +779,7 @@ class MemoryGame {
     }
 
     // Montrer un message de victoire
-    showArcadeMessage('arcade.multiMemory.win', '#4CAF50', 2000);
+    showArcadeMessage('arcade.multiMemory.win', 'success', 2000);
 
     // Animer la victoire
     this.animateVictory();
@@ -957,10 +952,10 @@ class MemoryGame {
   drawCardFront(card, cardX, cardY, cardWidth, cardHeight) {
     this.ctx.fillStyle = '#FFFFFF';
     let fontSize = Math.floor(card.type === 'operation' ? cardHeight / 3 : cardHeight / 2.5);
-    this.ctx.font = `bold ${fontSize}px Arial`;
+    this.ctx.font = getCanvasFont(fontSize);
     while (this.ctx.measureText(card.content).width > cardWidth * 0.8 && fontSize > 10) {
       fontSize--;
-      this.ctx.font = `bold ${fontSize}px Arial`;
+      this.ctx.font = getCanvasFont(fontSize);
     }
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
@@ -991,7 +986,7 @@ class MemoryGame {
       this.ctx.fillStyle = '#FFFFFF';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.font = `${Math.floor(cardHeight / 5)}px Arial`;
+      this.ctx.font = getCanvasFont(cardHeight / 5);
       this.ctx.fillText('?', cardX + cardWidth / 2, cardY + cardHeight / 2);
     }
   }

@@ -1,470 +1,285 @@
-/* ========== ADVENTURE MODE ========== */
+/* ===========================================
+   LeapMultix : mode Aventure
+   Sélection des niveaux, scène de progression et écran de fin, à plat dans la
+   carte de contenu. Question, tuiles et actions : css/game.css.
+   Étoiles de récompense : css/stars.css.
+   =========================================== */
 
-/* Appliquer un fond blanc semi-transparent sur la sélection de niveau
-   pour améliorer la lisibilité quel que soit l'arrière-plan */
 .adventure-container {
-  background-color: rgb(255 255 255 / 0.85);
-  border-radius: 16px;
-  padding: 16px;
+  max-width: 48rem;
+  margin: 0 auto;
 }
 
-.theme-dark .adventure-container {
-  background-color: rgb(44 62 80 / 0.85);
-}
-
-/* Style pour le texte d'introduction */
-.adventure-story-intro {
-  background-color: rgb(255 255 255 / 0.85);
-
-  /* Fond blanc semi-transparent */
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-
-  /* Espace avant le titre suivant */
-  box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
-
-  /* Ombre légère */
-  color: #333;
-
-  /* Assurer une couleur de texte foncée pour le contraste */
-  line-height: 1.5;
-
-  /* Améliorer la lisibilité */
-}
-
-/* Adaptation pour le thème sombre */
-.theme-dark .adventure-story-intro {
-  background-color: rgb(44 62 80 / 0.85);
-
-  /* Fond sombre semi-transparent */
-  color: #ecf0f1;
-
-  /* Texte clair */
-  box-shadow: 0 2px 5px rgb(255 255 255 / 0.1);
-}
-
+/* === EN-TÊTE : le personnage de l'enfant et ses étoiles === */
 .adventure-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .adventure-avatar {
-  font-size: 40px;
-  background-color: #f1f1f1;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 88px;
+  height: 88px;
+  overflow: hidden;
+  background-color: var(--color-surface-sunken);
   border-radius: 50%;
-  width: 100px;
-  height: 100px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+}
+
+.adventure-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .adventure-info {
-  text-align: left;
+  display: grid;
+  gap: var(--space-1);
+  text-align: start;
 }
 
 .adventure-name {
-  font-size: 18px;
-  font-weight: bold;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
 }
 
 .adventure-stars {
-  color: #666;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-ink-muted);
 }
 
+.adventure-stars .reward-star {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+#total-stars-display {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.adventure-story-intro {
+  max-width: 60ch;
+  margin: 0 auto var(--space-5);
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+/* === NIVEAUX : des touches numérotées ; l'état se lit à la forme === */
 .adventure-levels {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
-  margin: 20px 0;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
 }
 
 .level-card {
-  /* background-color: white; -> Hérité de .card-base */
-  border-radius: 20px;
-
-  /* Surcharge .card-base */
-  overflow: hidden;
-
-  /* box-shadow: 0 8px 16px rgb(0 0 0 / 0.1); -> Hérité de .card-base (valeur similaire) */
-
-  /* transition: all 0.3s; -> Hérité de .card-base */
-
-  /* cursor: pointer; -> Hérité de .card-base--clickable */
-  border: 3px solid #ffc6dd;
-
-  /* Style spécifique */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 72px;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  font: inherit;
+  text-align: start;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
 }
 
-.level-card:hover {
-  transform: translateY(-8px) rotate(2deg);
-  box-shadow: 0 12px 24px rgb(0 0 0 / 0.15);
-  border-color: #ff85a2;
+@media (hover: hover) {
+  .level-card:hover:not([aria-disabled='true']) {
+    border-color: var(--color-action);
+  }
 }
 
-.level-card.locked {
-  opacity: 0.7;
-  filter: grayscale(50%);
-  cursor: not-allowed;
+.level-card:active:not([aria-disabled='true']) {
+  transform: translateY(var(--key-edge));
+  box-shadow: 0 0 0 var(--color-border-strong);
 }
 
-.level-card.unlocked {
-  background-color: #e8f5e9;
-  border: 4px solid var(--primary-color, #00bbf9);
-}
-
-.level-card.unlocked .level-status {
-  display: none;
-}
-
-.level-card.completed {
-  border: 4px solid #ffcd00;
-  box-shadow: 0 8px 20px rgb(255 205 0 / 0.3);
-  background-image: linear-gradient(to bottom, #fffbeb, #fff9f2);
-}
-
-.level-image {
-  height: 120px;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-}
-
-.level-status {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 24px;
+.level-number {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-ink);
+  background-color: var(--color-surface-sunken);
+  border-radius: 50%;
 }
 
 .level-info {
-  padding: 15px;
+  display: grid;
+  gap: 2px;
 }
 
 .level-name {
-  font-weight: bold;
-  margin-bottom: 5px;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink-heading);
 }
 
 .level-table {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 5px;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
 }
 
-.theme-dark .level-table {
-  color: #bdc3c7;
+.level-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 700;
+  color: var(--color-ink-muted);
 }
 
-.level-stars {
-  color: #ffcd00;
-  filter: drop-shadow(0 0 3px rgb(255 205 0 / 0.5));
-  font-size: 18px;
-  letter-spacing: 3px;
+.level-lock {
+  width: 1.25em;
+  height: 1.25em;
 }
 
-.theme-dark .level-name {
-  color: #3498db;
+.level-lock path {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.adventure-level-header {
-  margin-bottom: 20px;
+/* Prochain niveau à jouer : fond sélectionné, numéro sur la couleur d'action */
+.level-card.is-available {
+  background-color: var(--color-action-tint);
+  border-color: var(--color-action);
+  box-shadow: 0 var(--key-edge) 0 var(--color-action-edge);
 }
 
-.level-description {
-  background-color: #f9f9f9;
-  padding: 10px;
-  border-radius: 5px;
-  margin: 10px 0;
+.level-card.is-available .level-number {
+  color: var(--color-on-action);
+  background-color: var(--color-action);
+}
+
+/* Verrouillé : à plat (sans tranche), en retrait, cadenas et étoiles requises */
+.level-card.is-locked {
+  color: var(--color-ink-muted);
+  background-color: var(--color-surface-sunken);
+  border-color: var(--color-border);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.level-card.is-locked .level-name {
+  color: var(--color-ink-muted);
+}
+
+.level-card.is-locked .level-number {
+  background-color: var(--color-surface);
+}
+
+/* === PARTIE : le nom du niveau et la scène de progression === */
+.adventure-level-header h3 {
+  margin-bottom: var(--space-3);
 }
 
 .adventure-scene {
   position: relative;
-  height: 150px;
-  background-color: #f1f1f1;
-  border-radius: 5px;
-  margin-bottom: 20px;
+  max-width: 36rem;
+  height: 120px;
+  margin: 0 auto var(--space-4);
+  overflow: hidden;
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
 }
 
 .adventure-path {
   position: absolute;
-  bottom: 50px;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background-color: #ccc;
+  right: var(--space-4);
+  bottom: var(--space-5);
+  left: var(--space-4);
+  height: 4px;
+  background-color: var(--color-border);
+  border-radius: var(--radius-pill);
 }
 
+/* Le personnage avance d'un pas par bonne réponse (transform, jamais left) */
 .adventure-character {
   position: absolute;
-  bottom: 50px;
-  left: 0;
-  width: 80px;
-  height: 80px;
-  transition: left 0.5s;
-}
-
-.adventure-character img {
-  width: 100%;
-  height: 100%;
+  bottom: var(--space-5);
+  left: var(--space-2);
+  width: 72px;
+  height: 72px;
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 
 .adventure-treasure {
   position: absolute;
-  bottom: 50px;
-  right: 20px;
-  width: 80px;
-  height: 80px;
+  right: var(--space-4);
+  bottom: var(--space-5);
+  width: 72px;
+  height: 72px;
 }
 
+.adventure-character img,
 .adventure-treasure img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
 }
 
-.adventure-controls {
-  background-color: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
-  max-width: 800px;
-  margin: 0 auto;
+/* === ÉCRAN DE FIN : le trésor, la phrase, les étoiles ===
+   Le titre (« Niveau terminé ») reste un cran sous la phrase principale. */
+.adventure-results > h2 {
+  margin: 0;
+  font-size: var(--text-lg);
 }
 
-.adventure-stats {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
-}
-
-.adventure-question {
-  font-size: 24px;
-  font-weight: bold;
-  margin: 0 auto 20px;
-  text-align: center;
-  background-color: #f5f5f5;
-  padding: 15px;
-  border-radius: 10px;
-  max-width: 650px;
-}
-
-.theme-dark .adventure-question {
-  background-color: #2c3e50;
-  color: #ecf0f1;
-  border: 2px solid #3498db;
-}
-
-.adventure-options {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin: 0 auto 20px;
-  max-width: 650px;
-}
-
-.option-btn {
-  background-color: #f0e6ff;
-  border: 2px solid #d9c2ff;
-  padding: 15px;
-  font-size: 18px;
-  border-radius: 15px;
-  cursor: pointer;
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s,
-    background-color 0.3s,
-    border-color 0.3s;
-
-  /* font-family héritée de body */
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
-  min-height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.option-btn:hover {
-  background-color: #e3d3ff;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgb(0 0 0 / 0.15);
-}
-
-.theme-dark .option-btn {
-  background-color: #2c3e50;
-  color: #ecf0f1;
-  border-color: #3498db;
-}
-
-.theme-dark .option-btn:hover {
-  background-color: #3498db;
-}
-
-.adventure-feedback {
-  min-height: 30px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.victory-screen {
-  background-color: white;
-  background-image: radial-gradient(circle, #fff9fb 0%, white 70%);
-  padding: 30px;
-  border-radius: 25px;
-  box-shadow: 0 10px 25px rgb(0 0 0 / 0.15);
-  text-align: center;
-  border: 5px solid #ff85a2;
-  animation: victory-appear 0.8s ease-out;
-}
-
-@keyframes victory-appear {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-
-  70% {
-    transform: scale(1.05);
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.victory-image {
-  margin: 15px 0;
-}
-
-.victory-stars {
-  font-size: 42px;
-  margin: 20px 0;
-  animation: star-dance 2s ease-in-out;
-  color: #ffcd00;
-  filter: drop-shadow(0 0 10px rgb(255 205 0 / 0.7));
-  letter-spacing: 10px;
-}
-
-@keyframes star-dance {
-  0% {
-    transform: scale(0) rotate(-10deg);
-    opacity: 0;
-  }
-
-  40% {
-    transform: scale(1.3) rotate(5deg);
-    opacity: 1;
-  }
-
-  60% {
-    transform: scale(1.2) rotate(-3deg);
-  }
-
-  80% {
-    transform: scale(0.9) rotate(2deg);
-  }
-
-  100% {
-    transform: scale(1) rotate(0);
-  }
-}
-
-.victory-message {
-  margin-bottom: 15px;
-}
-
-.victory-stats {
-  background-color: #f9f9f9;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-}
-
-.continue-btn {
-  margin-top: 10px;
-}
-
-/* --- Responsive Adventure Mode --- */
-
-@media (max-width: 768px) {
-  .adventure-header {
-    flex-direction: column; /* Stack avatar and info */
-    align-items: center;
-    text-align: center;
-  }
-
-  .adventure-avatar {
-    width: 80px;
-    height: 80px;
-    font-size: 32px;
-  }
-
-  .adventure-levels {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-  }
-
-  .level-image {
-    height: 100px;
-  }
-
-  .adventure-question {
-    font-size: 20px;
-  }
-
-  .adventure-options {
-    grid-template-columns: 1fr; /* Single column for options */
-  }
-
-  .option-btn {
-    padding: 12px;
-    font-size: 16px;
-    min-height: 60px;
-  }
-
-  .victory-stars {
-    font-size: 32px;
-  }
+.results-treasure {
+  display: block;
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
 }
 
 @media (max-width: 480px) {
-  .adventure-container,
-  .adventure-controls,
-  .victory-screen {
-    padding: 15px;
+  .adventure-header {
+    gap: var(--space-3);
   }
 
-  .adventure-levels {
-    grid-template-columns: 1fr; /* Force single column on very small screens */
-  }
-
-  .adventure-stats {
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .adventure-question {
-    font-size: 18px;
-    padding: 10px;
+  .adventure-avatar {
+    width: 72px;
+    height: 72px;
   }
 
   .adventure-scene {
-    height: 120px;
+    height: 104px;
   }
 
   .adventure-character,
   .adventure-treasure {
-    width: 60px;
-    height: 60px;
-  }
-
-  .victory-stars {
-    font-size: 28px;
-    letter-spacing: 5px;
+    width: 56px;
+    height: 56px;
   }
 }

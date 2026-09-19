@@ -3,57 +3,142 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>LeapMultix — Hors ligne</title>
+    <title>LeapMultix — Hors ligne · Offline · Sin conexión</title>
     <meta name="robots" content="noindex" />
+    <!-- Page de secours du service worker (sw.js) : elle remplace la page demandée
+         quand le réseau ne répond pas. C’est souvent l’enfant qui la lit : on le
+         tutoie, comme dans l’application.
+         La CSP de production interdit le script en ligne : la page ne peut pas lire
+         la langue choisie dans l’application. Elle parle donc les trois langues,
+         le français d’abord, chaque bloc avec son attribut lang.
+         Jetons et socle : hors ligne, le service worker les sert s’il les a en cache ;
+         sinon, le repli du bloc <style> ci-dessous prend le relais. -->
+    <link rel="stylesheet" href="/css/themes.css" />
+    <link rel="stylesheet" href="/css/general.css" />
     <style>
-      body {
-        font-family:
+      /* Repli quand themes.css et general.css ne sont pas en cache : chaque var()
+         retombe sur la valeur du thème Classique, recopiée de css/themes.css.
+         Les règles en :where() ont une spécificité nulle : general.css l’emporte
+         dès qu’il est chargé, ce bloc ne fait que combler son absence. */
+      :where(body) {
+        margin: 0;
+        font-family: var(
+          --font-text,
+          'LeapMultix Lecture',
           system-ui,
           -apple-system,
           'Segoe UI',
-          Roboto,
-          Ubuntu,
-          Cantarell,
-          'Noto Sans',
-          Arial,
-          sans-serif;
-        margin: 2rem;
-        background: #0a0a0a;
-        color: #f2f2f2;
+          sans-serif
+        );
+        line-height: 1.5;
+        color: var(--color-ink, oklch(0.29 0.03 248));
+        background-color: var(--color-page, oklch(0.93 0.02 235));
       }
-      .card {
-        max-width: 640px;
-        margin: 10vh auto;
-        background: #141414;
-        border-radius: 12px;
-        padding: 1.5rem 1.75rem;
-        box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
+
+      :where(a) {
+        color: var(--color-action-ink, oklch(0.47 0.118 245));
       }
-      h1 {
-        margin-top: 0;
-        font-size: 1.5rem;
+
+      /* Même touche que .btn et .btn-secondary (css/general.css) */
+      :where(.offline-card .btn) {
+        box-sizing: border-box;
+        min-height: 48px;
+        padding: 0.7em 1.3em;
+        font-weight: 700;
+        color: var(--color-on-action, oklch(1 0 0));
+        background: var(--color-action, oklch(0.52 0.131 245));
+        border-radius: var(--radius-md, 14px);
+        box-shadow: 0 var(--key-edge, 4px) 0 var(--color-action-edge, oklch(0.38 0.095 245));
       }
-      p {
-        opacity: 0.9;
+
+      :where(.offline-card .btn-secondary) {
+        color: var(--color-action-ink, oklch(0.47 0.118 245));
+        background: var(--color-surface, oklch(0.995 0.001 248));
+        box-shadow:
+          inset 0 0 0 2px var(--color-border-strong, oklch(0.64 0.02 248)),
+          0 var(--key-edge, 4px) 0 var(--color-border-strong, oklch(0.64 0.02 248));
       }
-      a {
-        color: #68d391;
+
+      /* Mise en page propre à cette page */
+      .offline-card {
+        box-sizing: border-box;
+        width: min(34rem, 100% - 2 * var(--space-4, 16px));
+        margin: 12vh auto var(--space-6, 32px);
+        padding: var(--space-6, 32px);
+        color: var(--color-ink, oklch(0.29 0.03 248));
+        background-color: var(--color-surface, oklch(0.995 0.001 248));
+        border: 1px solid var(--color-border, oklch(0.885 0.014 248));
+        border-radius: var(--radius-lg, 20px);
+      }
+
+      /* Une rubrique par langue, séparées par un filet */
+      .offline-lang + .offline-lang {
+        margin-top: var(--space-5, 24px);
+        padding-top: var(--space-5, 24px);
+        border-top: 1px solid var(--color-border, oklch(0.885 0.014 248));
+      }
+
+      .offline-card :is(h1, h2) {
+        margin: 0 0 var(--space-3, 12px);
+        font-family: var(--font-display, 'Baloo2', 'LeapMultix Lecture', system-ui, sans-serif);
+        line-height: 1.2;
+        color: var(--color-ink-heading, oklch(0.42 0.106 245));
+        text-wrap: balance;
+      }
+
+      /* Titre d’écran (Headline de DESIGN.md) ; les deux autres langues suivent en
+         titre de sous-section, pour que le bloc français reste le premier lu. */
+      .offline-card h1 {
+        font-size: var(--text-2xl, 2.25rem);
+      }
+
+      .offline-card h2 {
+        margin-bottom: var(--space-2, 8px);
+        font-size: var(--text-lg, 1.375rem);
+      }
+
+      .offline-card p {
+        margin: 0 0 var(--space-3, 12px);
+      }
+
+      .offline-card .offline-action {
+        margin: var(--space-4, 16px) 0 0;
+      }
+
+      .offline-card .btn {
+        display: inline-flex;
+        align-items: center;
+        margin: 0;
         text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
       }
     </style>
   </head>
   <body>
-    <main class="card" role="main" aria-label="Mode hors ligne">
-      <h1>Vous êtes hors ligne</h1>
-      <p>
-        Impossible de charger l'application complète. Vérifiez votre connexion Internet puis
-        rechargez la page.
-      </p>
-      <p>Astuce : certaines zones restent disponibles hors ligne après une première visite.</p>
-      <p><a href="/">Revenir à l’accueil</a></p>
+    <main class="offline-card">
+      <section class="offline-lang" lang="fr">
+        <h1>Tu es hors ligne</h1>
+        <p>
+          Il n’y a pas d’Internet pour le moment. Vérifie la connexion ou demande de l’aide à un
+          adulte, puis réessaie.
+        </p>
+        <p class="offline-action"><a class="btn" href="/">Réessayer</a></p>
+      </section>
+      <section class="offline-lang" lang="en">
+        <h2>You’re offline</h2>
+        <p>
+          There’s no internet right now. Check the connection or ask an adult for help, then try
+          again.
+        </p>
+        <p class="offline-action"><a class="btn btn-secondary" href="/">Try again</a></p>
+      </section>
+      <section class="offline-lang" lang="es">
+        <h2>Estás sin conexión</h2>
+        <p>
+          No hay internet por ahora. Revisa la conexión o pide ayuda a un adulto antes de volver a
+          intentarlo.
+        </p>
+        <p class="offline-action"><a class="btn btn-secondary" href="/">Reintentar</a></p>
+      </section>
     </main>
   </body>
 </html>

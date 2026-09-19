@@ -115,6 +115,8 @@ let lastHighText = '';
 let pendingHighReplay = null;
 let waitingForVoiceLoad = false;
 let lastAnnouncedVoiceKey = null;
+// Une erreur de synthèse (souvent : aucune voix installée) n'est signalée qu'une fois
+let speechErrorReported = false;
 const BENIGN_SPEECH_ERRORS = new Set(['interrupted', 'canceled']);
 
 function getGlobalRoot() {
@@ -444,8 +446,13 @@ function attachUtteranceEvents(utterance, priority) {
     if (priority === 'high') {
       pendingHighReplay = null;
     }
+    if (speechErrorReported) return;
+    speechErrorReported = true;
     const reason = event?.error || event?.message || 'unknown';
-    console.error(`[Speech] ❌ Error: ${reason}`, event);
+    console.warn(
+      `[Speech] Lecture à voix haute indisponible (${reason}) : les textes restent affichés.`,
+      event
+    );
   };
 }
 

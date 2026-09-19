@@ -1,6 +1,8 @@
 // multimiam-controls.js - Gestion des contrôles clavier / tactile pour Pacman (ESM)
 // (c) LeapMultix - 2025
 
+import { clientToCanvasPoint } from './arcade-common.js';
+
 /**
  * Initialise les contrôles pour une instance de PacmanGame
  * @param {PacmanGame} game Instance du jeu
@@ -133,34 +135,30 @@ export function initPacmanControls(game) {
   game.canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 
   // ================= Clic ET Touch intelligent sur labyrinthe =================
+  // Point touché ou cliqué, dans les coordonnées de la fenêtre (null si absent)
+  function readPointer(e) {
+    const source = e.touches && e.touches.length > 0 ? e.touches[0] : e;
+    if (source.clientX === undefined || source.clientY === undefined) return null;
+    return { clientX: source.clientX, clientY: source.clientY };
+  }
+
   function handleCanvasTouch(e) {
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-    const rect = game.canvas.getBoundingClientRect();
-
     // Support touch ET click avec vérification sécurisée
-    let clientX, clientY;
-
-    if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else if (e.clientX !== undefined && e.clientY !== undefined) {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    } else {
+    const pointer = readPointer(e);
+    if (!pointer) {
       console.warn('Événement canvas sans coordonnées valides:', e.type);
       return;
     }
 
-    const clickX = clientX - rect.left;
-    const clickY = clientY - rect.top;
-
-    // Coordonnées canvas -> jeu
-    const scaleX = game.canvas.width / rect.width;
-    const scaleY = game.canvas.height / rect.height;
-    const gameClickX = clickX * scaleX;
-    const gameClickY = clickY * scaleY;
+    // Coordonnées écran -> jeu (cadre et éventuelle réduction du canevas compris)
+    const { x: gameClickX, y: gameClickY } = clientToCanvasPoint(
+      game.canvas,
+      pointer.clientX,
+      pointer.clientY
+    );
 
     // Position actuelle du personnage (pixels au centre de la case)
     const playerX = game.multimiam.x;

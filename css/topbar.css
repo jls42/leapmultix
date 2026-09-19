@@ -1,0 +1,329 @@
+/* ===========================================
+   Barre du haut : accueil, informations, pièces, langue, tables, son, voix, joueur
+   (composant js/components/topBar.js, icônes js/components/icons.js)
+   Les boutons réutilisent .btn-secondary (general.css) : ici, seulement la mise en
+   page, la taille des cibles et les états propres à la barre.
+   =========================================== */
+
+.top-bar {
+  position: relative;
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* --- Boutons d'icône : cibles de 44 px, icône de 24 px --- */
+.top-bar .icon-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  inline-size: 44px;
+  block-size: 44px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-base);
+}
+
+/* Masqués sans joueur choisi (topBar.js) : l'affichage propre à chaque élément
+   l'emporterait sinon sur l'attribut hidden */
+.top-bar .icon-btn[hidden],
+.top-bar .coin-display[hidden],
+.top-bar .change-user-btn[hidden] {
+  display: none;
+}
+
+.top-bar .icon {
+  flex: none;
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+/* Libellé texte : lu par les lecteurs d'écran, affiché seulement dans le menu mobile */
+.icon-btn-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+/* Voix active : bouton enfoncé (fond teinté, contour d'action) */
+.top-bar .voice-toggle[aria-pressed='true'] {
+  background: var(--color-action-tint);
+  box-shadow:
+    inset 0 0 0 2px var(--color-action),
+    0 var(--key-edge) 0 var(--color-action-edge);
+}
+
+.top-bar .voice-toggle[aria-pressed='true']:active {
+  box-shadow:
+    inset 0 0 0 2px var(--color-action),
+    0 0 0 var(--color-action-edge);
+}
+
+/* --- Langue : trois touches texte groupées, la langue active est pleine --- */
+.language-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background-color: var(--color-surface-sunken);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.lang-btn {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding: 0 var(--space-2);
+  font-family: var(--font-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-ink-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.lang-btn:hover {
+  color: var(--color-ink);
+  background-color: var(--color-action-tint);
+}
+
+.lang-btn.active,
+.lang-btn[aria-pressed='true'] {
+  color: var(--color-on-action);
+  background-color: var(--color-action);
+}
+
+/* --- Son --- */
+.global-volume-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Piste native teintée par accent-color ; la hauteur agrandit la zone de saisie */
+.volume-slider {
+  inline-size: 96px;
+  block-size: 44px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-action);
+  background: transparent;
+}
+
+/* --- Pièces --- */
+.coin-display {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline-start: auto;
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
+  font-size: var(--text-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  color: var(--color-ink);
+  background-color: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.top-bar .coin-display .coin-icon {
+  inline-size: 22px;
+  block-size: 22px;
+  fill: var(--color-reward);
+  stroke: var(--color-reward-edge);
+  stroke-width: 1.5;
+}
+
+/* Gain de pièces : un bref grossissement du compteur */
+.coin-gain {
+  animation: coin-gain var(--dur-slow) var(--ease-out) 1;
+}
+
+/* --- Changer de joueur : touche secondaire avec icône --- */
+.top-bar .change-user-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-block-size: 44px;
+  margin: 0;
+  padding: 0 var(--space-4);
+}
+
+.top-bar .change-user-btn .icon {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+/* --- Menu (mobile et tablette) --- */
+.top-bar .burger-menu-btn {
+  display: none;
+  margin-inline-start: auto;
+  color: var(--color-ink);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.top-bar .burger-menu-btn:hover {
+  background-color: var(--color-action-tint);
+}
+
+.top-bar .coin-display + .burger-menu-btn {
+  margin-inline-start: 0;
+}
+
+.top-bar-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (min-width: 993px) {
+  .top-bar-nav .language-selector {
+    margin-inline-end: var(--space-2);
+  }
+
+  .top-bar-nav .change-user-btn {
+    margin-inline-start: var(--space-2);
+  }
+}
+
+@media (max-width: 992px) {
+  .top-bar .burger-menu-btn {
+    display: inline-flex;
+  }
+
+  .top-bar-nav {
+    position: absolute;
+    inset-block-start: calc(100% + var(--space-1));
+    inset-inline-end: 0;
+    z-index: var(--z-dropdown);
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    inline-size: min(20rem, calc(100vw - 2 * var(--space-4)));
+    padding: var(--space-3);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .top-bar-nav.is-open {
+    display: flex;
+  }
+
+  .top-bar-nav .language-selector {
+    display: flex;
+  }
+
+  .top-bar-nav .lang-btn {
+    flex: 1;
+  }
+
+  /* Dans le menu, chaque bouton montre son icône et son libellé */
+  .top-bar-nav .icon-btn {
+    inline-size: 100%;
+    justify-content: flex-start;
+    padding: 0 var(--space-3);
+    text-align: start;
+  }
+
+  .top-bar-nav .icon-btn-label {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    overflow: visible;
+    white-space: normal;
+    clip-path: none;
+  }
+
+  .top-bar-nav .global-volume-controls .icon-btn {
+    flex: 1;
+    inline-size: auto;
+  }
+
+  .top-bar-nav .volume-slider {
+    flex: none;
+    inline-size: 7rem;
+  }
+
+  .top-bar-nav .change-user-btn {
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding: 0 var(--space-3);
+  }
+
+  .top-bar-nav .change-user-btn .icon {
+    inline-size: 24px;
+    block-size: 24px;
+  }
+}
+
+/* --- Même place et même largeur sur tous les écrans, partie comprise ---
+   Les slides n'ont pas de marge en haut (responsive-unified.css) ; la slide de jeu
+   (#slide4) n'a aucune marge interne (game.css) : sa barre reprend la marge latérale
+   des autres écrans (--slide-gutter). Sans cela, la barre descendait et rétrécissait
+   à chaque fin de partie. */
+@media (min-width: 768px) {
+  .slide > .top-bar {
+    margin-block-start: var(--space-4);
+  }
+
+  #slide4 > .top-bar {
+    margin-inline: var(--slide-gutter, 0);
+  }
+}
+
+/* --- Bandeau compact sur mobile --- */
+@media (max-width: 768px) {
+  .top-bar {
+    gap: var(--space-1);
+    min-block-size: 52px;
+    margin-bottom: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-md);
+  }
+}
+
+/* --- Variante de la slide 0 (choix du joueur) : langue à gauche, son et voix à droite --- */
+.top-bar--slide0 {
+  margin-bottom: var(--space-2);
+}
+
+@media (min-width: 993px) {
+  .top-bar--slide0 .top-bar-nav {
+    flex: 1;
+  }
+
+  .top-bar--slide0 .global-volume-controls {
+    margin-inline-start: auto;
+  }
+}

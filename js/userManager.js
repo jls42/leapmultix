@@ -5,12 +5,11 @@
  */
 import {
   getTranslation,
-  addArrowKeyNavigation,
   updateBackgroundByAvatar,
-  startBackgroundRotation,
   updateWelcomeMessageUI,
   updateCoinDisplay,
 } from './utils-es6.js';
+import { getAvatarHeadSrc } from './main-helpers.js';
 import Storage from './core/storage.js';
 import { sanitizeUsername } from './security-utils.js';
 import { VideoManager } from './VideoManager.js';
@@ -18,6 +17,19 @@ import { AudioManager } from './core/audio.js';
 import { createVirtualKeyboard } from './virtual-keyboard.js';
 import { goToSlide } from './slides.js';
 import { gameState, displayDailyChallenge } from './game.js';
+import { eventBus } from './core/eventBus.js';
+
+/**
+ * Traduction avec texte de secours tant que la clé n'existe pas dans les fichiers de langue.
+ * @param {string} key
+ * @param {string} fallback
+ * @param {Object} [params]
+ * @returns {string}
+ */
+const translateOr = (key, fallback, params = {}) => {
+  const value = getTranslation(key, params);
+  return typeof value === 'string' && !/^\[.*\]$/.test(value) ? value : fallback;
+};
 
 const DEFAULT_TABLE_PREFERENCES = Object.freeze({
   globalExclusions: [],
@@ -118,6 +130,10 @@ export const UserManager = {
 
     // Initialiser l'interface utilisateur
     this.initUI();
+
+    // Les tuiles portent des libellés traduits (« Supprimer », nom accessible) :
+    // les régénérer quand la langue change
+    eventBus.on('languageChanged', () => this.refreshUserList());
   },
 
   /**
@@ -232,15 +248,17 @@ export const UserManager = {
    */
   _updateUIForUser(userData) {
     const avatar = userData.avatar || 'fox';
+    // Un monde illustré fixe par avatar (plus de rotation du fond)
     updateBackgroundByAvatar(avatar);
-    startBackgroundRotation(avatar);
     updateWelcomeMessageUI();
     updateCoinDisplay();
 
     const heroMascotImg = document.getElementById('hero-mascot-img');
     if (heroMascotImg) {
-      heroMascotImg.src = `assets/images/arcade/${avatar}_head_avatar.png`;
-      heroMascotImg.alt = avatar;
+      // Visage 128 px : la mascotte est affichée à 72 px au plus
+      heroMascotImg.src = getAvatarHeadSrc(avatar);
+      // Décorative : la bulle porte le message
+      heroMascotImg.alt = '';
     }
   },
 
@@ -413,12 +431,8 @@ export const UserManager = {
     }
 
     // Si c'est l'utilisateur actuel, le déconnecter
-    /**
-     * Fonction if
-     * @param {*} this._currentUser - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (this._currentUser === key) {
+    const wasCurrentUser = this._currentUser === key;
+    if (wasCurrentUser) {
       this._currentUser = null;
     }
 
@@ -426,6 +440,8 @@ export const UserManager = {
       Reflect.deleteProperty(this._players, key);
     }
     this.savePlayers();
+    // Plus de joueur courant : la barre du haut retire ce qui dépend d'un profil
+    if (wasCurrentUser) this.emitUserChanged(null);
     return true;
   },
 
@@ -474,61 +490,85 @@ export const UserManager = {
     while (userListDiv.firstChild) userListDiv.removeChild(userListDiv.firstChild);
     const names = Object.keys(this._players);
 
-    /**
-     * Fonction if
-     * @param {*} names.length - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (names.length === 0) {
-      userListDiv.textContent = getTranslation('no_existing_users');
+      const empty = document.createElement('p');
+      empty.className = 'user-list-empty';
+      empty.textContent = getTranslation('no_existing_users');
+      userListDiv.appendChild(empty);
       return;
     }
 
-    names.forEach(name => {
-      const userContainer = document.createElement('div');
-      userContainer.className = 'user-container';
+    // « Qui joue ? » : une tuile par joueur (visage de l'avatar + prénom).
+    // Les flèches du clavier passent d'une tuile à l'autre grâce à la navigation
+    // spatiale globale de keyboard-navigation.js : pas de gestionnaire local ici.
+    const list = document.createElement('ul');
+    list.className = 'user-tiles';
+    names.forEach(name => list.appendChild(this._createUserTile(name)));
+    userListDiv.appendChild(list);
+  },
 
-      const btn = document.createElement('button');
-      btn.className = 'btn';
-      btn.textContent = name;
-      btn.onclick = () => this.selectUser(name);
+  /**
+   * Crée la tuile d'un joueur : un grand bouton (visage + prénom) pour jouer,
+   * et, nettement séparé en dessous, un petit bouton discret pour supprimer.
+   * @param {string} name - Clé du joueur
+   * @returns {HTMLLIElement}
+   * @private
+   */
+  _createUserTile(name) {
+    const userContainer = document.createElement('li');
+    userContainer.className = 'user-container';
 
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'btn delete-btn';
-      deleteBtn.textContent = '🗑️';
-      {
-        const delTitle = getTranslation('delete_user_title');
-        deleteBtn.title =
-          typeof delTitle === 'string' && !/^\[.*\]$/.test(delTitle)
-            ? delTitle
-            : "Supprimer l'utilisateur";
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'user-tile';
+    const face = document.createElement('img');
+    face.className = 'user-tile-face';
+    face.src = getAvatarHeadSrc(this._players[name]?.avatar);
+    face.alt = '';
+    face.width = 72;
+    face.height = 72;
+    face.decoding = 'async';
+    const label = document.createElement('span');
+    label.className = 'user-tile-name';
+    label.textContent = name;
+    tile.appendChild(face);
+    tile.appendChild(label);
+    tile.onclick = () => this.selectUser(name);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'btn btn-quiet btn-danger btn-sm delete-btn';
+    deleteBtn.textContent = translateOr('delete_profile_button', 'Supprimer');
+    // « Supprimer le profil « Emma » » : pas de « de Emma » à élider selon le prénom
+    deleteBtn.setAttribute(
+      'aria-label',
+      translateOr('delete_profile_label', `Supprimer le profil «\u00a0${name}\u00a0»`, { name })
+    );
+    deleteBtn.onclick = e => {
+      e.stopPropagation();
+      const canConfirm =
+        typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
+      if (canConfirm ? globalThis.confirm(getTranslation('confirm_delete_user', { name })) : true) {
+        this.deleteUser(name);
+        this.refreshUserList();
+        this._focusAfterProfileRemoval();
       }
-      deleteBtn.onclick = e => {
-        e.stopPropagation();
-        const canConfirm =
-          typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-        if (
-          canConfirm ? globalThis.confirm(getTranslation('confirm_delete_user', { name })) : true
-        ) {
-          this.deleteUser(name);
-          this.refreshUserList();
-        }
-      };
+    };
 
-      userContainer.appendChild(btn);
-      userContainer.appendChild(deleteBtn);
-      userListDiv.appendChild(userContainer);
-    });
+    userContainer.appendChild(tile);
+    userContainer.appendChild(deleteBtn);
+    return userContainer;
+  },
 
-    // Ajouter navigation clavier par flèches
-    /**
-     * Fonction if
-     * @param {*} typeof - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (typeof addArrowKeyNavigation === 'function') {
-      addArrowKeyNavigation(userListDiv, '.user-container .btn:not(.delete-btn)');
-    }
+  /**
+   * Après une suppression, le bouton qui avait le focus n'existe plus :
+   * on le rend à la première tuile restante, sinon au champ « Ton prénom ».
+   * @private
+   */
+  _focusAfterProfileRemoval() {
+    const target =
+      document.querySelector('#user-list .user-tile') || document.getElementById('new-user-name');
+    target?.focus?.();
   },
 
   /**
@@ -540,97 +580,168 @@ export const UserManager = {
 
     if (!newUserNameInput || !createUserBtn) return;
 
-    // NE PAS afficher automatiquement le clavier au focus pour permettre saisie physique
-    // L'utilisateur peut cliquer sur l'input pour utiliser clavier physique normalement
+    // Le clavier virtuel ne s'ouvre pas au focus : la saisie physique reste possible
+    const virtualKeyboardBtn = this._ensureVirtualKeyboardToggle(newUserNameInput);
+    virtualKeyboardBtn.addEventListener('click', () => {
+      this._toggleVirtualKeyboard(newUserNameInput, virtualKeyboardBtn);
+    });
 
-    // Optionnel : Ajouter un bouton pour afficher/masquer le clavier virtuel
-    let virtualKeyboardBtn = document.getElementById('show-virtual-keyboard');
-    /**
-     * Fonction if
-     * @param {*} !virtualKeyboardBtn - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (!virtualKeyboardBtn) {
-      virtualKeyboardBtn = document.createElement('button');
-      virtualKeyboardBtn.id = 'show-virtual-keyboard';
-      virtualKeyboardBtn.type = 'button';
-      virtualKeyboardBtn.className = 'btn virtual-keyboard-toggle';
-      virtualKeyboardBtn.textContent = '⌨️';
-      virtualKeyboardBtn.title = 'Afficher/masquer le clavier virtuel';
-      newUserNameInput.parentElement.appendChild(virtualKeyboardBtn);
+    // Entrée dans le champ vaut « Créer ». La touche s'arrête ici : la création ouvre la
+    // vidéo et place le focus sur « Passer » ; si le même keydown remontait jusqu'à la
+    // navigation clavier globale (keyboard-navigation.js), elle cliquerait ce bouton.
+    newUserNameInput.addEventListener('keydown', event => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      event.stopPropagation();
+      createUserBtn.click();
+    });
+    newUserNameInput.addEventListener('input', () => this._clearCreationMessage());
+
+    createUserBtn.addEventListener('click', () => {
+      this._handleCreateUser(newUserNameInput, virtualKeyboardBtn);
+    });
+  },
+
+  /**
+   * Bouton « Clavier » (index.html) ; créé ici s'il manque dans la page.
+   * @param {HTMLInputElement} input
+   * @returns {HTMLButtonElement}
+   * @private
+   */
+  _ensureVirtualKeyboardToggle(input) {
+    let toggle = document.getElementById('show-virtual-keyboard');
+    if (!toggle) {
+      toggle = document.createElement('button');
+      toggle.id = 'show-virtual-keyboard';
+      toggle.type = 'button';
+      toggle.className = 'btn btn-secondary btn-sm virtual-keyboard-toggle';
+      toggle.textContent = translateOr('virtual_keyboard_toggle', 'Clavier');
+      toggle.setAttribute('aria-expanded', 'false');
+      input.parentElement.appendChild(toggle);
+    }
+    return toggle;
+  },
+
+  /**
+   * Affiche ou masque le clavier virtuel ; l'état est porté par aria-expanded.
+   * @param {HTMLInputElement} input
+   * @param {HTMLButtonElement} toggle
+   * @private
+   */
+  _toggleVirtualKeyboard(input, toggle) {
+    const keyboardId = `virtual-keyboard-${input.id}`;
+    let keyboardContainer = document.getElementById(keyboardId);
+    let willShow = true;
+    if (keyboardContainer) {
+      willShow = keyboardContainer.style.display === 'none';
+    } else {
+      keyboardContainer = createVirtualKeyboard(input, input.parentElement);
+      toggle.setAttribute('aria-controls', keyboardContainer.id);
+      this._notifyInputFromVirtualKeys(keyboardContainer, input);
+    }
+    keyboardContainer.style.display = willShow ? 'block' : 'none';
+    toggle.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+  },
+
+  /**
+   * Les touches du clavier à l'écran écrivent dans le champ sans émettre d'événement
+   * « input » : on le signale après chaque touche, comme une frappe au clavier
+   * physique (le message « Écris d'abord ton prénom. » s'efface alors aussi).
+   * @param {HTMLElement} keyboardContainer
+   * @param {HTMLInputElement} input
+   * @private
+   */
+  _notifyInputFromVirtualKeys(keyboardContainer, input) {
+    if (keyboardContainer.dataset.notifiesInput) return;
+    keyboardContainer.dataset.notifiesInput = 'true';
+    keyboardContainer.addEventListener('click', event => {
+      if (!event.target.closest?.('.keyboard-key')) return;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  },
+
+  /**
+   * Message sous le formulaire « Nouveau joueur » (remplace les alert() natifs).
+   * @param {string} text
+   * @private
+   */
+  _showCreationMessage(text) {
+    const input = document.getElementById('new-user-name');
+    const messageEl = document.getElementById('new-user-message');
+    if (!messageEl) {
+      if (typeof globalThis !== 'undefined' && typeof globalThis.alert === 'function') {
+        globalThis.alert(text);
+      }
+      return;
+    }
+    messageEl.textContent = text;
+    messageEl.hidden = false;
+    if (input) {
+      input.setAttribute('aria-invalid', 'true');
+      input.setAttribute('aria-describedby', messageEl.id);
+      input.focus();
+    }
+  },
+
+  /**
+   * @private
+   */
+  _clearCreationMessage() {
+    const messageEl = document.getElementById('new-user-message');
+    if (!messageEl || messageEl.hidden) return;
+    messageEl.hidden = true;
+    messageEl.textContent = '';
+    const input = document.getElementById('new-user-name');
+    input?.removeAttribute('aria-invalid');
+    input?.removeAttribute('aria-describedby');
+  },
+
+  /**
+   * Valide le prénom, crée le joueur et lance la vidéo de son avatar.
+   * @param {HTMLInputElement} input
+   * @param {HTMLButtonElement} keyboardToggle
+   * @private
+   */
+  _handleCreateUser(input, keyboardToggle) {
+    const newName = input.value.trim();
+    const selectedAvatarBtn = document.querySelector(
+      '.creation-avatar-selector .avatar-btn.active'
+    );
+    const selectedAvatar = selectedAvatarBtn ? selectedAvatarBtn.dataset.avatar : 'fox';
+
+    // Un prénom fait seulement de caractères refusés deviendrait vide une fois nettoyé
+    if (!newName || !sanitizeUsername(newName)) {
+      this._showCreationMessage(translateOr('enter_valid_name_alert', 'Écris d’abord ton prénom.'));
+      return;
     }
 
-    // Gestionnaire pour afficher/masquer le clavier virtuel
-    virtualKeyboardBtn.addEventListener('click', () => {
-      const keyboardId = `virtual-keyboard-${newUserNameInput.id}`;
-      let keyboardContainer = document.getElementById(keyboardId);
-      if (!keyboardContainer) {
-        keyboardContainer = createVirtualKeyboard(newUserNameInput, newUserNameInput.parentElement);
-        keyboardContainer.style.display = 'block';
-        virtualKeyboardBtn.textContent = '⌨️❌';
-        virtualKeyboardBtn.title = 'Masquer le clavier virtuel';
-      } else {
-        const isVisible = keyboardContainer.style.display !== 'none';
-        keyboardContainer.style.display = isVisible ? 'none' : 'block';
-        virtualKeyboardBtn.textContent = isVisible ? '⌨️' : '⌨️❌';
-        virtualKeyboardBtn.title = isVisible
-          ? 'Afficher le clavier virtuel'
-          : 'Masquer le clavier virtuel';
-      }
-    });
-
-    // Gestionnaire de création
-    createUserBtn.addEventListener('click', () => {
-      const newName = newUserNameInput.value.trim();
-
-      // Récupérer l'avatar sélectionné
-      const selectedAvatarBtn = document.querySelector(
-        '.creation-avatar-selector .avatar-btn.active'
+    if (!this.createUser(newName, selectedAvatar)) {
+      this._showCreationMessage(
+        translateOr(
+          'user_already_exists_alert',
+          'Ce joueur existe déjà. Touche son prénom plus haut pour jouer.'
+        )
       );
-      const selectedAvatar = selectedAvatarBtn ? selectedAvatarBtn.dataset.avatar : 'fox';
+      return;
+    }
 
-      /**
-       * Fonction if
-       * @param {*} !newName - Description du paramètre
-       * @returns {*} Description du retour
-       */
-      if (!newName) {
-        if (typeof globalThis !== 'undefined' && typeof globalThis.alert === 'function') {
-          globalThis.alert(getTranslation('enter_valid_name_alert'));
-        }
-        return;
-      }
+    input.value = '';
+    this._clearCreationMessage();
 
-      if (this.createUser(newName, selectedAvatar)) {
-        newUserNameInput.value = '';
+    // Cacher le clavier virtuel après création
+    const keyboardContainer = document.getElementById(`virtual-keyboard-${input.id}`);
+    if (keyboardContainer) {
+      keyboardContainer.style.display = 'none';
+      keyboardToggle.setAttribute('aria-expanded', 'false');
+    }
 
-        // Cacher le clavier virtuel après création
-        const keyboardId = `virtual-keyboard-${newUserNameInput.id}`;
-        const keyboardContainer = document.getElementById(keyboardId);
-        /**
-         * Fonction if
-         * @param {*} keyboardContainer - Description du paramètre
-         * @returns {*} Description du retour
-         */
-        if (keyboardContainer) {
-          keyboardContainer.style.display = 'none';
-          virtualKeyboardBtn.textContent = '⌨️';
-          virtualKeyboardBtn.title = 'Afficher le clavier virtuel';
-        }
+    this.refreshUserList();
 
-        this.refreshUserList();
-
-        // 🎬 Ne sélectionner l'utilisateur que si aucune vidéo ne va être jouée
-        // (createUser gère déjà la sélection via le callback vidéo)
-        if (!VideoManager?.CHARACTER_VIDEOS?.has(selectedAvatar)) {
-          this.selectUser(newName);
-        }
-      } else {
-        if (typeof globalThis !== 'undefined' && typeof globalThis.alert === 'function') {
-          globalThis.alert(getTranslation('user_already_exists_alert'));
-        }
-      }
-    });
+    // 🎬 Ne sélectionner l'utilisateur que si aucune vidéo ne va être jouée
+    // (createUser gère déjà la sélection via le callback vidéo)
+    if (!VideoManager?.CHARACTER_VIDEOS?.has(selectedAvatar)) {
+      this.selectUser(newName);
+    }
   },
 
   /**
@@ -651,24 +762,11 @@ export const UserManager = {
   },
 
   /**
-   * Mettre à jour l'affichage du message d'accueil
+   * Mettre à jour l'affichage du message d'accueil (bulle de la mascotte)
    */
   async updateWelcomeMessage() {
     if (!this._currentUser) return;
-
-    const userData = this.getCurrentUserData();
-    const nickname = userData.nickname || this._currentUser;
-
-    const welcomeMsgElement = document.getElementById('welcome-message');
-    if (welcomeMsgElement) {
-      while (welcomeMsgElement.firstChild)
-        welcomeMsgElement.removeChild(welcomeMsgElement.firstChild);
-      const welcomeText = getTranslation('welcome_user', { nickname });
-      const introText = getTranslation('adventure_intro');
-      welcomeMsgElement.appendChild(document.createTextNode(welcomeText));
-      welcomeMsgElement.appendChild(document.createElement('br'));
-      welcomeMsgElement.appendChild(document.createTextNode(introText));
-    }
+    await updateWelcomeMessageUI();
   },
 };
 

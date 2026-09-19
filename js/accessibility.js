@@ -45,16 +45,17 @@ export class AccessibilityManager {
   // Activer la navigation clavier
   enableKeyboardNavigation() {
     document.addEventListener('keydown', e => {
-      // Échap pour fermer/retour
-      if (e.key === 'Escape') {
+      // Touche déjà traitée ailleurs (fenêtre, navigation clavier) : ne rien refaire
+      if (e.defaultPrevented) return;
+
+      // Échap pour fermer/retour, sauf si une fenêtre ouverte le gère elle-même
+      if (e.key === 'Escape' && !this.isDialogOpen()) {
         import('./slides.js').then(m => m.goToSlide(0));
         this.announce('Retour au menu principal');
       }
 
-      // Entrée pour activer un élément en focus
-      if (e.key === 'Enter' && e.target.tagName === 'BUTTON') {
-        e.target.click();
-      }
+      // Entrée : un <button> natif s'active déjà seul (et keyboard-navigation.js
+      // gère le mode clavier) ; un clic de plus ici provoquait une double activation.
 
       // Flèches pour navigation dans les listes
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -63,6 +64,25 @@ export class AccessibilityManager {
     });
 
     this.keyboardNavigationEnabled = true;
+  }
+
+  // Une fenêtre (vidéo, vérification parentale, réglages des tables) ou le menu de la
+  // barre du haut est-il visible ? Échap les ferme d'abord (topBar.js pour le menu).
+  // Certaines restent dans le DOM une fois fermées : seule la visibilité réelle compte.
+  isDialogOpen() {
+    const candidates = document.querySelectorAll(
+      'dialog[open], [role="dialog"], .popup-overlay.visible, .top-bar-nav.is-open'
+    );
+    return Array.from(candidates).some(el =>
+      typeof el.checkVisibility === 'function'
+        ? el.checkVisibility({
+            checkOpacity: true,
+            checkVisibilityCSS: true,
+            opacityProperty: true,
+            visibilityProperty: true,
+          })
+        : el.getClientRects().length > 0
+    );
   }
 
   // Gestion navigation par flèches

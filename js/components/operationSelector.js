@@ -1,11 +1,71 @@
 /**
  * Composant de sélection d'opération arithmétique
- * Permet à l'utilisateur de choisir entre ×, +, −, ÷
+ * Contrôle segmenté compact : ×, +, −, ÷ (icône + libellé), une seule option active.
  */
 
 import { getTranslation } from '../utils-es6.js';
 import { UserState } from '../core/userState.js';
 import { createSafeElement } from '../security-utils.js';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+// Opérations disponibles (R1-R3 : ×, +, −, ÷)
+const OPERATIONS = [
+  { symbol: '×', key: 'operation_multiplication', image: 'multiplication', enabled: true },
+  { symbol: '+', key: 'operation_addition', image: 'addition', enabled: true },
+  { symbol: '−', key: 'operation_subtraction', image: 'soustraction', enabled: true },
+  { symbol: '÷', key: 'operation_division', image: 'division', enabled: true },
+];
+
+function translateOr(key, fallback) {
+  const value = getTranslation(key);
+  return typeof value === 'string' && !/^\[.*\]$/.test(value) ? value : fallback;
+}
+
+// Coche de l'option active : la sélection ne repose pas sur la seule couleur
+function createCheckIcon() {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'operation-check');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '18');
+  svg.setAttribute('height', '18');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const mark = document.createElementNS(SVG_NS, 'polyline');
+  mark.setAttribute('points', '4 12.5 9.5 18 20 6.5');
+  mark.setAttribute('fill', 'none');
+  mark.setAttribute('stroke', 'currentColor');
+  mark.setAttribute('stroke-width', '3');
+  mark.setAttribute('stroke-linecap', 'round');
+  mark.setAttribute('stroke-linejoin', 'round');
+  svg.appendChild(mark);
+  return svg;
+}
+
+function createOperationIcon(op) {
+  const icon = document.createElement('img');
+  icon.src = `assets/images/operators/${op.image}-64.webp`;
+  icon.srcset = [
+    `assets/images/operators/${op.image}-32.webp 32w`,
+    `assets/images/operators/${op.image}-64.webp 64w`,
+    `assets/images/operators/${op.image}-128.webp 128w`,
+  ].join(', ');
+  icon.sizes = '32px';
+  // Le libellé visible nomme déjà le bouton
+  icon.alt = '';
+  icon.className = 'operation-icon';
+  icon.width = 32;
+  icon.height = 32;
+  return icon;
+}
+
+function markActive(buttonsContainer, activeButton) {
+  buttonsContainer.querySelectorAll('.operation-btn').forEach(b => {
+    const isActive = b === activeButton;
+    b.classList.toggle('active', isActive);
+    b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
 
 export class OperationSelector {
   /**
@@ -21,73 +81,47 @@ export class OperationSelector {
 
     const userData = UserState.getCurrentUserData();
     const currentOp = userData.preferredOperator || '×';
+    const labelId = `${containerId}-label`;
 
-    // Conteneur principal
+    // Groupe de boutons bascule, nommé par son libellé visible
     const wrapper = document.createElement('div');
-    wrapper.className = 'operation-selector-wrapper';
-    wrapper.setAttribute('role', 'region');
-    wrapper.setAttribute('aria-label', getTranslation('operation_selector_title'));
+    wrapper.className = 'operation-selector';
+    wrapper.setAttribute('role', 'group');
+    wrapper.setAttribute('aria-labelledby', labelId);
 
-    // Titre
-    const title = createSafeElement('h3', getTranslation('operation_selector_title'));
+    const title = createSafeElement(
+      'p',
+      translateOr('select_operation', getTranslation('operation_selector_title')),
+      { id: labelId, class: 'operation-selector-label' }
+    );
     wrapper.appendChild(title);
 
-    // Conteneur des boutons
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'operation-selector-buttons';
 
-    // Opérations disponibles (R1-R3: ×, +, −, ÷)
-    const operations = [
-      { symbol: '×', key: 'operation_multiplication', image: 'multiplication', enabled: true },
-      { symbol: '+', key: 'operation_addition', image: 'addition', enabled: true },
-      { symbol: '−', key: 'operation_subtraction', image: 'soustraction', enabled: true },
-      { symbol: '÷', key: 'operation_division', image: 'division', enabled: true }, // R3: Division activée
-    ];
-
-    operations.forEach(op => {
+    OPERATIONS.forEach(op => {
+      const isActive = currentOp === op.symbol;
       const btn = document.createElement('button');
-      btn.className = `btn operation-btn ${currentOp === op.symbol ? 'active' : ''}`;
+      btn.type = 'button';
+      btn.className = `operation-btn${isActive ? ' active' : ''}`;
       btn.dataset.operator = op.symbol;
       btn.disabled = !op.enabled;
-      btn.setAttribute('aria-label', getTranslation(op.key));
-      btn.setAttribute('aria-pressed', currentOp === op.symbol ? 'true' : 'false');
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
 
-      // Icône de l'opération (responsive avec srcset)
-      const icon = document.createElement('img');
-      icon.src = `assets/images/operators/${op.image}-64.webp`;
-      icon.srcset = `
-        assets/images/operators/${op.image}-32.webp 32w,
-        assets/images/operators/${op.image}-64.webp 64w,
-        assets/images/operators/${op.image}-128.webp 128w
-      `;
-      icon.sizes = '64px';
-      icon.alt = op.symbol;
-      icon.className = 'operation-icon';
-      icon.width = 64;
-      icon.height = 64;
-      btn.appendChild(icon);
+      btn.appendChild(createOperationIcon(op));
 
-      // Nom de l'opération (sans le symbole)
       const label = document.createElement('span');
       label.textContent = getTranslation(op.key);
       label.className = 'operation-label';
       btn.appendChild(label);
 
+      btn.appendChild(createCheckIcon());
+
       if (op.enabled) {
         btn.addEventListener('click', () => {
           OperationSelector.selectOperation(op.symbol);
-
-          // Mettre à jour visuellement tous les boutons
-          buttonsContainer.querySelectorAll('.operation-btn').forEach(b => {
-            b.classList.remove('active');
-            b.setAttribute('aria-pressed', 'false');
-          });
-          btn.classList.add('active');
-          btn.setAttribute('aria-pressed', 'true');
+          markActive(buttonsContainer, btn);
         });
-      } else {
-        // Opération désactivée (ne devrait plus arriver maintenant que toutes sont enabled)
-        btn.style.cursor = 'not-allowed';
       }
 
       buttonsContainer.appendChild(btn);

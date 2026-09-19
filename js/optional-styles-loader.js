@@ -13,7 +13,6 @@ import { APP_VERSION, VERSION_PARAM } from './cache-updater.js';
     'css/theme-selector.css',
     'css/volume-control.css',
     'css/progress-dashboard.css',
-    'css/discovery-fixes.css',
     'css/video.css',
   ];
 

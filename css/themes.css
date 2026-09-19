@@ -1,618 +1,264 @@
 /* ===========================================
-   PLAYFUL REDESIGN - Candy Pop Theme System
-   Vibrant, toy-like colors replacing Material Design
+   LeapMultix : jetons de design
+   Surfaces calmes, encre contrastée (WCAG AA vérifié pour chaque thème).
+   Le caractère vient des personnages et des illustrations, pas du décor.
+   Les composants n'utilisent que les jetons sémantiques --color-*,
+   --space-*, --radius-*, --shadow-*, --ease-*, --dur-*, --text-*.
    =========================================== */
 
-/* ========== ROOT DESIGN SYSTEM ========== */
 :root {
-  /* === CANDY POP PALETTE === */
-  --candy-pink: #ff6b9d;
-  --candy-pink-dark: #e85a8a;
-  --candy-orange: #ff8f50;
-  --candy-orange-dark: #e67a3d;
-  --candy-yellow: #ffd23f;
-  --candy-yellow-dark: #e6bc36;
-  --candy-lime: #9be564;
-  --candy-lime-dark: #7bc44a;
-  --candy-turquoise: #4ecdc4;
-  --candy-turquoise-dark: #3db5ad;
-  --candy-purple: #9b5de5;
-  --candy-purple-dark: #7a4ab8;
-  --candy-blue: #00bbf9;
-  --candy-blue-dark: #00a3d9;
+  color-scheme: light;
 
-  /* === WARM NEUTRALS === */
-  --cream: #fff8f0;
-  --soft-white: #fffcfa;
-  --warm-gray: #8b8589;
-  --dark-text: #2d2a32;
+  /* === TYPOGRAPHIE === */
+  /* Baloo 2 : titres et calculs. LeapMultix Lecture (Andika, SIL OFL) : tout le texte. */
+  --font-display: 'Baloo2', 'LeapMultix Lecture', system-ui, sans-serif;
+  --font-text: 'LeapMultix Lecture', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-body: 1.0625rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.25rem;
+  --text-3xl: 3rem;
+  --leading-tight: 1.2;
+  --leading-body: 1.5;
 
-  /* === COLORED SHADOWS (not gray!) === */
-  --shadow-pink: rgb(255 107 157 / 0.35);
-  --shadow-purple: rgb(155 93 229 / 0.3);
-  --shadow-turquoise: rgb(78 205 196 / 0.3);
-  --shadow-orange: rgb(255 143 80 / 0.3);
-  --shadow-blue: rgb(0 187 249 / 0.3);
+  /* === ESPACEMENTS (base 4 px) === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
 
-  /* === SPRING ANIMATION TIMING === */
-  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --ease-squish: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* === FORMES === */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
 
-  /* === ORGANIC BORDER RADIUS === */
-  --radius-bubble: 50% 45% 55% 48%;
-  --radius-blob: 60% 40% 55% 45% / 55% 45% 50% 60%;
-  --radius-pill: 100px;
-  --radius-card: 28px;
-  --radius-btn: 20px;
+  /* Épaisseur de la « touche » : tranche pleine sous les éléments pressables */
+  --key-edge: 4px;
 
-  /* === TOY-LIKE SHADOWS === */
-  --shadow-toy-sm: 0 4px 0 var(--candy-pink-dark), 0 8px 16px var(--shadow-pink);
-  --shadow-toy-md: 0 6px 0 var(--candy-turquoise-dark), 0 12px 24px var(--shadow-turquoise);
-  --shadow-float: 0 20px 40px var(--shadow-purple);
+  /* === MOUVEMENT : décélération franche, jamais de rebond === */
+  --ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
 
-  /* === DEFAULT THEME: CANDY (Blue/Pink) === */
-  --primary-color: var(--candy-blue);
-  --primary-dark: var(--candy-blue-dark);
-  --secondary-color: var(--candy-pink);
-  --secondary-dark: var(--candy-pink-dark);
-  --accent-color: var(--candy-yellow);
-  --accent-dark: var(--candy-yellow-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: var(--cream);
-  --bg-gradient: linear-gradient(135deg, var(--cream) 0%, #e8f8ff 50%, #fff0f5 100%);
-  --text-color: var(--dark-text);
-  --heading-color: var(--candy-blue);
-  --neutral-light: #fff0f5;
-  --neutral-medium: #ffc6dd;
-  --neutral-dark: #ff9eb5;
+  /* === EMPILEMENT === */
+  --z-raised: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
 
-  /* === TYPOGRAPHY === */
-  --font-display: 'Baloo2', 'Comic Sans MS', cursive, sans-serif;
-  --font-body: 'Quicksand', 'Arial Rounded MT Bold', sans-serif;
+  /* === COULEURS : thème Classique (défaut) === */
+  --color-page: oklch(93% 0.02 235deg);
+  --color-surface: oklch(99.5% 0.001 248deg);
+  --color-surface-sunken: oklch(96.5% 0.008 248deg);
+  --color-border: oklch(88.5% 0.014 248deg);
+  --color-border-strong: oklch(64% 0.02 248deg);
+  --color-ink: oklch(29% 0.03 248deg);
+  --color-ink-muted: oklch(49% 0.025 248deg);
+  --color-ink-heading: oklch(42% 0.106 245deg);
+  --color-action: oklch(52% 0.131 245deg);
+  --color-action-hover: oklch(47% 0.117 245deg);
+  --color-action-edge: oklch(38% 0.095 245deg);
+  --color-action-ink: oklch(47% 0.118 245deg);
+  --color-action-tint: oklch(94.5% 0.027 245deg);
+  --color-on-action: oklch(100% 0 0deg);
+
+  /* Anneau de focus : 3:1 au moins sur la page (3,44:1) comme sur la surface (4,15:1) */
+  --color-focus: oklch(58% 0.156 245deg);
+
+  /* États (partagés par les thèmes clairs) */
+  --color-success-tint: oklch(95.5% 0.045 155deg);
+  --color-success-edge: oklch(60% 0.15 152deg);
+  --color-success-ink: oklch(44% 0.11 152deg);
+  --color-danger-tint: oklch(95.5% 0.021 25deg);
+  --color-danger-edge: oklch(62% 0.17 27deg);
+  --color-danger-ink: oklch(50% 0.17 27deg);
+  --color-warning-tint: oklch(96% 0.042 85deg);
+  --color-warning-edge: oklch(66% 0.14 72deg);
+  --color-warning-ink: oklch(46% 0.1 70deg);
+
+  /* Récompenses (étoiles, pièces) : remplissage uniquement, jamais du texte */
+  --color-reward: oklch(84% 0.16 88deg);
+  --color-reward-edge: oklch(62% 0.13 70deg);
+
+  /* Voile posé sur l'illustration de fond pendant une partie */
+  --color-scrim-game: oklch(96.5% 0.008 248deg / 0.8);
+
+  /* Voile sombre derrière une fenêtre (vidéo, vérification parentale, réglages) */
+  --color-scrim-modal: oklch(20% 0.02 250deg / 0.55);
+
+  /* Ombres neutres teintées, jamais colorées */
+  --shadow-sm: 0 1px 2px oklch(25% 0.03 250deg / 0.1);
+  --shadow-md: 0 1px 3px oklch(25% 0.03 250deg / 0.08), 0 6px 16px oklch(25% 0.03 250deg / 0.1);
+  --shadow-lg: 0 2px 6px oklch(25% 0.03 250deg / 0.08), 0 18px 44px oklch(25% 0.03 250deg / 0.18);
 }
 
-/* ========== THEME: OCEAN BUBBLE ========== */
-.theme-ocean {
-  --primary-color: var(--candy-blue);
-  --primary-dark: var(--candy-blue-dark);
-  --secondary-color: var(--candy-lime);
-  --secondary-dark: var(--candy-lime-dark);
-  --accent-color: var(--candy-yellow);
-  --accent-dark: var(--candy-yellow-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: #e8f8ff;
-  --bg-gradient: linear-gradient(135deg, #e8f8ff 0%, #d0f4ff 50%, #e8ffe8 100%);
-  --text-color: #1a4a5c;
-  --heading-color: var(--candy-blue);
-  --neutral-light: #d0f4ff;
-  --neutral-medium: #7dd3fc;
-  --neutral-dark: #38bdf8;
-
-  /* Theme-specific shadows */
-  --shadow-toy-sm: 0 4px 0 var(--candy-blue-dark), 0 8px 16px var(--shadow-blue);
-  --shadow-toy-md: 0 6px 0 var(--candy-lime-dark), 0 12px 24px rgb(155 229 100 / 0.3);
+/* Réglage « Taille du texte » : l'échelle rem suit le choix de l'enfant */
+:root:has(> body.font-size-small) {
+  font-size: 87.5%;
 }
 
-/* ========== THEME: SUNSET SAFARI ========== */
-.theme-sunset {
-  --primary-color: var(--candy-orange);
-  --primary-dark: var(--candy-orange-dark);
-  --secondary-color: var(--candy-yellow);
-  --secondary-dark: var(--candy-yellow-dark);
-  --accent-color: var(--candy-pink);
-  --accent-dark: var(--candy-pink-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: #fff5e6;
-  --bg-gradient: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 50%, #fff0e0 100%);
-  --text-color: #5c3d1a;
-  --heading-color: var(--candy-orange);
-  --neutral-light: #ffe8cc;
-  --neutral-medium: #ffcc80;
-  --neutral-dark: #ffb347;
-
-  /* Theme-specific shadows */
-  --shadow-toy-sm: 0 4px 0 var(--candy-orange-dark), 0 8px 16px var(--shadow-orange);
-  --shadow-toy-md: 0 6px 0 var(--candy-yellow-dark), 0 12px 24px rgb(255 210 63 / 0.3);
+:root:has(> body.font-size-large) {
+  font-size: 112.5%;
 }
 
-/* ========== THEME: MAGIC FOREST ========== */
-.theme-forest {
-  --primary-color: var(--candy-lime);
-  --primary-dark: var(--candy-lime-dark);
-  --secondary-color: var(--candy-purple);
-  --secondary-dark: var(--candy-purple-dark);
-  --accent-color: var(--candy-yellow);
-  --accent-dark: var(--candy-yellow-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: #f0fff0;
-  --bg-gradient: linear-gradient(135deg, #f0fff0 0%, #e0ffe0 50%, #f0e8ff 100%);
-  --text-color: #2d4a2d;
-  --heading-color: var(--candy-lime-dark);
-  --neutral-light: #e0ffe0;
-  --neutral-medium: #a8e6a8;
-  --neutral-dark: #6bcf6b;
-
-  /* Theme-specific shadows */
-  --shadow-toy-sm: 0 4px 0 var(--candy-lime-dark), 0 8px 16px rgb(155 229 100 / 0.3);
-  --shadow-toy-md: 0 6px 0 var(--candy-purple-dark), 0 12px 24px var(--shadow-purple);
-}
-
-/* ========== THEME: GALAXY NIGHT ========== */
-.theme-galaxy {
-  --primary-color: var(--candy-purple);
-  --primary-dark: var(--candy-purple-dark);
-  --secondary-color: var(--candy-blue);
-  --secondary-dark: var(--candy-blue-dark);
-  --accent-color: var(--candy-pink);
-  --accent-dark: var(--candy-pink-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: #1a1a2e;
-  --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16162a 50%, #2d1b4e 100%);
-  --text-color: #e8e0ff;
-  --heading-color: var(--candy-purple);
-  --neutral-light: #3d3a50;
-  --neutral-medium: #5a5670;
-  --neutral-dark: #7a7590;
-
-  /* Theme-specific shadows */
-  --shadow-toy-sm: 0 4px 0 var(--candy-purple-dark), 0 8px 16px var(--shadow-purple);
-  --shadow-toy-md: 0 6px 0 var(--candy-blue-dark), 0 12px 24px var(--shadow-blue);
-}
-
-/* Galaxy theme - dark mode adjustments */
-.theme-galaxy .content-card {
-  background: rgb(255 255 255 / 0.95);
-  color: var(--dark-text);
-}
-
-.theme-galaxy .content-card h1,
-.theme-galaxy .content-card h2,
-.theme-galaxy .content-card h3 {
-  color: var(--candy-purple);
-}
-
-.theme-galaxy .question-box,
-.theme-galaxy .quiz-container,
-.theme-galaxy .challenge-container,
-.theme-galaxy .customization-section,
-.theme-galaxy .dashboard-container,
-.theme-galaxy .victory-screen,
-.theme-galaxy #game,
-.theme-galaxy .grid-item,
-.theme-galaxy .visual-row,
-.theme-galaxy .star-cell,
-.theme-galaxy .stat-box,
-.theme-galaxy .result-stat,
-.theme-galaxy .level-card,
-.theme-galaxy .level-info,
-.theme-galaxy .level-description,
-.theme-galaxy .adventure-scene,
-.theme-galaxy .adventure-controls,
-.theme-galaxy .progress-dashboard,
-.theme-galaxy .review-list li,
-.theme-galaxy .success-list li,
-.theme-galaxy .message-box,
-.theme-galaxy .challenge-stats,
-.theme-galaxy .quiz-stats,
-.theme-galaxy .results-container,
-.theme-galaxy .difficulty-selector {
-  background-color: #2d2a40;
-  color: #e8e0ff;
-  border-color: var(--candy-purple);
-  background-image: none !important;
-}
-
-.theme-galaxy h1,
-.theme-galaxy h2,
-.theme-galaxy h3,
-.theme-galaxy h4,
-.theme-galaxy h5 {
-  color: var(--candy-purple);
-}
-
-.theme-galaxy .option,
-.theme-galaxy .numpad-btn,
-.theme-galaxy .keyboard-key,
-.theme-galaxy #answer-display,
-.theme-galaxy #nickname-input,
-.theme-galaxy #new-user-name,
-.theme-galaxy .difficulty-selector button {
-  background-color: #1a1a2e;
-  color: #e8e0ff;
-  border-color: var(--candy-purple);
-}
-
-.theme-galaxy .option:hover,
-.theme-galaxy .numpad-btn:hover,
-.theme-galaxy .keyboard-key:hover,
-.theme-galaxy .difficulty-selector button:hover {
-  background-color: var(--candy-purple);
-  color: white;
-}
-
-/* ========== THEME: RAINBOW PARTY ========== */
-.theme-rainbow {
-  --primary-color: var(--candy-pink);
-  --primary-dark: var(--candy-pink-dark);
-  --secondary-color: var(--candy-turquoise);
-  --secondary-dark: var(--candy-turquoise-dark);
-  --accent-color: var(--candy-yellow);
-  --accent-dark: var(--candy-yellow-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: var(--soft-white);
-  --bg-gradient: linear-gradient(
-    135deg,
-    #ffe8f0 0%,
-    #fff8e0 25%,
-    #e8fff0 50%,
-    #e0f8ff 75%,
-    #f0e8ff 100%
-  );
-  --text-color: var(--dark-text);
-  --heading-color: var(--candy-purple);
-  --neutral-light: #fff0f8;
-  --neutral-medium: #ffd0e8;
-  --neutral-dark: #ffb0d0;
-
-  /* Rainbow shadows cycle through colors */
-  --shadow-toy-sm: 0 4px 0 var(--candy-orange-dark), 0 8px 16px var(--shadow-orange);
-  --shadow-toy-md: 0 6px 0 var(--candy-purple-dark), 0 12px 24px var(--shadow-purple);
-}
-
-/* ========== LEGACY THEME ALIASES ========== */
-/* Map old theme names to new ones for backwards compatibility */
-.theme-pink {
-  --primary-color: var(--candy-pink);
-  --primary-dark: var(--candy-pink-dark);
-  --secondary-color: var(--candy-purple);
-  --secondary-dark: var(--candy-purple-dark);
-  --accent-color: var(--candy-yellow);
-  --accent-dark: var(--candy-yellow-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: #fff0f5;
-  --bg-gradient: linear-gradient(135deg, #fff0f5 0%, #ffe8f0 50%, #f0e0ff 100%);
-  --text-color: #5a3d5c;
-  --heading-color: var(--candy-pink);
-  --neutral-light: #fff0f5;
-  --neutral-medium: #ffc6dd;
-  --neutral-dark: #ff9eb5;
-}
-
-.theme-blue {
-  --primary-color: var(--candy-blue);
-  --primary-dark: var(--candy-blue-dark);
-  --secondary-color: var(--candy-turquoise);
-  --secondary-dark: var(--candy-turquoise-dark);
-  --accent-color: var(--candy-orange);
-  --accent-dark: var(--candy-orange-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: #1a237e;
-  --bg-gradient: linear-gradient(135deg, #1a237e 0%, #283593 100%);
-  --text-color: #e8eaf6;
-  --heading-color: var(--candy-blue);
-  --neutral-light: #c5cae9;
-  --neutral-medium: #7986cb;
-  --neutral-dark: #3949ab;
-}
-
-.theme-blue .content-card {
-  color: #1a237e;
-}
-
-.theme-blue .content-card h1,
-.theme-blue .content-card h2,
-.theme-blue .content-card h3 {
-  color: var(--candy-blue-dark);
-}
-
+/* ========== THÈME : NATURE ========== */
 .theme-green {
-  --primary-color: var(--candy-lime);
-  --primary-dark: var(--candy-lime-dark);
-  --secondary-color: var(--candy-turquoise);
-  --secondary-dark: var(--candy-turquoise-dark);
-  --accent-color: var(--candy-yellow);
-  --accent-dark: var(--candy-yellow-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: #e8f5e9;
-  --bg-gradient: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  --text-color: #33691e;
-  --heading-color: var(--candy-lime-dark);
-  --neutral-light: #dcedc8;
-  --neutral-medium: #aed581;
-  --neutral-dark: #7cb342;
+  --color-page: oklch(93% 0.025 150deg);
+  --color-surface: oklch(99.5% 0.003 165deg);
+  --color-surface-sunken: oklch(96.5% 0.008 165deg);
+  --color-border: oklch(88.5% 0.014 165deg);
+  --color-border-strong: oklch(64% 0.02 165deg);
+  --color-ink: oklch(29% 0.03 165deg);
+  --color-ink-muted: oklch(49% 0.025 165deg);
+  --color-ink-heading: oklch(43% 0.106 155deg);
+  --color-action: oklch(52% 0.128 155deg);
+  --color-action-hover: oklch(47% 0.116 155deg);
+  --color-action-edge: oklch(38% 0.095 155deg);
+  --color-action-ink: oklch(47% 0.116 155deg);
+  --color-action-tint: oklch(94.5% 0.035 155deg);
+  --color-focus: oklch(57% 0.152 155deg);
+  --color-scrim-game: oklch(96.5% 0.008 165deg / 0.8);
 }
 
+/* ========== THÈME : ORANGÉ ========== */
 .theme-orange {
-  --primary-color: var(--candy-orange);
-  --primary-dark: var(--candy-orange-dark);
-  --secondary-color: var(--candy-yellow);
-  --secondary-dark: var(--candy-yellow-dark);
-  --accent-color: var(--candy-pink);
-  --accent-dark: var(--candy-pink-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: #fff3e0;
-  --bg-gradient: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-  --text-color: #5d4037;
-  --heading-color: var(--candy-orange);
-  --neutral-light: #ffecb3;
-  --neutral-medium: #ffd54f;
-  --neutral-dark: #ffb300;
+  --color-page: oklch(94% 0.025 70deg);
+  --color-surface: oklch(99.5% 0.003 60deg);
+  --color-surface-sunken: oklch(96.5% 0.008 60deg);
+  --color-border: oklch(88.5% 0.014 60deg);
+  --color-border-strong: oklch(64% 0.02 60deg);
+  --color-ink: oklch(29% 0.03 60deg);
+  --color-ink-muted: oklch(49% 0.025 60deg);
+  --color-ink-heading: oklch(43% 0.11 42deg);
+  --color-action: oklch(56% 0.168 42deg);
+  --color-action-hover: oklch(51% 0.154 42deg);
+  --color-action-edge: oklch(42% 0.127 42deg);
+  --color-action-ink: oklch(50% 0.15 42deg);
+  --color-action-tint: oklch(94.5% 0.029 42deg);
+  --color-focus: oklch(62% 0.17 42deg);
+  --color-scrim-game: oklch(96.5% 0.008 60deg / 0.8);
 }
 
+/* ========== THÈMES SOMBRES : états et ombres communs ========== */
+.theme-blue,
 .theme-dark {
-  --primary-color: var(--candy-blue);
-  --primary-dark: var(--candy-blue-dark);
-  --secondary-color: var(--candy-lime);
-  --secondary-dark: var(--candy-lime-dark);
-  --accent-color: var(--candy-yellow);
-  --accent-dark: var(--candy-yellow-dark);
-  --danger-color: #ff6b6b;
-  --danger-dark: #ee5a5a;
-  --bg-color: #2c3e50;
-  --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  --text-color: #ecf0f1;
-  --heading-color: var(--candy-blue);
-  --neutral-light: #34495e;
-  --neutral-medium: #2c3e50;
-  --neutral-dark: #1a242f;
+  color-scheme: dark;
+
+  --color-scrim-modal: oklch(8% 0.01 250deg / 0.72);
+  --color-on-action: oklch(22% 0.05 240deg);
+  --color-success-tint: oklch(32% 0.06 152deg);
+  --color-success-edge: oklch(72% 0.15 152deg);
+  --color-success-ink: oklch(86% 0.12 152deg);
+  --color-danger-tint: oklch(32% 0.07 25deg);
+  --color-danger-edge: oklch(70% 0.15 27deg);
+  --color-danger-ink: oklch(82% 0.1 25deg);
+  --color-warning-tint: oklch(33% 0.06 80deg);
+  --color-warning-edge: oklch(76% 0.13 80deg);
+  --color-warning-ink: oklch(89% 0.11 85deg);
+  --color-reward-edge: oklch(70% 0.14 75deg);
+  --shadow-sm: 0 1px 2px oklch(0% 0 0deg / 0.4);
+  --shadow-md: 0 1px 3px oklch(0% 0 0deg / 0.35), 0 6px 16px oklch(0% 0 0deg / 0.35);
+  --shadow-lg: 0 2px 6px oklch(0% 0 0deg / 0.35), 0 18px 44px oklch(0% 0 0deg / 0.5);
 }
 
-/* Dark theme adjustments */
-.theme-dark .question-box,
-.theme-dark .quiz-container,
-.theme-dark .challenge-container,
-.theme-dark .customization-section,
-.theme-dark .dashboard-container,
-.theme-dark .victory-screen,
-.theme-dark #game,
-.theme-dark .grid-item,
-.theme-dark .visual-row,
-.theme-dark .star-cell,
-.theme-dark .stat-box,
-.theme-dark .result-stat,
-.theme-dark .level-card,
-.theme-dark .level-info,
-.theme-dark .level-description,
-.theme-dark .adventure-scene,
-.theme-dark .adventure-controls,
-.theme-dark .progress-dashboard,
-.theme-dark .review-list li,
-.theme-dark .success-list li,
-.theme-dark .message-box,
-.theme-dark .challenge-stats,
-.theme-dark .quiz-stats,
-.theme-dark .results-container,
-.theme-dark .difficulty-selector {
-  background-color: #34495e;
-  color: #ecf0f1;
-  border-color: var(--candy-blue);
-  background-image: none !important;
+/* ========== THÈME : SPATIAL (bleu nuit) ========== */
+.theme-blue {
+  --color-page: oklch(20% 0.06 268deg);
+  --color-surface: oklch(26.5% 0.055 268deg);
+  --color-surface-sunken: oklch(22.5% 0.05 268deg);
+  --color-border: oklch(36% 0.05 268deg);
+  --color-border-strong: oklch(56% 0.05 268deg);
+  --color-ink: oklch(95.5% 0.012 268deg);
+  --color-ink-muted: oklch(80% 0.03 268deg);
+  --color-ink-heading: oklch(86% 0.08 235deg);
+  --color-action: oklch(78% 0.12 235deg);
+  --color-action-hover: oklch(84% 0.092 235deg);
+  --color-action-edge: oklch(58% 0.12 235deg);
+  --color-action-ink: oklch(82% 0.106 235deg);
+  --color-action-tint: oklch(32% 0.068 235deg);
+  --color-on-action: oklch(22% 0.048 235deg);
+  --color-focus: oklch(80% 0.118 235deg);
+  --color-scrim-game: oklch(20% 0.06 268deg / 0.82);
 }
 
-.theme-dark h1,
-.theme-dark h2,
-.theme-dark h3,
-.theme-dark h4,
-.theme-dark h5,
-.theme-dark .difficulty-selector h3 {
-  color: var(--candy-blue);
+/* ========== THÈME : NUIT ========== */
+.theme-dark {
+  --color-page: oklch(17% 0.012 250deg);
+  --color-surface: oklch(23.5% 0.012 250deg);
+  --color-surface-sunken: oklch(20.5% 0.012 250deg);
+  --color-border: oklch(34% 0.014 250deg);
+  --color-border-strong: oklch(54% 0.016 250deg);
+  --color-ink: oklch(95% 0.006 250deg);
+  --color-ink-muted: oklch(78% 0.012 250deg);
+  --color-ink-heading: oklch(86% 0.076 240deg);
+  --color-action: oklch(78% 0.12 240deg);
+  --color-action-hover: oklch(84% 0.088 240deg);
+  --color-action-edge: oklch(58% 0.12 240deg);
+  --color-action-ink: oklch(82% 0.1 240deg);
+  --color-action-tint: oklch(32% 0.07 240deg);
+  --color-focus: oklch(80% 0.112 240deg);
+  --color-scrim-game: oklch(17% 0.012 250deg / 0.82);
 }
 
-.theme-dark .challenge-container {
-  border-color: var(--candy-blue);
+/* ========== CONTRASTE ÉLEVÉ ==========
+   Prioritaire sur tous les thèmes : noir, blanc, jaune ; ni ombre ni illustration. */
+body.high-contrast {
+  color-scheme: dark;
+
+  --color-page: #000;
+  --color-surface: #000;
+  --color-surface-sunken: #000;
+  --color-border: #fff;
+  --color-border-strong: #fff;
+  --color-ink: #fff;
+  --color-ink-muted: #fff;
+  --color-ink-heading: #ff0;
+  --color-action: #ff0;
+  --color-action-hover: #fff;
+  --color-action-edge: #fff;
+  --color-action-ink: #ff0;
+  --color-action-tint: #000;
+  --color-on-action: #000;
+  --color-focus: #0ff;
+  --color-success-tint: #000;
+  --color-success-edge: #0f0;
+  --color-success-ink: #0f0;
+  --color-danger-tint: #000;
+  --color-danger-edge: #ff4d4d;
+  --color-danger-ink: #ff4d4d;
+  --color-warning-tint: #000;
+  --color-warning-edge: #ff0;
+  --color-warning-ink: #ff0;
+  --color-reward: #ff0;
+  --color-reward-edge: #fff;
+  --color-scrim-game: #000;
+  --color-scrim-modal: oklch(0% 0 0deg / 0.85);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+
+  background-image: none;
 }
 
-.theme-dark .option,
-.theme-dark .numpad-btn,
-.theme-dark .keyboard-key,
-.theme-dark #answer-display,
-.theme-dark #nickname-input,
-.theme-dark #new-user-name,
-.theme-dark .difficulty-selector button {
-  background-color: #2c3e50;
-  color: #ecf0f1;
-  border-color: var(--candy-blue);
-}
-
-.theme-dark .grid-item,
-.theme-dark .mnemonic,
-.theme-dark .interaction-instructions {
-  background-color: #2c3e50;
-  color: #ecf0f1;
-}
-
-.theme-dark .grid-item:hover {
-  background-color: var(--candy-blue);
-}
-
-.theme-dark .drop-zone {
-  background-color: #2c3e50;
-  color: #ecf0f1;
-  border-color: var(--candy-blue);
-}
-
-.theme-dark .drop-zone.show-result {
-  background-color: #2c3e50;
-  color: var(--candy-lime);
-  border-color: var(--candy-lime);
-}
-
-.theme-dark .option:hover,
-.theme-dark .numpad-btn:hover,
-.theme-dark .keyboard-key:hover,
-.theme-dark .difficulty-selector button:hover {
-  background-color: var(--candy-blue);
-}
-
-.theme-dark .visual-objects .object-group {
-  border-color: var(--candy-blue);
-}
-
-.theme-dark .grid-cell {
-  color: #2c3e50;
-  border-color: var(--candy-blue);
-}
-
-.theme-dark .voice-control {
-  color: #ecf0f1;
-}
-
-.theme-dark .instruction-arrow {
-  color: var(--candy-blue);
-}
-
-.theme-dark .lab-item {
-  background-color: var(--neutral-medium);
-  border-color: var(--primary-color);
-}
-
-.theme-dark .lab-name {
-  color: var(--primary-color);
-}
-
-.theme-dark .lab-icon {
-  color: var(--text-color);
-}
-
-/* ========== BUTTON CONTRAST FIXES ========== */
-.theme-pink .btn,
-.theme-orange .btn,
-.theme-sunset .btn {
-  color: var(--text-color);
-}
-
-.theme-blue .btn,
-.theme-galaxy .btn {
-  color: #fff;
-}
-
-.theme-dark .btn {
-  color: var(--text-color);
-}
-
-/* ========== HIGH CONTRAST MODE ========== */
-.high-contrast {
-  --bg-color: #000;
-  --bg-gradient: none;
-  --text-color: #fff;
-  --heading-color: #ff0;
-  --primary-color: #ff0;
-  --primary-dark: #e6e600;
-  --secondary-color: #0f0;
-  --secondary-dark: #0c0;
-  --accent-color: #f0f;
-  --accent-dark: #c0c;
-  --danger-color: #ff4d4d;
-  --danger-dark: #ff1a1a;
-  --neutral-light: #333;
-  --neutral-medium: #666;
-  --neutral-dark: #ddd;
-
-  /* Disable animations for accessibility */
-  --ease-bounce: ease;
-  --ease-elastic: ease;
-  --ease-squish: ease;
-
-  /* Simple shadows */
-  --shadow-toy-sm: 0 2px 0 #ff0;
-  --shadow-toy-md: 0 4px 0 #ff0;
-  --shadow-float: none;
-}
-
-.high-contrast .btn,
-.high-contrast .option,
-.high-contrast .numpad-btn,
-.high-contrast .keyboard-key,
-.high-contrast .difficulty-selector button {
-  background-color: var(--primary-color);
-  color: #000;
-  border: 2px solid #fff;
-}
-
-.high-contrast .btn:hover,
-.high-contrast .option:hover,
-.high-contrast .numpad-btn:hover,
-.high-contrast .keyboard-key:hover,
-.high-contrast .difficulty-selector button:hover {
-  background-color: var(--primary-dark);
-  border-color: #ff0;
-}
-
-.high-contrast .question-box,
-.high-contrast .quiz-container,
-.high-contrast .challenge-container,
-.high-contrast .customization-section,
-.high-contrast .dashboard-container,
-.high-contrast .victory-screen,
-.high-contrast #game,
-.high-contrast .grid-item,
-.high-contrast .visual-row,
-.high-contrast .star-cell,
-.high-contrast .stat-box,
-.high-contrast .result-stat,
-.high-contrast .level-card,
-.high-contrast .level-info,
-.high-contrast .level-description,
-.high-contrast .adventure-scene,
-.high-contrast .adventure-controls,
-.high-contrast .progress-dashboard,
-.high-contrast .review-list li,
-.high-contrast .success-list li,
-.high-contrast .message-box,
-.high-contrast .challenge-stats,
-.high-contrast .quiz-stats,
-.high-contrast .results-container,
-.high-contrast .difficulty-selector,
-.high-contrast .virtual-keyboard,
-.high-contrast #answer-display,
-.high-contrast #nickname-input,
-.high-contrast #new-user-name {
-  background-color: #000 !important;
-  color: #fff !important;
-  border: 1px solid #fff !important;
-  background-image: none !important;
-}
-
-.high-contrast h1,
-.high-contrast h2,
-.high-contrast h3,
-.high-contrast h4,
-.high-contrast h5 {
-  color: var(--heading-color) !important;
-}
-
-.high-contrast .feedback-success {
-  color: #0f0;
-}
-
-.high-contrast .feedback-error {
-  color: #ff4d4d;
-}
-
-.high-contrast .star.earned {
-  color: #ff0;
-}
-
-.high-contrast .star {
-  color: #fff;
-}
-
-/* ========== REDUCED MOTION SUPPORT ========== */
+/* ========== MOUVEMENT RÉDUIT ========== */
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --ease-bounce: ease;
-    --ease-elastic: ease;
-    --ease-squish: ease;
+    --dur-fast: 0.01ms;
+    --dur-base: 0.01ms;
+    --dur-slow: 0.01ms;
   }
 }

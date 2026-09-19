@@ -1,229 +1,480 @@
-/* ========== JEU ========== */
-.game-container {
+/* ===========================================
+   LeapMultix : écran de jeu (Quiz, Défi, Aventure)
+   Barre d'infos, question, tuiles de réponse, retours, actions et écran de fin.
+   Jetons : css/themes.css. Composants partagés : css/general.css.
+   =========================================== */
+
+/* === SLIDE DE JEU : socle commun à tous les modes ===
+   Chaque partie s'affiche dans #game (#slide4). Elle commence en haut de l'écran ;
+   seule l'arcade centre son canevas sur toute la hauteur. */
+html,
+body {
+  height: 100%;
+}
+
+#game {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.stats {
-  display: flex;
-  justify-content: space-around;
-  background-color: var(--primary-dark);
-  background-image: linear-gradient(45deg, var(--primary-dark) 0%, var(--primary-color) 100%);
-  color: white;
-  padding: 10px;
-  border-radius: 15px;
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.15);
-}
-
-.stat {
-  display: flex;
   align-items: center;
-  gap: 5px;
+  padding-top: var(--space-3);
 }
 
-.heart {
-  font-size: 20px;
+/* L'arcade gère sa propre zone de jeu, dimensionnée sous la barre du haut */
+#game:has(.arcade-game-ui, .arcade-gameover) {
+  padding-top: 0;
 }
 
-.scene {
-  position: relative;
-  height: 200px;
-  background-color: #c8e6c9;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 6px 12px rgb(0 0 0 / 0.1);
-  border: 3px solid rgb(255 255 255 / 0.3);
-  width: 80%;
-  max-width: 600px;
-  margin: 0 auto;
+@media (min-width: 768px) {
+  #slide4.active-slide {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  #slide4.active-slide .top-bar {
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+
+  #slide4.active-slide .game-content-area {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  /* Pas de double barre de défilement sur la content-card */
+  #slide4 .game-content-area > .content-card {
+    flex-shrink: 0;
+    overflow: visible;
+  }
 }
 
-.theme-forest {
-  background-color: #c8e6c9;
-  background-image: url('../assets/images/forest.png');
-  background-size: cover;
+/* === BARRE D'INFOS : une bande pleine, lisible au-dessus de l'illustration === */
+.game-info-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-1) var(--space-5);
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto var(--space-4);
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--text-base);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
-.theme-space {
-  background-color: #d9c2ff;
-  background-image: linear-gradient(45deg, #d9c2ff 0%, #b39ddb 100%);
+/* Découverte n'affiche aucune donnée : pas de bande vide */
+.game-info-bar:empty {
+  display: none;
 }
 
-.theme-ocean {
-  background-color: #a1e0ff;
-  background-image: url('../assets/images/river.png');
-  background-size: cover;
+.info-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  min-height: 32px;
+  white-space: nowrap;
+  color: var(--color-ink-muted);
 }
 
-.theme-mountain {
-  background-color: #e8e8e8;
-  background-image: linear-gradient(45deg, #e8e8e8 0%, #d3d3d3 100%);
+.info-value {
+  font-weight: 700;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
 }
 
-.theme-unicorn {
-  background-color: #fde;
-  background-image: linear-gradient(45deg, #fde 0%, #ffc6dd 100%);
+/* Vies : des cœurs dessinés, pleins ou vides (la forme, pas seulement la couleur).
+   Même composant dans la barre des modes et dans le bandeau des mini-jeux. */
+.info-hearts {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
 }
 
-.character,
-.treasure {
-  position: absolute;
-  font-size: 40px;
+.info-heart {
+  width: 1.25em;
+  height: 1.25em;
 }
 
-.character {
-  bottom: 20px;
-  left: 50px;
-  transition: left 0.5s ease-out;
+/* Bandeau des mini-jeux : texte déjà grand, cœurs à la taille des chiffres */
+.arcade-mult-display .info-heart {
+  width: 0.9em;
+  height: 0.9em;
 }
 
-.treasure {
-  bottom: 20px;
-  right: 50px;
+.info-heart path {
+  fill: var(--color-danger-edge);
+  stroke: var(--color-danger-edge);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
 }
 
-.progress-container {
-  background-color: #ddd;
-  border-radius: 10px;
-  height: 10px;
-  width: 100%;
+.info-heart.is-empty path {
+  fill: none;
+  stroke: var(--color-border-strong);
 }
 
-.progress-bar {
-  background-color: #ff85a2;
-  background-image: linear-gradient(45deg, #ff85a2 0%, #ff6b88 100%);
-  height: 100%;
-  border-radius: 10px;
-  width: 0%;
-  transition: width 0.3s;
-  box-shadow: 0 0 5px rgb(255 107 136 / 0.5);
-}
-
-.question-box {
-  background-color: white;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 8px 16px rgb(0 0 0 / 0.1);
-  margin-bottom: 20px;
-  border: 3px solid #ffc6dd;
-}
-
+/* === QUESTION : le calcul en grand, dans un creux sans ombre === */
 .question {
-  font-size: 24px;
-  margin-bottom: 15px;
+  max-width: 36rem;
+  margin: 0 auto var(--space-5);
+  padding: var(--space-5) var(--space-4);
+  font-family: var(--font-display);
+  font-size: clamp(var(--text-xl), 11vw, var(--text-3xl));
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  text-align: center;
+  white-space: nowrap;
+  color: var(--color-ink);
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
 }
 
+/* Un énoncé (problème) se lit : police de lecture, retour à la ligne naturel
+   (« pretty » évite un mot seul en fin d'énoncé sans rééquilibrer les lignes ;
+   les nombres restent collés à leur nom par des espaces insécables) */
+.question.is-sentence {
+  font-family: var(--font-text);
+  font-size: var(--text-lg);
+  line-height: var(--leading-body);
+  white-space: normal;
+  text-wrap: pretty;
+}
+
+/* Découverte et Arcade n'utilisent pas ces zones : rien ne s'affiche à vide */
+.question:empty,
+.options:empty,
+.feedback:empty {
+  display: none;
+}
+
+/* === TUILES DE RÉPONSE : des touches franches === */
 .options {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-bottom: 15px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  max-width: 36rem;
+  margin: 0 auto var(--space-4);
 }
 
 .option {
-  background-color: #f0e6ff;
-  border: 2px solid #d9c2ff;
-  padding: 15px;
-  font-size: 18px;
-  border-radius: 15px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  text-align: center;
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
   cursor: pointer;
+  touch-action: manipulation;
   transition:
-    transform 0.3s,
-    box-shadow 0.3s,
-    background-color 0.3s,
-    border-color 0.3s;
-
-  /* font-family héritée de body */
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.05);
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out);
 }
 
-.option:hover {
-  background-color: #e3d3ff;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgb(0 0 0 / 0.1);
+/* Mots (Vrai, Faux, nombres écrits en lettres) : police de lecture */
+.option.is-word {
+  font-family: var(--font-text);
+  font-size: var(--text-md);
 }
 
-.feedback {
-  min-height: 30px;
-  font-weight: bold;
+/* Survol : seule la bordure change, le texte reste lisible */
+@media (hover: hover) {
+  .option:hover:not(:disabled) {
+    border-color: var(--color-action);
+  }
 }
 
-.feedback.fast-response {
-  animation: pulse 0.5s infinite alternate;
+.option:active:not(:disabled) {
+  transform: translateY(var(--key-edge));
+  box-shadow: 0 0 0 var(--color-border-strong);
 }
 
-@keyframes pulse {
-  0% {
+.option:disabled {
+  cursor: default;
+}
+
+/* Après la réponse : la bonne tuile est cochée, le choix de l'enfant reste enfoncé,
+   les autres passent en retrait. Jamais la couleur seule. */
+.options.is-answered .option {
+  color: var(--color-ink-muted);
+}
+
+.options .option.is-correct {
+  color: var(--color-success-ink);
+  background-color: var(--color-success-tint);
+  border-color: var(--color-success-edge);
+  box-shadow: 0 var(--key-edge) 0 var(--color-success-edge);
+  animation: option-correct var(--dur-slow) var(--ease-out) 1;
+}
+
+.options .option.is-chosen-wrong {
+  color: var(--color-ink);
+  background-color: var(--color-surface-sunken);
+  border-color: var(--color-border-strong);
+  box-shadow: 0 0 0 var(--color-border-strong);
+  transform: translateY(var(--key-edge));
+}
+
+.option-mark {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: var(--space-3);
+  width: 1.5rem;
+  height: 1.5rem;
+  translate: 0 -50%;
+  animation: option-mark-in var(--dur-base) var(--ease-out) both;
+}
+
+.option-mark path {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* === RETOUR DE RÉPONSE : une ligne réservée, pas de saut de mise en page === */
+:is(.quiz-container, .challenge-container, .adventure-container) > .feedback {
+  display: block;
+  max-width: 36rem;
+  min-height: 2.25rem;
+  margin: 0 auto;
+  font-size: var(--text-md);
+  line-height: var(--leading-body);
+}
+
+/* === EXPLICATION APRÈS UNE ERREUR (Quiz, Aventure) ===
+   Une étape, pas une sanction : encre normale, fond en creux, aucune secousse.
+   Elle reste affichée jusqu'à l'appui sur « Continuer ». */
+.feedback-explain {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: var(--leading-body);
+  text-align: start;
+  color: var(--color-ink);
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.feedback-explain p {
+  margin: 0;
+}
+
+.feedback-lead {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink-heading);
+}
+
+.feedback-answer {
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+/* Comptage « 6 → 12 → … → 42 » et calcul « 9 × 4 = 36 » : ce que fait l'opération */
+.feedback-count,
+.feedback-fact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+}
+
+.feedback-count-label {
+  color: var(--color-ink-muted);
+}
+
+.feedback-count-steps,
+.feedback-fact-equation {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.feedback-fact-equation {
+  font-weight: 700;
+}
+
+.feedback-count-arrow {
+  color: var(--color-ink-muted);
+}
+
+strong.feedback-count-step {
+  color: var(--color-success-ink);
+}
+
+/* Astuce : l'intitulé sur sa ligne, le texte dessous */
+.quiz-hint-inline strong {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+/* === ACTIONS DE PARTIE === */
+
+/* « Continuer » après une erreur : attend l'enfant, aucun minuteur */
+.game-continue {
+  margin-top: var(--space-4);
+}
+
+.game-continue[hidden] {
+  display: none;
+}
+
+.game-continue .btn {
+  min-width: 12rem;
+  margin: 0;
+}
+
+/* « Abandonner » : discret, après la zone de réponse */
+.game-quit {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-5);
+}
+
+.game-quit .btn {
+  margin: 0;
+}
+
+/* === ÉCRAN DE FIN : une phrase, puis une ligne secondaire === */
+.game-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.results-avatar {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+
+.results-lead {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink-heading);
+  text-wrap: balance;
+}
+
+.results-message {
+  max-width: 36rem;
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.results-details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-5);
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--color-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.results-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.results-actions .btn {
+  margin: 0;
+}
+
+/* === MOUVEMENT : un seul signe de réussite, sans rebond === */
+@keyframes option-correct {
+  0%,
+  100% {
     transform: scale(1);
   }
 
-  100% {
-    transform: scale(1.05);
+  50% {
+    transform: scale(1.04);
   }
 }
 
-/* --- Responsive Game --- */
-@media (max-width: 768px) {
-  .stats {
-    flex-wrap: wrap; /* Allow stats to wrap */
-    gap: 10px;
+@keyframes option-mark-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
   }
 
-  .scene {
-    height: 150px;
-    width: 90%;
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* === PETITS ÉCRANS === */
+@media (max-width: 480px) {
+  .game-info-bar {
+    gap: var(--space-1) var(--space-4);
+    padding: var(--space-1) var(--space-4);
   }
 
   .question {
-    font-size: 20px;
+    margin-bottom: var(--space-4);
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .feedback-explain {
+    padding: var(--space-3) var(--space-4);
   }
 
   .options {
-    grid-template-columns: 1fr; /* Single column layout */
+    gap: var(--space-2);
   }
 
-  .option {
-    padding: 12px;
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .game-container {
-    gap: 10px;
-  }
-
-  .stats {
-    padding: 8px;
-    border-radius: 10px;
-  }
-
-  .scene {
-    height: 120px;
-    width: 95%;
-  }
-
-  .character,
-  .treasure {
-    font-size: 30px;
-    bottom: 10px;
-  }
-
-  .character {
-    left: 20px;
-  }
-
-  .treasure {
-    right: 20px;
-  }
-
-  .question-box {
-    padding: 15px;
-    margin-bottom: 10px;
-  }
-
-  .question {
-    font-size: 18px;
+  .results-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
   }
 }

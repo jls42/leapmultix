@@ -37,24 +37,22 @@ body.full-screen-mobile {
   overflow: hidden;
 }
 
+/* --slide-gutter : marge latérale des écrans, reprise par la barre du haut de la
+   slide de jeu (topbar.css), qui n'a pas de marge interne (game.css) */
 .slide {
-  padding: var(--padding-mobile);
+  --slide-gutter: var(--padding-mobile);
+
+  padding: var(--slide-gutter);
   min-height: calc(100vh - 80px); /* Space for top-bar */
 }
 
 /* === COMPOSANTS RESPONSIVE === */
 
-/* Boutons touch-friendly */
-.btn {
-  min-height: var(--touch-target);
-  min-width: var(--touch-target);
-  padding: 12px 16px;
-  font-size: 16px; /* Évite zoom iOS */
-}
+/* Boutons : hauteur (48 px) et cible minimale définies par general.css (.btn, .btn-sm) */
 
 .btn-mobile {
   padding: 16px 20px;
-  font-size: 18px;
+  font-size: var(--text-md);
   min-height: var(--touch-target-large);
 }
 
@@ -100,11 +98,10 @@ img {
     margin: 0;
   }
 
+  /* La page défile d'un bloc : une slide qui défilait dans son propre cadre coupait
+     net l'ombre de la carte et gardait sa position d'un passage à l'autre */
   .slide {
-    padding: var(--padding-mobile);
     min-height: auto;
-    max-height: 100vh;
-    overflow-y: auto;
   }
 
   /* Containers adaptables mobile */
@@ -126,50 +123,8 @@ img {
     max-width: 280px;
     margin: 8px auto;
     padding: 12px 16px;
-    font-size: 16px;
+    font-size: var(--text-base);
     min-height: var(--touch-target);
-  }
-
-  .user-list {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-}
-
-/* Navigation mobile - Bandeau compact */
-@media (max-width: 768px) {
-  .top-bar {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 3px 8px;
-    margin-bottom: 8px;
-    gap: 3px;
-    min-height: 40px;
-    border-radius: 10px;
-  }
-
-  .top-bar .language-selector,
-  .top-bar .global-volume-controls {
-    gap: 3px;
-  }
-
-  .top-bar .btn {
-    padding: 4px 8px;
-    font-size: 0.9em;
-    min-height: 32px;
-    margin: 2px;
-  }
-
-  .top-bar .mute-btn {
-    padding: 2px 4px;
-    font-size: 1em;
-    min-height: 24px;
-  }
-
-  .top-bar .volume-slider {
-    width: 60px;
   }
 }
 
@@ -179,11 +134,6 @@ img {
 @media (min-width: 320px) {
   .container {
     padding: 15px;
-  }
-
-  .btn {
-    font-size: 16px;
-    padding: 14px 18px;
   }
 }
 
@@ -196,10 +146,6 @@ img {
 
   .grid-responsive {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .slide h1 {
-    font-size: 2rem;
   }
 
   /* Cartes en 2 colonnes avec meilleure gestion hauteur */
@@ -236,20 +182,13 @@ img {
     gap: 20px;
   }
 
+  /* Pas de marge en haut : la barre se place elle-même (topbar.css), au même endroit
+     que dans la slide de jeu, qui n'a aucune marge interne (game.css) */
   .slide {
-    padding: var(--padding-tablet);
+    --slide-gutter: var(--padding-tablet);
+
+    padding: 0 var(--slide-gutter) var(--slide-gutter);
     min-height: auto; /* Remove forced height on desktop */
-  }
-
-  .slide h1 {
-    font-size: 2.5rem;
-  }
-
-  /* Navigation desktop */
-  .top-bar {
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 10px 15px;
   }
 
   /* Cartes en 3 colonnes */
@@ -260,9 +199,7 @@ img {
   /* Boutons plus petits sur desktop */
   .btn-sm-desktop {
     padding: 6px 12px;
-    font-size: 14px;
-    min-height: auto;
-    min-width: auto;
+    font-size: var(--text-sm);
   }
 }
 
@@ -278,10 +215,6 @@ img {
     gap: 25px;
   }
 
-  .slide h1 {
-    font-size: 3rem;
-  }
-
   /* Cartes en 4 colonnes */
   .card-base {
     width: calc(25% - 20px);
@@ -295,54 +228,13 @@ img {
   }
 
   .slide {
-    padding: 60px 40px;
+    --slide-gutter: 40px;
+
+    padding: 0 var(--slide-gutter) 60px;
   }
 }
 
 /* === ORIENTATION === */
-
-/* Arcade Canvas Mobile Optimisé */
-@media (max-width: 768px) {
-  .arcade-canvas,
-  .arcade-game-ui > canvas,
-  #arcade-canvas,
-  #multimiam-canvas {
-    width: 95%;
-    height: auto;
-    max-width: 400px;
-    max-height: 50vh;
-    margin: 10px auto;
-    padding: 0;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    /* Anti-aliasing pour éviter le flou */
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    image-rendering: pixelated;
-  }
-
-  /* Snake canvas - Résolution fixe pour éviter l'effet ratatiné */
-  #multisnake-canvas,
-  canvas#multisnake-canvas,
-  .arcade-game-ui > canvas.multisnake-canvas {
-    width: 90%;
-    height: auto;
-    max-width: 380px;
-    max-height: 380px; /* Carré pour le Snake */
-    min-height: 280px; /* Minimum pour être lisible */
-    aspect-ratio: 1; /* Force aspect ratio carré */
-    margin: 10px auto;
-    padding: 0;
-    /* Rendu pixel parfait pour Snake */
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    image-rendering: -webkit-optimize-contrast;
-    /* Éviter l'anti-aliasing qui fait flou */
-    -webkit-font-smoothing: none;
-    -moz-osx-font-smoothing: unset;
-  }
-}
 
 .game-controls {
   flex-direction: column;
@@ -356,36 +248,10 @@ img {
   margin: 5px auto;
 }
 
-/* Boutons arcade game over gardent leur taille normale */
-.arcade-gameover .btn {
-  width: auto;
-  margin: 5px;
-  display: inline-block;
-}
-
-/* Portrait mobile/tablette */
-@media (max-width: 1024px) and (orientation: portrait) {
-  .arcade-canvas,
-  .arcade-game-ui > canvas {
-    max-height: 50vh;
-    width: 90%;
-  }
-}
-
 /* Paysage mobile - Plus d'espace en hauteur */
 @media (max-width: 768px) and (orientation: landscape) {
-  .arcade-canvas,
-  .arcade-game-ui > canvas {
-    max-height: 60vh;
-    width: 70%;
-  }
-
   .slide {
     padding: 10px 20px;
-  }
-
-  .top-bar {
-    height: 50px;
   }
 }
 
@@ -407,194 +273,8 @@ img {
   }
 
   .hover-effect:active {
-    background: rgb(0 123 255 / 0.1);
+    background: var(--color-action-tint);
     transform: scale(0.98);
-  }
-}
-
-/* === COMPOSANTS SPÉCIFIQUES === */
-
-/* Cartes arcade responsive - Fix overflow boutons difficulté */
-.arcade-game-card {
-  width: 100%;
-  margin: 10px 0;
-  overflow-x: hidden;
-  box-sizing: border-box;
-}
-
-.arcade-game-card .improved-difficulty-select {
-  width: 95%;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 8px;
-  margin: 5px auto 10px auto;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.arcade-game-card .difficulty-buttons-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  max-width: 100%;
-}
-
-.arcade-game-card .difficulty-btn {
-  flex: 0 0 auto;
-  min-width: 85px;
-  max-width: 120px;
-  padding: 8px 12px;
-  margin: 2px;
-  font-size: 0.9em;
-  white-space: nowrap;
-  text-align: center;
-}
-
-@media (max-width: 480px) {
-  .arcade-game-card .difficulty-btn {
-    min-width: 75px;
-    padding: 6px 10px;
-    font-size: 0.85em;
-    margin: 1px;
-  }
-
-  .arcade-game-card .improved-difficulty-select {
-    padding: 6px;
-    margin: 3px auto 8px auto;
-  }
-
-  /* Réduction hauteur cartes mobile */
-  #multimiam-arcade-card,
-  #multimemory-arcade-card,
-  #multisnake-arcade-card {
-    min-height: 280px;
-  }
-}
-
-/* Discovery Mode responsive */
-.visual-grid,
-.patterns-grid {
-  display: grid;
-  gap: 15px;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-}
-
-@media (max-width: 768px) {
-  .visual-grid,
-  .patterns-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .animation-step {
-    padding: 15px;
-  }
-
-  .lab-selector {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  }
-}
-
-@media (max-width: 480px) {
-  .visual-grid,
-  .patterns-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .lab-selector {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  }
-
-  .equation-card {
-    min-width: 100px;
-    padding: 15px;
-  }
-
-  .dropzone-content {
-    font-size: 18px;
-  }
-
-  /* Bouton retour fixé mobile */
-  .return-btn,
-  #back-btn.discovery-return-btn {
-    position: fixed !important;
-    top: 20px;
-    left: 20px;
-    z-index: 1001;
-    background-color: var(--primary-color);
-    color: var(--text-color);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 16px;
-    box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
-    transition:
-      transform 0.3s,
-      box-shadow 0.3s,
-      background-color 0.3s;
-  }
-}
-
-/* Scores dashboard responsive */
-.dashboard-scores-card {
-  border-radius: 22px;
-  padding: var(--padding-tablet);
-  margin: 32px auto 24px auto;
-  max-width: 700px;
-}
-
-.scores-block {
-  display: flex;
-  flex-direction: column;
-  gap: 28px 0;
-}
-
-@media (max-width: 900px) {
-  .dashboard-scores-card {
-    padding: 18px 4vw 10px 4vw;
-    max-width: 98vw;
-  }
-
-  .scores-block {
-    gap: 18px 0;
-  }
-
-  .scores-subblock {
-    max-width: 98vw;
-    padding: 18px 2vw 14px 2vw;
-    min-height: 0;
-  }
-}
-
-/* Arcade responsive */
-.arcade-top5-modern {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  padding: 8px 0;
-}
-
-.arcade-score-item {
-  min-width: 56px;
-  padding: 8px 14px;
-  font-size: 1.1em;
-}
-
-@media (max-width: 600px) {
-  .arcade-top5-modern {
-    gap: 8px;
-    padding: 4px 0;
-  }
-
-  .arcade-score-item {
-    min-width: 44px;
-    font-size: 1em;
-    padding: 6px 7px;
-    margin-bottom: 2px;
   }
 }
 
@@ -602,8 +282,7 @@ img {
 
 /* GPU acceleration pour animations */
 .animated,
-.slide-transition,
-.btn:active {
+.slide-transition {
   will-change: transform;
   transform: translateZ(0);
 }
@@ -648,7 +327,7 @@ img {
 
 /* Texte et espacement responsive */
 .text-responsive {
-  font-size: clamp(14px, 4vw, 18px);
+  font-size: clamp(var(--text-sm), 4vw, var(--text-md));
   line-height: 1.4;
 }
 

@@ -1,7 +1,10 @@
-/* ========== VOLUME CONTROL ========== */
+/* ===========================================
+   Réglage du volume (hors barre du haut) : icône de son puis curseur.
+   Le curseur de la barre du haut est stylé dans topbar.css (.volume-slider).
+   =========================================== */
 .volume-control {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }

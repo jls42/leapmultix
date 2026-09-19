@@ -6,7 +6,6 @@
 import { UserState } from './userState.js';
 import { UserManager } from '../userManager.js';
 import Storage from './storage.js';
-import { getTranslation } from '../i18n.js';
 import { gameState } from '../game.js';
 import { eventBus } from './eventBus.js';
 
@@ -318,18 +317,8 @@ const AudioManager = {
    * Mettre à jour tous les contrôles de volume dans l'UI
    */
   updateVolumeControls() {
-    // Mettre à jour les boutons mute
-    document.querySelectorAll('.mute-btn').forEach(btn => {
-      btn.textContent = this._volume > 0 ? '🔊' : '🔇';
-
-      // Titre traduit avec fallback si clé manquante
-      const key = this._volume > 0 ? 'mute_button_label_on' : 'mute_button_label_off';
-      const t = getTranslation(key);
-      const missing = typeof t === 'string' && t.startsWith('[') && t.endsWith(']');
-      btn.title = missing ? (this._volume > 0 ? 'Couper le son' : 'Activer le son') : t;
-    });
-
-    // Mettre à jour les sliders
+    // L'icône et le libellé des boutons son sont gérés par la barre du haut
+    // (TopBar.updateVolumeControls, via l'événement volumeChanged) : ici, seulement les curseurs.
     document.querySelectorAll('.volume-slider').forEach(slider => {
       slider.value = this._volume;
     });

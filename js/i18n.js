@@ -71,8 +71,25 @@ export function updateLanguageButtons() {
   try {
     const lang = Storage.loadLanguage?.() || 'fr';
     document.querySelectorAll('.lang-btn')?.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === lang);
+      const isActive = btn.dataset.lang === lang;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
     });
+  } catch (e) {
+    void e;
+  }
+}
+
+/**
+ * Langue du document : <html lang> (prononciation des lecteurs d'écran, césure)
+ * et titre de l'onglet, qui est aussi le nom de la page pour les lecteurs d'écran.
+ * @param {string} langCode - 'fr', 'en' ou 'es'
+ */
+export function applyDocumentLanguage(langCode) {
+  try {
+    if (langCode) document.documentElement.lang = langCode;
+    const title = getTranslation('document_title');
+    if (typeof title === 'string' && title && !title.startsWith('[')) document.title = title;
   } catch (e) {
     void e;
   }
@@ -100,6 +117,7 @@ export async function changeLanguage(langCode) {
       } catch (e) {
         void e;
       }
+      applyDocumentLanguage(langCode);
       try {
         updateLanguageButtons();
       } catch (e) {
@@ -129,6 +147,7 @@ export default {
   getTranslation,
   loadTranslations,
   applyStaticTranslations,
+  applyDocumentLanguage,
   updateLanguageButtons,
   updateSpeechVoice,
   changeLanguage,

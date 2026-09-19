@@ -1,7 +1,7 @@
 /* =====================
    Arcade Pacman Launcher (MultiPac)
    - Contient la fonction startPacmanArcade déplacée depuis arcade.js
-   - Dépend de getArcadeGameTemplate (arcade.js) et PacmanGame (multimiam-engine.js & co.)
+   - Dépend de InfoBar.createArcadeTemplateElement (components/infoBar.js) et PacmanGame (multimiam-engine.js & co.)
    ===================== */
 
 import { getDifficultySettings } from './difficulty.js';
@@ -13,7 +13,7 @@ import { getTranslation, cleanupGameResources } from './utils-es6.js';
 import { setStartingMode } from './mode-orchestrator.js';
 import { startArcadeTimer, showArcadeGameOver, stopArcadeMode } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
-import { showGameInstructions } from './arcade-common.js';
+import { showGameInstructions, prepareArcadeStage } from './arcade-common.js';
 import { InfoBar } from './components/infoBar.js';
 import { UserState } from './core/userState.js';
 // Utilise les helpers ESM
@@ -112,6 +112,11 @@ export function startPacmanArcade() {
 
   // Nettoyer l'écran jeu et rendre l'UI
   renderPacmanUI();
+  // Haut de page, zone de jeu sans hauteur imposée, consigne sous le labyrinthe :
+  // le labyrinthe se dimensionne ensuite pour que l'ensemble tienne dans l'écran
+  const canvas = document.getElementById('multimiam-canvas');
+  prepareArcadeStage(canvas);
+  showGameInstructions(canvas, getInstructions());
   // Utilisation des paramètres de difficulté (Cascade 2025)
   const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
   // Durée de la partie selon le niveau
@@ -184,14 +189,6 @@ export function startPacmanArcade() {
       // Enregistrement d'événement non-critique
       // Erreur ignorée (non-critique)
     }
-
-    // Afficher les instructions du jeu
-    showGameInstructions(
-      document.getElementById('multimiam-canvas'),
-      getInstructions(),
-      '#FFB700',
-      5000
-    );
   } else {
     console.error('Erreur: MultiMiam non défini');
   }

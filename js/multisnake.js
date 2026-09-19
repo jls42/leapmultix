@@ -3,7 +3,13 @@
 
 import { generateQuestion } from './questionGenerator.js';
 import { showArcadeMessage, showArcadePoints, getTranslation } from './utils-es6.js';
-import { showGameInstructions } from './arcade-common.js';
+import { showArcadePenalty } from './arcade-points.js';
+import {
+  showGameInstructions,
+  getCanvasFont,
+  getArcadeCanvasBox,
+  readableCanvasFontSize,
+} from './arcade-common.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { showArcadeGameOver } from './arcade.js';
 import { cleanupGameResources } from './game-cleanup.js';
@@ -81,6 +87,10 @@ class SnakeGame {
     this.direction = { x: 1, y: 0 };
     this.nextDirection = { x: 1, y: 0 };
 
+    // La consigne s'affiche sous le plateau avant le calcul de sa place : l'ensemble
+    // tient dans l'écran sans défilement
+    this.showInstructions();
+
     // Appliquer le redimensionnement du canvas
     this.resizeCanvas();
 
@@ -91,20 +101,14 @@ class SnakeGame {
     this.initControls();
 
     // Redimensionnement
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
     this._onResize = () => {
       if (this._disposed) return;
       this.resizeCanvas();
       this.draw();
     };
-    Root?.addEventListener?.('resize', this._onResize);
+    globalThis.addEventListener?.('resize', this._onResize);
     this.eventListeners.push({
-      element: Root,
+      element: globalThis,
       type: 'resize',
       callback: this._onResize,
       options: false,
@@ -166,8 +170,10 @@ class SnakeGame {
       return;
     }
 
-    const containerWidth = Math.max(300, container.clientWidth || 300);
-    const containerHeight = Math.max(300, container.clientHeight || 300);
+    // Place réelle du plateau : sous le bandeau, avec la consigne et « Abandonner »
+    const box = getArcadeCanvasBox(this.canvas);
+    const containerWidth = Math.max(200, box.width);
+    const containerHeight = Math.max(200, box.height);
 
     // Adapter la grille à la taille du canvas
     if (this.isMobile) {
@@ -210,8 +216,9 @@ class SnakeGame {
 
     this.canvas.style.display = 'block';
     this.canvas.style.margin = '0 auto';
-    this.canvas.style.borderRadius = '8px';
-    this.canvas.style.boxSizing = 'border-box';
+    this.canvas.style.borderRadius = 'var(--radius-md)';
+    // Le cadre s'ajoute autour du dessin : taille affichée = taille interne
+    this.canvas.style.boxSizing = 'content-box';
 
     console.log(
       `Snake: Canvas redimensionné: ${this.canvas.width}x${this.canvas.height}, grille: ${this.cols}x${this.rows}, cellule: ${this.cellSize}px`
@@ -525,9 +532,6 @@ class SnakeGame {
     // Mettre à jour la barre d'info via InfoBar (ESM)
     this.updateInfoBar();
 
-    // Afficher les instructions du jeu
-    this.showInstructions();
-
     // Donner le focus au canvas sans provoquer de scroll
     this.focusCanvasWithoutScroll();
 
@@ -608,7 +612,7 @@ class SnakeGame {
       : getTranslation('arcade.multiSnake.controls.desktop') ||
         'Utilise les flèches du clavier pour déplacer le serpent';
 
-    showGameInstructions(this.canvas, instructions, '#4CAF50', 5000);
+    showGameInstructions(this.canvas, instructions);
   }
 
   /**
@@ -835,8 +839,8 @@ class SnakeGame {
           );
           // bonne réponse mangée
           this.score += 100;
-          // Affichage du gain de points
-          showArcadePoints(100, this.canvas);
+          // Affichage du gain de points, au-dessus de la pomme mangée
+          showArcadePoints(100, this.canvas, this.cellPoint(pos));
           // Augmenter la vitesse
           this.moveInterval = Math.max(this.minSpeed, this.moveInterval - this.speedIncrement);
 
@@ -853,10 +857,11 @@ class SnakeGame {
             this.currentOperation.num2,
             false
           );
-          // Mauvaise réponse : on perd 50 points mais pas de vie, et on retire la bulle
-          this.score = Math.max(0, this.score - 50);
-          // Affichage de la perte de points
-          showArcadePoints(-50, this.canvas);
+          // Mauvaise réponse : on perd 50 points (au plus ce qu'on a) mais pas de vie,
+          // et on retire la bulle ; la pastille montre ce qui a vraiment été retiré
+          const removed = Math.min(this.score, 50);
+          this.score -= removed;
+          showArcadePenalty(removed, this.canvas, this.cellPoint(pos));
           this.numberPositions.splice(i, 1);
           // On continue le déplacement normal du serpent (pas de break ni return)
         }
@@ -923,8 +928,8 @@ class SnakeGame {
     this.lives--;
     this.updateScoreDisplay();
 
-    // Afficher le message de vie perdue avec la fonction unifiée
-    showArcadeMessage('arcade_life_lost', '#F44336');
+    // Afficher le message de vie perdue avec la fonction unifiée (ton neutre, jamais rouge)
+    showArcadeMessage('arcade_life_lost', 'neutral');
 
     if (this.lives <= 0) {
       this.gameOver = true;
@@ -1018,13 +1023,14 @@ class SnakeGame {
         this.ctx.stroke();
       }
 
-      // Texte centré dans la pomme
+      // Texte centré dans la pomme, au moins 16 px à l'écran
       const text = pos.value.toString();
       this.ctx.fillStyle = 'white';
-      const fontSize = this.isMobile
-        ? Math.max(14, this.cellSize * 0.5)
-        : Math.max(12, this.cellSize * 0.4);
-      this.ctx.font = `bold ${fontSize}px Arial`;
+      const fontSize = readableCanvasFontSize(
+        this.canvas,
+        this.isMobile ? this.cellSize * 0.5 : this.cellSize * 0.4
+      );
+      this.ctx.font = getCanvasFont(fontSize);
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       this.ctx.strokeStyle = 'black';
@@ -1236,6 +1242,11 @@ class SnakeGame {
     } catch (e) {
       void e;
     }
+  }
+
+  // Point du plateau où poser une pastille de points : au-dessus de la case
+  cellPoint(cell) {
+    return { x: (cell.x + 0.5) * this.cellSize, y: cell.y * this.cellSize };
   }
 
   // Méthode utilitaire pour charger une image

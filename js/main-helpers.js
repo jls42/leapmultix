@@ -3,81 +3,153 @@ import { UserState } from './core/userState.js';
 import { getTranslation } from './utils-es6.js';
 import { gameState } from './game.js';
 import Storage from './core/storage.js';
+import { createIcon } from './components/icons.js';
 
 const AVATAR_LIST = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
+// Anciennes valeurs françaises encore présentes dans certains profils enregistrés
+const AVATAR_ALIASES = { renard: 'fox', licorne: 'unicorn', astronaute: 'astronaut' };
+const DEFAULT_AVATAR = 'fox';
 const HERO_IMAGE_BY_LANG = {
   fr: 'assets/social/leapmultix-social-card.webp',
   en: 'assets/social/leapmultix-social-card.webp',
   es: 'assets/social/leapmultix-social-card.webp',
 };
 const HERO_DEFAULT_LANG = 'fr';
+// Repli du message de la mascotte si aucune traduction n'est disponible
+const WELCOME_FALLBACK = 'Salut {nickname} ! On joue à quoi aujourd’hui ?';
+
+const isMissingTranslation = value => typeof value !== 'string' || /^\[.*\]$/.test(value);
+
+/**
+ * Ramène un identifiant d'avatar (éventuellement ancien ou inconnu) à un avatar connu.
+ * @param {string} [avatarId]
+ * @returns {string} Identifiant de la liste AVATAR_LIST (renard par défaut)
+ */
+export function normalizeAvatarId(avatarId) {
+  const resolved = AVATAR_ALIASES[avatarId] || avatarId;
+  return AVATAR_LIST.includes(resolved) ? resolved : DEFAULT_AVATAR;
+}
+
+/**
+ * Chemin du visage (128×128) d'un avatar. L'identifiant est filtré par une liste
+ * blanche : une valeur inattendue venant du stockage ne peut pas composer une URL.
+ * @param {string} [avatarId]
+ * @returns {string}
+ */
+export function getAvatarHeadSrc(avatarId) {
+  return `assets/images/arcade/${normalizeAvatarId(avatarId)}_head_avatar_128x128.png`;
+}
+
+// Cadenas des avatars verrouillés : icône partagée (components/icons.js), pas d'émoji.
+// Le conteneur .lock-icon est celui que la personnalisation sait déjà décorer.
+function createLockIcon() {
+  const lock = document.createElement('span');
+  lock.className = 'lock-icon';
+  lock.setAttribute('aria-hidden', 'true');
+  const icon = createIcon('lock', { size: 18 });
+  if (icon) lock.appendChild(icon);
+  return lock;
+}
+
+// Conteneurs dont l'état aria-checked suit déjà les clics (un seul écouteur par conteneur)
+const avatarRadioGroups = new WeakSet();
+
+function markCheckedAvatar(container, avatarId) {
+  for (const btn of container.querySelectorAll('.avatar-btn')) {
+    btn.setAttribute('aria-checked', btn.dataset.avatar === avatarId ? 'true' : 'false');
+  }
+}
+
+function syncAvatarRadiosOnClick(container) {
+  if (avatarRadioGroups.has(container)) return;
+  avatarRadioGroups.add(container);
+  container.addEventListener('click', event => {
+    const btn = event.target.closest?.('.avatar-btn');
+    if (!btn || !container.contains(btn) || btn.disabled) return;
+    markCheckedAvatar(container, btn.dataset.avatar);
+  });
+}
+
+function resolveAvatarSelector(target) {
+  if (!target) {
+    // Le sélecteur du formulaire « Nouveau joueur » (slide 0) n'est jamais régénéré ici :
+    // il propose tous les avatars, indépendamment de ceux débloqués par le joueur courant.
+    const all = Array.from(document.querySelectorAll('.avatar-selector'));
+    return (
+      all.find(
+        el => el.offsetParent !== null && !el.classList.contains('creation-avatar-selector')
+      ) || null
+    );
+  }
+  if (typeof target === 'string') return document.querySelector(target);
+  return target;
+}
 
 export function renderAvatarSelector(target) {
-  let avatarSelector = null;
-  if (!target) {
-    const all = Array.from(document.querySelectorAll('.avatar-selector'));
-    avatarSelector = all.find(el => el.offsetParent !== null);
-  } else if (typeof target === 'string') {
-    avatarSelector = document.querySelector(target);
-  } else {
-    avatarSelector = target;
-  }
+  const avatarSelector = resolveAvatarSelector(target);
   if (!avatarSelector) return;
 
   const userData = UserState.getCurrentUserData();
   const unlocked = userData.unlockedAvatars || ['fox'];
+  const current = normalizeAvatarId(userData.avatar);
+  const lockTipRaw = getTranslation('avatar_locked_tooltip');
+  const lockTip = isMissingTranslation(lockTipRaw) ? 'Avatar verrouillé' : lockTipRaw;
 
   while (avatarSelector.firstChild) avatarSelector.removeChild(avatarSelector.firstChild);
   AVATAR_LIST.forEach(avatarName => {
     const isUnlocked = unlocked.includes(avatarName);
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'avatar-btn' + (isUnlocked ? '' : ' locked');
     btn.dataset.avatar = avatarName;
+    // Le conteneur est un radiogroup (index.html) : chaque avatar est une option
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', avatarName === current ? 'true' : 'false');
     const labelRaw = getTranslation(avatarName);
-    const label =
-      typeof labelRaw === 'string' && !/^\[.*\]$/.test(labelRaw) ? labelRaw : avatarName;
-    const lockTipRaw = getTranslation('avatar_locked_tooltip');
-    const lockTip =
-      typeof lockTipRaw === 'string' && !/^\[.*\]$/.test(lockTipRaw)
-        ? lockTipRaw
-        : 'Avatar verrouillé';
+    const label = isMissingTranslation(labelRaw) ? avatarName : labelRaw;
     const img = document.createElement('img');
-    img.src = `assets/images/arcade/${avatarName}_head_avatar_128x128.png`;
+    img.src = getAvatarHeadSrc(avatarName);
     img.width = 100;
     img.height = 100;
-    img.alt = label;
+    // Le nom visible donne déjà le nom accessible du bouton
+    img.alt = '';
     const span = document.createElement('span');
     span.className = 'avatar-label';
+    // Un changement de langue réécrit le nom sans régénérer le sélecteur (i18n.js)
+    span.dataset.translate = avatarName;
     span.textContent = label;
     btn.appendChild(img);
     btn.appendChild(document.createTextNode(' '));
     btn.appendChild(span);
     if (!isUnlocked) {
-      const lock = document.createElement('span');
-      lock.className = 'lock-icon';
-      lock.title = lockTip;
-      lock.textContent = '🔒';
       btn.appendChild(document.createTextNode(' '));
-      btn.appendChild(lock);
+      btn.appendChild(createLockIcon());
+      btn.title = lockTip;
+      btn.dataset.translateTitle = 'avatar_locked_tooltip';
     }
     btn.disabled = !isUnlocked;
-    if (!isUnlocked) btn.title = getTranslation('avatar_locked_tooltip');
     avatarSelector.appendChild(btn);
   });
+  syncAvatarRadiosOnClick(avatarSelector);
 }
 
+/**
+ * Message d'accueil de la bulle de la mascotte : une ligne courte avec le prénom.
+ */
 export async function updateWelcomeMessageUI() {
   const userData = UserState.getCurrentUserData();
   const nickname = userData.nickname || '';
   const welcomeMsgElement = document.getElementById('welcome-message');
   if (welcomeMsgElement) {
-    while (welcomeMsgElement.firstChild)
-      welcomeMsgElement.removeChild(welcomeMsgElement.firstChild);
-    const welcomeText = getTranslation('welcome_user', { nickname });
-    const introText = getTranslation('adventure_intro');
-    welcomeMsgElement.appendChild(document.createTextNode(welcomeText));
-    welcomeMsgElement.appendChild(document.createElement('br'));
-    welcomeMsgElement.appendChild(document.createTextNode(introText));
+    let welcomeText = getTranslation('welcome_user_short', { nickname });
+    if (isMissingTranslation(welcomeText)) {
+      welcomeText = getTranslation('welcome_user', { nickname });
+    }
+    if (isMissingTranslation(welcomeText)) {
+      welcomeText = WELCOME_FALLBACK.replace('{nickname}', nickname);
+    }
+    // Sans prénom, « Salut {nickname} ! » laisserait deux espaces consécutives
+    welcomeMsgElement.textContent = String(welcomeText).replace(/\s{2,}/g, ' ');
   } else {
     const welcomeNicknameSpan = document.getElementById('welcome-nickname');
     if (welcomeNicknameSpan) {
@@ -132,7 +204,10 @@ export function updateSeoHeroImage(preferredLang) {
 
 // No global exposure; use ES module imports instead
 
-// Background helpers (guarded definitions to avoid overriding main.js if present)
+/* === FOND ILLUSTRÉ : UN MONDE FIXE PAR AVATAR ===
+   Chaque avatar a plusieurs illustrations de fond. Une seule est tirée pour
+   chaque avatar, la première fois qu'on l'affiche dans la session, puis elle
+   ne change plus : ni minuterie, ni changement pendant une question. */
 const avatarAvailableImages = {
   fox: [1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17],
   panda: Array.from({ length: 17 }, (_, i) => i + 1),
@@ -141,33 +216,38 @@ const avatarAvailableImages = {
   astronaut: Array.from({ length: 17 }, (_, i) => i + 1),
   default: [1],
 };
-const _lastUsedImageNumber = {};
-let _backgroundIntervalId = null;
+const _chosenImageByAvatar = {};
+let _appliedBackgroundKey = null;
 
+function chooseImageNumber(avatarKey, available) {
+  if (!Object.prototype.hasOwnProperty.call(_chosenImageByAvatar, avatarKey)) {
+    _chosenImageByAvatar[avatarKey] = available[Math.floor(Math.random() * available.length)];
+  }
+  return _chosenImageByAvatar[avatarKey];
+}
+
+/**
+ * Affiche le monde illustré de l'avatar. Appeler plusieurs fois avec le même
+ * avatar ne change pas l'image ; changer d'avatar affiche le monde du nouvel avatar.
+ * @param {string} [avatarId] - Avatar (par défaut : celui de la partie ou du joueur)
+ */
 export function updateBackgroundByAvatar(avatarId) {
-  // Resolve avatar id from arg or current state, normalize possible FR aliases
-  const aliases = { renard: 'fox', licorne: 'unicorn', astronaute: 'astronaut' };
-  let resolved = avatarId || gameState?.avatar || UserState.getCurrentUserData()?.avatar || 'fox';
-
-  resolved = aliases[resolved] || resolved;
+  const requested =
+    avatarId || gameState?.avatar || UserState.getCurrentUserData()?.avatar || DEFAULT_AVATAR;
+  const resolved = AVATAR_ALIASES[requested] || requested;
 
   let available = avatarAvailableImages[resolved];
   let effective = resolved;
   if (!available || available.length === 0) {
     available = avatarAvailableImages.default;
-    effective = 'fox';
-    if (!available || available.length === 0) return;
-  }
-  let chosen;
-  if (available.length > 1) {
-    do {
-      chosen = available[Math.floor(Math.random() * available.length)];
-    } while (chosen === _lastUsedImageNumber[effective]);
-  } else {
-    chosen = available[0];
+    effective = DEFAULT_AVATAR;
   }
 
-  _lastUsedImageNumber[effective] = chosen;
+  const chosen = chooseImageNumber(effective, available);
+  const backgroundKey = `${effective}_${chosen}`;
+  if (backgroundKey === _appliedBackgroundKey) return;
+  _appliedBackgroundKey = backgroundKey;
+
   const imageNumber = String(chosen).padStart(3, '0');
   const basePath = `../img/background_${effective}_${imageNumber}`;
   const pngPath = `${basePath}.png`;
@@ -177,13 +257,14 @@ export function updateBackgroundByAvatar(avatarId) {
   document.body.style.setProperty('--current-bg-image-url', `url('${pngPath}')`);
 }
 
+/**
+ * @deprecated Le fond ne tourne plus (l'ancienne minuterie de 42 s est supprimée) :
+ * utiliser updateBackgroundByAvatar(). Conservé pour les modules qui l'appellent
+ * encore ; affiche simplement le monde de l'avatar.
+ * @param {string} [avatarId]
+ */
 export function startBackgroundRotation(avatarId) {
-  if (_backgroundIntervalId) clearInterval(_backgroundIntervalId);
-  function changeBg() {
-    updateBackgroundByAvatar(avatarId);
-  }
-  changeBg();
-  _backgroundIntervalId = setInterval(changeBg, 42000);
+  updateBackgroundByAvatar(avatarId);
 }
 
 export default { renderAvatarSelector, updateWelcomeMessageUI, updateSeoHeroImage };

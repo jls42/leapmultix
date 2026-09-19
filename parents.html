@@ -64,140 +64,187 @@
       }
     </script>
   </head>
-  <body class="static-page theme-blue">
+  <body class="static-page">
     <header class="site-header">
       <a class="logo" href="/">
-        <img src="/assets/icons/panda-64.png" alt="" aria-hidden="true" width="64" height="64" />
+        <img src="/assets/icons/panda-64.png" alt="" width="64" height="64" />
         <span>LeapMultix</span>
       </a>
-      <nav class="site-nav">
-        <a class="nav-link" href="/">Application</a>
-        <a class="nav-link" href="/modes.html">Modes</a>
-        <a class="nav-link active" href="/parents.html">Parents & enseignants</a>
-        <a class="nav-link" href="/pwa.html">Installer l'app</a>
+      <nav class="site-nav" aria-label="Pages de LeapMultix">
+        <a href="/">Application</a>
+        <a href="/modes.html">Modes</a>
+        <a href="/parents.html" aria-current="page">Parents & enseignants</a>
+        <a href="/pwa.html">Installer l’app</a>
       </nav>
-      <a class="cta" href="/index.html#slide1">Créer un profil enfant</a>
+      <a class="btn" href="/">Créer un profil enfant</a>
     </header>
 
     <main>
-      <section class="hero content-card">
-        <p class="pretitle">Accompagnement</p>
+      <section class="hero">
         <h1>Faites du calcul mental un rituel serein</h1>
         <p>
-          LeapMultix est pensé pour soulager les parents comme les enseignants : pas de compte à
-          créer, pas de collecte de données, mais un suivi précis des acquis. Tout se passe dans le
-          navigateur et reste sur l’appareil de l’enfant.
+          LeapMultix est pensé pour soulager les parents comme les enseignants&nbsp;: pas de compte
+          à créer, aucune donnée personnelle collectée, mais un suivi précis des acquis. Tout se
+          passe dans le navigateur et reste sur l’appareil de l’enfant.
         </p>
       </section>
 
-      <section class="content-card">
-        <h2 class="section-title">Plan d'entraînement conseillé</h2>
-        <div class="grid">
-          <article class="mode-card">
-            <h3>Lundi – Découverte</h3>
+      <div class="page-sheet">
+        <section class="page-section">
+          <h2>Plan d’entraînement conseillé</h2>
+          <ol class="plan-list" role="list">
+            <li class="plan-item">
+              <h3>Lundi – Découverte</h3>
+              <img
+                class="plan-art"
+                src="/assets/images/arcade/logo_mode_decouverte.png"
+                alt=""
+                width="64"
+                height="64"
+                loading="lazy"
+                decoding="async"
+              />
+              <p>
+                10 minutes d’exploration libre pour présenter une nouvelle opération, relever les
+                patterns et ajouter un mémo visuel dans le carnet.
+              </p>
+            </li>
+            <li class="plan-item">
+              <h3>Mercredi – Quiz personnalisé</h3>
+              <img
+                class="plan-art"
+                src="/assets/images/arcade/logo_mode_quizz.png"
+                alt=""
+                width="64"
+                height="64"
+                loading="lazy"
+                decoding="async"
+              />
+              <p>
+                Séance courte focalisée sur deux opérations maximum. On répète jusqu’à obtenir
+                80&nbsp;% de réussite sans chronomètre.
+              </p>
+            </li>
+            <li class="plan-item">
+              <h3>Vendredi – Défi chronométré</h3>
+              <img
+                class="plan-art"
+                src="/assets/images/arcade/logo_mode_defi.png"
+                alt=""
+                width="64"
+                height="64"
+                loading="lazy"
+                decoding="async"
+              />
+              <p>
+                On lance un défi de 90, 60 ou 30&nbsp;secondes avec bonus de série pour gamifier la
+                semaine. Les erreurs sont relues à voix haute.
+              </p>
+            </li>
+            <li class="plan-item">
+              <h3>Weekend – Arcade libre</h3>
+              <img
+                class="plan-art"
+                src="/assets/images/arcade/logo_mode_arcade.png"
+                alt=""
+                width="64"
+                height="64"
+                loading="lazy"
+                decoding="async"
+              />
+              <p>
+                On autorise 15 minutes de mini-jeux pour consolider le calcul mental sans tension,
+                idéal en mode avion lors d’un trajet.
+              </p>
+            </li>
+          </ol>
+          <p>
+            En classe, ce découpage peut s’appliquer à un atelier autonome ou à un plan de travail.
+            L’application fonctionne hors ligne après installation PWA et tourne aussi bien sur un
+            ordinateur partagé que sur une tablette.
+          </p>
+        </section>
+
+        <div class="page-section split">
+          <section>
+            <h2>Ce que vous contrôlez</h2>
+            <ul>
+              <li>
+                <strong>Profils multiples&nbsp;:</strong> créez un profil par enfant, chacun avec
+                son avatar, pour qu’il se repère facilement.
+              </li>
+              <li>
+                <strong>Tableaux de progression&nbsp;:</strong> nombre total de questions répondues,
+                bonnes réponses cumulées, meilleure série sans erreur et étoiles gagnées pour chaque
+                table de multiplication.
+              </li>
+              <li>
+                <strong>Langues&nbsp;:</strong> passez en anglais ou en espagnol pour travailler le
+                vocabulaire mathématique dans une autre langue vivante. La FAQ et les astuces pour
+                retenir les tables suivent la langue choisie.
+              </li>
+            </ul>
+          </section>
+
+          <section class="panel">
+            <h2>Respect de la vie privée</h2>
             <p>
-              10 minutes d'exploration libre pour présenter une nouvelle opération, relever les
-              patterns et ajouter un mémo visuel dans le carnet.
+              LeapMultix suit les bonnes pratiques de la CNIL pour les services éducatifs destinés
+              aux mineurs.
             </p>
-          </article>
-          <article class="mode-card">
-            <h3>Mercredi – Quiz personnalisé</h3>
-            <p>
-              Séance courte focalisée sur deux opérations maximum. On répète jusqu’à obtenir 80 % de
-              réussite sans chronomètre.
-            </p>
-          </article>
-          <article class="mode-card">
-            <h3>Vendredi – Défi chronométré</h3>
-            <p>
-              On lance un défi à 20 questions avec bonus de série pour gamifier la semaine. Les
-              erreurs sont relues à voix haute.
-            </p>
-          </article>
-          <article class="mode-card">
-            <h3>Weekend – Arcade libre</h3>
-            <p>
-              On autorise 15 minutes de mini-jeux pour consolider le calcul mental sans tension,
-              idéal en mode avion lors d’un trajet.
-            </p>
-          </article>
+            <ul>
+              <li>
+                Pas de création de compte, pas d’email demandé, profils stockés uniquement en local.
+              </li>
+              <li>
+                Les seules statistiques collectées sont agrégées par Plausible (hébergé dans l’UE)
+                pour mesurer l’audience globale.
+              </li>
+              <li>
+                Chaque page d’information se lit sans JavaScript&nbsp;: vous pouvez l’imprimer ou
+                l’envoyer aux familles sans modification.
+              </li>
+              <li>
+                La politique de confidentialité et les mentions légales, consultables dans
+                l’application, sont rédigées en français uniquement.
+              </li>
+            </ul>
+          </section>
         </div>
-        <p>
-          En classe, ce découpage peut s’appliquer à un atelier autonome ou à un plan de travail.
-          L’application fonctionne hors ligne après installation PWA et tourne aussi bien sur un
-          ordinateur partagé que sur une tablette.
-        </p>
-      </section>
 
-      <section class="content-section alt">
-        <h2 class="section-title">Ce que vous contrôlez</h2>
-        <ul>
-          <li>
-            <strong>Profils multiples :</strong> créez un profil par enfant avec avatar et thème
-            dédiés pour qu’il se repère facilement.
-          </li>
-          <li>
-            <strong>Tableaux de progression :</strong> nombre total de questions répondues, bonnes
-            réponses cumulées, meilleure série sans erreur et étoiles gagnées par opération.
-          </li>
-          <li>
-            <strong>Langues :</strong> passez en anglais ou en espagnol pour travailler le
-            vocabulaire mathématique dans une autre langue vivante.
-          </li>
-        </ul>
-      </section>
+        <section class="page-section">
+          <h2>Idées d’intégration en classe</h2>
+          <ul>
+            <li>
+              Utilisez le mode Quiz comme activité d’entrée pour lancer une séance en demi-groupe.
+            </li>
+            <li>
+              Organisez une «&nbsp;couronne du calcul&nbsp;»&nbsp;: chaque élève doit battre son
+              record Défi pour débloquer un badge collectif.
+            </li>
+            <li>
+              En atelier accompagné, laissez le duo parent/enfant jouer au mode Arcade, puis
+              discutez des stratégies gagnantes le lundi suivant.
+            </li>
+          </ul>
+        </section>
 
-      <section class="content-section">
-        <h2 class="section-title">Respect de la vie privée</h2>
-        <p class="section-subtitle">
-          LeapMultix suit les bonnes pratiques de la CNIL pour les services éducatifs destinés aux
-          mineurs.
-        </p>
-        <ul>
-          <li>
-            Pas de création de compte, pas d’email demandé, profils stockés uniquement en local.
-          </li>
-          <li>
-            Les seules statistiques collectées sont agrégées par Plausible (hébergé dans l’UE) pour
-            mesurer l’audience globale.
-          </li>
-          <li>
-            Chaque page statique possède un contenu crawlable sans JavaScript : vous pouvez
-            l’imprimer ou l’envoyer aux familles sans modification.
-          </li>
-          <li>
-            Les ressources pédagogiques (mnémotechniques, FAQ, mentions légales) sont disponibles en
-            3 langues.
-          </li>
-        </ul>
-      </section>
-
-      <section class="content-card">
-        <h2 class="section-title">Idées d'intégration en classe</h2>
-        <p>
-          • Utilisez le mode Quiz comme activité d’entrée pour lancer une séance en demi-groupe.<br />
-          • Organisez une « couronne du calcul » : chaque élève doit battre son record Défi pour
-          débloquer un badge collectif.<br />
-          • En atelier accompagné, laissez le duo parent/enfant jouer au mode Arcade, puis discutez
-          des stratégies gagnantes le lundi suivant.<br />
-        </p>
-      </section>
-
-      <section class="content-section alt">
-        <h2 class="section-title">Besoin d'aide&nbsp;?</h2>
-        <p>
-          Contactez <a href="mailto:contact@jls42.org">contact@jls42.org</a> pour poser vos
-          questions ou partager un retour d’expérience.
-        </p>
-      </section>
+        <section class="page-section">
+          <h2>Besoin d’aide&nbsp;?</h2>
+          <p>
+            Contactez <a href="mailto:contact@jls42.org">contact@jls42.org</a> pour poser vos
+            questions ou partager un retour d’expérience.
+          </p>
+        </section>
+      </div>
     </main>
 
-    <footer>
+    <footer class="site-footer">
       <p>
-        © 2025 LeapMultix — Projet open source hébergé sur
+        © 2025 LeapMultix — Projet open source (licence AGPL-3.0) hébergé sur
         <a href="https://github.com/jls42/leapmultix" target="_blank" rel="noopener noreferrer"
           >GitHub</a
-        >. Contact : <a href="mailto:contact@jls42.org">contact@jls42.org</a>
+        >. Contact&nbsp;: <a href="mailto:contact@jls42.org">contact@jls42.org</a>
       </p>
     </footer>
   </body>

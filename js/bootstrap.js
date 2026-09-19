@@ -183,15 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
         );
       }
     };
+    // Un seul abonnement : i18n.js émet aussi l'événement sur window (écouté par
+    // i18n-store.js) ; s'y abonner en plus redessinait chaque écran deux fois.
     try {
       eventBus.on('languageChanged', handler);
     } catch (err) {
       console.warn('Failed to attach languageChanged listener to eventBus', err);
-    }
-    try {
-      globalThis.addEventListener('languageChanged', handler);
-    } catch (err) {
-      console.warn('Failed to attach languageChanged listener to globalThis', err);
     }
   } catch (e) {
     console.warn('Bootstrap wiring failed:', e);

@@ -1,392 +1,521 @@
-/* Playful design variables - aligned with main app */
-body.static-page {
-  /* Candy color palette */
-  --candy-pink: #ff6b9d;
-  --candy-pink-dark: #e85a8a;
-  --candy-blue: #00bbf9;
-  --candy-blue-dark: #00a0d4;
-  --shadow-pink: rgb(255 107 157 / 0.35);
-  --cream: #fff8f0;
-  --soft-white: #fffaf5;
+/* ===========================================
+   LeapMultix : pages vitrines pour adultes (modes.html, parents.html, pwa.html)
+   Jetons : css/themes.css. Socle (polices, titres, liens, touche .btn) : css/general.css.
+   Une page = un en-tête, une introduction posée sur la page, une feuille de
+   contenu et un pied de page, tous sur la même largeur.
+   Dans la feuille, pas de carte dans la carte : les sections sont séparées par
+   un filet, et un seul encart en fond creusé par page met un élément en avant.
+   =========================================== */
 
-  /* Theme colors */
-  --primary-color: var(--candy-blue);
-  --primary-dark: var(--candy-blue-dark);
-  --text-color: #2c3e50;
-  --heading-color: var(--candy-blue);
-
-  /* Playful radius */
-  --radius-btn: 20px;
-  --radius-card: 24px;
-
-  /* Fonts */
-  --font-display: 'Baloo2', cursive;
-  --font-body: 'Quicksand', sans-serif;
-
-  min-height: 100vh;
+/* === PAGE === */
+.static-page {
   display: flex;
   flex-direction: column;
-  color: var(--text-color);
-  /* Playful pastel gradient background */
-  background: linear-gradient(135deg, var(--cream) 0%, #e8f8ff 50%, #fff0f5 100%);
-  position: relative;
+  min-height: 100vh;
+  font-size: var(--text-body);
 }
 
-body.static-page::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  /* Subtle warm overlay for depth */
-  background: radial-gradient(ellipse at top, rgb(255 200 220 / 0.15), transparent 70%);
-  z-index: -1;
-  pointer-events: none;
+.site-header,
+.static-page main,
+.site-footer {
+  width: min(64rem, 100% - 2 * var(--space-4));
+  margin-inline: auto;
 }
 
-/* Override theme-blue to use playful colors */
-.static-page.theme-blue {
-  --primary-color: var(--candy-blue);
-  --primary-dark: var(--candy-blue-dark);
-  --text-color: #2c3e50;
-  --heading-color: var(--candy-blue);
+/* Colonne de lecture : 70 caractères au plus par ligne (mesuré à 17 px) */
+.static-page main p,
+.static-page main :is(ul, ol):not([role='list']) {
+  max-width: 33rem;
 }
 
-.site-header {
-  width: min(1200px, 100%);
-  margin: clamp(16px, 4vw, 32px) auto 0;
-  padding: clamp(18px, 3vw, 36px);
-  border-radius: var(--radius-card, 24px);
-  background: linear-gradient(135deg, var(--candy-blue) 0%, var(--candy-blue-dark) 100%);
-  border: 1px solid rgb(255 255 255 / 0.4);
-  /* Playful shadow with pink accent */
-  box-shadow:
-    0 4px 0 var(--candy-pink-dark),
-    0 20px 40px var(--shadow-pink);
-  display: flex;
+/* Puces pleines à tous les niveaux, alignées sur le bord du texte qui précède */
+.static-page main :is(ul, ol):not([role='list']) {
+  margin-bottom: var(--space-4);
+  padding-left: 1.25em;
+  list-style-type: disc;
+}
+
+.static-page main ol:not([role='list']) {
+  list-style-type: decimal;
+}
+
+.static-page main :is(ul, ol):not([role='list']) > li + li {
+  margin-top: var(--space-2);
+}
+
+.static-page main li::marker {
+  font-weight: 700;
+  color: var(--color-ink-heading);
+}
+
+/* Listes composées (modes, mini-jeux, plan, installation) : la mise en page remplace les puces */
+.static-page main [role='list'] {
+  padding: 0;
+  list-style: none;
+}
+
+/* Un lien qui a l'allure de la touche .btn */
+.static-page a.btn {
+  display: inline-flex;
   align-items: center;
-  gap: 18px;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+}
+
+/* === EN-TÊTE === */
+.site-header {
+  display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  backdrop-filter: blur(16px);
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .logo {
-  font-weight: 700;
-  font-size: 1.35rem;
-  text-decoration: none;
-  color: #fff;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
+  min-height: 44px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-ink-heading);
+  text-decoration: none;
 }
 
 .logo img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.25));
+  width: 40px;
+  height: 40px;
 }
 
 .site-nav {
   display: flex;
+  flex: 1;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-1);
+  font-size: var(--text-base);
 }
 
-.nav-link {
-  padding: 8px 18px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-weight: 600;
-  color: var(--primary-dark);
-  background: rgb(255 255 255 / 0.85);
-  border: 1px solid rgb(255 255 255 / 0.4);
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.nav-link:hover,
-.nav-link.active {
-  background: var(--candy-pink);
-  color: #fff;
-  box-shadow:
-    0 4px 0 var(--candy-pink-dark),
-    0 8px 16px var(--shadow-pink);
-}
-
-.cta {
-  padding: 12px 24px;
-  border-radius: var(--radius-btn, 20px);
-  background: var(--candy-blue-dark, #006699);
-  color: #fff;
-  text-decoration: none;
-  font-family: var(--font-display, 'Baloo2'), cursive;
-  font-weight: 600;
-  /* Toy-like 3D shadow: pink underline for playful effect */
-  box-shadow:
-    0 4px 0 var(--candy-pink-dark, #e85a8a),
-    0 8px 16px var(--shadow-pink, rgb(255 107 157 / 0.35));
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.cta:hover {
-  transform: translateY(2px);
-  box-shadow:
-    0 2px 0 var(--candy-pink-dark, #e85a8a),
-    0 4px 8px var(--shadow-pink, rgb(255 107 157 / 0.35));
-}
-
-.cta:active {
-  transform: translateY(4px);
-  box-shadow:
-    0 0 0 var(--candy-pink-dark, #e85a8a),
-    0 2px 4px var(--shadow-pink, rgb(255 107 157 / 0.35));
-}
-
-.static-page main {
-  width: min(1100px, 100%);
-  margin: 0 auto;
-  padding: clamp(24px, 5vw, 60px) clamp(18px, 4vw, 48px) 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-.hero {
-  text-align: center;
-  padding: clamp(24px, 6vw, 60px);
-  color: var(--neutral-dark, #1f2a40);
-}
-
-.hero .pretitle {
+.site-nav a {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.85rem;
-  color: var(--primary-color);
-  margin-bottom: 12px;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  color: var(--color-ink);
+  text-decoration: none;
+  border-radius: var(--radius-pill);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.site-nav a:hover {
+  color: var(--color-action-ink);
+  background-color: var(--color-surface-sunken);
+}
+
+.site-nav a[aria-current='page'] {
   font-weight: 700;
+  color: var(--color-action-ink);
+  background-color: var(--color-action-tint);
+}
+
+/* La tranche de la touche dépasse sous le bouton : on lui laisse sa place */
+.site-header .btn {
+  margin: 0 0 var(--key-edge);
+}
+
+/* === INTRODUCTION (sur le fond de page) ===
+   Même colonne que les sections de la feuille : tant que la feuille est plus
+   étroite que 52rem + ses marges, le retrait reprend sa marge intérieure et
+   sa bordure (var(--space-5) + 1px), puis il s'efface. */
+.hero {
+  max-width: 52rem;
+  margin-inline: auto;
+  padding-block: var(--space-7) var(--space-6);
+  padding-inline: clamp(0px, var(--space-5) + 1px - (100% - 52rem) / 2, var(--space-5) + 1px);
 }
 
 .hero h1 {
-  font-size: clamp(2.1rem, 4vw, 3.2rem);
-  margin-bottom: 16px;
-  color: var(--primary-color, #3f51b5);
+  margin-bottom: var(--space-4);
+  font-size: clamp(var(--text-xl), 1rem + 3vw, var(--text-3xl));
 }
 
 .hero p {
-  max-width: 720px;
-  margin: 0 auto;
-  color: var(--neutral-dark, #1f2a40);
-  opacity: 0.8;
+  margin-bottom: 0;
+  font-size: var(--text-md);
 }
 
-.content-card,
-.content-section {
-  background: rgb(255 255 255 / 0.78);
-  border-radius: 26px;
-  padding: clamp(22px, 4vw, 40px);
-  box-shadow: 0 20px 45px rgb(0 0 0 / 0.15);
-  border: 1px solid rgb(255 255 255 / 0.5);
-  color: var(--neutral-dark, #283046);
-}
-
-.content-section.alt {
-  background: rgb(10 17 40 / 0.82);
-  color: #fff;
-  border-color: rgb(255 255 255 / 0.2);
-}
-
-.content-section.alt h2,
-.content-section.alt h3 {
-  color: #fff;
-}
-
-.section-title {
-  font-size: 1.7rem;
-  color: var(--primary-color, #3f51b5);
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.section-subtitle {
-  color: var(--text-color);
-  opacity: 0.85;
-  margin-bottom: 24px;
-}
-
-.mode-experience .section-subtitle {
-  color: var(--neutral-dark, #1f2a40);
-  opacity: 0.95;
-  font-weight: 600;
-}
-
-.mode-experience .section-subtitle strong {
-  color: var(--primary-color, #3498db);
-}
-
-.arcade-gallery .section-subtitle {
-  color: #fff;
-  opacity: 0.95;
-  font-weight: 600;
-}
-
-.mode-cards-grid {
+/* Introduction accompagnée d'une image (icône de l'application sur pwa.html) */
+.hero--with-art {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 18px;
-  margin-top: 24px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
 }
 
-.mode-cards-grid .mode-card {
-  text-align: center;
-  gap: 10px;
+.hero-art {
+  width: 7rem;
+  height: auto;
 }
 
-.mode-cards-grid .mode-card img {
-  width: 140px;
-  height: 140px;
-  object-fit: contain;
-  margin: 0 auto 12px;
+/* === FEUILLE DE CONTENU === */
+.page-sheet {
+  margin-bottom: var(--space-6);
+  padding-inline: var(--space-5);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
-.arcade-gallery-grid {
+.page-section {
+  max-width: 52rem;
+  margin-inline: auto;
+  padding-block: var(--space-7);
+}
+
+.page-section + .page-section {
+  border-top: 1px solid var(--color-border);
+}
+
+.page-section h2 {
+  margin-bottom: var(--space-4);
+  font-size: clamp(var(--text-lg), 1rem + 1.2vw, var(--text-xl));
+}
+
+.page-section > :last-child {
+  margin-bottom: 0;
+}
+
+/* L'élément mis en avant de la page : fond creusé, sans ombre ni bordure */
+.page-section.panel {
+  margin-block: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  background-color: var(--color-surface-sunken);
+  border-top: 0;
+  border-radius: var(--radius-md);
+}
+
+.panel + .page-section {
+  border-top: 0;
+}
+
+/* Deux rubriques côte à côte ; celle de droite peut être l'encart mis en avant */
+.split {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 18px;
+  align-items: start;
+  gap: var(--space-6);
 }
 
-.arcade-card {
-  background: rgb(255 255 255 / 0.1);
-  border-radius: 20px;
-  border: 1px solid rgb(255 255 255 / 0.15);
-  padding: 18px;
-  text-align: center;
-  box-shadow: 0 12px 30px rgb(0 0 0 / 0.2);
+.split > section > :last-child {
+  margin-bottom: 0;
 }
 
-.arcade-card img {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-  margin-bottom: 10px;
+.split > .panel {
+  padding: var(--space-5);
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
 }
 
-.arcade-card h3 {
-  margin: 0 0 8px;
-  color: #fff;
+/* === MODES (modes.html) : illustration à gauche, texte à droite === */
+.mode-list {
+  margin-top: var(--space-5);
 }
 
-.grid {
+.mode-item {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 18px;
+  grid-template:
+    'art title' auto
+    'art desc' auto
+    'art points' 1fr
+    / 8rem minmax(0, 1fr);
+  column-gap: var(--space-6);
+  padding-block: var(--space-5);
+  border-top: 1px solid var(--color-border);
 }
 
-.mode-card {
-  background: rgb(255 255 255 / 0.9);
-  border-radius: 18px;
-  padding: 20px;
-  border: 1px solid rgb(0 0 0 / 0.05);
-  box-shadow: 0 10px 25px rgb(0 0 0 / 0.08);
-  color: var(--neutral-dark, #1f2a40);
+.mode-item:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
-.content-section.alt .mode-card {
-  background: rgb(255 255 255 / 0.08);
-  border-color: rgb(255 255 255 / 0.15);
-  color: inherit;
+.mode-item:last-child {
+  padding-bottom: 0;
 }
 
-.mode-card h3 {
-  margin-top: 0;
-  color: var(--primary-dark);
+.mode-item h3 {
+  grid-area: title;
+  margin-bottom: var(--space-2);
 }
 
-.stat-blocks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  margin-bottom: 16px;
+.mode-item > p {
+  grid-area: desc;
+  margin-bottom: var(--space-3);
 }
 
-.stat {
-  flex: 1;
-  min-width: 200px;
-  padding: 18px;
-  border-radius: 18px;
-  background: rgb(255 255 255 / 0.85);
-  border: 1px solid rgb(0 0 0 / 0.05);
-  box-shadow: 0 10px 20px rgb(0 0 0 / 0.1);
-  color: var(--neutral-dark, #1f2a40);
+.mode-item > ul {
+  grid-area: points;
+  margin-bottom: 0;
 }
 
-.stat strong {
+.mode-art {
+  grid-area: art;
+}
+
+/* Illustrations carrées : la place est réservée avant le chargement (pas de décalage).
+   Ce sont les PNG versionnés d'assets/images/arcade : la page s'affiche telle quelle
+   depuis un simple clone du dépôt, sans étape de génération d'images. */
+.mode-art,
+.game-art,
+.plan-art {
   display: block;
-  font-size: 1.9rem;
-  color: var(--primary-color);
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
 }
 
-.stat span {
-  color: inherit;
-  opacity: 0.85;
+/* === MINI-JEUX (modes.html) : deux colonnes, logos plus petits que les modes === */
+.game-list {
+  display: grid;
+  gap: var(--space-5) var(--space-6);
+  margin-top: var(--space-5);
 }
 
-.page-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+.game-item {
+  display: grid;
+  grid-template:
+    'art title' auto
+    'art desc' 1fr
+    / 6rem minmax(0, 1fr);
+  column-gap: var(--space-4);
 }
 
-.page-links a,
-.page-links button {
-  padding: 10px 20px;
-  border-radius: 999px;
-  border: none;
-  background: var(--primary-color);
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease;
+.game-item h3 {
+  grid-area: title;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-md);
 }
 
-.page-links a:hover,
-.page-links button:hover {
-  transform: translateY(-1px);
+.game-item > p {
+  grid-area: desc;
+  margin-bottom: 0;
 }
 
-footer {
+.game-art {
+  grid-area: art;
+}
+
+/* === PLAN DE LA SEMAINE (parents.html) : un jour par ligne === */
+.plan-list {
+  margin-block: var(--space-5) var(--space-5);
+}
+
+.plan-item {
+  display: grid;
+  grid-template:
+    'art title' auto
+    'art desc' 1fr
+    / 4rem minmax(0, 1fr);
+  column-gap: var(--space-4);
+}
+
+.plan-item + .plan-item {
+  margin-top: var(--space-5);
+}
+
+.plan-item h3 {
+  grid-area: title;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-md);
+}
+
+.plan-item > p {
+  grid-area: desc;
+  margin-bottom: 0;
+}
+
+.plan-art {
+  grid-area: art;
+}
+
+/* === INSTALLATION (pwa.html) : l'appareil à gauche, les étapes à droite === */
+.install-list {
+  margin-block: var(--space-5);
+}
+
+.install-item {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  column-gap: var(--space-5);
+  padding-block: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.install-item:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.install-item h3 {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-md);
+}
+
+.install-item ol {
+  margin-bottom: 0;
+}
+
+/* === PIED DE PAGE === */
+.site-footer {
   margin-top: auto;
-  padding: 40px 20px 50px;
+  padding: var(--space-5) var(--space-4) var(--space-7);
   text-align: center;
-  color: #fff;
-  text-shadow: 0 2px 6px rgb(0 0 0 / 0.6);
+  color: var(--color-ink-muted);
 }
 
-footer a {
-  color: #fff;
-  font-weight: 600;
+.site-footer p {
+  max-width: 33rem;
+  margin: 0 auto;
+  line-height: 2;
 }
 
-@media (max-width: 768px) {
-  .site-header {
-    flex-direction: column;
-    align-items: flex-start;
+/* Liens de pied de page : zone de toucher d'environ 44 px de haut */
+.site-footer a {
+  padding-block: 0.6em;
+  font-weight: 700;
+  color: var(--color-action-ink);
+}
+
+/* === ÉCRANS MOYENS ET LARGES === */
+@media (min-width: 40rem) {
+  .game-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Grand écran : la description et les points clés d'un mode côte à côte */
+@media (min-width: 62rem) {
+  .mode-item {
+    grid-template:
+      'art title title' auto
+      'art desc points' 1fr
+      / 8rem minmax(0, 1.2fr) minmax(0, 1fr);
   }
 
+  .mode-item > p {
+    margin-bottom: 0;
+  }
+}
+
+@media (min-width: 52rem) {
+  .split {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* La rubrique sans encart s'aligne sur le texte de l'encart voisin */
+  .split > :not(.panel) {
+    padding-top: var(--space-5);
+  }
+}
+
+/* === EN-TÊTE SUR DEUX LIGNES : logo et bouton, puis la navigation === */
+@media (max-width: 64rem) {
   .site-nav {
-    width: 100%;
+    flex-basis: 100%;
+    order: 3;
   }
 
-  .cta {
+  .site-header .btn {
+    margin-left: auto;
+  }
+}
+
+/* === TÉLÉPHONES === */
+@media (max-width: 36rem) {
+  .site-header {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .site-nav a {
+    padding: 0 var(--space-2);
+  }
+
+  .site-header .btn {
+    order: 4;
     width: 100%;
-    text-align: center;
+    margin-left: 0;
+  }
+
+  .hero {
+    padding: var(--space-6) calc(var(--space-4) + 1px) var(--space-5);
+  }
+
+  .hero--with-art {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .hero-art {
+    width: 4.5rem;
+  }
+
+  .page-sheet {
+    padding-inline: var(--space-4);
+  }
+
+  .page-section {
+    padding-block: var(--space-6);
+  }
+
+  .page-section.panel {
+    margin-inline: calc(-1 * var(--space-2));
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .mode-item {
+    grid-template:
+      'art title' auto
+      'desc desc' auto
+      'points points' auto
+      / 4.5rem minmax(0, 1fr);
+    column-gap: var(--space-4);
+  }
+
+  .mode-item h3 {
+    align-self: center;
+    margin-bottom: 0;
+  }
+
+  .mode-art {
+    margin-bottom: var(--space-3);
+  }
+
+  .game-item {
+    grid-template-columns: 4rem minmax(0, 1fr);
+  }
+
+  .install-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* === IMPRESSION : la page se lit sur papier, sans la navigation === */
+@media print {
+  .site-nav,
+  .static-page a.btn {
+    display: none;
+  }
+
+  .site-header,
+  .page-sheet {
+    border: 0;
+    box-shadow: none;
   }
 }
