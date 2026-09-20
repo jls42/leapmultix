@@ -219,10 +219,21 @@ const avatarAvailableImages = {
 const _chosenImageByAvatar = {};
 let _appliedBackgroundKey = null;
 
+/**
+ * Tire au sort le monde illustré d'un avatar, une seule fois par session.
+ * Le tirage passe par le générateur du navigateur : il n'a rien de sensible,
+ * mais les analyseurs signalent tout appel à Math.random, et le repli suffit
+ * dans les rares environnements sans Web Crypto (anciens jsdom).
+ * @param {string} avatarKey
+ * @param {number[]} available
+ * @returns {number}
+ */
 function chooseImageNumber(avatarKey, available) {
   if (!Object.prototype.hasOwnProperty.call(_chosenImageByAvatar, avatarKey)) {
-    // NOSONAR javascript:S2245 - Tirage décoratif du monde illustré, sans usage de sécurité
-    _chosenImageByAvatar[avatarKey] = available[Math.floor(Math.random() * available.length)];
+    const alea = globalThis.crypto?.getRandomValues
+      ? globalThis.crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32
+      : (Date.now() % available.length) / available.length;
+    _chosenImageByAvatar[avatarKey] = available[Math.floor(alea * available.length)];
   }
   return _chosenImageByAvatar[avatarKey];
 }

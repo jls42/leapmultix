@@ -31,10 +31,9 @@ beforeEach(async () => {
   screen.id = 'game';
   document.body.appendChild(screen);
   mode = new ArcadeMode();
-  const template = document.createElement('template');
-  // eslint-disable-next-line no-restricted-properties -- Montage de test : gabarit produit par le mode lui-même, aucune donnée utilisateur
-  template.innerHTML = await mode.getCustomHTML();
-  screen.appendChild(template.content);
+  // Montage du gabarit produit par le mode, sans innerHTML
+  const parsed = new DOMParser().parseFromString(await mode.getCustomHTML(), 'text/html');
+  screen.append(...parsed.body.childNodes);
   mode.gameScreen = screen;
 });
 

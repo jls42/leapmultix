@@ -10,6 +10,32 @@ import { eventBus } from './core/eventBus.js';
 import { OperationSelector } from './components/operationSelector.js';
 import { updateModeButtonsAvailability } from './components/operationModeAvailability.js';
 
+/**
+ * Exécute une étape de rafraîchissement sans laisser une erreur interrompre les
+ * suivantes : un changement de langue doit aboutir même si un écran manque.
+ * @param {string} label - Nom de l'étape, pour le journal
+ * @param {() => unknown} step
+ */
+async function runSafely(label, step) {
+  try {
+    await step();
+  } catch (err) {
+    console.warn(`${label} failed during language change`, err);
+  }
+}
+
+/** Recharge les textes du mode en cours, chaque mode étant chargé à la demande. */
+async function refreshActiveModeTexts(mode) {
+  const chargeurs = {
+    quiz: async () => (await import('./modes/QuizMode.js')).refreshQuizTexts?.(),
+    challenge: async () => (await import('./modes/ChallengeMode.js')).refreshChallengeTexts?.(),
+    adventure: async () => (await import('./modes/AdventureMode.js')).refreshAdventureTexts?.(),
+    discovery: async () => (await import('./modes/DiscoveryMode.js')).refreshDiscoveryTexts?.(),
+    arcade: async () => (await import('./modes/ArcadeMode.js')).refreshArcadeTexts?.(),
+  };
+  await chargeurs[mode]?.();
+}
+
 function rewireSetGameModeButtons(root = document) {
   const nodes = root.querySelectorAll('[onclick]');
   nodes.forEach(el => {
@@ -112,76 +138,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Refresh active mode texts on language change (ESM wrappers)
     const handler = async e => {
-      const mode = gameState?.gameMode;
       const lang = e?.detail?.lang;
-      try {
-        switch (mode) {
-          case 'quiz':
-            (await import('./modes/QuizMode.js')).refreshQuizTexts?.();
-            break;
-          case 'challenge':
-            (await import('./modes/ChallengeMode.js')).refreshChallengeTexts?.();
-            break;
-          case 'adventure':
-            (await import('./modes/AdventureMode.js')).refreshAdventureTexts?.();
-            break;
-          case 'discovery':
-            (await import('./modes/DiscoveryMode.js')).refreshDiscoveryTexts?.();
-            break;
-          case 'arcade':
-            (await import('./modes/ArcadeMode.js')).refreshArcadeTexts?.();
-            break;
-          default:
-            break;
-        }
-      } catch (err) {
-        console.warn('Dynamic module import failed on language change', err);
-      }
+      await runSafely('refresh mode texts', () => refreshActiveModeTexts(gameState?.gameMode));
 
       // Refresh TopBar labels, language buttons, and coin display
-      try {
-        TopBar.updateTranslations();
-      } catch (err) {
-        console.warn('TopBar.updateTranslations failed during language change', err);
-      }
-      try {
-        if (lang) TopBar.updateLanguageButtons(lang);
-      } catch (err) {
-        console.warn('TopBar.updateLanguageButtons failed during language change', err);
-      }
-      try {
-        updateCoinDisplay();
-      } catch (err) {
-        console.warn('updateCoinDisplay failed during language change', err);
-      }
-      try {
-        await updateWelcomeMessageUI();
-      } catch (err) {
-        console.warn('updateWelcomeMessageUI failed during language change', err);
-      }
-      try {
-        updateSeoHeroImage(lang);
-      } catch (err) {
-        console.warn('updateSeoHeroImage failed during language change', err);
-      }
-      try {
-        OperationSelector.refresh('operation-selector-container');
-      } catch (err) {
-        console.warn('OperationSelector.refresh failed during language change', err);
-      }
-      try {
-        updateModeButtonsAvailability();
-      } catch (err) {
-        console.warn('updateModeButtonsAvailability failed during language change', err);
-      }
-      try {
-        TopBar.updateTableSettingsButtonVisibility?.();
-      } catch (err) {
-        console.warn(
-          'TopBar.updateTableSettingsButtonVisibility failed during language change',
-          err
-        );
-      }
+      const steps = [
+        ['TopBar.updateTranslations', () => TopBar.updateTranslations()],
+        ['TopBar.updateLanguageButtons', () => lang && TopBar.updateLanguageButtons(lang)],
+        ['updateCoinDisplay', () => updateCoinDisplay()],
+        ['updateWelcomeMessageUI', () => updateWelcomeMessageUI()],
+        ['updateSeoHeroImage', () => updateSeoHeroImage(lang)],
+        [
+          'OperationSelector.refresh',
+          () => OperationSelector.refresh('operation-selector-container'),
+        ],
+        ['updateModeButtonsAvailability', () => updateModeButtonsAvailability()],
+        [
+          'TopBar.updateTableSettingsButtonVisibility',
+          () => TopBar.updateTableSettingsButtonVisibility?.(),
+        ],
+      ];
+      for (const [label, step] of steps) await runSafely(label, step);
     };
     // Un seul abonnement : i18n.js émet aussi l'événement sur window (écouté par
     // i18n-store.js) ; s'y abonner en plus redessinait chaque écran deux fois.
@@ -194,5 +171,3 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('Bootstrap wiring failed:', e);
   }
 });
-
-export {};

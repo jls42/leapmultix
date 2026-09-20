@@ -181,14 +181,24 @@ export function markAnswerOptions(container, correctAnswer, chosenAnswer) {
   container.classList.add('is-answered');
   for (const option of container.querySelectorAll('.option')) {
     const value = option.dataset.value;
-    const isCorrect = value === correct;
-    const isChosenWrong = !isCorrect && value === chosen;
-    option.classList.toggle('is-correct', isCorrect);
-    option.classList.toggle('is-chosen-wrong', isChosenWrong);
-    if ((isCorrect || isChosenWrong) && !option.querySelector('.option-mark')) {
-      option.appendChild(isCorrect ? createCheckIcon() : createCrossIcon());
-    }
+    markOption(option, value === correct, value === chosen);
   }
+}
+
+/**
+ * Marque une tuile : coche si elle porte la bonne réponse, croix si c'est le
+ * choix de l'enfant, rien sinon.
+ * @param {HTMLElement} option
+ * @param {boolean} isCorrect
+ * @param {boolean} isChosen
+ */
+function markOption(option, isCorrect, isChosen) {
+  const isChosenWrong = isChosen && !isCorrect;
+  option.classList.toggle('is-correct', isCorrect);
+  option.classList.toggle('is-chosen-wrong', isChosenWrong);
+  if (!isCorrect && !isChosenWrong) return;
+  if (option.querySelector('.option-mark')) return;
+  option.appendChild(isCorrect ? createCheckIcon() : createCrossIcon());
 }
 
 /**
