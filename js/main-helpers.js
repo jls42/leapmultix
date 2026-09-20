@@ -51,25 +51,6 @@ function createLockIcon() {
   return lock;
 }
 
-// Conteneurs dont l'état aria-checked suit déjà les clics (un seul écouteur par conteneur)
-const avatarRadioGroups = new WeakSet();
-
-function markCheckedAvatar(container, avatarId) {
-  for (const btn of container.querySelectorAll('.avatar-btn')) {
-    btn.setAttribute('aria-checked', btn.dataset.avatar === avatarId ? 'true' : 'false');
-  }
-}
-
-function syncAvatarRadiosOnClick(container) {
-  if (avatarRadioGroups.has(container)) return;
-  avatarRadioGroups.add(container);
-  container.addEventListener('click', event => {
-    const btn = event.target.closest?.('.avatar-btn');
-    if (!btn || !container.contains(btn) || btn.disabled) return;
-    markCheckedAvatar(container, btn.dataset.avatar);
-  });
-}
-
 function resolveAvatarSelector(target) {
   if (!target) {
     // Le sélecteur du formulaire « Nouveau joueur » (slide 0) n'est jamais régénéré ici :
@@ -98,13 +79,18 @@ export function renderAvatarSelector(target) {
   while (avatarSelector.firstChild) avatarSelector.removeChild(avatarSelector.firstChild);
   AVATAR_LIST.forEach(avatarName => {
     const isUnlocked = unlocked.includes(avatarName);
-    const btn = document.createElement('button');
-    btn.type = 'button';
+    // Un <label> qui habille un bouton radio natif : le navigateur gère le clavier
+    // (flèches, Espace), l'état coché et l'annonce « option 2 sur 5 »
+    const btn = document.createElement('label');
     btn.className = 'avatar-btn' + (isUnlocked ? '' : ' locked');
-    btn.dataset.avatar = avatarName;
-    // Le conteneur est un radiogroup (index.html) : chaque avatar est une option
-    btn.setAttribute('role', 'radio');
-    btn.setAttribute('aria-checked', avatarName === current ? 'true' : 'false');
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.className = 'avatar-radio';
+    radio.name = 'customization-avatar';
+    radio.value = avatarName;
+    radio.checked = avatarName === current;
+    radio.disabled = !isUnlocked;
+    btn.appendChild(radio);
     const labelRaw = getTranslation(avatarName);
     const label = isMissingTranslation(labelRaw) ? avatarName : labelRaw;
     const img = document.createElement('img');
@@ -127,10 +113,8 @@ export function renderAvatarSelector(target) {
       btn.title = lockTip;
       btn.dataset.translateTitle = 'avatar_locked_tooltip';
     }
-    btn.disabled = !isUnlocked;
     avatarSelector.appendChild(btn);
   });
-  syncAvatarRadiosOnClick(avatarSelector);
 }
 
 /**

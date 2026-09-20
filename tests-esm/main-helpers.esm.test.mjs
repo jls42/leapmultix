@@ -77,30 +77,32 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
     );
   });
 
-  test('images décoratives, nom visible, état radio et cadenas sans émoji', () => {
+  test('images décoratives, nom visible, boutons radio natifs et cadenas sans émoji', () => {
     helpers.renderAvatarSelector('#avatar-choice');
 
-    const buttons = [...document.querySelectorAll('#avatar-choice .avatar-btn')];
-    expect(buttons).toHaveLength(5);
-    for (const btn of buttons) {
-      expect(btn.getAttribute('role')).toBe('radio');
-      expect(btn.querySelector('img').getAttribute('alt')).toBe('');
-      expect(btn.querySelector('.avatar-label').textContent).not.toBe('');
-      expect(btn.textContent).not.toContain('🔒');
+    const tiles = [...document.querySelectorAll('#avatar-choice .avatar-btn')];
+    expect(tiles).toHaveLength(5);
+    for (const tile of tiles) {
+      expect(tile.tagName).toBe('LABEL');
+      expect(tile.querySelector('.avatar-radio').type).toBe('radio');
+      expect(tile.querySelector('img').getAttribute('alt')).toBe('');
+      expect(tile.querySelector('.avatar-label').textContent).not.toBe('');
+      expect(tile.textContent).not.toContain('🔒');
     }
-    const byId = id => buttons.find(b => b.dataset.avatar === id);
-    expect(byId('panda').getAttribute('aria-checked')).toBe('true');
-    expect(byId('fox').getAttribute('aria-checked')).toBe('false');
+    const radioOf = id => document.querySelector(`#avatar-choice .avatar-radio[value="${id}"]`);
+    expect(radioOf('panda').checked).toBe(true);
+    expect(radioOf('fox').checked).toBe(false);
 
-    const unicorn = byId('unicorn');
+    const unicorn = radioOf('unicorn');
     expect(unicorn.disabled).toBe(true);
-    const lock = unicorn.querySelector('.lock-icon');
+    const lock = unicorn.closest('.avatar-btn').querySelector('.lock-icon');
     expect(lock?.getAttribute('aria-hidden')).toBe('true');
     expect(lock?.querySelector('svg')).not.toBeNull();
 
-    byId('fox').click();
-    expect(byId('fox').getAttribute('aria-checked')).toBe('true');
-    expect(byId('panda').getAttribute('aria-checked')).toBe('false');
+    // Un seul avatar coché à la fois : c'est le groupe natif qui s'en charge
+    radioOf('fox').click();
+    expect(radioOf('fox').checked).toBe(true);
+    expect(radioOf('panda').checked).toBe(false);
   });
 
   test('noms et infobulle de verrouillage suivent un changement de langue (data-translate)', () => {
@@ -108,7 +110,9 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
 
     const buttons = [...document.querySelectorAll('#avatar-choice .avatar-btn')];
     for (const btn of buttons) {
-      expect(btn.querySelector('.avatar-label').dataset.translate).toBe(btn.dataset.avatar);
+      expect(btn.querySelector('.avatar-label').dataset.translate).toBe(
+        btn.querySelector('.avatar-radio').value
+      );
     }
     const locked = buttons.filter(b => b.classList.contains('locked'));
     expect(locked.length).toBeGreaterThan(0);

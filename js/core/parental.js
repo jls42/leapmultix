@@ -25,8 +25,8 @@ export function showParentalLockPopup(callbackOnSuccess) {
     popup.classList.add('visible');
     try {
       answerInput.focus();
-    } catch (e) {
-      void e; /* no-op */
+    } catch {
+      /* no-op */
     }
   }, 10);
 }
@@ -34,7 +34,7 @@ export function showParentalLockPopup(callbackOnSuccess) {
 export function removeAvatarAfterCadenas() {
   const style = document.createElement('style');
   style.textContent = `
-    button.avatar-btn.locked::after, .avatar-btn.locked::after {
+    .avatar-btn.locked::after {
       content: '' !important;
       background: none !important;
       display: none !important;

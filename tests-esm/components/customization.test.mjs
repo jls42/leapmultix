@@ -174,8 +174,18 @@ describe('Personnalisation : avatar du joueur', () => {
     <section id="slide6" class="slide">
       <div class="current-avatar"><img id="current-avatar-img" alt="" /></div>
       <div class="avatar-selector" role="radiogroup">
-        <button class="avatar-btn active" data-avatar="fox"><span class="avatar-label">Renard</span></button>
-        <button class="avatar-btn" data-avatar="panda"><span class="avatar-label">Panda</span></button>
+        <label class="avatar-btn"
+          ><input class="avatar-radio" type="radio" name="a" value="fox" checked /><span
+            class="avatar-label"
+            >Renard</span
+          ></label
+        >
+        <label class="avatar-btn"
+          ><input class="avatar-radio" type="radio" name="a" value="panda" /><span
+            class="avatar-label"
+            >Panda</span
+          ></label
+        >
       </div>
     </section>
   `;
@@ -201,7 +211,7 @@ describe('Personnalisation : avatar du joueur', () => {
     expect(face()).toContain('fox_head');
 
     Customization.show();
-    document.querySelector('#slide6 .avatar-btn[data-avatar="panda"]').click();
+    document.querySelector('#slide6 .avatar-radio[value="panda"]').click();
 
     expect(UserManager._players.Lina.avatar).toBe('panda');
     expect(face()).toContain('panda_head');

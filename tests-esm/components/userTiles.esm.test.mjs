@@ -14,8 +14,12 @@ const CREATION_MARKUP = `
     </div>
     <p id="new-user-message" class="new-player-message" role="alert" hidden></p>
     <div class="avatar-selector creation-avatar-selector" role="radiogroup">
-      <button type="button" class="avatar-btn active" data-avatar="fox" role="radio" aria-checked="true"></button>
-      <button type="button" class="avatar-btn" data-avatar="panda" role="radio" aria-checked="false"></button>
+      <label class="avatar-btn"
+        ><input class="avatar-radio" type="radio" name="creation-avatar" value="fox" checked
+      /></label>
+      <label class="avatar-btn"
+        ><input class="avatar-radio" type="radio" name="creation-avatar" value="panda"
+      /></label>
     </div>
     <button type="button" class="btn" id="create-user-btn">Créer</button>
   </section>

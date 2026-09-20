@@ -704,10 +704,8 @@ export const UserManager = {
    */
   _handleCreateUser(input, keyboardToggle) {
     const newName = input.value.trim();
-    const selectedAvatarBtn = document.querySelector(
-      '.creation-avatar-selector .avatar-btn.active'
-    );
-    const selectedAvatar = selectedAvatarBtn ? selectedAvatarBtn.dataset.avatar : 'fox';
+    const selectedRadio = document.querySelector('.creation-avatar-selector .avatar-radio:checked');
+    const selectedAvatar = selectedRadio ? selectedRadio.value : 'fox';
 
     // Un prénom fait seulement de caractères refusés deviendrait vide une fois nettoyé
     if (!newName || !sanitizeUsername(newName)) {

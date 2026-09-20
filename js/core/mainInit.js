@@ -106,15 +106,10 @@ function setupEnterKeyActivation() {
 function wireCreationAvatarSelector() {
   const creationAvatarSelector = document.querySelector('.creation-avatar-selector');
   if (!creationAvatarSelector) return;
-  creationAvatarSelector.addEventListener('click', e => {
-    const btn = e.target.closest('.avatar-btn');
-    if (!btn || !creationAvatarSelector.contains(btn)) return;
-    for (const button of creationAvatarSelector.querySelectorAll('.avatar-btn')) {
-      const isSelected = button === btn;
-      button.classList.toggle('active', isSelected);
-      button.setAttribute('aria-checked', isSelected ? 'true' : 'false');
-    }
-    const selectedAvatarId = btn.dataset.avatar;
+  // Boutons radio natifs : le navigateur tient l'état coché, il reste l'aperçu
+  creationAvatarSelector.addEventListener('change', e => {
+    const selectedAvatarId = e.target?.value;
+    if (!selectedAvatarId) return;
     updateBackgroundByAvatar(selectedAvatarId);
     updateHeroMascot(selectedAvatarId);
   });

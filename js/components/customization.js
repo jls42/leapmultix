@@ -22,6 +22,7 @@ import { createIcon } from './icons.js';
 
 /** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
 const SLIDE6_AVATARS = '#slide6 .avatar-selector .avatar-btn';
+const SLIDE6_AVATAR_RADIOS = '#slide6 .avatar-selector .avatar-radio';
 
 /** Libellés accessibles des trois boutons « A » (taille du texte) */
 const FONT_SIZE_LABELS = {
@@ -40,8 +41,8 @@ function tr(key, fallback) {
   try {
     const value = getTranslation(key);
     if (typeof value === 'string' && value && !/^\[.*\]$/.test(value)) return value;
-  } catch (error) {
-    void error; // i18n pas encore prêt : on garde le repli
+  } catch {
+    // i18n pas encore prêt : on garde le repli
   }
   return fallback;
 }
@@ -114,7 +115,7 @@ export const Customization = {
       const fallback = stripLeadingSymbols(btn.textContent);
 
       // Le texte traduit vit dans le libellé : data-translate sur le bouton effacerait la pastille
-      btn.removeAttribute('data-translate');
+      delete btn.dataset.translate;
       btn.type = 'button';
 
       const swatch = document.createElement('span');
@@ -203,16 +204,11 @@ export const Customization = {
   },
 
   /**
-   * Avatars de la personnalisation : sémantique de boutons radio (le conteneur
-   * est un radiogroup). Si le cadenas est encore un émoji dans un <span>, il est
+   * Si le cadenas d'un avatar verrouillé est encore un émoji dans un <span>, il est
    * redessiné en SVG ; un cadenas déjà en SVG est laissé tel quel.
    */
-  _decorateAvatarSelector() {
-    const current = gameState.avatar || 'fox';
+  _upgradeAvatarLocks() {
     for (const btn of document.querySelectorAll(SLIDE6_AVATARS)) {
-      btn.type = 'button';
-      btn.setAttribute('role', 'radio');
-      btn.setAttribute('aria-checked', String(btn.dataset.avatar === current));
       const lock = btn.querySelector('.lock-icon');
       if (lock && !(lock instanceof SVGElement) && !lock.querySelector('svg')) {
         const icon = createIcon('lock', { size: 20 });
@@ -248,10 +244,10 @@ export const Customization = {
       heroMascotImg.src = getAvatarHeadSrc(current);
       heroMascotImg.alt = '';
     }
-    for (const btn of document.querySelectorAll(SLIDE6_AVATARS)) {
-      btn.classList.toggle('active', btn.dataset.avatar === (gameState.avatar || 'fox'));
+    for (const radio of document.querySelectorAll(SLIDE6_AVATAR_RADIOS)) {
+      radio.checked = radio.value === current;
     }
-    this._decorateAvatarSelector();
+    this._upgradeAvatarLocks();
 
     // Mettre à jour le champ de surnom
     const nicknameInput = document.getElementById('nickname-input');
@@ -271,48 +267,54 @@ export const Customization = {
   },
 
   /**
+   * Un seul écouteur, posé sur le groupe : les boutons radio sont refaits à chaque
+   * affichage, le conteneur, lui, reste.
+   * @private
+   */
+  _wireAvatarSelection() {
+    const selector = document.querySelector('#slide6 .avatar-selector');
+    if (!selector || selector.dataset.avatarChangeBound) return;
+    selector.dataset.avatarChangeBound = 'true';
+    selector.addEventListener('change', event => {
+      const avatarName = event.target?.value;
+      if (avatarName) this._applyAvatarChoice(avatarName);
+    });
+  },
+
+  /**
+   * Applique un avatar : aperçu, mascotte, monde illustré, profil et tuile « Qui joue ? ».
+   * @param {string} avatarName
+   * @private
+   */
+  _applyAvatarChoice(avatarName) {
+    gameState.avatar = avatarName;
+    updateBackgroundByAvatar(avatarName);
+
+    const currentImg = document.getElementById('current-avatar-img');
+    if (currentImg) {
+      currentImg.src = getAvatarHeadSrc(avatarName);
+      currentImg.alt = tr(avatarName, avatarName);
+    }
+    // Mascotte de l'accueil : visage 128 px, décoratif
+    const heroMascotImg = document.getElementById('hero-mascot-img');
+    if (heroMascotImg) {
+      heroMascotImg.src = getAvatarHeadSrc(avatarName);
+      heroMascotImg.alt = '';
+    }
+
+    const userData = UserState.getCurrentUserData();
+    userData.avatar = avatarName;
+    UserState.updateUserData(userData);
+    // « Qui joue ? » montre le visage de l'avatar : la tuile suit le nouveau choix
+    UserManager.refreshUserList();
+  },
+
+  /**
    * Configurer les événements de l'écran de personnalisation
    */
   setupEvents() {
     // Sélection d'avatar (seulement ceux de la personnalisation, pas ceux de la création de profil)
-    for (const btn of document.querySelectorAll(`${SLIDE6_AVATARS}:not(.locked)`)) {
-      // Supprimer l'ancien écouteur s'il existe pour éviter les doublons
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-      newBtn.addEventListener('click', () => {
-        const avatarName = newBtn.dataset.avatar;
-        gameState.avatar = avatarName;
-        updateBackgroundByAvatar(avatarName);
-
-        // Mettre à jour la sélection visuelle
-        for (const avatarBtn of document.querySelectorAll(SLIDE6_AVATARS)) {
-          const isSelected = avatarBtn.dataset.avatar === avatarName;
-          avatarBtn.classList.toggle('active', isSelected);
-          avatarBtn.setAttribute('aria-checked', String(isSelected));
-        }
-
-        // Mettre à jour l'image d'avatar actuel
-        const currentImg = document.getElementById('current-avatar-img');
-        if (currentImg) {
-          currentImg.src = getAvatarHeadSrc(avatarName);
-          currentImg.alt = tr(avatarName, avatarName);
-        }
-
-        // Mascotte de l'accueil : visage 128 px, décoratif
-        const heroMascotImg = document.getElementById('hero-mascot-img');
-        if (heroMascotImg) {
-          heroMascotImg.src = getAvatarHeadSrc(avatarName);
-          heroMascotImg.alt = '';
-        }
-
-        // Sauvegarder automatiquement l'avatar sélectionné
-        const userData = UserState.getCurrentUserData();
-        userData.avatar = avatarName;
-        UserState.updateUserData(userData);
-        // « Qui joue ? » montre le visage de l'avatar : la tuile suit le nouveau choix
-        UserManager.refreshUserList();
-      });
-    }
+    this._wireAvatarSelection();
 
     // Ajouter le clavier virtuel pour le surnom
     const nicknameInput = document.getElementById('nickname-input');
@@ -383,11 +385,8 @@ export const Customization = {
       );
     }
 
-    // Tâche 4.2: navigation par flèches dans les groupes (Entrée et Espace restent natifs)
-    this._bindArrowKeys(
-      document.querySelector('#slide6 .avatar-selector'),
-      '.avatar-btn:not(.locked)'
-    );
+    // Navigation par flèches dans les thèmes ; les avatars sont des boutons radio
+    // natifs, le navigateur s'en charge déjà.
     this._bindArrowKeys(document.querySelector('.color-theme-selector'), '.color-theme-btn');
 
     // Bouton « Vider le cache »
@@ -420,8 +419,8 @@ export const Customization = {
   _notifyClearing() {
     try {
       showMessage(getTranslation('clearing_cache_message') || 'Nettoyage du cache...');
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
   },
 
@@ -429,14 +428,14 @@ export const Customization = {
     const mod = await import('../cache-updater.js');
     try {
       mod.forceDevCacheClear?.();
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
     setTimeout(() => {
       try {
         mod.clearCacheAndReload?.();
-      } catch (e) {
-        void e;
+      } catch {
+        /* ignoré volontairement */
       }
     }, 200);
   },
@@ -453,8 +452,7 @@ export const Customization = {
       } else {
         if (globalThis.location) globalThis.location.reload();
       }
-    } catch (err) {
-      void err;
+    } catch {
       if (globalThis.location) globalThis.location.reload();
     }
   },

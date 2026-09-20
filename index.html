@@ -395,15 +395,16 @@
               role="radiogroup"
               aria-labelledby="creation-avatar-label"
             >
-              <button
-                type="button"
-                class="avatar-btn active"
-                data-avatar="fox"
-                role="radio"
-                aria-checked="true"
-                aria-label="Renard"
-                data-translate-aria-label="fox"
-              >
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="creation-avatar"
+                  value="fox"
+                  aria-label="Renard"
+                  data-translate-aria-label="fox"
+                  checked
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/fox_head_avatar_128x128.png"
@@ -411,16 +412,16 @@
                   height="56"
                   alt=""
                 />
-              </button>
-              <button
-                type="button"
-                class="avatar-btn"
-                data-avatar="panda"
-                role="radio"
-                aria-checked="false"
-                aria-label="Panda"
-                data-translate-aria-label="panda"
-              >
+              </label>
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="creation-avatar"
+                  value="panda"
+                  aria-label="Panda"
+                  data-translate-aria-label="panda"
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/panda_head_avatar_128x128.png"
@@ -428,16 +429,16 @@
                   height="56"
                   alt=""
                 />
-              </button>
-              <button
-                type="button"
-                class="avatar-btn"
-                data-avatar="unicorn"
-                role="radio"
-                aria-checked="false"
-                aria-label="Licorne"
-                data-translate-aria-label="unicorn"
-              >
+              </label>
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="creation-avatar"
+                  value="unicorn"
+                  aria-label="Licorne"
+                  data-translate-aria-label="unicorn"
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/unicorn_head_avatar_128x128.png"
@@ -445,16 +446,16 @@
                   height="56"
                   alt=""
                 />
-              </button>
-              <button
-                type="button"
-                class="avatar-btn"
-                data-avatar="dragon"
-                role="radio"
-                aria-checked="false"
-                aria-label="Dragon"
-                data-translate-aria-label="dragon"
-              >
+              </label>
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="creation-avatar"
+                  value="dragon"
+                  aria-label="Dragon"
+                  data-translate-aria-label="dragon"
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/dragon_head_avatar_128x128.png"
@@ -462,16 +463,16 @@
                   height="56"
                   alt=""
                 />
-              </button>
-              <button
-                type="button"
-                class="avatar-btn"
-                data-avatar="astronaut"
-                role="radio"
-                aria-checked="false"
-                aria-label="Astronaute"
-                data-translate-aria-label="astronaut"
-              >
+              </label>
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="creation-avatar"
+                  value="astronaut"
+                  aria-label="Astronaute"
+                  data-translate-aria-label="astronaut"
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/astronaut_head_avatar_128x128.png"
@@ -479,7 +480,7 @@
                   height="56"
                   alt=""
                 />
-              </button>
+              </label>
             </div>
             <button type="button" class="btn" id="create-user-btn" data-translate="create_user">
               Créer
@@ -720,14 +721,16 @@
               />
             </div>
             <div class="avatar-selector" role="radiogroup" aria-labelledby="avatar-choice-title">
-              <button
-                class="avatar-btn active"
-                data-avatar="fox"
-                role="radio"
-                aria-checked="true"
-                aria-label="Renard"
-                data-translate-aria-label="fox"
-              >
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="customization-avatar"
+                  value="fox"
+                  aria-label="Renard"
+                  data-translate-aria-label="fox"
+                  checked
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/fox_head_avatar_128x128.png"
@@ -735,15 +738,16 @@
                   height="100"
                   alt=""
                 />
-              </button>
-              <button
-                class="avatar-btn"
-                data-avatar="panda"
-                role="radio"
-                aria-checked="false"
-                aria-label="Panda"
-                data-translate-aria-label="panda"
-              >
+              </label>
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="customization-avatar"
+                  value="panda"
+                  aria-label="Panda"
+                  data-translate-aria-label="panda"
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/panda_head_avatar_128x128.png"
@@ -751,15 +755,16 @@
                   height="100"
                   alt=""
                 />
-              </button>
-              <button
-                class="avatar-btn"
-                data-avatar="unicorn"
-                role="radio"
-                aria-checked="false"
-                aria-label="Licorne"
-                data-translate-aria-label="unicorn"
-              >
+              </label>
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="customization-avatar"
+                  value="unicorn"
+                  aria-label="Licorne"
+                  data-translate-aria-label="unicorn"
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/unicorn_head_avatar_128x128.png"
@@ -767,15 +772,16 @@
                   height="100"
                   alt=""
                 />
-              </button>
-              <button
-                class="avatar-btn"
-                data-avatar="dragon"
-                role="radio"
-                aria-checked="false"
-                aria-label="Dragon"
-                data-translate-aria-label="dragon"
-              >
+              </label>
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="customization-avatar"
+                  value="dragon"
+                  aria-label="Dragon"
+                  data-translate-aria-label="dragon"
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/dragon_head_avatar_128x128.png"
@@ -783,15 +789,16 @@
                   height="100"
                   alt=""
                 />
-              </button>
-              <button
-                class="avatar-btn"
-                data-avatar="astronaut"
-                role="radio"
-                aria-checked="false"
-                aria-label="Astronaute"
-                data-translate-aria-label="astronaut"
-              >
+              </label>
+              <label class="avatar-btn">
+                <input
+                  class="avatar-radio"
+                  type="radio"
+                  name="customization-avatar"
+                  value="astronaut"
+                  aria-label="Astronaute"
+                  data-translate-aria-label="astronaut"
+                />
                 <img
                   class="img-responsive"
                   src="assets/images/arcade/astronaut_head_avatar_128x128.png"
@@ -799,7 +806,7 @@
                   height="100"
                   alt=""
                 />
-              </button>
+              </label>
             </div>
           </div>
           <div class="customization-section">

@@ -327,8 +327,11 @@ a {
   }
 }
 
-/* === AVATARS (création de profil et personnalisation) === */
+/* === AVATARS (création de profil et personnalisation) ===
+   Chaque avatar est un <label> qui habille un bouton radio natif : le clavier
+   (Tab, flèches, Espace) et l'annonce « option 2 sur 5 » viennent du navigateur. */
 .avatar-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -359,11 +362,27 @@ a {
   box-shadow: 0 0 0 var(--color-border-strong);
 }
 
-.avatar-btn.active {
+/* Le bouton radio porte la sémantique ; la pastille reste le seul repère visuel. */
+.avatar-radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.avatar-btn:has(.avatar-radio:checked) {
   border-color: var(--color-action);
   box-shadow:
     0 0 0 4px var(--color-action-tint),
     0 var(--key-edge) 0 var(--color-action-edge);
+}
+
+/* Le contour de focus se pose sur la pastille, pas sur le radio caché */
+.avatar-btn:has(.avatar-radio:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
 }
 
 /* Verrouillé : posé à plat (pas de tranche, on ne peut pas l'enfoncer), nom à l'encre
