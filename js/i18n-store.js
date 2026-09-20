@@ -7,6 +7,21 @@
 import { VERSION_PARAM } from './cache-updater.js';
 import { eventBus } from './core/eventBus.js';
 
+/** Langues livrées avec l'application ; rien d'autre ne doit composer une adresse. */
+const LANGUES_LIVREES = new Set(['fr', 'en', 'es']);
+
+/**
+ * Ramène une langue quelconque à une langue livrée. La valeur peut venir d'un
+ * événement extérieur ou d'un stockage modifié : une langue inconnue retombe sur
+ * le français plutôt que d'aller chercher un fichier arbitraire.
+ * @param {unknown} lang - 'fr', 'en', 'es', ou une variante régionale ('fr-CA')
+ * @returns {string}
+ */
+function langueLivree(lang) {
+  const demandee = typeof lang === 'string' ? lang.toLowerCase().split('-')[0] : '';
+  return LANGUES_LIVREES.has(demandee) ? demandee : 'fr';
+}
+
 let _currentLanguage = 'fr';
 let _translations = {};
 let _ready = false;
@@ -56,7 +71,7 @@ export function translate(key, params = {}) {
 
 // Fetch translations JSON for a language (no global side effects)
 export async function fetchTranslations(lang) {
-  const l = lang || _currentLanguage || 'fr';
+  const l = langueLivree(lang || _currentLanguage);
   const ver = VERSION_PARAM || Date.now();
   const url = `assets/translations/${l}.json?v=${ver}`;
   const res = await fetch(url);
@@ -66,9 +81,10 @@ export async function fetchTranslations(lang) {
 
 // Load into store (preferred ESM path)
 export async function loadIntoStore(lang) {
-  const json = await fetchTranslations(lang);
+  const l = langueLivree(lang);
+  const json = await fetchTranslations(l);
   setTranslations(json);
-  setCurrentLanguage(lang || 'fr');
+  setCurrentLanguage(l);
   setReady(true);
   return true;
 }
