@@ -119,21 +119,27 @@ export function showArcadeGameOver(score, { persist = true } = {}) {
   const arcadeScores = getScoresForMode(mode);
   const { key: endMessageKey, text: endMessage } = gameOverMessage(score);
 
+  renderGameOverScreen({ mode, score, endMessageKey, endMessage, arcadeScores, persist });
+  if (persist && isVoiceEnabled()) speak(endMessage);
+}
+
+/**
+ * Remplace l'écran de jeu par l'écran de fin et rebranche ses boutons.
+ * @param {{mode: string, score: number, endMessageKey: string, endMessage: string,
+ *          arcadeScores: Array, persist: boolean}} params
+ */
+function renderGameOverScreen({ mode, score, endMessageKey, endMessage, arcadeScores, persist }) {
   const gameScreen = document.getElementById('game');
-  if (gameScreen) {
-    while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
-    const wrapper = buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScores);
-    gameScreen.appendChild(wrapper);
-    // Actions liées aux boutons de CET écran : un second affichage rapproché
-    // ne peut plus doubler les écouteurs (ni les relances, ni les confirmations)
-    bindGameOverActions(wrapper, mode, score);
-    // Le canevas qui avait le focus a disparu : le focus va sur le titre de l'écran de
-    // fin (pas sur « Rejouer », qu'une barre d'espace encore enfoncée relancerait)
-    if (persist) focusGameOverTitle(wrapper);
-  }
-  if (persist && isVoiceEnabled()) {
-    speak(endMessage);
-  }
+  if (!gameScreen) return;
+  while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
+  const wrapper = buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScores);
+  gameScreen.appendChild(wrapper);
+  // Actions liées aux boutons de CET écran : un second affichage rapproché
+  // ne peut plus doubler les écouteurs (ni les relances, ni les confirmations)
+  bindGameOverActions(wrapper, mode, score);
+  // Le canevas qui avait le focus a disparu : le focus va sur le titre de l'écran de
+  // fin (pas sur « Rejouer », qu'une barre d'espace encore enfoncée relancerait)
+  if (persist) focusGameOverTitle(wrapper);
 }
 
 function focusGameOverTitle(wrapper) {
