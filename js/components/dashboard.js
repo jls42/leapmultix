@@ -63,6 +63,76 @@ function buildFacts(facts, className) {
   return list;
 }
 
+/**
+ * Numéro de table normalisé en chaîne, ou null si la valeur n'en est pas un.
+ * @param {unknown} candidate
+ * @returns {string|null}
+ */
+function normalizeTableNumber(candidate) {
+  if (typeof candidate === 'number' && Number.isFinite(candidate)) return String(candidate);
+  if (typeof candidate === 'string' && /^\d+$/.test(candidate.trim())) {
+    return String(Number(candidate.trim()));
+  }
+  return null;
+}
+
+/** Cumul du Quiz : questions posées et bonnes réponses. */
+function quizTotals(userData) {
+  const quiz = { total: 0, correct: 0 };
+  for (const entry of userData.quizStats?.history || []) {
+    quiz.total += Number(entry.total) || 0;
+    quiz.correct += Number(entry.correct) || 0;
+  }
+  return quiz;
+}
+
+/** Cumul du Défi, toutes difficultés confondues. */
+function challengeTotals(userData) {
+  const challenge = { sessions: 0, best: 0 };
+  for (const st of Object.values(userData.challengeStats || {})) {
+    challenge.sessions += Number(st.totalPlayed) || 0;
+    challenge.best = Math.max(challenge.best, Number(st.bestScore) || 0);
+  }
+  return challenge;
+}
+
+/** Cumul de l'Aventure : niveaux terminés et étoiles gagnées. */
+function adventureTotals(userData) {
+  const adventure = { levels: 0, stars: 0 };
+  for (const progress of Object.values(userData.adventureProgress || {})) {
+    if (progress.completed) adventure.levels++;
+    adventure.stars += progress.stars || 0;
+  }
+  return adventure;
+}
+
+/** Étoiles enregistrées par table, en table de correspondance. */
+function starsMapFrom(starsByTable) {
+  const entrees = Object.entries(starsByTable ?? {});
+  return new Map(entrees.map(([table, valeur]) => [String(table), Number(valeur) || 0]));
+}
+
+/** Table d'un niveau d'Aventure : celle de la partie, sinon celle du niveau. */
+function tableOfProgress(progress, levelInfo) {
+  return normalizeTableNumber(progress?.table) ?? normalizeTableNumber(levelInfo?.table);
+}
+
+/**
+ * Reporte les étoiles gagnées en Aventure sur leur table, si elles font mieux.
+ * @param {Map<string, number>} starsByTable - Modifiée sur place
+ * @param {Object} [adventureProgress]
+ */
+function mergeAdventureStars(starsByTable, adventureProgress) {
+  if (!adventureProgress) return;
+  const levelById = new Map(ADVENTURE_LEVELS.map(level => [level.id, level]));
+  for (const [levelId, progress] of Object.entries(adventureProgress)) {
+    const table = tableOfProgress(progress, levelById.get(Number(levelId)));
+    if (!table) continue;
+    const best = Number(progress?.stars) || 0;
+    if (best > (starsByTable.get(table) ?? 0)) starsByTable.set(table, best);
+  }
+}
+
 export const Dashboard = {
   _computeStats(scores) {
     const count = scores.length;
@@ -209,9 +279,10 @@ export const Dashboard = {
 
     const starRow = createSafeElement('span', '', { class: 'star-count', 'aria-hidden': 'true' });
     for (let index = 0; index < MAX_STARS; index++) {
+      const estGagnee = count > index;
       const icon = createIcon('star', {
         size: 20,
-        className: index < count ? 'star-icon is-filled' : 'star-icon',
+        className: estGagnee ? 'star-icon is-filled' : 'star-icon',
       });
       if (icon) starRow.appendChild(icon);
     }
@@ -381,28 +452,11 @@ export const Dashboard = {
   },
 
   _classicModeStats(userData) {
-    // Quiz
-    const quiz = { total: 0, correct: 0 };
-    for (const entry of userData.quizStats?.history || []) {
-      quiz.total += Number(entry.total) || 0;
-      quiz.correct += Number(entry.correct) || 0;
-    }
-
-    // Défi (toutes difficultés)
-    const challenge = { sessions: 0, best: 0 };
-    for (const st of Object.values(userData.challengeStats || {})) {
-      challenge.sessions += Number(st.totalPlayed) || 0;
-      challenge.best = Math.max(challenge.best, Number(st.bestScore) || 0);
-    }
-
-    // Aventure
-    const adventure = { levels: 0, stars: 0 };
-    for (const progress of Object.values(userData.adventureProgress || {})) {
-      if (progress.completed) adventure.levels++;
-      adventure.stars += progress.stars || 0;
-    }
-
-    return { quiz, challenge, adventure };
+    return {
+      quiz: quizTotals(userData),
+      challenge: challengeTotals(userData),
+      adventure: adventureTotals(userData),
+    };
   },
 
   _buildClassicRows(userData) {
@@ -559,38 +613,8 @@ export const Dashboard = {
     return Object.values(starsByTable).reduce((sum, stars) => sum + stars, 0);
   },
   _getStarsByTable(userData) {
-    const starsByTable = new Map(
-      Object.entries(userData.starsByTable ?? {}).map(([tableKey, value]) => [
-        String(tableKey),
-        Number(value) || 0,
-      ])
-    );
-
-    if (userData.adventureProgress) {
-      const levelById = new Map(ADVENTURE_LEVELS.map(level => [level.id, level]));
-      for (const [levelId, progress] of Object.entries(userData.adventureProgress)) {
-        const levelInfo = levelById.get(Number(levelId));
-        const tableFromProgress = progress?.table;
-
-        const normalizedTable = (() => {
-          const normalize = candidate => {
-            if (typeof candidate === 'number' && Number.isFinite(candidate))
-              return String(candidate);
-            if (typeof candidate === 'string' && /^\d+$/.test(candidate.trim())) {
-              return String(Number(candidate.trim()));
-            }
-            return null;
-          };
-          return normalize(tableFromProgress) ?? normalize(levelInfo?.table);
-        })();
-
-        if (!normalizedTable) continue;
-        const current = starsByTable.get(normalizedTable) ?? 0;
-        const best = Number(progress?.stars) || 0;
-        if (best > current) starsByTable.set(normalizedTable, best);
-      }
-    }
-
+    const starsByTable = starsMapFrom(userData.starsByTable);
+    mergeAdventureStars(starsByTable, userData.adventureProgress);
     return Object.fromEntries(starsByTable);
   },
 };

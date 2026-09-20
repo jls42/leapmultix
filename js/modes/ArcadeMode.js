@@ -72,6 +72,59 @@ function controlIconSVG(type) {
     .join('')}</svg>`;
 }
 
+// Titre de chaque mini-jeu : clé actuelle, puis ancienne clé en repli
+const TITRES_DE_JEU = {
+  invasion: () => getTranslation('arcade_invasion_title') || 'MultiInvaders',
+  multisnake: () => getTranslation('multisnake_title') || getTranslation('arcade_snake_title'),
+  multimiam: () =>
+    getTranslation('arcade.multiMiam.title') || getTranslation('arcade_pacman_title'),
+  multimemory: () => getTranslation('arcade.multiMemory.title'),
+};
+
+// Éléments de réglage d'une tuile : un clic dedans ne referme pas la tuile
+const REGLAGES_DE_TUILE =
+  'button,input,label,.arcade-game-settings,.difficulty-btn-row,.spaceship-select-block,.arcade-controls-help';
+
+// Chaque mini-jeu, son module et le nom de sa fonction de démarrage.
+// Les specifiers restent littéraux : le bundler doit pouvoir les résoudre.
+const ARCADE_LOADERS = {
+  invasion: {
+    charger: () => import('../arcade-invasion.js'),
+    demarrer: 'startMultiplicationInvasion',
+  },
+  multimiam: { charger: () => import('../arcade-multimiam.js'), demarrer: 'startPacmanArcade' },
+  multimemory: {
+    charger: () => import('../arcade-multimemory.js'),
+    demarrer: 'startMemoryArcade',
+  },
+  multisnake: { charger: () => import('../arcade-multisnake.js'), demarrer: 'startSnakeArcade' },
+};
+
+/**
+ * Charge le module d'un mini-jeu et lance sa partie. Un module absent ou en
+ * erreur prévient l'enfant au lieu de laisser un écran vide.
+ * @param {string} gameId
+ */
+function launchArcadeGame(gameId) {
+  const loader = ARCADE_LOADERS[gameId];
+  if (!loader) {
+    console.error(`❌ Jeu arcade inconnu: ${gameId}`);
+    return;
+  }
+  loader
+    .charger()
+    .then(mod => {
+      const demarrer = mod[loader.demarrer];
+      if (typeof demarrer === 'function') return demarrer();
+      console.error(`❌ ${loader.demarrer} non disponible pour ${gameId}`);
+      showArcadeMessage('arcade_load_error', 'warning', 1800);
+    })
+    .catch(err => {
+      console.error(`❌ Import du jeu ${gameId} échoué :`, err);
+      showArcadeMessage('arcade_load_error', 'warning', 1800);
+    });
+}
+
 function prefersReducedMotion() {
   try {
     return globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
@@ -228,18 +281,8 @@ export class ArcadeMode extends GameMode {
   }
 
   getGameTitle(id) {
-    switch (id) {
-      case 'invasion':
-        return getTranslation('arcade_invasion_title') || 'MultiInvaders';
-      case 'multisnake':
-        return getTranslation('multisnake_title') || getTranslation('arcade_snake_title');
-      case 'multimiam':
-        return getTranslation('arcade.multiMiam.title') || getTranslation('arcade_pacman_title');
-      case 'multimemory':
-        return getTranslation('arcade.multiMemory.title');
-      default:
-        return id;
-    }
+    const titre = TITRES_DE_JEU[id];
+    return titre ? titre() : id;
   }
 
   getGameDescription(id) {
@@ -402,38 +445,44 @@ export class ArcadeMode extends GameMode {
 
   handleListClick(e) {
     const actionEl = e.target.closest('[data-action]');
-    if (actionEl) {
-      const action = actionEl.getAttribute('data-action');
-      if (action === 'arcade-toggle') {
-        const toggledCard = actionEl.closest('.arcade-game-card');
-        if (toggledCard) this.toggleCard(toggledCard);
-        return;
-      }
-      if (action === 'arcade-play') {
+    if (actionEl && this.runCardAction(actionEl, e)) return;
+
+    const card = e.target.closest('.arcade-game-card');
+    // Un clic dans les réglages d'une tuile ouverte ne la referme pas
+    const insideControl = e.target.closest(REGLAGES_DE_TUILE);
+    if (card && !insideControl) this.toggleCard(card);
+  }
+
+  /**
+   * Exécute l'action portée par l'élément cliqué.
+   * @param {HTMLElement} actionEl - Élément portant data-action
+   * @param {Event} e - Clic d'origine, pour retrouver la case cochée
+   * @returns {boolean} Vrai si une action a été traitée
+   */
+  runCardAction(actionEl, e) {
+    const actions = {
+      'arcade-toggle': () => {
+        const tuile = actionEl.closest('.arcade-game-card');
+        if (tuile) this.toggleCard(tuile);
+      },
+      'arcade-play': () => {
         const gameId = actionEl.getAttribute('data-game');
         if (gameId) this.startGame(gameId);
-        return;
-      }
-      if (action === 'arcade-set-difficulty') {
+      },
+      'arcade-set-difficulty': () => {
         const diff = actionEl.getAttribute('data-difficulty');
         const gameId = actionEl.getAttribute('data-game');
         if (diff && gameId) this.setDifficulty(diff, gameId);
-        return;
-      }
-      if (action === 'arcade-set-spaceship') {
+      },
+      'arcade-set-spaceship': () => {
         const input = e.target.closest('input[type="radio"]');
-        if (input && input.value) this.setSpaceship(input.value);
-        return;
-      }
-    }
-    const card = e.target.closest('.arcade-game-card');
-    // Un clic dans les réglages d'une tuile ouverte ne la referme pas
-    const insideControl = e.target.closest(
-      'button,input,label,.arcade-game-settings,.difficulty-btn-row,.spaceship-select-block,.arcade-controls-help'
-    );
-    if (card && !insideControl) {
-      this.toggleCard(card);
-    }
+        if (input?.value) this.setSpaceship(input.value);
+      },
+    };
+    const action = actions[actionEl.getAttribute('data-action')];
+    if (!action) return false;
+    action();
+    return true;
   }
 
   toggleCard(card) {
@@ -522,81 +571,28 @@ export class ArcadeMode extends GameMode {
 
     console.log(`🎮 Démarrage du jeu arcade: ${gameId}`);
 
-    // Sauvegarder les préférences dans gameState global
-    /**
-     * Fonction if
-     * @param {*} window.gameState - Description du paramètre
-     * @returns {*} Description du retour
-     */
+    // Préférences reprises par le sous-jeu, et conservées d'une partie à l'autre
     gameState.difficulty = this.selectedDifficulty;
-    gameState.gameMode = gameId; // Pour que les sous-jeux sachent quel mode ils sont
-
-    // Sauvegarder dans localStorage pour persistance
+    gameState.gameMode = gameId;
     localStorage.setItem('gameState.difficulty', this.selectedDifficulty);
-    // Prioriser la sélection de fusée dans la carte du jeu (si présente)
+
+    const ship = this.resolveSpaceship(gameId);
+    if (ship) this.setSpaceship(ship);
+
+    launchArcadeGame(gameId);
+  }
+
+  /**
+   * Fusée retenue : celle cochée dans la carte du jeu, sinon la dernière choisie.
+   * @param {string} gameId
+   * @returns {string|null}
+   */
+  resolveSpaceship(gameId) {
     const card = document.querySelector(`[data-game="${gameId}"]`);
-    const sel = card
-      ? card.querySelector(`input[name="spaceship-choice-${gameId}"]:checked`)
-      : null;
-    const shipVal =
-      sel?.value || this.selectedSpaceship || localStorage.getItem('arcade.selectedSpaceship');
-    if (shipVal) this.setSpaceship(shipVal);
-
-    // Démarrer via import ESM; pas de fallback legacy window.*
-
-    switch (gameId) {
-      case 'invasion':
-        import('../arcade-invasion.js')
-          .then(mod => {
-            if (typeof mod.startMultiplicationInvasion === 'function')
-              return mod.startMultiplicationInvasion();
-            console.error('❌ startMultiplicationInvasion non disponible dans arcade-invasion.js');
-            showArcadeMessage('arcade_load_error', 'warning', 1800);
-          })
-          .catch(err => {
-            console.error('❌ Import arcade-invasion failed:', err);
-            showArcadeMessage('arcade_load_error', 'warning', 1800);
-          });
-        break;
-      case 'multimiam':
-        import('../arcade-multimiam.js')
-          .then(mod => {
-            if (typeof mod.startPacmanArcade === 'function') return mod.startPacmanArcade();
-            console.error('❌ startPacmanArcade non disponible dans arcade-multimiam.js');
-            showArcadeMessage('arcade_load_error', 'warning', 1800);
-          })
-          .catch(err => {
-            console.error('❌ Import arcade-multimiam failed:', err);
-            showArcadeMessage('arcade_load_error', 'warning', 1800);
-          });
-        break;
-      case 'multimemory':
-        import('../arcade-multimemory.js')
-          .then(mod => {
-            if (typeof mod.startMemoryArcade === 'function') return mod.startMemoryArcade();
-            console.error('❌ startMemoryArcade non disponible dans arcade-multimemory.js');
-            showArcadeMessage('arcade_load_error', 'warning', 1800);
-          })
-          .catch(err => {
-            console.error('❌ Import arcade-multimemory failed:', err);
-            showArcadeMessage('arcade_load_error', 'warning', 1800);
-          });
-        break;
-      case 'multisnake':
-        import('../arcade-multisnake.js')
-          .then(mod => {
-            if (typeof mod.startSnakeArcade === 'function') return mod.startSnakeArcade();
-            console.error('❌ startSnakeArcade non disponible dans arcade-multisnake.js');
-            showArcadeMessage('arcade_load_error', 'warning', 1800);
-          })
-          .catch(err => {
-            console.error('❌ Import arcade-multisnake failed:', err);
-            showArcadeMessage('arcade_load_error', 'warning', 1800);
-          });
-        break;
-      default:
-        console.error(`❌ Jeu arcade inconnu: ${gameId}`);
-    }
+    const coche = card?.querySelector(`input[name="spaceship-choice-${gameId}"]:checked`);
+    return (
+      coche?.value || this.selectedSpaceship || localStorage.getItem('arcade.selectedSpaceship')
+    );
   }
 
   /**

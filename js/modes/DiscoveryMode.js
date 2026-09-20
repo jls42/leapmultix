@@ -172,6 +172,69 @@ function createArrow() {
   return arrow;
 }
 
+// Écoute tactile qui peut annuler le défilement (glisser-déposer des nombres)
+const TACTILE_ACTIF = { passive: false };
+
+/**
+ * Points d'une ligne numérique : chacun porte sa position et son état
+ * (départ, arrivée, sur le chemin parcouru).
+ * @param {number[]} valeurs
+ * @param {{depart: number, arrivee: number, low: number, high: number, position: Function}} options
+ * @returns {string[]}
+ */
+function pointsDeLigne(valeurs, { depart, arrivee, low, high, position }) {
+  return valeurs.map(value => {
+    const classes = ['number-point'];
+    if (value === depart) classes.push('highlight-start');
+    if (value === arrivee) classes.push('highlight-end');
+    if (value > low && value < high) classes.push('in-path');
+    return `
+                <div class="${classes.join(' ')}" data-value="${value}" style="left: ${position(value)}%">
+                  <div class="point-marker"></div>
+                  <div class="point-label">${value}</div>
+                </div>`;
+  });
+}
+
+/**
+ * Arcs de saut au-dessus de la ligne, dans le sens de l'opération.
+ * @param {Array<{from: number, to: number, step: number}>} sauts
+ * @param {{isAddition: boolean, position: Function}} options
+ * @returns {string[]}
+ */
+function arcsDeSauts(sauts, { isAddition, position }) {
+  const signe = isAddition ? '+' : '−';
+  const sens = isAddition ? 'right' : 'left';
+  return sauts.map(
+    jump => `
+                <div class="jump-arrow jump-arrow-${sens}" style="left: ${position(Math.min(jump.from, jump.to))}%; width: ${(jump.step / JUMP_LINE_SPAN) * 100}%;">
+                  <span class="jump-label">${signe}${jump.step}</span>
+                </div>`
+  );
+}
+
+/**
+ * Nombre lu dans un glisser-déposer, NaN si le transfert n'en porte pas.
+ * @param {DataTransfer} [dataTransfer]
+ * @returns {number}
+ */
+function nombreTransfere(dataTransfer) {
+  try {
+    const texte = dataTransfer?.getData('text/plain') || dataTransfer?.getData('text') || '';
+    return Number.parseInt(texte, 10);
+  } catch {
+    return Number.NaN;
+  }
+}
+
+// Quand une opération se montre : au-delà, les jetons deviennent illisibles
+const VISUALISABLE = {
+  '×': (a, b) => a <= 10 && b <= 10,
+  '+': (a, b) => a <= 10 && b <= 10,
+  '−': (a, b) => a <= 20 && b <= a,
+  '÷': (a, b, operation) => a <= 20 && Number.isInteger(operation.compute(a, b)),
+};
+
 export class DiscoveryMode extends GameMode {
   constructor() {
     super('discovery', {
@@ -820,26 +883,14 @@ export class DiscoveryMode extends GameMode {
     const low = Math.min(a, result);
     const high = Math.max(a, result);
 
-    const points = range(start, end).map(value => {
-      const classes = ['number-point'];
-      if (value === a) classes.push('highlight-start');
-      if (value === result) classes.push('highlight-end');
-      if (value > low && value < high) classes.push('in-path');
-      return `
-                <div class="${classes.join(' ')}" data-value="${value}" style="left: ${position(value)}%">
-                  <div class="point-marker"></div>
-                  <div class="point-label">${value}</div>
-                </div>`;
+    const points = pointsDeLigne(range(start, end), {
+      depart: a,
+      arrivee: result,
+      low,
+      high,
+      position,
     });
-
-    const sign = isAddition ? '+' : '−';
-    const direction = isAddition ? 'right' : 'left';
-    const arcs = this.getJumps(a, b).map(
-      jump => `
-                <div class="jump-arrow jump-arrow-${direction}" style="left: ${position(Math.min(jump.from, jump.to))}%; width: ${(jump.step / JUMP_LINE_SPAN) * 100}%;">
-                  <span class="jump-label">${sign}${jump.step}</span>
-                </div>`
-    );
+    const arcs = arcsDeSauts(this.getJumps(a, b), { isAddition, position });
 
     const titleKey = isAddition ? 'number_line_addition_title' : 'number_line_subtraction_title';
     const explanationKey = isAddition
@@ -1348,17 +1399,8 @@ export class DiscoveryMode extends GameMode {
    * @private
    */
   _canVisualize(a, b) {
-    switch (this.operator) {
-      case '×':
-      case '+':
-        return a <= 10 && b <= 10;
-      case '−':
-        return a <= 20 && b <= a;
-      case '÷':
-        return a <= 20 && Number.isInteger(this.operation.compute(a, b));
-      default:
-        return false;
-    }
+    const regle = VISUALISABLE[this.operator];
+    return regle ? regle(a, b, this.operation) : false;
   }
 
   /**
@@ -1576,10 +1618,10 @@ export class DiscoveryMode extends GameMode {
         place();
       });
 
-      // Support tactile
-      item.addEventListener('touchstart', e => this.handleTouchStart(e), { passive: false });
-      item.addEventListener('touchmove', e => this.handleTouchMove(e), { passive: false });
-      item.addEventListener('touchend', e => this.handleTouchEnd(e), { passive: false });
+      // Support tactile : le glissement prend la main sur le défilement
+      item.addEventListener('touchstart', e => this.handleTouchStart(e), TACTILE_ACTIF);
+      item.addEventListener('touchmove', e => this.handleTouchMove(e), TACTILE_ACTIF);
+      item.addEventListener('touchend', e => this.handleTouchEnd(e), TACTILE_ACTIF);
       item.addEventListener('touchcancel', () => this._endTouch());
     });
 
@@ -1630,21 +1672,11 @@ export class DiscoveryMode extends GameMode {
    * @private
    */
   _extractDroppedNumber(e) {
-    let numberStr = '';
-    try {
-      if (e.dataTransfer) {
-        numberStr = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text') || '';
-      }
-    } catch {
-      /* ignore */
-    }
-
-    let number = Number.parseInt(numberStr, 10);
-    if (Number.isNaN(number)) {
-      number = Number.parseInt(this.draggedElement?.dataset?.number || '0', 10);
-    }
-
-    return Number.isNaN(number) || number <= 0 ? null : number;
+    const transfere = nombreTransfere(e.dataTransfer);
+    const nombre = Number.isNaN(transfere)
+      ? Number.parseInt(this.draggedElement?.dataset?.number || '0', 10)
+      : transfere;
+    return Number.isNaN(nombre) || nombre <= 0 ? null : nombre;
   }
 
   /**
