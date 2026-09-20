@@ -20,19 +20,28 @@
 
 # LeapMultix
 
-<!-- Badges (mettre à jour <owner>/<repo> après migration GitHub) -->
-
 ![CI](https://img.shields.io/github/actions/workflow/status/jls42/leapmultix/ci.yml?branch=main)
+![Licence : AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/jls42/leapmultix/badge)](https://www.codefactor.io/repository/github/jls42/leapmultix)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 ## Table des matières
 
 - [Description](#description)
+- [Aperçu](#-aperçu)
 - [Fonctionnalités](#-fonctionnalités)
 - [Démarrage rapide](#-démarrage-rapide)
 - [Architecture](#-architecture)
@@ -46,13 +55,42 @@
 
 ## Description
 
-LeapMultix est une application web éducative interactive moderne destinée aux enfants (8–12 ans) pour maîtriser les 4 opérations arithmétiques : multiplication (×), addition (+), soustraction (−) et division (÷). L'application propose **5 modes de jeu** et **4 mini-jeux d'arcade** dans une interface intuitive, accessible et multilingue.
+LeapMultix est une application web éducative interactive destinée aux enfants de 6 à 12 ans pour maîtriser les 4 opérations arithmétiques : multiplication (×), addition (+), soustraction (−) et division (÷). Elle propose **5 modes de jeu** et **4 mini-jeux d'arcade** dans une interface intuitive, accessible et multilingue.
 
-**Support multi-opérations :** Les modes Quiz et Défi permettent de pratiquer toutes les opérations. Les modes Découverte, Aventure et Arcade se concentrent sur la multiplication.
+**Support multi-opérations :** les cinq modes acceptent les quatre opérations. Le choix se fait sur l'écran d'accueil et vaut pour tout le parcours.
 
 **Développé par :** Julien LS (contact@jls42.org)
 
 **URL en ligne :** https://leapmultix.jls42.org/
+
+## 📸 Aperçu
+
+### Les écrans
+
+|                                                                                                               |                                                                                                                |
+| :-----------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------: |
+|                     ![Écran « Qui joue ? » : choix du profil](docs/media/01-accueil.webp)                     |              ![Menu principal : choix de l'opération et des cinq modes](docs/media/02-menu.webp)               |
+|                   **Qui joue ?** — un profil par enfant, avec son avatar et sa progression.                   |                    **Le menu** — l'opération se choisit ici, puis les cinq modes s'ouvrent.                    |
+|              ![Mode Découverte : la table de 4 montrée en points](docs/media/03-decouverte.webp)              |             ![Mode Quiz : réponse fausse en rouge, bonne réponse en vert](docs/media/04-quiz.webp)             |
+|   **Découverte** — chaque égalité se montre en points, en bonds ou en comptage, avec l'astuce de la table.    | **Quiz** — le choix de l'enfant reste affiché à côté de la bonne réponse, et l'explication détaille le calcul. |
+|                  ![Mode Défi : compte à rebours et série en cours](docs/media/05-defi.webp)                   |        ![Mode Aventure : carte des dix niveaux, les suivants verrouillés](docs/media/06-aventure.webp)         |
+| **Défi** — course contre la montre. Sur une erreur, le chronomètre se fige le temps de lire la bonne réponse. |                **Aventure** — dix niveaux qui s'ouvrent l'un après l'autre, contre des étoiles.                |
+|                       ![Menu Arcade : les quatre mini-jeux](docs/media/07-arcade.webp)                        |           ![Tableau de bord : étoiles par table et statistiques](docs/media/08-tableau-de-bord.webp)           |
+|              **Arcade** — quatre mini-jeux, avec réglage de la difficulté et choix du vaisseau.               |                   **Tableau de bord** — étoiles par table, tables à revoir, scores par mode.                   |
+|           ![Personnalisation : avatars, thèmes, accessibilité](docs/media/09-personnalisation.webp)           |                                                                                                                |
+|      **Personnalisation** — avatar, thème de couleurs, taille du texte, contraste élevé, code parental.       |                                                                                                                |
+
+### Les mini-jeux d'arcade
+
+Les animations ci-dessous montrent la zone de jeu. L'opération en cours et les
+vies s'affichent juste au-dessus, dans la barre d'information.
+
+|                                                                                                                  |                                                                                              |
+| :--------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------: |
+|       ![MultiInvaders : des monstres portant des nombres descendent](docs/media/arcade-multiinvaders.gif)        | ![MultiMiam : un labyrinthe où collecter la bonne réponse](docs/media/arcade-multimiam.gif)  |
+|                     **MultiInvaders** — tirer sur les mauvaises réponses, épargner la bonne.                     |            **MultiMiam** — parcourir le labyrinthe pour attraper le bon résultat.            |
+| ![MultiMemory : retourner les cartes pour associer un calcul et son résultat](docs/media/arcade-multimemory.gif) | ![MultiSnake : un serpent qui mange les pommes numérotées](docs/media/arcade-multisnake.gif) |
+|                       **MultiMemory** — associer chaque calcul à son résultat, de mémoire.                       |           **MultiSnake** — grandir en avalant les bons nombres, éviter les autres.           |
 
 ## ✨ Fonctionnalités
 
@@ -173,113 +211,59 @@ npm run sw:fix         # Corriger les problèmes de service worker
 
 ### Structure des fichiers
 
+Les modules JavaScript sont **à plat dans `js/`**, à trois dossiers près :
+`core/`, `components/` et `modes/`. C'est donc le nom du fichier qui porte le
+regroupement (`arcade-*`, `multimiam-*`, `i18n*`…).
+
 ```
 leapmultix/
-├── index.html              # Point d'entrée principal
+├── index.html              # Application (navigation par slides)
+├── modes.html              # Page publique : les modes de jeu
+├── parents.html            # Page publique : guide parents et enseignants
+├── pwa.html                # Page publique : installation hors ligne
+├── offline.html            # Page servie hors ligne par le service worker
+├── sw.js                   # Service worker (version alignée sur js/cache-updater.js)
+├── deploy.sh               # Déploiement S3 + invalidation CloudFront
 ├── js/
-│   ├── core/               # Modules centraux ES6
-│   │   ├── GameMode.js     # Classe de base des modes
-│   │   ├── GameModeManager.js # Gestion des modes de jeu
-│   │   ├── storage.js      # API de stockage LocalStorage
-│   │   ├── audio.js        # Gestion du son
-│   │   ├── utils.js        # Utilitaires génériques (source canonique)
-│   │   ├── eventBus.js     # Communication événementielle
-│   │   ├── userState.js    # Gestion de session utilisateur
-│   │   ├── mainInit.js     # Initialisation DOM-ready
-│   │   ├── theme.js        # Système de thèmes
-│   │   ├── userUi.js       # Utilitaires d'interface utilisateur
-│   │   ├── parental.js     # Contrôles parentaux
-│   │   ├── adventure-data.js # Données du mode Aventure
-│   │   ├── mult-stats.js   # Statistiques de multiplication
-│   │   ├── challenge-stats.js # Statistiques de défi
-│   │   └── daily-challenge.js # Gestion défis quotidiens
-│   ├── components/         # Composants UI réutilisables
-│   │   ├── topBar.js       # Barre de navigation
-│   │   ├── infoBar.js      # Barres d'information des jeux
-│   │   ├── dashboard.js    # Tableau de bord utilisateur
-│   │   └── customization.js # Interface de personnalisation
-│   ├── modes/              # Modes de jeu
-│   │   ├── QuizMode.js
-│   │   ├── ChallengeMode.js
-│   │   ├── AdventureMode.js
-│   │   ├── DiscoveryMode.js
-│   │   └── ArcadeMode.js
-│   ├── arcade/             # Mini-jeux arcade
-│   │   ├── arcade.js       # Orchestrateur principal arcade
-│   │   ├── arcade-invasion.js # Space Invaders (31 KB)
-│   │   ├── arcade-multimemory.js # Jeu de mémoire (31 KB)
-│   │   ├── arcade-multimiam.js # Intégration Multimiam
-│   │   ├── arcade-multisnake.js # Intégration Snake
-│   │   ├── arcade-common.js, arcade-utils.js # Utilitaires partagés
-│   │   ├── arcade-message.js, arcade-points.js # Composants UI
-│   │   └── arcade-scores.js # Gestion des scores
-│   ├── multimiam/          # Jeu Pac-Man (architecture décomposée)
-│   │   ├── multimiam.js    # Contrôleur principal
-│   │   ├── multimiam-engine.js # Moteur de jeu (15 KB)
-│   │   ├── multimiam-renderer.js # Système de rendu (9 KB)
-│   │   ├── multimiam-controls.js # Gestion des contrôles (7 KB)
-│   │   ├── multimiam-questions.js # Génération de questions (6 KB)
-│   │   └── multimiam-ui.js # Éléments d'interface
-│   ├── multisnake.js       # Jeu Snake (38 KB)
-│   ├── navigation/         # Système de navigation
-│   │   ├── slides.js       # Navigation par slides (goToSlide, showSlide)
-│   │   └── keyboard-navigation.js # Support clavier
-│   ├── ui/                 # Interface utilisateur et feedback
-│   │   ├── uiUtils.js      # Utilitaires d'interface
-│   │   ├── ui-feedback.js  # Mécanismes de feedback
-│   │   ├── touch-support.js # Support tactile (7 KB)
-│   │   ├── virtual-keyboard.js # Clavier virtuel
-│   │   ├── coin-display.js, coin-effects.js # Système de monnaie
-│   │   ├── notifications.js # Système de notifications
-│   │   └── badges.js       # Système de badges
-│   ├── media/              # Gestion des médias
-│   │   ├── VideoManager.js # Gestion de lecture vidéo (12 KB)
-│   │   └── responsive-image-loader.js # Chargement d'images (9 KB)
-│   ├── orchestration/      # Orchestration et chargement
-│   │   ├── mode-orchestrator.js # Changement de modes
-│   │   ├── lazy-loader.js  # Chargement dynamique (10 KB)
-│   │   └── game-cleanup.js # Nettoyage d'état
-│   ├── utils/              # Utilitaires
-│   │   ├── utils-es6.js    # Agrégateur principal (5 KB)
-│   │   ├── main-helpers.js # Helpers de l'application
-│   │   ├── helpers.js      # Fonctions helpers legacy
-│   │   ├── stats-utils.js  # Utilitaires de statistiques
-│   │   ├── difficulty.js   # Gestion de difficulté
-│   │   └── questionGenerator.js # Génération de questions
-│   ├── storage/            # Stockage et état
-│   │   ├── storage.js      # Wrapper de stockage legacy
-│   │   └── userManager.js  # Gestion multi-utilisateurs (19 KB)
-│   ├── i18n/               # Internationalisation
-│   │   ├── i18n.js         # Système i18n
-│   │   └── i18n-store.js   # Stockage des traductions
-│   ├── security/           # Sécurité et gestion d'erreurs
-│   │   ├── security-utils.js # Protection XSS, sanitisation
-│   │   ├── error-handlers.js # Gestion globale d'erreurs
-│   │   └── logger.js       # Système de logging
-│   ├── accessibility/      # Accessibilité
-│   │   ├── accessibility.js # Fonctionnalités d'accessibilité
-│   │   └── speech.js       # Support de synthèse vocale
-│   ├── integration/        # Intégration et analytics
-│   │   ├── plausible-init.js # Analytics Plausible
-│   │   ├── cache-updater.js # Gestion de cache (10 KB)
-│   │   └── imports.js      # Utilitaires d'import
-│   ├── main-es6.js         # Point d'entrée ES6
-│   ├── main.js             # Orchestrateur principal
-│   ├── bootstrap.js        # Configuration des event handlers ES6
-│   └── game.js             # Gestion d'état et défis quotidiens
-├── css/                    # Styles modulaires
-├── assets/                 # Ressources
-│   ├── images/             # Images et sprites
-│   ├── generated-images/   # Images responsives générées
-│   ├── sounds/             # Effets sonores
-│   ├── translations/       # Fichiers de traduction (fr, en, es)
-│   └── videos/             # Vidéos tutoriels
-├── tests/                  # Tests automatisés
-│   ├── __tests__/          # Tests unitaires et d'intégration
-│   └── tests-esm/          # Tests ESM (.mjs)
-├── scripts/                # Scripts de maintenance
-│   ├── compare-translations.cjs # Comparaison des traductions
-│   └── cleanup-i18n-keys.cjs # Nettoyage des clés i18n
+│   ├── core/               # Socle applicatif
+│   │   ├── GameMode.js, GameModeManager.js   # Classe de base des modes
+│   │   ├── storage.js, userState.js          # Persistance et session
+│   │   ├── audio.js, theme.js, parental.js   # Son, thèmes, contrôle parental
+│   │   ├── eventBus.js, mainInit.js          # Événements, amorçage DOM
+│   │   ├── adventure-data.js                 # Niveaux du mode Aventure
+│   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
+│   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
+│   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
+│   │   └── operations/                       # Une classe par opération
+│   │       ├── Operation.js, OperationRegistry.js
+│   │       └── Multiplication.js, Addition.js, Subtraction.js, Division.js
+│   ├── components/         # Composants d'interface
+│   │   ├── topBar.js, infoBar.js, dashboard.js, customization.js
+│   │   ├── operationSelector.js, operationModeAvailability.js
+│   │   └── icons.js, tableSettingsModal.js
+│   ├── modes/              # Les cinq modes de jeu
+│   │   ├── DiscoveryMode.js, QuizMode.js, ChallengeMode.js
+│   │   └── AdventureMode.js, ArcadeMode.js
+│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux
+│   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
+│   ├── multisnake.js       # Mini-jeu Snake
+│   ├── i18n.js, i18n-store.js                # Internationalisation
+│   ├── security-utils.js, error-handlers.js, logger.js
+│   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
+│   ├── slides.js, mode-orchestrator.js, lazy-loader.js, game-cleanup.js
+│   ├── VideoManager.js, responsive-image-loader.js
+│   ├── userManager.js, main-helpers.js, utils-es6.js, questionGenerator.js
+│   └── main-es6.js, main.js, bootstrap.js, game.js   # Points d'entrée
+├── css/                    # Feuilles de style (jetons de design : themes.css)
+├── assets/
+│   ├── images/             # Sources PNG (avatars, sprites, fonds)
+│   ├── generated-images/   # Variantes responsives (généré, hors git)
+│   ├── fonts/, sounds/, videos/, icons/, social/
+│   └── translations/       # fr.json, en.json, es.json
+├── tests/__tests__/        # Tests Jest (jsdom, et bout-en-bout via Puppeteer)
+├── tests-esm/              # Tests Jest en modules ES (.mjs)
+├── scripts/                # Génération d'assets, i18n, rapports
+├── docs/media/             # Captures et animations du README
 └── dist/                   # Build de production (généré)
 ```
 
@@ -334,7 +318,7 @@ Course contre la montre avec :
 
 Progression narrative avec :
 
-- 12 niveaux thématiques débloquables
+- 10 niveaux thématiques débloquables
 - Carte interactive avec progression visuelle
 - Histoire immersive avec personnages
 - Système d'étoiles et de récompenses
@@ -433,39 +417,23 @@ npm run serve:dist # sert dist/ (port 5000)
 
 ### Intégration Continue
 
-**GitHub Actions** : Pipeline automatisé dans `.github/workflows/ci.yml`
+**GitHub Actions** : `.github/workflows/ci.yml`, déclenché à chaque push sur
+`main` et à chaque pull request.
 
-Le pipeline CI/CD exécute automatiquement à chaque push et pull request :
+**`verify`** — la porte qualité, bloquante :
 
-**Jobs principaux** :
+- `npm ci` puis `npm run verify` (ESLint, tests Jest, couverture)
+- `npm run format:check` (Prettier)
 
-1. **build-test** : Job principal de validation
-   - Installation des dépendances : `npm ci`
-   - Vérification du formatage : `npm run format:check`
-   - Analyse statique : `npm run lint`
-   - Tests unitaires : `npm run test`
-   - Audit de sécurité : `npm audit`
-   - Génération de l'artefact de couverture
+**`seo-report`** — après `verify` : audit Lighthouse du site en ligne, pour
+suivre les métriques SEO dans la durée.
 
-2. **accessibility** : Audit d'accessibilité (non bloquant)
-   - Exécute `npm run audit:accessibility`
-   - Génère un rapport d'accessibilité WCAG 2.1 AA
+**Analyses externes** branchées sur les pull requests : Codacy, CodeFactor et
+SonarCloud. La porte SonarCloud exige les notes A en fiabilité, sécurité et
+maintenabilité sur le code nouveau.
 
-3. **test-esm** : Tests des modules ES6
-   - Exécute `npm run test:esm` avec Jest VM modules
-   - Valide les imports/exports ES6
-
-4. **lighthouse** : Audit de performance (non bloquant)
-   - Audit de performance mobile
-   - Génération de rapports Lighthouse artefacts
-   - Métriques Core Web Vitals
-
-**Badges de qualité** :
-
-- CI Build Status (GitHub Actions)
-- CodeFactor Grade
-- Codacy Badge
-- SonarCloud Quality Gate
+**Déploiement** : `./deploy.sh` synchronise le site vers S3 et invalide le cache
+CloudFront. Le script régénère au besoin les images responsives, absentes de git.
 
 ### PWA (Progressive Web App)
 
@@ -557,10 +525,13 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 ### Navigateurs supportés
 
-- Chrome/Chromium 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+L'interface s'appuie sur `oklch()` pour les couleurs et sur `:has()` pour les
+états contextuels, ce qui fixe le plancher :
+
+- Chrome / Chromium 111+
+- Edge 111+
+- Firefox 121+
+- Safari 15.4+
 
 ### Appareils
 
@@ -623,21 +594,21 @@ Ce script (`scripts/compare-translations.cjs`) assure la synchronisation de tous
 🔍 Analyse comparative des fichiers de traduction
 
 📚 Langue de référence: fr.json
-✅ fr.json: 335 clés
+✅ fr.json: 570 clés
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📝 Analyse de en.json
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 Total de clés: 335
+📊 Total de clés: 570
 ✅ Aucune clé manquante
 ✅ Aucune clé supplémentaire
 ✅ Aucune valeur vide
 
 📊 RÉSUMÉ FINAL
-  fr.json: 335 clés
-  en.json: 335 clés
-  es.json: 335 clés
+  fr.json: 570 clés
+  en.json: 570 clés
+  es.json: 570 clés
 
 ✅ Tous les fichiers de traduction sont parfaitement synchronisés !
 ```
@@ -686,4 +657,4 @@ Ce projet est sous licence AGPL v3. Voir le fichier `LICENSE` pour plus de déta
 
 ---
 
-_LeapMultix - Application éducative moderne pour l'apprentissage des tables de multiplication_
+_LeapMultix — application éducative libre pour apprendre les quatre opérations_
