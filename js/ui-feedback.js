@@ -137,6 +137,7 @@ function createIcon(className, pathData) {
 }
 
 const CHECK_PATH = 'M5 12.5l4.5 4.5L19 7';
+const CROSS_PATH = 'M7 7l10 10M17 7L7 17';
 const STAR_PATH = 'M12 2.8l2.8 5.9 6.4.8-4.7 4.5 1.2 6.4L12 17.3l-5.7 3.1 1.2-6.4-4.7-4.5 6.4-.8z';
 const LOCK_PATH =
   'M7 10.5V8a5 5 0 0 1 10 0v2.5M6 10.5h12a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8.5a1 1 0 0 1 1-1z';
@@ -144,6 +145,11 @@ const LOCK_PATH =
 /** Coche de la bonne réponse. */
 export function createCheckIcon() {
   return createIcon('option-mark', CHECK_PATH);
+}
+
+/** Croix du choix erroné : l'enfant retrouve la tuile qu'il a touchée. */
+export function createCrossIcon() {
+  return createIcon('option-mark option-mark-wrong', CROSS_PATH);
 }
 
 /**
@@ -161,8 +167,8 @@ export function createLockIcon() {
 }
 
 /**
- * Après un choix : la tuile juste reçoit une coche (jamais la couleur seule),
- * le choix erroné de l'enfant reste enfoncé, sur fond neutre.
+ * Après un choix : la tuile juste reçoit une coche, le choix erroné une croix
+ * (jamais la couleur seule) et reste enfoncé. Les deux se repèrent d'un coup d'œil.
  * @param {HTMLElement} container - Conteneur des tuiles `.option`
  * @param {*} correctAnswer - Bonne réponse
  * @param {*} chosenAnswer - Réponse choisie par l'enfant
@@ -176,10 +182,11 @@ export function markAnswerOptions(container, correctAnswer, chosenAnswer) {
   for (const option of container.querySelectorAll('.option')) {
     const value = option.dataset.value;
     const isCorrect = value === correct;
+    const isChosenWrong = !isCorrect && value === chosen;
     option.classList.toggle('is-correct', isCorrect);
-    option.classList.toggle('is-chosen-wrong', !isCorrect && value === chosen);
-    if (isCorrect && !option.querySelector('.option-mark')) {
-      option.appendChild(createCheckIcon());
+    option.classList.toggle('is-chosen-wrong', isChosenWrong);
+    if ((isCorrect || isChosenWrong) && !option.querySelector('.option-mark')) {
+      option.appendChild(isCorrect ? createCheckIcon() : createCrossIcon());
     }
   }
 }

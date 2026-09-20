@@ -231,11 +231,13 @@ body {
   animation: option-correct var(--dur-slow) var(--ease-out) 1;
 }
 
+/* Le choix erroné garde sa place et se voit : enfoncé, en rouge, avec sa croix.
+   Rien ne tremble et aucun son d'alerte : c'est une information, pas une sanction. */
 .options .option.is-chosen-wrong {
-  color: var(--color-ink);
-  background-color: var(--color-surface-sunken);
-  border-color: var(--color-border-strong);
-  box-shadow: 0 0 0 var(--color-border-strong);
+  color: var(--color-danger-ink);
+  background-color: var(--color-danger-tint);
+  border-color: var(--color-danger-edge);
+  box-shadow: 0 0 0 var(--color-danger-edge);
   transform: translateY(var(--key-edge));
 }
 
