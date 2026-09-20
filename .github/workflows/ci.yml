@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Simuler le déploiement sans rien écrire sur S3'
+        type: boolean
+        default: false
 
 jobs:
   verify:
@@ -61,3 +67,104 @@ jobs:
         env:
           SEO_REPORT_BASE_URL: https://leapmultix.jls42.org
         run: npm run seo:report
+
+  # Déploiement du site vers S3 + invalidation CloudFront, uniquement depuis main
+  # et uniquement si `verify` est passé. L'authentification se fait par jeton OIDC
+  # éphémère : aucune clé AWS n'est stockée dans le dépôt.
+  deploy:
+    name: Déploiement
+    runs-on: ubuntu-latest
+    needs: verify
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    permissions:
+      id-token: write # échange du jeton OIDC avec AWS
+      contents: read
+    # Un seul déploiement à la fois, et on ne coupe pas celui qui est en cours.
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Échouer ici plutôt que de déployer un site amputé : sans PLAUSIBLE_DOMAIN,
+      # deploy.sh retire silencieusement les scripts d'analytics.
+      - name: Vérification des variables du dépôt
+        env:
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+          CLOUDFRONT_DISTRIB: ${{ vars.CLOUDFRONT_DISTRIB }}
+          PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
+          ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+        run: |
+          manquantes=''
+          for nom in S3_BUCKET CLOUDFRONT_DISTRIB PLAUSIBLE_DOMAIN ROLE_ARN; do
+            [ -n "${!nom}" ] || manquantes="$manquantes $nom"
+          done
+          if [ -n "$manquantes" ]; then
+            echo "::error::Variables de dépôt manquantes :$manquantes"
+            echo "À définir dans Settings > Secrets and variables > Actions > Variables."
+            exit 1
+          fi
+          echo "Variables présentes."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        # --ignore-scripts : défense en profondeur contre une dépendance
+        # compromise qui s'exécuterait à l'installation. Vérifié : sharp charge
+        # ses binaires préconstruits sans script d'installation, la génération
+        # d'images et les tests passent à l'identique.
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      # assets/generated-images/ n'est pas dans git (3100+ fichiers) : il faut le
+      # reconstruire ici, sinon la synchronisation S3, qui utilise --delete,
+      # effacerait toutes les images du site. Environ 2 min 30 à froid.
+      - name: Génération des images responsives
+        run: npm run assets:generate
+
+      - name: Garde-fou avant synchronisation
+        run: |
+          # Une génération partielle serait aussi destructrice qu'une génération
+          # absente : on refuse de déployer s'il y a moins de fichiers générés que
+          # de PNG sources.
+          sources=$(find assets/images img -name '*.png' | wc -l)
+          generes=$(find assets/generated-images -type f | wc -l)
+          echo "PNG sources : $sources — fichiers générés : $generes"
+          if [ "$generes" -lt "$sources" ]; then
+            echo "::error::Génération incomplète — déploiement interrompu"
+            exit 1
+          fi
+
+      - name: Outils attendus par deploy.sh
+        run: |
+          if ! command -v rsync > /dev/null; then
+            sudo apt-get update && sudo apt-get install -y rsync
+          fi
+          rsync --version | head -1
+          aws --version
+
+      # Les identifiants AWS n'apparaissent qu'à partir d'ici, après le build.
+      - name: Configuration des identifiants AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-west-3
+
+      - name: Déploiement S3 + invalidation CloudFront
+        env:
+          TF_VAR_leapmultixs3bucket: ${{ vars.S3_BUCKET }}
+          CLOUDFRONT_DISTRIB: ${{ vars.CLOUDFRONT_DISTRIB }}
+          PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          # deploy.config n'est pas versionné : deploy.sh retombe alors sur les
+          # variables d'environnement, ce qui est exactement ce qu'on lui fournit.
+          if [ "$DRY_RUN" = 'true' ]; then
+            ./deploy.sh --dry-run
+          else
+            ./deploy.sh
+          fi

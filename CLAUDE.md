@@ -521,3 +521,27 @@ l'être vraiment. Donc, avant toute annonce de résultat :
 
 - **GitHub**: Source code repository with CI/CD via GitHub Actions
 - **Static hosting**: Application designed for static file serving
+
+#### Déploiement automatique
+
+Un push sur `main` déploie le site, mais seulement si le job `verify` est passé :
+le job `deploy` de `.github/workflows/ci.yml` s'authentifie auprès d'AWS par jeton
+OIDC (aucune clé stockée), régénère les images, puis appelle `deploy.sh`.
+
+Deux points à connaître avant d'y toucher :
+
+- **`assets/generated-images/` n'est pas versionné** (3100+ fichiers). Le job le
+  reconstruit par `npm run assets:generate` avant la synchronisation. Sans cette
+  étape, `aws s3 sync --delete` effacerait toutes les images du site : mesuré,
+  3145 suppressions. Un garde-fou refuse de déployer si la génération est
+  incomplète.
+- **Le rôle IAM n'accepte que `refs/heads/main`.** Le dépôt étant public, c'est
+  cette condition qui empêche la pull request d'un inconnu d'obtenir les droits
+  de déploiement. Il est défini dans le dépôt d'infrastructure
+  (`leapmultix-infra`, fichier `github-oidc.tf`).
+
+Variables de dépôt attendues (Settings > Secrets and variables > Actions) :
+`AWS_DEPLOY_ROLE_ARN`, `S3_BUCKET`, `CLOUDFRONT_DISTRIB`, `PLAUSIBLE_DOMAIN`.
+
+Déploiement manuel toujours possible : `./deploy.sh` en local (lit `deploy.config`),
+ou l'onglet Actions avec l'option `dry_run` pour simuler sans rien écrire.
