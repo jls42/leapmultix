@@ -52,7 +52,27 @@ echo "Langues     : ${langues[*]}"
 echo "Médias à préserver : $nb_medias"
 echo
 
+# Contrôle préalable. aipmt ne met à l'abri que les blocs dont la clôture est en
+# colonne 0 : son motif est ancré, une clôture indentée dans une liste numérotée
+# lui échappe. Le contenu part alors au modèle comme de la prose, revient tel
+# quel, et la garde anti-passthrough refuse le fichier — pour les quatorze
+# langues, sans jamais nommer la cause. Autant la nommer ici.
+indentees=$(grep -cE '^[[:space:]]+```' "$SOURCE" || true)
+if [[ "$indentees" -gt 0 ]]; then
+  echo "ERREUR : $SOURCE contient $indentees clôture(s) de bloc de code indentée(s)." >&2
+  grep -nE '^[[:space:]]+```' "$SOURCE" | head -5 >&2
+  echo 'aipmt ne protège que les blocs dont les ``` commencent en colonne 0.' >&2
+  echo "Sortir ces blocs des listes numérotées avant de relancer." >&2
+  exit 1
+fi
+
 echecs=()
+
+# Une langue d'abord, seule : si la source a un défaut, il se voit sur la
+# première et il est inutile de dépenser le quota sur les treize autres.
+canari="${langues[0]}"
+echo "Canari : $canari (on ne poursuit que s'il passe)"
+echo
 
 for langue in "${langues[@]}"; do
   cible="README.${langue}.md"
@@ -91,7 +111,18 @@ for langue in "${langues[@]}"; do
     echo "   échec"
   done
 
-  [[ "$reussi" -eq 1 ]] || echecs+=("$langue")
+  if [[ "$reussi" -ne 1 ]]; then
+    echecs+=("$langue")
+    if [[ "$langue" == "$canari" ]]; then
+      echo >&2
+      echo "ERREUR : le canari « $canari » a échoué après $ESSAIS tentatives." >&2
+      echo "La source est sans doute en cause : on s'arrête avant d'y passer le quota." >&2
+      echo "Relancer une traduction seule, sans masquer la sortie, pour voir le motif :" >&2
+      echo "  aipmt --file $SOURCE --source_lang $LANGUE_SOURCE --target_lang $canari \\" >&2
+      echo "        --target_dir /tmp $PROVIDER --force" >&2
+      exit 1
+    fi
+  fi
 done
 
 echo

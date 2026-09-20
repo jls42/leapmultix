@@ -1,583 +1,549 @@
 <details>
-<summary>هذه الوثيقة متاحة أيضًا بلغات أخرى</summary>
+<summary>هذا المستند متاح أيضًا بلغات أخرى</summary>
 
-- [English](./README.en.md)
-- [Español](./README.es.md)
-- [Português](./README.pt.md)
-- [Deutsch](./README.de.md)
-- [中文](./README.zh.md)
-- [हिन्दी](./README.hi.md)
-- [Français](./README.md)
-- [Italiano](./README.it.md)
-- [Svenska](./README.sv.md)
-- [Polski](./README.pl.md)
-- [Nederlands](./README.nl.md)
-- [Română](./README.ro.md)
-- [日本語](./README.ja.md)
-- [한국어](./README.ko.md)
+- [الإنجليزية](./README.en.md)
+- [الإسبانية](./README.es.md)
+- [البرتغالية](./README.pt.md)
+- [الألمانية](./README.de.md)
+- [الصينية](./README.zh.md)
+- [الهندية](./README.hi.md)
+- [العربية](./README.ar.md)
+- [الإيطالية](./README.it.md)
+- [السويدية](./README.sv.md)
+- [البولندية](./README.pl.md)
+- [الهولندية](./README.nl.md)
+- [الرومانية](./README.ro.md)
+- [اليابانية](./README.ja.md)
+- [الكورية](./README.ko.md)
 
 </details>
 
 # LeapMultix
 
-<!-- Badges (update <owner>/<repo> after GitHub migration) -->
-
-![CI](https://img.shields.io/github/actions/workflow/status/jls42/leapmultix/ci.yml?branch=main)
+![التكامل المستمر](https://img.shields.io/github/actions/workflow/status/jls42/leapmultix/ci.yml?branch=main)
+![الترخيص: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/jls42/leapmultix/badge)](https://www.codefactor.io/repository/github/jls42/leapmultix)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![شارة Codacy](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![حالة بوابة الجودة](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
+[![تقييم الموثوقية](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![تقييم الأمان](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![تقييم قابلية الصيانة](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![الدين التقني](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+
+[![الأخطاء](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![الثغرات الأمنية](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![مشكلات جودة الشيفرة](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![الأسطر المكررة (%)](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![أسطر الشيفرة](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 ## جدول المحتويات
 
 - [الوصف](#الوصف)
+- [نظرة عامة](#-نظرة-عامة)
 - [الميزات](#-الميزات)
-- [البداية السريعة](#-البداية-السريعة)
-- [الهندسة المعمارية](#-الهندسة-المعمارية)
+- [البدء السريع](#-البدء-السريع)
+- [البنية](#-البنية)
 - [أوضاع اللعب بالتفصيل](#-أوضاع-اللعب-بالتفصيل)
 - [التطوير](#-التطوير)
 - [التوافق](#-التوافق)
-- [التعريب](#-التعريب)
+- [التوطين](#-التوطين)
 - [تخزين البيانات](#-تخزين-البيانات)
 - [الإبلاغ عن مشكلة](#-الإبلاغ-عن-مشكلة)
-- [الرخصة](#-الرخصة)
+- [الترخيص](#-الترخيص)
 
 ## الوصف
 
-LeapMultix هو تطبيق ويب تعليمي تفاعلي حديث مصمم للأطفال (8-12 سنة) لإتقان العمليات الحسابية الأربع: الضرب (×)، الجمع (+)، الطرح (-)، والقسمة (÷). يقدم التطبيق **5 أوضاع للعب** و **4 ألعاب أركيد مصغرة** في واجهة بديهية وسهلة الوصول ومتعددة اللغات.
+LeapMultix هو تطبيق ويب تعليمي تفاعلي مخصص للأطفال من عمر 6 إلى 12 عامًا لإتقان العمليات الحسابية الأربع: الضرب (×)، والجمع (+)، والطرح (−)، والقسمة (÷). ويقدم **5 أوضاع لعب** و**4 ألعاب مصغّرة من نمط Arcade** ضمن واجهة سهلة الاستخدام ومتاحة للجميع ومتعددة اللغات.
 
-**دعم العمليات المتعددة:** تسمح أوضاع الاختبار والتحدي بممارسة جميع العمليات. تركز أوضاع الاكتشاف والمغامرة والأركيد على الضرب ولكنها مصممة لدعم جميع العمليات.
+**دعم عمليات متعددة:** تقبل الأوضاع الخمسة العمليات الأربع. ويُحدَّد الاختيار من الشاشة الرئيسية ويُطبَّق على المسار بأكمله.
 
-**تطوير:** Julien LS (contact@jls42.org)
+**طوّره:** Julien LS (contact@jls42.org)
 
-**الرابط عبر الإنترنت:** https://leapmultix.jls42.org/
+**الرابط المباشر:** https://leapmultix.jls42.org/
+
+## 📸 نظرة عامة
+
+### الشاشات
+
+|                                                                                             |                                                                                                        |
+| :-----------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
+|             ![شاشة «من يلعب؟»: اختيار الملف الشخصي](docs/media/01-accueil.webp)             |            ![القائمة الرئيسية: اختيار العملية وأوضاع اللعب الخمسة](docs/media/02-menu.webp)            |
+|                  **من يلعب؟** — ملف شخصي لكل طفل، مع صورته الرمزية وتقدمه.                  |                       **القائمة** — تُختار العملية هنا، ثم تُفتح الأوضاع الخمسة.                       |
+|         ![وضع الاستكشاف: جدول العدد 4 معروض بالنقاط](docs/media/03-decouverte.webp)         |           ![وضع الاختبار: الإجابة الخاطئة بالأحمر والصحيحة بالأخضر](docs/media/04-quiz.webp)           |
+|        **الاستكشاف** — تُعرض كل مساواة بالنقاط أو القفزات أو العدّ، مع حيلة الجدول.         | **الاختبار** — يظل اختيار الطفل ظاهرًا بجوار الإجابة الصحيحة، ويشرح التوضيح العملية الحسابية بالتفصيل. |
+|               ![وضع التحدي: عدّ تنازلي وسلسلة حالية](docs/media/05-defi.webp)               |     ![وضع المغامرة: خريطة المستويات العشرة مع قفل المستويات التالية](docs/media/06-aventure.webp)      |
+| **التحدي** — سباق مع الزمن. عند حدوث خطأ، يتوقف المؤقت مؤقتًا لإتاحة قراءة الإجابة الصحيحة. |                    **المغامرة** — عشرة مستويات تُفتح واحدًا تلو الآخر مقابل النجوم.                    |
+|             ![قائمة Arcade: الألعاب المصغّرة الأربع](docs/media/07-arcade.webp)             |          ![لوحة المعلومات: النجوم حسب الجدول والإحصاءات](docs/media/08-tableau-de-bord.webp)           |
+|            **Arcade** — أربع ألعاب مصغّرة، مع ضبط مستوى الصعوبة واختيار المركبة.            |       **لوحة المعلومات** — النجوم حسب الجدول، والجداول التي ينبغي مراجعتها، والنتائج حسب الوضع.        |
+|   ![التخصيص: الصور الرمزية والسمات وإمكانية الوصول](docs/media/09-personnalisation.webp)    |                                                                                                        |
+|   **التخصيص** — الصورة الرمزية، ونسق الألوان، وحجم النص، والتباين العالي، والرمز الأبوي.    |                                                                                                        |
+
+### ألعاب Arcade المصغّرة
+
+أربع ألعاب تطرح السؤال نفسه — المعروض أعلى منطقة
+اللعب، مع الوقت المتبقي وعدد الأرواح — لكنها تتطلب في كل مرة حركة
+مختلفة.
+
+|                                                                                                        |                                                                                      |
+| :----------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: |
+|      ![MultiInvaders: وحوش تحمل أرقامًا ومركبة في أسفل الشاشة](docs/media/10-multiinvaders.webp)       | ![MultiMiam: متاهة تحمل فيها النقاط الإجابات المحتملة](docs/media/11-multimiam.webp) |
+|     **MultiInvaders** — إطلاق النار على الإجابات الخاطئة وترك الصحيحة: فهي تخفي صديقًا يجب تحريره.     |        **MultiMiam** — اجتياز المتاهة لالتقاط النتيجة الصحيحة مع تجنب الوحوش.        |
+| ![MultiMemory: شبكة بطاقات، انقلبت بطاقتان تعرضان عملية حسابية ورقمًا](docs/media/12-multimemory.webp) |       ![MultiSnake: ثعبان وتفاحات مرقمة في مرج](docs/media/13-multisnake.webp)       |
+|               **MultiMemory** — تذكّر البطاقة التي تحمل نتيجة العملية الحسابية الظاهرة.                |      **MultiSnake** — النمو بابتلاع الأرقام الصحيحة وتجنب جميع الأرقام الأخرى.       |
 
 ## ✨ الميزات
 
 ### 🎮 أوضاع اللعب
 
-- **وضع الاكتشاف**: استكشاف مرئي وتفاعلي يتكيف مع كل عملية
-- **وضع الاختبار**: أسئلة متعددة الخيارات مع دعم لجميع العمليات الأربع (×، +، -، ÷) وتقدم تكيفي
-- **وضع التحدي**: سباق ضد الزمن مع جميع العمليات الأربع (×، +، -، ÷) ومستويات صعوبة مختلفة
-- **وضع المغامرة**: تقدم سردي حسب المستويات مع دعم لجميع العمليات الأربع
+- **وضع الاستكشاف**: استكشاف مرئي وتفاعلي ملائم لكل عملية
+- **وضع الاختبار**: أسئلة متعددة الخيارات تدعم العمليات الأربع (×، +، −، ÷) مع تقدم تكيّفي
+- **وضع التحدي**: سباق مع الزمن باستخدام العمليات الأربع (×، +، −، ÷) ومستويات صعوبة مختلفة
+- **وضع المغامرة**: تقدم قصصي عبر المستويات مع دعم العمليات الأربع
 
-### 🕹️ ألعاب أركيد مصغرة
+### 🕹️ ألعاب Arcade المصغّرة
 
-- **MultiInvaders**: غزاة الفضاء التعليمية - دمر الإجابات الخاطئة
-- **MultiMiam**: باكمان الرياضي - اجمع الإجابات الصحيحة
-- **MultiMemory**: لعبة الذاكرة - طابق العمليات والنتائج
-- **MultiSnake**: الثعبان التعليمي - تنمو عن طريق أكل الأرقام الصحيحة
+- **MultiInvaders**: لعبة Space Invaders تعليمية - تدمير الإجابات الخاطئة
+- **MultiMiam**: لعبة Pac-Man رياضية - جمع الإجابات الصحيحة
+- **MultiMemory**: لعبة ذاكرة - مطابقة العمليات بنتائجها
+- **MultiSnake**: لعبة Snake تعليمية - النمو بأكل الأرقام الصحيحة
 
-### ➕ دعم العمليات المتعددة
+### ➕ دعم عمليات متعددة
 
-تقدم LeapMultix تدريبًا كاملاً على العمليات الحسابية الأربع في **جميع الأوضاع**:
+يقدم LeapMultix تدريبًا شاملًا على العمليات الحسابية الأربع في **جميع الأوضاع**:
 
-| الوضع    | ×   | +   | −   | ÷   |
-| -------- | --- | --- | --- | --- |
-| الاختبار | ✅  | ✅  | ✅  | ✅  |
-| التحدي   | ✅  | ✅  | ✅  | ✅  |
-| الاكتشاف | ✅  | ✅  | ✅  | ✅  |
-| المغامرة | ✅  | ✅  | ✅  | ✅  |
-| الأركيد  | ✅  | ✅  | ✅  | ✅  |
+| الوضع     | ×   | +   | −   | ÷   |
+| --------- | --- | --- | --- | --- |
+| الاختبار  | ✅  | ✅  | ✅  | ✅  |
+| التحدي    | ✅  | ✅  | ✅  | ✅  |
+| الاستكشاف | ✅  | ✅  | ✅  | ✅  |
+| المغامرة  | ✅  | ✅  | ✅  | ✅  |
+| Arcade    | ✅  | ✅  | ✅  | ✅  |
 
-### 🌍 ميزات شاملة
+### 🌍 ميزات مشتركة
 
-- **متعدد المستخدمين**: إدارة ملفات تعريف فردية مع حفظ التقدم
-- **متعدد اللغات**: دعم للفرنسية والإنجليزية والإسبانية
-- **التخصيص**: صور رمزية، سمات ألوان، خلفيات
-- **إمكانية الوصول**: التنقل عبر لوحة المفاتيح، دعم اللمس، التوافق مع WCAG 2.1 AA
-- **استجابة للجوال**: واجهة محسنة للأجهزة اللوحية والهواتف الذكية
-- **نظام التقدم**: درجات، شارات، تحديات يومية
+- **تعدد المستخدمين**: إدارة ملفات شخصية فردية مع حفظ التقدم
+- **تعدد اللغات**: دعم الفرنسية والإنجليزية والإسبانية
+- **التخصيص**: صور رمزية وسمات لونية وخلفيات
+- **إمكانية الوصول**: التنقل بلوحة المفاتيح ودعم اللمس والتوافق مع WCAG 2.1 AA
+- **تجاوب الأجهزة المحمولة**: واجهة محسّنة للأجهزة اللوحية والهواتف الذكية
+- **نظام التقدم**: نتائج وشارات وتحديات يومية
 
-## 🚀 البداية السريعة
+## 🚀 البدء السريع
 
 ### المتطلبات الأساسية
 
-- Node.js (الإصدار 16 أو أعلى)
+- Node.js (الإصدار 16 أو أحدث)
 - متصفح ويب حديث
 
 ### التثبيت
 
 ```bash
-# استنساخ المشروع
+# Cloner le projet
 git clone https://github.com/jls42/leapmultix.git
 cd leapmultix
 
-# تثبيت التبعيات
+# Installer les dépendances
 npm install
 
-# بدء خادم التطوير (الخيار 1)
+# Lancer le serveur de développement (option 1)
 npm run serve
-# سيكون التطبيق متاحًا على http://localhost:8080 (أو المنفذ المتاح التالي)
+# L'application sera accessible sur http://localhost:8080 (ou port suivant disponible)
 
-# أو باستخدام Python (الخيار 2)
+# Ou avec Python (option 2)
 python3 -m http.server 8000
-# سيكون التطبيق متاحًا على http://localhost:8000
+# L'application sera accessible sur http://localhost:8000
 ```
 
-### النصوص البرمجية المتاحة
+### البرامج النصية المتاحة
 
 ```bash
-# التطوير
-npm run serve          # خادم محلي (http://localhost:8080)
-npm run lint           # التحقق من الكود باستخدام ESLint
-npm run lint:fix       # إصلاح تلقائي لمشاكل ESLint
-npm run format:check   # التحقق من تنسيق الكود (دائمًا قبل الالتزام)
-npm run format         # تنسيق الكود باستخدام Prettier
-npm run verify         # بوابة الجودة: lint + test + coverage
+# Développement
+npm run serve          # Serveur local (http://localhost:8080)
+npm run lint           # Vérification du code avec ESLint
+npm run lint:fix       # Correction automatique des problèmes ESLint
+npm run format:check   # Vérifier le formatage du code (TOUJOURS avant commit)
+npm run format         # Formater le code avec Prettier
+npm run verify         # Quality gate: lint + test + coverage
 
-# الاختبارات
-npm run test           # تشغيل جميع الاختبارات (CJS)
-npm run test:watch     # الاختبارات في وضع المراقبة
-npm run test:coverage  # الاختبارات مع تقرير التغطية
-npm run test:core      # اختبارات الوحدات الأساسية فقط
-npm run test:integration # اختبارات التكامل
-npm run test:storage   # اختبارات نظام التخزين
-npm run test:esm       # اختبارات ESM (مجلدات tests-esm/، Jest vm-modules)
-npm run test:verbose   # اختبارات مع مخرجات مفصلة
-npm run test:pwa-offline # اختبار PWA دون اتصال (يتطلب Puppeteer)، بعد `npm run serve`
+# Tests
+npm run test           # Lancer tous les tests (CJS)
+npm run test:watch     # Tests en mode watch
+npm run test:coverage  # Tests avec rapport de couverture
+npm run test:core      # Tests des modules core uniquement
+npm run test:integration # Tests d'intégration
+npm run test:storage   # Tests du système de stockage
+npm run test:esm       # Tests ESM (dossiers tests-esm/, Jest vm-modules)
+npm run test:verbose   # Tests avec sortie détaillée
+npm run test:pwa-offline # Test offline PWA (nécessite Puppeteer), après `npm run serve`
 
-# التحليل والصيانة
-npm run analyze:jsdoc  # تحليل التوثيق
-npm run improve:jsdoc  # تحسين JSDoc التلقائي
-npm run audit:mobile   # اختبارات استجابة الجوال
-npm run audit:accessibility # اختبارات إمكانية الوصول
-npm run dead-code      # الكشف عن الكود غير المستخدم
-npm run analyze:globals # تحليل المتغيرات العالمية
-npm run analyze:dependencies # تحليل استخدام التبعيات
-npm run verify:cleanup # تحليل مجمع (الكود الميت + العالمية)
+# Analyse et maintenance
+npm run analyze:jsdoc  # Analyse de la documentation
+npm run improve:jsdoc  # Amélioration automatique JSDoc
+npm run audit:mobile   # Tests responsivité mobile
+npm run audit:accessibility # Tests d'accessibilité
+npm run dead-code      # Détection de code non utilisé
+npm run analyze:globals # Analyse des variables globales
+npm run analyze:dependencies # Analyse usage des dépendances
+npm run verify:cleanup # Analyse combinée (dead code + globals)
 
-# إدارة الأصول
-npm run assets:generate    # إنشاء صور مستجيبة
-npm run assets:backgrounds # تحويل الخلفيات إلى WebP
-npm run assets:analyze     # تحليل الأصول المستجيبة
-npm run assets:diff        # مقارنة الأصول
+# Gestion des assets
+npm run assets:generate    # Générer les images responsives
+npm run assets:backgrounds # Convertir les fonds en WebP
+npm run assets:analyze     # Analyse des assets responsive
+npm run assets:diff        # Comparaison des assets
 
-# التدويل
-npm run i18n:verify    # التحقق من اتساق مفاتيح الترجمة
-npm run i18n:unused    # سرد مفاتيح الترجمة غير المستخدمة
-npm run i18n:compare   # مقارنة الترجمات (en/es) مع fr.json (المرجع)
+# Internationalisation
+npm run i18n:verify    # Vérifier la cohérence des clés de traduction
+npm run i18n:unused    # Lister les clés de traduction non utilisées
+npm run i18n:compare   # Comparer les traductions (en/es) avec fr.json (référence)
 
-# البناء والتسليم
-npm run build          # بناء الإنتاج (Rollup) + postbuild (dist/ كامل)
-npm run serve:dist     # تقديم dist/ على http://localhost:5000 (أو منفذ متاح)
+# Build & livraison
+npm run build          # Build de prod (Rollup) + postbuild (dist/ complet)
+npm run serve:dist     # Servir dist/ sur http://localhost:5000 (ou port disponible)
 
-# PWA و Service Worker
-npm run sw:disable     # تعطيل service worker
-npm run sw:fix         # إصلاح مشاكل service worker
+# PWA et Service Worker
+npm run sw:disable     # Désactiver le service worker
+npm run sw:fix         # Corriger les problèmes de service worker
 ```
 
-## 🏗️ الهندسة المعمارية
+## 🏗️ البنية
 
-### هيكل الملفات
+### بنية الملفات
+
+توجد وحدات JavaScript **بصورة مسطحة داخل `js/`**، باستثناء ثلاثة مجلدات:
+`core/` و`components/` و`modes/`. ولذلك فإن اسم الملف هو الذي يعبّر عن
+التجميع (`arcade-*`، و`multimiam-*`، و`i18n*`…).
 
 ```
 leapmultix/
-├── index.html              # نقطة الدخول الرئيسية
+├── index.html              # Application (navigation par slides)
+├── modes.html              # Page publique : les modes de jeu
+├── parents.html            # Page publique : guide parents et enseignants
+├── pwa.html                # Page publique : installation hors ligne
+├── offline.html            # Page servie hors ligne par le service worker
+├── sw.js                   # Service worker (version alignée sur js/cache-updater.js)
+├── deploy.sh               # Déploiement S3 + invalidation CloudFront
 ├── js/
-│   ├── core/               # وحدات ES6 الأساسية
-│   │   ├── GameMode.js     # الفئة الأساسية للأوضاع
-│   │   ├── GameModeManager.js # إدارة وضع اللعبة
-│   │   ├── storage.js      # واجهة برمجة تطبيقات التخزين المحلي
-│   │   ├── audio.js        # إدارة الصوت
-│   │   ├── utils.js        # أدوات مساعدة عامة (المصدر الأساسي)
-│   │   ├── eventBus.js     # الاتصال عبر الأحداث
-│   │   ├── userState.js    # إدارة جلسة المستخدم
-│   │   ├── mainInit.js     # تهيئة DOM-ready
-│   │   ├── theme.js        # نظام السمات
-│   │   ├── userUi.js       # أدوات واجهة المستخدم
-│   │   ├── parental.js     # الرقابة الأبوية
-│   │   ├── adventure-data.js # بيانات وضع المغامرة
-│   │   ├── mult-stats.js   # إحصائيات الضرب
-│   │   ├── challenge-stats.js # إحصائيات التحدي
-│   │   └── daily-challenge.js # إدارة التحديات اليومية
-│   ├── components/         # مكونات واجهة المستخدم القابلة لإعادة الاستخدام
-│   │   ├── topBar.js       # شريط التنقل
-│   │   ├── infoBar.js      # أشرطة معلومات اللعبة
-│   │   ├── dashboard.js    # لوحة تحكم المستخدم
-│   │   └── customization.js # واجهة التخصيص
-│   ├── modes/              # أوضاع اللعب
-│   │   ├── QuizMode.js
-│   │   ├── ChallengeMode.js
-│   │   ├── AdventureMode.js
-│   │   ├── DiscoveryMode.js
-│   │   └── ArcadeMode.js
-│   ├── arcade/             # ألعاب أركيد مصغرة
-│   │   ├── arcade.js       # منسق الأركيد الرئيسي
-│   │   ├── arcade-invasion.js # غزاة الفضاء (31 KB)
-│   │   ├── arcade-multimemory.js # لعبة الذاكرة (31 KB)
-│   │   ├── arcade-multimiam.js # تكامل MultiMiam
-│   │   ├── arcade-multisnake.js # تكامل Snake
-│   │   ├── arcade-common.js, arcade-utils.js # أدوات مساعدة مشتركة
-│   │   ├── arcade-message.js, arcade-points.js # مكونات واجهة المستخدم
-│   │   └── arcade-scores.js # إدارة الدرجات
-│   ├── multimiam/          # لعبة باكمان (هندسة مفككة)
-│   │   ├── multimiam.js    # المتحكم الرئيسي
-│   │   ├── multimiam-engine.js # محرك اللعبة (15 KB)
-│   │   ├── multimiam-renderer.js # نظام العرض (9 KB)
-│   │   ├── multimiam-controls.js # إدارة التحكم (7 KB)
-│   │   ├── multimiam-questions.js # توليد الأسئلة (6 KB)
-│   │   └── multimiam-ui.js # عناصر الواجهة
-│   ├── multisnake.js       # لعبة الثعبان (38 KB)
-│   ├── navigation/         # نظام التنقل
-│   │   ├── slides.js       # التنقل القائم على الشرائح (goToSlide, showSlide)
-│   │   └── keyboard-navigation.js # دعم لوحة المفاتيح
-│   ├── ui/                 # واجهة المستخدم والملاحظات
-│   │   ├── uiUtils.js      # أدوات الواجهة
-│   │   ├── ui-feedback.js  # آليات الملاحظات
-│   │   ├── touch-support.js # دعم اللمس (7 KB)
-│   │   ├── virtual-keyboard.js # لوحة مفاتيح افتراضية
-│   │   ├── coin-display.js, coin-effects.js # نظام العملة
-│   │   ├── notifications.js # نظام الإشعارات
-│   │   └── badges.js       # نظام الشارات
-│   ├── media/              # إدارة الوسائط
-│   │   ├── VideoManager.js # إدارة تشغيل الفيديو (12 KB)
-│   │   └── responsive-image-loader.js # تحميل الصور (9 KB)
-│   ├── orchestration/      # التنسيق والتحميل
-│   │   ├── mode-orchestrator.js # تبديل الأوضاع
-│   │   ├── lazy-loader.js  # التحميل الديناميكي (10 KB)
-│   │   └── game-cleanup.js # تنظيف الحالة
-│   ├── utils/              # أدوات مساعدة
-│   │   ├── utils-es6.js    # المجمع الرئيسي (5 KB)
-│   │   ├── main-helpers.js # مساعدو التطبيق
-│   │   ├── helpers.js      # وظائف المساعدة القديمة
-│   │   ├── stats-utils.js  # أدوات الإحصائيات
-│   │   ├── difficulty.js   # إدارة الصعوبة
-│   │   └── questionGenerator.js # توليد الأسئلة
-│   ├── storage/            # التخزين والحالة
-│   │   ├── storage.js      # غلاف التخزين القديم
-│   │   └── userManager.js  # إدارة المستخدمين المتعددين (19 KB)
-│   ├── i18n/               # التدويل
-│   │   ├── i18n.js         # نظام i18n
-│   │   └── i18n-store.js   # تخزين الترجمات
-│   ├── security/           # الأمان ومعالجة الأخطاء
-│   │   ├── security-utils.js # حماية XSS، التعقيم
-│   │   ├── error-handlers.js # معالجة الأخطاء العالمية
-│   │   └── logger.js       # نظام التسجيل
-│   ├── accessibility/      # إمكانية الوصول
-│   │   ├── accessibility.js # ميزات إمكانية الوصول
-│   │   └── speech.js       # دعم تركيب الكلام
-│   ├── integration/        # التكامل والتحليلات
-│   │   ├── plausible-init.js # تحليلات Plausible
-│   │   ├── cache-updater.js # إدارة ذاكرة التخزين المؤقت (10 KB)
-│   │   └── imports.js      # أدوات الاستيراد
-│   ├── main-es6.js         # نقطة دخول ES6
-│   ├── main.js             # المنسق الرئيسي
-│   ├── bootstrap.js        # إعداد معالجات أحداث ES6
-│   └── game.js             # إدارة الحالة والتحديات اليومية
-├── css/                    # أنماط معيارية
-├── assets/                 # الموارد
-│   ├── images/             # الصور والرموز المتحركة
-│   ├── generated-images/   # الصور المستجيبة المولدة
-│   ├── sounds/             # المؤثرات الصوتية
-│   ├── translations/       # ملفات الترجمة (fr, en, es)
-│   └── videos/             # فيديوهات تعليمية
-├── tests/                  # الاختبارات المؤتمتة
-│   ├── __tests__/          # اختبارات الوحدة والتكامل
-│   └── tests-esm/          # اختبارات ESM (.mjs)
-├── scripts/                # نصوص الصيانة
-│   ├── compare-translations.cjs # مقارنة الترجمات
-│   └── cleanup-i18n-keys.cjs # تنظيف مفاتيح i18n
-└── dist/                   # بناء الإنتاج (تم إنشاؤه)
+│   ├── core/               # Socle applicatif
+│   │   ├── GameMode.js, GameModeManager.js   # Classe de base des modes
+│   │   ├── storage.js, userState.js          # Persistance et session
+│   │   ├── audio.js, theme.js, parental.js   # Son, thèmes, contrôle parental
+│   │   ├── eventBus.js, mainInit.js          # Événements, amorçage DOM
+│   │   ├── adventure-data.js                 # Niveaux du mode Aventure
+│   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
+│   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
+│   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
+│   │   └── operations/                       # Une classe par opération
+│   │       ├── Operation.js, OperationRegistry.js
+│   │       └── Multiplication.js, Addition.js, Subtraction.js, Division.js
+│   ├── components/         # Composants d'interface
+│   │   ├── topBar.js, infoBar.js, dashboard.js, customization.js
+│   │   ├── operationSelector.js, operationModeAvailability.js
+│   │   └── icons.js, tableSettingsModal.js
+│   ├── modes/              # Les cinq modes de jeu
+│   │   ├── DiscoveryMode.js, QuizMode.js, ChallengeMode.js
+│   │   └── AdventureMode.js, ArcadeMode.js
+│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux
+│   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
+│   ├── multisnake.js       # Mini-jeu Snake
+│   ├── i18n.js, i18n-store.js                # Internationalisation
+│   ├── security-utils.js, error-handlers.js, logger.js
+│   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
+│   ├── slides.js, mode-orchestrator.js, lazy-loader.js, game-cleanup.js
+│   ├── VideoManager.js, responsive-image-loader.js
+│   ├── userManager.js, main-helpers.js, utils-es6.js, questionGenerator.js
+│   └── main-es6.js, main.js, bootstrap.js, game.js   # Points d'entrée
+├── css/                    # Feuilles de style (jetons de design : themes.css)
+├── assets/
+│   ├── images/             # Sources PNG (avatars, sprites, fonds)
+│   ├── generated-images/   # Variantes responsives (généré, hors git)
+│   ├── fonts/, sounds/, videos/, icons/, social/
+│   └── translations/       # fr.json, en.json, es.json
+├── tests/__tests__/        # Tests Jest (jsdom, et bout-en-bout via Puppeteer)
+├── tests-esm/              # Tests Jest en modules ES (.mjs)
+├── scripts/                # Génération d'assets, i18n, rapports
+├── docs/media/             # Captures et animations du README
+└── dist/                   # Build de production (généré)
 ```
 
-### الهندسة الفنية
+### البنية التقنية
 
-**وحدات ES6 الحديثة**: يستخدم المشروع بنية معيارية مع فئات ES6 والاستيراد/التصدير الأصلي.
+**وحدات ES6 حديثة**: يستخدم المشروع بنية معيارية تضم أصناف ES6 وعمليات استيراد وتصدير أصلية.
 
-**مكونات قابلة لإعادة الاستخدام**: واجهة مبنية بمكونات UI مركزية (TopBar, InfoBar, Dashboard, Customization).
+**مكوّنات قابلة لإعادة الاستخدام**: واجهة مبنية باستخدام مكوّنات UI مركزية (TopBar وInfoBar وDashboard وCustomization).
 
-**التحميل الكسول**: تحميل ذكي للوحدات عند الطلب عبر `lazy-loader.js` لتحسين الأداء الأولي.
+**Lazy Loading**: تحميل ذكي للوحدات عند الطلب عبر `lazy-loader.js` لتحسين الأداء الأولي.
 
-**نظام تخزين موحد**: واجهة برمجة تطبيقات مركزية لاستمرار بيانات المستخدم عبر LocalStorage مع بدائل.
+**نظام تخزين موحّد**: API مركزية للاحتفاظ ببيانات المستخدم عبر LocalStorage مع حلول احتياطية.
 
-**إدارة صوت مركزية**: تحكم في الصوت مع دعم متعدد اللغات وتفضيلات لكل مستخدم.
+**إدارة مركزية للصوت**: التحكم بالصوت مع دعم تعدد اللغات وتفضيلات خاصة بكل مستخدم.
 
-**ناقل الأحداث**: اتصال مفصول يحركه الحدث بين المكونات لهندسة قابلة للصيانة.
+**Event Bus**: تواصل قائم على الأحداث وغير مترابط بين المكوّنات لضمان بنية قابلة للصيانة.
 
-**التنقل عبر الشرائح**: نظام تنقل يعتمد على شرائح مرقمة (slide0, slide1, إلخ) مع `goToSlide()`.
+**التنقل عبر الشرائح**: نظام تنقل يستند إلى شرائح مرقمة (slide0 وslide1 وما إلى ذلك) باستخدام `goToSlide()`.
 
-**الأمان**: حماية XSS والتعقيم عبر `security-utils.js` لجميع معالجات DOM.
+**الأمان**: الحماية من XSS وتنقية المدخلات عبر `security-utils.js` لجميع عمليات معالجة DOM.
 
 ## 🎯 أوضاع اللعب بالتفصيل
 
-### وضع الاكتشاف
+### وضع الاستكشاف
 
-واجهة استكشاف مرئية لجداول الضرب مع:
+واجهة للاستكشاف المرئي لجداول الضرب تتضمن:
 
-- تصور تفاعلي لعمليات الضرب
-- رسوم متحركة ومساعدات للذاكرة
-- سحب وإفلات تعليمي
-- تقدم حر لكل جدول
+- عرضًا تفاعليًا لعمليات الضرب
+- رسومًا متحركة ووسائل مساعدة على التذكر
+- سحبًا وإفلاتًا تعليميًا
+- تقدمًا حرًا حسب الجدول
 
 ### وضع الاختبار
 
-أسئلة متعددة الخيارات مع:
+أسئلة متعددة الخيارات تتضمن:
 
-- 10 أسئلة لكل جلسة
-- تقدم تكيفي بناءً على النجاح
-- لوحة مفاتيح رقمية افتراضية
-- نظام التسلسل (سلسلة من الإجابات الصحيحة)
+- 10 أسئلة في كل جلسة
+- تقدمًا تكيّفيًا وفقًا للإجابات الصحيحة
+- لوحة أرقام افتراضية
+- نظام سلسلة من الإجابات الصحيحة
 
 ### وضع التحدي
 
-سباق ضد الزمن مع:
+سباق مع الزمن يتضمن:
 
 - 3 مستويات صعوبة (مبتدئ، متوسط، صعب)
-- مكافأة وقت للإجابات الصحيحة
-- نظام الحياة
-- لوحة المتصدرين لأفضل الدرجات
+- وقتًا إضافيًا مقابل الإجابات الصحيحة
+- نظام أرواح
+- ترتيبًا لأفضل النتائج
 
 ### وضع المغامرة
 
-تقدم سردي مع:
+تقدم قصصي يتضمن:
 
-- 12 مستوى موضوعي قابل للفتح
-- خريطة تفاعلية مع تقدم مرئي
+- 10 مستويات ذات سمات مختلفة قابلة للفتح
+- خريطة تفاعلية تعرض التقدم بصريًا
 - قصة غامرة مع شخصيات
-- نظام النجوم والمكافآت
+- نظام نجوم ومكافآت
 
-### ألعاب أركيد مصغرة
+### ألعاب Arcade المصغّرة
 
-تقدم كل لعبة مصغرة:
+تقدم كل لعبة مصغّرة:
 
-- اختيار الصعوبة والتخصيص
-- نظام الحياة والنتيجة
-- ضوابط لوحة المفاتيح واللمس
-- لوحات المتصدرين الفردية لكل مستخدم
+- اختيار مستوى الصعوبة والتخصيص
+- نظام أرواح ونتائج
+- تحكمًا بلوحة المفاتيح واللمس
+- ترتيبًا فرديًا لكل مستخدم
 
 ## 🛠️ التطوير
 
 ### سير عمل التطوير
 
-**هام: لا تلتزم أبدًا مباشرة بـ main**
+**لا تُجرِ أي commit مباشرة على main مطلقًا.** يعمل المشروع من خلال فروع
+الميزات.
 
-يستخدم المشروع سير عمل يعتمد على فروع الميزات:
+**1. إنشاء فرع**، باستخدام `feat/` لميزة و`fix/` لإصلاح:
 
-1.  **إنشاء فرع**:
+```bash
+git checkout -b feat/nom-de-la-fonctionnalite
+```
 
-    ```bash
-    git checkout -b feat/feature-name
-    # أو
-    git checkout -b fix/bug-name
-    ```
+**2. التطوير والتحقق.** يأتي التنسيق أولًا، إذ ترفضه CI
+حتى قبل تشغيل الاختبارات.
 
-2.  **التطوير والاختبار**:
+```bash
+npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
+npm run format        # Formater si nécessaire
+npm run lint          # Qualité du code
+npm run test          # Tests
+npm run test:coverage # Couverture
+```
 
-    ```bash
-    npm run format:check  # تحقق دائمًا من التنسيق أولاً
-    npm run format        # قم بالتنسيق إذا لزم الأمر
-    npm run lint          # تحقق من جودة الكود
-    npm run test          # قم بتشغيل الاختبارات
-    npm run test:coverage # تحقق من التغطية
-    ```
+**3. إجراء commit على الفرع**، ثم دفعه:
 
-3.  **الالتزام بالفرع**:
+```bash
+git add .
+git commit -m "feat: description de la fonctionnalité"
+git push -u origin feat/nom-de-la-fonctionnalite
+```
 
-    ```bash
-    git add .
-    git commit -m "feat: description of the feature"
-    ```
+**4. فتح pull request** وانتظار التحليلات: verify وCodacy
+وCodeFactor وSonarCloud. تُصلح المشكلات حتى تصبح جميع النتائج خضراء قبل الدمج.
 
-4.  **الدفع وإنشاء طلب سحب**:
-    ```bash
-    git push -u origin feat/feature-name
-    ```
+**أسلوب commit**: رسائل موجزة بصيغة الأمر (مثل: "Fix arcade init errors" و"Refactor cache updater")
 
-**نمط الالتزام**: موجز، صيغة الأمر (مثل "Fix arcade init errors", "Refactor cache updater")
+**بوابة الجودة**: التأكد من نجاح `npm run lint` و`npm test` و`npm run test:coverage` قبل كل commit
 
-**بوابة الجودة**: تأكد من اجتياز `npm run lint` و `npm test` و `npm run test:coverage` قبل كل التزام
+### بنية المكوّنات
 
-### هندسة المكونات
+**GameMode (الصنف الأساسي)**: ترث جميع الأوضاع من صنف مشترك ذي أساليب موحّدة.
 
-**GameMode (الفئة الأساسية)**: ترث جميع الأوضاع من فئة مشتركة بأساليب موحدة.
+**GameModeManager**: تنظيم مركزي لتشغيل الأوضاع وإدارتها.
 
-**GameModeManager**: تنسيق مركزي لإطلاق وإدارة الأوضاع.
+**مكوّنات UI**: توفر TopBar وInfoBar وDashboard وCustomization واجهة متسقة.
 
-**مكونات UI**: توفر TopBar و InfoBar و Dashboard و Customization واجهة متسقة.
+**Lazy Loading**: تُحمَّل الوحدات عند الطلب لتحسين الأداء الأولي.
 
-**التحميل الكسول**: يتم تحميل الوحدات عند الطلب لتحسين الأداء الأولي.
-
-**ناقل الأحداث**: اتصال مفصول بين المكونات عبر نظام الأحداث.
+**Event Bus**: تواصل غير مترابط بين المكوّنات عبر نظام الأحداث.
 
 ### الاختبارات
 
-يتضمن المشروع مجموعة اختبار شاملة:
+يتضمن المشروع حزمة اختبارات شاملة:
 
-- اختبارات الوحدة للوحدات الأساسية
-- اختبارات التكامل للمكونات
-- اختبارات وضع اللعبة
-- تغطية الكود الآلية
+- اختبارات وحدات لوحدات core
+- اختبارات تكامل للمكوّنات
+- اختبارات أوضاع اللعب
+- تغطية آلية للشيفرة
 
 ```bash
-npm test              # جميع الاختبارات (CJS)
-npm test:core         # اختبارات الوحدات الأساسية
-npm test:integration  # اختبارات التكامل
-npm test:coverage     # تقرير التغطية
-npm run test:esm      # اختبارات ESM (مثل components/dashboard) عبر vm-modules
+npm test              # Tous les tests (CJS)
+npm test:core         # Tests des modules centraux
+npm test:integration  # Tests d'intégration
+npm test:coverage     # Rapport de couverture
+npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 ```
 
-### بناء الإنتاج
+### نسخة الإنتاج
 
-- **Rollup**: يجمع `js/main-es6.js` في ESM مع تقسيم الكود وخرائط المصدر
-- **Terser**: تصغير تلقائي للتحسين
-- **ما بعد البناء**: ينسخ `css/` و `assets/`، والأيقونات المفضلة (`favicon.ico`، `favicon.png`، `favicon.svg`)، و `sw.js`، ويعيد كتابة `dist/index.html` إلى ملف الإدخال المجزأ (مثل `main-es6-*.js`)
-- **المجلد النهائي**: `dist/` جاهز للخدمة بشكل ثابت
+- **Rollup**: تجميع `js/main-es6.js` بصيغة ESM مع code-splitting وsourcemaps
+- **Terser**: تصغير آلي لأغراض التحسين
+- **Post-build**: نسخ `css/` و`assets/`، وأيقونات favicons ‏(`favicon.ico` و`favicon.png` و`favicon.svg`)، و`sw.js`، وإعادة كتابة `dist/index.html` إلى ملف الإدخال ذي الاسم المرمّز (مثل: `main-es6-*.js`)
+- **المجلد النهائي**: `dist/` جاهز للتقديم بصورة ثابتة
 
 ```bash
-npm run build      # يولد dist/
-npm run serve:dist # يخدم dist/ (المنفذ 5000)
+npm run build      # génère dist/
+npm run serve:dist # sert dist/ (port 5000)
 ```
 
 ### التكامل المستمر
 
-**GitHub Actions**: خط أنابيب آلي في `.github/workflows/ci.yml`
+**GitHub Actions**: ‏`.github/workflows/ci.yml`، ويُشغَّل مع كل push إلى
+`main` ومع كل pull request.
 
-يعمل خط أنابيب CI/CD تلقائيًا عند كل دفع وطلب سحب:
+**`verify`** — بوابة الجودة الإلزامية:
 
-**الوظائف الرئيسية**:
+- `npm ci` ثم `npm run verify` ‏(ESLint واختبارات Jest والتغطية)
+- `npm run format:check` ‏(Prettier)
 
-1.  **build-test**: وظيفة التحقق الرئيسية
-    - تثبيت التبعيات: `npm ci`
-    - التحقق من التنسيق: `npm run format:check`
-    - التحليل الثابت: `npm run lint`
-    - اختبارات الوحدة: `npm run test`
-    - تدقيق الأمان: `npm audit`
-    - إنشاء قطعة أثرية للتغطية
+**`seo-report`** — بعد `verify`: تدقيق Lighthouse للموقع المباشر
+لتتبّع مقاييس SEO بمرور الوقت.
 
-2.  **accessibility**: تدقيق إمكانية الوصول (غير محظور)
-    - يشغل `npm run audit:accessibility`
-    - يولد تقرير إمكانية الوصول WCAG 2.1 AA
+**التحليلات الخارجية** المرتبطة بطلبات pull request: ‏Codacy وCodeFactor
+وSonarCloud. تتطلب بوابة SonarCloud الحصول على تقييم A في الموثوقية والأمان
+وقابلية الصيانة للشيفرة الجديدة.
 
-3.  **test-esm**: اختبارات وحدات ES6
-    - يشغل `npm run test:esm` مع Jest VM modules
-    - يتحقق من صحة استيراد/تصدير ES6
+**النشر**: يزامن `./deploy.sh` الموقع مع S3 ويبطل ذاكرة التخزين المؤقت
+لـCloudFront. ويعيد البرنامج النصي إنشاء الصور المتجاوبة عند الحاجة، إذ إنها غير موجودة في git.
 
-4.  **lighthouse**: تدقيق الأداء (غير محظور)
-    - تدقيق أداء الجوال
-    - يولد قطع أثرية لتقرير Lighthouse
-    - مقاييس Core Web Vitals
+### PWA (Progressive Web App)
 
-**شارات الجودة**:
+LeapMultix هو تطبيق PWA متكامل يدعم العمل دون اتصال ويمكن تثبيته.
 
-- حالة بناء CI (GitHub Actions)
-- درجة CodeFactor
-- شارة Codacy
-- بوابة جودة SonarCloud
+**Service Worker** ‏(`sw.js`):
 
-### PWA (تطبيق ويب تقدمي)
+- التنقل: Network-first مع رجوع احتياطي دون اتصال إلى `offline.html`
+- الصور: Cache-first لتحسين الأداء
+- الترجمات: Stale-while-revalidate للتحديث في الخلفية
+- JS/CSS: ‏Network-first لتقديم أحدث إصدار دائمًا
+- إدارة تلقائية للإصدارات عبر `cache-updater.js`
 
-LeapMultix هو PWA كامل مع دعم دون اتصال وقدرة على التثبيت.
+**Manifest** ‏(`manifest.json`):
 
-**Service Worker** (`sw.js`):
+- أيقونات SVG وPNG لجميع الأجهزة
+- إمكانية التثبيت على الأجهزة المحمولة (Add to Home Screen)
+- إعداد standalone لتجربة شبيهة بالتطبيقات
+- دعم السمات والألوان
 
-- التنقل: الشبكة أولاً مع التراجع دون اتصال إلى `offline.html`
-- الصور: ذاكرة التخزين المؤقت أولاً لتحسين الأداء
-- الترجمات: قديمة أثناء إعادة التحقق للتحديثات في الخلفية
-- JS/CSS: الشبكة أولاً لخدمة أحدث إصدار دائمًا
-- إدارة الإصدار التلقائية عبر `cache-updater.js`
-
-**Manifest** (`manifest.json`):
-
-- أيقونات SVG و PNG لجميع الأجهزة
-- التثبيت ممكن على الهاتف المحمول (إضافة إلى الشاشة الرئيسية)
-- تكوين مستقل لتجربة تشبه التطبيق
-- دعم للسمات والألوان
-
-**اختبار الوضع دون اتصال محليًا**:
-
-1.  ابدأ خادم التطوير:
-
-    ```bash
-    npm run serve
-    ```
-
-    افتح `http://localhost:8080` (أو المنفذ المعروض)
-
-2.  الاختبار يدويًا:
-    - قطع الشبكة في DevTools (علامة تبويب Network ← Offline)
-    - تحديث الصفحة ← يتم عرض `offline.html`
-
-3.  اختبار آلي (يتطلب Puppeteer):
-    ```bash
-    npm run test:pwa-offline
-    ```
-
-**نصوص إدارة Service Worker**:
+**اختبار وضع عدم الاتصال محليًا.** شغّل الخادم، ثم افتح
+`http://localhost:8080` (أو المنفذ المعروض):
 
 ```bash
-npm run sw:disable  # تعطيل service worker
-npm run sw:fix      # إصلاح مشاكل ذاكرة التخزين المؤقت
+npm run serve
+```
+
+يدويًا: اقطع الاتصال بالشبكة من أدوات التطوير (علامة تبويب الشبكة،
+وضع عدم الاتصال)، ثم حدّث الصفحة. يجب أن يظهر `offline.html`.
+
+تلقائيًا باستخدام Puppeteer:
+
+```bash
+npm run test:pwa-offline
+```
+
+**برامج إدارة Service Worker النصية**:
+
+```bash
+npm run sw:disable  # Désactiver le service worker
+npm run sw:fix      # Corriger les problèmes de cache
 ```
 
 ### معايير الجودة
 
-**أدوات جودة الكود**:
+**أدوات جودة الشيفرة**:
 
-- **ESLint**: تكوين حديث مع تكوين مسطح (`eslint.config.js`)، دعم ES2022
-- **Prettier**: تنسيق الكود التلقائي (`.prettierrc`)
-- **Stylelint**: التحقق من صحة CSS (`.stylelintrc.json`)
-- **JSDoc**: توثيق تلقائي للوظائف مع تحليل التغطية
+- **ESLint**: إعداد حديث باستخدام flat config ‏(`eslint.config.js`)، مع دعم ES2022
+- **Prettier**: تنسيق تلقائي للشيفرة (`.prettierrc`)
+- **Stylelint**: التحقق من CSS ‏(`.stylelintrc.json`)
+- **JSDoc**: توثيق تلقائي للدوال مع تحليل التغطية
 
-**قواعد الكود المهمة**:
+**قواعد مهمة للشيفرة**:
 
-- إزالة المتغيرات والمعلمات غير المستخدمة (`no-unused-vars`)
-- استخدام معالجة أخطاء محددة (بدون عمليات التقاط فارغة)
-- تجنب `innerHTML` لصالح وظائف `security-utils.js`
-- الحفاظ على التعقيد المعرفي أقل من 15 للوظائف
-- استخراج الوظائف المعقدة إلى مساعدين أصغر
+- إزالة المتغيرات والمعاملات غير المستخدمة (`no-unused-vars`)
+- استخدام معالجة محددة للأخطاء (من دون كتل catch فارغة)
+- تجنب `innerHTML` لصالح دوال `security-utils.js`
+- إبقاء التعقيد المعرفي للدوال أقل من 15
+- استخراج الدوال المعقدة إلى دوال مساعدة أصغر
 
 **الأمان**:
 
-- **حماية XSS**: استخدم الوظائف من `security-utils.js`:
-  - `appendSanitizedHTML()` بدلاً من `innerHTML`
+- **الحماية من XSS**: استخدام دوال `security-utils.js`:
+  - `appendSanitizedHTML()` بدلًا من `innerHTML`
   - `createSafeElement()` لإنشاء عناصر آمنة
-  - `setSafeMessage()` لمحتوى النص
-- **النصوص الخارجية**: سمة `crossorigin="anonymous"` إلزامية
-- **التحقق من الإدخال**: قم دائمًا بتعقيم البيانات الخارجية
-- **سياسة أمان المحتوى**: رؤوس CSP لتقييد مصادر النصوص
+  - `setSafeMessage()` للمحتوى النصي
+- **البرامج النصية الخارجية**: السمة `crossorigin="anonymous"` إلزامية
+- **التحقق من المدخلات**: تنقية البيانات الخارجية دائمًا
+- **Content Security Policy**: ترويسات CSP لتقييد مصادر البرامج النصية
 
 **إمكانية الوصول**:
 
 - التوافق مع WCAG 2.1 AA
-- تنقل كامل عبر لوحة المفاتيح
+- تنقل كامل بلوحة المفاتيح
 - أدوار ARIA وتسميات مناسبة
-- تباين ألوان متوافق
+- تباينات ألوان متوافقة
 
 **الأداء**:
 
-- التحميل الكسول للوحدات عبر `lazy-loader.js`
-- تحسينات CSS والأصول المستجيبة
+- Lazy loading للوحدات عبر `lazy-loader.js`
+- تحسينات CSS وأصول متجاوبة
 - Service Worker للتخزين المؤقت الذكي
-- تقسيم الكود والتصغير في الإنتاج
+- Code splitting وتصغير الشيفرة في الإنتاج
 
 ## 📱 التوافق
 
 ### المتصفحات المدعومة
 
-- Chrome/Chromium 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+تعتمد الواجهة على `oklch()` للألوان وعلى `:has()` للحالات
+السياقية، مما يحدد الحد الأدنى التالي:
+
+- Chrome / Chromium 111+
+- Edge 111+
+- Firefox 121+
+- Safari 15.4+
 
 ### الأجهزة
 
-- **سطح المكتب**: ضوابط لوحة المفاتيح والماوس
-- **الأجهزة اللوحية**: واجهة لمس محسنة
-- **الهواتف الذكية**: تصميم سريع الاستجابة تكيفي
+- **أجهزة سطح المكتب**: عناصر تحكم بلوحة المفاتيح والفأرة
+- **الأجهزة اللوحية**: واجهة لمسية محسّنة
+- **الهواتف الذكية**: تصميم متجاوب وتكيّفي
 
 ### إمكانية الوصول
 
-- تنقل كامل عبر لوحة المفاتيح (Tab، الأسهم، Escape)
+- تنقّل كامل بلوحة المفاتيح (Tab، الأسهم، Escape)
 - أدوار ARIA وتسميات لقارئات الشاشة
-- تباين ألوان متوافق
-- دعم التكنولوجيا المساعدة
+- تباينات ألوان متوافقة
+- دعم التقنيات المساعدة
 
-## 🌍 التعريب
+## 🌍 التوطين
 
-دعم كامل متعدد اللغات:
+دعم كامل لعدة لغات:
 
 - **الفرنسية** (اللغة الافتراضية)
 - **الإنجليزية**
@@ -591,13 +557,13 @@ npm run sw:fix      # إصلاح مشاكل ذاكرة التخزين المؤق
 
 ```json
 {
-  "menu_start": "بدء",
-  "quiz_correct": "أحسنت!",
+  "menu_start": "Commencer",
+  "quiz_correct": "Bravo !",
   "arcade_invasion_title": "MultiInvaders"
 }
 ```
 
-### نصوص إدارة i18n
+### نصوص إدارة i18n البرمجية
 
 **`npm run i18n:verify`** - التحقق من اتساق مفاتيح الترجمة
 
@@ -605,85 +571,85 @@ npm run sw:fix      # إصلاح مشاكل ذاكرة التخزين المؤق
 
 **`npm run i18n:compare`** - مقارنة ملفات الترجمة مع fr.json (المرجع)
 
-يضمن هذا النص البرمجي (`scripts/compare-translations.cjs`) مزامنة جميع ملفات اللغة:
+يضمن هذا النص البرمجي (`scripts/compare-translations.cjs`) مزامنة جميع ملفات اللغات:
 
 **الميزات:**
 
-- الكشف عن المفاتيح المفقودة (موجودة في fr.json ولكنها غير موجودة في لغات أخرى)
-- الكشف عن المفاتيح الإضافية (موجودة في لغات أخرى ولكن ليس في fr.json)
-- تحديد القيم الفارغة (`""`, `null`, `undefined`, `[]`)
-- التحقق من اتساق النوع (سلسلة مقابل مصفوفة)
-- تسطيح هياكل JSON المتداخلة إلى تدوين نقطي (مثل `arcade.multiMemory.title`)
-- إنشاء تقرير مفصل في وحدة التحكم
+- اكتشاف المفاتيح المفقودة (الموجودة في fr.json والغائبة عن اللغات الأخرى)
+- اكتشاف المفاتيح الإضافية (الموجودة في اللغات الأخرى وغير الموجودة في fr.json)
+- تحديد القيم الفارغة (`""`، `null`، `undefined`، `[]`)
+- التحقق من اتساق الأنواع (string مقابل array)
+- تسطيح بُنى JSON المتداخلة باستخدام ترميز النقاط (مثال: `arcade.multiMemory.title`)
+- إنشاء تقرير مفصّل في وحدة التحكم
 - حفظ تقرير JSON في `docs/translations-comparison-report.json`
 
-**مثال للمخرجات:**
+**مثال على المخرجات:**
 
 ```
-🔍 تحليل مقارن لملفات الترجمة
+🔍 Analyse comparative des fichiers de traduction
 
-📚 اللغة المرجعية: fr.json
-✅ fr.json: 335 مفتاح
+📚 Langue de référence: fr.json
+✅ fr.json: 570 clés
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 تحليل en.json
+📝 Analyse de en.json
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 إجمالي المفاتيح: 335
-✅ لا توجد مفاتيح مفقودة
-✅ لا توجد مفاتيح إضافية
-✅ لا توجد قيم فارغة
+📊 Total de clés: 570
+✅ Aucune clé manquante
+✅ Aucune clé supplémentaire
+✅ Aucune valeur vide
 
-📊 الملخص النهائي
-  fr.json: 335 مفتاح
-  en.json: 335 مفتاح
-  es.json: 335 مفتاح
+📊 RÉSUMÉ FINAL
+  fr.json: 570 clés
+  en.json: 570 clés
+  es.json: 570 clés
 
-✅ جميع ملفات الترجمة متزامنة تمامًا!
+✅ Tous les fichiers de traduction sont parfaitement synchronisés !
 ```
 
-**تغطية الترجمة:**
+**تغطية الترجمات:**
 
-- واجهة مستخدم كاملة
-- تعليمات اللعبة
+- واجهة المستخدم الكاملة
+- تعليمات الألعاب
 - رسائل الخطأ والملاحظات
 - الأوصاف والمساعدة السياقية
-- محتوى سردي لوضع المغامرة
-- تسميات إمكانية الوصول و ARIA
+- المحتوى السردي لوضع المغامرة
+- تسميات إمكانية الوصول وARIA
 
 ## 📊 تخزين البيانات
 
 ### بيانات المستخدم
 
 - الملفات الشخصية والتفضيلات
-- التقدم حسب وضع اللعبة
-- درجات وإحصائيات ألعاب الأركيد
+- التقدّم حسب وضع اللعب
+- النتائج والإحصاءات لألعاب الأركيد
 - إعدادات التخصيص
 
 ### الميزات التقنية
 
-- التخزين المحلي (localStorage) مع بدائل
-- عزل البيانات لكل مستخدم
-- حفظ التقدم التلقائي
-- ترحيل تلقائي للبيانات القديمة
+- التخزين المحلي (localStorage) مع حلول بديلة
+- عزل البيانات حسب المستخدم
+- الحفظ التلقائي للتقدّم
+- الترحيل التلقائي للبيانات القديمة
 
 ## 🐛 الإبلاغ عن مشكلة
 
-يمكن الإبلاغ عن المشاكل عبر مشاكل GitHub. يرجى تضمين:
+يمكن الإبلاغ عن المشكلات عبر GitHub Issues. يُرجى تضمين:
 
-- وصف مفصل للمشكلة
-- خطوات لإعادة إنتاجها
-- المتصفح والإصدار
-- لقطات شاشة إذا كانت ذات صلة
+- وصف مفصّل للمشكلة
+- خطوات إعادة إنتاجها
+- المتصفح وإصداره
+- لقطات شاشة إن كانت ذات صلة
 
 ## 💝 دعم المشروع
 
-**[☕ تبرع عبر PayPal](https://paypal.me/jls)**
+**[☕ التبرع عبر PayPal](https://paypal.me/jls)**
 
-## 📄 الرخصة
+## 📄 الترخيص
 
-هذا المشروع مرخص بموجب رخصة AGPL v3. راجع ملف `LICENSE` لمزيد من التفاصيل.
+هذا المشروع مرخّص بموجب AGPL v3. راجع الملف `LICENSE` لمزيد من التفاصيل.
 
 ---
 
-_LeapMultix - تطبيق تعليمي حديث لتعلم جداول الضرب_
+_LeapMultix — تطبيق تعليمي حرّ لتعلّم العمليات الحسابية الأربع_

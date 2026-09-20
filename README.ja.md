@@ -1,589 +1,540 @@
 <details>
-<summary>このドキュメントは他の言語でも利用可能です</summary>
+<summary>このドキュメントは他の言語でもご覧いただけます</summary>
 
-- [English](./README.en.md)
-- [Español](./README.es.md)
-- [Português](./README.pt.md)
-- [Deutsch](./README.de.md)
-- [中文](./README.zh.md)
-- [हिन्दी](./README.hi.md)
-- [العربية](./README.ar.md)
-- [Français](./README.md)
-- [Italiano](./README.it.md)
-- [Svenska](./README.sv.md)
-- [Polski](./README.pl.md)
-- [Nederlands](./README.nl.md)
-- [Română](./README.ro.md)
-- [한국어](./README.ko.md)
+- [英語](./README.en.md)
+- [スペイン語](./README.es.md)
+- [ポルトガル語](./README.pt.md)
+- [ドイツ語](./README.de.md)
+- [中国語](./README.zh.md)
+- [ヒンディー語](./README.hi.md)
+- [アラビア語](./README.ar.md)
+- [イタリア語](./README.it.md)
+- [スウェーデン語](./README.sv.md)
+- [ポーランド語](./README.pl.md)
+- [オランダ語](./README.nl.md)
+- [ルーマニア語](./README.ro.md)
+- [日本語](./README.ja.md)
+- [韓国語](./README.ko.md)
 
 </details>
 
 # LeapMultix
 
-<!-- バッジ（GitHub移行後に <owner>/<repo> を更新） -->
-
 ![CI](https://img.shields.io/github/actions/workflow/status/jls42/leapmultix/ci.yml?branch=main)
+![ライセンス：AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/jls42/leapmultix/badge)](https://www.codefactor.io/repository/github/jls42/leapmultix)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Codacy バッジ](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![品質ゲートのステータス](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
+[![信頼性評価](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![セキュリティ評価](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![保守性評価](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![技術的負債](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+
+[![バグ](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![脆弱性](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![コードスメル](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![重複行（%）](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![コード行数](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 ## 目次
 
 - [説明](#説明)
+- [概要](#-概要)
 - [機能](#-機能)
 - [クイックスタート](#-クイックスタート)
 - [アーキテクチャ](#-アーキテクチャ)
-- [詳細なゲームモード](#-詳細なゲームモード)
+- [ゲームモードの詳細](#-ゲームモードの詳細)
 - [開発](#-開発)
 - [互換性](#-互換性)
-- [ローカリゼーション](#-ローカリゼーション)
-- [データ保存](#-データ保存)
-- [問題の報告](#-問題の報告)
+- [ローカライズ](#-ローカライズ)
+- [データストレージ](#-データストレージ)
+- [問題を報告する](#-問題を報告する)
 - [ライセンス](#-ライセンス)
 
 ## 説明
 
-LeapMultixは、子供たち（8〜12歳）が4つの算術演算：掛け算（×）、足し算（+）、引き算（−）、割り算（÷）を習得するために設計された最新のインタラクティブな教育用Webアプリケーションです。このアプリケーションは、直感的でアクセスしやすく、多言語に対応したインターフェースで、**5つのゲームモード**と**4つのアーケードミニゲーム**を提供します。
+LeapMultix は、6～12歳の子どもが乗算（×）、加算（+）、減算（−）、除算（÷）の4つの算術演算を習得するための、インタラクティブな教育用ウェブアプリケーションです。直感的でアクセシブルな多言語インターフェースに、**5つのゲームモード**と**4つのアーケード・ミニゲーム**を備えています。
 
-**マルチ演算サポート：** クイズモードとチャレンジモードでは、すべての演算を練習できます。発見、冒険、アーケードモードは掛け算に焦点を当てていますが、すべての演算をサポートするように設計されています。
+**複数演算への対応：** 5つすべてのモードで4つの演算を利用できます。ホーム画面で選択した演算が、学習全体に適用されます。
 
 **開発者：** Julien LS (contact@jls42.org)
 
 **オンラインURL：** https://leapmultix.jls42.org/
 
+## 📸 概要
+
+### 各画面
+
+|                                                                                                     |                                                                                                |
+| :-------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: |
+|             ![「誰がプレイする？」画面：プロフィールの選択](docs/media/01-accueil.webp)             |              ![メインメニュー：演算と5つのモードの選択](docs/media/02-menu.webp)               |
+|       **誰がプレイする？** — 子どもごとに、アバターと進捗を備えたプロフィールを作成できます。       |               **メニュー** — ここで演算を選択してから、5つのモードを開始します。               |
+|                    ![発見モード：4の段を点で表示](docs/media/03-decouverte.webp)                    |              ![クイズモード：不正解は赤、正解は緑で表示](docs/media/04-quiz.webp)              |
+|          **発見** — 各式を点、ジャンプ、または数え上げで示し、その段の覚え方も表示します。          |        **クイズ** — 子どもが選んだ答えを正解の横に残し、解説で計算を詳しく説明します。         |
+|           ![チャレンジモード：カウントダウンと継続中の連続正解](docs/media/05-defi.webp)            | ![アドベンチャーモード：10レベルのマップとロックされた後続レベル](docs/media/06-aventure.webp) |
+|     **チャレンジ** — 時間との競争です。間違えると、正解を読めるようにタイマーが一時停止します。     |              **アドベンチャー** — 星を集めながら、10のレベルを順番に開放します。               |
+|                  ![アーケードメニュー：4つのミニゲーム](docs/media/07-arcade.webp)                  |            ![ダッシュボード：段ごとの星と統計](docs/media/08-tableau-de-bord.webp)             |
+|               **アーケード** — 難易度設定と宇宙船の選択が可能な4つのミニゲームです。                |       **ダッシュボード** — 段ごとの星、復習すべき段、モードごとのスコアを確認できます。        |
+|      ![カスタマイズ：アバター、テーマ、アクセシビリティ](docs/media/09-personnalisation.webp)       |                                                                                                |
+| **カスタマイズ** — アバター、配色テーマ、文字サイズ、高コントラスト、保護者用コードを設定できます。 |                                                                                                |
+
+### アーケード・ミニゲーム
+
+4つのゲームでは、ゲームエリアの上に残り時間とライフとともに表示される同じ形式の問題に答えますが、ゲームごとに異なる操作が必要です。
+
+|                                                                                                             |                                                                                |
+| :---------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------: |
+|        ![MultiInvaders：数字を掲げたモンスターと画面下部の宇宙船](docs/media/10-multiinvaders.webp)         |     ![MultiMiam：選択肢の数字が置かれた迷路](docs/media/11-multimiam.webp)     |
+|      **MultiInvaders** — 不正解を撃ち、正解は撃たずに残します。その中には救出する仲間が隠れています。       |   **MultiMiam** — モンスターを避けながら迷路を進み、正しい答えを捕まえます。   |
+| ![MultiMemory：カードのグリッドと、計算式および数字が表示された2枚のカード](docs/media/12-multimemory.webp) | ![MultiSnake：草原にいるヘビと数字付きのリンゴ](docs/media/13-multisnake.webp) |
+|              **MultiMemory** — めくられた計算式の答えが書かれたカードを記憶から探し出します。               |  **MultiSnake** — 正しい数字を食べて成長し、それ以外の数字をすべて避けます。   |
+
 ## ✨ 機能
 
 ### 🎮 ゲームモード
 
-- **発見モード**：各演算に適応した視覚的およびインタラクティブな探索
-- **クイズモード**：4つの演算（×、+、−、÷）すべてをサポートし、適応的な進行を備えた多肢選択問題
-- **チャレンジモード**：4つの演算（×、+、−、÷）すべてとさまざまな難易度レベルを備えたタイムトライアル
-- **アドベンチャーモード**：4つの演算すべてをサポートするレベルごとの物語の進行
+- **発見モード**：各演算に合わせた視覚的でインタラクティブな学習
+- **クイズモード**：4つの演算（×、+、−、÷）に対応した選択式問題と適応型の進捗
+- **チャレンジモード**：4つの演算（×、+、−、÷）と複数の難易度に対応した時間制チャレンジ
+- **アドベンチャーモード**：4つの演算に対応した、レベルごとに進む物語形式の学習
 
-### 🕹️ アーケードミニゲーム
+### 🕹️ アーケード・ミニゲーム
 
-- **MultiInvaders**：教育用スペースインベーダー - 間違った答えを破壊する
-- **MultiMiam**：数学的パックマン - 正しい答えを集める
-- **MultiMemory**：記憶ゲーム - 演算と結果を一致させる
-- **MultiSnake**：教育用スネーク - 正しい数字を食べて成長する
+- **MultiInvaders**：教育版 Space Invaders - 不正解を破壊する
+- **MultiMiam**：算数版 Pac-Man - 正解を集める
+- **MultiMemory**：記憶ゲーム - 演算と答えを組み合わせる
+- **MultiSnake**：教育版 Snake - 正しい数字を食べて成長する
 
-### ➕ マルチ演算サポート
+### ➕ 複数演算への対応
 
-LeapMultixは、**すべてのモード**で4つの算術演算の完全なトレーニングを提供します：
+LeapMultix では、**すべてのモード**で4つの算術演算を総合的に練習できます。
 
-| モード     | ×   | +   | −   | ÷   |
-| ---------- | --- | --- | --- | --- |
-| クイズ     | ✅  | ✅  | ✅  | ✅  |
-| チャレンジ | ✅  | ✅  | ✅  | ✅  |
-| 発見       | ✅  | ✅  | ✅  | ✅  |
-| 冒険       | ✅  | ✅  | ✅  | ✅  |
-| アーケード | ✅  | ✅  | ✅  | ✅  |
+| モード         | ×   | +   | −   | ÷   |
+| -------------- | --- | --- | --- | --- |
+| クイズ         | ✅  | ✅  | ✅  | ✅  |
+| チャレンジ     | ✅  | ✅  | ✅  | ✅  |
+| 発見           | ✅  | ✅  | ✅  | ✅  |
+| アドベンチャー | ✅  | ✅  | ✅  | ✅  |
+| アーケード     | ✅  | ✅  | ✅  | ✅  |
 
-### 🌍 横断的機能
+### 🌍 共通機能
 
-- **マルチユーザー**：保存された進行状況を含む個々のプロファイルの管理
-- **多言語**：フランス語、英語、スペイン語のサポート
-- **カスタマイズ**：アバター、カラーテーマ、背景
-- **アクセシビリティ**：キーボードナビゲーション、タッチサポート、WCAG 2.1 AA準拠
-- **モバイルレスポンシブ**：タブレットやスマートフォン向けに最適化されたインターフェース
-- **進行システム**：スコア、バッジ、デイリーチャレンジ
+- **複数ユーザー**：進捗が保存される個別プロフィールの管理
+- **多言語対応**：フランス語、英語、スペイン語をサポート
+- **カスタマイズ**：アバター、配色テーマ、背景
+- **アクセシビリティ**：キーボード操作、タッチ操作、WCAG 2.1 AA準拠
+- **モバイル対応**：タブレットとスマートフォン向けに最適化されたインターフェース
+- **進捗システム**：スコア、バッジ、デイリーチャレンジ
 
 ## 🚀 クイックスタート
 
 ### 前提条件
 
-- Node.js（バージョン16以上）
-- 最新のWebブラウザ
+- Node.js（バージョン16以降）
+- 最新のウェブブラウザ
 
 ### インストール
 
 ```bash
-# プロジェクトのクローン
+# Cloner le projet
 git clone https://github.com/jls42/leapmultix.git
 cd leapmultix
 
-# 依存関係のインストール
+# Installer les dépendances
 npm install
 
-# 開発サーバーの起動（オプション1）
+# Lancer le serveur de développement (option 1)
 npm run serve
-# アプリケーションは http://localhost:8080 （または次に利用可能なポート）でアクセス可能になります
+# L'application sera accessible sur http://localhost:8080 (ou port suivant disponible)
 
-# またはPythonを使用（オプション2）
+# Ou avec Python (option 2)
 python3 -m http.server 8000
-# アプリケーションは http://localhost:8000 でアクセス可能になります
+# L'application sera accessible sur http://localhost:8000
 ```
 
 ### 利用可能なスクリプト
 
 ```bash
-# 開発
-npm run serve          # ローカルサーバー (http://localhost:8080)
-npm run lint           # ESLintによるコード検証
-npm run lint:fix       # ESLintの問題を自動修正
-npm run format:check   # コードフォーマットのチェック（コミット前に必ず実行）
-npm run format         # Prettierでコードをフォーマット
-npm run verify         # 品質ゲート：lint + test + coverage
+# Développement
+npm run serve          # Serveur local (http://localhost:8080)
+npm run lint           # Vérification du code avec ESLint
+npm run lint:fix       # Correction automatique des problèmes ESLint
+npm run format:check   # Vérifier le formatage du code (TOUJOURS avant commit)
+npm run format         # Formater le code avec Prettier
+npm run verify         # Quality gate: lint + test + coverage
 
-# テスト
-npm run test           # すべてのテストを実行 (CJS)
-npm run test:watch     # ウォッチモードでテスト
-npm run test:coverage  # カバレッジレポート付きテスト
-npm run test:core      # コアモジュールのテストのみ
-npm run test:integration # 統合テスト
-npm run test:storage   # ストレージシステムテスト
-npm run test:esm       # ESMテスト (tests-esm/ フォルダ, Jest vm-modules)
-npm run test:verbose   # 詳細出力付きテスト
-npm run test:pwa-offline # PWAオフラインテスト（Puppeteerが必要）、`npm run serve`の後
+# Tests
+npm run test           # Lancer tous les tests (CJS)
+npm run test:watch     # Tests en mode watch
+npm run test:coverage  # Tests avec rapport de couverture
+npm run test:core      # Tests des modules core uniquement
+npm run test:integration # Tests d'intégration
+npm run test:storage   # Tests du système de stockage
+npm run test:esm       # Tests ESM (dossiers tests-esm/, Jest vm-modules)
+npm run test:verbose   # Tests avec sortie détaillée
+npm run test:pwa-offline # Test offline PWA (nécessite Puppeteer), après `npm run serve`
 
-# 分析とメンテナンス
-npm run analyze:jsdoc  # ドキュメント分析
-npm run improve:jsdoc  # JSDocの自動改善
-npm run audit:mobile   # モバイルレスポンシブテスト
-npm run audit:accessibility # アクセシビリティテスト
-npm run dead-code      # 未使用コードの検出
-npm run analyze:globals # グローバル変数分析
-npm run analyze:dependencies # 依存関係の使用状況分析
-npm run verify:cleanup # 複合分析（デッドコード + グローバル）
+# Analyse et maintenance
+npm run analyze:jsdoc  # Analyse de la documentation
+npm run improve:jsdoc  # Amélioration automatique JSDoc
+npm run audit:mobile   # Tests responsivité mobile
+npm run audit:accessibility # Tests d'accessibilité
+npm run dead-code      # Détection de code non utilisé
+npm run analyze:globals # Analyse des variables globales
+npm run analyze:dependencies # Analyse usage des dépendances
+npm run verify:cleanup # Analyse combinée (dead code + globals)
 
-# アセット管理
-npm run assets:generate    # レスポンシブ画像の生成
-npm run assets:backgrounds # 背景をWebPに変換
-npm run assets:analyze     # レスポンシブアセット分析
-npm run assets:diff        # アセット比較
+# Gestion des assets
+npm run assets:generate    # Générer les images responsives
+npm run assets:backgrounds # Convertir les fonds en WebP
+npm run assets:analyze     # Analyse des assets responsive
+npm run assets:diff        # Comparaison des assets
 
-# 国際化
-npm run i18n:verify    # 翻訳キーの一貫性を確認
-npm run i18n:unused    # 未使用の翻訳キーをリスト
-npm run i18n:compare   # 翻訳 (en/es) を fr.json (参照) と比較
+# Internationalisation
+npm run i18n:verify    # Vérifier la cohérence des clés de traduction
+npm run i18n:unused    # Lister les clés de traduction non utilisées
+npm run i18n:compare   # Comparer les traductions (en/es) avec fr.json (référence)
 
-# ビルドと配信
-npm run build          # 本番ビルド (Rollup) + postbuild (完全な dist/)
-npm run serve:dist     # http://localhost:5000 （または利用可能なポート）で dist/ を提供
+# Build & livraison
+npm run build          # Build de prod (Rollup) + postbuild (dist/ complet)
+npm run serve:dist     # Servir dist/ sur http://localhost:5000 (ou port disponible)
 
-# PWAとService Worker
-npm run sw:disable     # service workerを無効化
-npm run sw:fix         # service workerの問題を修正
+# PWA et Service Worker
+npm run sw:disable     # Désactiver le service worker
+npm run sw:fix         # Corriger les problèmes de service worker
 ```
 
 ## 🏗️ アーキテクチャ
 
-### ファイル構造
+### ファイル構成
+
+JavaScript モジュールは、`core/`、`components/`、`modes/` の3つのディレクトリを除き、**`js/` の直下にフラットに配置されています**。そのため、ファイル名によってグループ分けされています（`arcade-*`、`multimiam-*`、`i18n*`…）。
 
 ```
 leapmultix/
-├── index.html              # メインエントリーポイント
+├── index.html              # Application (navigation par slides)
+├── modes.html              # Page publique : les modes de jeu
+├── parents.html            # Page publique : guide parents et enseignants
+├── pwa.html                # Page publique : installation hors ligne
+├── offline.html            # Page servie hors ligne par le service worker
+├── sw.js                   # Service worker (version alignée sur js/cache-updater.js)
+├── deploy.sh               # Déploiement S3 + invalidation CloudFront
 ├── js/
-│   ├── core/               # ES6コアモジュール
-│   │   ├── GameMode.js     # モードの基本クラス
-│   │   ├── GameModeManager.js # ゲームモード管理
-│   │   ├── storage.js      # LocalStorage API
-│   │   ├── audio.js        # サウンド管理
-│   │   ├── utils.js        # 汎用ユーティリティ（正規のソース）
-│   │   ├── eventBus.js     # イベント通信
-│   │   ├── userState.js    # ユーザーセッション管理
-│   │   ├── mainInit.js     # DOM-ready初期化
-│   │   ├── theme.js        # テーマシステム
-│   │   ├── userUi.js       # ユーザーインターフェースユーティリティ
-│   │   ├── parental.js     # ペアレンタルコントロール
-│   │   ├── adventure-data.js # アドベンチャーモードのデータ
-│   │   ├── mult-stats.js   # 掛け算の統計
-│   │   ├── challenge-stats.js # チャレンジ統計
-│   │   └── daily-challenge.js # デイリーチャレンジ管理
-│   ├── components/         # 再利用可能なUIコンポーネント
-│   │   ├── topBar.js       # ナビゲーションバー
-│   │   ├── infoBar.js      # ゲーム情報バー
-│   │   ├── dashboard.js    # ユーザーダッシュボード
-│   │   └── customization.js # カスタマイズインターフェース
-│   ├── modes/              # ゲームモード
-│   │   ├── QuizMode.js
-│   │   ├── ChallengeMode.js
-│   │   ├── AdventureMode.js
-│   │   ├── DiscoveryMode.js
-│   │   └── ArcadeMode.js
-│   ├── arcade/             # アーケードミニゲーム
-│   │   ├── arcade.js       # メインアーケードオーケストレーター
-│   │   ├── arcade-invasion.js # スペースインベーダー (31 KB)
-│   │   ├── arcade-multimemory.js # 記憶ゲーム (31 KB)
-│   │   ├── arcade-multimiam.js # MultiMiam統合
-│   │   ├── arcade-multisnake.js # Snake統合
-│   │   ├── arcade-common.js, arcade-utils.js # 共有ユーティリティ
-│   │   ├── arcade-message.js, arcade-points.js # UIコンポーネント
-│   │   └── arcade-scores.js # スコア管理
-│   ├── multimiam/          # パックマンゲーム（分解されたアーキテクチャ）
-│   │   ├── multimiam.js    # メインコントローラー
-│   │   ├── multimiam-engine.js # ゲームエンジン (15 KB)
-│   │   ├── multimiam-renderer.js # レンダリングシステム (9 KB)
-│   │   ├── multimiam-controls.js # コントロール管理 (7 KB)
-│   │   ├── multimiam-questions.js # 質問生成 (6 KB)
-│   │   └── multimiam-ui.js # インターフェース要素
-│   ├── multisnake.js       # Snakeゲーム (38 KB)
-│   ├── navigation/         # ナビゲーションシステム
-│   │   ├── slides.js       # スライドベースのナビゲーション (goToSlide, showSlide)
-│   │   └── keyboard-navigation.js # キーボードサポート
-│   ├── ui/                 # ユーザーインターフェースとフィードバック
-│   │   ├── uiUtils.js      # インターフェースユーティリティ
-│   │   ├── ui-feedback.js  # フィードバックメカニズム
-│   │   ├── touch-support.js # タッチサポート (7 KB)
-│   │   ├── virtual-keyboard.js # 仮想キーボード
-│   │   ├── coin-display.js, coin-effects.js # 通貨システム
-│   │   ├── notifications.js # 通知システム
-│   │   └── badges.js       # バッジシステム
-│   ├── media/              # メディア管理
-│   │   ├── VideoManager.js # ビデオ再生管理 (12 KB)
-│   │   └── responsive-image-loader.js # 画像読み込み (9 KB)
-│   ├── orchestration/      # オーケストレーションと読み込み
-│   │   ├── mode-orchestrator.js # モード切り替え
-│   │   ├── lazy-loader.js  # 動的読み込み (10 KB)
-│   │   └── game-cleanup.js # 状態のクリーンアップ
-│   ├── utils/              # ユーティリティ
-│   │   ├── utils-es6.js    # メインアグリゲーター (5 KB)
-│   │   ├── main-helpers.js # アプリケーションヘルパー
-│   │   ├── helpers.js      # レガシーヘルパー関数
-│   │   ├── stats-utils.js  # 統計ユーティリティ
-│   │   ├── difficulty.js   # 難易度管理
-│   │   └── questionGenerator.js # 質問生成
-│   ├── storage/            # ストレージと状態
-│   │   ├── storage.js      # レガシーストレージラッパー
-│   │   └── userManager.js  # マルチユーザー管理 (19 KB)
-│   ├── i18n/               # 国際化
-│   │   ├── i18n.js         # i18nシステム
-│   │   └── i18n-store.js   # 翻訳ストレージ
-│   ├── security/           # セキュリティとエラー処理
-│   │   ├── security-utils.js # XSS保護、サニタイズ
-│   │   ├── error-handlers.js # グローバルエラー処理
-│   │   └── logger.js       # ロギングシステム
-│   ├── accessibility/      # アクセシビリティ
-│   │   ├── accessibility.js # アクセシビリティ機能
-│   │   └── speech.js       # 音声合成サポート
-│   ├── integration/        # 統合と分析
-│   │   ├── plausible-init.js # Plausible分析
-│   │   ├── cache-updater.js # キャッシュ管理 (10 KB)
-│   │   └── imports.js      # インポートユーティリティ
-│   ├── main-es6.js         # ES6エントリーポイント
-│   ├── main.js             # メインオーケストレーター
-│   ├── bootstrap.js        # ES6イベントハンドラーの設定
-│   └── game.js             # 状態管理とデイリーチャレンジ
-├── css/                    # モジュラースタイル
-├── assets/                 # リソース
-│   ├── images/             # 画像とスプライト
-│   ├── generated-images/   # 生成されたレスポンシブ画像
-│   ├── sounds/             # 効果音
-│   ├── translations/       # 翻訳ファイル (fr, en, es)
-│   └── videos/             # チュートリアルビデオ
-├── tests/                  # 自動テスト
-│   ├── __tests__/          # ユニットおよび統合テスト
-│   └── tests-esm/          # ESMテスト (.mjs)
-├── scripts/                # メンテナンススクリプト
-│   ├── compare-translations.cjs # 翻訳の比較
-│   └── cleanup-i18n-keys.cjs # i18nキーのクリーンアップ
-└── dist/                   # 本番ビルド（生成済み）
+│   ├── core/               # Socle applicatif
+│   │   ├── GameMode.js, GameModeManager.js   # Classe de base des modes
+│   │   ├── storage.js, userState.js          # Persistance et session
+│   │   ├── audio.js, theme.js, parental.js   # Son, thèmes, contrôle parental
+│   │   ├── eventBus.js, mainInit.js          # Événements, amorçage DOM
+│   │   ├── adventure-data.js                 # Niveaux du mode Aventure
+│   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
+│   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
+│   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
+│   │   └── operations/                       # Une classe par opération
+│   │       ├── Operation.js, OperationRegistry.js
+│   │       └── Multiplication.js, Addition.js, Subtraction.js, Division.js
+│   ├── components/         # Composants d'interface
+│   │   ├── topBar.js, infoBar.js, dashboard.js, customization.js
+│   │   ├── operationSelector.js, operationModeAvailability.js
+│   │   └── icons.js, tableSettingsModal.js
+│   ├── modes/              # Les cinq modes de jeu
+│   │   ├── DiscoveryMode.js, QuizMode.js, ChallengeMode.js
+│   │   └── AdventureMode.js, ArcadeMode.js
+│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux
+│   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
+│   ├── multisnake.js       # Mini-jeu Snake
+│   ├── i18n.js, i18n-store.js                # Internationalisation
+│   ├── security-utils.js, error-handlers.js, logger.js
+│   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
+│   ├── slides.js, mode-orchestrator.js, lazy-loader.js, game-cleanup.js
+│   ├── VideoManager.js, responsive-image-loader.js
+│   ├── userManager.js, main-helpers.js, utils-es6.js, questionGenerator.js
+│   └── main-es6.js, main.js, bootstrap.js, game.js   # Points d'entrée
+├── css/                    # Feuilles de style (jetons de design : themes.css)
+├── assets/
+│   ├── images/             # Sources PNG (avatars, sprites, fonds)
+│   ├── generated-images/   # Variantes responsives (généré, hors git)
+│   ├── fonts/, sounds/, videos/, icons/, social/
+│   └── translations/       # fr.json, en.json, es.json
+├── tests/__tests__/        # Tests Jest (jsdom, et bout-en-bout via Puppeteer)
+├── tests-esm/              # Tests Jest en modules ES (.mjs)
+├── scripts/                # Génération d'assets, i18n, rapports
+├── docs/media/             # Captures et animations du README
+└── dist/                   # Build de production (généré)
 ```
 
 ### 技術アーキテクチャ
 
-**最新のES6モジュール**：プロジェクトは、ES6クラスとネイティブインポート/エクスポートを備えたモジュラーアーキテクチャを使用しています。
+**最新のES6モジュール**：このプロジェクトでは、ES6クラスとネイティブのimport/exportを使用したモジュール型アーキテクチャを採用しています。
 
-**再利用可能なコンポーネント**：集中型UIコンポーネント（TopBar、InfoBar、Dashboard、Customization）で構築されたインターフェース。
+**再利用可能なコンポーネント**：一元管理されたUIコンポーネント（TopBar、InfoBar、Dashboard、Customization）でインターフェースを構築しています。
 
-**遅延読み込み**：初期パフォーマンスを最適化するために、`lazy-loader.js`を介してモジュールをオンデマンドでインテリジェントに読み込みます。
+**Lazy Loading**：初期パフォーマンスを最適化するため、`lazy-loader.js` を介して必要に応じてモジュールを効率的に読み込みます。
 
-**統一ストレージシステム**：フォールバックを備えたLocalStorageを介したユーザーデータの永続化のための集中型API。
+**統合ストレージシステム**：フォールバック付きのLocalStorageを介してユーザーデータを永続化するための一元化されたAPIです。
 
-**集中型オーディオ管理**：多言語サポートとユーザーごとの設定を備えたサウンドコントロール。
+**一元化されたオーディオ管理**：多言語対応とユーザーごとの設定を備えたサウンド制御です。
 
-**イベントバス**：保守可能なアーキテクチャのための、コンポーネント間の分離されたイベント駆動型通信。
+**Event Bus**：保守しやすいアーキテクチャを実現する、コンポーネント間の疎結合なイベント通信です。
 
-**スライドナビゲーション**：`goToSlide()`を使用した番号付きスライド（slide0、slide1など）に基づくナビゲーションシステム。
+**スライド式ナビゲーション**：`goToSlide()` を使用した、番号付きスライド（slide0、slide1など）に基づくナビゲーションシステムです。
 
-**セキュリティ**：すべてのDOM操作に対する`security-utils.js`を介したXSS保護とサニタイズ。
+**セキュリティ**：すべてのDOM操作で `security-utils.js` を使用し、XSS対策とサニタイズを行います。
 
-## 🎯 詳細なゲームモード
+## 🎯 ゲームモードの詳細
 
 ### 発見モード
 
-以下を備えた掛け算表の視覚的探索インターフェース：
+次の機能を備えた、掛け算の段を視覚的に学ぶためのインターフェースです。
 
 - 掛け算のインタラクティブな視覚化
-- アニメーションと記憶補助
-- 教育用ドラッグアンドドロップ
-- 表ごとの自由な進行
+- アニメーションと暗記のヒント
+- 教育的なドラッグ＆ドロップ
+- 段ごとに自由に進められる学習
 
 ### クイズモード
 
-以下を備えた多肢選択問題：
+次の機能を備えた選択式問題です。
 
-- セッションごとに10の質問
-- 成功に基づく適応的な進行
+- 1セッションにつき10問
+- 正答状況に応じた適応型の進行
 - 仮想テンキー
-- ストリークシステム（正解の連続）
+- 連続正解システム
 
 ### チャレンジモード
 
-以下を備えたタイムトライアル：
+次の機能を備えた時間制チャレンジです。
 
-- 3つの難易度レベル（初心者、中級者、上級者）
-- 正解に対する時間ボーナス
+- 3段階の難易度（初級、中級、上級）
+- 正解時のタイムボーナス
 - ライフシステム
-- ベストスコアのリーダーボード
+- ハイスコアランキング
 
 ### アドベンチャーモード
 
-以下を備えた物語の進行：
+次の機能を備えた物語形式の進行です。
 
-- ロック解除可能な12のテーマレベル
-- 視覚的な進行を備えたインタラクティブマップ
-- キャラクターとの没入型ストーリー
-- スターシステムと報酬
+- 開放可能な10のテーマ別レベル
+- 進捗を視覚的に示すインタラクティブマップ
+- キャラクターが登場する没入感のある物語
+- 星と報酬のシステム
 
-### アーケードミニゲーム
+### アーケード・ミニゲーム
 
-各ミニゲームは以下を提供します：
+各ミニゲームには次の機能があります。
 
-- 難易度とカスタマイズの選択
-- ライフシステムとスコア
-- キーボードとタッチコントロール
-- ユーザーごとの個別のリーダーボード
+- 難易度の選択とカスタマイズ
+- ライフとスコアのシステム
+- キーボードとタッチ操作
+- ユーザーごとの個別ランキング
 
 ## 🛠️ 開発
 
 ### 開発ワークフロー
 
-**重要：mainに直接コミットしないでください**
+**main に直接コミットしないでください。** このプロジェクトでは機能ブランチを使用します。
 
-プロジェクトは、機能ブランチに基づくワークフローを使用します：
+**1. ブランチを作成します。** 機能追加には `feat/`、バグ修正には `fix/` を使用します。
 
-1.  **ブランチを作成する**：
+```bash
+git checkout -b feat/nom-de-la-fonctionnalite
+```
 
-    ```bash
-    git checkout -b feat/feature-name
-    # または
-    git checkout -b fix/bug-name
-    ```
+**2. 開発して確認します。** まずフォーマットを行ってください。CIはテストを実行する前にフォーマット違反を拒否します。
 
-2.  **開発とテスト**：
+```bash
+npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
+npm run format        # Formater si nécessaire
+npm run lint          # Qualité du code
+npm run test          # Tests
+npm run test:coverage # Couverture
+```
 
-    ```bash
-    npm run format:check  # 常に最初にフォーマットを確認してください
-    npm run format        # 必要に応じてフォーマット
-    npm run lint          # コード品質を確認
-    npm run test          # テストを実行
-    npm run test:coverage # カバレッジを確認
-    ```
+**3. ブランチにコミットしてから、プッシュします。**
 
-3.  **ブランチにコミットする**：
+```bash
+git add .
+git commit -m "feat: description de la fonctionnalité"
+git push -u origin feat/nom-de-la-fonctionnalite
+```
 
-    ```bash
-    git add .
-    git commit -m "feat: description of the feature"
-    ```
+**4. pull requestを作成し**、verify、Codacy、CodeFactor、SonarCloudの分析が完了するまで待ちます。すべて合格するまで修正してからマージします。
 
-4.  **プッシュしてプルリクエストを作成する**：
-    ```bash
-    git push -u origin feat/feature-name
-    ```
+**コミットのスタイル**：簡潔な命令形のメッセージ（例："Fix arcade init errors"、"Refactor cache updater"）
 
-**コミットスタイル**：簡潔、命令形（例："Fix arcade init errors", "Refactor cache updater"）
+**品質ゲート**：各コミットの前に `npm run lint`、`npm test`、`npm run test:coverage` が成功することを確認してください。
 
-**品質ゲート**：各コミットの前に、`npm run lint`、`npm test`、`npm run test:coverage`が通過することを確認してください
+### コンポーネントのアーキテクチャ
 
-### コンポーネントアーキテクチャ
+**GameMode（基底クラス）**：すべてのモードは、標準化されたメソッドを持つ共通クラスを継承します。
 
-**GameMode（基本クラス）**：すべてのモードは、標準化されたメソッドを持つ共通クラスから継承します。
+**GameModeManager**：モードの起動と管理を一元的に制御します。
 
-**GameModeManager**：モードの起動と管理の集中オーケストレーション。
+**UIコンポーネント**：TopBar、InfoBar、Dashboard、Customizationが一貫したインターフェースを提供します。
 
-**UIコンポーネント**：TopBar、InfoBar、Dashboard、Customizationは、一貫したインターフェースを提供します。
+**Lazy Loading**：初期パフォーマンスを最適化するため、必要に応じてモジュールを読み込みます。
 
-**遅延読み込み**：モジュールは、初期パフォーマンスを最適化するためにオンデマンドで読み込まれます。
-
-**イベントバス**：イベントシステムを介したコンポーネント間の分離された通信。
+**Event Bus**：イベントシステムを介した、コンポーネント間の疎結合な通信です。
 
 ### テスト
 
-プロジェクトには、包括的なテストスイートが含まれています：
+このプロジェクトには包括的なテストスイートが含まれています。
 
-- コアモジュールの単体テスト
+- coreモジュールの単体テスト
 - コンポーネントの統合テスト
-- ゲームモードテスト
+- ゲームモードのテスト
 - 自動コードカバレッジ
 
 ```bash
-npm test              # すべてのテスト (CJS)
-npm test:core         # コアモジュールテスト
-npm test:integration  # 統合テスト
-npm test:coverage     # カバレッジレポート
-npm run test:esm      # vm-modulesを介したESMテスト（例：components/dashboard）
+npm test              # Tous les tests (CJS)
+npm test:core         # Tests des modules centraux
+npm test:integration  # Tests d'intégration
+npm test:coverage     # Rapport de couverture
+npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 ```
 
 ### 本番ビルド
 
-- **Rollup**：コード分割とソースマップを使用して、`js/main-es6.js`をESMにバンドルします
-- **Terser**：最適化のための自動縮小
-- **ビルド後**：`css/`と`assets/`、ファビコン（`favicon.ico`、`favicon.png`、`favicon.svg`）、`sw.js`をコピーし、`dist/index.html`をハッシュ化されたエントリーファイル（例：`main-es6-*.js`）に書き換えます
-- **最終フォルダ**：静的に提供する準備ができている`dist/`
+- **Rollup**：`js/main-es6.js` を、code-splittingとsourcemapを備えたESMにbundleします
+- **Terser**：最適化のための自動minification
+- **Post-build**：`css/` と `assets/`、favicon（`favicon.ico`、`favicon.png`、`favicon.svg`）、`sw.js` をコピーし、`dist/index.html` をハッシュ付きのエントリーファイル（例：`main-es6-*.js`）へ書き換えます
+- **最終ディレクトリ**：静的配信の準備が整った `dist/`
 
 ```bash
-npm run build      # dist/を生成
-npm run serve:dist # dist/を提供（ポート5000）
+npm run build      # génère dist/
+npm run serve:dist # sert dist/ (port 5000)
 ```
 
 ### 継続的インテグレーション
 
-**GitHub Actions**：`.github/workflows/ci.yml`の自動パイプライン
+**GitHub Actions**：`.github/workflows/ci.yml` は、`main` への各pushと各pull requestで実行されます。
 
-CI/CDパイプラインは、プッシュおよびプルリクエストごとに自動的に実行されます：
+**`verify`** — 処理を停止できる品質ゲートです。
 
-**主なジョブ**：
+- `npm ci`、続いて `npm run verify`（ESLint、Jestテスト、カバレッジ）
+- `npm run format:check`（Prettier）
 
-1.  **build-test**：主な検証ジョブ
-    - 依存関係のインストール：`npm ci`
-    - フォーマットの確認：`npm run format:check`
-    - 静的分析：`npm run lint`
-    - 単体テスト：`npm run test`
-    - セキュリティ監査：`npm audit`
-    - カバレッジアーティファクトの生成
+**`seo-report`** — `verify` の後にオンラインサイトのLighthouse監査を実行し、SEO指標を長期的に追跡します。
 
-2.  **accessibility**：アクセシビリティ監査（非ブロッキング）
-    - `npm run audit:accessibility`を実行します
-    - WCAG 2.1 AAアクセシビリティレポートを生成します
+**pull requestに連携された外部分析**：Codacy、CodeFactor、SonarCloud。SonarCloudの品質ゲートでは、新しいコードの信頼性、セキュリティ、保守性についてA評価が必須です。
 
-3.  **test-esm**：ES6モジュールテスト
-    - Jest VM modulesを使用して`npm run test:esm`を実行します
-    - ES6のインポート/エクスポートを検証します
+**デプロイ**：`./deploy.sh` はサイトをS3へ同期し、CloudFrontのキャッシュを無効化します。gitに含まれていないレスポンシブ画像は、必要に応じてスクリプトが再生成します。
 
-4.  **lighthouse**：パフォーマンス監査（非ブロッキング）
-    - モバイルパフォーマンス監査
-    - Lighthouseレポートアーティファクトを生成します
-    - Core Web Vitalsメトリクス
+### PWA（Progressive Web App）
 
-**品質バッジ**：
+LeapMultixは、オフライン対応とインストール機能を備えた完全なPWAです。
 
-- CIビルドステータス (GitHub Actions)
-- CodeFactorグレード
-- Codacyバッジ
-- SonarCloud品質ゲート
+**Service Worker**（`sw.js`）：
 
-### PWA（プログレッシブウェブアプリ）
+- ナビゲーション：Network-firstを使用し、オフライン時は `offline.html` にフォールバック
+- 画像：パフォーマンスを最適化するCache-first
+- 翻訳：バックグラウンド更新を行うStale-while-revalidate
+- JS/CSS：常に最新版を提供するNetwork-first
+- `cache-updater.js` を使用した自動バージョン管理
 
-LeapMultixは、オフラインサポートとインストール機能を備えた完全なPWAです。
+**Manifest**（`manifest.json`）：
 
-**Service Worker** (`sw.js`)：
+- すべてのデバイス向けのSVGおよびPNGアイコン
+- モバイルへのインストールが可能（Add to Home Screen）
+- アプリのような体験を実現するstandalone設定
+- テーマと色をサポート
 
-- ナビゲーション：`offline.html`へのオフラインフォールバックを備えたネットワークファースト
-- 画像：パフォーマンスを最適化するためのキャッシュファースト
-- 翻訳：バックグラウンド更新のためのStale-while-revalidate
-- JS/CSS：常に最新バージョンを提供するためのネットワークファースト
-- `cache-updater.js`を介した自動バージョン管理
+**オフラインモードをローカルでテストします。** サーバーを起動してから、`http://localhost:8080`（または表示されたポート）を開きます。
 
-**マニフェスト** (`manifest.json`)：
+```bash
+npm run serve
+```
 
-- すべてのデバイス用のSVGおよびPNGアイコン
-- モバイルへのインストールが可能（ホーム画面に追加）
-- アプリのような体験のためのスタンドアロン構成
-- テーマと色のサポート
+手動の場合：開発者ツールのネットワークを切断し（ネットワークタブのオフラインモード）、ページを再読み込みします。`offline.html` が表示される必要があります。
 
-**ローカルでのオフラインモードのテスト**：
+Puppeteerで自動的に行う場合：
 
-1.  開発サーバーを起動します：
-
-    ```bash
-    npm run serve
-    ```
-
-    `http://localhost:8080`（または表示されているポート）を開きます
-
-2.  手動でテスト：
-    - DevToolsでネットワークを切断します（[Network]タブ→[Offline]）
-    - ページを更新→`offline.html`が表示されます
-
-3.  自動テスト（Puppeteerが必要）：
-    ```bash
-    npm run test:pwa-offline
-    ```
+```bash
+npm run test:pwa-offline
+```
 
 **Service Worker管理スクリプト**：
 
 ```bash
-npm run sw:disable  # service workerを無効化
-npm run sw:fix      # キャッシュの問題を修正
+npm run sw:disable  # Désactiver le service worker
+npm run sw:fix      # Corriger les problèmes de cache
 ```
 
 ### 品質基準
 
 **コード品質ツール**：
 
-- **ESLint**：フラット設定（`eslint.config.js`）、ES2022サポートを備えた最新の設定
-- **Prettier**：自動コードフォーマット（`.prettierrc`）
-- **Stylelint**：CSS検証（`.stylelintrc.json`）
-- **JSDoc**：カバレッジ分析を備えた自動関数ドキュメント
+- **ESLint**：flat config（`eslint.config.js`）を使用した最新の設定、ES2022対応
+- **Prettier**：コードの自動フォーマット（`.prettierrc`）
+- **Stylelint**：CSSの検証（`.stylelintrc.json`）
+- **JSDoc**：カバレッジ分析を備えた関数ドキュメントの自動生成
 
-**重要なコードルール**：
+**重要なコーディング規則**：
 
-- 未使用の変数とパラメーターを削除する (`no-unused-vars`)
-- 特定のエラー処理を使用する（空のキャッチなし）
-- `security-utils.js`関数を優先して`innerHTML`を避ける
-- 関数の認知的複雑さを15未満に保つ
-- 複雑な関数をより小さなヘルパーに抽出する
+- 未使用の変数と引数を削除する（`no-unused-vars`）
+- 具体的なエラー処理を使用する（空のcatchを使わない）
+- `innerHTML` を避け、`security-utils.js` の関数を使用する
+- 関数の認知的複雑度を15未満に保つ
+- 複雑な関数を、より小さなhelperに分割する
 
 **セキュリティ**：
 
-- **XSS保護**：`security-utils.js`の関数を使用します：
-  - `innerHTML`の代わりに`appendSanitizedHTML()`
-  - 安全な要素を作成するための`createSafeElement()`
-  - テキストコンテンツ用の`setSafeMessage()`
-- **外部スクリプト**：`crossorigin="anonymous"`属性が必須
-- **入力検証**：常に外部データをサニタイズする
-- **コンテンツセキュリティポリシー**：スクリプトソースを制限するためのCSPヘッダー
+- **XSS対策**：`security-utils.js` の関数を使用する：
+  - `innerHTML` の代わりに `appendSanitizedHTML()`
+  - 安全な要素の作成には `createSafeElement()`
+  - テキストコンテンツには `setSafeMessage()`
+- **外部スクリプト**：`crossorigin="anonymous"` 属性が必須
+- **入力検証**：外部データは必ずサニタイズする
+- **Content Security Policy**：スクリプトの取得元を制限するCSPヘッダー
 
 **アクセシビリティ**：
 
 - WCAG 2.1 AA準拠
-- 完全なキーボードナビゲーション
-- ARIAロールと適切なラベル
-- 準拠したカラーコントラスト
+- 完全なキーボード操作
+- 適切なARIAロールとラベル
+- 基準を満たす色のコントラスト
 
 **パフォーマンス**：
 
-- `lazy-loader.js`を介したモジュールの遅延読み込み
-- CSSおよびレスポンシブアセットの最適化
-- インテリジェントキャッシングのためのService Worker
-- 本番環境でのコード分割と縮小
+- `lazy-loader.js` を使用したモジュールのLazy Loading
+- CSSの最適化とレスポンシブなasset
+- 効率的なキャッシュを実現するService Worker
+- 本番環境でのcode splittingとminification
 
 ## 📱 互換性
 
-### サポートされているブラウザ
+### サポート対象ブラウザー
 
-- Chrome/Chromium 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+インターフェースでは、色に `oklch()`、コンテキストに応じた状態に `:has()` を使用しているため、最低要件は次のとおりです：
+
+- Chrome / Chromium 111+
+- Edge 111+
+- Firefox 121+
+- Safari 15.4+
 
 ### デバイス
 
-- **デスクトップ**：キーボードとマウスのコントロール
+- **デスクトップ**：キーボードとマウスによる操作
 - **タブレット**：最適化されたタッチインターフェース
-- **スマートフォン**：適応型レスポンシブデザイン
+- **スマートフォン**：画面に適応するレスポンシブデザイン
 
 ### アクセシビリティ
 
-- 完全なキーボードナビゲーション（Tab、矢印、Esc）
-- スクリーンリーダー用のARIAロールとラベル
-- 準拠したカラーコントラスト
-- 支援技術のサポート
+- 完全なキーボードナビゲーション（Tab、矢印キー、Esc）
+- スクリーンリーダー向けの ARIA ロールとラベル
+- 基準に準拠した色のコントラスト
+- 支援技術への対応
 
-## 🌍 ローカリゼーション
+## 🌍 ローカライゼーション
 
-完全な多言語サポート：
+完全な多言語対応：
 
 - **フランス語**（デフォルト言語）
 - **英語**
 - **スペイン語**
 
-### 翻訳管理
+### 翻訳の管理
 
 **翻訳ファイル：** `assets/translations/*.json`
 
@@ -591,99 +542,99 @@ npm run sw:fix      # キャッシュの問題を修正
 
 ```json
 {
-  "menu_start": "開始",
-  "quiz_correct": "よくできました！",
+  "menu_start": "Commencer",
+  "quiz_correct": "Bravo !",
   "arcade_invasion_title": "MultiInvaders"
 }
 ```
 
-### i18n管理スクリプト
+### i18n 管理スクリプト
 
-**`npm run i18n:verify`** - 翻訳キーの一貫性を確認
+**`npm run i18n:verify`** - 翻訳キーの整合性を確認
 
-**`npm run i18n:unused`** - 未使用の翻訳キーをリスト
+**`npm run i18n:unused`** - 使用されていない翻訳キーを一覧表示
 
-**`npm run i18n:compare`** - 翻訳ファイルをfr.json（参照）と比較
+**`npm run i18n:compare`** - 翻訳ファイルを fr.json（参照元）と比較
 
-このスクリプト (`scripts/compare-translations.cjs`) は、すべての言語ファイルの同期を保証します：
+このスクリプト（`scripts/compare-translations.cjs`）は、すべての言語ファイルの同期を維持します：
 
 **機能：**
 
-- 欠落しているキーの検出（fr.jsonには存在するが他の言語にはない）
-- 余分なキーの検出（他の言語には存在するがfr.jsonにはない）
-- 空の値の識別（`""`、`null`、`undefined`、`[]`）
-- 型の一貫性チェック（文字列 vs 配列）
-- ネストされたJSON構造のドット表記へのフラット化（例：`arcade.multiMemory.title`）
+- 不足しているキーの検出（fr.json には存在するが、ほかの言語には存在しないキー）
+- 余分なキーの検出（ほかの言語には存在するが、fr.json には存在しないキー）
+- 空の値の特定（`""`、`null`、`undefined`、`[]`）
+- 型の整合性確認（string と array）
+- ネストされた JSON 構造をドット記法にフラット化（例：`arcade.multiMemory.title`）
 - 詳細なコンソールレポートの生成
-- `docs/translations-comparison-report.json`へのJSONレポートの保存
+- JSON レポートを `docs/translations-comparison-report.json` に保存
 
 **出力例：**
 
 ```
-🔍 翻訳ファイルの比較分析
+🔍 Analyse comparative des fichiers de traduction
 
-📚 参照言語：fr.json
-✅ fr.json: 335 キー
+📚 Langue de référence: fr.json
+✅ fr.json: 570 clés
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 en.json の分析
+📝 Analyse de en.json
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 合計キー：335
-✅ 欠落しているキーはありません
-✅ 余分なキーはありません
-✅ 空の値はありません
+📊 Total de clés: 570
+✅ Aucune clé manquante
+✅ Aucune clé supplémentaire
+✅ Aucune valeur vide
 
-📊 最終概要
-  fr.json: 335 キー
-  en.json: 335 キー
-  es.json: 335 キー
+📊 RÉSUMÉ FINAL
+  fr.json: 570 clés
+  en.json: 570 clés
+  es.json: 570 clés
 
-✅ すべての翻訳ファイルは完全に同期されています！
+✅ Tous les fichiers de traduction sont parfaitement synchronisés !
 ```
 
-**翻訳カバレッジ：**
+**翻訳対象範囲：**
 
-- 完全なユーザーインターフェース
+- ユーザーインターフェース全体
 - ゲームの説明
 - エラーおよびフィードバックメッセージ
 - 説明とコンテキストヘルプ
 - アドベンチャーモードの物語コンテンツ
-- アクセシビリティとARIAラベル
+- アクセシビリティおよび ARIA ラベル
 
-## 📊 データ保存
+## 📊 データストレージ
 
 ### ユーザーデータ
 
-- プロファイルと設定
-- ゲームモードごとの進行状況
+- プロフィールと設定
+- ゲームモードごとの進捗
 - アーケードゲームのスコアと統計
 - カスタマイズ設定
 
-### 技術的機能
+### 技術的な機能
 
-- フォールバックを備えたローカルストレージ (localStorage)
+- フォールバック機能を備えたローカルストレージ（localStorage）
 - ユーザーごとのデータ分離
-- 自動進行保存
-- 古いデータの自動移行
+- 進捗の自動保存
+- 旧データの自動移行
 
-## 🐛 問題の報告
+## 🐛 問題を報告する
 
-問題はGitHubのissueを介して報告できます。以下を含めてください：
+問題は GitHub の issue から報告できます。次の情報を含めてください：
 
 - 問題の詳細な説明
 - 再現手順
-- ブラウザとバージョン
-- 関連する場合はスクリーンショット
+- ブラウザーとバージョン
+- 必要に応じてスクリーンショット
 
 ## 💝 プロジェクトを支援する
 
-**[☕ PayPal経由で寄付する](https://paypal.me/jls)**
+**[☕ PayPal で寄付する](https://paypal.me/jls)**
 
 ## 📄 ライセンス
 
-このプロジェクトはAGPL v3ライセンスの下でライセンスされています。詳細については、`LICENSE`ファイルを参照してください。
+このプロジェクトは AGPL v3 の下でライセンスされています。詳細については `LICENSE` ファイルを参照してください。
 
 ---
 
-_LeapMultix - 掛け算表を学習するための最新の教育アプリケーション_
+_LeapMultix — 四則演算を学ぶための自由な教育アプリケーション_

@@ -337,39 +337,36 @@ Chaque mini-jeu propose :
 
 ### Workflow de développement
 
-**IMPORTANT : Ne jamais commiter directement sur main**
+**Ne jamais commiter directement sur main.** Le projet travaille par branches de
+fonctionnalité.
 
-Le projet utilise un workflow basé sur les branches de fonctionnalité :
+**1. Créer une branche**, `feat/` pour une fonctionnalité, `fix/` pour un correctif :
 
-1. **Créer une branche** :
+```bash
+git checkout -b feat/nom-de-la-fonctionnalite
+```
 
-   ```bash
-   git checkout -b feat/nom-de-la-fonctionnalite
-   # ou
-   git checkout -b fix/nom-du-bug
-   ```
+**2. Développer et vérifier.** Le formatage vient en premier : la CI le refuse
+avant même de lancer les tests.
 
-2. **Développer et tester** :
+```bash
+npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
+npm run format        # Formater si nécessaire
+npm run lint          # Qualité du code
+npm run test          # Tests
+npm run test:coverage # Couverture
+```
 
-   ```bash
-   npm run format:check  # TOUJOURS vérifier le formatage en premier
-   npm run format        # Formater si nécessaire
-   npm run lint          # Vérifier la qualité du code
-   npm run test          # Lancer les tests
-   npm run test:coverage # Vérifier la couverture
-   ```
+**3. Committer sur la branche**, puis la pousser :
 
-3. **Commiter sur la branche** :
+```bash
+git add .
+git commit -m "feat: description de la fonctionnalité"
+git push -u origin feat/nom-de-la-fonctionnalite
+```
 
-   ```bash
-   git add .
-   git commit -m "feat: description de la fonctionnalité"
-   ```
-
-4. **Pousser et créer une Pull Request** :
-   ```bash
-   git push -u origin feat/nom-de-la-fonctionnalite
-   ```
+**4. Ouvrir une pull request** et attendre les analyses : verify, Codacy,
+CodeFactor et SonarCloud. On corrige jusqu'au vert avant de fusionner.
 
 **Style de commit** : Messages concis, mode impératif (ex: "Fix arcade init errors", "Refactor cache updater")
 
@@ -455,24 +452,21 @@ LeapMultix est une PWA complète avec support hors-ligne et possibilité d'insta
 - Configuration standalone pour expérience app-like
 - Support des thèmes et couleurs
 
-**Tester le mode hors-ligne localement** :
+**Tester le mode hors-ligne localement.** Démarrer le serveur, puis ouvrir
+`http://localhost:8080` (ou le port affiché) :
 
-1. Démarrer le serveur de développement :
+```bash
+npm run serve
+```
 
-   ```bash
-   npm run serve
-   ```
+À la main : couper le réseau dans les outils de développement (onglet Réseau,
+mode hors ligne), puis rafraîchir la page. `offline.html` doit s'afficher.
 
-   Ouvrir `http://localhost:8080` (ou le port affiché)
+Automatiquement, avec Puppeteer :
 
-2. Tester manuellement :
-   - Couper le réseau dans les DevTools (Network tab → Offline)
-   - Rafraîchir la page → `offline.html` s'affiche
-
-3. Test automatisé (Puppeteer requis) :
-   ```bash
-   npm run test:pwa-offline
-   ```
+```bash
+npm run test:pwa-offline
+```
 
 **Scripts de gestion du Service Worker** :
 

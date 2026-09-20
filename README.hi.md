@@ -1,586 +1,550 @@
 <details>
 <summary>यह दस्तावेज़ अन्य भाषाओं में भी उपलब्ध है</summary>
 
-- [English](./README.en.md)
-- [Español](./README.es.md)
-- [Português](./README.pt.md)
-- [Deutsch](./README.de.md)
-- [中文](./README.zh.md)
-- [Français](./README.md)
-- [العربية](./README.ar.md)
-- [Italiano](./README.it.md)
-- [Svenska](./README.sv.md)
-- [Polski](./README.pl.md)
-- [Nederlands](./README.nl.md)
-- [Română](./README.ro.md)
-- [日本語](./README.ja.md)
-- [한국어](./README.ko.md)
+- [अंग्रेज़ी](./README.en.md)
+- [स्पेनिश](./README.es.md)
+- [पुर्तगाली](./README.pt.md)
+- [जर्मन](./README.de.md)
+- [चीनी](./README.zh.md)
+- [हिन्दी](./README.hi.md)
+- [अरबी](./README.ar.md)
+- [इतालवी](./README.it.md)
+- [स्वीडिश](./README.sv.md)
+- [पोलिश](./README.pl.md)
+- [डच](./README.nl.md)
+- [रोमानियाई](./README.ro.md)
+- [जापानी](./README.ja.md)
+- [कोरियाई](./README.ko.md)
 
 </details>
 
 # LeapMultix
 
-<!-- Badges (update <owner>/<repo> after GitHub migration) -->
-
 ![CI](https://img.shields.io/github/actions/workflow/status/jls42/leapmultix/ci.yml?branch=main)
+![लाइसेंस: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/jls42/leapmultix/badge)](https://www.codefactor.io/repository/github/jls42/leapmultix)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Codacy बैज](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![गुणवत्ता गेट की स्थिति](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
+[![विश्वसनीयता रेटिंग](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![सुरक्षा रेटिंग](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![रखरखाव-योग्यता रेटिंग](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![तकनीकी ऋण](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-## विषय सूची
+[![बग](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![कमज़ोरियाँ](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![कोड संबंधी समस्याएँ](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![दोहराई गई पंक्तियाँ (%)](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![कोड की पंक्तियाँ](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+
+## विषय-सूची
 
 - [विवरण](#विवरण)
+- [अवलोकन](#-अवलोकन)
 - [विशेषताएँ](#-विशेषताएँ)
-- [त्वरित आरंभ](#-त्वरित-आरंभ)
+- [त्वरित शुरुआत](#-त्वरित-शुरुआत)
 - [आर्किटेक्चर](#-आर्किटेक्चर)
-- [विस्तृत गेम मोड](#-विस्तृत-गेम-मोड)
+- [गेम मोड का विस्तृत विवरण](#-गेम-मोड-का-विस्तृत-विवरण)
 - [विकास](#-विकास)
 - [संगतता](#-संगतता)
 - [स्थानीयकरण](#-स्थानीयकरण)
-- [डेटा स्टोरेज](#-डेटा-स्टोरेज)
-- [समस्याओं की रिपोर्ट करना](#-समस्याओं-की-रिपोर्ट-करना)
+- [डेटा संग्रहण](#-डेटा-संग्रहण)
+- [समस्या की रिपोर्ट करें](#-समस्या-की-रिपोर्ट-करें)
 - [लाइसेंस](#-लाइसेंस)
 
 ## विवरण
 
-LeapMultix एक आधुनिक इंटरैक्टिव शैक्षिक वेब एप्लिकेशन है जिसे बच्चों (8–12 वर्ष) को 4 अंकगणितीय संक्रियाओं में महारत हासिल करने के लिए डिज़ाइन किया गया है: गुणा (×), जोड़ (+), घटाव (−), और भाग (÷)। एप्लिकेशन एक सहज, सुलभ और बहुभाषी इंटरफ़ेस में **5 गेम मोड** और **4 आर्केड मिनी-गेम** प्रदान करता है।
+LeapMultix एक संवादात्मक शैक्षिक वेब एप्लिकेशन है, जिसे 6 से 12 वर्ष के बच्चों को चार अंकगणितीय संक्रियाओं—गुणा (×), जोड़ (+), घटाव (−) और भाग (÷)—में निपुण बनाने के लिए बनाया गया है। यह सहज, सुलभ और बहुभाषी इंटरफ़ेस में **5 गेम मोड** और **4 आर्केड मिनी-गेम** प्रदान करता है।
 
-**मल्टी-ऑपरेशन समर्थन:** क्विज़ और चुनौती मोड सभी संक्रियाओं का अभ्यास करने की अनुमति देते हैं। खोज, साहसिक और आर्केड मोड गुणा पर ध्यान केंद्रित करते हैं लेकिन सभी संक्रियाओं का समर्थन करने के लिए डिज़ाइन किए गए हैं।
+**एकाधिक संक्रियाओं का समर्थन:** पाँचों मोड चारों संक्रियाओं का समर्थन करते हैं। संक्रिया का चयन होम स्क्रीन पर किया जाता है और यह पूरे अभ्यास के दौरान लागू रहता है।
 
-**द्वारा विकसित:** Julien LS (contact@jls42.org)
+**डेवलपर:** Julien LS (contact@jls42.org)
 
 **ऑनलाइन URL:** https://leapmultix.jls42.org/
+
+## 📸 अवलोकन
+
+### स्क्रीन
+
+|                                                                                                           |                                                                                                             |
+| :-------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------: |
+|               ![「कौन खेल रहा है?」 स्क्रीन: प्रोफ़ाइल का चयन](docs/media/01-accueil.webp)                |                     ![मुख्य मेनू: संक्रिया और पाँच मोड का चयन](docs/media/02-menu.webp)                     |
+|            **कौन खेल रहा है?** — प्रत्येक बच्चे के लिए उसके अवतार और प्रगति सहित एक प्रोफ़ाइल।            |                      **मेनू** — यहाँ संक्रिया चुनी जाती है, फिर पाँचों मोड खुलते हैं।                       |
+|           ![खोज मोड: 4 की तालिका बिंदुओं के रूप में दिखाई गई है](docs/media/03-decouverte.webp)           |               ![क्विज़ मोड: गलत उत्तर लाल और सही उत्तर हरे रंग में](docs/media/04-quiz.webp)                |
+| **खोज** — प्रत्येक समीकरण को बिंदुओं, छलाँगों या गिनती के रूप में, तालिका की तरकीब के साथ दिखाया जाता है। | **क्विज़** — बच्चे का चयन सही उत्तर के बगल में दिखाई देता रहता है और व्याख्या गणना को विस्तार से समझाती है। |
+|                     ![चुनौती मोड: उलटी गिनती और जारी शृंखला](docs/media/05-defi.webp)                     |            ![रोमांच मोड: दस स्तरों का मानचित्र, अगले स्तर लॉक हैं](docs/media/06-aventure.webp)             |
+|  **चुनौती** — समय के विरुद्ध दौड़। गलती होने पर सही उत्तर पढ़ने के लिए टाइमर कुछ समय के लिए रुक जाता है।  |                      **रोमांच** — दस स्तर, जो सितारों के बदले एक के बाद एक खुलते हैं।                       |
+|                          ![आर्केड मेनू: चार मिनी-गेम](docs/media/07-arcade.webp)                          |            ![डैशबोर्ड: प्रत्येक तालिका के सितारे और आँकड़े](docs/media/08-tableau-de-bord.webp)             |
+|                     **आर्केड** — कठिनाई समायोजन और अंतरिक्षयान चयन वाले चार मिनी-गेम।                     |         **डैशबोर्ड** — प्रत्येक तालिका के सितारे, दोहराने योग्य तालिकाएँ और प्रत्येक मोड के स्कोर।          |
+|                 ![वैयक्तिकरण: अवतार, थीम और सुलभता](docs/media/09-personnalisation.webp)                  |                                                                                                             |
+|              **वैयक्तिकरण** — अवतार, रंग थीम, पाठ का आकार, उच्च कंट्रास्ट और अभिभावकीय कोड।               |                                                                                                             |
+
+### आर्केड मिनी-गेम
+
+चार गेम एक ही प्रश्न पूछते हैं—जो खेल क्षेत्र के ऊपर शेष समय और जीवनों के साथ
+दिखाया जाता है—लेकिन हर बार अलग क्रिया करने को कहते हैं।
+
+|                                                                                                                           |                                                                                                    |
+| :-----------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
+|      ![MultiInvaders: संख्याएँ धारण किए राक्षस और स्क्रीन के नीचे एक अंतरिक्षयान](docs/media/10-multiinvaders.webp)       | ![MultiMiam: एक भूलभुलैया, जिसमें गोलियों पर संभावित उत्तर लिखे हैं](docs/media/11-multimiam.webp) |
+| **MultiInvaders** — गलत उत्तरों पर गोली चलाएँ और सही उत्तर को छोड़ दें: उसके पीछे मुक्त किया जाने वाला एक मित्र छिपा है।  |          **MultiMiam** — राक्षसों से बचते हुए सही परिणाम पाने के लिए भूलभुलैया में घूमें।          |
+| ![MultiMemory: कार्डों की ग्रिड, जिसमें पलटे गए दो कार्ड एक गणना और एक संख्या दिखाते हैं](docs/media/12-multimemory.webp) |      ![MultiSnake: घास के मैदान में एक साँप और क्रमांकित सेब](docs/media/13-multisnake.webp)       |
+|                     **MultiMemory** — याद करके वह कार्ड खोजें जिस पर पलटी गई गणना का परिणाम लिखा है।                      |                  **MultiSnake** — सही संख्याएँ निगलकर बढ़ें और अन्य सभी से बचें।                   |
 
 ## ✨ विशेषताएँ
 
 ### 🎮 गेम मोड
 
-- **खोज मोड**: प्रत्येक संक्रिया के लिए अनुकूलित दृश्य और इंटरैक्टिव अन्वेषण
-- **क्विज़ मोड**: सभी 4 संक्रियाओं (×, +, −, ÷) के समर्थन और अनुकूलनशील प्रगति के साथ बहुविकल्पीय प्रश्न
-- **चुनौती मोड**: सभी 4 संक्रियाओं (×, +, −, ÷) और विभिन्न कठिनाई स्तरों के साथ समय के विरुद्ध दौड़
-- **साहसिक मोड**: सभी 4 संक्रियाओं के समर्थन के साथ स्तरों द्वारा कथात्मक प्रगति
+- **खोज मोड**: प्रत्येक संक्रिया के अनुरूप दृश्यात्मक और संवादात्मक अन्वेषण
+- **क्विज़ मोड**: चारों संक्रियाओं (×, +, −, ÷) के समर्थन और अनुकूली प्रगति वाले बहुविकल्पीय प्रश्न
+- **चुनौती मोड**: चारों संक्रियाओं (×, +, −, ÷) और कठिनाई के विभिन्न स्तरों के साथ समय के विरुद्ध दौड़
+- **रोमांच मोड**: चारों संक्रियाओं के समर्थन के साथ स्तरों के माध्यम से कथात्मक प्रगति
 
 ### 🕹️ आर्केड मिनी-गेम
 
-- **MultiInvaders**: शैक्षिक स्पेस इनवेडर्स - गलत उत्तरों को नष्ट करें
-- **MultiMiam**: गणितीय पैकमैन - सही उत्तर एकत्र करें
-- **MultiMemory**: मेमोरी गेम - संक्रियाओं और परिणामों का मिलान करें
-- **MultiSnake**: शैक्षिक स्नेक - सही संख्या खाकर बढ़ें
+- **MultiInvaders**: शैक्षिक Space Invaders — गलत उत्तरों को नष्ट करें
+- **MultiMiam**: गणितीय Pac-Man — सही उत्तर एकत्र करें
+- **MultiMemory**: स्मृति का खेल — संक्रियाओं को परिणामों से मिलाएँ
+- **MultiSnake**: शैक्षिक Snake — सही संख्याएँ खाकर बढ़ें
 
-### ➕ मल्टी-ऑपरेशन समर्थन
+### ➕ एकाधिक संक्रियाओं का समर्थन
 
-LeapMultix **सभी मोड** में 4 अंकगणितीय संक्रियाओं के लिए पूर्ण प्रशिक्षण प्रदान करता है:
+LeapMultix **सभी मोड** में चारों अंकगणितीय संक्रियाओं का संपूर्ण अभ्यास प्रदान करता है:
 
 | मोड    | ×   | +   | −   | ÷   |
 | ------ | --- | --- | --- | --- |
 | क्विज़ | ✅  | ✅  | ✅  | ✅  |
 | चुनौती | ✅  | ✅  | ✅  | ✅  |
 | खोज    | ✅  | ✅  | ✅  | ✅  |
-| साहसिक | ✅  | ✅  | ✅  | ✅  |
+| रोमांच | ✅  | ✅  | ✅  | ✅  |
 | आर्केड | ✅  | ✅  | ✅  | ✅  |
 
-### 🌍 क्रॉस-कटिंग विशेषताएँ
+### 🌍 सभी मोड में उपलब्ध विशेषताएँ
 
-- **मल्टी-यूज़र**: सहेजी गई प्रगति के साथ व्यक्तिगत प्रोफ़ाइल का प्रबंधन
-- **बहुभाषी**: फ्रेंच, अंग्रेजी और स्पेनिश के लिए समर्थन
-- **अनुकूलन**: अवतार, रंग थीम, पृष्ठभूमि
-- **सुलभता**: कीबोर्ड नेविगेशन, स्पर्श समर्थन, WCAG 2.1 AA अनुपालन
-- **मोबाइल रिस्पॉन्सिव**: टैबलेट और स्मार्टफोन के लिए अनुकूलित इंटरफ़ेस
-- **प्रगति प्रणाली**: स्कोर, बैज, दैनिक चुनौतियाँ
+- **एकाधिक उपयोगकर्ता**: सहेजी गई प्रगति के साथ व्यक्तिगत प्रोफ़ाइल का प्रबंधन
+- **बहुभाषी**: फ़्रेंच, अंग्रेज़ी और स्पेनिश का समर्थन
+- **वैयक्तिकरण**: अवतार, रंग थीम और पृष्ठभूमियाँ
+- **सुलभता**: कीबोर्ड नेविगेशन, स्पर्श समर्थन और WCAG 2.1 AA अनुपालन
+- **मोबाइल अनुकूल**: टैबलेट और स्मार्टफ़ोन के लिए अनुकूलित इंटरफ़ेस
+- **प्रगति प्रणाली**: स्कोर, बैज और दैनिक चुनौतियाँ
 
-## 🚀 त्वरित आरंभ
+## 🚀 त्वरित शुरुआत
 
 ### पूर्वापेक्षाएँ
 
-- Node.js (संस्करण 16 या उच्चतर)
+- Node.js (संस्करण 16 या उससे नया)
 - एक आधुनिक वेब ब्राउज़र
 
 ### स्थापना
 
 ```bash
-# प्रोजेक्ट क्लोन करें
+# Cloner le projet
 git clone https://github.com/jls42/leapmultix.git
 cd leapmultix
 
-# निर्भरताएँ स्थापित करें
+# Installer les dépendances
 npm install
 
-# विकास सर्वर शुरू करें (विकल्प 1)
+# Lancer le serveur de développement (option 1)
 npm run serve
-# एप्लिकेशन http://localhost:8080 (या अगले उपलब्ध पोर्ट) पर उपलब्ध होगा
+# L'application sera accessible sur http://localhost:8080 (ou port suivant disponible)
 
-# या Python के साथ (विकल्प 2)
+# Ou avec Python (option 2)
 python3 -m http.server 8000
-# एप्लिकेशन http://localhost:8000 पर उपलब्ध होगा
+# L'application sera accessible sur http://localhost:8000
 ```
 
 ### उपलब्ध स्क्रिप्ट
 
 ```bash
-# विकास
-npm run serve          # स्थानीय सर्वर (http://localhost:8080)
-npm run lint           # ESLint के साथ कोड सत्यापन
-npm run lint:fix       # ESLint मुद्दों का स्वचालित सुधार
-npm run format:check   # कोड स्वरूपण की जाँच करें (हमेशा कमिट से पहले)
-npm run format         # Prettier के साथ कोड स्वरूपित करें
-npm run verify         # गुणवत्ता गेट: lint + test + coverage
+# Développement
+npm run serve          # Serveur local (http://localhost:8080)
+npm run lint           # Vérification du code avec ESLint
+npm run lint:fix       # Correction automatique des problèmes ESLint
+npm run format:check   # Vérifier le formatage du code (TOUJOURS avant commit)
+npm run format         # Formater le code avec Prettier
+npm run verify         # Quality gate: lint + test + coverage
 
-# परीक्षण
-npm run test           # सभी परीक्षण चलाएँ (CJS)
-npm run test:watch     # वॉच मोड में परीक्षण
-npm run test:coverage  # कवरेज रिपोर्ट के साथ परीक्षण
-npm run test:core      # केवल कोर मॉड्यूल के लिए परीक्षण
-npm run test:integration # एकीकरण परीक्षण
-npm run test:storage   # स्टोरेज सिस्टम परीक्षण
-npm run test:esm       # ESM परीक्षण (tests-esm/ फ़ोल्डर, Jest vm-modules)
-npm run test:verbose   # विस्तृत आउटपुट के साथ परीक्षण
-npm run test:pwa-offline # PWA ऑफ़लाइन परीक्षण (Puppeteer आवश्यक), `npm run serve` के बाद
+# Tests
+npm run test           # Lancer tous les tests (CJS)
+npm run test:watch     # Tests en mode watch
+npm run test:coverage  # Tests avec rapport de couverture
+npm run test:core      # Tests des modules core uniquement
+npm run test:integration # Tests d'intégration
+npm run test:storage   # Tests du système de stockage
+npm run test:esm       # Tests ESM (dossiers tests-esm/, Jest vm-modules)
+npm run test:verbose   # Tests avec sortie détaillée
+npm run test:pwa-offline # Test offline PWA (nécessite Puppeteer), après `npm run serve`
 
-# विश्लेषण और रखरखाव
-npm run analyze:jsdoc  # दस्तावेज़ीकरण विश्लेषण
-npm run improve:jsdoc  # स्वचालित JSDoc सुधार
-npm run audit:mobile   # मोबाइल रिस्पॉन्सिवनेस परीक्षण
-npm run audit:accessibility # सुलभता परीक्षण
-npm run dead-code      # अप्रयुक्त कोड का पता लगाना
-npm run analyze:globals # वैश्विक चर विश्लेषण
-npm run analyze:dependencies # निर्भरता उपयोग विश्लेषण
-npm run verify:cleanup # संयुक्त विश्लेषण (डेड कोड + ग्लोबल्स)
+# Analyse et maintenance
+npm run analyze:jsdoc  # Analyse de la documentation
+npm run improve:jsdoc  # Amélioration automatique JSDoc
+npm run audit:mobile   # Tests responsivité mobile
+npm run audit:accessibility # Tests d'accessibilité
+npm run dead-code      # Détection de code non utilisé
+npm run analyze:globals # Analyse des variables globales
+npm run analyze:dependencies # Analyse usage des dépendances
+npm run verify:cleanup # Analyse combinée (dead code + globals)
 
-# एसेट प्रबंधन
-npm run assets:generate    # रिस्पॉन्सिव चित्र उत्पन्न करें
-npm run assets:backgrounds # पृष्ठभूमि को WebP में बदलें
-npm run assets:analyze     # रिस्पॉन्सिव एसेट विश्लेषण
-npm run assets:diff        # एसेट तुलना
+# Gestion des assets
+npm run assets:generate    # Générer les images responsives
+npm run assets:backgrounds # Convertir les fonds en WebP
+npm run assets:analyze     # Analyse des assets responsive
+npm run assets:diff        # Comparaison des assets
 
-# अंतर्राष्ट्रीयकरण
-npm run i18n:verify    # अनुवाद कुंजी स्थिरता सत्यापित करें
-npm run i18n:unused    # अप्रयुक्त अनुवाद कुंजियों को सूचीबद्ध करें
-npm run i18n:compare   # fr.json (संदर्भ) के साथ अनुवाद (en/es) की तुलना करें
+# Internationalisation
+npm run i18n:verify    # Vérifier la cohérence des clés de traduction
+npm run i18n:unused    # Lister les clés de traduction non utilisées
+npm run i18n:compare   # Comparer les traductions (en/es) avec fr.json (référence)
 
-# निर्माण और वितरण
-npm run build          # प्रोडक्शन बिल्ड (Rollup) + postbuild (पूर्ण dist/)
-npm run serve:dist     # http://localhost:5000 (या उपलब्ध पोर्ट) पर dist/ सर्व करें
+# Build & livraison
+npm run build          # Build de prod (Rollup) + postbuild (dist/ complet)
+npm run serve:dist     # Servir dist/ sur http://localhost:5000 (ou port disponible)
 
-# PWA और सर्विस वर्कर
-npm run sw:disable     # सर्विस वर्कर अक्षम करें
-npm run sw:fix         # सर्विस वर्कर समस्याओं को ठीक करें
+# PWA et Service Worker
+npm run sw:disable     # Désactiver le service worker
+npm run sw:fix         # Corriger les problèmes de service worker
 ```
 
 ## 🏗️ आर्किटेक्चर
 
 ### फ़ाइल संरचना
 
+JavaScript मॉड्यूल **`js/` में सपाट रूप से व्यवस्थित हैं**, केवल तीन फ़ोल्डरों को छोड़कर:
+`core/`, `components/` और `modes/`। इसलिए फ़ाइल का नाम ही
+समूहीकरण दर्शाता है (`arcade-*`, `multimiam-*`, `i18n*`…)।
+
 ```
 leapmultix/
-├── index.html              # मुख्य प्रवेश बिंदु
+├── index.html              # Application (navigation par slides)
+├── modes.html              # Page publique : les modes de jeu
+├── parents.html            # Page publique : guide parents et enseignants
+├── pwa.html                # Page publique : installation hors ligne
+├── offline.html            # Page servie hors ligne par le service worker
+├── sw.js                   # Service worker (version alignée sur js/cache-updater.js)
+├── deploy.sh               # Déploiement S3 + invalidation CloudFront
 ├── js/
-│   ├── core/               # ES6 कोर मॉड्यूल
-│   │   ├── GameMode.js     # मोड के लिए बेस क्लास
-│   │   ├── GameModeManager.js # गेम मोड प्रबंधन
-│   │   ├── storage.js      # LocalStorage API
-│   │   ├── audio.js        # ध्वनि प्रबंधन
-│   │   ├── utils.js        # सामान्य उपयोगिताएँ (प्रामाणिक स्रोत)
-│   │   ├── eventBus.js     # ईवेंट संचार
-│   │   ├── userState.js    # उपयोगकर्ता सत्र प्रबंधन
-│   │   ├── mainInit.js     # DOM-रेडी आरंभीकरण
-│   │   ├── theme.js        # थीम सिस्टम
-│   │   ├── userUi.js       # यूज़र इंटरफ़ेस उपयोगिताएँ
-│   │   ├── parental.js     # माता-पिता का नियंत्रण
-│   │   ├── adventure-data.js # साहसिक मोड डेटा
-│   │   ├── mult-stats.js   # गुणा आँकड़े
-│   │   ├── challenge-stats.js # चुनौती आँकड़े
-│   │   └── daily-challenge.js # दैनिक चुनौती प्रबंधन
-│   ├── components/         # पुन: प्रयोज्य UI घटक
-│   │   ├── topBar.js       # नेविगेशन बार
-│   │   ├── infoBar.js      # गेम जानकारी बार
-│   │   ├── dashboard.js    # उपयोगकर्ता डैशबोर्ड
-│   │   └── customization.js # अनुकूलन इंटरफ़ेस
-│   ├── modes/              # गेम मोड
-│   │   ├── QuizMode.js
-│   │   ├── ChallengeMode.js
-│   │   ├── AdventureMode.js
-│   │   ├── DiscoveryMode.js
-│   │   └── ArcadeMode.js
-│   ├── arcade/             # आर्केड मिनी-गेम
-│   │   ├── arcade.js       # मुख्य आर्केड ऑर्केस्ट्रेटर
-│   │   ├── arcade-invasion.js # स्पेस इनवेडर्स (31 KB)
-│   │   ├── arcade-multimemory.js # मेमोरी गेम (31 KB)
-│   │   ├── arcade-multimiam.js # MultiMiam एकीकरण
-│   │   ├── arcade-multisnake.js # स्नेक एकीकरण
-│   │   ├── arcade-common.js, arcade-utils.js # साझा उपयोगिताएँ
-│   │   ├── arcade-message.js, arcade-points.js # UI घटक
-│   │   └── arcade-scores.js # स्कोर प्रबंधन
-│   ├── multimiam/          # पैकमैन गेम (विघटित आर्किटेक्चर)
-│   │   ├── multimiam.js    # मुख्य नियंत्रक
-│   │   ├── multimiam-engine.js # गेम इंजन (15 KB)
-│   │   ├── multimiam-renderer.js # रेंडरिंग सिस्टम (9 KB)
-│   │   ├── multimiam-controls.js # नियंत्रण प्रबंधन (7 KB)
-│   │   ├── multimiam-questions.js # प्रश्न निर्माण (6 KB)
-│   │   └── multimiam-ui.js # इंटरफ़ेस तत्व
-│   ├── multisnake.js       # स्नेक गेम (38 KB)
-│   ├── navigation/         # नेविगेशन सिस्टम
-│   │   ├── slides.js       # स्लाइड-आधारित नेविगेशन (goToSlide, showSlide)
-│   │   └── keyboard-navigation.js # कीबोर्ड समर्थन
-│   ├── ui/                 # यूज़र इंटरफ़ेस और फीडबैक
-│   │   ├── uiUtils.js      # इंटरफ़ेस उपयोगिताएँ
-│   │   ├── ui-feedback.js  # फीडबैक तंत्र
-│   │   ├── touch-support.js # स्पर्श समर्थन (7 KB)
-│   │   ├── virtual-keyboard.js # वर्चुअल कीबोर्ड
-│   │   ├── coin-display.js, coin-effects.js # मुद्रा प्रणाली
-│   │   ├── notifications.js # अधिसूचना प्रणाली
-│   │   └── badges.js       # बैज प्रणाली
-│   ├── media/              # मीडिया प्रबंधन
-│   │   ├── VideoManager.js # वीडियो प्लेबैक प्रबंधन (12 KB)
-│   │   └── responsive-image-loader.js # छवि लोडिंग (9 KB)
-│   ├── orchestration/      # ऑर्केस्ट्रेशन और लोडिंग
-│   │   ├── mode-orchestrator.js # मोड स्विचिंग
-│   │   ├── lazy-loader.js  # डायनामिक लोडिंग (10 KB)
-│   │   └── game-cleanup.js # स्थिति सफाई
-│   ├── utils/              # उपयोगिताएँ
-│   │   ├── utils-es6.js    # मुख्य एग्रीगेटर (5 KB)
-│   │   ├── main-helpers.js # एप्लिकेशन हेल्पर्स
-│   │   ├── helpers.js      # लीगेसी हेल्पर फ़ंक्शन
-│   │   ├── stats-utils.js  # सांख्यिकी उपयोगिताएँ
-│   │   ├── difficulty.js   # कठिनाई प्रबंधन
-│   │   └── questionGenerator.js # प्रश्न निर्माण
-│   ├── storage/            # स्टोरेज और स्थिति
-│   │   ├── storage.js      # लीगेसी स्टोरेज रैपर
-│   │   └── userManager.js  # मल्टी-यूज़र प्रबंधन (19 KB)
-│   ├── i18n/               # अंतर्राष्ट्रीयकरण
-│   │   ├── i18n.js         # i18n सिस्टम
-│   │   └── i18n-store.js   # अनुवाद स्टोरेज
-│   ├── security/           # सुरक्षा और त्रुटि हैंडलिंग
-│   │   ├── security-utils.js # XSS सुरक्षा, स्वच्छता
-│   │   ├── error-handlers.js # वैश्विक त्रुटि हैंडलिंग
-│   │   └── logger.js       # लॉगिंग सिस्टम
-│   ├── accessibility/      # सुलभता
-│   │   ├── accessibility.js # सुलभता विशेषताएँ
-│   │   └── speech.js       # भाषण संश्लेषण समर्थन
-│   ├── integration/        # एकीकरण और एनालिटिक्स
-│   │   ├── plausible-init.js # Plausible एनालिटिक्स
-│   │   ├── cache-updater.js # कैश प्रबंधन (10 KB)
-│   │   └── imports.js      # आयात उपयोगिताएँ
-│   ├── main-es6.js         # ES6 प्रवेश बिंदु
-│   ├── main.js             # मुख्य ऑर्केस्ट्रेटर
-│   ├── bootstrap.js        # ES6 ईवेंट हैंडलर सेटअप
-│   └── game.js             # स्थिति प्रबंधन और दैनिक चुनौतियाँ
-├── css/                    # मॉड्यूलर शैलियाँ
-├── assets/                 # संसाधन
-│   ├── images/             # चित्र और स्प्राइट्स
-│   ├── generated-images/   # उत्पन्न रिस्पॉन्सिव चित्र
-│   ├── sounds/             # ध्वनि प्रभाव
-│   ├── translations/       # अनुवाद फ़ाइलें (fr, en, es)
-│   └── videos/             # ट्यूटोरियल वीडियो
-├── tests/                  # स्वचालित परीक्षण
-│   ├── __tests__/          # यूनिट और एकीकरण परीक्षण
-│   └── tests-esm/          # ESM परीक्षण (.mjs)
-├── scripts/                # रखरखाव स्क्रिप्ट
-│   ├── compare-translations.cjs # अनुवाद तुलना
-│   └── cleanup-i18n-keys.cjs # i18n कुंजी सफाई
-└── dist/                   # प्रोडक्शन बिल्ड (उत्पन्न)
+│   ├── core/               # Socle applicatif
+│   │   ├── GameMode.js, GameModeManager.js   # Classe de base des modes
+│   │   ├── storage.js, userState.js          # Persistance et session
+│   │   ├── audio.js, theme.js, parental.js   # Son, thèmes, contrôle parental
+│   │   ├── eventBus.js, mainInit.js          # Événements, amorçage DOM
+│   │   ├── adventure-data.js                 # Niveaux du mode Aventure
+│   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
+│   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
+│   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
+│   │   └── operations/                       # Une classe par opération
+│   │       ├── Operation.js, OperationRegistry.js
+│   │       └── Multiplication.js, Addition.js, Subtraction.js, Division.js
+│   ├── components/         # Composants d'interface
+│   │   ├── topBar.js, infoBar.js, dashboard.js, customization.js
+│   │   ├── operationSelector.js, operationModeAvailability.js
+│   │   └── icons.js, tableSettingsModal.js
+│   ├── modes/              # Les cinq modes de jeu
+│   │   ├── DiscoveryMode.js, QuizMode.js, ChallengeMode.js
+│   │   └── AdventureMode.js, ArcadeMode.js
+│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux
+│   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
+│   ├── multisnake.js       # Mini-jeu Snake
+│   ├── i18n.js, i18n-store.js                # Internationalisation
+│   ├── security-utils.js, error-handlers.js, logger.js
+│   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
+│   ├── slides.js, mode-orchestrator.js, lazy-loader.js, game-cleanup.js
+│   ├── VideoManager.js, responsive-image-loader.js
+│   ├── userManager.js, main-helpers.js, utils-es6.js, questionGenerator.js
+│   └── main-es6.js, main.js, bootstrap.js, game.js   # Points d'entrée
+├── css/                    # Feuilles de style (jetons de design : themes.css)
+├── assets/
+│   ├── images/             # Sources PNG (avatars, sprites, fonds)
+│   ├── generated-images/   # Variantes responsives (généré, hors git)
+│   ├── fonts/, sounds/, videos/, icons/, social/
+│   └── translations/       # fr.json, en.json, es.json
+├── tests/__tests__/        # Tests Jest (jsdom, et bout-en-bout via Puppeteer)
+├── tests-esm/              # Tests Jest en modules ES (.mjs)
+├── scripts/                # Génération d'assets, i18n, rapports
+├── docs/media/             # Captures et animations du README
+└── dist/                   # Build de production (généré)
 ```
 
 ### तकनीकी आर्किटेक्चर
 
-**आधुनिक ES6 मॉड्यूल**: प्रोजेक्ट ES6 कक्षाओं और मूल आयात/निर्यात के साथ एक मॉड्यूलर आर्किटेक्चर का उपयोग करता है।
+**आधुनिक ES6 मॉड्यूल**: यह प्रोजेक्ट ES6 क्लास और मूल import/export वाली मॉड्यूलर आर्किटेक्चर का उपयोग करता है।
 
-**पुन: प्रयोज्य घटक**: इंटरफ़ेस केंद्रीकृत UI घटकों (TopBar, InfoBar, Dashboard, Customization) के साथ बनाया गया है।
+**पुनः उपयोग योग्य कंपोनेंट**: इंटरफ़ेस केंद्रीकृत UI कंपोनेंट (TopBar, InfoBar, Dashboard, Customization) से बनाया गया है।
 
-**लेजी लोडिंग**: प्रारंभिक प्रदर्शन को अनुकूलित करने के लिए `lazy-loader.js` के माध्यम से मॉड्यूल की बुद्धिमान ऑन-डिमांड लोडिंग।
+**Lazy Loading**: आरंभिक प्रदर्शन को अनुकूलित करने के लिए `lazy-loader.js` के माध्यम से आवश्यकता पड़ने पर मॉड्यूल को समझदारी से लोड किया जाता है।
 
-**एकीकृत स्टोरेज सिस्टम**: फ़ॉलबैक के साथ LocalStorage के माध्यम से उपयोगकर्ता डेटा दृढ़ता के लिए केंद्रीकृत API।
+**एकीकृत संग्रहण प्रणाली**: LocalStorage और fallback के माध्यम से उपयोगकर्ता डेटा को स्थायी रखने के लिए केंद्रीकृत API।
 
-**केंद्रीकृत ऑडियो प्रबंधन**: बहुभाषी समर्थन और प्रति-उपयोगकर्ता वरीयताओं के साथ ध्वनि नियंत्रण।
+**केंद्रीकृत ऑडियो प्रबंधन**: बहुभाषी समर्थन और प्रत्येक उपयोगकर्ता की प्राथमिकताओं के साथ ध्वनि नियंत्रण।
 
-**ईवेंट बस**: एक रखरखाव योग्य आर्किटेक्चर के लिए घटकों के बीच डिकूपल्ड ईवेंट-संचालित संचार।
+**Event Bus**: रखरखाव-योग्य आर्किटेक्चर के लिए कंपोनेंट के बीच असंबद्ध इवेंट-आधारित संचार।
 
-**स्लाइड नेविगेशन**: `goToSlide()` के साथ क्रमांकित स्लाइड (slide0, slide1, आदि) पर आधारित नेविगेशन प्रणाली।
+**स्लाइड-आधारित नेविगेशन**: `goToSlide()` के साथ क्रमांकित स्लाइड (slide0, slide1 आदि) पर आधारित नेविगेशन प्रणाली।
 
-**सुरक्षा**: सभी DOM जोड़तोड़ के लिए `security-utils.js` के माध्यम से XSS सुरक्षा और स्वच्छता।
+**सुरक्षा**: सभी DOM परिचालनों के लिए `security-utils.js` के माध्यम से XSS सुरक्षा और सैनिटाइज़ेशन।
 
-## 🎯 विस्तृत गेम मोड
+## 🎯 गेम मोड का विस्तृत विवरण
 
 ### खोज मोड
 
-गुणा सारणी के लिए दृश्य अन्वेषण इंटरफ़ेस जिसमें शामिल हैं:
+गुणा तालिकाओं का दृश्यात्मक अन्वेषण इंटरफ़ेस, जिसमें शामिल हैं:
 
-- गुणा का इंटरैक्टिव दृश्य
-- एनिमेशन और मेमोरी एड्स
+- गुणाओं का संवादात्मक प्रदर्शन
+- ऐनिमेशन और स्मृति-सहायक संकेत
 - शैक्षिक ड्रैग-एंड-ड्रॉप
-- प्रति सारणी मुक्त प्रगति
+- प्रत्येक तालिका में स्वतंत्र प्रगति
 
 ### क्विज़ मोड
 
-बहुविकल्पीय प्रश्न जिसमें शामिल हैं:
+बहुविकल्पीय प्रश्न, जिनमें शामिल हैं:
 
-- प्रति सत्र 10 प्रश्न
-- सफलता के आधार पर अनुकूलनशील प्रगति
-- वर्चुअल न्यूमेरिक कीपैड
-- स्ट्रीक सिस्टम (सही उत्तरों की श्रृंखला)
+- प्रत्येक सत्र में 10 प्रश्न
+- सफलताओं के अनुसार अनुकूली प्रगति
+- वर्चुअल संख्यात्मक कीपैड
+- लगातार सही उत्तरों की शृंखला प्रणाली
 
 ### चुनौती मोड
 
-समय के विरुद्ध दौड़ जिसमें शामिल हैं:
+समय के विरुद्ध दौड़, जिसमें शामिल हैं:
 
-- 3 कठिनाई स्तर (शुरुआती, मध्यम, कठिन)
-- सही उत्तरों के लिए समय बोनस
+- कठिनाई के 3 स्तर (शुरुआती, मध्यम, कठिन)
+- सही उत्तरों के लिए अतिरिक्त समय
 - जीवन प्रणाली
-- सर्वश्रेष्ठ स्कोर का लीडरबोर्ड
+- सर्वोच्च स्कोर की रैंकिंग
 
-### साहसिक मोड
+### रोमांच मोड
 
-कथात्मक प्रगति जिसमें शामिल हैं:
+कथात्मक प्रगति, जिसमें शामिल हैं:
 
-- 12 अनलॉक करने योग्य विषयगत स्तर
-- दृश्य प्रगति के साथ इंटरैक्टिव मानचित्र
-- पात्रों के साथ इमर्सिव कहानी
-- स्टार सिस्टम और पुरस्कार
+- अनलॉक किए जा सकने वाले 10 विषयगत स्तर
+- प्रगति के दृश्य प्रदर्शन वाला संवादात्मक मानचित्र
+- पात्रों वाली रोचक कहानी
+- सितारों और पुरस्कारों की प्रणाली
 
 ### आर्केड मिनी-गेम
 
-प्रत्येक मिनी-गेम प्रदान करता है:
+प्रत्येक मिनी-गेम में शामिल हैं:
 
-- कठिनाई का विकल्प और अनुकूलन
-- जीवन प्रणाली और स्कोर
+- कठिनाई का चयन और वैयक्तिकरण
+- जीवन और स्कोर प्रणाली
 - कीबोर्ड और स्पर्श नियंत्रण
-- प्रति उपयोगकर्ता व्यक्तिगत लीडरबोर्ड
+- प्रत्येक उपयोगकर्ता के लिए व्यक्तिगत रैंकिंग
 
 ## 🛠️ विकास
 
 ### विकास कार्यप्रवाह
 
-**महत्वपूर्ण: कभी भी सीधे main पर कमिट न करें**
+**कभी भी सीधे main पर commit न करें।** प्रोजेक्ट में सुविधाओं के लिए अलग-अलग
+branch पर काम किया जाता है।
 
-प्रोजेक्ट फ़ीचर शाखाओं पर आधारित कार्यप्रवाह का उपयोग करता है:
+**1. एक branch बनाएँ**, सुविधा के लिए `feat/` और सुधार के लिए `fix/`:
 
-1.  **एक शाखा बनाएँ**:
+```bash
+git checkout -b feat/nom-de-la-fonctionnalite
+```
 
-    ```bash
-    git checkout -b feat/feature-name
-    # या
-    git checkout -b fix/bug-name
-    ```
+**2. विकास और सत्यापन करें।** फ़ॉर्मैटिंग सबसे पहले होती है: परीक्षण शुरू होने
+से पहले ही CI इसके उल्लंघन को अस्वीकार कर देता है।
 
-2.  **विकास और परीक्षण**:
+```bash
+npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
+npm run format        # Formater si nécessaire
+npm run lint          # Qualité du code
+npm run test          # Tests
+npm run test:coverage # Couverture
+```
 
-    ```bash
-    npm run format:check  # हमेशा पहले स्वरूपण की जाँच करें
-    npm run format        # यदि आवश्यक हो तो स्वरूपित करें
-    npm run lint          # कोड गुणवत्ता की जाँच करें
-    npm run test          # परीक्षण चलाएँ
-    npm run test:coverage # कवरेज की जाँच करें
-    ```
+**3. branch पर commit करें**, फिर उसे push करें:
 
-3.  **शाखा पर कमिट करें**:
+```bash
+git add .
+git commit -m "feat: description de la fonctionnalité"
+git push -u origin feat/nom-de-la-fonctionnalite
+```
 
-    ```bash
-    git add .
-    git commit -m "feat: description of the feature"
-    ```
+**4. एक pull request खोलें** और विश्लेषण की प्रतीक्षा करें: verify, Codacy,
+CodeFactor और SonarCloud। merge करने से पहले सभी जाँचों के सफल होने तक सुधार करें।
 
-4.  **पुश करें और एक पुल रिक्वेस्ट बनाएँ**:
-    ```bash
-    git push -u origin feat/feature-name
-    ```
+**Commit शैली**: संक्षिप्त, आज्ञार्थक संदेश (उदाहरण: "Fix arcade init errors", "Refactor cache updater")
 
-**कमिट शैली**: संक्षिप्त, अनिवार्य मूड (जैसे, "Fix arcade init errors", "Refactor cache updater")
+**Quality gate**: प्रत्येक commit से पहले सुनिश्चित करें कि `npm run lint`, `npm test` और `npm run test:coverage` सफल हों
 
-**गुणवत्ता गेट**: सुनिश्चित करें कि प्रत्येक कमिट से पहले `npm run lint`, `npm test`, और `npm run test:coverage` पास हों
+### कंपोनेंट आर्किटेक्चर
 
-### घटक आर्किटेक्चर
+**GameMode (आधार क्लास)**: सभी मोड मानकीकृत विधियों वाली एक सामान्य क्लास से विरासत प्राप्त करते हैं।
 
-**GameMode (बेस क्लास)**: सभी मोड मानकीकृत विधियों के साथ एक सामान्य वर्ग से इनहेरिट करते हैं।
+**GameModeManager**: मोड शुरू करने और प्रबंधित करने का केंद्रीकृत संचालन।
 
-**GameModeManager**: मोड लॉन्चिंग और प्रबंधन का केंद्रीकृत ऑर्केस्ट्रेशन।
+**UI कंपोनेंट**: TopBar, InfoBar, Dashboard और Customization एक सुसंगत इंटरफ़ेस प्रदान करते हैं।
 
-**UI घटक**: TopBar, InfoBar, Dashboard, और Customization एक सुसंगत इंटरफ़ेस प्रदान करते हैं।
+**Lazy Loading**: आरंभिक प्रदर्शन को अनुकूलित करने के लिए मॉड्यूल आवश्यकता पड़ने पर लोड किए जाते हैं।
 
-**लेजी लोडिंग**: प्रारंभिक प्रदर्शन को अनुकूलित करने के लिए मॉड्यूल मांग पर लोड किए जाते हैं।
-
-**ईवेंट बस**: ईवेंट सिस्टम के माध्यम से घटकों के बीच डिकूपल्ड संचार।
+**Event Bus**: इवेंट प्रणाली के माध्यम से कंपोनेंट के बीच असंबद्ध संचार।
 
 ### परीक्षण
 
-प्रोजेक्ट में एक व्यापक परीक्षण सूट शामिल है:
+प्रोजेक्ट में एक संपूर्ण परीक्षण सुइट शामिल है:
 
-- कोर मॉड्यूल के लिए यूनिट परीक्षण
-- घटकों के लिए एकीकरण परीक्षण
-- गेम मोड परीक्षण
+- core मॉड्यूल के यूनिट परीक्षण
+- कंपोनेंट के एकीकरण परीक्षण
+- गेम मोड के परीक्षण
 - स्वचालित कोड कवरेज
 
 ```bash
-npm test              # सभी परीक्षण (CJS)
-npm test:core         # कोर मॉड्यूल परीक्षण
-npm test:integration  # एकीकरण परीक्षण
-npm test:coverage     # कवरेज रिपोर्ट
-npm run test:esm      # ESM परीक्षण (जैसे components/dashboard) vm-modules के माध्यम से
+npm test              # Tous les tests (CJS)
+npm test:core         # Tests des modules centraux
+npm test:integration  # Tests d'intégration
+npm test:coverage     # Rapport de couverture
+npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 ```
 
-### प्रोडक्शन बिल्ड
+### उत्पादन बिल्ड
 
-- **Rollup**: कोड-स्प्लिटिंग और सोरमैप्स के साथ ESM में `js/main-es6.js` को बंडल करता है
-- **Terser**: अनुकूलन के लिए स्वचालित मिनिमाइजेशन
-- **पोस्ट-बिल्ड**: `css/` और `assets/`, फ़ेविकॉन (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js` को कॉपी करता है, और हैश की गई प्रवेश फ़ाइल (जैसे, `main-es6-*.js`) में `dist/index.html` को फिर से लिखता है
-- **अंतिम फ़ोल्डर**: `dist/` स्थिर रूप से परोसने के लिए तैयार
+- **Rollup**: code-splitting और sourcemap के साथ `js/main-es6.js` को ESM में bundle करता है
+- **Terser**: अनुकूलन के लिए स्वचालित minification
+- **Post-build**: `css/` और `assets/`, favicon (`favicon.ico`, `favicon.png`, `favicon.svg`) तथा `sw.js` की प्रतिलिपि बनाता है और `dist/index.html` को hash की गई प्रवेश फ़ाइल की ओर पुनर्लिखता है (उदाहरण: `main-es6-*.js`)
+- **अंतिम फ़ोल्डर**: `dist/` स्थिर रूप से उपलब्ध कराने के लिए तैयार है
 
 ```bash
-npm run build      # dist/ उत्पन्न करता है
-npm run serve:dist # dist/ परोसता है (पोर्ट 5000)
+npm run build      # génère dist/
+npm run serve:dist # sert dist/ (port 5000)
 ```
 
-### निरंतर एकीकरण
+### सतत एकीकरण
 
-**GitHub Actions**: `.github/workflows/ci.yml` में स्वचालित पाइपलाइन
+**GitHub Actions**: `.github/workflows/ci.yml`, जो `main` पर प्रत्येक push
+और प्रत्येक pull request पर शुरू होता है।
 
-CI/CD पाइपलाइन प्रत्येक पुश और पुल रिक्वेस्ट पर स्वचालित रूप से चलती है:
+**`verify`** — अनिवार्य गुणवत्ता गेट:
 
-**मुख्य जॉब्स**:
+- `npm ci`, फिर `npm run verify` (ESLint, Jest परीक्षण, कवरेज)
+- `npm run format:check` (Prettier)
 
-1.  **build-test**: मुख्य सत्यापन जॉब
-    - निर्भरता स्थापना: `npm ci`
-    - स्वरूपण जाँच: `npm run format:check`
-    - स्थैतिक विश्लेषण: `npm run lint`
-    - यूनिट परीक्षण: `npm run test`
-    - सुरक्षा ऑडिट: `npm audit`
-    - कवरेज आर्टिफैक्ट निर्माण
+**`seo-report`** — `verify` के बाद: समय के साथ SEO मेट्रिक पर नज़र रखने के लिए
+ऑनलाइन साइट का Lighthouse ऑडिट।
 
-2.  **accessibility**: सुलभता ऑडिट (गैर-अवरुद्ध)
-    - `npm run audit:accessibility` चलाता है
-    - WCAG 2.1 AA सुलभता रिपोर्ट उत्पन्न करता है
+**Pull request से जुड़े बाहरी विश्लेषण**: Codacy, CodeFactor और
+SonarCloud। SonarCloud गेट नए कोड के लिए विश्वसनीयता, सुरक्षा और
+रखरखाव-योग्यता में A रेटिंग की माँग करता है।
 
-3.  **test-esm**: ES6 मॉड्यूल परीक्षण
-    - Jest VM मॉड्यूल के साथ `npm run test:esm` चलाता है
-    - ES6 आयात/निर्यात को मान्य करता है
+**परिनियोजन**: `./deploy.sh` साइट को S3 के साथ सिंक्रनाइज़ करता है और
+CloudFront cache को अमान्य करता है। आवश्यकता पड़ने पर स्क्रिप्ट git में अनुपस्थित responsive image दोबारा बनाती है।
 
-4.  **lighthouse**: प्रदर्शन ऑडिट (गैर-अवरुद्ध)
-    - मोबाइल प्रदर्शन ऑडिट
-    - लाइटहाउस रिपोर्ट आर्टिफैक्ट्स उत्पन्न करता है
-    - कोर वेब वाइटल्स मेट्रिक्स
+### PWA (Progressive Web App)
 
-**गुणवत्ता बैज**:
+LeapMultix एक संपूर्ण PWA है, जिसमें ऑफ़लाइन समर्थन और स्थापना की सुविधा है।
 
-- CI बिल्ड स्थिति (GitHub Actions)
-- कोडफ़ैक्टर ग्रेड
-- कोडेसी बैज
-- सोनारक्लाउड गुणवत्ता गेट
+**Service Worker** (`sw.js`):
 
-### PWA (प्रोग्रेसिव वेब ऐप)
-
-LeapMultix ऑफ़लाइन समर्थन और स्थापना क्षमता के साथ एक पूर्ण PWA है।
-
-**सर्विस वर्कर** (`sw.js`):
-
-- नेविगेशन: `offline.html` के लिए ऑफ़लाइन फ़ॉलबैक के साथ नेटवर्क-फ़र्स्ट
-- चित्र: प्रदर्शन को अनुकूलित करने के लिए कैश-फ़र्स्ट
-- अनुवाद: पृष्ठभूमि अपडेट के लिए स्टेल-व्हाइल-रिवैलिडेट
-- JS/CSS: हमेशा नवीनतम संस्करण परोसने के लिए नेटवर्क-फ़र्स्ट
+- नेविगेशन: `offline.html` पर ऑफ़लाइन fallback के साथ Network-first
+- चित्र: प्रदर्शन अनुकूलित करने के लिए Cache-first
+- अनुवाद: पृष्ठभूमि में अद्यतन के लिए Stale-while-revalidate
+- JS/CSS: हमेशा नवीनतम संस्करण उपलब्ध कराने के लिए Network-first
 - `cache-updater.js` के माध्यम से स्वचालित संस्करण प्रबंधन
 
-**मैनिफ़ेस्ट** (`manifest.json`):
+**Manifest** (`manifest.json`):
 
 - सभी उपकरणों के लिए SVG और PNG आइकन
-- मोबाइल पर स्थापना संभव (होम स्क्रीन पर जोड़ें)
-- ऐप जैसे अनुभव के लिए स्टैंडअलोन कॉन्फ़िगरेशन
-- थीम और रंगों के लिए समर्थन
+- मोबाइल पर स्थापना संभव (Add to Home Screen)
+- ऐप जैसा अनुभव देने के लिए standalone कॉन्फ़िगरेशन
+- थीम और रंगों का समर्थन
 
-**स्थानीय रूप से ऑफ़लाइन मोड का परीक्षण**:
-
-1.  विकास सर्वर शुरू करें:
-
-    ```bash
-    npm run serve
-    ```
-
-    `http://localhost:8080` (या प्रदर्शित पोर्ट) खोलें
-
-2.  मैन्युअल रूप से परीक्षण करें:
-    - DevTools में नेटवर्क काटें (नेटवर्क टैब → ऑफ़लाइन)
-    - पृष्ठ ताज़ा करें → `offline.html` प्रदर्शित होता है
-
-3.  स्वचालित परीक्षण (Puppeteer आवश्यक):
-    ```bash
-    npm run test:pwa-offline
-    ```
-
-**सर्विस वर्कर प्रबंधन स्क्रिप्ट**:
+**ऑफ़लाइन मोड का स्थानीय रूप से परीक्षण करें।** सर्वर शुरू करें, फिर
+`http://localhost:8080` (या दिखाया गया port) खोलें:
 
 ```bash
-npm run sw:disable  # सर्विस वर्कर अक्षम करें
-npm run sw:fix      # कैश समस्याओं को ठीक करें
+npm run serve
+```
+
+स्वयं परीक्षण करने के लिए: डेवलपर टूल के नेटवर्क टैब में नेटवर्क बंद करें
+(ऑफ़लाइन मोड), फिर पृष्ठ रीफ़्रेश करें। `offline.html` दिखाई देना चाहिए।
+
+Puppeteer के साथ स्वचालित रूप से:
+
+```bash
+npm run test:pwa-offline
+```
+
+**Service Worker प्रबंधन स्क्रिप्ट**:
+
+```bash
+npm run sw:disable  # Désactiver le service worker
+npm run sw:fix      # Corriger les problèmes de cache
 ```
 
 ### गुणवत्ता मानक
 
 **कोड गुणवत्ता उपकरण**:
 
-- **ESLint**: फ़्लैट कॉन्फ़िगरेशन (`eslint.config.js`), ES2022 समर्थन के साथ आधुनिक कॉन्फ़िगरेशन
-- **Prettier**: स्वचालित कोड स्वरूपण (`.prettierrc`)
+- **ESLint**: flat config (`eslint.config.js`) और ES2022 समर्थन वाला आधुनिक कॉन्फ़िगरेशन
+- **Prettier**: स्वचालित कोड फ़ॉर्मैटिंग (`.prettierrc`)
 - **Stylelint**: CSS सत्यापन (`.stylelintrc.json`)
-- **JSDoc**: कवरेज विश्लेषण के साथ स्वचालित फ़ंक्शन दस्तावेज़ीकरण
+- **JSDoc**: कवरेज विश्लेषण के साथ फ़ंक्शन का स्वचालित दस्तावेज़ीकरण
 
 **महत्वपूर्ण कोड नियम**:
 
-- अप्रयुक्त चर और मापदंडों को हटा दें (`no-unused-vars`)
-- विशिष्ट त्रुटि हैंडलिंग का उपयोग करें (कोई खाली कैच नहीं)
-- `security-utils.js` फ़ंक्शन के पक्ष में `innerHTML` से बचें
-- कार्यों के लिए संज्ञानात्मक जटिलता < 15 रखें
-- जटिल कार्यों को छोटे हेल्पर्स में निकालें
+- अप्रयुक्त variable और parameter हटाएँ (`no-unused-vars`)
+- विशिष्ट त्रुटि प्रबंधन का उपयोग करें (खाली catch नहीं)
+- `innerHTML` से बचें और उसके स्थान पर `security-utils.js` फ़ंक्शन का उपयोग करें
+- फ़ंक्शन की संज्ञानात्मक जटिलता < 15 रखें
+- जटिल फ़ंक्शन को छोटे helper में विभाजित करें
 
 **सुरक्षा**:
 
-- **XSS सुरक्षा**: `security-utils.js` से फ़ंक्शन का उपयोग करें:
-  - `innerHTML` के बजाय `appendSanitizedHTML()`
-  - सुरक्षित तत्व बनाने के लिए `createSafeElement()`
-  - पाठ सामग्री के लिए `setSafeMessage()`
-- **बाहरी स्क्रिप्ट**: `crossorigin="anonymous"` विशेषता अनिवार्य
-- **इनपुट सत्यापन**: हमेशा बाहरी डेटा को साफ़ करें
-- **सामग्री सुरक्षा नीति**: स्क्रिप्ट स्रोतों को प्रतिबंधित करने के लिए CSP हेडर
+- **XSS सुरक्षा**: `security-utils.js` के फ़ंक्शन का उपयोग करें:
+  - `innerHTML` के स्थान पर `appendSanitizedHTML()`
+  - सुरक्षित element बनाने के लिए `createSafeElement()`
+  - पाठ्य सामग्री के लिए `setSafeMessage()`
+- **बाहरी स्क्रिप्ट**: `crossorigin="anonymous"` attribute अनिवार्य है
+- **इनपुट सत्यापन**: बाहरी डेटा को हमेशा sanitize करें
+- **Content Security Policy**: script source सीमित करने के लिए CSP header
 
 **सुलभता**:
 
 - WCAG 2.1 AA अनुपालन
 - पूर्ण कीबोर्ड नेविगेशन
-- ARIA भूमिकाएँ और उपयुक्त लेबल
-- अनुपालन रंग कंट्रास्ट
+- उपयुक्त ARIA role और label
+- मानकों के अनुरूप रंग कंट्रास्ट
 
 **प्रदर्शन**:
 
-- `lazy-loader.js` के माध्यम से मॉड्यूल की लेजी लोडिंग
-- CSS और रिस्पॉन्सिव एसेट अनुकूलन
-- बुद्धिमान कैशिंग के लिए सर्विस वर्कर
-- प्रोडक्शन में कोड स्प्लिटिंग और मिनिमाइजेशन
+- `lazy-loader.js` के माध्यम से मॉड्यूल की Lazy loading
+- CSS अनुकूलन और responsive asset
+- समझदारी से cache करने के लिए Service Worker
+- उत्पादन में code splitting और minification
 
 ## 📱 संगतता
 
 ### समर्थित ब्राउज़र
 
-- Chrome/Chromium 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+इंटरफ़ेस रंगों के लिए `oklch()` और संदर्भगत स्थितियों के लिए `:has()` पर निर्भर करता है, जिससे न्यूनतम आवश्यकताएँ निर्धारित होती हैं:
+
+- Chrome / Chromium 111+
+- Edge 111+
+- Firefox 121+
+- Safari 15.4+
 
 ### उपकरण
 
-- **डेस्कटॉप**: कीबोर्ड और माउस नियंत्रण
-- **टैबलेट**: अनुकूलित स्पर्श इंटरफ़ेस
-- **स्मार्टफ़ोन**: एडेप्टिव रिस्पॉन्सिव डिज़ाइन
+- **Desktop**: कीबोर्ड और माउस नियंत्रण
+- **Tablets**: अनुकूलित स्पर्श इंटरफ़ेस
+- **Smartphones**: अनुकूली responsive design
 
-### सुलभता
+### अभिगम्यता
 
-- पूर्ण कीबोर्ड नेविगेशन (टैब, तीर, एस्केप)
+- पूर्ण कीबोर्ड नेविगेशन (Tab, तीर कुंजियाँ, Escape)
 - स्क्रीन रीडर के लिए ARIA भूमिकाएँ और लेबल
-- अनुपालन रंग कंट्रास्ट
-- सहायक तकनीक समर्थन
+- मानकों के अनुरूप रंग कंट्रास्ट
+- सहायक प्रौद्योगिकियों का समर्थन
 
 ## 🌍 स्थानीयकरण
 
 पूर्ण बहुभाषी समर्थन:
 
-- **फ्रेंच** (डिफ़ॉल्ट भाषा)
-- **अंग्रेजी**
+- **फ़्रेंच** (डिफ़ॉल्ट भाषा)
+- **अंग्रेज़ी**
 - **स्पेनिश**
 
 ### अनुवाद प्रबंधन
@@ -591,99 +555,99 @@ npm run sw:fix      # कैश समस्याओं को ठीक कर
 
 ```json
 {
-  "menu_start": "शुरू करें",
-  "quiz_correct": "बहुत बढ़िया!",
+  "menu_start": "Commencer",
+  "quiz_correct": "Bravo !",
   "arcade_invasion_title": "MultiInvaders"
 }
 ```
 
 ### i18n प्रबंधन स्क्रिप्ट
 
-**`npm run i18n:verify`** - अनुवाद कुंजी स्थिरता सत्यापित करें
+**`npm run i18n:verify`** - अनुवाद कुंजियों की संगति जाँचना
 
-**`npm run i18n:unused`** - अप्रयुक्त अनुवाद कुंजियों को सूचीबद्ध करें
+**`npm run i18n:unused`** - अप्रयुक्त अनुवाद कुंजियों को सूचीबद्ध करना
 
-**`npm run i18n:compare`** - fr.json (संदर्भ) के साथ अनुवाद फ़ाइलों की तुलना करें
+**`npm run i18n:compare`** - अनुवाद फ़ाइलों की fr.json (संदर्भ) से तुलना करना
 
-यह स्क्रिप्ट (`scripts/compare-translations.cjs`) सभी भाषा फ़ाइलों का सिंक्रनाइज़ेशन सुनिश्चित करती है:
+यह स्क्रिप्ट (`scripts/compare-translations.cjs`) सभी भाषा फ़ाइलों का समन्वयन सुनिश्चित करती है:
 
 **विशेषताएँ:**
 
-- लापता कुंजियों का पता लगाना (fr.json में मौजूद है लेकिन अन्य भाषाओं में अनुपस्थित)
-- अतिरिक्त कुंजियों का पता लगाना (अन्य भाषाओं में मौजूद है लेकिन fr.json में नहीं)
-- खाली मानों की पहचान (`""`, `null`, `undefined`, `[]`)
-- प्रकार स्थिरता जाँच (स्ट्रिंग बनाम सरणी)
-- नेस्टेड JSON संरचनाओं को डॉट नोटेशन (जैसे, `arcade.multiMemory.title`) में समतल करना
-- विस्तृत कंसोल रिपोर्ट तैयार करना
+- अनुपलब्ध कुंजियों का पता लगाना (fr.json में मौजूद, लेकिन अन्य भाषाओं में अनुपस्थित)
+- अतिरिक्त कुंजियों का पता लगाना (अन्य भाषाओं में मौजूद, लेकिन fr.json में अनुपस्थित)
+- रिक्त मानों की पहचान (`""`, `null`, `undefined`, `[]`)
+- प्रकारों की संगति की जाँच (string बनाम array)
+- नेस्टेड JSON संरचनाओं को डॉट नोटेशन में समतल करना (उदाहरण: `arcade.multiMemory.title`)
+- विस्तृत console रिपोर्ट तैयार करना
 - JSON रिपोर्ट को `docs/translations-comparison-report.json` में सहेजना
 
-**आउटपुट उदाहरण:**
+**आउटपुट का उदाहरण:**
 
 ```
-🔍 अनुवाद फ़ाइलों का तुलनात्मक विश्लेषण
+🔍 Analyse comparative des fichiers de traduction
 
-📚 संदर्भ भाषा: fr.json
-✅ fr.json: 335 कुंजियाँ
+📚 Langue de référence: fr.json
+✅ fr.json: 570 clés
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 en.json का विश्लेषण
+📝 Analyse de en.json
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 कुल कुंजियाँ: 335
-✅ कोई लापता कुंजी नहीं
-✅ कोई अतिरिक्त कुंजी नहीं
-✅ कोई खाली मान नहीं
+📊 Total de clés: 570
+✅ Aucune clé manquante
+✅ Aucune clé supplémentaire
+✅ Aucune valeur vide
 
-📊 अंतिम सारांश
-  fr.json: 335 कुंजियाँ
-  en.json: 335 कुंजियाँ
-  es.json: 335 कुंजियाँ
+📊 RÉSUMÉ FINAL
+  fr.json: 570 clés
+  en.json: 570 clés
+  es.json: 570 clés
 
-✅ सभी अनुवाद फ़ाइलें पूरी तरह से सिंक्रनाइज़ हैं!
+✅ Tous les fichiers de traduction sont parfaitement synchronisés !
 ```
 
 **अनुवाद कवरेज:**
 
-- पूर्ण यूज़र इंटरफ़ेस
-- गेम निर्देश
-- त्रुटि और फीडबैक संदेश
-- विवरण और प्रासंगिक सहायता
-- साहसिक मोड कथात्मक सामग्री
-- सुलभता और ARIA लेबल
+- संपूर्ण उपयोगकर्ता इंटरफ़ेस
+- खेलों के निर्देश
+- त्रुटि और feedback संदेश
+- विवरण और संदर्भगत सहायता
+- Adventure मोड की कथात्मक सामग्री
+- अभिगम्यता और ARIA लेबल
 
-## 📊 डेटा स्टोरेज
+## 📊 डेटा संग्रहण
 
 ### उपयोगकर्ता डेटा
 
-- प्रोफ़ाइल और वरीयताएँ
-- गेम मोड द्वारा प्रगति
-- आर्केड गेम स्कोर और आँकड़े
-- अनुकूलन सेटिंग्स
+- प्रोफ़ाइल और प्राथमिकताएँ
+- प्रत्येक गेम मोड की प्रगति
+- arcade खेलों के स्कोर और आँकड़े
+- वैयक्तिकरण सेटिंग्स
 
 ### तकनीकी विशेषताएँ
 
-- फ़ॉलबैक के साथ स्थानीय स्टोरेज (localStorage)
-- प्रति उपयोगकर्ता डेटा अलगाव
-- स्वचालित प्रगति बचत
-- पुराने डेटा का स्वचालित प्रवासन
+- fallbacks सहित स्थानीय संग्रहण (localStorage)
+- प्रत्येक उपयोगकर्ता के डेटा का पृथक्करण
+- प्रगति की स्वचालित बचत
+- पुराने डेटा का स्वचालित माइग्रेशन
 
-## 🐛 समस्याओं की रिपोर्ट करना
+## 🐛 समस्या की रिपोर्ट करें
 
-समस्याओं को GitHub मुद्दों के माध्यम से रिपोर्ट किया जा सकता है। कृपया शामिल करें:
+समस्याओं की रिपोर्ट GitHub issues के माध्यम से की जा सकती है। कृपया निम्नलिखित शामिल करें:
 
 - समस्या का विस्तृत विवरण
-- पुन: पेश करने के चरण
+- उसे पुनरुत्पन्न करने के चरण
 - ब्राउज़र और संस्करण
-- स्क्रीनशॉट यदि प्रासंगिक हों
+- प्रासंगिक होने पर स्क्रीनशॉट
 
-## 💝 प्रोजेक्ट का समर्थन करें
+## 💝 परियोजना का समर्थन करें
 
 **[☕ PayPal के माध्यम से दान करें](https://paypal.me/jls)**
 
 ## 📄 लाइसेंस
 
-यह प्रोजेक्ट AGPL v3 लाइसेंस के तहत लाइसेंस प्राप्त है। अधिक विवरण के लिए `LICENSE` फ़ाइल देखें।
+यह परियोजना AGPL v3 लाइसेंस के अंतर्गत है। अधिक जानकारी के लिए `LICENSE` फ़ाइल देखें।
 
 ---
 
-_LeapMultix - गुणा सारणी सीखने के लिए आधुनिक शैक्षिक एप्लिकेशन_
+_LeapMultix — चारों अंकगणितीय संक्रियाएँ सीखने के लिए एक मुक्त शैक्षिक एप्लिकेशन_
