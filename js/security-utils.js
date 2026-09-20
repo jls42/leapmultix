@@ -100,8 +100,10 @@ export function sanitizeUsername(username) {
 export function containsHtml(input) {
   if (typeof input !== 'string') return false;
 
-  // Recherche de balise en lecture simple plutôt que /<[^>]*>/ : sur une chaîne sans
-  // « > », ce motif repart en arrière à chaque « < » et le coût devient quadratique.
+  // Deux lectures simples plutôt qu'un motif glouton « un chevron ouvrant, tout
+  // sauf un chevron fermant, un chevron fermant » : sur une chaîne sans chevron
+  // fermant, ce motif repart en arrière à chaque chevron ouvrant et le coût
+  // devient quadratique.
   const ouvrante = input.indexOf('<');
   const contientBalise = ouvrante !== -1 && input.includes('>', ouvrante + 1);
   const scriptRegex = /<script|javascript:|on\w+=/i;
