@@ -7,7 +7,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+
+/** Répertoires sans intérêt pour l'analyse, et qui la noieraient sous le bruit */
+const IGNORES = new Set(['node_modules', 'coverage', 'dist', 'analysis', '.git', 'backups']);
 
 class ResponsiveUsageAnalyzer {
   constructor() {
@@ -43,11 +45,11 @@ class ResponsiveUsageAnalyzer {
 
   async scanCodebase() {
     // Scanner les fichiers JS
-    const jsFiles = this.findFiles('./js', '**/*.js');
+    const jsFiles = this.findFiles('./js', '.js');
     this.report.jsFiles = jsFiles.length;
 
-    // Scanner les fichiers HTML
-    const htmlFiles = this.findFiles('.', '*.html');
+    // Scanner les fichiers HTML, à la racine seulement (les pages du site)
+    const htmlFiles = this.findFiles('.', '.html', { recursif: false });
     this.report.htmlFiles = htmlFiles.length;
 
     // Analyser les références d'images dans le code
@@ -58,18 +60,40 @@ class ResponsiveUsageAnalyzer {
     console.log(`📊 Analysé ${jsFiles.length} JS + ${htmlFiles.length} HTML`);
   }
 
-  findFiles(directory, pattern) {
-    try {
-      const result = execSync(`find ${directory} -name "${pattern}" -type f 2>/dev/null`, {
-        encoding: 'utf-8',
-      });
-      return result
-        .trim()
-        .split('\n')
-        .filter(file => file.length > 0);
-    } catch (error) {
-      return [];
-    }
+  /**
+   * Liste les fichiers portant une extension, sans passer par un interpréteur.
+   *
+   * L'ancienne version appelait `find -name "**\/*.js"` : `-name` ne compare que
+   * le nom de base, jamais un chemin, donc ce motif ne trouvait rien et
+   * l'analyse portait sur zéro fichier JS.
+   *
+   * @param {string} directory - Racine du parcours
+   * @param {string} extension - Extension attendue, point compris (« .js »)
+   * @param {{recursif?: boolean}} [options]
+   * @returns {string[]}
+   */
+  findFiles(directory, extension, { recursif = true } = {}) {
+    const trouves = [];
+    const parcourir = repertoire => {
+      let entrees;
+      try {
+        entrees = fs.readdirSync(repertoire, { withFileTypes: true });
+      } catch {
+        return;
+      }
+      for (const entree of entrees) {
+        const chemin = path.join(repertoire, entree.name);
+        if (entree.isDirectory()) {
+          if (recursif && !IGNORES.has(entree.name) && !entree.name.startsWith('.')) {
+            parcourir(chemin);
+          }
+        } else if (entree.name.endsWith(extension)) {
+          trouves.push(chemin);
+        }
+      }
+    };
+    parcourir(directory);
+    return trouves;
   }
 
   analyzeFile(filePath) {

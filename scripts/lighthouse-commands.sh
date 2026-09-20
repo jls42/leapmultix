@@ -65,7 +65,7 @@ echo "======================"
 
 # Extraction scores rapide depuis JSON
 for file in "$REPORT_DIR"/*.json; do
-    if [ -f "$file" ]; then
+    if [[ -f "$file" ]]; then
         filename=$(basename "$file" .json)
         echo "📱 $filename :"
         

@@ -372,7 +372,7 @@ describe('AudioManager Module', () => {
         expect(AudioManager._volume).toBe(0.8);
       } else {
         // Test fallback
-        const savedVolume = parseFloat(mockLocalStorage.data.volume || '1');
+        const savedVolume = Number.parseFloat(mockLocalStorage.data.volume || '1');
         expect(savedVolume).toBe(0.8);
       }
     });

@@ -266,7 +266,7 @@ describe('Core Utils Module', () => {
         Utils?.validateNumber ||
         ((value, min = 0, max = Infinity, defaultValue = 0) => {
           const num = Number(value);
-          if (isNaN(num)) return defaultValue;
+          if (Number.isNaN(num)) return defaultValue;
           return Math.max(min, Math.min(max, num));
         });
 
@@ -281,7 +281,7 @@ describe('Core Utils Module', () => {
         ((value, min = 0, max = Infinity, defaultValue = 0) => {
           if (value === null || value === undefined) return defaultValue;
           const num = Number(value);
-          if (isNaN(num)) return defaultValue;
+          if (Number.isNaN(num)) return defaultValue;
           return Math.max(min, Math.min(max, num));
         });
 

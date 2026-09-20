@@ -108,7 +108,7 @@ function extractAvatarKeys(used) {
   if (m) {
     const items = m[1].match(/['"]([a-zA-Z0-9_-]+)['"]/g) || [];
     for (const it of items) {
-      const id = it.replace(/^(['"])|(["'])$/g, '');
+      const id = it.replace(/(^['"])|(['"]$)/g, '');
       if (id) used.add(id);
     }
   }
@@ -261,7 +261,7 @@ function main() {
 
   const unused = Array.from(allKeys)
     .filter(k => !isUsed(k) && !inKeep(k))
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 
   const reportPath = path.join(translationsDir, 'unused_keys.txt');
   // eslint-disable-next-line -- reportPath is constructed from translationsDir

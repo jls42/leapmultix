@@ -19,7 +19,7 @@ function placeholders(str) {
   if (typeof str !== 'string') return [];
   return Array.from(str.matchAll(/\{([^}]+)\}/g))
     .map(m => m[1])
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 }
 
 describe('i18n governance', () => {
