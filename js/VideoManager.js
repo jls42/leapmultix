@@ -66,6 +66,24 @@ function createIcon(shapes) {
   return svg;
 }
 
+/**
+ * Élément à focaliser pour garder la tabulation dans la fenêtre : le premier ou
+ * le dernier selon le sens, rien si le focus reste à l'intérieur.
+ * @param {Element} container
+ * @param {Element[]} focusables
+ * @param {boolean} versLArriere - Tabulation avec Maj
+ * @returns {Element|null}
+ */
+function nextTrappedFocus(container, focusables, versLArriere) {
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  const active = document.activeElement;
+  if (!container.contains(active)) return versLArriere ? last : first;
+  if (versLArriere && active === first) return last;
+  if (!versLArriere && active === last) return first;
+  return null;
+}
+
 export const VideoManager = {
   // Configuration des vidéos par avatar
   CHARACTER_VIDEOS: new Map([
@@ -357,17 +375,7 @@ export const VideoManager = {
       e.preventDefault();
       return;
     }
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-    const active = document.activeElement;
-    let target = null;
-    if (!container.contains(active)) {
-      target = e.shiftKey ? last : first;
-    } else if (e.shiftKey && active === first) {
-      target = last;
-    } else if (!e.shiftKey && active === last) {
-      target = first;
-    }
+    const target = nextTrappedFocus(container, focusables, e.shiftKey);
     if (!target) return;
     e.preventDefault();
     target.focus();

@@ -274,13 +274,14 @@ export function getArcadeCanvasBox(canvas, { minWidth = 200, minHeight = 220 } =
 /**
  * Position de l'image dans sa boîte selon object-position (centre par défaut).
  */
+// Mots-clés d'alignement : part de l'espace libre laissée avant le dessin
+const ALIGN_KEYWORDS = { left: 0, top: 0, right: 1, bottom: 1, center: 0.5 };
+
 function alignOffset(free, token) {
   if (typeof token !== 'string' || !token) return free / 2;
   if (token.endsWith('%')) return (free * toPx(token)) / 100;
   if (token.endsWith('px')) return toPx(token);
-  if (token === 'left' || token === 'top') return 0;
-  if (token === 'right' || token === 'bottom') return free;
-  return free / 2;
+  return free * (ALIGN_KEYWORDS[token] ?? 0.5);
 }
 
 /**
@@ -361,13 +362,23 @@ const DISPLAY_SCALE_CACHE_MS = 500;
  * @param {HTMLCanvasElement} canvas
  * @returns {number}
  */
+/**
+ * Échelle encore valable en cache pour ce canevas, sinon null.
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} now
+ * @returns {number|null}
+ */
+function cachedDisplayScale(canvas, now) {
+  const cached = displayScaleCache.get(canvas);
+  if (!cached || cached.width !== canvas.width) return null;
+  return now - cached.time < DISPLAY_SCALE_CACHE_MS ? cached.scale : null;
+}
+
 export function getCanvasDisplayScale(canvas) {
   if (!canvas || typeof canvas.getBoundingClientRect !== 'function') return 1;
   const now = Date.now();
-  const cached = displayScaleCache.get(canvas);
-  if (cached && cached.width === canvas.width && now - cached.time < DISPLAY_SCALE_CACHE_MS) {
-    return cached.scale;
-  }
+  const enCache = cachedDisplayScale(canvas, now);
+  if (enCache !== null) return enCache;
   const { width } = getCanvasContentRect(canvas);
   const raw = canvas.width > 0 && width > 0 ? width / canvas.width : 1;
   const scale = Number.isFinite(raw) && raw > 0 ? raw : 1;

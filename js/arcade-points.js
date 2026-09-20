@@ -25,8 +25,7 @@ function playPointsSound(isGain) {
  * @returns {boolean} true si la pastille a été placée
  */
 function placeAtGamePoint(element, container, canvas, at) {
-  if (!at || !canvas || !container) return false;
-  if (typeof canvas.getBoundingClientRect !== 'function') return false;
+  if (!canPlaceAtGamePoint(container, canvas, at)) return false;
   const point = canvasToClientPoint(canvas, at.x, at.y);
   const box = container.getBoundingClientRect();
   const left = point.x - box.left - (container.clientLeft || 0);
@@ -36,6 +35,18 @@ function placeAtGamePoint(element, container, canvas, at) {
   element.style.left = `${Math.round(left)}px`;
   element.style.top = `${Math.round(top)}px`;
   return true;
+}
+
+/**
+ * Le point de jeu est-il exploitable ? (canevas mesurable, conteneur présent)
+ * @param {HTMLElement} container
+ * @param {HTMLCanvasElement} canvas
+ * @param {{x: number, y: number}} [at]
+ * @returns {boolean}
+ */
+function canPlaceAtGamePoint(container, canvas, at) {
+  if (!at || !canvas || !container) return false;
+  return typeof canvas.getBoundingClientRect === 'function';
 }
 
 /**

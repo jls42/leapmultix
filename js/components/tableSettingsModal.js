@@ -267,18 +267,24 @@ export const TableSettingsModal = {
       return;
     }
 
-    if (e.key !== 'Tab') return;
+    if (e.key === 'Tab') this.trapTab(e);
+  },
+
+  /**
+   * Tabulation circulaire : du dernier élément on revient au premier, et
+   * inversement avec Maj.
+   * @param {KeyboardEvent} e
+   */
+  trapTab(e) {
     const focusable = this.getFocusableElements();
     if (focusable.length === 0) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
+    const cible = e.shiftKey && document.activeElement === first ? last : null;
+    const suite = !e.shiftKey && document.activeElement === last ? first : cible;
+    if (!suite) return;
+    e.preventDefault();
+    suite.focus();
   },
 
   /**

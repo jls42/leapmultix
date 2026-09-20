@@ -165,24 +165,24 @@ export const ICON_NAMES = Object.freeze(Object.keys(ICONS));
  * @param {string} [options.className] - Classes supplémentaires
  * @returns {SVGSVGElement|null} L'icône, ou null si le nom est inconnu
  */
-export function createIcon(name, { size = 24, className = '' } = {}) {
-  const nodes = Object.hasOwn(ICONS, name) ? ICONS[name] : null;
-  if (!nodes || typeof document === 'undefined') return null;
+// Attributs partagés par toutes les icônes : trait de 2 px, décoratives
+const ICON_BASE_ATTRIBUTES = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  'stroke-width': '2',
+  'stroke-linecap': 'round',
+  'stroke-linejoin': 'round',
+  'aria-hidden': 'true',
+  focusable: 'false',
+};
 
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('width', String(size));
-  svg.setAttribute('height', String(size));
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('fill', 'none');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('stroke-linecap', 'round');
-  svg.setAttribute('stroke-linejoin', 'round');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  svg.setAttribute('class', `icon icon-${name}${className ? ` ${className}` : ''}`);
-  svg.setAttribute('data-icon', name);
-
+/**
+ * Ajoute les tracés d'une icône au SVG.
+ * @param {SVGSVGElement} svg
+ * @param {Array<[string, Object]>} nodes
+ */
+function appendIconShapes(svg, nodes) {
   for (const [tag, attributes] of nodes) {
     const child = document.createElementNS(SVG_NS, tag);
     for (const [attribute, value] of Object.entries(attributes)) {
@@ -190,6 +190,22 @@ export function createIcon(name, { size = 24, className = '' } = {}) {
     }
     svg.appendChild(child);
   }
+}
+
+export function createIcon(name, { size = 24, className = '' } = {}) {
+  const nodes = Object.hasOwn(ICONS, name) ? ICONS[name] : null;
+  if (!nodes || typeof document === 'undefined') return null;
+
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  for (const [attribute, value] of Object.entries(ICON_BASE_ATTRIBUTES)) {
+    svg.setAttribute(attribute, value);
+  }
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
+  svg.setAttribute('class', ['icon', `icon-${name}`, className].filter(Boolean).join(' '));
+  svg.dataset.icon = name;
+
+  appendIconShapes(svg, nodes);
   return svg;
 }
 
@@ -203,7 +219,7 @@ export function createIcon(name, { size = 24, className = '' } = {}) {
 export function setIcon(element, name) {
   if (!element) return null;
   const current = element.querySelector(':scope > svg.icon');
-  if (current?.getAttribute('data-icon') === name) return current;
+  if (current?.dataset.icon === name) return current;
   const icon = createIcon(name);
   if (!icon) return current;
   if (current) current.replaceWith(icon);

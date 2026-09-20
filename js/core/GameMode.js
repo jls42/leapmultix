@@ -240,9 +240,31 @@ const OPERATION_HINT_KEYS = {
  * et l'astuce qui l'accompagne.
  * @returns {{countBy: Object|null, hint: string, fact: Object|null}}
  */
+// Ce que chaque opération sait montrer : un comptage, un indice, une vérification
+const DETAILS_BY_OPERATOR = {
+  '×': ({ question, a, b }) => {
+    const { countBy, table } = multiplicationCount(question, a, b);
+    return { countBy, hint: translateOrEmpty(`mnemonic_${table}`), fact: null };
+  },
+  '+': ({ a, b, operationHint }) => ({
+    countBy: additionCount(a, b),
+    hint: operationHint,
+    fact: null,
+  }),
+  '−': ({ question, operator, a, b, result, operationHint }) => {
+    const countBy = subtractionCount(a, b);
+    return {
+      countBy,
+      hint: operationHint,
+      fact: countBy ? null : checkFact(question, operator, a, b, result),
+    };
+  },
+};
+
 function operationDetails(question, operator, a, b, result) {
   const operationHint = translateOrEmpty(OPERATION_HINT_KEYS[operator] ?? '');
 
+  // Nombre manquant : l'enfant cherche un facteur, pas un résultat
   if (question.type === 'gap') {
     return {
       countBy: null,
@@ -250,18 +272,9 @@ function operationDetails(question, operator, a, b, result) {
       fact: checkFact(question, operator, a, b, result),
     };
   }
-  if (operator === '×') {
-    const { countBy, table } = multiplicationCount(question, a, b);
-    return { countBy, hint: translateOrEmpty(`mnemonic_${table}`), fact: null };
-  }
-  if (operator === '+') {
-    return { countBy: additionCount(a, b), hint: operationHint, fact: null };
-  }
-  if (operator === '−') {
-    const countBy = subtractionCount(a, b);
-    const fact = countBy ? null : checkFact(question, operator, a, b, result);
-    return { countBy, hint: operationHint, fact };
-  }
+
+  const build = DETAILS_BY_OPERATOR[operator];
+  if (build) return build({ question, operator, a, b, result, operationHint });
   return { countBy: null, hint: operationHint, fact: checkFact(question, operator, a, b, result) };
 }
 
