@@ -95,10 +95,8 @@ describe('Menu Arcade', () => {
   test('la fusée choisie reste cochée au retour dans le menu, avec un nom accessible simple', async () => {
     const [, comete] = mode.getSpaceshipVariants('fox');
     mode.selectedSpaceship = `${comete.file}|${comete.fallback}`;
-    screen.innerHTML = '';
-    const template = document.createElement('template');
-    template.innerHTML = await mode.getCustomHTML();
-    screen.appendChild(template.content);
+    const remonte = new DOMParser().parseFromString(await mode.getCustomHTML(), 'text/html');
+    screen.replaceChildren(...remonte.body.childNodes);
     const radios = [...screen.querySelectorAll('input[name="spaceship-choice-invasion"]')];
     expect(radios.map(r => r.checked)).toEqual([false, true]);
     // L'image est décorative : le libellé écrit suffit (plus de « Fusée Lotus Fusée Lotus »)

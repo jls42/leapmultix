@@ -387,31 +387,61 @@ function wrongAnswerPool(question, correct) {
  * @param {number} [count=3]
  * @returns {number[]}
  */
+/**
+ * Bornes d'une mauvaise réponse acceptable pour cette question.
+ * Résultat de soustraction : 0 est possible ; ailleurs, des nombres à partir de 1.
+ * @param {Object} question
+ * @param {number} correct
+ * @returns {{correct: number, min: number, max: number}}
+ */
+function wrongAnswerBounds(question, correct) {
+  return {
+    correct,
+    min: question.operator === '−' && question.type !== 'gap' ? 0 : 1,
+    max: correct <= 100 ? 100 : Infinity,
+  };
+}
+
+/**
+ * Une valeur est-elle une mauvaise réponse utilisable, pas déjà retenue ?
+ * @param {number} value
+ * @param {{correct: number, min: number, max: number}} bounds
+ * @param {number[]} taken
+ * @returns {boolean}
+ */
+function isUsableWrongAnswer(value, bounds, taken) {
+  if (!Number.isInteger(value)) return false;
+  if (value < bounds.min || value > bounds.max) return false;
+  if (value === bounds.correct) return false;
+  return !taken.includes(value);
+}
+
+/**
+ * Complète la liste avec des voisins de plus en plus lointains, quand le
+ * réservoir de distracteurs ne suffit pas.
+ * @param {number[]} chosen - Modifiée sur place
+ * @param {number} count
+ * @param {{correct: number, min: number, max: number}} bounds
+ */
+function fillWithNeighbours(chosen, count, bounds) {
+  for (let offset = 3; chosen.length < count && offset < 50; offset++) {
+    for (const value of [bounds.correct + offset, bounds.correct - offset]) {
+      if (chosen.length < count && isUsableWrongAnswer(value, bounds, chosen)) chosen.push(value);
+    }
+  }
+}
+
 export function plausibleWrongAnswers(question, count = 3) {
   const correct = Number(question?.answer);
   if (!Number.isFinite(correct)) return [];
-  // Résultat de soustraction : 0 est possible ; ailleurs, des nombres à partir de 1
-  const min = question.operator === '−' && question.type !== 'gap' ? 0 : 1;
-  const max = correct <= 100 ? 100 : Infinity;
-  const isValid = (value, list) =>
-    Number.isInteger(value) &&
-    value >= min &&
-    value <= max &&
-    value !== correct &&
-    !list.includes(value);
+  const bounds = wrongAnswerBounds(question, correct);
 
   const pool = [];
   for (const value of wrongAnswerPool(question, correct)) {
-    if (isValid(value, pool)) pool.push(value);
+    if (isUsableWrongAnswer(value, bounds, pool)) pool.push(value);
   }
   const chosen = shuffle(pool).slice(0, count);
-
-  // Repli : voisins plus lointains si le réservoir est trop petit
-  for (let offset = 3; chosen.length < count && offset < 50; offset++) {
-    for (const value of [correct + offset, correct - offset]) {
-      if (chosen.length < count && isValid(value, chosen)) chosen.push(value);
-    }
-  }
+  fillWithNeighbours(chosen, count, bounds);
   return chosen;
 }
 

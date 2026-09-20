@@ -80,37 +80,45 @@ export function arcadeKeyUp(e) {
  * @param {{persist?: boolean}} [options] - persist: false pour réafficher l'écran
  *   (après une remise à zéro) sans réenregistrer le score ni le relire à voix haute
  */
+/** Coupe la voix en cours : l'écran de fin ne parle pas par-dessus la partie. */
+function cancelSpeech() {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+  } catch (e) {
+    void e;
+  }
+}
+
+/**
+ * Phrase de fin : encouragement à zéro point, félicitations chiffrées sinon.
+ * @param {number} score
+ * @returns {{key: string, text: string}}
+ */
+function gameOverMessage(score) {
+  if (score === 0) {
+    return { key: 'arcade_try_again', text: getTranslation('arcade_try_again') };
+  }
+  // Le score est dynamique : la phrase se compose, elle ne porte pas data-translate
+  return {
+    key: 'arcade_final_score_message',
+    text: `${getTranslation('arcade_final_congrats')} ${score} ${getTranslation('points_label')}`,
+  };
+}
+
 export function showArcadeGameOver(score, { persist = true } = {}) {
   // Arrêter le sous-jeu en même temps que le chronomètre : boucles, minuteries et
   // écouteurs (arcade:stop). Sinon, à la fin du temps, la partie continuait sans être
   // vue : messages sur l'écran de fin, second enregistrement du score, touches avalées.
   stopArcadeMode();
-  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    try {
-      window.speechSynthesis.cancel();
-    } catch (e) {
-      void e;
-    }
-  }
-  // Gestion de l'historique des scores (par utilisateur)
+  cancelSpeech();
+
+  // Historique des scores, par utilisateur et par mode
   const mode = globalGameState?.gameMode ?? 'arcade';
-  // Sauvegarder et lire les scores en fonction du mode
   if (persist) saveScoreForMode(mode, score);
   const arcadeScores = getScoresForMode(mode);
-  // Message d'encouragement si score = 0
-  let endMessageKey = '';
-  let endMessage = '';
-  if (score === 0) {
-    endMessageKey = 'arcade_try_again';
-    endMessage = getTranslation(endMessageKey);
-  } else {
-    // Pour celui-ci, on ne peut pas utiliser data-translate simple
-    // car la valeur du score est dynamique
-    endMessageKey = 'arcade_final_score_message';
-    endMessage = `${getTranslation('arcade_final_congrats')} ${score} ${getTranslation('points_label')}`;
-  }
-  // Affichage du top 5
-  // Top scores HTML generation removed as it was unused
+  const { key: endMessageKey, text: endMessage } = gameOverMessage(score);
+
   const gameScreen = document.getElementById('game');
   if (gameScreen) {
     while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
