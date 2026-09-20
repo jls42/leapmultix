@@ -1,0 +1,15 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": ["index.html"],
+        "createdAt": "2026-09-20T07:33:00.471Z",
+        "reason": "Claude : deux faux positifs, le détecteur ne résout ni var() ni clamp(). .content-card a padding: clamp(var(--space-4), 4vw, var(--space-6)) = 16 à 32 px (css/general.css:211) et .faq-item a padding: var(--space-4) 0 = 16 px sous le border-top, son :first-child étant sans bordure (css/general.css:472-480)"
+      }
+    ]
+  }
+}
