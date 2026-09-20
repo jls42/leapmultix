@@ -185,8 +185,11 @@ a {
   position: relative;
 }
 
+/* flow-root plutôt que block : l'écran contient la marge haute de la barre du
+   haut. Sans cela, cette marge s'échappe et ajoute une barre de défilement de
+   sa hauteur alors que le contenu tient à l'écran. */
 .active-slide {
-  display: block;
+  display: flow-root;
 }
 
 /* Titre de slide posé sur l'illustration, hors de la carte : une plaque de
