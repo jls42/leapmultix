@@ -629,6 +629,21 @@ export class ChallengeMode extends GameMode {
   }
 
   /**
+   * Lire la bonne réponse ne coûte pas de temps : le décompte s'arrête pendant
+   * la pause qui suit une erreur, puis repart avec la question suivante.
+   * @param {number} delay - Durée de la pause en millisecondes
+   */
+  onWrongAnswerPause(delay) {
+    if (!this.timerInterval) return;
+    clearInterval(this.timerInterval);
+    this.intervals.delete(this.timerInterval);
+    this.timerInterval = null;
+    this.addTimer(() => {
+      if (this.state.isActive && this.state.timeLeft > 0) this.startTimer();
+    }, delay);
+  }
+
+  /**
    * Nettoyage spécifique au Challenge
    */
   cleanup() {

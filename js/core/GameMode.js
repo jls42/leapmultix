@@ -442,6 +442,9 @@ export class GameMode {
       autoProgress: true,
       // Après une erreur, l'explication attend « Continuer » (modes non chronométrés)
       pauseAfterError: false,
+      // Enchaînement automatique : une erreur laisse le temps de lire la bonne réponse
+      nextQuestionDelay: 1200,
+      wrongAnswerDelay: 2400,
       showScore: true,
       ...config,
     };
@@ -882,7 +885,7 @@ export class GameMode {
     // Progression automatique, sauf si l'explication attend l'enfant ou si la fin
     // du niveau est déjà programmée
     if (this.config.autoProgress && !this._continuePending && !this._holdProgress) {
-      this.scheduleNextQuestion();
+      this.scheduleNextQuestion(isCorrect);
     }
   }
 
@@ -1048,10 +1051,15 @@ export class GameMode {
   }
 
   /**
-   * Programmer la prochaine question
+   * Programmer la prochaine question. Une erreur tient plus longtemps à l'écran :
+   * la bonne réponse vient d'être marquée, elle doit être lue avant de disparaître.
+   * @param {boolean} isCorrect - La réponse donnée était-elle juste
    */
-  scheduleNextQuestion() {
-    const delay = 1200; // Délai standard
+  scheduleNextQuestion(isCorrect = true) {
+    const delay = isCorrect ? this.config.nextQuestionDelay : this.config.wrongAnswerDelay;
+
+    // Les modes chronométrés suspendent leur décompte pendant cette lecture
+    if (!isCorrect) this.onWrongAnswerPause(delay);
 
     this.addTimer(() => {
       if (this.shouldContinue()) {
@@ -1061,6 +1069,12 @@ export class GameMode {
       }
     }, delay);
   }
+
+  /**
+   * Pause de lecture après une erreur : un mode chronométré y arrête son décompte
+   * (voir ChallengeMode). La durée de la pause est passée aux redéfinitions.
+   */
+  onWrongAnswerPause() {}
 
   /**
    * Vérifier si le jeu doit continuer
