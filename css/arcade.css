@@ -75,10 +75,10 @@
   padding: var(--space-5) var(--space-4);
   text-align: center;
   color: var(--color-ink);
-  background: var(--color-surface);
-  border: 2px solid var(--color-border);
+  background: var(--accent-tint, var(--color-surface));
+  border: 2px solid var(--accent, var(--color-border));
   border-radius: var(--radius-lg);
-  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
+  box-shadow: 0 var(--key-edge) 0 var(--accent-edge, var(--color-border-strong));
   cursor: pointer;
   transition:
     transform var(--dur-fast) var(--ease-out),
@@ -87,19 +87,23 @@
 }
 
 /* Le survol ne remplit jamais la tuile : le nom reste lisible */
-.arcade-game-card:hover {
-  border-color: var(--color-action);
+@media (hover: hover) {
+  .arcade-game-card:hover {
+    border-color: var(--accent-edge, var(--color-action));
+    transform: translateY(-2px);
+    box-shadow: 0 calc(var(--key-edge) + 2px) 0 var(--accent-edge, var(--color-border-strong));
+  }
 }
 
 .arcade-game-card.collapsed:active {
   transform: translateY(var(--key-edge));
-  box-shadow: 0 0 0 var(--color-border-strong);
+  box-shadow: 0 0 0 var(--accent-edge, var(--color-border-strong));
 }
 
 /* Tuile ouverte : bordure d'action, les réglages apparaissent dessous */
 .arcade-game-card.expanded {
-  border-color: var(--color-action);
-  box-shadow: 0 var(--key-edge) 0 var(--color-action-edge);
+  border-color: var(--accent, var(--color-action));
+  box-shadow: 0 var(--key-edge) 0 var(--accent-edge, var(--color-action-edge));
 }
 
 .arcade-game-card .game-thumb {
@@ -116,6 +120,7 @@
 .arcade-game-card .game-title {
   margin: var(--space-2) 0 var(--space-1);
   font-size: var(--text-lg);
+  color: var(--accent, var(--color-ink-heading));
 }
 
 /* Le nom du jeu est le bouton qui ouvre la tuile (clavier, lecteurs d'écran) ;

@@ -104,6 +104,32 @@
   --shadow-sm: 0 1px 2px oklch(25% 0.03 250deg / 0.1);
   --shadow-md: 0 1px 3px oklch(25% 0.03 250deg / 0.08), 0 6px 16px oklch(25% 0.03 250deg / 0.1);
   --shadow-lg: 0 2px 6px oklch(25% 0.03 250deg / 0.08), 0 18px 44px oklch(25% 0.03 250deg / 0.18);
+
+  /* === UNE COULEUR PAR MODE ===
+     La teinte identifie le mode partout : tuile d'accueil, écran de jeu,
+     tableau de bord. Elle ne change pas d'un thème clair à l'autre, pour que
+     l'enfant reconnaisse le Quiz au violet et le Défi à l'orange.
+     Trois rôles : le trait et le texte (--mode-x), la tranche pressée
+     (-edge), la surface très claire (-tint). Contraste AA vérifié. */
+  --mode-discovery: oklch(45% 0.13 150deg);
+  --mode-discovery-edge: oklch(36% 0.1 150deg);
+  --mode-discovery-tint: oklch(96% 0.035 150deg);
+  --mode-quiz: oklch(45% 0.16 295deg);
+  --mode-quiz-edge: oklch(36% 0.13 295deg);
+  --mode-quiz-tint: oklch(96% 0.03 295deg);
+  --mode-challenge: oklch(48% 0.15 45deg);
+  --mode-challenge-edge: oklch(38% 0.12 45deg);
+  --mode-challenge-tint: oklch(96% 0.04 55deg);
+  --mode-adventure: oklch(45% 0.14 240deg);
+  --mode-adventure-edge: oklch(36% 0.11 240deg);
+  --mode-adventure-tint: oklch(96% 0.03 240deg);
+  --mode-arcade: oklch(45% 0.16 350deg);
+  --mode-arcade-edge: oklch(36% 0.13 350deg);
+  --mode-arcade-tint: oklch(96% 0.035 350deg);
+
+  /* Défi du jour : ambre, distinct des cinq modes */
+  --color-daily-tint: oklch(96% 0.04 85deg);
+  --color-daily-edge: oklch(70% 0.12 85deg);
 }
 
 /* Réglage « Taille du texte » : l'échelle rem suit le choix de l'enfant */
@@ -170,6 +196,25 @@
   --color-warning-edge: oklch(76% 0.13 80deg);
   --color-warning-ink: oklch(89% 0.11 85deg);
   --color-reward-edge: oklch(70% 0.14 75deg);
+
+  /* Mêmes teintes de mode, éclaircies pour rester lisibles sur fond sombre */
+  --mode-discovery: oklch(84% 0.13 150deg);
+  --mode-discovery-edge: oklch(58% 0.11 150deg);
+  --mode-discovery-tint: oklch(31% 0.05 150deg);
+  --mode-quiz: oklch(83% 0.11 295deg);
+  --mode-quiz-edge: oklch(56% 0.12 295deg);
+  --mode-quiz-tint: oklch(31% 0.05 295deg);
+  --mode-challenge: oklch(85% 0.13 70deg);
+  --mode-challenge-edge: oklch(58% 0.12 55deg);
+  --mode-challenge-tint: oklch(32% 0.05 60deg);
+  --mode-adventure: oklch(84% 0.1 240deg);
+  --mode-adventure-edge: oklch(57% 0.11 240deg);
+  --mode-adventure-tint: oklch(31% 0.05 240deg);
+  --mode-arcade: oklch(83% 0.11 350deg);
+  --mode-arcade-edge: oklch(56% 0.12 350deg);
+  --mode-arcade-tint: oklch(31% 0.05 350deg);
+  --color-daily-tint: oklch(32% 0.05 85deg);
+  --color-daily-edge: oklch(62% 0.12 85deg);
   --shadow-sm: 0 1px 2px oklch(0% 0 0deg / 0.4);
   --shadow-md: 0 1px 3px oklch(0% 0 0deg / 0.35), 0 6px 16px oklch(0% 0 0deg / 0.35);
   --shadow-lg: 0 2px 6px oklch(0% 0 0deg / 0.35), 0 18px 44px oklch(0% 0 0deg / 0.5);
@@ -250,6 +295,26 @@ body.high-contrast {
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-lg: none;
+
+  /* Contraste élevé : pas de code couleur par mode, la palette reste
+     noir, blanc et jaune. Les modes se distinguent par leur nom et leur image. */
+  --mode-discovery: #ff0;
+  --mode-discovery-edge: #fff;
+  --mode-discovery-tint: #000;
+  --mode-quiz: #ff0;
+  --mode-quiz-edge: #fff;
+  --mode-quiz-tint: #000;
+  --mode-challenge: #ff0;
+  --mode-challenge-edge: #fff;
+  --mode-challenge-tint: #000;
+  --mode-adventure: #ff0;
+  --mode-adventure-edge: #fff;
+  --mode-adventure-tint: #000;
+  --mode-arcade: #ff0;
+  --mode-arcade-edge: #fff;
+  --mode-arcade-tint: #000;
+  --color-daily-tint: #000;
+  --color-daily-edge: #fff;
 
   background-image: none;
 }

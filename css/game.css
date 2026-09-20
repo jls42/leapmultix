@@ -294,7 +294,7 @@ body {
   font-size: var(--text-lg);
   font-weight: 700;
   line-height: var(--leading-tight);
-  color: var(--color-ink-heading);
+  color: var(--accent, var(--color-ink-heading));
 }
 
 .feedback-answer {
@@ -477,4 +477,99 @@ strong.feedback-count-step {
     align-items: stretch;
     width: 100%;
   }
+}
+
+/* ===========================================
+   UNE COULEUR PAR MODE
+   Le conteneur du mode porte sa classe (`quiz-container`…). La teinte est
+   posée sur <body> pour couvrir aussi la barre d'infos, qui est hors carte.
+   Fallback systématique : sans mode actif, rien ne change.
+   =========================================== */
+
+body:has(.discovery-container) {
+  --accent: var(--mode-discovery);
+  --accent-edge: var(--mode-discovery-edge);
+  --accent-tint: var(--mode-discovery-tint);
+}
+
+body:has(.quiz-container) {
+  --accent: var(--mode-quiz);
+  --accent-edge: var(--mode-quiz-edge);
+  --accent-tint: var(--mode-quiz-tint);
+}
+
+body:has(.challenge-container) {
+  --accent: var(--mode-challenge);
+  --accent-edge: var(--mode-challenge-edge);
+  --accent-tint: var(--mode-challenge-tint);
+}
+
+body:has(.adventure-container) {
+  --accent: var(--mode-adventure);
+  --accent-edge: var(--mode-adventure-edge);
+  --accent-tint: var(--mode-adventure-tint);
+}
+
+body:has(.arcade-container) {
+  --accent: var(--mode-arcade);
+  --accent-edge: var(--mode-arcade-edge);
+  --accent-tint: var(--mode-arcade-tint);
+}
+
+/* Titre du mode et valeurs de la barre d'infos */
+.game-content-area > .content-card > [class$='-container'] > h2,
+.game-info-bar .info-value {
+  color: var(--accent, var(--color-ink-heading));
+}
+
+/* L'énoncé prend la teinte du mode : la couleur suit l'enfant dans sa partie */
+.question {
+  background-color: var(--accent-tint, var(--color-surface-sunken));
+}
+
+/* Réponse survolée : le trait du mode, jamais un remplissage */
+@media (hover: hover) {
+  .option:hover:not(:disabled) {
+    border-color: var(--accent, var(--color-action));
+  }
+}
+
+/* Action principale de la partie : la touche prend la couleur du mode.
+   Les boutons discrets (abandonner, secondaires) gardent leur rôle. */
+.game-content-area .btn:not(.btn-quiet, .btn-secondary, .btn-danger) {
+  background-color: var(--accent, var(--color-action));
+  box-shadow: 0 var(--key-edge) 0 var(--accent-edge, var(--color-action-edge));
+}
+
+.game-content-area .btn:not(.btn-quiet, .btn-secondary, .btn-danger):hover {
+  background-color: var(--accent-edge, var(--color-action-hover));
+}
+
+.game-content-area .btn:not(.btn-quiet, .btn-secondary, .btn-danger):active {
+  box-shadow: 0 0 0 var(--accent-edge, var(--color-action-edge));
+}
+
+/* Arcade : chaque mini-jeu reprend une des cinq teintes */
+.arcade-game-card[data-game='invasion'] {
+  --accent: var(--mode-arcade);
+  --accent-edge: var(--mode-arcade-edge);
+  --accent-tint: var(--mode-arcade-tint);
+}
+
+.arcade-game-card[data-game='multimiam'] {
+  --accent: var(--mode-challenge);
+  --accent-edge: var(--mode-challenge-edge);
+  --accent-tint: var(--mode-challenge-tint);
+}
+
+.arcade-game-card[data-game='multimemory'] {
+  --accent: var(--mode-quiz);
+  --accent-edge: var(--mode-quiz-edge);
+  --accent-tint: var(--mode-quiz-tint);
+}
+
+.arcade-game-card[data-game='multisnake'] {
+  --accent: var(--mode-discovery);
+  --accent-edge: var(--mode-discovery-edge);
+  --accent-tint: var(--mode-discovery-tint);
 }

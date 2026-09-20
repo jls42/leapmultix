@@ -242,6 +242,38 @@
   gap: var(--space-3);
 }
 
+/* Chaque mode porte sa couleur : la tuile, son nom et sa tranche.
+   Les jetons --accent-* servent ensuite au reste de l'écran du mode. */
+.mode-btn[data-mode='discovery'] {
+  --accent: var(--mode-discovery);
+  --accent-edge: var(--mode-discovery-edge);
+  --accent-tint: var(--mode-discovery-tint);
+}
+
+.mode-btn[data-mode='quiz'] {
+  --accent: var(--mode-quiz);
+  --accent-edge: var(--mode-quiz-edge);
+  --accent-tint: var(--mode-quiz-tint);
+}
+
+.mode-btn[data-mode='challenge'] {
+  --accent: var(--mode-challenge);
+  --accent-edge: var(--mode-challenge-edge);
+  --accent-tint: var(--mode-challenge-tint);
+}
+
+.mode-btn[data-mode='adventure'] {
+  --accent: var(--mode-adventure);
+  --accent-edge: var(--mode-adventure-edge);
+  --accent-tint: var(--mode-adventure-tint);
+}
+
+.mode-btn[data-mode='arcade'] {
+  --accent: var(--mode-arcade);
+  --accent-edge: var(--mode-arcade-edge);
+  --accent-tint: var(--mode-arcade-tint);
+}
+
 .mode-btn {
   display: flex;
   flex-direction: column;
@@ -253,10 +285,10 @@
   font: inherit;
   text-align: center;
   color: var(--color-ink);
-  background-color: var(--color-surface);
-  border: 2px solid var(--color-border);
+  background-color: var(--accent-tint, var(--color-surface));
+  border: 2px solid var(--accent, var(--color-border));
   border-radius: var(--radius-lg);
-  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
+  box-shadow: 0 var(--key-edge) 0 var(--accent-edge, var(--color-border-strong));
   cursor: pointer;
   transition:
     transform var(--dur-fast) var(--ease-out),
@@ -269,15 +301,19 @@
 }
 
 /* Le survol ne remplit jamais la tuile : le nom reste lisible */
+/* Survol : la touche se soulève et sa tranche s'épaissit. Même langage
+   que l'enfoncement au clic, sans remplissage qui masquerait le nom. */
 @media (hover: hover) {
   .mode-btn:hover {
-    border-color: var(--color-action);
+    border-color: var(--accent-edge, var(--color-action));
+    transform: translateY(-2px);
+    box-shadow: 0 calc(var(--key-edge) + 2px) 0 var(--accent-edge, var(--color-border-strong));
   }
 }
 
 .mode-btn:active {
   transform: translateY(var(--key-edge));
-  box-shadow: 0 0 0 var(--color-border-strong);
+  box-shadow: 0 0 0 var(--accent-edge, var(--color-border-strong));
 }
 
 .mode-btn:disabled {
@@ -304,7 +340,7 @@
   font-size: var(--text-md);
   font-weight: 700;
   line-height: var(--leading-tight);
-  color: var(--color-ink-heading);
+  color: var(--accent, var(--color-ink-heading));
 }
 
 .mode-desc {
@@ -363,7 +399,8 @@
   margin: var(--space-6) auto 0;
   padding: var(--space-4) var(--space-5);
   text-align: center;
-  background-color: var(--color-surface-sunken);
+  background-color: var(--color-daily-tint);
+  border: 1px solid var(--color-daily-edge);
   border-radius: var(--radius-md);
 }
 

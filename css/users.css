@@ -51,6 +51,8 @@
 @media (hover: hover) {
   .user-tile:hover {
     border-color: var(--color-action);
+    transform: translateY(-2px);
+    box-shadow: 0 calc(var(--key-edge) + 2px) 0 var(--color-border-strong);
   }
 }
 
