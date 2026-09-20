@@ -220,8 +220,10 @@ SYNC_CMD="aws s3 sync --size-only --delete \
 
 if [[ "$DRY_RUN" == "true" ]]; then
     echo -e "${YELLOW}🔍 Mode dry-run - Commande qui serait exécutée:${NC}"
-    echo "$SYNC_CMD --dry-run"
-    eval "$SYNC_CMD --dry-run"
+    # L'option de l'AWS CLI s'écrit --dryrun, sans tiret : avec --dry-run, la
+    # commande échouait en « Unknown options » et la simulation ne montrait rien.
+    echo "$SYNC_CMD --dryrun"
+    eval "$SYNC_CMD --dryrun"
 else
     echo -e "${GREEN}📤 Synchronisation en cours...${NC}"
 
