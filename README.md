@@ -82,15 +82,16 @@ LeapMultix est une application web éducative interactive destinée aux enfants 
 
 ### Les mini-jeux d'arcade
 
-Les animations ci-dessous montrent la zone de jeu. L'opération en cours et les
-vies s'affichent juste au-dessus, dans la barre d'information.
+Quatre jeux qui posent la même question — celle affichée au-dessus de la zone de
+jeu, avec le temps restant et les vies — mais demandent chaque fois un geste
+différent.
 
-|                                                                                                                  |                                                                                              |
-| :--------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------: |
-|       ![MultiInvaders : des monstres portant des nombres descendent](docs/media/arcade-multiinvaders.gif)        | ![MultiMiam : un labyrinthe où collecter la bonne réponse](docs/media/arcade-multimiam.gif)  |
-|                     **MultiInvaders** — tirer sur les mauvaises réponses, épargner la bonne.                     |            **MultiMiam** — parcourir le labyrinthe pour attraper le bon résultat.            |
-| ![MultiMemory : retourner les cartes pour associer un calcul et son résultat](docs/media/arcade-multimemory.gif) | ![MultiSnake : un serpent qui mange les pommes numérotées](docs/media/arcade-multisnake.gif) |
-|                       **MultiMemory** — associer chaque calcul à son résultat, de mémoire.                       |           **MultiSnake** — grandir en avalant les bons nombres, éviter les autres.           |
+|                                                                                                                        |                                                                                                            |
+| :--------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------: |
+|  ![MultiInvaders : des monstres portant des nombres, un vaisseau en bas de l'écran](docs/media/10-multiinvaders.webp)  | ![MultiMiam : un labyrinthe où des pastilles portent les réponses possibles](docs/media/11-multimiam.webp) |
+|         **MultiInvaders** — tirer sur les mauvaises réponses, épargner la bonne : elle cache un ami à libérer.         |      **MultiMiam** — parcourir le labyrinthe pour attraper le bon résultat, en évitant les monstres.       |
+| ![MultiMemory : une grille de cartes, deux retournées montrant un calcul et un nombre](docs/media/12-multimemory.webp) |    ![MultiSnake : un serpent et des pommes numérotées dans une prairie](docs/media/13-multisnake.webp)     |
+|               **MultiMemory** — retrouver de mémoire quelle carte porte le résultat du calcul retourné.                |               **MultiSnake** — grandir en avalant les bons nombres, éviter tous les autres.                |
 
 ## ✨ Fonctionnalités
 
