@@ -3,6 +3,17 @@
 import { UserState } from './core/userState.js';
 
 /**
+ * Énoncé d'une multiplication (« 7 × 8 = ? »), table puis multiplicande.
+ *
+ * Les deux gardes autour du premier nombre l'épinglent sur une suite de chiffres
+ * entière : le motif ne peut plus la reprendre chiffre par chiffre sur un énoncé
+ * sans signe, ce qui coûtait un temps quadratique. Reculer dans cette suite n'a
+ * jamais permis de trouver un signe — on ne retomberait que sur un chiffre — donc
+ * les énoncés reconnus restent exactement les mêmes.
+ */
+const ENONCE_MULTIPLICATION = /(?<!\d)(\d+)(?!\d)\s*[×x]\s*(\d+)/;
+
+/**
  * Calcule les tables "faibles" basées sur l'historique (tous modes).
  * Retourne un tableau de numéros de tables.
  */
@@ -12,7 +23,7 @@ export function getWeakTables() {
   const tableStats = {};
 
   (userData.progressHistory || []).forEach(item => {
-    const match = item.question && item.question.match(/(\d+)\s*[×x]\s*(\d+)/);
+    const match = item.question && ENONCE_MULTIPLICATION.exec(item.question);
     if (match) {
       const table = Number.parseInt(match[1]);
 

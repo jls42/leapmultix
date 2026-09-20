@@ -7,19 +7,19 @@
 import { VERSION_PARAM } from './cache-updater.js';
 import { eventBus } from './core/eventBus.js';
 
-/** Langues livrées avec l'application ; rien d'autre ne doit composer une adresse. */
-const LANGUES_LIVREES = new Set(['fr', 'en', 'es']);
-
 /**
- * Ramène une langue quelconque à une langue livrée. La valeur peut venir d'un
- * événement extérieur ou d'un stockage modifié : une langue inconnue retombe sur
- * le français plutôt que d'aller chercher un fichier arbitraire.
+ * Ramène une langue quelconque à une des trois langues livrées avec l'application.
+ * La valeur reçue peut venir d'un événement extérieur ou d'un stockage modifié :
+ * ce qui ressort est toujours un littéral écrit ici, jamais la valeur d'entrée,
+ * pour qu'aucune adresse arbitraire ne puisse être composée.
  * @param {unknown} lang - 'fr', 'en', 'es', ou une variante régionale ('fr-CA')
- * @returns {string}
+ * @returns {'fr'|'en'|'es'}
  */
 function langueLivree(lang) {
   const demandee = typeof lang === 'string' ? lang.toLowerCase().split('-')[0] : '';
-  return LANGUES_LIVREES.has(demandee) ? demandee : 'fr';
+  if (demandee === 'en') return 'en';
+  if (demandee === 'es') return 'es';
+  return 'fr';
 }
 
 let _currentLanguage = 'fr';

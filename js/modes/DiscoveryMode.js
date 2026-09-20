@@ -341,9 +341,9 @@ export class DiscoveryMode extends GameMode {
    */
   initializeUI() {
     const render = () => this._renderUI();
-    // Le premier rendu part directement ; les suivants attendent celui d'avant,
-    // qu'il ait abouti ou échoué.
-    this._renderQueue = this._renderQueue ? this._renderQueue.then(render, render) : render();
+    // La file démarre au premier rendu, pas dans le constructeur. L'enchaînement
+    // reste le même : chaque rendu attend le précédent, abouti ou non.
+    this._renderQueue = (this._renderQueue ?? Promise.resolve()).then(render, render);
     return this._renderQueue;
   }
 
