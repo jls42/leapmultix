@@ -78,7 +78,7 @@ function main() {
   const codeFiles = [
     ...walk(path.join(root, 'js'), f => /\.(mjs|js|cjs)$/.test(f)),
     path.join(root, 'index.html'),
-  ].filter(fs.existsSync);
+  ].filter(f => fs.existsSync(f));
 
   const used = new Set();
   const dataTranslateUsed = new Set();

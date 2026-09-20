@@ -1191,8 +1191,12 @@ export class GameMode {
    * Titres, noms de régions, libellés et boutons portent data-translate et sont déjà
    * retraduits ; restent l'énoncé, les réponses en toutes lettres, les vies et
    * l'explication affichée.
+   *
+   * Asynchrone par contrat : la Découverte reconstruit son écran entier
+   * (DiscoveryMode.refreshTexts), les autres modes rendent une promesse déjà tenue.
+   * @returns {Promise<void>}
    */
-  refreshTexts() {
+  async refreshTexts() {
     if (!this.gameScreen?.isConnected) return;
     this.updateInfoBar();
     this.refreshQuestionText();

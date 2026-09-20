@@ -699,9 +699,9 @@ export class ArcadeMode extends GameMode {
   /**
    * Fonction pour rafraîchir les textes après changement de langue
    */
-  refreshTexts() {
+  async refreshTexts() {
     // Recharger complètement l'interface avec les nouvelles traductions
-    this.initializeUI();
+    await this.initializeUI();
   }
 
   /**

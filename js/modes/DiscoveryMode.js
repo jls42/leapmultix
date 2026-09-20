@@ -1943,12 +1943,12 @@ export class DiscoveryMode extends GameMode {
    * (une fois par demande, jamais en parallèle) avec les mêmes tirages.
    * @returns {Promise<void>}
    */
-  refreshTexts() {
+  async refreshTexts() {
     // Écran remplacé par un autre mode : rien à retraduire ici
     if (this._stopped || (this._root && !this._root.isConnected)) {
-      return Promise.resolve();
+      return;
     }
-    return this.initializeUI().catch(error => {
+    await this.initializeUI().catch(error => {
       console.warn('Découverte : textes non rafraîchis', error);
     });
   }

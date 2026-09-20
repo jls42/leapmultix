@@ -221,6 +221,7 @@ let _appliedBackgroundKey = null;
 
 function chooseImageNumber(avatarKey, available) {
   if (!Object.prototype.hasOwnProperty.call(_chosenImageByAvatar, avatarKey)) {
+    // NOSONAR javascript:S2245 - Tirage décoratif du monde illustré, sans usage de sécurité
     _chosenImageByAvatar[avatarKey] = available[Math.floor(Math.random() * available.length)];
   }
   return _chosenImageByAvatar[avatarKey];

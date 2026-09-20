@@ -26,10 +26,13 @@ let mode;
 let screen;
 
 beforeEach(async () => {
-  document.body.innerHTML = '<div id="game"></div>';
-  screen = document.getElementById('game');
+  document.body.replaceChildren();
+  screen = document.createElement('div');
+  screen.id = 'game';
+  document.body.appendChild(screen);
   mode = new ArcadeMode();
   const template = document.createElement('template');
+  // eslint-disable-next-line no-restricted-properties -- Montage de test : gabarit produit par le mode lui-même, aucune donnée utilisateur
   template.innerHTML = await mode.getCustomHTML();
   screen.appendChild(template.content);
   mode.gameScreen = screen;

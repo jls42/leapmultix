@@ -528,6 +528,10 @@
     column-gap: clamp(var(--space-5), 4vw, var(--space-7));
     width: min(100%, 1180px);
     max-width: 1180px;
+
+    /* Deux colonnes tiennent en hauteur : marges verticales resserrées pour
+       qu'un écran de 800 px n'ait pas à défiler. */
+    padding-block: var(--space-5);
   }
 
   #slide0 .user-selection-intro {
@@ -561,14 +565,8 @@
     margin: 0 0 var(--space-4);
   }
 
-  /* Deux colonnes tiennent en hauteur : on resserre les marges verticales
-     pour qu'un écran de 800 px n'ait pas à défiler. */
   #slide0 {
     padding-bottom: var(--space-5);
-  }
-
-  #slide0 .content-card {
-    padding-block: var(--space-5);
   }
 }
 

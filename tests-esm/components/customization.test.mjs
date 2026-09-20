@@ -135,11 +135,12 @@ describe('Personnalisation : pastilles de thème et réglages', () => {
 describe('theme.js : état des boutons de thème et de taille', () => {
   beforeEach(() => {
     document.body.className = '';
+    // eslint-disable-next-line no-restricted-properties -- Montage de test : gabarit littéral du fichier, aucune donnée utilisateur
     document.body.innerHTML = SLIDE6;
   });
 
   afterEach(() => {
-    document.body.innerHTML = '';
+    document.body.replaceChildren();
     document.body.className = '';
   });
 

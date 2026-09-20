@@ -137,7 +137,9 @@ body {
   text-align: center;
   white-space: nowrap;
   color: var(--color-ink);
-  background-color: var(--color-surface-sunken);
+
+  /* Teinte du mode quand une partie est en cours, sinon surface neutre */
+  background-color: var(--accent-tint, var(--color-surface-sunken));
   border-radius: var(--radius-md);
 }
 
@@ -522,11 +524,6 @@ body:has(.arcade-container) {
 .game-content-area > .content-card > [class$='-container'] > h2,
 .game-info-bar .info-value {
   color: var(--accent, var(--color-ink-heading));
-}
-
-/* L'énoncé prend la teinte du mode : la couleur suit l'enfant dans sa partie */
-.question {
-  background-color: var(--accent-tint, var(--color-surface-sunken));
 }
 
 /* Réponse survolée : le trait du mode, jamais un remplissage */

@@ -69,7 +69,7 @@ function mockLayout(entries) {
     styles.set(el, style || {});
   }
   const original = globalThis.getComputedStyle;
-  globalThis.getComputedStyle = el => ({ ...original(el), ...(styles.get(el) || {}) });
+  globalThis.getComputedStyle = el => ({ ...original(el), ...styles.get(el) });
   return () => {
     globalThis.getComputedStyle = original;
   };

@@ -1184,12 +1184,12 @@ export class AdventureMode extends GameMode {
    * socle commun retraduit l'explication et les réponses. L'écran de fin se
    * retraduit seul (mountResults).
    */
-  refreshTexts() {
+  async refreshTexts() {
     if (this.phase === 'selection') {
       if (document.getElementById('adventure-levels')) this.renderLevelTiles();
       return;
     }
-    if (this.phase === 'playing') super.refreshTexts();
+    if (this.phase === 'playing') await super.refreshTexts();
   }
 
   /**
