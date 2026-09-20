@@ -262,8 +262,9 @@ export class DiscoveryMode extends GameMode {
     this._plan = null;
     /** .content-card du dernier rendu : toutes les recherches du mode s'y limitent */
     this._root = null;
-    /** Rendus mis en file : jamais deux constructions de l'écran en même temps */
-    this._renderQueue = Promise.resolve();
+    /** Rendus mis en file : jamais deux constructions de l'écran en même temps.
+     *  La file naît au premier rendu, pas ici : un constructeur ne lance rien. */
+    this._renderQueue = null;
     /** Mode arrêté : un rendu encore en file ne redessine plus rien */
     this._stopped = false;
     /** Début d'un toucher sur un nombre, pour distinguer un toucher d'un glisser */
@@ -340,7 +341,9 @@ export class DiscoveryMode extends GameMode {
    */
   initializeUI() {
     const render = () => this._renderUI();
-    this._renderQueue = this._renderQueue.then(render, render);
+    // Le premier rendu part directement ; les suivants attendent celui d'avant,
+    // qu'il ait abouti ou échoué.
+    this._renderQueue = this._renderQueue ? this._renderQueue.then(render, render) : render();
     return this._renderQueue;
   }
 
@@ -1279,7 +1282,8 @@ export class DiscoveryMode extends GameMode {
     this._showScreenTop();
 
     // « Addition, facile » : la voix confirme l'opération autant que le niveau
-    speak(`${this._getOperationName()}, ${getTranslation(`difficulty_${level}`)}`);
+    const nomDuNiveau = getTranslation(`difficulty_${level}`);
+    speak(`${this._getOperationName()}, ${nomDuNiveau}`);
     console.log(`🧪 Exploration du niveau ${level} (${this.operation.name})`);
   }
 
@@ -1733,9 +1737,10 @@ export class DiscoveryMode extends GameMode {
     }
 
     dropZone.classList.add('is-filled');
-    // Relancer l'apparition du calcul à chaque nombre posé
+    // Relancer l'apparition du calcul à chaque nombre posé : lire la mise en page
+    // sépare le retrait de la classe de son ajout, sinon le navigateur groupe les deux
     label.classList.remove('is-new');
-    void label.offsetWidth;
+    label.getBoundingClientRect();
     label.classList.add('is-new');
   }
 

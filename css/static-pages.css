@@ -24,22 +24,22 @@
 
 /* Colonne de lecture : 70 caractères au plus par ligne (mesuré à 17 px) */
 .static-page main p,
-.static-page main :is(ul, ol):not([role='list']) {
+.static-page main :is(ul, ol):not(.list-unstyled) {
   max-width: 33rem;
 }
 
 /* Puces pleines à tous les niveaux, alignées sur le bord du texte qui précède */
-.static-page main :is(ul, ol):not([role='list']) {
+.static-page main :is(ul, ol):not(.list-unstyled) {
   margin-bottom: var(--space-4);
   padding-left: 1.25em;
   list-style-type: disc;
 }
 
-.static-page main ol:not([role='list']) {
+.static-page main ol:not(.list-unstyled) {
   list-style-type: decimal;
 }
 
-.static-page main :is(ul, ol):not([role='list']) > li + li {
+.static-page main :is(ul, ol):not(.list-unstyled) > li + li {
   margin-top: var(--space-2);
 }
 
@@ -48,8 +48,9 @@
   color: var(--color-ink-heading);
 }
 
-/* Listes composées (modes, mini-jeux, plan, installation) : la mise en page remplace les puces */
-.static-page main [role='list'] {
+/* Listes composées (modes, mini-jeux, plan) : la mise en page remplace les puces.
+   Une classe plutôt que role="list", qui ne ferait que répéter le rôle implicite du <ul>. */
+.static-page main .list-unstyled {
   padding: 0;
   list-style: none;
 }

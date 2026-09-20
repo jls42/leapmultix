@@ -5,7 +5,7 @@
 
 // Durée du fondu de sortie de la consigne : suit le jeton --dur-slow (css/themes.css)
 const INSTRUCTIONS_FADE_MS = 320;
-const INSTRUCTION_TONES = ['neutral', 'success', 'warning'];
+const INSTRUCTION_TONES = new Set(['neutral', 'success', 'warning']);
 // Zone de jeu créée par le gabarit commun (js/components/infoBar.js)
 const STAGE_SELECTOR = '.arcade-game-ui';
 // Ancien conteneur, gardé pour les intégrations qui l'utiliseraient encore
@@ -59,7 +59,7 @@ export function showGameInstructions(canvas, message, tone = 'neutral', duration
   }
 
   clearInstructionTimers(instructionsElement);
-  const safeTone = INSTRUCTION_TONES.includes(tone) ? tone : 'neutral';
+  const safeTone = INSTRUCTION_TONES.has(tone) ? tone : 'neutral';
   instructionsElement.className = `game-instructions game-instructions--${safeTone}`;
   instructionsElement.hidden = false;
 
@@ -174,7 +174,7 @@ export function resetArcadeScroll() {
     document.getElementById('game'),
   ];
   for (const el of targets) {
-    if (el && el.scrollTop) el.scrollTop = 0;
+    if (el?.scrollTop) el.scrollTop = 0;
   }
 }
 
@@ -370,7 +370,7 @@ const DISPLAY_SCALE_CACHE_MS = 500;
  */
 function cachedDisplayScale(canvas, now) {
   const cached = displayScaleCache.get(canvas);
-  if (!cached || cached.width !== canvas.width) return null;
+  if (cached?.width !== canvas.width) return null;
   return now - cached.time < DISPLAY_SCALE_CACHE_MS ? cached.scale : null;
 }
 

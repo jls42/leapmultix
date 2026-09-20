@@ -14,7 +14,7 @@ export function getWeakTables() {
   (userData.progressHistory || []).forEach(item => {
     const match = item.question && item.question.match(/(\d+)\s*[×x]\s*(\d+)/);
     if (match) {
-      const table = parseInt(match[1]);
+      const table = Number.parseInt(match[1]);
 
       if (!tableStats[table]) tableStats[table] = { total: 0, correct: 0 };
 
@@ -30,7 +30,7 @@ export function getWeakTables() {
     if (stats.total >= 3) {
       hasStats = true;
       const successRate = (stats.correct / stats.total) * 100;
-      if (successRate < 70) weakTables.push(parseInt(table));
+      if (successRate < 70) weakTables.push(Number.parseInt(table));
     }
   }
   return hasStats ? weakTables : [];

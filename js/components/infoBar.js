@@ -20,7 +20,7 @@ function trLabel(key, fallback, params = {}) {
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const HEART_PATH =
   'M12 20.3s-7.6-4.5-9.3-9.4C1.5 7.6 3.6 4.5 7 4.5c2.2 0 3.9 1.2 5 3 1.1-1.8 2.8-3 5-3 3.4 0 5.5 3.1 4.3 6.4-1.7 4.9-9.3 9.4-9.3 9.4z';
-const ARCADE_MODES = ['multisnake', 'multimiam', 'multimemory', 'multiinvaders'];
+const ARCADE_MODES = new Set(['multisnake', 'multimiam', 'multimemory', 'multiinvaders']);
 const MAX_LIVES = 3;
 
 /**
@@ -66,7 +66,7 @@ function formatLivesLabel(lives, total) {
 function createHiddenLabel(key, fallback) {
   const label = document.createElement('span');
   label.className = 'sr-only';
-  label.setAttribute('data-translate', key);
+  label.dataset.translate = key;
   label.textContent = trLabel(key, fallback);
   return label;
 }
@@ -229,7 +229,7 @@ export const InfoBar = {
       options.ariaLabel || trLabel('game_info_bar_label', 'Informations de la partie')
     );
     if (options.ariaLabelKey) {
-      root.setAttribute('data-translate-aria-label', options.ariaLabelKey);
+      root.dataset.translateAriaLabel = options.ariaLabelKey;
     }
 
     template.forEach(item => {
@@ -241,7 +241,7 @@ export const InfoBar = {
       span.className = `info-item info-item--${item}`;
       const label = document.createElement('span');
       label.className = 'info-label';
-      label.setAttribute('data-translate', labelKey);
+      label.dataset.translate = labelKey;
       label.textContent = getTranslation(labelKey);
       const val = document.createElement('span');
       val.id = id;
@@ -259,7 +259,7 @@ export const InfoBar = {
         span.className = 'info-item';
         const label = document.createElement('span');
         label.className = 'info-label';
-        label.setAttribute('data-translate', customItem.labelKey);
+        label.dataset.translate = customItem.labelKey;
         label.textContent = getTranslation(customItem.labelKey);
         const val = document.createElement('span');
         val.id = customItem.id;
@@ -366,7 +366,7 @@ export const InfoBar = {
    * @returns {boolean}
    */
   isArcadeMode(mode) {
-    return ARCADE_MODES.includes(mode);
+    return ARCADE_MODES.has(mode);
   },
 
   /**

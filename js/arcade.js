@@ -85,8 +85,8 @@ function cancelSpeech() {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   try {
     window.speechSynthesis.cancel();
-  } catch (e) {
-    void e;
+  } catch {
+    /* ignoré volontairement */
   }
 }
 
@@ -292,7 +292,7 @@ function createTranslatedButton({ id, className, key, fallback }) {
   button.type = 'button';
   button.id = id;
   button.className = className;
-  button.setAttribute('data-translate', key);
+  button.dataset.translate = key;
   button.textContent = translated(key, fallback);
   return button;
 }
@@ -305,7 +305,7 @@ function buildResultSentence(score, endMessageKey, endMessage) {
   const result = document.createElement('p');
   result.className = 'arcade-final-score arcade-end-message';
   if (score === 0) {
-    result.setAttribute('data-translate', endMessageKey);
+    result.dataset.translate = endMessageKey;
     result.textContent = endMessage;
     return result;
   }
@@ -332,7 +332,7 @@ function buildTopScores(arcadeScores) {
   const topWrap = document.createElement('section');
   topWrap.className = 'arcade-top-scores';
   const title = document.createElement('h3');
-  title.setAttribute('data-translate', 'arcade_top_scores');
+  title.dataset.translate = 'arcade_top_scores';
   title.textContent = translated('arcade_top_scores', 'Meilleurs scores');
   const ol = document.createElement('ol');
   bestScores.forEach(s => {
@@ -356,7 +356,7 @@ function buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScor
   wrapper.className = 'arcade-gameover content-card';
 
   const h2 = document.createElement('h2');
-  h2.setAttribute('data-translate', 'game_over');
+  h2.dataset.translate = 'game_over';
   h2.textContent = translated('game_over', 'Fin de partie !');
   wrapper.appendChild(h2);
 
@@ -395,8 +395,8 @@ function buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScor
 export function stopArcadeMode() {
   try {
     console.debug('[Arcade] stopArcadeMode called');
-  } catch (e) {
-    void e;
+  } catch {
+    /* ignoré volontairement */
   }
   setArcadeActive(false);
   // Arrêt de la boucle d'animation
@@ -407,8 +407,8 @@ export function stopArcadeMode() {
   // Notifier les sous-jeux pour qu'ils retirent leurs écouteurs spécifiques
   try {
     eventBus.emit('arcade:stop');
-  } catch (e) {
-    void e;
+  } catch {
+    /* ignoré volontairement */
   }
   try {
     const Root =
@@ -420,14 +420,14 @@ export function stopArcadeMode() {
     if (Root && typeof Event !== 'undefined') {
       Root.dispatchEvent(new Event('arcade:stop'));
     }
-  } catch (e) {
-    void e;
+  } catch {
+    /* ignoré volontairement */
   }
   // Autres nettoyages éventuels (sons, etc.)
   try {
     AudioManager.stopAll();
-  } catch (e) {
-    void e;
+  } catch {
+    /* ignoré volontairement */
   }
   stopArcadeTimer(); // arrêter le compte à rebours
 }

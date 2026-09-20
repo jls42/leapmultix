@@ -106,7 +106,7 @@ export const PacmanQuestions = {
       [(num1 + 1) * num2, (num1 - 1) * num2, num1 * (num2 + 1), num1 * (num2 - 1)].forEach(pushIf);
       // Inversion chiffres (pour résultats ≥ 10)
       if (correctResult >= 10) {
-        const rev = parseInt(correctResult.toString().split('').reverse().join(''), 10);
+        const rev = Number.parseInt(correctResult.toString().split('').reverse().join(''), 10);
         pushIf(rev);
       }
     } else if (operator === '+' && game.currentOperation) {

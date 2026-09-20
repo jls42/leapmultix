@@ -22,8 +22,8 @@ export const eventBus = {
     }
     try {
       _target.addEventListener(type, handler, options);
-    } catch (e) {
-      void e; /* no-op */
+    } catch {
+      /* no-op */
     }
   },
   off(event, handler, options) {
@@ -35,8 +35,8 @@ export const eventBus = {
     }
     try {
       _target.removeEventListener(type, handler, options);
-    } catch (e) {
-      void e; /* no-op */
+    } catch {
+      /* no-op */
     }
   },
   emit(event, detail) {
@@ -49,8 +49,7 @@ export const eventBus = {
     try {
       if (_et) return _et.dispatchEvent(ce);
       return _target.dispatchEvent(ce);
-    } catch (e) {
-      void e;
+    } catch {
       return false;
     }
   },

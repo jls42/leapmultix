@@ -389,8 +389,8 @@ export class PacmanGame {
         cleanDOM: true,
         cleanTimers: true,
       });
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
 
     // Utiliser l'interface commune de fin de jeu
@@ -444,8 +444,8 @@ export class PacmanGame {
   updateUI() {
     try {
       InfoBar.update({ score: this.score, lives: this.lives }, 'multimiam');
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
   }
 

@@ -47,7 +47,7 @@ function rewireSetGameModeButtons(root = document) {
     if (m) {
       const mode = m[1];
       el.removeAttribute('onclick');
-      el.setAttribute('data-mode', mode);
+      el.dataset.mode = mode;
       el.addEventListener(
         'click',
         e => {
@@ -62,9 +62,9 @@ function rewireSetGameModeButtons(root = document) {
     // goToSlide(n)
     const s = handler.match(/goToSlide\((\d+)\)/);
     if (s) {
-      const slide = parseInt(s[1], 10);
+      const slide = Number.parseInt(s[1], 10);
       el.removeAttribute('onclick');
-      el.setAttribute('data-slide', String(slide));
+      el.dataset.slide = String(slide);
       el.addEventListener(
         'click',
         e => {
@@ -84,7 +84,7 @@ function wireDataAttributes(root = document) {
   root.querySelectorAll('[data-mode]')?.forEach(el => {
     if (el._modeWired) return;
     el.addEventListener('click', e => {
-      const mode = el.getAttribute('data-mode');
+      const mode = el.dataset.mode;
       if (!mode) return;
       e.preventDefault();
       _setGameMode(mode);
@@ -96,7 +96,7 @@ function wireDataAttributes(root = document) {
   root.querySelectorAll('[data-slide]')?.forEach(el => {
     if (el._slideWired) return;
     el.addEventListener('click', e => {
-      const slide = parseInt(el.getAttribute('data-slide') || '', 10);
+      const slide = Number.parseInt(el.dataset.slide || '', 10);
       if (Number.isNaN(slide)) return;
       e.preventDefault();
       _goToSlide(slide);

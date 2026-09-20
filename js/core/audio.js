@@ -67,7 +67,7 @@ const AudioManager = {
         this._volume = Storage.loadVolume();
       } catch {
         const savedVolume = localStorage.getItem('volume');
-        this._volume = savedVolume !== null ? parseFloat(savedVolume) : 1;
+        this._volume = savedVolume !== null ? Number.parseFloat(savedVolume) : 1;
       }
     }
 
@@ -305,7 +305,7 @@ const AudioManager = {
        */
       if (!slider.dataset.audioListenerAttached) {
         slider.addEventListener('input', e => {
-          const newVolume = parseFloat(e.target.value);
+          const newVolume = Number.parseFloat(e.target.value);
           this.setVolume(newVolume);
         });
         slider.dataset.audioListenerAttached = 'true';
@@ -368,8 +368,8 @@ try {
   document.addEventListener('DOMContentLoaded', () => {
     try {
       AudioManager.init(gameState);
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
   });
 }

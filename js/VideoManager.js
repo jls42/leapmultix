@@ -213,9 +213,9 @@ export const VideoManager = {
     closeBtn.id = 'video-close-btn';
     closeBtn.className = 'video-close-btn';
     const closeLabel = translateOr('close_video', 'Fermer la vidéo');
-    closeBtn.setAttribute('data-translate-aria-label', 'close_video');
+    closeBtn.dataset.translateAriaLabel = 'close_video';
     closeBtn.setAttribute('aria-label', closeLabel);
-    closeBtn.setAttribute('data-translate-title', 'close_video');
+    closeBtn.dataset.translateTitle = 'close_video';
     closeBtn.title = closeLabel;
     closeBtn.appendChild(createIcon([{ d: 'M6 6l12 12M18 6 6 18' }]));
     header.appendChild(closeBtn);
@@ -233,7 +233,7 @@ export const VideoManager = {
     source.type = 'video/mp4';
     video.appendChild(source);
     const fallbackP = document.createElement('p');
-    fallbackP.setAttribute('data-translate', 'video_not_supported');
+    fallbackP.dataset.translate = 'video_not_supported';
     fallbackP.textContent = translateOr(
       'video_not_supported',
       'Ton navigateur ne peut pas lire cette vidéo.'
@@ -251,7 +251,7 @@ export const VideoManager = {
     playBtn.hidden = true;
     playBtn.appendChild(createIcon([{ d: 'M8 5.5v13l10-6.5z', filled: true }]));
     const playLabel = document.createElement('span');
-    playLabel.setAttribute('data-translate', 'play_video');
+    playLabel.dataset.translate = 'play_video';
     playLabel.textContent = translateOr('play_video', 'Voir la vidéo');
     playBtn.appendChild(playLabel);
     controls.appendChild(playBtn);
@@ -261,7 +261,7 @@ export const VideoManager = {
     skipBtn.id = 'skip-intro-btn';
     skipBtn.className = 'btn btn-secondary skip-btn';
     const skipLabel = document.createElement('span');
-    skipLabel.setAttribute('data-translate', 'skip_video');
+    skipLabel.dataset.translate = 'skip_video';
     skipLabel.textContent = translateOr('skip_video', 'Passer');
     skipBtn.appendChild(skipLabel);
     skipBtn.appendChild(
@@ -635,7 +635,7 @@ export const VideoManager = {
     this.setBackgroundInert(true);
 
     // Lire la mise en page pour que la transition parte bien de l'état fermé
-    void this._modal.offsetWidth;
+    this._modal.getBoundingClientRect();
     this._modal.classList.add('is-open');
 
     // Le clavier arrive dans la fenêtre, sur « Voir la vidéo » si la lecture attend

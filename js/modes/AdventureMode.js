@@ -295,7 +295,7 @@ export class AdventureMode extends GameMode {
       card.addEventListener(
         'click',
         singleActivation(() => {
-          const levelId = parseInt(card.dataset.level, 10);
+          const levelId = Number.parseInt(card.dataset.level, 10);
           const levelData = this.adventureLevels.find(level => level.id === levelId);
           const reason = levelData ? this.getLockReason(levelData) : null;
 
@@ -949,7 +949,7 @@ export class AdventureMode extends GameMode {
   getLockReason(level) {
     if (level.id > 1) {
       const prevLevel = this.adventureLevels.find(l => l.id === level.id - 1);
-      if (!prevLevel || !prevLevel.completed) return 'previous';
+      if (!prevLevel?.completed) return 'previous';
     }
     if (this.totalStars < level.requiredStars) return 'stars';
     return null;

@@ -343,7 +343,7 @@ export class ArcadeMode extends GameMode {
     const valueOf = variant => `${variant.file}|${variant.fallback}`;
     // La fusée choisie la dernière fois reste cochée (sinon la première)
     const savedIndex = spaceshipVariants.findIndex(v => valueOf(v) === this.selectedSpaceship);
-    const checkedIndex = savedIndex >= 0 ? savedIndex : 0;
+    const checkedIndex = Math.max(savedIndex, 0);
     const titleId = `${this.getCardId(gameId)}-spaceship-title`;
 
     return `
@@ -466,12 +466,12 @@ export class ArcadeMode extends GameMode {
         if (tuile) this.toggleCard(tuile);
       },
       'arcade-play': () => {
-        const gameId = actionEl.getAttribute('data-game');
+        const gameId = actionEl.dataset.game;
         if (gameId) this.startGame(gameId);
       },
       'arcade-set-difficulty': () => {
-        const diff = actionEl.getAttribute('data-difficulty');
-        const gameId = actionEl.getAttribute('data-game');
+        const diff = actionEl.dataset.difficulty;
+        const gameId = actionEl.dataset.game;
         if (diff && gameId) this.setDifficulty(diff, gameId);
       },
       'arcade-set-spaceship': () => {
@@ -479,7 +479,7 @@ export class ArcadeMode extends GameMode {
         if (input?.value) this.setSpaceship(input.value);
       },
     };
-    const action = actions[actionEl.getAttribute('data-action')];
+    const action = actions[actionEl.dataset.action];
     if (!action) return false;
     action();
     return true;
@@ -540,7 +540,7 @@ export class ArcadeMode extends GameMode {
       document.querySelector(`[data-game="${gameId}"]`);
     if (scope) {
       scope.querySelectorAll('.difficulty-btn').forEach(btn => {
-        const isSelected = btn.getAttribute('data-difficulty') === difficulty;
+        const isSelected = btn.dataset.difficulty === difficulty;
         btn.classList.toggle('selected', isSelected);
         btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
       });
@@ -563,8 +563,7 @@ export class ArcadeMode extends GameMode {
    * Démarrer un jeu arcade spécifique
    */
   startGame(gameId) {
-    const game = this.availableGames.find(g => g.id === gameId);
-    if (!game) {
+    if (!this.availableGames.some(g => g.id === gameId)) {
       console.error(`❌ Jeu arcade inconnu: ${gameId}`);
       return;
     }

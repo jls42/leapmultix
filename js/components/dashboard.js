@@ -37,8 +37,8 @@ function tr(key, fallback, params = {}) {
   try {
     const value = getTranslation(key, params);
     if (typeof value === 'string' && value && !/^\[.*\]$/.test(value)) return value;
-  } catch (error) {
-    void error; // i18n pas encore prêt : on garde le repli
+  } catch {
+    // i18n pas encore prêt : on garde le repli
   }
   let text = fallback;
   for (const [name, value] of Object.entries(params)) text = text.replace(`{${name}}`, value);
@@ -159,7 +159,7 @@ export const Dashboard = {
       replayBtn.type = 'button';
       replayBtn.classList.add('btn', 'btn-secondary', 'btn-sm');
       replayBtn.removeAttribute('title');
-      replayBtn.removeAttribute('data-translate-title');
+      delete replayBtn.dataset.translateTitle;
       const label = createSafeElement(
         'span',
         tr('replay_avatar_video', "Rejouer la vidéo d'avatar"),
@@ -597,7 +597,7 @@ export const Dashboard = {
 
     // Placer la section AVANT les succès débloqués
     const achievementsSection = document.getElementById('achievements-list')?.parentElement;
-    if (achievementsSection && achievementsSection.parentElement === dashboardContainer) {
+    if (achievementsSection?.parentElement === dashboardContainer) {
       dashboardContainer.insertBefore(section, achievementsSection);
     } else {
       dashboardContainer.appendChild(section);
@@ -627,12 +627,12 @@ try {
       if (slide7 && slide7.classList.contains('active-slide')) {
         Dashboard.show();
       }
-    } catch (e) {
-      void e; /* no-op: dashboard refresh best-effort */
+    } catch {
+      /* no-op: dashboard refresh best-effort */
     }
   });
-} catch (e) {
-  void e; /* no-op: eventBus optional */
+} catch {
+  /* no-op: eventBus optional */
 }
 
 export default Dashboard;

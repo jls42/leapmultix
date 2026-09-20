@@ -126,8 +126,8 @@ export class AccessibilityManager {
         import('./core/audio.js').then(({ AudioManager }) => {
           try {
             AudioManager.toggleMute();
-          } catch (e) {
-            void e;
+          } catch {
+            /* ignoré volontairement */
           }
           this.announce('Son activé/désactivé');
         });

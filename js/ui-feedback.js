@@ -97,7 +97,7 @@ export function scrollToScreenTop(element) {
  */
 export function keepNumbersTogether(text) {
   if (typeof text !== 'string' || !text) return '';
-  return text.replace(/ = /g, '\u00a0=\u00a0').replace(/(\d) (?=\p{L})/gu, '$1\u00a0');
+  return text.replaceAll(' = ', '\u00a0=\u00a0').replaceAll(/(\d) (?=\p{L})/gu, '$1\u00a0');
 }
 
 export function showFeedback(target, message, type = 'success', speakIt = false) {
@@ -113,8 +113,8 @@ export function showFeedback(target, message, type = 'success', speakIt = false)
   el.setAttribute('aria-live', 'polite');
   try {
     if (speakIt) speak(message);
-  } catch (e) {
-    void e;
+  } catch {
+    /* ignoré volontairement */
   }
 }
 

@@ -10,6 +10,30 @@
  */
 import { showArcadeMessage, showArcadePoints } from './utils-es6.js';
 import { showArcadePenalty } from './arcade-points.js';
+
+/**
+ * Invincibilité après une vie perdue : le personnage clignote, puis redevient normal.
+ * @param {Object} ctx Instance de PacmanGame
+ */
+function updateInvincibility(ctx) {
+  if (ctx.isInvincible && Date.now() > ctx.invincibilityEndTime) {
+    ctx.isInvincible = false;
+    ctx.isVisible = true;
+  }
+  if (ctx.isInvincible) {
+    ctx.isVisible = Date.now() % ctx.blinkInterval < ctx.blinkInterval / 2;
+  }
+}
+
+/**
+ * Point du labyrinthe où poser la pastille de points : au-dessus de la case mangée.
+ * @param {Object} ctx Instance de PacmanGame
+ * @param {{x: number, y: number}} cell
+ * @returns {{x: number, y: number}}
+ */
+function cellPoint(ctx, cell) {
+  return { x: (cell.x + 0.5) * ctx.cellSize, y: cell.y * ctx.cellSize };
+}
 export function initPacmanEngine(game) {
   /* === DÉPLACEMENTS & COLLISIONS =============================== */
 
@@ -65,17 +89,6 @@ export function initPacmanEngine(game) {
     });
     if (possibles.length === 0) return chosenDir;
     return possibles[Math.floor(Math.random() * possibles.length)];
-  }
-
-  // Invincibilité après une vie perdue : le personnage clignote, puis redevient normal
-  function updateInvincibility(ctx) {
-    if (ctx.isInvincible && Date.now() > ctx.invincibilityEndTime) {
-      ctx.isInvincible = false;
-      ctx.isVisible = true;
-    }
-    if (ctx.isInvincible) {
-      ctx.isVisible = Date.now() % ctx.blinkInterval < ctx.blinkInterval / 2;
-    }
   }
 
   function ensureTimingState(ctx, now) {
@@ -244,11 +257,6 @@ export function initPacmanEngine(game) {
       ghost.y = next.y;
     }
   };
-
-  // Point du labyrinthe où poser la pastille de points : au-dessus de la case mangée
-  function cellPoint(ctx, cell) {
-    return { x: (cell.x + 0.5) * ctx.cellSize, y: cell.y * ctx.cellSize };
-  }
 
   // Collision Pacman / réponses
   game.checkAnswerCollision = function checkAnswerCollision() {

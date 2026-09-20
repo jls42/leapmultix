@@ -163,7 +163,7 @@ function computeResult(operator, a, b) {
     case '−':
       return a - b;
     case '÷':
-      return b === 0 ? NaN : a / b;
+      return b === 0 ? Number.NaN : a / b;
     default:
       return a * b;
   }

@@ -51,14 +51,14 @@ export function selectUser(name) {
   // Un monde illustré fixe par avatar (plus de rotation du fond)
   updateBackgroundByAvatar(userData.avatar || 'fox');
 
-  updateWelcomeMessageUI().catch(e => {
-    void e; /* no-op */
+  updateWelcomeMessageUI().catch(() => {
+    /* message d'accueil optionnel : l'écran reste utilisable sans */
   });
   updateCoinDisplay();
   try {
     displayDailyChallenge();
-  } catch (e) {
-    void e; /* no-op */
+  } catch {
+    /* no-op */
   }
 
   localStorage.removeItem('arcadeScores_default');

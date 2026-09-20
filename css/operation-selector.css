@@ -16,8 +16,8 @@
   color: var(--color-ink);
 }
 
-/* Mobile : 2 × 2 ; tablette : une ligne, icône au-dessus du libellé ;
-   bureau : une ligne, icône et libellé côte à côte */
+/* Mobile, deux colonnes sur deux lignes. Tablette, une ligne avec l'icône
+   au-dessus du libellé. Bureau, une ligne avec l'icône à côté du libellé. */
 .operation-selector-buttons {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

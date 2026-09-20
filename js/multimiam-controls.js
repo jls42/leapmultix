@@ -4,6 +4,17 @@
 import { clientToCanvasPoint } from './arcade-common.js';
 
 /**
+ * Point touché ou cliqué, dans les coordonnées de la fenêtre (null si absent).
+ * @param {TouchEvent|MouseEvent} e
+ * @returns {{clientX: number, clientY: number}|null}
+ */
+function readPointer(e) {
+  const source = e.touches && e.touches.length > 0 ? e.touches[0] : e;
+  if (source.clientX === undefined || source.clientY === undefined) return null;
+  return { clientX: source.clientX, clientY: source.clientY };
+}
+
+/**
  * Initialise les contrôles pour une instance de PacmanGame
  * @param {PacmanGame} game Instance du jeu
  */
@@ -135,13 +146,6 @@ export function initPacmanControls(game) {
   game.canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 
   // ================= Clic ET Touch intelligent sur labyrinthe =================
-  // Point touché ou cliqué, dans les coordonnées de la fenêtre (null si absent)
-  function readPointer(e) {
-    const source = e.touches && e.touches.length > 0 ? e.touches[0] : e;
-    if (source.clientX === undefined || source.clientY === undefined) return null;
-    return { clientX: source.clientX, clientY: source.clientY };
-  }
-
   function handleCanvasTouch(e) {
     e.preventDefault();
     e.stopPropagation();

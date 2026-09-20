@@ -23,8 +23,8 @@ async function stopActiveModes(targetSlideId = null) {
         return; // skip cleanup only if not going to home
       }
     }
-  } catch (e) {
-    void e;
+  } catch {
+    /* ignoré volontairement */
   }
   const STOPPERS = new Map([
     ['arcade', () => import('./modes/ArcadeMode.js').then(m => m.stopArcadeMode?.())],
@@ -114,8 +114,8 @@ function showSlide(slideId) {
         // Personnalisation: préparer l'écran (injection UI, etc.)
         import('./components/customization.js')
           .then(m => m.Customization?.show?.())
-          .catch(e => {
-            void e;
+          .catch(() => {
+            /* écran de personnalisation optionnel : la navigation continue */
           });
       }
     } else {

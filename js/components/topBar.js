@@ -58,8 +58,8 @@ function tr(key, fallback) {
   try {
     const value = getTranslation(key);
     if (typeof value === 'string' && value && !/^\[.*\]$/.test(value)) return value;
-  } catch (error) {
-    void error; // i18n pas encore prêt : on garde le repli
+  } catch {
+    // i18n pas encore prêt : on garde le repli
   }
   return fallback;
 }
@@ -755,13 +755,13 @@ export const TopBar = {
     // Libellés qui dépendent d'un état : voix, son, langue active
     try {
       this.updateVoiceToggleUI(_isVoiceEnabled());
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
     try {
       this.updateVolumeControls();
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
     this.updateLanguageButtons();
   },

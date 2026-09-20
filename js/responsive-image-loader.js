@@ -309,7 +309,7 @@ class ResponsiveImageLoader {
   optimizeImageBySelector(selector, context = null) {
     const img = document.querySelector(selector);
     if (img) {
-      img.setAttribute('data-responsive', 'true');
+      img.dataset.responsive = 'true';
       this.optimizeImage(img, context);
     }
   }

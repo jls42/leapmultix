@@ -569,8 +569,8 @@ class SnakeGame {
   updateInfoBar() {
     try {
       InfoBar.update({ score: 0, lives: this.lives }, 'multisnake');
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
   }
 
@@ -898,14 +898,14 @@ class SnakeGame {
         for (const l of this.eventListeners) {
           try {
             l.element?.removeEventListener?.(l.type, l.callback, l.options || false);
-          } catch (e) {
-            void e;
+          } catch {
+            /* ignoré volontairement */
           }
         }
         this.eventListeners = [];
       }
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
 
     // Utiliser la fonction utilitaire centralisée pour un nettoyage complet
@@ -916,8 +916,8 @@ class SnakeGame {
         cleanTimers: true,
         cleanDOM: true,
       });
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
 
     console.log('Snake - Ressources nettoyées');
@@ -1239,8 +1239,8 @@ class SnakeGame {
   updateScoreDisplay() {
     try {
       InfoBar.update({ score: this.score, lives: this.lives }, 'multisnake');
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
   }
 

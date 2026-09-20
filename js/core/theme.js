@@ -77,14 +77,13 @@ export function updateVolume(newVolume) {
 
   try {
     AudioManager.setVolume(newVolume);
-  } catch (e) {
-    void e; /* no-op */
+  } catch {
+    /* no-op */
   }
 
   try {
     TopBar.updateVolumeControls(newVolume, isMuted);
-  } catch (e) {
-    void e;
+  } catch {
     updateVolumeControlsFallback(newVolume);
   }
 

@@ -97,13 +97,13 @@ try {
         const lang = e?.detail?.lang || (g.loadLanguage ? g.loadLanguage() : null);
         if (lang) setCurrentLanguage(lang);
         setReady(true);
-      } catch (e) {
-        void e;
+      } catch {
+        /* ignoré volontairement */
       }
     });
   }
-} catch (e) {
-  void e;
+} catch {
+  /* ignoré volontairement */
 }
 
 try {
@@ -112,12 +112,12 @@ try {
       const lang = e?.detail?.lang || null;
       if (lang) setCurrentLanguage(lang);
       setReady(true);
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
   });
-} catch (e) {
-  void e;
+} catch {
+  /* ignoré volontairement */
 }
 
 export default {

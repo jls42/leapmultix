@@ -51,9 +51,14 @@ export function createArcadeToast(text, tone = 'neutral') {
  * @param {string} messageKey - Clé de traduction du message
  * @param {string} [tone='neutral'] - neutral | success | warning
  * @param {number} [duration=1500] - Durée d'affichage en millisecondes
- * @param {string} [fallback] - Texte affiché si la clé manque
+ * @param {string} [fallback=messageKey] - Texte affiché si la clé manque
  */
-export function showArcadeMessage(messageKey, tone = 'neutral', duration = 1500, fallback) {
+export function showArcadeMessage(
+  messageKey,
+  tone = 'neutral',
+  duration = 1500,
+  fallback = messageKey
+) {
   const gameContainer = document.getElementById('game');
   if (!gameContainer) return;
 
