@@ -20,7 +20,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Lint + Tests + Coverage
         run: npm run verify
@@ -42,7 +42,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Install Chrome
         uses: browser-actions/setup-chrome@4c4260df9622eff1b597d1653b7a388b6b0f8341 # v2.0.0
