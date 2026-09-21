@@ -477,6 +477,23 @@ remonte. Ce n'est pas une demande à attendre : c'est la suite normale du travai
 4. Committer, pousser, puis **retourner lire les contrôles**. Recommencer tant
    que tout n'est pas vert.
 
+**Une remontée se corrige, elle ne se rapporte pas.** Lister les problèmes en
+laissant à l'utilisateur le soin de demander la correction n'est pas un
+service : c'est du travail à moitié fait. La seule exception est le point qui
+demande une décision qui ne s'invente pas — un arbitrage produit, une action
+dans une console tierce, un coût. Celui-là se pose en une ligne, le reste se
+corrige.
+
+Cela vaut pour les remontées de la porte qualité **comme pour celles qui ne la
+bloquent pas** : une odeur de code signalée sur une PR se traite dans cette PR.
+
+**Une remontée en cache souvent une vraie.** Le message décrit un symptôme ;
+chercher la cause avant de corriger. Trois exemples rencontrés : un
+`find -name "**/*.js"` qui n'a jamais rien trouvé, donc une analyse d'assets
+portant sur zéro fichier ; vingt-trois tests audio au vert qui n'exécutaient
+pas une ligne du module ; des `.sort()` sans comparateur qui plaçaient tout un
+dépôt en note D de fiabilité.
+
 ### Vérifier : mesuré, jamais supposé
 
 L'utilisateur est le dernier maillon. Quand on lui annonce que c'est bon, ça doit
@@ -493,6 +510,10 @@ l'être vraiment. Donc, avant toute annonce de résultat :
 - Les preuves n'ont pas à être montrées, mais elles doivent exister. Une
   vérification qui n'a pas pu être faite se dit explicitement ; elle ne se
   présente jamais comme faite.
+- **Un test qui passe ne prouve rien tant qu'on ne l'a pas vu échouer.** Devant
+  un test soupçonné de ne rien vérifier, injecter la panne qu'il est censé
+  détecter : s'il reste vert, c'est de la couverture fantôme, et le corriger
+  passe avant tout le reste.
 
 ### Deployment
 

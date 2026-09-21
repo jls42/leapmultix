@@ -257,60 +257,54 @@ const mockUserManager = {
 describe("Tests d'intégration - Workflow utilisateur complet", () => {
   describe("Workflow de création d'utilisateur", () => {
     test('devrait créer un utilisateur complet avec toutes les propriétés', () => {
-      if (mockUserManager && mockUserManager.init) {
-        mockUserManager.init();
+      expect(mockUserManager && mockUserManager.init).toBeTruthy();
+      mockUserManager.init();
 
-        const userData = {
-          name: 'TestUser',
-          avatar: 'fox',
-          nickname: 'TestNick',
-        };
+      const userData = {
+        name: 'TestUser',
+        avatar: 'fox',
+        nickname: 'TestNick',
+      };
 
-        const success = mockUserManager.createUser(userData);
+      const success = mockUserManager.createUser(userData);
 
-        expect(success).toBe(true);
+      expect(success).toBe(true);
 
-        // Vérifier que l'utilisateur est créé avec toutes les propriétés par défaut
-        const createdUser = mockUserManager.getUserData('TestUser');
-        expect(createdUser).toMatchObject({
-          name: 'TestUser',
-          avatar: 'fox',
-          nickname: 'TestNick',
-          coins: 0,
-          completedTables: [],
-          preferences: expect.any(Object),
-        });
+      // Vérifier que l'utilisateur est créé avec toutes les propriétés par défaut
+      const createdUser = mockUserManager.getUserData('TestUser');
+      expect(createdUser).toMatchObject({
+        name: 'TestUser',
+        avatar: 'fox',
+        nickname: 'TestNick',
+        coins: 0,
+        completedTables: [],
+        preferences: expect.any(Object),
+      });
 
-        expect(mockStorage.savePlayers).toHaveBeenCalled();
-      } else {
-        expect(true).toBe(true);
-      }
+      expect(mockStorage.savePlayers).toHaveBeenCalled();
     });
 
     test("devrait empêcher la création d'utilisateurs avec noms dupliqués", () => {
-      if (mockUserManager && mockUserManager.init) {
-        mockUserManager.init();
+      expect(mockUserManager && mockUserManager.init).toBeTruthy();
+      mockUserManager.init();
 
-        const userData = {
-          name: 'DuplicateUser',
-          avatar: 'panda',
-        };
+      const userData = {
+        name: 'DuplicateUser',
+        avatar: 'panda',
+      };
 
-        // Première création
-        const firstSuccess = mockUserManager.createUser(userData);
-        expect(firstSuccess).toBe(true);
+      // Première création
+      const firstSuccess = mockUserManager.createUser(userData);
+      expect(firstSuccess).toBe(true);
 
-        // Tentative de duplication
-        const secondSuccess = mockUserManager.createUser(userData);
-        expect(secondSuccess).toBe(false);
+      // Tentative de duplication
+      const secondSuccess = mockUserManager.createUser(userData);
+      expect(secondSuccess).toBe(false);
 
-        // Vérifier qu'il n'y a qu'un seul utilisateur
-        const players = mockUserManager.getPlayers();
-        const duplicateUsers = Object.keys(players).filter(name => name === 'DuplicateUser');
-        expect(duplicateUsers).toHaveLength(1);
-      } else {
-        expect(true).toBe(true);
-      }
+      // Vérifier qu'il n'y a qu'un seul utilisateur
+      const players = mockUserManager.getPlayers();
+      const duplicateUsers = Object.keys(players).filter(name => name === 'DuplicateUser');
+      expect(duplicateUsers).toHaveLength(1);
     });
   });
 
@@ -323,23 +317,22 @@ describe("Tests d'intégration - Workflow utilisateur complet", () => {
         preferences: { volume: 0.7, theme: 'dark' },
       };
 
-      if (mockUserManager && mockUserManager.createUser && mockUserManager.selectUser) {
-        mockUserManager.createUser(userData);
-        mockUserManager.selectUser('PrefUser');
+      expect(
+        mockUserManager && mockUserManager.createUser && mockUserManager.selectUser
+      ).toBeTruthy();
+      mockUserManager.createUser(userData);
+      mockUserManager.selectUser('PrefUser');
 
-        // Vérifier la sélection
-        expect(mockUserManager.getCurrentUser()).toBe('PrefUser');
+      // Vérifier la sélection
+      expect(mockUserManager.getCurrentUser()).toBe('PrefUser');
 
-        // Note : Les fonctions updateVolume, updateBackgroundByAvatar, etc. ne sont pas mockées
-        // Dans un vrai système, elles seraient appelées. Pour les tests d'intégration,
-        // nous validons que la sélection fonctionne correctement.
+      // Note : Les fonctions updateVolume, updateBackgroundByAvatar, etc. ne sont pas mockées
+      // Dans un vrai système, elles seraient appelées. Pour les tests d'intégration,
+      // nous validons que la sélection fonctionne correctement.
 
-        // Vérifier que le gameState est mis à jour
-        if (global.window.gameState) {
-          expect(global.window.gameState.currentUser).toBe('PrefUser');
-        }
-      } else {
-        expect(true).toBe(true);
+      // Vérifier que le gameState est mis à jour
+      if (global.window.gameState) {
+        expect(global.window.gameState.currentUser).toBe('PrefUser');
       }
     });
 
@@ -351,19 +344,18 @@ describe("Tests d'intégration - Workflow utilisateur complet", () => {
         global.window.goToSlide = jest.fn(() => true);
       }
 
-      if (mockUserManager && mockUserManager.createUser && mockUserManager.selectUser) {
-        // Créer et sélectionner utilisateur
-        mockUserManager.createUser({ name: 'NavUser', avatar: 'fox' });
-        mockUserManager.selectUser('NavUser');
+      expect(
+        mockUserManager && mockUserManager.createUser && mockUserManager.selectUser
+      ).toBeTruthy();
+      // Créer et sélectionner utilisateur
+      mockUserManager.createUser({ name: 'NavUser', avatar: 'fox' });
+      mockUserManager.selectUser('NavUser');
 
-        // Dans un vrai système, la navigation serait automatique
-        // Simulons l'appel pour le test
-        global.window.goToSlide(1);
+      // Dans un vrai système, la navigation serait automatique
+      // Simulons l'appel pour le test
+      global.window.goToSlide(1);
 
-        expect(global.window.goToSlide).toHaveBeenCalledWith(1);
-      } else {
-        expect(true).toBe(true);
-      }
+      expect(global.window.goToSlide).toHaveBeenCalledWith(1);
     });
   });
 
@@ -492,102 +484,93 @@ describe("Tests d'intégration - Workflow utilisateur complet", () => {
     });
 
     test('devrait gérer les workflow avec utilisateurs multiples', () => {
-      if (mockUserManager && mockUserManager.init) {
-        mockUserManager.init();
+      expect(mockUserManager && mockUserManager.init).toBeTruthy();
+      mockUserManager.init();
 
-        // Créer plusieurs utilisateurs
-        const users = [
-          { name: 'User1', avatar: 'fox' },
-          { name: 'User2', avatar: 'panda' },
-          { name: 'User3', avatar: 'dragon' },
-        ];
+      // Créer plusieurs utilisateurs
+      const users = [
+        { name: 'User1', avatar: 'fox' },
+        { name: 'User2', avatar: 'panda' },
+        { name: 'User3', avatar: 'dragon' },
+      ];
 
-        users.forEach(userData => {
-          const success = mockUserManager.createUser(userData);
-          expect(success).toBe(true);
-        });
+      users.forEach(userData => {
+        const success = mockUserManager.createUser(userData);
+        expect(success).toBe(true);
+      });
 
-        // Sélectionner différents utilisateurs
-        mockUserManager.selectUser('User2');
-        expect(mockUserManager.getCurrentUser()).toBe('User2');
-        expect(global.window.gameState.avatar).toBe('panda');
+      // Sélectionner différents utilisateurs
+      mockUserManager.selectUser('User2');
+      expect(mockUserManager.getCurrentUser()).toBe('User2');
+      expect(global.window.gameState.avatar).toBe('panda');
 
-        mockUserManager.selectUser('User3');
-        expect(mockUserManager.getCurrentUser()).toBe('User3');
-        expect(global.window.gameState.avatar).toBe('dragon');
+      mockUserManager.selectUser('User3');
+      expect(mockUserManager.getCurrentUser()).toBe('User3');
+      expect(global.window.gameState.avatar).toBe('dragon');
 
-        // Vérifier que tous les utilisateurs existent
-        const players = mockUserManager.getPlayers();
-        expect(Object.keys(players)).toHaveLength(3);
-        expect(players).toHaveProperty('User1');
-        expect(players).toHaveProperty('User2');
-        expect(players).toHaveProperty('User3');
-      } else {
-        expect(true).toBe(true);
-      }
+      // Vérifier que tous les utilisateurs existent
+      const players = mockUserManager.getPlayers();
+      expect(Object.keys(players)).toHaveLength(3);
+      expect(players).toHaveProperty('User1');
+      expect(players).toHaveProperty('User2');
+      expect(players).toHaveProperty('User3');
     });
   });
 
   describe('Workflow de sauvegarde et persistance', () => {
     test('devrait sauvegarder et charger les données utilisateur correctement', () => {
-      if (mockUserManager && mockUserManager.init) {
-        mockUserManager.init();
+      expect(mockUserManager && mockUserManager.init).toBeTruthy();
+      mockUserManager.init();
 
-        // Créer et sauvegarder un utilisateur
-        const userData = {
-          name: 'PersistUser',
-          avatar: 'unicorn',
-          coins: 150,
-          preferences: { language: 'en' },
-        };
+      // Créer et sauvegarder un utilisateur
+      const userData = {
+        name: 'PersistUser',
+        avatar: 'unicorn',
+        coins: 150,
+        preferences: { language: 'en' },
+      };
 
-        mockUserManager.createUser(userData);
-        mockUserManager.selectUser('PersistUser');
+      mockUserManager.createUser(userData);
+      mockUserManager.selectUser('PersistUser');
 
-        // Simuler modifications et sauvegarde
-        const updatedData = { ...userData, coins: 200 };
-        mockUserManager.saveUserData('PersistUser', updatedData);
+      // Simuler modifications et sauvegarde
+      const updatedData = { ...userData, coins: 200 };
+      mockUserManager.saveUserData('PersistUser', updatedData);
 
-        // Vérifier sauvegarde
-        expect(mockStorage.savePlayers).toHaveBeenCalled();
-        expect(mockStorage.saveCurrentUser).toHaveBeenCalled();
+      // Vérifier sauvegarde
+      expect(mockStorage.savePlayers).toHaveBeenCalled();
+      expect(mockStorage.saveCurrentUser).toHaveBeenCalled();
 
-        // Vérifier que les données sont correctement mises à jour
-        const savedUser = mockUserManager.getUserData('PersistUser');
-        expect(savedUser.coins).toBe(200);
-      } else {
-        expect(true).toBe(true);
-      }
+      // Vérifier que les données sont correctement mises à jour
+      const savedUser = mockUserManager.getUserData('PersistUser');
+      expect(savedUser.coins).toBe(200);
     });
 
     test("devrait gérer la suppression d'utilisateurs", () => {
-      if (mockUserManager && mockUserManager.init) {
-        mockUserManager.init();
+      expect(mockUserManager && mockUserManager.init).toBeTruthy();
+      mockUserManager.init();
 
-        // Créer des utilisateurs
-        mockUserManager.createUser({ name: 'ToDelete', avatar: 'fox' });
-        mockUserManager.createUser({ name: 'ToKeep', avatar: 'panda' });
+      // Créer des utilisateurs
+      mockUserManager.createUser({ name: 'ToDelete', avatar: 'fox' });
+      mockUserManager.createUser({ name: 'ToKeep', avatar: 'panda' });
 
-        // Sélectionner l'utilisateur à supprimer
-        mockUserManager.selectUser('ToDelete');
-        expect(mockUserManager.getCurrentUser()).toBe('ToDelete');
+      // Sélectionner l'utilisateur à supprimer
+      mockUserManager.selectUser('ToDelete');
+      expect(mockUserManager.getCurrentUser()).toBe('ToDelete');
 
-        // Supprimer l'utilisateur sélectionné
-        const deleteSuccess = mockUserManager.deleteUser('ToDelete');
-        expect(deleteSuccess).toBe(true);
+      // Supprimer l'utilisateur sélectionné
+      const deleteSuccess = mockUserManager.deleteUser('ToDelete');
+      expect(deleteSuccess).toBe(true);
 
-        // Vérifier que l'utilisateur actuel est désélectionné
-        expect(mockUserManager.getCurrentUser()).toBeNull();
+      // Vérifier que l'utilisateur actuel est désélectionné
+      expect(mockUserManager.getCurrentUser()).toBeNull();
 
-        // Vérifier que l'utilisateur n'existe plus
-        expect(mockUserManager.getUserData('ToDelete')).toBeNull();
-        expect(mockUserManager.getUserData('ToKeep')).toBeTruthy();
+      // Vérifier que l'utilisateur n'existe plus
+      expect(mockUserManager.getUserData('ToDelete')).toBeNull();
+      expect(mockUserManager.getUserData('ToKeep')).toBeTruthy();
 
-        expect(mockStorage.savePlayers).toHaveBeenCalled();
-        expect(mockStorage.saveCurrentUser).toHaveBeenCalledWith(null);
-      } else {
-        expect(true).toBe(true);
-      }
+      expect(mockStorage.savePlayers).toHaveBeenCalled();
+      expect(mockStorage.saveCurrentUser).toHaveBeenCalledWith(null);
     });
   });
 
@@ -598,35 +581,29 @@ describe("Tests d'intégration - Workflow utilisateur complet", () => {
         throw new Error('localStorage error');
       });
 
-      if (mockUserManager && mockUserManager.init) {
-        expect(() => mockUserManager.init()).not.toThrow();
+      expect(mockUserManager && mockUserManager.init).toBeTruthy();
+      expect(() => mockUserManager.init()).not.toThrow();
 
-        // Vérifier que l'erreur est capturée (le mock peut appeler console.error)
-        // Le test vérifie que le système continue de fonctionner malgré l'erreur
+      // Vérifier que l'erreur est capturée (le mock peut appeler console.error)
+      // Le test vérifie que le système continue de fonctionner malgré l'erreur
 
-        // Le système devrait fonctionner avec des données par défaut
-        const players = mockUserManager.getPlayers();
-        expect(players).toEqual({});
-      } else {
-        expect(true).toBe(true);
-      }
+      // Le système devrait fonctionner avec des données par défaut
+      const players = mockUserManager.getPlayers();
+      expect(players).toEqual({});
     });
 
     test('devrait gérer les données corrompues', () => {
       // Données corrompues retournées par le storage
       mockStorage.loadPlayers.mockReturnValue('invalid data');
 
-      if (mockUserManager && mockUserManager.init) {
-        // L'init devrait gérer les données corrompues
-        expect(() => mockUserManager.init()).not.toThrow();
+      expect(mockUserManager && mockUserManager.init).toBeTruthy();
+      // L'init devrait gérer les données corrompues
+      expect(() => mockUserManager.init()).not.toThrow();
 
-        // Le système devrait fallback vers un objet vide ou gérer l'erreur
-        const players = mockUserManager.getPlayers();
-        // Soit {} (gestion d'erreur), soit les données telles quelles selon l'implémentation
-        expect(typeof players).toBe('object');
-      } else {
-        expect(true).toBe(true);
-      }
+      // Le système devrait fallback vers un objet vide ou gérer l'erreur
+      const players = mockUserManager.getPlayers();
+      // Soit {} (gestion d'erreur), soit les données telles quelles selon l'implémentation
+      expect(typeof players).toBe('object');
     });
   });
 
@@ -659,48 +636,45 @@ describe("Tests d'intégration - Workflow utilisateur complet", () => {
     });
 
     test('devrait gérer de multiples appels simultanés', () => {
-      if (mockUserManager && mockUserManager.init) {
-        // Réinitialiser complètement le store pour ce test
-        usersStore = {};
+      expect(mockUserManager && mockUserManager.init).toBeTruthy();
+      // Réinitialiser complètement le store pour ce test
+      usersStore = {};
 
-        // Override temporaire de getPlayers pour ce test spécifique
-        const originalGetPlayers = mockUserManager.getPlayers;
-        const testUsers = {};
-        mockUserManager.getPlayers.mockImplementation(() => testUsers);
+      // Override temporaire de getPlayers pour ce test spécifique
+      const originalGetPlayers = mockUserManager.getPlayers;
+      const testUsers = {};
+      mockUserManager.getPlayers.mockImplementation(() => testUsers);
 
-        mockUserManager.init();
+      mockUserManager.init();
 
-        const operations = [];
+      const operations = [];
 
-        // Lancer plusieurs opérations simultanément
-        for (let i = 1; i <= 5; i++) {
-          operations.push(() => {
-            const success = mockUserManager.createUser({
+      // Lancer plusieurs opérations simultanément
+      for (let i = 1; i <= 5; i++) {
+        operations.push(() => {
+          const success = mockUserManager.createUser({
+            name: `ConcurrentUser${i}`,
+            avatar: 'panda',
+          });
+          if (success) {
+            testUsers[`ConcurrentUser${i}`] = {
               name: `ConcurrentUser${i}`,
               avatar: 'panda',
-            });
-            if (success) {
-              testUsers[`ConcurrentUser${i}`] = {
-                name: `ConcurrentUser${i}`,
-                avatar: 'panda',
-              };
-            }
-            return success;
-          });
-        }
-
-        // Exécuter toutes les opérations
-        operations.forEach(op => op());
-
-        // Vérifier que tous les utilisateurs ont été créés
-        const players = mockUserManager.getPlayers();
-        expect(Object.keys(players)).toHaveLength(5);
-
-        // Restaurer la fonction originale
-        mockUserManager.getPlayers.mockImplementation(originalGetPlayers);
-      } else {
-        expect(true).toBe(true);
+            };
+          }
+          return success;
+        });
       }
+
+      // Exécuter toutes les opérations
+      operations.forEach(op => op());
+
+      // Vérifier que tous les utilisateurs ont été créés
+      const players = mockUserManager.getPlayers();
+      expect(Object.keys(players)).toHaveLength(5);
+
+      // Restaurer la fonction originale
+      mockUserManager.getPlayers.mockImplementation(originalGetPlayers);
     });
   });
 });
