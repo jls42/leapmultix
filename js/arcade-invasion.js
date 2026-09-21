@@ -1,7 +1,7 @@
 /* =====================
    Arcade Multiplication Invasion Launcher (MultiInvaders)
    - Contient la fonction startMultiplicationInvasion déplacée depuis arcade.js
-   - Dépend de getArcadeGameTemplate(), showArcadeGameOver() définis dans arcade.js
+   - Dépend de InfoBar.createArcadeTemplateElement (components/infoBar.js) et de showArcadeGameOver() (arcade.js)
    ===================== */
 
 import { generateQuestion } from './questionGenerator.js';
@@ -11,11 +11,12 @@ import {
   speak,
   isVoiceEnabled,
   playSound,
-  showNotification,
   showArcadePoints,
   updateInfoBar,
   showArcadeMessage,
 } from './utils-es6.js';
+import { showArcadePenalty } from './arcade-points.js';
+import { getArcadeText } from './arcade-message.js';
 import { eventBus } from './core/eventBus.js';
 import { InfoBar } from './components/infoBar.js';
 import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
@@ -33,13 +34,28 @@ import {
   isArcadeActive,
 } from './arcade.js';
 import { recordOperationResult } from './core/operation-stats.js';
-import { showGameInstructions } from './arcade-common.js';
+import {
+  showGameInstructions,
+  getCanvasFont,
+  prepareArcadeStage,
+  getArcadeCanvasBox,
+  clientToCanvasPoint,
+  readableCanvasFontSize,
+} from './arcade-common.js';
 import { UserState } from './core/userState.js';
 // Utilise les helpers arcades via window (arcade.js expose des ponts globaux)
 
 // Constants for canvas dimensions
 const baseWidth = 800;
 const baseHeight = 600;
+// Couleur de l'espace derrière les monstres (dessin du jeu)
+const SPACE_COLOR = '#000';
+// Textes de repli tant que les traductions manquent (espaces insécables avant « : » et « ! »)
+const INVADERS_INSTRUCTION_FALLBACK =
+  'Tire sur les mauvaises réponses. Ne tire pas sur la bonne\u00a0: elle cache un ami à libérer\u00a0!';
+const AVATAR_ERROR_FALLBACK = 'Oups\u00a0! Ne tire pas sur la bonne réponse.';
+// La consigne reste le temps de la lire (règle inhabituelle : ne pas tirer sur la bonne)
+const INVADERS_INSTRUCTION_MS = 8000;
 
 function initializeInvadersGame() {
   try {
@@ -49,7 +65,9 @@ function initializeInvadersGame() {
   }
 
   try {
-    globalGameState.gameMode = 'multiinvaders';
+    // Même nom que dans le menu (ArcadeMode) et que la liste d'arrêt de js/slides.js :
+    // quitter la partie par « Accueil » arrête bien le jeu et ses touches
+    globalGameState.gameMode = 'invasion';
   } catch {
     // Erreur ignorée (non-critique)
   }
@@ -111,14 +129,6 @@ function setupGameUI() {
   return difficultySettings;
 }
 
-function getRootObject() {
-  return typeof globalThis !== 'undefined'
-    ? globalThis
-    : typeof window !== 'undefined'
-      ? window
-      : undefined;
-}
-
 /**
  * Fonction centralisée de nettoyage du jeu Invasion
  * @param {Object} params - Paramètres de nettoyage
@@ -178,10 +188,11 @@ function cleanupInvasionGame({
 }
 
 function setupAbandonButton(gameVars) {
-  // This function will be used to setup the abandon button after all variables are declared
-  // For now, just return a function that can be called later
-  return function (autoRestartTimeout, spaceshipImg, avatarImg, score, handleSpaceDown) {
+  // Les valeurs qui changent pendant la partie (score, image de l'ami) sont lues au
+  // moment du clic : passées par valeur au lancement, « Abandonner » enregistrait 0
+  return function (autoRestartTimeout, spaceshipImg, getLiveState, handleSpaceDown) {
     document.getElementById('arcade-abandon-btn').addEventListener('click', function () {
+      const { score, avatarImg } = getLiveState();
       const finalScore = cleanupInvasionGame({
         gameVars,
         autoRestartTimeout,
@@ -195,32 +206,22 @@ function setupAbandonButton(gameVars) {
   };
 }
 
-function calculateCanvasDimensions(Root) {
+/**
+ * Taille du plateau : la plus grande qui tient dans la zone de jeu, avec ses proportions
+ * (plus haut que large sur téléphone, pour laisser le temps de viser). La taille interne
+ * est la taille affichée : pas de bandes, le pointeur tombe là où l'enfant vise.
+ * @param {HTMLCanvasElement} canvas
+ */
+function calculateCanvasDimensions(canvas) {
   const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(globalThis.navigator?.userAgent || '');
-  let displayWidth, displayHeight;
-
-  if (isMobile) {
-    const maxWidthMobile = Math.min((Root?.innerWidth || baseWidth) * 0.95, baseWidth);
-    displayWidth = maxWidthMobile;
-    const maxHeightMobile = Math.floor((Root?.innerHeight || baseHeight) * 0.7);
-    const mobileRatio = 1.5;
-    displayHeight = Math.round(displayWidth * mobileRatio);
-
-    if (displayHeight > maxHeightMobile) {
-      displayHeight = maxHeightMobile;
-      displayWidth = Math.floor(displayHeight / mobileRatio);
-    }
-  } else {
-    const maxWidthDesktop = Math.floor((Root?.innerWidth || baseWidth) * 0.9);
-    displayWidth = maxWidthDesktop;
-    const maxHeightDesktop = Math.floor((Root?.innerHeight || baseHeight) * 0.8);
-    displayHeight = Math.round((displayWidth * baseHeight) / baseWidth);
-    if (displayHeight > maxHeightDesktop) {
-      displayHeight = maxHeightDesktop;
-      displayWidth = Math.floor((displayHeight * baseWidth) / baseHeight);
-    }
+  const ratio = isMobile ? 1.5 : baseHeight / baseWidth; // hauteur / largeur
+  const box = getArcadeCanvasBox(canvas);
+  let displayWidth = Math.floor(box.width);
+  let displayHeight = Math.floor(displayWidth * ratio);
+  if (displayHeight > box.height) {
+    displayHeight = Math.floor(box.height);
+    displayWidth = Math.floor(displayHeight / ratio);
   }
-
   return { displayWidth, displayHeight, isMobile };
 }
 
@@ -356,7 +357,6 @@ function createSpaceshipSprite(selectedState) {
 export function startMultiplicationInvasion() {
   const gameVars = initializeInvadersGame();
   const difficultySettings = setupGameUI();
-  const Root = getRootObject();
 
   // Récupérer l'opérateur sélectionné (support multi-opérations R4)
   const userData = UserState.getCurrentUserData();
@@ -376,7 +376,16 @@ export function startMultiplicationInvasion() {
   const setupAbandonButtonHandler = setupAbandonButton(gameVars);
   const canvas = document.getElementById('arcade-canvas');
   const ctx = canvas.getContext('2d');
-  const { displayWidth, displayHeight, isMobile } = calculateCanvasDimensions(Root);
+  // Haut de page, zone de jeu sans hauteur imposée, consigne sous le plateau :
+  // la place du plateau se calcule ensuite, consigne comprise
+  prepareArcadeStage(canvas);
+  showGameInstructions(
+    canvas,
+    getArcadeText('multiinvaders_instruction', INVADERS_INSTRUCTION_FALLBACK),
+    'neutral',
+    INVADERS_INSTRUCTION_MS
+  );
+  const { displayWidth, displayHeight, isMobile } = calculateCanvasDimensions(canvas);
 
   canvas.width = displayWidth;
   canvas.height = displayHeight;
@@ -385,6 +394,8 @@ export function startMultiplicationInvasion() {
 
   // Ajout de la classe pour appliquer les styles communs
   canvas.classList.add('arcade-canvas');
+  // Ciel du jeu (art) : visible aussi dans les bandes quand l'écran est plus large que le dessin
+  canvas.style.backgroundColor = SPACE_COLOR;
 
   // Desktop controls: arrow keys & shoot
   document.addEventListener('keydown', arcadeKeyDown);
@@ -490,98 +501,93 @@ export function startMultiplicationInvasion() {
   // Variables globales pour la taille et l'espacement des aliens
   let alienWidth, spacing;
 
-  // Gestion tactile améliorée - Clic monstre = déplace vaisseau + tire (tap unique)
+  // Tir : la balle part du milieu de la fusée (voir shoot()) ; ces fonctions placent la
+  // fusée pour que la balle parte exactement sous le point visé
+  const bulletOffset = () => player.width / 2 - 2.5;
+  function aimAt(canvasX) {
+    const x = canvasX - bulletOffset();
+    player.x = Math.max(5, Math.min(canvas.width - player.width - 5, x));
+  }
+
+  // Monstre dont l'enfant a touché la colonne : toute la largeur dessinée du monstre,
+  // plus la moitié de l'écart de chaque côté (pas de zone morte entre deux colonnes)
+  function findAlienColumn(canvasX) {
+    const margin = (spacing || 0) / 2;
+    return aliens.find(
+      alien => canvasX >= alien.x - margin && canvasX <= alien.x + alienWidth + margin
+    );
+  }
+
+  // Toucher : la fusée se place sous le monstre de la colonne touchée (ou sous le doigt)
+  // et tire aussitôt. Les coordonnées tiennent compte de l'affichage réel du canevas.
   canvas.addEventListener(
     'touchstart',
     e => {
-      e.preventDefault(); // Empêcher autres événements tactiles
+      e.preventDefault(); // Pas de zoom ni de clic simulé
       e.stopPropagation();
       e.stopImmediatePropagation();
-      let hitMonster = false; // Déplacer la déclaration ici
 
-      // Ignorer gestes multi-touch (pinch/zoom) pour éviter double interprétation
+      // Geste à plusieurs doigts : pas de visée, un simple tir
       if (e.touches.length === 1 && e.touches[0]) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const touchX = (e.touches[0].clientX - rect.left) * scaleX;
-        const touchY = (e.touches[0].clientY - rect.top) * scaleY;
-
-        // Vérifier si on touche un monstre OU sa colonne (peu importe où sur l'écran)
-        for (const alien of aliens) {
-          // Suppression de alien.active: tous les aliens présents sont ciblables
-          const monsterX = alien.x;
-          const monsterY = alien.y;
-          const monsterW = alienWidth * (displayWidth / baseWidth);
-          const monsterH = 64 * (displayHeight / baseHeight);
-
-          // Vérifier collision avec le monstre OU dans sa colonne verticale (toute hauteur)
-          const inMonsterColumn = touchX >= monsterX && touchX <= monsterX + monsterW;
-          const directHitMonster =
-            inMonsterColumn && touchY >= monsterY && touchY <= monsterY + monsterH;
-
-          if (directHitMonster || (inMonsterColumn && touchY < canvas.height * 0.8)) {
-            // Déplacer le vaisseau sous le monstre cliqué IMMÉDIATEMENT
-            player.x = monsterX + monsterW / 2 - (64 * (displayWidth / baseWidth)) / 2;
-            player.x = Math.max(
-              64 * (displayWidth / baseWidth),
-              Math.min(canvas.width - 64 * (displayWidth / baseWidth), player.x)
-            );
-            // Tir instantané (plus de délai artificiel) pour reactivité sur device réel
-            shoot();
-            hitMonster = true;
-            break; // Sortie de boucle
-          }
-        }
-
-        // Si pas de monstre touché, comportement classique (partie basse)
-        if (!hitMonster && touchY > canvas.height / 2) {
-          player.x = touchX - 64 * (displayWidth / baseWidth);
-          player.x = Math.max(
-            64 * (displayWidth / baseWidth),
-            Math.min(canvas.width - 64 * (displayWidth / baseWidth), player.x)
-          );
-        }
+        const touch = e.touches[0];
+        const point = clientToCanvasPoint(canvas, touch.clientX, touch.clientY);
+        const target = findAlienColumn(point.x);
+        aimAt(target ? target.x + alienWidth / 2 : point.x);
       }
-
-      // Tir simple immédiat si pas de monstre ciblé (remplace l'ancien double-tap)
-      if (!hitMonster) shoot();
-      // Empêcher propagation si monstre touché (on a déjà programmé le tir différé)
-      if (hitMonster) {
-        e.stopPropagation();
-        return false;
-      }
+      shoot();
     },
     { passive: false }
   );
-  canvas.addEventListener('touchmove', e => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    if (e.touches[0]) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      if (e.touches[0].clientY > rect.top + rect.height / 2) {
-        const x = (e.touches[0].clientX - rect.left) * scaleX;
-        player.x = x - 64 * (displayWidth / baseWidth);
-        player.x = Math.max(
-          64 * (displayWidth / baseWidth),
-          Math.min(canvas.width - 64 * (displayWidth / baseWidth), player.x)
-        );
-      }
-    }
-  });
+  // Glisser dans la moitié basse : la fusée suit le doigt
+  canvas.addEventListener(
+    'touchmove',
+    e => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const touch = e.touches[0];
+      if (!touch) return;
+      const point = clientToCanvasPoint(canvas, touch.clientX, touch.clientY);
+      if (point.y > canvas.height / 2) aimAt(point.x);
+    },
+    { passive: false }
+  );
 
   // Ajouter touchend pour s'assurer que les événements ne se propagent pas
-  canvas.addEventListener('touchend', e => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    // Ne pas faire d'action spécifique, juste empêcher la propagation
-  });
+  canvas.addEventListener(
+    'touchend',
+    e => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      // Ne pas faire d'action spécifique, juste empêcher la propagation
+    },
+    { passive: false }
+  );
 
   // Avatars
   // Liste d'avatars disponibles (chargés lors de la libération aléatoire)
+
+  // Taille des monstres et écart entre eux, selon la largeur du plateau
+  function layoutAliens(nbAliens) {
+    // Marge de sécurité sur les bords pour éviter les monstres coupés
+    const safeMargin = 20;
+    const availableWidth = displayWidth - safeMargin * 2;
+    if (isMobile) {
+      // Petits écrans : monstres et écarts réduits, tous entièrement visibles
+      alienWidth = Math.min(70, availableWidth / nbAliens - 10);
+      spacing = Math.max(
+        10,
+        Math.min(20, (availableWidth - nbAliens * alienWidth) / (nbAliens - 1))
+      );
+    } else {
+      alienWidth = Math.max(70, Math.min(100, availableWidth / nbAliens - 15));
+      spacing = Math.max(
+        20,
+        Math.min(50, (availableWidth - nbAliens * alienWidth) / (nbAliens - 1))
+      );
+    }
+  }
 
   function generateProblem() {
     // reset flag (variable supprimée)
@@ -617,28 +623,7 @@ export function startMultiplicationInvasion() {
     const spritesForWave = shuffledPool.slice(0, nbAliens);
     // Retirer les sprites utilisées du pool
     availableMonsterSprites = availableMonsterSprites.filter(s => !spritesForWave.includes(s));
-    // Ajouter des marges plus importantes sur les bords pour éviter les monstres coupés
-    // Définir une marge minimale de sécurité sur les bords
-    const safeMargin = 20;
-
-    if (isMobile) {
-      // Ajustement pour les petits écrans: réduire la taille et l'espacement
-      // pour s'assurer que tous les monstres sont entièrement visibles
-      const availableWidth = displayWidth - safeMargin * 2; // Retirer les marges des deux côtés
-      alienWidth = Math.min(70, availableWidth / nbAliens - 10);
-      spacing = Math.max(
-        10,
-        Math.min(20, (availableWidth - nbAliens * alienWidth) / (nbAliens - 1))
-      );
-    } else {
-      // Version desktop: plus de flexibilité mais toujours avec des marges sécurisées
-      const availableWidth = displayWidth - safeMargin * 2;
-      alienWidth = Math.max(70, Math.min(100, availableWidth / nbAliens - 15));
-      spacing = Math.max(
-        20,
-        Math.min(50, (availableWidth - nbAliens * alienWidth) / (nbAliens - 1))
-      );
-    }
+    layoutAliens(nbAliens);
     const totalWidth = nbAliens * alienWidth + (nbAliens - 1) * spacing;
     const startX = (displayWidth - totalWidth) / 2;
     let options = [correctAnswer];
@@ -713,15 +698,20 @@ export function startMultiplicationInvasion() {
   document.addEventListener('keydown', handleSpaceDown);
 
   // Setup abandon button handler now that all variables are available
-  setupAbandonButtonHandler(autoRestartTimeout, spaceshipImg, avatarImg, score, handleSpaceDown);
+  setupAbandonButtonHandler(
+    autoRestartTimeout,
+    spaceshipImg,
+    () => ({ score, avatarImg }),
+    handleSpaceDown
+  );
 
   function createExplosion(x, y) {
     explosions.push({ x: x, y: y, radius: 1, maxRadius: 30, color: '#ffff00' });
   }
 
-  function updatePlayerPosition() {
-    if (arcadeControls.leftPressed) player.x -= player.speed;
-    if (arcadeControls.rightPressed) player.x += player.speed;
+  function updatePlayerPosition(step) {
+    if (arcadeControls.leftPressed) player.x -= player.speed * step;
+    if (arcadeControls.rightPressed) player.x += player.speed * step;
     player.x = Math.max(
       64 * (displayWidth / baseWidth),
       Math.min(canvas.width - 64 * (displayWidth / baseWidth), player.x)
@@ -743,11 +733,16 @@ export function startMultiplicationInvasion() {
     }
   };
 
+  // Point du plateau où poser la pastille de points : au-dessus du monstre touché
+  function alienPoint(alien) {
+    return { x: alien.x + alienWidth / 2, y: Math.max(0, alien.y - 0.5 * alienWidth) };
+  }
+
   function handleWrongAlienHit(bIndex, aIndex) {
     if (!isArcadeActive()) return;
     score += 100;
     if (typeof showArcadePoints === 'function') {
-      showArcadePoints(100, canvas);
+      showArcadePoints(100, canvas, alienPoint(aliens[aIndex]));
     }
     refreshInfoBar();
 
@@ -758,44 +753,41 @@ export function startMultiplicationInvasion() {
 
   function handleCorrectAlienHit(alien, bIndex) {
     if (!isArcadeActive()) return;
+    bullets.splice(bIndex, 1);
+    // Tir absorbé pendant que l'ami apparaît : une seule erreur ne coûte qu'une vie
+    if (avatarErrorAnim > 0) return;
+
     recordOperationResult(operator, currentProblem.a, currentProblem.b, false);
-    score = Math.max(0, score - difficultySettings.penalty);
-    if (typeof showArcadePoints === 'function') {
-      showArcadePoints(-50, canvas);
-    }
+    // La pastille montre les points vraiment retirés (50, 75 ou 100 selon le niveau)
+    const removed = Math.min(score, difficultySettings.penalty);
+    score -= removed;
+    showArcadePenalty(removed, canvas, alienPoint(alien));
     lives--;
     refreshInfoBar();
 
-    bullets.splice(bIndex, 1);
+    // Un seul message, posé sur le jeu et en ton neutre : il dit ce qui s'est passé
+    // (la vie perdue se voit aux cœurs). Il est lu à voix haute si la voix est active ;
+    // le son de la mauvaise réponse vient de la pastille.
+    showArcadeMessage('arcade_avatar_error', 'neutral', 1800, AVATAR_ERROR_FALLBACK);
 
-    showArcadeMessage('arcade_life_lost', '#F44336');
-
-    if (!avatarErrorAnim || avatarErrorAnim === 0) {
-      avatarErrorAnim = 24;
-      const errMsg =
-        getTranslation('arcade_avatar_error') || "Attention ! Il ne faut pas tirer sur l'avatar !";
-      showNotification('info', '', errMsg);
-      speak(errMsg);
-      playSound('bad');
-
-      const possibleAvatars = ['panda', 'fox', 'astronaut', 'unicorn', 'dragon'].filter(
-        a => a !== (globalGameState?.avatar ?? 'fox')
-      );
-
-      const randomAvatar = possibleAvatars[Math.floor(Math.random() * possibleAvatars.length)];
-      const spriteName = `${randomAvatar}_right_128x128`;
-      avatarErrorImg = arcadeSpriteLoader.loadSpriteSync(spriteName, 'ui');
-      avatarErrorX = alien.x;
-      avatarErrorY = alien.y;
-      avatarErrorW = alienWidth;
-      avatarErrorH = alienWidth;
-      avatarErrorPulse = 0;
-    }
+    // L'ami caché dans la bonne réponse apparaît un instant
+    avatarErrorAnim = 24;
+    const possibleAvatars = ['panda', 'fox', 'astronaut', 'unicorn', 'dragon'].filter(
+      a => a !== (globalGameState?.avatar ?? 'fox')
+    );
+    const randomAvatar = possibleAvatars[Math.floor(Math.random() * possibleAvatars.length)];
+    const spriteName = `${randomAvatar}_right_128x128`;
+    avatarErrorImg = arcadeSpriteLoader.loadSpriteSync(spriteName, 'ui');
+    avatarErrorX = alien.x;
+    avatarErrorY = alien.y;
+    avatarErrorW = alienWidth;
+    avatarErrorH = alienWidth;
+    avatarErrorPulse = 0;
   }
 
-  function updateBullets() {
+  function updateBullets(step) {
     bullets.forEach((bullet, bIndex) => {
-      bullet.y -= 7;
+      bullet.y -= 7 * step;
 
       aliens.forEach((alien, aIndex) => {
         if (
@@ -822,7 +814,8 @@ export function startMultiplicationInvasion() {
       lives--;
       aliens = [];
       refreshInfoBar();
-      showArcadeMessage('arcade_life_lost', '#F44336');
+      // Une vie perdue n'est pas une faute grave : ton neutre, jamais rouge
+      showArcadeMessage('arcade_life_lost', 'neutral');
       if (lives > 0) generateProblem();
     }
   }
@@ -877,14 +870,25 @@ export function startMultiplicationInvasion() {
     }
   }
 
-  function update() {
+  // Les vitesses sont données par image à 60 images/s : sur un écran à 120 ou 180 Hz,
+  // le jeu irait deux ou trois fois plus vite. Chaque mise à jour avance donc selon le
+  // temps réellement écoulé (borné pour éviter un saut après une pause).
+  const FRAME_MS = 1000 / 60;
+  let lastFrameTime = 0;
+  function frameStep(now) {
+    const elapsed = lastFrameTime ? now - lastFrameTime : FRAME_MS;
+    lastFrameTime = now;
+    return Math.min(3, Math.max(0.25, elapsed / FRAME_MS));
+  }
+
+  function update(step = 1) {
     if (!isArcadeActive()) return;
     if (gameOver) return;
     if (showingAvatar) return;
 
-    updatePlayerPosition();
-    aliens.forEach(alien => (alien.y += alien.speed));
-    updateBullets();
+    updatePlayerPosition(step);
+    aliens.forEach(alien => (alien.y += alien.speed * step));
+    updateBullets(step);
     checkAlienCollision();
     handleAvatarTransformation();
 
@@ -922,10 +926,9 @@ export function startMultiplicationInvasion() {
       const pulse = 1 + 0.2 * Math.sin(avatarErrorPulse / 2);
       ctx.save();
       ctx.globalAlpha = 0.98;
-      ctx.shadowColor = '#ff2d2d';
-      ctx.shadowBlur = 48;
-      ctx.lineWidth = 8;
-      ctx.strokeStyle = '#ff2d2d';
+      // L'ami caché apparaît dans un cercle clair : une erreur n'est jamais rouge
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = '#fff';
       ctx.beginPath();
       ctx.arc(
         avatarErrorX + avatarErrorW / 2,
@@ -964,6 +967,8 @@ export function startMultiplicationInvasion() {
       );
       ctx.restore();
     } else {
+      // Nombres lisibles : au moins 16 px à l'écran, même sur un petit téléphone
+      const fontSize = readableCanvasFontSize(canvas, alienWidth * 0.28);
       aliens.forEach(alien => {
         if (imagesLoaded) {
           ctx.drawImage(alien.sprite, alien.x, alien.y, alienWidth, alienWidth);
@@ -971,25 +976,7 @@ export function startMultiplicationInvasion() {
           ctx.fillStyle = alien.color;
           ctx.fillRect(alien.x, alien.y, alienWidth, alienWidth);
         }
-        ctx.save();
-        ctx.globalAlpha = 0.8;
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(
-          alien.x + alienWidth / 2,
-          alien.y - 0.28 * alienWidth,
-          0.2 * alienWidth,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-        ctx.restore();
-        ctx.fillStyle = '#222';
-        ctx.font = `bold ${Math.round(alienWidth * 0.28)}px Arial`;
-        ctx.textAlign = 'center';
-
-        ctx.fillText(alien.value, alien.x + alienWidth / 2, alien.y - 0.18 * alienWidth);
-        ctx.textAlign = 'start';
+        drawAlienLabel(alien, fontSize);
       });
     }
     ctx.fillStyle = '#ffff00';
@@ -1003,13 +990,40 @@ export function startMultiplicationInvasion() {
     });
   }
 
+  // Pastille claire derrière le nombre, à la taille du texte (1 à 3 chiffres)
+  function drawAlienLabel(alien, fontSize) {
+    const label = String(alien.value);
+    ctx.font = getCanvasFont(fontSize);
+    const pillH = fontSize * 1.3;
+    const pillW = Math.max(pillH, ctx.measureText(label).width + fontSize * 0.7);
+    const cx = alien.x + alienWidth / 2;
+    const cy = Math.max(pillH / 2 + 2, alien.y - 0.28 * alienWidth);
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(cx - pillW / 2, cy - pillH / 2, pillW, pillH, pillH / 2);
+    } else {
+      ctx.rect(cx - pillW / 2, cy - pillH / 2, pillW, pillH);
+    }
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#222';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, cx, cy + fontSize * 0.05);
+    ctx.textAlign = 'start';
+    ctx.textBaseline = 'alphabetic';
+  }
+
   function refreshInfoBar() {
     updateInfoBar({ score: score, lives: lives, streak: null, progress: null }, 'multiinvaders');
     updateMultiplicationDisplay();
   }
 
-  function gameLoop() {
-    update();
+  function gameLoop(now = globalThis.performance?.now?.() ?? Date.now()) {
+    update(frameStep(now));
     draw();
     if (!gameOver && isArcadeActive()) {
       // Sauvegarder l'ID dans gameVars pour permettre un cleanup correct
@@ -1033,38 +1047,12 @@ export function startMultiplicationInvasion() {
     }
   }
 
-  // Correction du positionnement: centrer parfaitement la fusée sous le curseur/doigt
+  // Souris : la balle part exactement sous le curseur, quelle que soit la taille
+  // d'affichage du canevas (bandes comprises)
   canvas.addEventListener('mousemove', e => {
-    if (!isMobile) {
-      // Récupérer les dimensions réelles du canvas pour le ratio
-      const rect = canvas.getBoundingClientRect();
-      // Convertir la position de la souris en position dans le canvas
-      const canvasX = (e.clientX - rect.left) * (canvas.width / rect.width);
-      // Le sprite du joueur fait environ 32px de large, on centre sous le curseur
-      player.x = canvasX - player.width / 2;
-      // Limiter aux bords du canvas avec une marge de sécurité
-      player.x = Math.max(5, Math.min(canvas.width - player.width - 5, player.x));
-    }
+    if (isMobile) return;
+    aimAt(clientToCanvasPoint(canvas, e.clientX, e.clientY).x);
   });
-
-  // Amélioration du contrôle tactile pour appareils mobiles
-  canvas.addEventListener(
-    'touchmove',
-    e => {
-      if (isMobile && e.touches.length > 0) {
-        e.preventDefault(); // Éviter le défilement de la page
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        // Convertir la position du toucher en position dans le canvas
-        const canvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
-        // Centrer la fusée sous le doigt
-        player.x = canvasX - player.width / 2;
-        // Limiter aux bords du canvas avec une marge de sécurité
-        player.x = Math.max(5, Math.min(canvas.width - player.width - 5, player.x));
-      }
-    },
-    { passive: false }
-  );
 
   // Tirer au clic ou toucher
   canvas.addEventListener('mousedown', e => {
@@ -1100,15 +1088,6 @@ export function startMultiplicationInvasion() {
   } catch {
     // Erreur ignorée (non-critique)
   }
-
-  // Afficher les instructions uniformisées au-dessus du canvas
-  showGameInstructions(
-    canvas,
-    getTranslation('multiinvaders_instruction') ||
-      'Détruis les monstres avec la bonne réponse ! Évite de tirer sur ton avatar.',
-    '#FF5722', // Couleur orange pour MultiInvader
-    5000
-  );
 }
 
 // No global export; ES module named export is used by ArcadeMode and retry button

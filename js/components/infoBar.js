@@ -2,42 +2,83 @@
  * Composant InfoBar centralisé
  * Gère l'affichage et la mise à jour des barres d'information pour tous les modes de jeu
  * Phase 3.3 - Centralisation des barres d'info dupliquées
+ *
+ * Barre des modes Quiz, Défi et Aventure : « libellé : valeur » (.info-label,
+ * .info-value), un modificateur par élément (.info-item--time…). Les vies sont des
+ * cœurs dessinés (pleins ou vides) dans tous les modes, mini-jeux d'Arcade compris,
+ * nommés « 2 vies sur 3 » pour les lecteurs d'écran.
  */
 import { getTranslation as _getTranslation } from '../i18n.js';
+import { getCurrentLanguage } from '../i18n-store.js';
+
+/** Libellé traduit, avec un texte de repli si la clé manque */
+function trLabel(key, fallback, params = {}) {
+  const value = _getTranslation(key, params);
+  return typeof value === 'string' && value !== '' && !value.startsWith('[') ? value : fallback;
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const HEART_PATH =
+  'M12 20.3s-7.6-4.5-9.3-9.4C1.5 7.6 3.6 4.5 7 4.5c2.2 0 3.9 1.2 5 3 1.1-1.8 2.8-3 5-3 3.4 0 5.5 3.1 4.3 6.4-1.7 4.9-9.3 9.4-9.3 9.4z';
+const ARCADE_MODES = new Set(['multisnake', 'multimiam', 'multimemory', 'multiinvaders']);
+const MAX_LIVES = 3;
+
+/**
+ * Cœur dessiné (plein ou vide), masqué aux technologies d'assistance
+ * @param {boolean} filled
+ * @returns {SVGSVGElement}
+ */
+function createHeartIcon(filled) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', filled ? 'info-heart' : 'info-heart is-empty');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', HEART_PATH);
+  svg.appendChild(path);
+  return svg;
+}
+
+/**
+ * Nom accessible des vies : « 2 vies sur 3 » (et non « 2/3 », lu « deux tiers »)
+ * @param {number} lives
+ * @param {number} total
+ * @returns {string}
+ */
+function formatLivesLabel(lives, total) {
+  let category = lives === 1 ? 'one' : 'other';
+  try {
+    category = new Intl.PluralRules(getCurrentLanguage()).select(lives);
+  } catch {
+    /* repli : règle simple */
+  }
+  const key = category === 'one' ? 'info_lives_value_one' : 'info_lives_value';
+  return trLabel(key, `${lives}/${total}`, { lives, total });
+}
+
+/**
+ * Libellé réservé aux lecteurs d'écran, retraduit avec la page (data-translate)
+ * @param {string} key
+ * @param {string} fallback
+ * @returns {HTMLSpanElement}
+ */
+function createHiddenLabel(key, fallback) {
+  const label = document.createElement('span');
+  label.className = 'sr-only';
+  label.dataset.translate = key;
+  label.textContent = trLabel(key, fallback);
+  return label;
+}
 
 export const InfoBar = {
-  // Helpers to simplify template construction
-  _placeholder(width) {
-    return `<span class="game-stat-display arcade-placeholder" style="min-width:${width}; opacity:0;">0</span>`;
-  },
-  _statSpan(id, cls, style, text) {
-    return `<span id="${id}" class="${cls}" style="${style}">${text}</span>`;
-  },
-  _leftStat(showScore, scoreId) {
-    return showScore
-      ? this._statSpan(scoreId, 'game-stat-display', 'min-width:60px; text-align:left;', '0')
-      : this._placeholder('60px');
-  },
-  _livesStat(showLives, livesId) {
-    return showLives
-      ? this._statSpan(livesId, 'game-stat-display', 'min-width:60px; text-align:center;', '❤️❤️❤️')
-      : '';
-  },
-  _timerStat(showLives, timerId) {
-    const timerWidth = showLives ? 'min-width:60px;' : 'min-width:120px;';
-    return this._statSpan(
-      timerId,
-      'game-stat-display',
-      `${timerWidth} text-align:center;`,
-      '05:00'
-    );
-  },
   // DOM helpers for arcade template element
   _createPlaceholderSpan() {
     const ph = document.createElement('span');
     ph.className = 'game-stat-display arcade-placeholder';
     ph.style.minWidth = '60px';
     ph.style.opacity = '0';
+    ph.setAttribute('aria-hidden', 'true');
     ph.textContent = '0';
     return ph;
   },
@@ -50,15 +91,21 @@ export const InfoBar = {
     top.style.justifyContent = 'center';
     top.style.width = '100%';
 
+    // Le score porte un libellé pour les lecteurs d'écran (« Score : 120 »)
+    if (showScore) top.appendChild(createHiddenLabel('info_score_label', 'Score'));
+
     const left = document.createElement('span');
     left.className = `game-stat-display${showScore ? '' : ' arcade-placeholder'}`;
     left.style.minWidth = '60px';
     left.style.textAlign = 'left';
     if (showScore) left.id = scoreId;
+    else left.setAttribute('aria-hidden', 'true');
     left.textContent = '0';
 
+    // Seule la question est annoncée quand elle change (pas le chrono, chaque seconde)
     const question = document.createElement('span');
     question.className = 'arcade-question';
+    question.setAttribute('aria-live', 'polite');
     question.style.flex = '1';
     question.style.textAlign = 'center';
     question.style.display = 'block';
@@ -89,6 +136,7 @@ export const InfoBar = {
     timer.textContent = '05:00';
 
     bottom.appendChild(ph1);
+    bottom.appendChild(createHiddenLabel('info_time_label', 'Temps'));
     bottom.appendChild(timer);
 
     if (showLives) {
@@ -97,7 +145,7 @@ export const InfoBar = {
       lives.className = 'game-stat-display';
       lives.style.minWidth = '60px';
       lives.style.textAlign = 'center';
-      lives.textContent = '❤️❤️❤️';
+      this.renderLives(lives, MAX_LIVES);
       bottom.appendChild(lives);
     }
 
@@ -109,18 +157,15 @@ export const InfoBar = {
     const gameUI = document.createElement('div');
     gameUI.className = 'arcade-game-ui';
     gameUI.setAttribute('role', 'region');
-    gameUI.setAttribute('aria-label', 'Zone de jeu');
-    gameUI.style.marginTop = '8px';
+    gameUI.setAttribute('aria-label', trLabel('arcade_game_area_label', 'Zone de jeu'));
+    // Mise en page portée par css/arcade.css (.arcade-game-ui) ; le plateau est
+    // dimensionné à la place disponible par js/arcade-common.js
     gameUI.style.width = '100%';
-    gameUI.style.height = '80vh';
-    gameUI.style.display = 'flex';
-    gameUI.style.justifyContent = 'center';
-    gameUI.style.alignItems = 'center';
 
     const canvas = document.createElement('canvas');
     canvas.id = canvasId;
     canvas.setAttribute('tabindex', '0');
-    canvas.setAttribute('aria-label', 'Jeu Arcade');
+    canvas.setAttribute('aria-label', trLabel('arcade_game_screen_label', 'Écran de jeu'));
     canvas.style.width = '100%';
     canvas.style.height = '100%';
 
@@ -134,10 +179,10 @@ export const InfoBar = {
     gameUI.appendChild(abandon);
     return gameUI;
   },
-  // Templates par mode de jeu
+  // Templates par mode de jeu (le temps gagné du Défi s'ajoute au chrono)
   templates: {
-    quiz: ['score', 'streak'],
-    challenge: ['score', 'streak', 'time', 'bonus'],
+    quiz: ['score', 'progress', 'streak'],
+    challenge: ['score', 'streak', 'time'],
     adventure: ['score', 'lives', 'progress', 'streak'],
     discovery: [],
     arcade: ['score', 'lives', 'time'],
@@ -155,54 +200,21 @@ export const InfoBar = {
   },
 
   /**
-   * Créer le HTML d'une barre d'information
+   * Créer le HTML d'une barre d'information (même rendu que createElement)
    * @param {string} mode - Mode de jeu (quiz, challenge, adventure, arcade, etc.)
    * @param {Object} values - Valeurs initiales { score: 0, lives: 3, etc. }
-   * @param {Object} options - Options { ariaLabel, customItems }
+   * @param {Object} options - Options { ariaLabel, ariaLabelKey, customItems }
    * @returns {string} HTML de la barre d'information
    */
   createHTML(mode, values = {}, options = {}) {
-    const template = this.templates[mode] || this.templates.arcade;
-    const getTranslation = _getTranslation;
-
-    let html = `<div class="game-info-bar" role="region" aria-label="${options.ariaLabel || "Barre d'information du jeu"}">`;
-
-    // Générer les éléments selon le template
-    template.forEach(item => {
-      const value = values[item] !== undefined ? values[item] : this.getDefaultValue(item);
-      const labelKey = this.getLabelKey(item);
-      const id = this.getElementId(item, mode);
-
-      html += `<span class="info-item">
-                <span data-translate="${labelKey}">${getTranslation(labelKey)}</span> 
-                <span id="${id}">${this.formatValue(item, value)}</span>
-            </span>`;
-    });
-
-    // Ajouter des éléments personnalisés si fournis
-    /**
-     * Fonction if
-     * @param {*} options.customItems - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (options.customItems) {
-      options.customItems.forEach(customItem => {
-        html += `<span class="info-item">
-                    <span data-translate="${customItem.labelKey}">${getTranslation(customItem.labelKey)}</span> 
-                    <span id="${customItem.id}">${customItem.value}</span>
-                </span>`;
-      });
-    }
-
-    html += `</div>`;
-    return html;
+    return this.createElement(mode, values, options).outerHTML;
   },
 
   /**
    * Créer un élément DOM de barre d'information (sans innerHTML)
    * @param {string} mode
    * @param {Object} values
-   * @param {Object} options
+   * @param {Object} options - { ariaLabel, ariaLabelKey (suit la langue), customItems }
    * @returns {HTMLElement}
    */
   createElement(mode, values = {}, options = {}) {
@@ -212,7 +224,13 @@ export const InfoBar = {
     const root = document.createElement('div');
     root.className = 'game-info-bar';
     root.setAttribute('role', 'region');
-    root.setAttribute('aria-label', options.ariaLabel || "Barre d'information du jeu");
+    root.setAttribute(
+      'aria-label',
+      options.ariaLabel || trLabel('game_info_bar_label', 'Informations de la partie')
+    );
+    if (options.ariaLabelKey) {
+      root.dataset.translateAriaLabel = options.ariaLabelKey;
+    }
 
     template.forEach(item => {
       const value = values[item] !== undefined ? values[item] : this.getDefaultValue(item);
@@ -220,13 +238,15 @@ export const InfoBar = {
       const id = this.getElementId(item, mode);
 
       const span = document.createElement('span');
-      span.className = 'info-item';
+      span.className = `info-item info-item--${item}`;
       const label = document.createElement('span');
-      label.setAttribute('data-translate', labelKey);
+      label.className = 'info-label';
+      label.dataset.translate = labelKey;
       label.textContent = getTranslation(labelKey);
       const val = document.createElement('span');
       val.id = id;
-      val.textContent = this.formatValue(item, value);
+      val.className = 'info-value';
+      this.renderValue(val, item, value);
       span.appendChild(label);
       span.appendChild(document.createTextNode(' '));
       span.appendChild(val);
@@ -238,10 +258,12 @@ export const InfoBar = {
         const span = document.createElement('span');
         span.className = 'info-item';
         const label = document.createElement('span');
-        label.setAttribute('data-translate', customItem.labelKey);
+        label.className = 'info-label';
+        label.dataset.translate = customItem.labelKey;
         label.textContent = getTranslation(customItem.labelKey);
         const val = document.createElement('span');
         val.id = customItem.id;
+        val.className = 'info-value';
         val.textContent = String(customItem.value);
         span.appendChild(label);
         span.appendChild(document.createTextNode(' '));
@@ -269,11 +291,6 @@ export const InfoBar = {
 
     // Supprimer toute barre existante
     const existingBar = container.querySelector('.game-info-bar');
-    /**
-     * Fonction if
-     * @param {*} existingBar - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (existingBar) {
       existingBar.remove();
     }
@@ -289,21 +306,67 @@ export const InfoBar = {
    * @param {string} mode - Mode de jeu (pour déterminer les IDs)
    */
   update(updates = {}, mode = 'arcade') {
-    const allowed = new Set(['score', 'lives', 'progress', 'streak', 'time', 'bonus']);
+    if (!updates || typeof updates !== 'object') return;
+    const allowed = new Set(['score', 'lives', 'progress', 'streak', 'time']);
     Object.keys(updates).forEach(key => {
       if (!allowed.has(key)) return;
       const elementId = this.getElementId(key, mode);
       const element = document.getElementById(elementId);
 
-      /**
-       * Fonction if
-       * @param {*} element - Description du paramètre
-       * @returns {*} Description du retour
-       */
       if (element && Object.prototype.hasOwnProperty.call(updates, key)) {
-        element.textContent = this.formatValue(key, updates[key]);
+        this.renderValue(element, key, updates[key]);
       }
     });
+  },
+
+  /**
+   * Écrit une valeur dans son élément. Les vies (nombre) sont des cœurs dessinés,
+   * pleins ou vides, dans tous les modes ; les autres valeurs restent du texte.
+   * @param {HTMLElement} element
+   * @param {string} item
+   * @param {*} value
+   */
+  renderValue(element, item, value) {
+    if (item === 'lives' && typeof value === 'number') {
+      this.renderLives(element, value);
+      return;
+    }
+    element.textContent = this.formatValue(item, value);
+  },
+
+  /**
+   * Vies en cœurs dessinés : la forme (plein ou vide) porte l'information. Le total
+   * retenu est le plus grand nombre de vies vu (au moins 3) : les cœurs perdus
+   * restent affichés, vides, et la largeur de la barre ne change pas.
+   * Les cœurs et leur nom (« 2 vies sur 3 ») vivent dans un enfant de l'élément :
+   * un script qui réécrirait le texte de l'élément les remplace ensemble, sans
+   * laisser un nom accessible périmé.
+   * @param {HTMLElement} element
+   * @param {number} lives
+   */
+  renderLives(element, lives) {
+    const remaining = Math.max(0, Math.floor(lives));
+    const known = Number(element.dataset.maxLives) || 0;
+    const total = Math.max(MAX_LIVES, remaining, known);
+    element.dataset.maxLives = String(total);
+
+    const hearts = document.createElement('span');
+    hearts.className = 'info-hearts';
+    hearts.setAttribute('role', 'img');
+    hearts.setAttribute('aria-label', formatLivesLabel(remaining, total));
+    for (let i = 0; i < total; i++) {
+      hearts.appendChild(createHeartIcon(i < remaining));
+    }
+    element.replaceChildren(hearts);
+  },
+
+  /**
+   * Mini-jeux d'Arcade : identifiants et rendu propres
+   * @param {string} mode
+   * @returns {boolean}
+   */
+  isArcadeMode(mode) {
+    return ARCADE_MODES.has(mode);
   },
 
   /**
@@ -314,9 +377,7 @@ export const InfoBar = {
    */
   getElementId(item, mode) {
     // IDs spécifiques aux modes arcade
-    const arcadeModes = ['multisnake', 'multimiam', 'multimemory', 'multiinvaders'];
-
-    if (arcadeModes.includes(mode)) {
+    if (this.isArcadeMode(mode)) {
       return `${mode}-info-${item}`;
     }
 
@@ -336,7 +397,6 @@ export const InfoBar = {
       ['progress', 'info_progress_label'],
       ['streak', 'info_streak_label'],
       ['time', 'info_time_label'],
-      ['bonus', 'info_bonus_label'],
     ]);
 
     return labelKeys.has(item) ? labelKeys.get(item) : `info_${item}_label`;
@@ -350,51 +410,28 @@ export const InfoBar = {
   getDefaultValue(item) {
     const defaultValues = new Map([
       ['score', 0],
-      ['lives', 3],
+      ['lives', MAX_LIVES],
       ['progress', '0/10'],
       ['streak', 0],
       ['time', '00:00'],
-      ['bonus', 0],
     ]);
 
     return defaultValues.has(item) ? defaultValues.get(item) : 0;
   },
 
   /**
-   * Formater une valeur pour l'affichage
+   * Formater une valeur texte pour l'affichage (les vies numériques sont dessinées)
    * @param {string} item - Type d'élément
    * @param {any} value - Valeur à formater
    * @returns {string} Valeur formatée
    */
   formatValue(item, value) {
-    switch (item) {
-      case 'lives':
-        /**
-         * Fonction if
-         * @param {*} typeof - Description du paramètre
-         * @returns {*} Description du retour
-         */
-        if (typeof value === 'number') {
-          return '❤️'.repeat(Math.max(0, value)) + '🤍'.repeat(Math.max(0, 3 - value));
-        }
-        return value;
-      case 'time':
-        /**
-         * Fonction if
-         * @param {*} typeof - Description du paramètre
-         * @returns {*} Description du retour
-         */
-        if (typeof value === 'number') {
-          const minutes = Math.floor(value / 60);
-          const seconds = value % 60;
-          return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-        return value;
-      case 'bonus':
-        return value > 0 ? `+${value}s` : value;
-      default:
-        return value;
+    if (item === 'time' && typeof value === 'number') {
+      const minutes = Math.floor(value / 60);
+      const seconds = value % 60;
+      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
+    return value === null || value === undefined ? '' : String(value);
   },
 
   /**
@@ -405,11 +442,6 @@ export const InfoBar = {
     const container = document.getElementById(containerId);
     if (container) {
       const infoBar = container.querySelector('.game-info-bar');
-      /**
-       * Fonction if
-       * @param {*} infoBar - Description du paramètre
-       * @returns {*} Description du retour
-       */
       if (infoBar) {
         infoBar.remove();
       }
@@ -417,53 +449,21 @@ export const InfoBar = {
   },
 
   /**
-   * Créer une barre d'information arcade avec template personnalisé
-   * @param {Object} config - Configuration { mode, canvasId, operationId, etc. }
+   * Zone de jeu arcade avec son bandeau, en HTML (même rendu que la version DOM)
+   * @param {Object} config - Configuration identique à createArcadeTemplateElement
    * @returns {string} HTML complet de la zone de jeu arcade avec barre d'info
    */
   createArcadeTemplate(config = {}) {
-    const {
-      mode = 'arcade',
-      canvasId = 'arcade-canvas',
-      operationId = 'arcade-mult-display',
-      scoreId = `${mode}-info-score`,
-      livesId = `${mode}-info-lives`,
-      timerId = `${mode}-info-timer`,
-      abandonId = 'arcade-abandon-btn',
-      operationLabel = '',
-      abandonLabel = _getTranslation('abandon_arcade_button'),
-      showLives = true,
-      showScore = true,
-    } = config;
-
-    const leftStat = this._leftStat(showScore, scoreId);
-    const livesStat = this._livesStat(showLives, livesId);
-    const timerStat = this._timerStat(showLives, timerId);
-
-    return `
-            <div class="arcade-mult-display" id="${operationId}" aria-live="polite">
-                <div class="arcade-mobile-top" style="display:flex; flex-direction:row; align-items:center; justify-content:center; width:100%;">
-                    ${leftStat}
-                    <span class="arcade-question" style="flex:1; text-align:center; display:block;">${operationLabel}</span>
-                    ${this._placeholder('60px')}
-                </div>
-                <div class="arcade-mobile-bottom" style="display:flex; flex-direction:row; align-items:center; justify-content:center; width:100%;">
-                    ${this._placeholder('60px')}
-                    ${timerStat}
-                    ${livesStat}
-                    ${this._placeholder('60px')}
-                </div>
-            </div>
-            <div class="arcade-game-ui" role="region" aria-label="Zone de jeu" style="margin-top:8px; width:100%; height:80vh; display:flex; justify-content:center; align-items:center;">
-                <canvas id="${canvasId}" tabindex="0" aria-label="Jeu Arcade" style="width:100%; height:100%;"></canvas>
-                <button class="btn btn-secondary" id="${abandonId}" aria-label="${abandonLabel}">${abandonLabel}</button>
-            </div>
-        `;
+    const frag = this.createArcadeTemplateElement(config);
+    return Array.from(frag.children)
+      .map(node => node.outerHTML)
+      .join('');
   },
 
   /**
-   * Crée une structure DOM (sans innerHTML) pour la zone arcade
-   * @param {Object} config Configuration identique à createArcadeTemplate
+   * Crée une structure DOM (sans innerHTML) pour la zone arcade : bandeau (score,
+   * calcul, temps, vies) puis canevas et « Abandonner ».
+   * @param {Object} config Configuration { mode, canvasId, operationId, etc. }
    * @returns {DocumentFragment} Fragment prêt à être inséré
    */
   createArcadeTemplateElement(config = {}) {
@@ -483,11 +483,10 @@ export const InfoBar = {
 
     const frag = document.createDocumentFragment();
 
-    // Top display container
+    // Bandeau : aria-live est posé sur la question seule (voir _createTopRow)
     const display = document.createElement('div');
     display.className = 'arcade-mult-display';
     display.id = operationId;
-    display.setAttribute('aria-live', 'polite');
     const top = this._createTopRow(showScore, scoreId, operationLabel);
     const bottom = this._createBottomRow(showLives, livesId, timerId);
     display.appendChild(top);

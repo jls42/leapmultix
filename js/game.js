@@ -155,9 +155,9 @@ function updateDailyChallengeProgress(answeredTable, answeredMultiplicand) {
   if (!UserManager.getCurrentUser || !UserManager.getCurrentUser()) return;
 
   const challengeStatus = checkDailyChallengeStatus();
-  const dailyTable = parseInt(challengeStatus.table); // Assurer que c'est un nombre
-  const tableNum = parseInt(answeredTable);
-  const multiplicandNum = parseInt(answeredMultiplicand);
+  const dailyTable = Number.parseInt(challengeStatus.table); // Assurer que c'est un nombre
+  const tableNum = Number.parseInt(answeredTable);
+  const multiplicandNum = Number.parseInt(answeredMultiplicand);
 
   // Debug: Afficher les valeurs et types avant la comparaison
   console.log(
@@ -223,12 +223,12 @@ function completeDailyChallenge(challengeData) {
     .then(({ checkAndUnlockBadge }) => {
       try {
         checkAndUnlockBadge('daily_challenger');
-      } catch (e) {
-        void e;
+      } catch {
+        /* ignoré volontairement */
       }
     })
-    .catch(e => {
-      void e;
+    .catch(() => {
+      /* badges optionnels : le défi reste jouable sans */
     });
 
   // Mettre à jour l'affichage du défi sur l'écran d'accueil (si affiché)
@@ -246,13 +246,13 @@ function displayDailyChallenge() {
   while (container.firstChild) container.removeChild(container.firstChild);
 
   const h3 = document.createElement('h3');
-  h3.setAttribute('data-translate', 'daily_challenge_title');
+  h3.dataset.translate = 'daily_challenge_title';
   h3.textContent = getTranslation('daily_challenge_title');
   container.appendChild(h3);
 
   if (challengeStatus.status === 'unavailable') {
     const p = document.createElement('p');
-    p.setAttribute('data-translate', 'daily_challenge_connect_prompt');
+    p.dataset.translate = 'daily_challenge_connect_prompt';
     p.textContent = getTranslation('daily_challenge_connect_prompt');
     container.appendChild(p);
   } else {

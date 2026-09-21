@@ -1,977 +1,1024 @@
-.discovery-intro {
-  background-color: var(--secondary-color);
-  color: white;
-  padding: 15px;
-  border-radius: 15px;
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.15);
+/* ===========================================
+   Mode Découverte : le laboratoire des tables et des opérations
+   Une seule surface, la .content-card du jeu. À l'intérieur, les étapes se
+   séparent par l'espace, un filet ou le fond « creusé », jamais par une carte
+   dans la carte. Les calculs sont en Baloo 2 et une égalité ne se coupe
+   jamais au milieu. Les objets à compter sont toujours des points dessinés
+   en CSS ; le vert reste réservé à « juste ». Jetons : css/themes.css.
+   =========================================== */
+
+/* --- Conteneurs --- */
+
+/* GameMode crée .discovery-container (titre du mode + contenu) ;
+   le mode y place .discovery-lab. */
+.discovery-container {
   text-align: center;
-  font-size: 18px;
-  max-width: 800px;
-  margin: 20px auto;
 }
-.lab-selector {
-  text-align: center;
-  margin: 30px auto;
-  width: 90%;
-  max-width: 800px;
+
+/* Un écran qui a son propre titre (table, opération) remplace « Mode Découverte » */
+.discovery-container:has(.discovery-lab-title) > h2 {
+  display: none;
 }
-.lab-item {
-  background-color: white;
-  border-radius: 15px;
-  padding: 20px 10px;
-  cursor: pointer;
-  text-align: center;
-  box-shadow: 0 5px 15px rgb(0 0 0 / 0.1);
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s,
-    border-color 0.3s,
-    background-color 0.3s;
-  position: relative;
-  overflow: hidden;
-  border: 2px solid var(--neutral-medium);
-  display: inline-block;
-  margin: 10px;
+
+/* Les zones question, options et retour du jeu restent vides en Découverte */
+.discovery-container > .discovery-question:empty,
+.discovery-container > .discovery-options:empty,
+.discovery-container > .discovery-feedback:empty {
+  display: none;
 }
-.lab-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0) 100%);
-  z-index: 1;
+
+/* Les grilles se règlent sur la largeur réelle du labo, pas sur l'écran */
+.discovery-lab {
+  container-type: inline-size;
 }
-.lab-item:hover {
-  transform: translateY(-8px) scale(1.05);
-  box-shadow: 0 10px 25px rgb(0 0 0 / 0.15);
-  border-color: var(--primary-color);
+
+.discovery-lab-title {
+  margin-bottom: var(--space-4);
 }
-.lab-icon {
-  font-size: 36px;
-  margin-bottom: 10px;
-  position: relative;
-  z-index: 2;
-  animation: float 3s ease-in-out infinite;
-}
-.lab-name {
-  font-weight: bold;
-  font-size: 18px;
-  color: var(--text-color);
-  position: relative;
-  z-index: 2;
-}
-@keyframes float {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-.lab-experiment {
-  background-color: white;
-  border-radius: 20px;
-  padding: 25px;
-  box-shadow: 0 8px 16px rgb(0 0 0 / 0.1);
-  margin: 20px 0;
-  position: relative;
-}
-.experiment-intro {
-  text-align: center;
-  margin-bottom: 20px;
-}
+
+.discovery-intro,
 .experiment-description {
-  font-size: 18px;
-  color: var(--primary-dark);
-  max-width: 700px;
+  max-width: 36rem;
+  margin: 0 auto var(--space-5);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--color-ink);
+}
+
+.experiment-description {
+  margin-bottom: var(--space-4);
+}
+
+/* --- Touches du labo : des boutons, comme les modes de l'accueil --- */
+.lab-item,
+.carousel-item,
+.visual-item {
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  color: var(--color-ink);
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  appearance: none;
+}
+
+/* --- Choix de la table ou du niveau --- */
+.lab-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-3);
+  max-width: 46rem;
   margin: 0 auto;
 }
-.multiplication-carousel {
+
+.lab-selector--levels {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 34rem;
+}
+
+.lab-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 6.5rem;
+  padding: var(--space-4) var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+/* Le survol ne remplit jamais la tuile : le nom reste lisible */
+@media (hover: hover) {
+  .lab-item:hover {
+    border-color: var(--color-action);
+  }
+}
+
+.lab-item:active {
+  transform: translateY(var(--key-edge));
+  box-shadow: 0 0 0 var(--color-border-strong);
+}
+
+/* La table montrée en quantité : 7 points pour la table de 7, par rangées de 5 */
+.lab-dots {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 15px;
-  padding: 15px 0;
-  margin: 20px 0;
+  place-content: center;
+  gap: var(--space-1);
+  width: calc(5 * 0.625rem + 4 * var(--space-1));
+  min-height: calc(2 * 0.625rem + var(--space-1));
 }
-.multiplication-carousel::-webkit-scrollbar {
-  height: 8px;
+
+.lab-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  background: var(--color-action);
+  border-radius: 50%;
 }
-.multiplication-carousel::-webkit-scrollbar-track {
-  background: var(--neutral-light);
-  border-radius: 10px;
+
+/* Le signe de l'opération : on sait où l'on est sans savoir lire */
+.lab-symbol {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-action-ink);
 }
-.multiplication-carousel::-webkit-scrollbar-thumb {
-  background-color: var(--primary-color);
-  border-radius: 10px;
+
+/* Le niveau en barres montantes : 1, 2 ou 3 pleines */
+.lab-level {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 1.125rem;
 }
+
+.lab-level-bar {
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 2px solid var(--color-border-strong);
+}
+
+.lab-level-bar:nth-child(2) {
+  height: 0.8125rem;
+}
+
+.lab-level-bar:nth-child(3) {
+  height: 1.125rem;
+}
+
+.lab-level-bar.is-on {
+  background: var(--color-action);
+  border-color: var(--color-action);
+}
+
+.lab-name {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink-heading);
+  text-wrap: balance;
+}
+
+.lab-range {
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+  color: var(--color-ink-muted);
+}
+
+/* Déjà explorée : une coche (forme), doublée d'un texte pour les lecteurs d'écran */
+.explored-badge {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-success-ink);
+  background: var(--color-success-tint);
+  border-radius: 50%;
+}
+
+.explored-badge svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* --- Les égalités de la table : une touche par égalité --- */
+.multiplication-carousel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-3);
+  margin: 0 0 var(--space-5);
+}
+
 .carousel-item {
-  width: 45%;
-  max-width: 200px;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  padding: var(--space-2) var(--space-1);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
   transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease,
-    background-color 0.3s ease;
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
 }
-.equation-card {
-  background: linear-gradient(135deg, var(--neutral-light) 0%, white 100%);
-  border: 2px solid var(--primary-color);
-  padding: 20px;
-  min-width: 120px;
-  text-align: center;
+
+@media (hover: hover) {
+  .carousel-item:hover {
+    border-color: var(--color-action);
+  }
 }
-.equation-card:hover {
-  transform: translateY(-5px) scale(1.1);
-  box-shadow: 0 8px 16px rgb(0 0 0 / 0.15);
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+
+.carousel-item:active {
+  transform: translateY(var(--key-edge));
+  box-shadow: 0 0 0 var(--color-border-strong);
 }
-.equation-card:hover .equation-display {
-  color: white;
+
+/* L'égalité montrée en ce moment dans la zone d'animation */
+.carousel-item.is-current {
+  background: var(--color-action-tint);
+  border-color: var(--color-action);
+  box-shadow: 0 var(--key-edge) 0 var(--color-action-edge);
 }
+
+.carousel-item.is-current:active {
+  box-shadow: 0 0 0 var(--color-action-edge);
+}
+
+/* Une égalité est une unité : elle passe à la ligne entière, jamais au milieu */
+.equation-display,
+.visual-equation,
+.visual-message,
+.animation-text,
+.animation-result,
+.dropzone-content {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  white-space: nowrap;
+}
+
 .equation-display {
-  font-size: 20px;
-  font-weight: bold;
-  color: var(--text-color);
-  transition: color 0.3s;
+  font-size: var(--text-lg);
+  color: var(--color-ink);
 }
+
+/* --- Zone d'animation : un fond creusé, sans carte à l'intérieur --- */
 .animation-area {
-  margin: 30px 0;
-  background-color: #f9f9f9;
-  border-radius: 15px;
-  padding: 20px;
-  box-shadow: inset 0 0 10px rgb(0 0 0 / 0.1);
-  text-align: center;
-  min-height: 200px;
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+
+  /* Amenée à l'écran après un toucher : un peu d'air au bord */
+  scroll-margin-block: var(--space-4);
 }
+
 .animation-title {
-  color: var(--neutral-dark);
-  margin-bottom: 15px;
-  font-size: 18px;
+  margin-bottom: var(--space-3);
+  font-size: var(--text-base);
+  color: var(--color-ink-muted);
 }
+
 .animation-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 150px;
+  min-height: 8rem;
 }
+
 .animated-equation {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(var(--space-2));
   transition:
-    opacity 0.5s,
-    transform 0.5s;
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
 }
+
 .animated-equation.animate {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
+
 .animation-step {
-  padding: 20px;
-  border-radius: 15px;
-  background-color: white;
-  box-shadow: 0 5px 15px rgb(0 0 0 / 0.1);
-  max-width: 600px;
+  max-width: 36rem;
   margin: 0 auto;
-  opacity: 0;
-  transform: scale(0.8);
-  transition:
-    opacity 0.5s 0.2s,
-    transform 0.5s 0.2s;
 }
-.animation-step.animate {
-  opacity: 1;
-  transform: scale(1);
-}
+
 .animation-text {
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: var(--primary-color);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xl);
+  color: var(--color-ink-heading);
 }
+
 .animation-objects {
+  --visual-dot: 0.875rem;
+
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
   justify-content: center;
-  margin: 20px 0;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
 }
+
+/* Un groupe de points dans son cadre pointillé, pour compter « 3 groupes de 4 » */
 .object-group {
   display: flex;
-  border: 2px dashed var(--primary-color);
-  padding: 10px;
-  border-radius: 10px;
-  background-color: rgb(255 255 255 / 0.1);
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
 }
-.object {
-  margin: 0 3px;
-  font-size: 24px;
+
+/* « Compte de 7 en 7 : 7 → 14 → 21 », « 16 → +10 → 26 → +4 → 30 » */
+.animation-calculation {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
 }
-.animation-diagram {
+
+.calc-step {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: var(--leading-body);
+  color: var(--color-ink-muted);
+}
+
+/* La ligne passe à la ligne entre deux bonds, jamais avant une flèche */
+.calc-line {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--space-2) 0;
+}
+
+.calc-hop {
+  display: inline-flex;
+  align-items: flex-start;
+}
+
+.calc-station {
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  margin: 15px 0;
+  min-width: 1.75rem;
 }
-.diagram-row {
-  display: flex;
-  gap: 10px;
+
+.calc-number {
+  font-weight: 700;
 }
-.diagram-cell {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  justify-content: center;
+
+/* Le rang du bond sous le nombre : 1, 2, 3… */
+.calc-index {
+  font-family: var(--font-text);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--color-ink-muted);
+}
+
+.calc-arrow {
+  padding: 0 var(--space-1);
+  color: var(--color-ink-muted);
+}
+
+/* Un bond : sa taille au-dessus de la flèche */
+.calc-leap {
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  font-size: 24px;
-  color: var(--primary-color);
+  margin-top: -0.25em;
 }
+
+.calc-leap-label {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-action-ink);
+  white-space: nowrap;
+}
+
+/* Le résultat apparaît juste après le calcul, une seule fois */
 .animation-result {
-  font-size: 28px;
-  font-weight: bold;
-  color: var(--secondary-color);
-  margin-top: 20px;
+  margin-top: var(--space-3);
+  font-size: var(--text-2xl);
+  color: var(--color-ink-heading);
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(var(--space-2));
   transition:
-    opacity 0.5s 0.7s,
-    transform 0.5s 0.7s;
+    opacity var(--dur-slow) var(--ease-out) var(--dur-base),
+    transform var(--dur-slow) var(--ease-out) var(--dur-base);
 }
+
 .animation-result.animate {
   opacity: 1;
-  transform: translateY(0);
-}
-.mnemonic-card {
-  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-dark) 100%);
-  border-radius: 15px;
-  padding: 20px;
-  margin: 30px 0;
-  color: white;
-  position: relative;
-  box-shadow: 0 6px 12px rgb(0 0 0 / 0.15);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.mnemonic-card h3 {
-  color: white;
-  margin-bottom: 20px;
-}
-.mnemonic-character {
-  font-size: 48px;
-  margin-bottom: 15px;
-}
-.mnemonic-card p {
-  font-size: 18px;
-  line-height: 1.6;
-  max-width: 600px;
-  text-align: center;
-}
-.visual-exploration {
-  margin: 30px 0;
-  text-align: center;
-}
-.visual-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  gap: 20px;
-  margin: 20px 0;
-}
-.visual-card {
-  padding: 20px;
-  transition:
-    all 0.3s,
-    border-color 0.3s,
-    box-shadow 0.3s;
-  border: 3px solid transparent;
-}
-.visual-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 10px 20px rgb(0 0 0 / 0.15);
-}
-.visual-card.highlighted,
-.pattern-card.highlighted {
-  border-color: var(--accent-color);
-  box-shadow: 0 8px 20px rgb(243 156 18 / 0.3);
-  transform: scale(1.03);
-}
-.visual-equation {
-  font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 15px;
-}
-.visual-objects {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-}
-.pattern-card {
-  transition:
-    all 0.3s,
-    border-color 0.3s,
-    box-shadow 0.3s;
-  text-align: center;
-  display: inline-block;
-  margin: 10px;
-  border: 3px solid transparent;
-}
-.pattern-card:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 6px 12px rgb(0 0 0 / 0.15);
-}
-.pattern-equation {
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-.pattern-visualization {
-  border-radius: 10px;
-  padding: 15px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.pattern-result {
-  font-size: 24px;
-  font-weight: bold;
-}
-.optional-interaction {
-  background-color: #f9f9f9;
-  border-radius: 15px;
-  padding: 25px;
-  margin: 30px 0;
-  box-shadow: 0 5px 15px rgb(0 0 0 / 0.1);
-  text-align: center;
-}
-.interaction-instructions {
-  background-color: var(--accent-color);
-  background-image: linear-gradient(45deg, var(--accent-color), var(--accent-dark));
-  border-radius: 15px;
-  padding: 15px;
-  margin: 15px 0;
-  font-size: 16px;
-  color: white;
-  border: 2px solid transparent;
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
-  text-align: center;
-}
-.theme-dark .interaction-instructions {
-  background-color: #3498db;
-  background-image: linear-gradient(45deg, #3498db, #2980b9);
-  color: white;
-  border: none;
-}
-.interaction-instructions strong {
-  font-weight: bold;
-  font-size: 18px;
-  display: block;
-  margin-bottom: 8px;
-}
-#drag-area {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 15px;
-  margin: 20px 0;
-}
-.drag-item {
-  background-color: var(--primary-color);
-  background-image: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
-  color: white;
-  padding: 15px;
-  border-radius: 50%;
-  cursor: move;
-  user-select: none;
-  font-size: 20px;
-  font-weight: bold;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.2);
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s,
-    background-color 0.3s,
-    border-color 0.3s;
-  border: 2px solid rgb(255 255 255 / 0.3);
-}
-.drag-item:hover {
-  transform: translateY(-5px) rotate(5deg);
-  box-shadow: 0 6px 12px rgb(0 0 0 / 0.3);
-}
-.dragging {
-  opacity: 0.9;
-  background-color: var(--accent-color);
-  background-image: linear-gradient(45deg, var(--accent-color), var(--accent-dark));
-  transform: scale(1.2) rotate(-5deg);
-  z-index: 10;
-}
-.lab-dropzone {
-  position: relative;
-  min-height: 100px;
-  padding: 25px;
-  background-color: var(--neutral-light);
-  border: 3px dashed var(--neutral-medium);
-  border-radius: 20px;
-  margin: 15px auto;
-  max-width: 400px;
-  font-size: 18px;
-  text-align: center;
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s,
-    border-color 0.3s,
-    background-color 0.3s;
-  box-shadow: inset 0 0 10px rgb(0 0 0 / 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.dropzone-content {
-  margin-bottom: 15px;
-  font-weight: bold;
-  font-size: 22px;
-}
-.dropzone-flask {
-  font-size: 36px;
-  transition:
-    transform 0.5s,
-    color 0.5s,
-    text-shadow 0.5s;
-}
-.dropzone-flask.react {
-  animation:
-    shake 0.5s,
-    glow 1.5s;
-}
-@keyframes shake {
-  0% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  50% {
-    transform: rotate(5deg);
-  }
-  75% {
-    transform: rotate(-5deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
-}
-@keyframes glow {
-  0% {
-    text-shadow: 0 0 5px rgb(255 255 0 / 0.5);
-  }
-  50% {
-    text-shadow:
-      0 0 20px rgb(255 255 0 / 0.8),
-      0 0 30px rgb(255 200 0 / 0.6);
-  }
-  100% {
-    text-shadow: 0 0 5px rgb(255 255 0 / 0.5);
-  }
-}
-.lab-dropzone:hover,
-.lab-dropzone.drag-over {
-  background-color: #d6eaf8;
-  border-color: var(--primary-color);
-  transform: scale(1.03);
-  box-shadow:
-    inset 0 0 15px rgb(0 0 0 / 0.1),
-    0 6px 12px rgb(0 0 0 / 0.1);
-}
-.lab-dropzone.show-result {
-  background-color: #eafaf1;
-  border-color: var(--secondary-color);
-  color: var(--secondary-dark);
-  animation: pop 0.7s;
-  box-shadow: 0 8px 16px rgb(0 0 0 / 0.15);
-}
-@keyframes pop {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-.reset-btn {
-  display: block;
-  margin: 15px auto 0;
-  background-color: var(--primary-color, #00bbf9);
-  color: white;
-  padding: 10px 15px;
-  font-size: 16px;
-  border-radius: 15px;
-}
-.voice-control {
-  margin: 20px 0;
-  text-align: center;
-}
-@media (max-width: 768px) {
-  .visual-grid,
-  .patterns-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .animation-step {
-    padding: 15px;
-  }
-  .lab-selector {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  }
-}
-@media (max-width: 480px) {
-  .visual-grid,
-  .patterns-grid {
-    grid-template-columns: 1fr;
-  }
-  .lab-selector {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  }
-  .equation-card {
-    min-width: 100px;
-    padding: 15px;
-  }
-}
-.dropzone-content {
-  font-size: 18px;
-}
-.return-btn {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 1001;
-  background-color: var(--primary-color);
-  color: var(--text-color);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 16px;
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s,
-    background-color 0.3s;
-}
-#game #back-btn.discovery-return-btn {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-}
-.discovery-container {
-  width: 90%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  text-align: center;
-}
-.number-line-container {
-  position: relative;
-  margin: 30px auto;
-  padding: 20px 20px 40px 20px;
-  background-color: #f8f9fa;
-  border-radius: 10px;
-  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.1);
-  max-width: 95%;
-}
-.number-line-container h4 {
-  text-align: center;
-  margin-bottom: 25px;
-  color: var(--primary-dark);
-}
-.number-line {
-  position: relative;
-  width: 90%;
-  margin: 50px auto 10px;
-  background-color: var(--neutral-medium);
-  border-radius: 2px;
-  height: 4px;
-}
-.tick {
-  position: absolute;
-  bottom: -2px;
-  width: 2px;
-  height: 8px;
-  background-color: var(--neutral-dark);
-  transform: translateX(-1px);
-}
-.tick .label {
-  position: absolute;
-  bottom: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: var(--text-color);
-  white-space: nowrap;
-}
-.arc {
-  position: absolute;
-  bottom: 2px;
-  border: 2px solid var(--primary-color);
-  border-top-left-radius: 100px;
-  border-top-right-radius: 100px;
-  border-bottom: none;
-  box-sizing: border-box;
-  transform-origin: bottom center;
-}
-.arc-label {
-  position: absolute;
-  top: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  color: var(--candy-blue-dark, #0077b6);
-  background-color: white;
-  padding: 2px 5px;
-  white-space: nowrap;
-  font-weight: 600;
-  border-radius: 3px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
-}
-.visual-separator {
-  border: none;
-  border-top: 1px dashed var(--neutral-medium);
-  margin: 30px 0;
-}
-@media (max-width: 768px) {
-  .number-line {
-    width: 95%;
-  }
-  .tick .label {
-    font-size: 10px;
-    bottom: -20px;
-  }
-  .arc-label {
-    font-size: 9px;
-    top: -15px;
-  }
+  transform: none;
 }
 
-/* ========================================
-   ADDITION/SOUSTRACTION - Ligne interactive
-   ======================================== */
+/* --- Indice : la mascotte du joueur donne l'astuce, sur un fond ambré doux --- */
+.mnemonic-tip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: var(--space-4);
+  text-align: left;
+  color: var(--color-ink);
+  background: var(--color-warning-tint);
+  border-radius: var(--radius-md);
+}
+
+.mnemonic-mascot {
+  flex: none;
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+.mnemonic-tip h3 {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-md);
+  color: var(--color-warning-ink);
+}
+
+.mnemonic-tip p {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+/* --- Étapes suivantes : séparées par un filet --- */
+.number-line-section,
+.visual-exploration,
+.optional-interaction {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
 
 .operation-explanation {
-  text-align: center;
-  color: var(--candy-blue-dark, #0077b6);
-  font-size: 1.1em;
-  margin-bottom: 20px;
-  font-weight: 500;
+  max-width: 36rem;
+  margin: 0 auto var(--space-4);
+  font-size: var(--text-body);
+  color: var(--color-ink);
 }
 
-.number-line-interactive {
-  padding-bottom: 60px;
-  margin-top: 20px;
+/* --- Ligne numérique --- */
+
+/* La marge latérale accueille la moitié de l'étiquette la plus large (« 10×10 »),
+   même en texte grand : les nombres des extrémités restent dans le bandeau. */
+.number-line-container {
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
 }
 
-.number-point.highlight-start .point-marker {
-  background: var(--candy-lime, #9be564);
-  width: 16px;
-  height: 16px;
-  border: 3px solid var(--candy-lime-dark, #7bc44a);
-  box-shadow: 0 0 10px var(--candy-lime, #9be564);
+.number-line {
+  position: relative;
+  height: 3px;
+  margin: 3.5rem 0 2.25rem;
+  background: var(--color-ink-muted);
+  border-radius: var(--radius-pill);
 }
 
-.number-point.highlight-end .point-marker {
-  background: var(--candy-pink, #ff6b9d);
-  width: 16px;
-  height: 16px;
-  border: 3px solid var(--candy-pink-dark, #e85a8a);
-  box-shadow: 0 0 10px var(--candy-pink, #ff6b9d);
+/* Chaque point est ancré sur la ligne ; sa position (left) vient du JS */
+.number-point {
+  position: absolute;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+
+.point-marker {
+  position: absolute;
+  top: -7px;
+  left: -1px;
+  width: 2px;
+  height: 14px;
+  background: var(--color-ink-muted);
+}
+
+/* Le nombre sous la ligne, le calcul au-dessus */
+.point-label,
+.point-equation {
+  position: absolute;
+  left: 0;
+  font-family: var(--font-display);
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.point-label {
+  top: 12px;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.point-equation {
+  bottom: 12px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-action-ink);
+}
+
+/* Addition et soustraction : un départ (anneau), des bonds, une arrivée (disque) */
+.number-line-interactive .number-line {
+  margin-top: 4rem;
 }
 
 .number-point.in-path .point-marker {
-  background: var(--candy-yellow, #ffe66d);
-  border-color: var(--candy-yellow-dark, #e6cf5a);
+  background: var(--color-action);
+}
+
+.number-point.highlight-start .point-marker,
+.number-point.highlight-end .point-marker {
+  top: -9px;
+  left: -9px;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--color-action);
+  border-radius: 50%;
+}
+
+.number-point.highlight-start .point-marker {
+  background: var(--color-surface);
+}
+
+.number-point.highlight-end .point-marker {
+  background: var(--color-action);
 }
 
 .number-point.highlight-start .point-label,
 .number-point.highlight-end .point-label {
-  font-weight: 700;
-  font-size: 1em;
+  top: 14px;
+  font-size: var(--text-md);
+  color: var(--color-ink-heading);
 }
 
-/* Flèches de saut */
+/* Un bond : un arc du départ à l'arrivée, la pointe posée sur l'arrivée */
 .jump-arrow {
   position: absolute;
-  bottom: -35px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  bottom: 18px;
+  height: 2.25rem;
 }
 
-.jump-arrow-right {
-  background: linear-gradient(
-    90deg,
-    var(--candy-lime, #9be564) 0%,
-    var(--candy-pink, #ff6b9d) 100%
-  );
-  border-radius: 15px;
-  animation: pulse-arrow 1.5s ease-in-out infinite;
+/* L'arc est la moitié haute d'une ellipse : des pieds nets, sans trait parasite */
+.jump-arrow::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 -100%;
+  border: 2px solid var(--color-action);
+  border-radius: 50%;
+  clip-path: inset(0 0 50%);
+}
+
+/* La pointe s'arrête juste au-dessus du disque d'arrivée, sans le toucher */
+.jump-arrow::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  border: 7px solid transparent;
+  border-top-color: var(--color-action);
+  border-bottom-width: 0;
 }
 
 .jump-arrow-right::after {
-  content: '→';
-  position: absolute;
-  right: -15px;
-  font-size: 24px;
-  color: var(--candy-pink-dark, #e85a8a);
+  right: -6px;
 }
 
-.jump-arrow-left {
-  background: linear-gradient(
-    90deg,
-    var(--candy-pink, #ff6b9d) 0%,
-    var(--candy-lime, #9be564) 100%
-  );
-  border-radius: 15px;
-  animation: pulse-arrow 1.5s ease-in-out infinite;
-}
-
-.jump-arrow-left::before {
-  content: '←';
-  position: absolute;
-  left: -15px;
-  font-size: 24px;
-  color: var(--candy-pink-dark, #e85a8a);
+.jump-arrow-left::after {
+  left: -6px;
 }
 
 .jump-label {
-  color: white;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  padding: 0 var(--space-1);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
   font-weight: 700;
-  font-size: 1.1em;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
-  padding: 0 10px;
+  line-height: 1;
+  color: var(--color-action-ink);
+  white-space: nowrap;
+  background: var(--color-surface-sunken);
+  transform: translate(-50%, -55%);
 }
 
-@keyframes pulse-arrow {
-  0%,
-  100% {
-    transform: scaleX(1);
-    opacity: 0.9;
-  }
-  50% {
-    transform: scaleX(1.05);
-    opacity: 1;
-  }
-}
-
-/* Équation exemple */
+/* L'égalité d'exemple ; l'explication passe à la ligne seule si besoin */
 .example-equation {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-top: 30px;
-  padding: 15px 25px;
-  background: white;
-  border-radius: 20px;
-  box-shadow:
-    0 4px 0 var(--candy-blue-dark, #00a3d9),
-    0 8px 20px rgb(0 187 249 / 0.2);
-  font-size: 1.4em;
-  font-weight: 600;
-  max-width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-5) auto 0;
 }
 
-.eq-number {
-  background: var(--candy-blue, #00bbf9);
-  color: white;
-  padding: 8px 15px;
-  border-radius: 10px;
-  min-width: 40px;
-  text-align: center;
+.example-equation .equation {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+  white-space: nowrap;
 }
 
-.eq-operator {
-  color: var(--candy-pink-dark, #e85a8a);
-  font-size: 1.2em;
-}
-
+.eq-operator,
 .eq-equals {
-  color: var(--neutral-dark, #666);
+  color: var(--color-ink-muted);
 }
 
 .eq-result {
-  background: var(--candy-pink-accessible, #a53860);
-  color: white;
-  padding: 8px 15px;
-  border-radius: 10px;
-  min-width: 40px;
-  text-align: center;
+  min-width: 2.5rem;
+  padding: 0 var(--space-2);
+  color: var(--color-action-ink);
+  background: var(--color-action-tint);
+  border-radius: var(--radius-sm);
 }
 
 .eq-explanation {
-  font-size: 0.7em;
-  color: var(--neutral-dark, #888);
-  font-weight: 400;
+  font-size: var(--text-base);
+  color: var(--color-ink-muted);
 }
 
-/* ========================================
-   DIVISION - Visualisation de partage
-   ======================================== */
-
-.division-visualization {
-  background: linear-gradient(135deg, rgb(255 230 109 / 0.1) 0%, rgb(255 107 157 / 0.1) 100%);
-  border-radius: 20px;
-  padding: 25px;
-}
-
+/* --- Division : partager en parts égales (les mêmes points que partout) --- */
 .division-demo {
+  --visual-dot: 0.875rem;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-}
-
-.division-total {
-  text-align: center;
+  gap: var(--space-4);
 }
 
 .total-label {
   display: block;
-  font-weight: 600;
-  color: var(--candy-blue-dark, #0077b6);
-  margin-bottom: 10px;
-  font-size: 1.1em;
+  margin-bottom: var(--space-2);
+  font-weight: 700;
+  color: var(--color-ink);
 }
 
 .total-items {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  padding: 15px 20px;
-  background: white;
-  border-radius: 15px;
-  box-shadow:
-    0 3px 0 var(--candy-yellow-dark, #e6cf5a),
-    0 6px 15px rgb(230 207 90 / 0.3);
-  max-width: 300px;
-}
-
-.share-item {
-  font-size: 1.8em;
-  animation: bounce-item 0.5s ease-out;
-}
-
-@keyframes bounce-item {
-  0% {
-    transform: scale(0);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
+  gap: var(--space-2);
+  max-width: 12rem;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
 }
 
 .division-arrow {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: var(--space-1);
+  color: var(--color-ink-muted);
 }
 
 .arrow-symbol {
-  font-size: 2em;
-  color: var(--candy-pink, #ff6b9d);
-  animation: bounce-arrow 1s ease-in-out infinite;
-}
-
-@keyframes bounce-arrow {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(5px);
-  }
-}
-
-.arrow-label {
-  font-size: 0.95em;
-  color: var(--candy-pink-dark, #e85a8a);
-  font-weight: 500;
+  font-size: var(--text-xl);
+  line-height: 1;
 }
 
 .division-groups {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 15px;
+  gap: var(--space-3);
 }
 
 .share-group {
-  background: white;
-  border-radius: 15px;
-  padding: 15px;
-  box-shadow:
-    0 4px 0 var(--candy-lime-dark, #7bc44a),
-    0 8px 15px rgb(123 196 74 / 0.3);
+  min-width: 5rem;
+  padding: var(--space-3);
   text-align: center;
-  min-width: 80px;
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
 }
 
 .share-items {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 5px;
-  margin-bottom: 8px;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
 }
 
 .share-label {
-  font-size: 0.85em;
-  color: var(--candy-lime-dark, #6aad3a);
-  font-weight: 600;
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-ink-muted);
 }
 
-/* Responsive pour petits écrans */
-@media (max-width: 480px) {
-  .example-equation {
-    font-size: 1.1em;
-    padding: 10px 15px;
-    gap: 6px;
+/* --- Exploration visuelle : chaque égalité et ses points --- */
+.visual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.visual-item {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3) var(--space-2);
+  background: var(--color-surface-sunken);
+  border: 0;
+  border-radius: var(--radius-md);
+  transition:
+    background-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .visual-item:hover {
+    box-shadow: inset 0 0 0 2px var(--color-action);
+  }
+}
+
+.visual-item.highlighted {
+  background: var(--color-action-tint);
+  box-shadow: inset 0 0 0 2px var(--color-action);
+}
+
+.visual-equation,
+.visual-message {
+  display: block;
+  font-size: var(--text-md);
+  color: var(--color-ink);
+}
+
+/* Des points dessinés, comme sur les tuiles des tables : nets et aux couleurs du thème.
+   Multiplication : une rangée par groupe ; addition : un groupe, « + », l'autre groupe.
+   Le point le plus grand possible (14 px au plus) pour que la plus longue rangée
+   (--per-row, posé par le JS) tienne dans le panneau */
+.visual-representation {
+  --visual-dot: clamp(
+    0.5rem,
+    (100cqi - (var(--per-row, 10) - 1) * var(--space-1) / 2) / var(--per-row, 10),
+    0.875rem
+  );
+
+  display: flex;
+  justify-content: center;
+}
+
+.visual-groups {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--space-1) / 2);
+}
+
+.visual-addition {
+  gap: var(--space-1);
+}
+
+/* Division : les parts côte à côte */
+.visual-division {
+  flex-flow: row wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.visual-group {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: calc(var(--space-1) / 2);
+}
+
+/* Soustraction : le total par rangées de 10, comme un cadre à dix cases */
+.visual-subtraction .visual-group {
+  flex-wrap: wrap;
+  max-width: calc(10 * var(--visual-dot, 0.5625rem) + 9 * var(--space-1) / 2);
+}
+
+.visual-object {
+  position: relative;
+  flex: none;
+  width: var(--visual-dot, 0.5625rem);
+  height: var(--visual-dot, 0.5625rem);
+  background: var(--color-action);
+  border-radius: 50%;
+}
+
+/* Le second nombre d'une addition : des points creux, même couleur.
+   La forme distingue les deux groupes ; le vert reste réservé à « juste ». */
+.visual-group-second .visual-object {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--color-action);
+}
+
+.visual-operator {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-ink-muted);
+}
+
+.visual-group-share {
+  padding: var(--space-1);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* Soustraction : ce qu'on enlève est un point vide, barré de deux traits
+   (dessinés en CSS : aucun glyphe emprunté à une troisième police) */
+.visual-object-removed {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--color-border-strong);
+}
+
+.visual-object-removed::before,
+.visual-object-removed::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  left: calc(50% - 1px);
+  width: 2px;
+  height: 64%;
+  background: var(--color-ink);
+  transform: rotate(45deg);
+}
+
+.visual-object-removed::after {
+  transform: rotate(-45deg);
+}
+
+/* --- Manipulation : un nombre à poser à la place du « ? » --- */
+.interaction-instructions {
+  max-width: 36rem;
+  margin: 0 auto var(--space-4);
+  color: var(--color-ink);
+}
+
+#drag-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4) var(--space-3);
+  max-width: 22rem;
+  margin: 0 auto var(--space-5);
+}
+
+.drag-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.5rem;
+  height: 3.5rem;
+  padding: 0 var(--space-1);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-ink-heading);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .drag-item:hover {
+    border-color: var(--color-action);
+  }
+}
+
+.drag-item:active {
+  cursor: grabbing;
+  transform: translateY(var(--key-edge));
+  box-shadow: 0 0 0 var(--color-border-strong);
+}
+
+/* La copie qui suit le doigt pendant un glisser tactile */
+.touch-clone {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  margin: 0;
+  pointer-events: none;
+  border-color: var(--color-action);
+  box-shadow: var(--shadow-md);
+}
+
+.lab-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  max-width: 24rem;
+  min-height: 7rem;
+  margin: 0 auto;
+  padding: var(--space-4);
+  background: var(--color-surface-sunken);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+
+.lab-dropzone.drag-over {
+  background: var(--color-action-tint);
+  border-color: var(--color-action);
+}
+
+/* Nombre posé : le cadre devient plein, le calcul reste affiché.
+   Aucune couleur de réussite : poser un nombre n'est pas une bonne réponse. */
+.lab-dropzone.is-filled {
+  background: var(--color-surface);
+  border-style: solid;
+}
+
+.dropzone-content {
+  font-size: var(--text-xl);
+  color: var(--color-ink);
+}
+
+/* La place du nombre à poser */
+.drop-slot {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 var(--space-1);
+  color: var(--color-ink-muted);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.drop-placed {
+  color: var(--color-action-ink);
+}
+
+/* Chaque nombre posé fait apparaître le calcul, une seule fois */
+.dropzone-content.is-new {
+  animation: dropzone-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes dropzone-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(var(--space-1));
+  }
+}
+
+/* --- Boutons de sortie --- */
+.discovery-lab .button-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.discovery-lab .button-row .btn {
+  margin: 0;
+}
+
+/* --- Largeurs : le labo s'adapte à la place disponible --- */
+
+/* Assez large pour cinq touches par rangée : 10 tables = 2 rangées pleines */
+@container (min-width: 42rem) {
+  .lab-selector--tables,
+  .multiplication-carousel,
+  .visual-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
-  .eq-number,
-  .eq-result {
-    padding: 6px 10px;
-    min-width: 30px;
+  .equation-display {
+    font-size: var(--text-md);
+  }
+}
+
+/* Labo étroit (téléphone) : lignes numériques resserrées */
+@container (max-width: 34rem) {
+  .point-label {
+    font-size: var(--text-sm);
   }
 
-  .division-groups {
-    gap: 10px;
-  }
-
-  .share-group {
-    padding: 10px;
-    min-width: 70px;
-  }
-
-  .share-item {
-    font-size: 1.4em;
+  /* Un calcul sur deux monte d'un cran pour ne pas chevaucher son voisin */
+  .number-point:nth-child(even) .point-equation {
+    bottom: 1.875rem;
   }
 }

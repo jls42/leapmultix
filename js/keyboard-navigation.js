@@ -76,12 +76,13 @@ class KeyboardNavigation {
   updateFocusableElements() {
     const selectors = [
       'button:not([disabled]):not([hidden])',
-      'input:not([disabled]):not([hidden])',
+      // Les boutons radio d'avatar restent hors de cette liste : ils sont réduits à
+      // un point et le navigateur assure déjà leurs flèches
+      'input:not([disabled]):not([hidden]):not(.avatar-radio)',
       'select:not([disabled]):not([hidden])',
       'textarea:not([disabled]):not([hidden])',
       'a[href]:not([hidden])',
       '[tabindex]:not([tabindex="-1"]):not([hidden])',
-      '.avatar-btn:not(.locked):not([hidden])',
       '.background-btn:not([hidden])',
       '.color-theme-btn:not([hidden])',
       '.card-base--clickable:not([hidden])',
@@ -153,7 +154,6 @@ class KeyboardNavigation {
         activeElement.click();
       }
     } else if (
-      activeElement.classList.contains('avatar-btn') ||
       activeElement.classList.contains('background-btn') ||
       activeElement.classList.contains('color-theme-btn')
     ) {

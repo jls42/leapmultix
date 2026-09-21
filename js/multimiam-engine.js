@@ -9,6 +9,31 @@
  * @param {Object} game Instance de PacmanGame
  */
 import { showArcadeMessage, showArcadePoints } from './utils-es6.js';
+import { showArcadePenalty } from './arcade-points.js';
+
+/**
+ * Invincibilité après une vie perdue : le personnage clignote, puis redevient normal.
+ * @param {Object} ctx Instance de PacmanGame
+ */
+function updateInvincibility(ctx) {
+  if (ctx.isInvincible && Date.now() > ctx.invincibilityEndTime) {
+    ctx.isInvincible = false;
+    ctx.isVisible = true;
+  }
+  if (ctx.isInvincible) {
+    ctx.isVisible = Date.now() % ctx.blinkInterval < ctx.blinkInterval / 2;
+  }
+}
+
+/**
+ * Point du labyrinthe où poser la pastille de points : au-dessus de la case mangée.
+ * @param {Object} ctx Instance de PacmanGame
+ * @param {{x: number, y: number}} cell
+ * @returns {{x: number, y: number}}
+ */
+function cellPoint(ctx, cell) {
+  return { x: (cell.x + 0.5) * ctx.cellSize, y: cell.y * ctx.cellSize };
+}
 export function initPacmanEngine(game) {
   /* === DÉPLACEMENTS & COLLISIONS =============================== */
 
@@ -244,7 +269,7 @@ export function initPacmanEngine(game) {
         if (answer.isCorrect) {
           this.score += 100;
           if (this.canvas) {
-            showArcadePoints(100, this.canvas);
+            showArcadePoints(100, this.canvas, cellPoint(this, answer));
           }
           this.updateUI();
 
@@ -260,9 +285,11 @@ export function initPacmanEngine(game) {
           }
           return;
         } else {
-          this.score = Math.max(0, this.score - 50);
+          // Seuls les points vraiment retirés s'affichent (rien à retirer à 0 point)
+          const removed = Math.min(this.score, 50);
+          this.score -= removed;
           if (this.canvas) {
-            showArcadePoints(-50, this.canvas);
+            showArcadePenalty(removed, this.canvas, cellPoint(this, answer));
           }
           this.updateUI();
 
@@ -292,8 +319,9 @@ export function initPacmanEngine(game) {
           this.updateUI();
           // Utiliser la fonction unifiée pour tous les jeux d'arcade
           // Only show message if game is still running to prevent sounds after navigation away
+          // Ton neutre : une vie perdue n'est pas signalée en rouge
           if (!this.gameOver && this.running) {
-            showArcadeMessage('arcade_life_lost', '#F44336');
+            showArcadeMessage('arcade_life_lost', 'neutral');
           }
           if (this.lives <= 0) {
             this.endGame();
@@ -441,18 +469,7 @@ export function initPacmanEngine(game) {
       // console.log('Fantômes déplacés à', now);
     }
 
-    // Gestion de l'invincibilité
-    if (this.isInvincible && Date.now() > this.invincibilityEndTime) {
-      this.isInvincible = false;
-      this.isVisible = true;
-    }
-    if (this.isInvincible) {
-      if (Date.now() % this.blinkInterval < this.blinkInterval / 2) {
-        this.isVisible = true;
-      } else {
-        this.isVisible = false;
-      }
-    }
+    updateInvincibility(this);
   };
 
   // Vérifier et activer un nouveau monstre si nécessaire
@@ -461,7 +478,7 @@ export function initPacmanEngine(game) {
       const inactiveGhostIndex = this.ghosts.findIndex(g => !g.active);
       if (inactiveGhostIndex !== -1) {
         this.ghosts[inactiveGhostIndex].active = true;
-        this.showMessage('multimiam_new_ghost', '#FF9800', 2000);
+        this.showMessage('multimiam_new_ghost', 'warning', 2000);
         console.log(`Monstre #${inactiveGhostIndex + 1} activé! (score: ${this.goodAnswersCount})`);
       }
     }

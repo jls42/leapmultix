@@ -17,8 +17,8 @@ export function loadDailyChallengeData() {
     userData.dailyChallenge = { completedDate: null, progress: 0, lastPlayedDate: null };
     try {
       UserState.updateUserData(userData);
-    } catch (e) {
-      void e; /* noop: ignore when no current user */
+    } catch {
+      /* noop: ignore when no current user */
     }
   }
   // Assurer la présence des propriétés attendues
@@ -37,7 +37,7 @@ export function saveDailyChallengeData(data) {
   userData.dailyChallenge = data;
   try {
     UserState.updateUserData(userData);
-  } catch (e) {
-    void e; /* noop: ignore when no current user */
+  } catch {
+    /* noop: ignore when no current user */
   }
 }

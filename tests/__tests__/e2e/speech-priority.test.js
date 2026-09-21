@@ -64,11 +64,11 @@ async function createUserAndSkipIntro(page) {
   await page.waitForSelector('#new-user-name', { visible: true, timeout: 10000 });
   await page.type('#new-user-name', userName);
   await page.click('#create-user-btn');
-  await page.waitForSelector('.user-container .btn:not(.delete-btn)', {
+  await page.waitForSelector('.user-container .user-tile', {
     visible: true,
     timeout: 10000,
   });
-  const userButtons = await page.$$('.user-container .btn:not(.delete-btn)');
+  const userButtons = await page.$$('.user-container .user-tile');
   await userButtons[0].click();
   await page.waitForSelector('#character-intro-modal', { visible: true, timeout: 10000 });
   await page.evaluate(() => {

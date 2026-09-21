@@ -1,210 +1,335 @@
-/* ========== PROGRESS DASHBOARD ========== */
+/* ===========================================
+   Tableau de bord (slide 7) : en-tête, étoiles par table, parcours, scores, badges
+   (composant js/components/dashboard.js)
+   Une seule surface, la .content-card : à l'intérieur, les groupes sont séparés
+   par l'espace et un filet, jamais par des cartes imbriquées.
+   =========================================== */
 
-/* Style for the main dashboard container - REMOVED */
-
-/* Adjustments for dark theme - REMOVED */
-
-/* .theme-dark .dashboard-container REMOVED */
-
-/* .theme-dark .dashboard-container REMOVED */
-
-.progress-dashboard {
-  background-color: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgb(0 0 0 / 0.1);
-  margin-top: 20px;
-  border: 2px solid var(--primary-color);
+.dashboard-container {
+  text-align: start;
 }
 
-.theme-dark .progress-dashboard {
-  background-color: #34495e;
-  color: #ecf0f1;
-  border-color: #3498db;
+/* Chaque groupe est séparé du précédent par un filet (ni sous le titre, ni avant le bouton) */
+.dashboard-container > * + *:not(.btn) {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
 }
 
-.theme-dark .progress-dashboard table {
-  color: #ecf0f1;
-  border-color: #3498db;
+.dashboard-container > h2 {
+  text-align: center;
 }
 
-.theme-dark .progress-dashboard table th,
-.theme-dark .progress-dashboard table td {
-  border-color: #3498db;
-  padding: 8px;
+.dashboard-container > h2 + * {
+  margin-top: var(--space-4);
+  padding-top: 0;
+  border-top: 0;
 }
 
-.star-grid {
+.dashboard-container h3 {
+  margin-bottom: var(--space-3);
+}
+
+/* --- En-tête : avatar, prénom, étoiles, revoir la vidéo --- */
+.dashboard-header {
+  display: grid;
+  grid-template-areas: 'avatar info replay';
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.dashboard-header .avatar-display {
+  grid-area: avatar;
+  inline-size: 88px;
+  block-size: 88px;
+}
+
+.dashboard-header .avatar-display img {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.dashboard-header .user-info {
+  grid-area: info;
+}
+
+.dashboard-header .nickname {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink-heading);
+  overflow-wrap: anywhere;
+}
+
+.stars-summary {
   display: flex;
-
-  /* Utiliser Flexbox */
   flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  color: var(--color-ink-muted);
+}
 
-  /* Permettre le retour à la ligne */
-  justify-content: center;
+.stars-summary #total-stars {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
 
-  /* Centrer les éléments horizontalement */
-  gap: 12px;
-  margin: 15px 0;
+.replay-video-btn {
+  display: inline-flex;
+  grid-area: replay;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
 
-  /* grid-template-columns est retiré */
+.replay-video-btn .icon {
+  flex: none;
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+/* --- Étoiles : pleines en récompense, vides en contour --- */
+.star-icon {
+  flex: none;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  fill: none;
+  stroke: var(--color-border-strong);
+}
+
+.star-icon.is-filled {
+  fill: var(--color-reward);
+  stroke: var(--color-reward-edge);
+}
+
+/* --- Progression par table : dix cases à plat, 5 par ligne --- */
+.star-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
 .star-cell {
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-1) var(--space-3);
   text-align: center;
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s,
-    border-color 0.3s,
-    background-color 0.3s;
-  border: 2px solid transparent;
-}
-
-.star-cell:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgb(0 0 0 / 0.15);
-}
-
-/* Tâche 3.4: Style pour les tables faibles */
-.star-cell.weak-table {
-  border: 2px solid var(--danger-color, red);
-  background-color: #fff0f0;
-
-  /* Léger fond rouge */
-}
-
-.theme-dark .star-cell {
-  background-color: #2c3e50;
-  color: #ecf0f1;
-  border-color: #3498db;
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
 }
 
 .table-number {
-  font-weight: bold;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-ink);
 }
 
 .star-count {
   display: flex;
   justify-content: center;
   gap: 2px;
-  margin-top: 5px;
 }
 
-.star-count .star {
-  font-size: 20px;
+/* Table à retravailler : un contour et un mot, jamais du rouge */
+.star-cell.weak-table {
+  box-shadow: inset 0 0 0 2px var(--color-warning-edge);
 }
 
-.table-percent {
-  font-size: 12px;
-  color: #666;
+.table-hint {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-warning-ink);
 }
 
-.review-list,
-.success-list {
-  list-style: none;
+/* --- Ton parcours : libellé → valeur --- */
+.journey-list {
+  max-inline-size: 28rem;
+  margin: 0;
+}
+
+.journey-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.journey-row:first-child {
+  border-top: 0;
+}
+
+.journey-row dt {
+  color: var(--color-ink-muted);
+}
+
+.journey-row dd {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+
+/* --- Scores et statistiques : deux groupes de rangées --- */
+.scores-block {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4) var(--space-6);
+}
+
+.scores-subtitle {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-md);
+}
+
+.score-list {
+  margin: 0;
   padding: 0;
-  margin: 15px 0;
+  list-style: none;
 }
 
-.review-list li,
-.success-list li {
-  background-color: #f9f9f9;
-  padding: 10px 15px;
-  margin-bottom: 8px;
-  border-radius: 10px;
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s,
-    border-color 0.3s,
-    background-color 0.3s;
-  box-shadow: 0 2px 5px rgb(0 0 0 / 0.05);
-  font-family: 'Comic Sans MS', 'Bubblegum Sans', sans-serif;
+.score-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  border-top: 1px solid var(--color-border);
 }
 
-.review-list li:hover,
-.success-list li:hover {
-  transform: translateX(5px);
-  box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+.score-row:first-child {
+  border-top: 0;
 }
 
-.theme-dark .review-list li {
-  background-color: #2c3e50;
-  color: #e74c3c;
-  border-left: 3px solid #e74c3c;
+.score-logo {
+  inline-size: 56px;
+  block-size: 56px;
+  object-fit: contain;
 }
 
-.success-list li {
-  color: #2ecc71;
-  border-left: 3px solid #2ecc71;
+.score-row-title {
+  margin: 0;
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
 }
 
-.theme-dark .success-list li {
-  background-color: #2c3e50;
-  color: #2ecc71;
+.score-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
 }
 
-/* ========== BOUTON REPLAY VIDÉO ========== */
-
-.replay-video-btn {
-  background: linear-gradient(45deg, #ff6b6b, #ff8e53);
-  color: white;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-  box-shadow: 0 3px 10px rgb(255 107 107 / 0.3);
-  margin-left: 10px;
-  position: relative;
-  top: -5px;
+.score-facts div {
+  display: flex;
+  gap: var(--space-1);
 }
 
-.replay-video-btn:hover {
-  transform: scale(1.1) translateY(-2px);
-  box-shadow: 0 5px 15px rgb(255 107 107 / 0.4);
+.score-facts dt {
+  color: var(--color-ink-muted);
 }
 
-.replay-video-btn:active {
-  transform: scale(0.95);
+.score-facts dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
 }
 
-.replay-video-btn:focus {
-  /* outline personnalisé plutôt que none pour accessibilité */
-  outline: 3px solid #ff6b6b;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 3px rgb(255 107 107 / 0.3);
+.score-empty {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
 }
 
-/* Thème sombre */
-.theme-dark .replay-video-btn {
-  background: linear-gradient(45deg, #3498db, #2980b9);
-  box-shadow: 0 3px 10px rgb(52 152 219 / 0.3);
+/* --- Succès débloqués --- */
+.achievement-item {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding-block: var(--space-2);
+  border-top: 1px solid var(--color-border);
 }
 
-.theme-dark .replay-video-btn:hover {
-  box-shadow: 0 5px 15px rgb(52 152 219 / 0.4);
+.achievement-item:first-child {
+  border-top: 0;
 }
 
-/* --- Responsive Progress Dashboard --- */
-@media (max-width: 480px) {
+.achievement-icon {
+  grid-row: span 2;
+  font-size: var(--text-xl);
+  line-height: 1;
+  text-align: center;
+}
+
+.achievement-name {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.achievement-desc {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.no-achievements {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+/* Bouton de retour en bas de la carte */
+.dashboard-container > .btn {
+  display: block;
+  margin: var(--space-5) auto 0;
+}
+
+/* --- Téléphone --- */
+@media (max-width: 600px) {
+  .dashboard-header {
+    grid-template-areas:
+      'avatar info'
+      'replay replay';
+    grid-template-columns: auto 1fr;
+  }
+
+  .dashboard-header .avatar-display {
+    inline-size: 72px;
+    block-size: 72px;
+  }
+
+  .replay-video-btn {
+    justify-self: start;
+  }
+
   .star-grid {
-    gap: 8px; /* Reduce gap on small screens */
+    gap: var(--space-1);
   }
 
+  /* Contenu centré : toute la largeur de la case sert au mot « À revoir » */
   .star-cell {
-    padding: 10px; /* Reduce padding */
+    padding-inline: 0;
   }
 
-  .star-count .star {
-    font-size: 16px; /* Make stars slightly smaller */
+  .table-number {
+    font-size: var(--text-md);
+  }
+
+  .star-icon {
+    inline-size: 0.875rem;
+    block-size: 0.875rem;
   }
 }

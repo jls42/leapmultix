@@ -28,10 +28,8 @@ import { initOnDomReady } from './core/mainInit.js';
 // 🔧 FIX: Supprimé - maintenant géré par UserManager pour éviter les conflits
 // let players = loadPlayers(); // loadPlayers() de storage.js
 
-// Afficher la liste des utilisateurs existants
-// 🔧 FIX: userListDiv maintenant géré par UserManager
-// const userListDiv = document.getElementById('user-list');
-// refreshUserList moved to core/userUi.js
+// « Qui joue ? » : tuiles des profils (visage de l'avatar + prénom) rendues par
+// UserManager.refreshUserList (js/userManager.js) ; repli dans core/userUi.js
 
 // Supprimer un utilisateur
 // deleteUser moved to core/userUi.js
@@ -196,11 +194,5 @@ initOnDomReady();
 
 // avatar ::after fix applied in mainInit
 
-// Background rotation handled by main-helpers
-
-/**
- * Démarrer le processus
- * @param {*} avatarId - Description du paramètre
- * @returns {*} Description du retour
- */
-// startBackgroundRotation géré par main-helpers (utils-es6); pas de wrapper ici
+// Fond illustré : un monde fixe par avatar, sans rotation (main-helpers.updateBackgroundByAvatar).
+// startBackgroundRotation n'est plus qu'un alias déprécié de updateBackgroundByAvatar.

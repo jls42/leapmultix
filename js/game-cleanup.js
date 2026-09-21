@@ -46,8 +46,8 @@ export function cleanupGameResources(gameInstance, options = {}) {
 
   try {
     AudioManager.stopAll();
-  } catch (e) {
-    void e;
+  } catch {
+    /* ignoré volontairement */
   }
 
   if (opts.cleanAnimations) cleanAnimations(gameInstance);

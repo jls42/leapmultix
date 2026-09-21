@@ -43,11 +43,11 @@ function checkAndUnlockBadge(badgeId) {
   if (badges[badgeId] && !userData.unlockedBadges.includes(badgeId)) {
     userData.unlockedBadges.push(badgeId);
     UserState.updateUserData(userData);
-    // Notification animée
-    // Message plain-text to avoid HTML injection inside notifications
-    const plain = `${getTranslation('new_badge_unlocked')}: ${getTranslation(`badge_${badgeId}_name`)} !`;
-
-    showNotification('badge', badges[badgeId].icon, plain);
+    // Toast : titre « Nouveau badge débloqué » puis le nom du badge (texte brut, sans HTML).
+    // Deux lignes plutôt qu'une phrase composée : aucune ponctuation propre à une langue.
+    showNotification('badge', badges[badgeId].icon, getTranslation(`badge_${badgeId}_name`), {
+      title: getTranslation('new_badge_unlocked'),
+    });
     // Son de succès
     if (typeof playSound === 'function') playSound('good');
   }

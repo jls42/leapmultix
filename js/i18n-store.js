@@ -7,6 +7,21 @@
 import { VERSION_PARAM } from './cache-updater.js';
 import { eventBus } from './core/eventBus.js';
 
+/**
+ * Ramène une langue quelconque à une des trois langues livrées avec l'application.
+ * La valeur reçue peut venir d'un événement extérieur ou d'un stockage modifié :
+ * ce qui ressort est toujours un littéral écrit ici, jamais la valeur d'entrée,
+ * pour qu'aucune adresse arbitraire ne puisse être composée.
+ * @param {unknown} lang - 'fr', 'en', 'es', ou une variante régionale ('fr-CA')
+ * @returns {'fr'|'en'|'es'}
+ */
+function langueLivree(lang) {
+  const demandee = typeof lang === 'string' ? lang.toLowerCase().split('-')[0] : '';
+  if (demandee === 'en') return 'en';
+  if (demandee === 'es') return 'es';
+  return 'fr';
+}
+
 let _currentLanguage = 'fr';
 let _translations = {};
 let _ready = false;
@@ -56,7 +71,7 @@ export function translate(key, params = {}) {
 
 // Fetch translations JSON for a language (no global side effects)
 export async function fetchTranslations(lang) {
-  const l = lang || _currentLanguage || 'fr';
+  const l = langueLivree(lang || _currentLanguage);
   const ver = VERSION_PARAM || Date.now();
   const url = `assets/translations/${l}.json?v=${ver}`;
   const res = await fetch(url);
@@ -66,9 +81,10 @@ export async function fetchTranslations(lang) {
 
 // Load into store (preferred ESM path)
 export async function loadIntoStore(lang) {
-  const json = await fetchTranslations(lang);
+  const l = langueLivree(lang);
+  const json = await fetchTranslations(l);
   setTranslations(json);
-  setCurrentLanguage(lang || 'fr');
+  setCurrentLanguage(l);
   setReady(true);
   return true;
 }
@@ -97,13 +113,13 @@ try {
         const lang = e?.detail?.lang || (g.loadLanguage ? g.loadLanguage() : null);
         if (lang) setCurrentLanguage(lang);
         setReady(true);
-      } catch (e) {
-        void e;
+      } catch {
+        /* ignoré volontairement */
       }
     });
   }
-} catch (e) {
-  void e;
+} catch {
+  /* ignoré volontairement */
 }
 
 try {
@@ -112,12 +128,12 @@ try {
       const lang = e?.detail?.lang || null;
       if (lang) setCurrentLanguage(lang);
       setReady(true);
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
   });
-} catch (e) {
-  void e;
+} catch {
+  /* ignoré volontairement */
 }
 
 export default {

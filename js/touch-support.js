@@ -116,8 +116,8 @@ export class TouchSupportManager {
         // Annoncer changement aux lecteurs d'écran (ESM)
         try {
           accessibilityManager?.announce(isExpanded ? 'Menu fermé' : 'Menu ouvert');
-        } catch (e) {
-          void e;
+        } catch {
+          /* ignoré volontairement */
         }
       });
     }

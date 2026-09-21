@@ -9,20 +9,28 @@ import {
   getTranslation,
   updateCoinDisplay,
   updateBackgroundByAvatar,
-  startBackgroundRotation,
   updateWelcomeMessageUI,
   showMessage,
 } from '../utils-es6.js';
 import { updateVolume } from './theme.js';
 import { displayDailyChallenge } from '../game.js';
 
+/**
+ * Affiche les tuiles « Qui joue ? » (rendu : UserManager.refreshUserList).
+ * Si ce rendu échoue, la liste affiche au moins un message lisible.
+ */
 export function refreshUserList() {
   try {
     UserManager.refreshUserList();
   } catch {
     const userListDiv = document.getElementById('user-list');
-    if (userListDiv)
-      userListDiv.textContent = getTranslation('no_existing_users') || 'Aucun utilisateur existant';
+    if (userListDiv) {
+      const message = getTranslation('no_existing_users');
+      userListDiv.textContent =
+        typeof message === 'string' && !/^\[.*\]$/.test(message)
+          ? message
+          : 'Aucun joueur pour l’instant.';
+    }
   }
 }
 
@@ -40,17 +48,17 @@ export function selectUser(name) {
   gameState.avatar = userData.avatar || 'fox';
   gameState.nickname = userData.nickname || UserManager.getCurrentUser();
 
+  // Un monde illustré fixe par avatar (plus de rotation du fond)
   updateBackgroundByAvatar(userData.avatar || 'fox');
-  startBackgroundRotation(userData.avatar || 'fox');
 
-  updateWelcomeMessageUI().catch(e => {
-    void e; /* no-op */
+  updateWelcomeMessageUI().catch(() => {
+    /* message d'accueil optionnel : l'écran reste utilisable sans */
   });
   updateCoinDisplay();
   try {
     displayDailyChallenge();
-  } catch (e) {
-    void e; /* no-op */
+  } catch {
+    /* no-op */
   }
 
   localStorage.removeItem('arcadeScores_default');

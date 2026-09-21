@@ -86,8 +86,8 @@ export class LazyLoader {
         // Déclencher des événements (EventBus + window fallback)
         try {
           eventBus.emit('moduleLoaded', { moduleId, config });
-        } catch (e) {
-          void e;
+        } catch {
+          /* ignoré volontairement */
         }
         try {
           (typeof globalThis !== 'undefined'
@@ -96,8 +96,8 @@ export class LazyLoader {
               ? window
               : undefined
           )?.dispatchEvent?.(new CustomEvent('moduleLoaded', { detail: { moduleId, config } }));
-        } catch (e) {
-          void e;
+        } catch {
+          /* ignoré volontairement */
         }
       })
       .catch(error => {

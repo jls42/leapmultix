@@ -453,6 +453,7 @@ cp .claude/agents/<agent-name>.md \
 ### Commit and Quality Guidelines
 
 - **Commit workflow**: **ALWAYS use the `helping-with-commits` skill** to propose commits. Never commit directly - wait for user validation before committing.
+  - **Exception, boucle de correction d'une PR** : les commits qui ne font que corriger les retours des analyseurs d'une PR déjà autorisée ne se revalident pas un par un. L'autorisation initiale court jusqu'au vert complet.
 - **Branch workflow**: **NEVER commit directly to main**. Always create a feature branch first
   - Create branch: `git checkout -b feat/your-feature-name`
   - Commit on branch: `git commit -m "Your message"`
@@ -461,6 +462,37 @@ cp .claude/agents/<agent-name>.md \
 - **Quality gate**: Ensure `npm run lint`, `npm test`, and `npm run test:coverage` pass before commits
 - **Security**: Do not commit secrets, API keys, or Terraform state files
 - **Commit messages**: Do not mention AI tools or assistants in commit messages or PR descriptions
+
+### Retours de PR : boucle obligatoire, jusqu'au vert
+
+À l'ouverture d'une PR **et après chaque push**, aller lire les retours des
+analyseurs (GitHub Actions, Codacy, CodeFactor, SonarCloud) et corriger ce qui
+remonte. Ce n'est pas une demande à attendre : c'est la suite normale du travail.
+
+1. Lire **toutes** les remontées, sans échantillonner.
+2. Corriger à la source. Un faux positif se justifie par écrit, avec une
+   suppression inline au périmètre le plus étroit. Une fonction trop complexe se
+   découpe, elle ne se masque pas.
+3. Relancer toute la batterie de vérification (section suivante).
+4. Committer, pousser, puis **retourner lire les contrôles**. Recommencer tant
+   que tout n'est pas vert.
+
+### Vérifier : mesuré, jamais supposé
+
+L'utilisateur est le dernier maillon. Quand on lui annonce que c'est bon, ça doit
+l'être vraiment. Donc, avant toute annonce de résultat :
+
+- Chaque affirmation repose sur une **mesure déterministe** : sortie de commande,
+  valeur lue dans le DOM, capture d'écran. Jamais sur une lecture du code seule.
+- Batterie complète : `npm run format:check`, `npm run lint`, `npm test`,
+  `npm run test:esm`, `npm run verify`, `npx stylelint "css/**/*.css"`, et
+  `npm run i18n:compare` si les traductions bougent.
+- **Plus une validation dans Chrome** des écrans touchés : parcours à la souris
+  **et** au clavier, console sans erreur, capture à l'appui, et au moins un
+  passage en largeur téléphone (390 px).
+- Les preuves n'ont pas à être montrées, mais elles doivent exister. Une
+  vérification qui n'a pas pu être faite se dit explicitement ; elle ne se
+  présente jamais comme faite.
 
 ### Deployment
 

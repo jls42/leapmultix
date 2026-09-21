@@ -1,28 +1,33 @@
 /**
  * Mode Quiz refactorisé avec héritage de GameMode
  * Phase 5.2 - Refactorisation du mode Quiz
+ *
+ * Une erreur est une étape : la bonne tuile est cochée, l'explication reste
+ * affichée et le bouton « Continuer » attend l'enfant (aucun compte à rebours,
+ * WCAG 2.2.1). Après une bonne réponse, la partie avance seule.
  */
 
 import { GameMode } from '../core/GameMode.js';
 import { setGameMode } from '../mode-orchestrator.js';
+import { getTranslation, getWeakTables, showFeedback, playSound, speak } from '../utils-es6.js';
+import { setSafeFeedback } from '../security-utils.js';
 import {
-  getTranslation,
-  numberToWords,
-  getWeakTables,
-  showFeedback,
-  playSound,
-  speak,
-} from '../utils-es6.js';
-import { setSafeFeedback, setSafeComplexFeedback, createSafeElement } from '../security-utils.js';
+  markAnswerOptions,
+  tagAnswerOptions,
+  markQuestionKind,
+  formatCorrectCount,
+  createResultsSummary,
+  createResultsActions,
+  singleActivation,
+  createAvatarPortrait,
+  mountResults,
+} from '../ui-feedback.js';
 import { goToSlide } from '../slides.js';
 import { UserState } from '../core/userState.js';
 import { checkAndUnlockBadge } from '../badges.js';
-import { updateDailyChallengeProgress } from '../game.js';
-import { generateMCQOptions } from '../uiUtils.js';
+import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { TablePreferences } from '../core/tablePreferences.js';
 import { UserManager } from '../userManager.js';
-import { getOperation } from '../core/operations/OperationRegistry.js';
-import { recordOperationResult } from '../core/operation-stats.js';
 
 export class QuizMode extends GameMode {
   constructor() {
@@ -31,16 +36,34 @@ export class QuizMode extends GameMode {
       hasTimer: false,
       hasLives: false,
       hasStreaks: true,
-      // Avance automatique par défaut (cas correct) ;
-      // pour les erreurs on affichera un bouton Continuer et on suspendra temporairement l'auto-advance
+      // Avance automatique après une bonne réponse ; après une erreur, « Continuer »
+      // (créé par GameMode) suspend l'avance jusqu'à ce que l'enfant l'active.
       autoProgress: true,
+      pauseAfterError: true,
       showScore: true,
     });
 
     // État spécifique au Quiz
     this.errors = 0;
-    this.feedbackTimeoutId = null;
-    this.feedbackIntervalId = null;
+    this.sessionBestStreak = 0;
+  }
+
+  /**
+   * Réinitialisation (nouvelle partie)
+   */
+  resetState() {
+    super.resetState();
+    this.errors = 0;
+    this.sessionBestStreak = 0;
+  }
+
+  /**
+   * Barre d'infos : score, progression (« 3/10 ») et série
+   */
+  getInfoBarData() {
+    const data = super.getInfoBarData();
+    data.progress = `${this.state.questionCount}/${this.config.maxQuestions}`;
+    return data;
   }
 
   /**
@@ -52,25 +75,13 @@ export class QuizMode extends GameMode {
   }
 
   /**
-   * HTML personnalisé pour le Quiz (filtre de tables)
+   * HTML personnalisé pour le Quiz : « Abandonner », replacé après la zone de
+   * réponse (et après « Continuer ») dans initializeUI().
    */
   async getCustomHTML() {
     return `
-            <!-- Zone d'astuce (affichée après réponse) -->
-            <div id="quiz-hint" class="quiz-hint" style="display:none; margin-top:10px;">
-                <strong>${getTranslation('hint')}:</strong>
-                <span id="quiz-hint-text"></span>
-            </div>
-            
-            <!-- Bouton Continuer avec compte à rebours -->
-            <div id="quiz-continue" class="quiz-continue" style="display:none; margin-top:12px;">
-                <button id="quiz-continue-btn" class="btn btn-primary">${getTranslation('continue')}</button>
-                <span id="quiz-continue-timer" style="margin-left:8px; opacity:0.8;"></span>
-            </div>
-            <div id="quiz-actions" class="quiz-actions">
-                <button id="quiz-abandon" class="btn btn-secondary" data-translate="abandon_quiz_button">
-                    ${getTranslation('abandon_quiz_button')}
-                </button>
+            <div id="quiz-actions" class="game-quit quiz-actions">
+                <button id="quiz-abandon" type="button" class="btn btn-quiet btn-danger" data-translate="abandon_quiz_button">${getTranslation('abandon_quiz_button')}</button>
             </div>
         `;
   }
@@ -81,8 +92,28 @@ export class QuizMode extends GameMode {
   async initializeUI() {
     await super.initializeUI();
 
+    this.placeActionsAfterAnswers();
+
     // Bouton d'abandon
     this.setupGameControls();
+  }
+
+  /**
+   * Ordre de lecture : question, réponses, retour, « Continuer », puis « Abandonner ».
+   * « Abandonner » n'est plus le premier élément visible de la partie.
+   */
+  placeActionsAfterAnswers() {
+    const container = this.feedbackElement?.parentElement;
+    const actions = document.getElementById('quiz-actions');
+    if (!container || !actions) return;
+
+    const customWrap = actions.parentElement;
+    container.appendChild(actions);
+
+    // L'enveloppe du contenu personnalisé, désormais vide, disparaît
+    if (customWrap && customWrap !== container && customWrap.children.length === 0) {
+      customWrap.remove();
+    }
   }
 
   /**
@@ -91,7 +122,7 @@ export class QuizMode extends GameMode {
   setupGameControls() {
     const abandonBtn = document.getElementById('quiz-abandon');
     if (abandonBtn) {
-      abandonBtn.onclick = () => this.confirmAbandon();
+      abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
     }
   }
 
@@ -106,6 +137,7 @@ export class QuizMode extends GameMode {
           ? window
           : undefined;
     if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_quiz'))) {
+      this.hideContinueButton();
       this.finish();
     }
   }
@@ -164,66 +196,30 @@ export class QuizMode extends GameMode {
   }
 
   /**
-   * Génération des options spécifique au Quiz
+   * Tuiles de réponse : nombres en police de titre, mots en police de lecture
    */
-  generateOptions() {
-    const correctAnswer = this.state.currentQuestion.answer;
-
-    switch (this.state.currentQuestion.type) {
-      case 'mcq': {
-        // QCM 4 choix avec réponses plausibles
-        const options = generateMCQOptions(
-          correctAnswer,
-          () => (Math.floor(Math.random() * 10) + 1) * (Math.floor(Math.random() * 10) + 1)
-        );
-
-        // Afficher les nombres en lettres uniquement pour × et ÷ (pas pour + et −)
-        const operator = this.state.currentQuestion?.operator;
-        const shouldUseWords = Math.random() < 0.2 && ['×', '÷'].includes(operator);
-
-        return options.map(value => ({
-          value: value,
-          display: shouldUseWords ? numberToWords(value) : value.toString(),
-        }));
-      }
-      case 'true_false':
-        // Vrai/Faux
-        return [
-          { value: true, display: getTranslation('true') },
-          { value: false, display: getTranslation('false') },
-        ];
-
-      default:
-        return super.generateOptions();
-    }
+  displayOptions() {
+    this.optionsElement?.classList.remove('is-answered');
+    super.displayOptions();
+    tagAnswerOptions(this.optionsElement);
   }
 
   /**
    * Feedback spécialisé pour le Quiz
+   * @param {boolean} isCorrect
+   * @param {*} userAnswer - Réponse choisie (fournie par GameMode.handleAnswer)
    */
-  showAnswerFeedback(isCorrect) {
+  showAnswerFeedback(isCorrect, userAnswer) {
     if (!this.feedbackElement) return;
 
-    this._clearPreviousTimeouts();
+    // La bonne tuile est cochée, le choix de l'enfant reste enfoncé
+    markAnswerOptions(this.optionsElement, this.state.currentQuestion.answer, userAnswer);
 
     if (isCorrect) {
+      this.sessionBestStreak = Math.max(this.sessionBestStreak, this.state.streak);
       this._handleCorrectAnswer();
     } else {
       this._handleIncorrectAnswer();
-    }
-  }
-
-  /**
-   * Nettoie les timeouts précédents
-   */
-  _clearPreviousTimeouts() {
-    if (this.feedbackTimeoutId) {
-      clearTimeout(this.feedbackTimeoutId);
-      this.feedbackTimeoutId = null;
-    }
-    if (this.feedbackIntervalId) {
-      clearInterval(this.feedbackIntervalId);
-      this.feedbackIntervalId = null;
     }
   }
 
@@ -255,7 +251,7 @@ export class QuizMode extends GameMode {
    */
   _displayCorrectFeedback(message) {
     try {
-      showFeedback(this.feedbackElement.id, message, 'success', true);
+      showFeedback(this.feedbackElement.id, message, 'success', false);
     } catch {
       this._fallbackCorrectFeedback(message);
     }
@@ -274,88 +270,25 @@ export class QuizMode extends GameMode {
   }
 
   /**
-   * Gère le feedback pour une réponse incorrecte
+   * Gère le feedback pour une réponse incorrecte : ton calme, ni son d'alerte
+   * ni secousse ; l'explication (GameMode) montre ce que fait l'opération et la
+   * voix donne la bonne réponse aux lecteurs débutants.
    */
   _handleIncorrectAnswer() {
     this.errors++;
 
-    const message = this._getIncorrectAnswerMessage();
+    const spoken = this.showErrorExplanation();
+    if (spoken) speak(`${spoken.lead} ${spoken.message}`);
 
-    // Audio feedback pour réponse incorrecte
-    playSound('bad');
-    speak(getTranslation('incorrect'));
-
-    this._displayIncorrectFeedback(message);
-    this._setupContinueButton();
-  }
-
-  /**
-   * Génère le message pour une réponse incorrecte
-   */
-  _getIncorrectAnswerMessage() {
-    const correctAnswer = this.state.currentQuestion.answer;
-
-    if (this.state.currentQuestion.type === 'true_false') {
-      return correctAnswer === true
-        ? getTranslation('incorrect_answer_was_true')
-        : getTranslation('incorrect_answer_was_false');
-    } else {
-      return getTranslation('feedback_incorrect', { correctAnswer });
-    }
-  }
-
-  /**
-   * Affiche le feedback complexe pour une réponse incorrecte
-   */
-  _displayIncorrectFeedback(message) {
-    const { operator, a, b, table, num } = this.state.currentQuestion;
-
-    // Utiliser a/b (nouveau format) ou table/num (ancien format) pour compatibilité
-    const firstOperand = a ?? table;
-    const secondOperand = b ?? num;
-
-    // Hint et ligne numérique uniquement pour multiplication
-    const hintText = operator === '×' ? this._getHintText(firstOperand) : '';
-    const numberLineText =
-      operator === '×'
-        ? this.generateNumberLineText(
-            firstOperand,
-            secondOperand,
-            this.state.currentQuestion.answer
-          )
-        : '';
-
-    setSafeComplexFeedback(this.feedbackElement, message, hintText, numberLineText);
-  }
-
-  /**
-   * Récupère le texte d'astuce pour une table
-   */
-  _getHintText(table) {
-    const t = getTranslation(`mnemonic_${table}`);
-    if (typeof t !== 'string' || (t.startsWith('[') && t.endsWith(']'))) {
-      return '';
-    }
-    return t;
-  }
-
-  /**
-   * Configure le bouton Continuer avec timer
-   */
-  _setupContinueButton() {
-    this._autoWas = this.config.autoProgress;
-    this.config.autoProgress = false;
-    this.showContinueWithTimer(5);
+    this.showContinueButton();
   }
 
   /**
    * Logique spécifique après soumission de réponse
+   * (la statistique de l'opération est déjà enregistrée par GameMode.recordAnswer)
    */
   onAnswerSubmitted(isCorrect, userAnswer) {
     const { operator, a, b, table, num } = this.state.currentQuestion;
-
-    // Enregistrer stats opération
-    recordOperationResult(operator, a, b, isCorrect);
 
     // Enregistrer dans l'historique utilisateur
     const userData = UserState.getCurrentUserData();
@@ -381,195 +314,13 @@ export class QuizMode extends GameMode {
   }
 
   /**
-   * Génère et affiche une astuce pour la question courante
-   */
-  renderHint() {
-    const hintBox = document.getElementById('quiz-hint');
-    const hintText = document.getElementById('quiz-hint-text');
-    if (!hintBox || !hintText || !this.state.currentQuestion) return;
-
-    const { table, num } = this.state.currentQuestion;
-    // Utiliser les mnémoniques existants (même sources que l'ancien quiz)
-    // Clé: mnemonic_<table>
-    let text = getTranslation(`mnemonic_${table}`);
-    if (typeof text !== 'string' || (text.startsWith('[') && text.endsWith(']'))) {
-      // Fallback minimal si traduction manquante
-      text = `${table} × ${num} = ${table * num}`;
-    }
-
-    hintText.textContent = text;
-    hintBox.style.display = 'block';
-    hintBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  /**
-   * Affiche un bouton Continuer avec compte à rebours avant passage auto
-   * @param {number} seconds
-   */
-  showContinueWithTimer(seconds = 5) {
-    const box = document.getElementById('quiz-continue');
-    const btn = document.getElementById('quiz-continue-btn');
-    const timerEl = document.getElementById('quiz-continue-timer');
-    if (!box || !btn || !timerEl) return;
-
-    // Assainir tout timer précédent
-    if (this.feedbackIntervalId) {
-      clearInterval(this.feedbackIntervalId);
-      this.feedbackIntervalId = null;
-    }
-    if (this.feedbackTimeoutId) {
-      clearTimeout(this.feedbackTimeoutId);
-      this.feedbackTimeoutId = null;
-    }
-
-    let remaining = Math.max(1, seconds);
-    const render = () => {
-      btn.textContent = `${getTranslation('continue')}`;
-      timerEl.textContent = `(${remaining})`;
-    };
-    render();
-
-    box.style.display = 'block';
-    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    const proceed = () => {
-      // Nettoyage
-      if (this.feedbackIntervalId) {
-        clearInterval(this.feedbackIntervalId);
-        this.feedbackIntervalId = null;
-      }
-      if (this.feedbackTimeoutId) {
-        clearTimeout(this.feedbackTimeoutId);
-        this.feedbackTimeoutId = null;
-      }
-      box.style.display = 'none';
-      const hintBox = document.getElementById('quiz-hint');
-      if (hintBox) hintBox.style.display = 'none';
-
-      // Restaurer l'auto-advance par défaut
-      if (typeof this._autoWas === 'boolean') {
-        this.config.autoProgress = this._autoWas;
-        delete this._autoWas;
-      }
-
-      // Avancer
-      if (this.shouldContinue()) {
-        this.generateQuestion();
-      } else {
-        this.finish();
-      }
-    };
-
-    btn.onclick = e => {
-      e.preventDefault();
-      proceed();
-    };
-
-    this.feedbackIntervalId = setInterval(() => {
-      remaining -= 1;
-      if (remaining <= 0) {
-        proceed();
-      } else {
-        render();
-      }
-    }, 1000);
-  }
-
-  /**
-   * Version texte sécurisée de la ligne numérique
-   */
-  generateNumberLineText(table, multiplicand, correctAnswer) {
-    if (typeof correctAnswer === 'boolean' || this.state.currentQuestion.type === 'gap') return '';
-    return (
-      getTranslation('number_line_explanation', { table, multiplicand, result: correctAnswer }) ||
-      `${table} × ${multiplicand} = ${correctAnswer}`
-    );
-  }
-
-  /**
-   * Génère le HTML d'une ligne numérique animée (héritée de l'ancien quiz)
-   */
-  generateNumberLineHTML(table, multiplicand, correctAnswer) {
-    if (typeof correctAnswer === 'boolean' || this.state.currentQuestion.type === 'gap') return '';
-
-    let html = '<div class="feedback-number-line-container">';
-    html += `<h4 data-translate="number_line_feedback_title" data-translate-params='{"table": ${table}, "multiplicand": ${multiplicand}}'>${getTranslation('number_line_feedback_title', { table, multiplicand })}</h4>`;
-    html += '<div class="feedback-number-line">';
-    const maxResult = Math.max(correctAnswer, table * 10);
-    const step = Math.ceil(maxResult / 10);
-    html += '<div class="line"></div>';
-
-    for (let i = 0; i <= maxResult; i += step) {
-      if (i < correctAnswer && i + step > correctAnswer && correctAnswer % step !== 0) {
-        const pos = (correctAnswer / maxResult) * 100;
-        html += `<div class="tick" style="left: ${pos}%"><span class="label">${correctAnswer}</span></div>`;
-      }
-      const pos = (i / maxResult) * 100;
-      if (i > 0 || step === 1) {
-        html += `<div class="tick" style="left: ${pos}%"><span class="label">${i}</span></div>`;
-      }
-    }
-    if (maxResult % step !== 0 && Math.floor(maxResult / step) * step !== maxResult) {
-      html += `<div class="tick" style="left: 100%"><span class="label">${maxResult}</span></div>`;
-    }
-    html += `<div class="tick" style="left: 0%"><span class="label">0</span></div>`;
-
-    for (let i = 1; i <= multiplicand; i++) {
-      const startPercent = (((i - 1) * table) / maxResult) * 100;
-      const widthPercent = (table / maxResult) * 100;
-      const arcHeight = 10 + i * 1.5;
-      const effectiveWidthPercent = Math.min(widthPercent, 100 - startPercent);
-      if (effectiveWidthPercent > 0.1) {
-        const delay = (i - 1) * 0.1;
-        html += `<div class="arc" style="left: ${startPercent}%; width: ${effectiveWidthPercent}%; height: ${arcHeight}px; animation-delay: ${delay}s;">`;
-        if (widthPercent > 5) {
-          html += `<span class="arc-label">+${table}</span>`;
-        }
-        html += `</div>`;
-      }
-    }
-
-    html += '</div></div>';
-    return html;
-  }
-
-  /**
-   * Nettoie l'UI contextuelle après génération de question
+   * Après génération : calcul en grand ou énoncé en police de lecture, puis la
+   * question lue à voix haute (sans jamais révéler la réponse)
    */
   onQuestionGenerated() {
-    const hintBox = document.getElementById('quiz-hint');
-    const contBox = document.getElementById('quiz-continue');
-    if (hintBox) hintBox.style.display = 'none';
-    if (contBox) contBox.style.display = 'none';
-
-    // Synthèse vocale de la question (ne jamais révéler la bonne réponse)
-    if (this.state.currentQuestion) {
-      const { operator, a, b, type, question } = this.state.currentQuestion;
-      const operation = getOperation(operator);
-
-      if (type === 'true_false') {
-        // Lire exactement l'énoncé affiché (ex: "8 × 6 = 47")
-        const spoken = String(question)
-          .replaceAll('×', ' fois ')
-          .replaceAll('+', ' plus ')
-          .replaceAll('−', ' moins ')
-          .replaceAll('÷', ' divisé par ')
-          .replaceAll('=', ' égale ');
-        speak(spoken);
-      } else if (type === 'gap') {
-        // Pour "2 × ? = 18", ne dire que la partie connue
-        speak(`${a} ${operation.spokenForm}`);
-      } else {
-        // Pour classic, mcq, problem: lire l'énoncé sans donner la réponse
-        const spoken = (question ? String(question) : `${a} ${operator} ${b} = ?`)
-          .replaceAll('×', ' fois ')
-          .replaceAll('+', ' plus ')
-          .replaceAll('−', ' moins ')
-          .replaceAll('÷', ' divisé par ')
-          .replaceAll('=', ' égale ');
-        speak(spoken);
-      }
-    }
+    if (!this.state.currentQuestion) return;
+    markQuestionKind(this.questionElement, this.state.currentQuestion);
+    this.speakQuestion();
   }
 
   /**
@@ -608,14 +359,17 @@ export class QuizMode extends GameMode {
 
     userData.bestStreak = Math.max(userData.bestStreak || 0, this.state.streak);
 
-    // Vérifier les badges
-    checkAndUnlockBadge('quiz_starter');
+    // Sauvegarder AVANT les badges : checkAndUnlockBadge enregistre sa propre copie des
+    // données ; réécrire ensuite cette copie-ci effacerait le badge tout juste gagné
+    UserState.updateUserData(userData);
+
+    // Vérifier les badges (un badge déjà obtenu ne s'annonce plus)
+    if (this.state.questionCount > 0) {
+      checkAndUnlockBadge('quiz_starter');
+    }
     if (successRate === 100 && this.state.questionCount >= 10) {
       checkAndUnlockBadge('perfect_quiz');
     }
-
-    // Sauvegarder
-    UserState.updateUserData(userData);
 
     console.log('💾 Résultats Quiz sauvegardés:', {
       score: this.state.score,
@@ -625,114 +379,89 @@ export class QuizMode extends GameMode {
   }
 
   /**
-   * Afficher les résultats du Quiz
+   * Encouragement de fin de partie (le pourcentage ne s'affiche pas)
+   * @param {number} correct
+   * @param {number} total
+   * @returns {string}
+   */
+  getResultMessage(correct = this.state.correctAnswers, total = this.state.questionCount) {
+    const successRate = total > 0 ? correct / total : 0;
+
+    if (successRate >= 0.9) return getTranslation('excellent');
+    if (successRate >= 0.75) return getTranslation('very_good');
+    if (successRate >= 0.6) return getTranslation('good_job');
+    return getTranslation('keep_practicing');
+  }
+
+  /**
+   * Écran de fin : une phrase « 7 bonnes réponses sur 10 », un encouragement, puis
+   * le score et la meilleure série en ligne secondaire. Construit à partir d'un
+   * instantané : il peut être reconstruit dans une autre langue.
+   * @param {{correct: number, total: number, score: number, bestStreak: number, avatar: string}} result
+   * @returns {HTMLElement}
+   */
+  renderResults(result) {
+    const container = document.createElement('section');
+    container.className = 'results-container content-card game-results';
+    container.setAttribute('aria-label', getTranslation('quiz_results'));
+
+    const avatar = createAvatarPortrait(result.avatar);
+    if (avatar) container.appendChild(avatar);
+
+    container.appendChild(
+      createResultsSummary({
+        lead: formatCorrectCount(result.correct, result.total),
+        message: this.getResultMessage(result.correct, result.total),
+        details: [
+          getTranslation('results_score', { score: result.score }),
+          result.bestStreak > 0
+            ? getTranslation('results_best_streak', { streak: result.bestStreak })
+            : '',
+        ],
+      })
+    );
+
+    container.appendChild(
+      createResultsActions([
+        {
+          label: getTranslation('play_again'),
+          action: 'play-again',
+          primary: true,
+          onActivate: () => {
+            setGameMode('quiz').catch(err => {
+              console.warn('setGameMode failed', err);
+            });
+          },
+        },
+        {
+          label: getTranslation('back_to_home'),
+          action: 'back-to-home',
+          onActivate: () => goToSlide(1),
+        },
+      ])
+    );
+
+    return container;
+  }
+
+  /**
+   * Afficher les résultats du Quiz (slide 5). Le focus va sur la phrase principale
+   * une fois l'écran affiché ; l'écran suit un changement de langue.
    */
   showResults() {
-    goToSlide(5);
+    const shown = goToSlide(5);
 
-    const successRate =
-      this.state.questionCount > 0
-        ? Math.round((this.state.correctAnswers / this.state.questionCount) * 100)
-        : 0;
-
-    // Déterminer le message de félicitations
-    let message;
-    if (successRate >= 90) {
-      message = getTranslation('excellent');
-    } else if (successRate >= 75) {
-      message = getTranslation('very_good');
-    } else if (successRate >= 60) {
-      message = getTranslation('good_job');
-    } else {
-      message = getTranslation('keep_practicing');
-    }
-
-    // Afficher les résultats
     const resultsScreen = document.getElementById('results');
-    if (resultsScreen) {
-      resultsScreen.textContent = '';
-      const container = document.createElement('div');
-      container.className = 'results-container content-card';
-      container.setAttribute('role', 'main');
-      container.setAttribute('aria-label', getTranslation('quiz_results'));
+    if (!resultsScreen) return;
 
-      const h2 = createSafeElement('h2', getTranslation('quiz_results'));
-      container.appendChild(h2);
-
-      const grid = document.createElement('div');
-      grid.className = 'stats-grid';
-      const mkBox = (value, labelKey) => {
-        const box = document.createElement('div');
-        box.className = 'stat-box';
-        const v = createSafeElement('div', String(value), { class: 'stat-value' });
-        const l = createSafeElement('div', getTranslation(labelKey), { class: 'stat-label' });
-        box.appendChild(v);
-        box.appendChild(l);
-        return box;
-      };
-      grid.appendChild(mkBox(this.state.score, 'your_score'));
-      grid.appendChild(mkBox(this.state.correctAnswers, 'stat_good_answers'));
-      grid.appendChild(mkBox(this.state.questionCount, 'stat_questions'));
-      grid.appendChild(mkBox(`${successRate}%`, 'stat_success_rate'));
-      container.appendChild(grid);
-
-      const msg = createSafeElement('div', message, { class: 'message-box' });
-      container.appendChild(msg);
-
-      const btnRow = document.createElement('div');
-      btnRow.className = 'button-row';
-      const btn = createSafeElement('button', getTranslation('play_again'), {
-        class: 'btn btn-primary',
-        'data-action': 'play-again',
-        'aria-label': getTranslation('play_again'),
-      });
-      btn.addEventListener('click', e => {
-        e.preventDefault();
-        setGameMode('quiz').catch(e2 => {
-          console.warn('setGameMode failed', e2);
-        });
-      });
-      btnRow.appendChild(btn);
-
-      const homeBtn = createSafeElement('button', getTranslation('back_to_home'), {
-        class: 'btn',
-        'data-action': 'back-to-home',
-        'aria-label': getTranslation('back_to_home'),
-      });
-      homeBtn.addEventListener('click', e => {
-        e.preventDefault();
-        goToSlide(1);
-      });
-      btnRow.appendChild(homeBtn);
-
-      container.appendChild(btnRow);
-
-      resultsScreen.appendChild(container);
-    }
-  }
-
-  /**
-   * Nettoyage spécifique au Quiz
-   */
-  cleanup() {
-    super.cleanup();
-
-    // Nettoyer les timeouts spécifiques
-    if (this.feedbackTimeoutId) {
-      clearTimeout(this.feedbackTimeoutId);
-      this.feedbackTimeoutId = null;
-    }
-    if (this.feedbackIntervalId) {
-      clearInterval(this.feedbackIntervalId);
-      this.feedbackIntervalId = null;
-    }
-  }
-
-  /**
-   * Fonction pour rafraîchir les textes après changement de langue
-   */
-  refreshTexts() {
-    // Pas de contenu spécifique à rafraîchir en dehors de l'infrastructure standard
+    const result = {
+      correct: this.state.correctAnswers,
+      total: this.state.questionCount,
+      score: this.state.score,
+      bestStreak: this.sessionBestStreak,
+      avatar: gameState?.avatar,
+    };
+    mountResults(resultsScreen, () => this.renderResults(result), { ready: shown });
   }
 }
 

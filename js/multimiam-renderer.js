@@ -1,6 +1,8 @@
 // multimiam-renderer.js - Gestion du rendu pour le jeu Pacman (ESM)
 // (c) LeapMultix - 2025
 
+import { getCanvasFont, readableCanvasFontSize } from './arcade-common.js';
+
 export default class PacmanRenderer {
   constructor(game) {
     this.game = game; // Référence à l'instance de PacmanGame
@@ -65,54 +67,38 @@ export default class PacmanRenderer {
     if (!g.answerPositions || g.answerPositions.length === 0) return;
 
     const isMobile = g.canvas.width < 500;
+    // Nombres lisibles : au moins 16 px à l'écran, même quand les cases sont petites
+    const baseSize = isMobile ? g.cellSize * 0.6 : Math.max(20, Math.min(28, g.cellSize * 0.5));
+    const fontSize = readableCanvasFontSize(g.canvas, baseSize);
+    ctx.font = getCanvasFont(fontSize);
 
     for (const ans of g.answerPositions) {
       const x = (ans.x + 0.5) * g.cellSize;
       const y = (ans.y + 0.5) * g.cellSize;
+      const label = ans.value.toString();
 
-      // Ajuster la taille du cercle selon la longueur du nombre et l'écran
-      let r = isMobile ? g.cellSize * 0.42 : g.cellSize * 0.4;
-      if (ans.value >= 100) {
-        // Agrandir légèrement le cercle pour les nombres à 3+ chiffres
-        r *= isMobile ? 1.2 : 1.15;
-      } else if (ans.value >= 10) {
-        // Petite adaptation pour nombres à 2 chiffres
-        r *= isMobile ? 1.05 : 1.0;
-      }
-
+      // Pastille à la taille du nombre (1 à 3 chiffres), jamais plus petite que la case
+      const pillH = Math.max(g.cellSize * 0.8, fontSize * 1.3);
+      const pillW = Math.max(pillH, ctx.measureText(label).width + fontSize * 0.6);
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(x - pillW / 2, y - pillH / 2, pillW, pillH, pillH / 2);
+      } else {
+        ctx.arc(x, y, pillW / 2, 0, Math.PI * 2);
+      }
       ctx.fillStyle = '#3333FF';
       ctx.fill();
-      // Réduire ou supprimer le contour blanc problématique sur mobile
-      if (!isMobile) {
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      } else {
-        // Sur mobile, contour très fin pour éviter l'effet blanc visible
-        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
+      // Contour clair, plus fin sur mobile
+      ctx.strokeStyle = isMobile ? 'rgba(255,255,255,0.6)' : 'white';
+      ctx.lineWidth = isMobile ? 1 : 2;
+      ctx.stroke();
 
-      // Déterminer une taille de police de base
-      let fontSize = isMobile
-        ? Math.max(12, Math.min(16, g.cellSize * 0.33)) // encore plus petit sur mobile
-        : Math.max(20, Math.min(28, g.cellSize * 0.5));
-
-      // Réduire la police si le nombre est plus grand
-      if (ans.value >= 100) {
-        fontSize *= 0.8; // réduction ~20 %
-      }
-
-      ctx.font = `bold ${fontSize}px Arial`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = 'black';
-      ctx.fillText(ans.value.toString(), x + 1, y + 1);
+      ctx.fillText(label, x + 1, y + 1);
       ctx.fillStyle = 'white';
-      ctx.fillText(ans.value.toString(), x, y);
+      ctx.fillText(label, x, y);
     }
   }
 

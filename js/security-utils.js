@@ -100,10 +100,15 @@ export function sanitizeUsername(username) {
 export function containsHtml(input) {
   if (typeof input !== 'string') return false;
 
-  const htmlTagRegex = /<[^>]*>/g;
+  // Deux lectures simples plutôt qu'un motif glouton « un chevron ouvrant, tout
+  // sauf un chevron fermant, un chevron fermant » : sur une chaîne sans chevron
+  // fermant, ce motif repart en arrière à chaque chevron ouvrant et le coût
+  // devient quadratique.
+  const ouvrante = input.indexOf('<');
+  const contientBalise = ouvrante !== -1 && input.includes('>', ouvrante + 1);
   const scriptRegex = /<script|javascript:|on\w+=/i;
 
-  return htmlTagRegex.test(input) || scriptRegex.test(input);
+  return contientBalise || scriptRegex.test(input);
 }
 
 /**
@@ -272,39 +277,116 @@ export function appendSanitizedHTML(parent, htmlString) {
 }
 
 /**
- * Crée un feedback d'erreur complexe avec message, astuce et contenu additionnel sécurisé
- * @param {HTMLElement} element - Élément cible
- * @param {string} message - Message principal
- * @param {string} hintText - Texte d'astuce (optionnel)
- * @param {string} additionalContent - Contenu additionnel (optionnel)
+ * Ligne de comptage : « Compter par 6 : 6 → 12 → … → 42 », la dernière valeur en évidence.
+ * Les flèches sont décoratives (masquées aux lecteurs d'écran).
+ * @param {{label: string, steps: number[]}} countBy
+ * @returns {HTMLElement}
  */
-export function setSafeComplexFeedback(element, message, hintText = '', additionalContent = '') {
+function createCountLine({ label, steps }) {
+  const line = createSafeElement('p', '', { class: 'feedback-count' });
+  if (label) {
+    line.appendChild(createSafeElement('span', label, { class: 'feedback-count-label' }));
+  }
+  const sequence = createSafeElement('span', '', { class: 'feedback-count-steps' });
+  steps.forEach((value, index) => {
+    if (index > 0) {
+      sequence.appendChild(
+        createSafeElement('span', '→', { class: 'feedback-count-arrow', 'aria-hidden': 'true' })
+      );
+    }
+    const isLast = index === steps.length - 1;
+    sequence.appendChild(
+      createSafeElement(isLast ? 'strong' : 'span', String(value), { class: 'feedback-count-step' })
+    );
+  });
+  line.appendChild(sequence);
+  return line;
+}
+
+/**
+ * Ligne de calcul : « Pour vérifier : 9 × 4 = 36 », le calcul en police de titre.
+ * @param {{label: string, equation: string}} fact
+ * @returns {HTMLElement}
+ */
+function createFactLine({ label, equation }) {
+  const line = createSafeElement('p', '', { class: 'feedback-fact' });
+  if (label) {
+    line.appendChild(createSafeElement('span', label, { class: 'feedback-count-label' }));
+  }
+  line.appendChild(createSafeElement('span', equation, { class: 'feedback-fact-equation' }));
+  return line;
+}
+
+/**
+ * Astuce : l'intitulé (« Indice ») sur sa propre ligne, sans ponctuation à traduire
+ * @param {string} hintText
+ * @returns {HTMLElement}
+ */
+function createHintLine(hintText) {
+  const hintDiv = createSafeElement('p', '', { class: 'quiz-hint-inline' });
+  hintDiv.appendChild(createSafeElement('strong', getTranslation('hint')));
+  hintDiv.appendChild(createSafeElement('span', hintText));
+  return hintDiv;
+}
+
+/**
+ * Lignes qui suivent la bonne réponse : calculs, comptage, astuce, texte libre
+ * @returns {HTMLElement[]}
+ */
+function createExplanationLines({ facts, countBy, hintText, additionalContent }) {
+  const lines = (Array.isArray(facts) ? facts : [])
+    .filter(fact => fact?.equation)
+    .map(createFactLine);
+
+  if (Array.isArray(countBy?.steps) && countBy.steps.length > 0) {
+    lines.push(createCountLine(countBy));
+  }
+  if (hintText) lines.push(createHintLine(hintText));
+  // Contenu additionnel sous forme de texte seulement pour sécurité
+  if (additionalContent) {
+    lines.push(createSafeElement('p', additionalContent, { class: 'feedback-extra' }));
+  }
+  return lines;
+}
+
+/**
+ * Explication calme après une erreur : une erreur est une étape, pas une sanction.
+ * Un mot d'accueil (« Presque ! »), la bonne réponse, puis, si fournis, les calculs
+ * utiles (vrai résultat, vérification), le comptage qui mène au résultat et une astuce.
+ * Tout est construit en texte (aucun HTML injecté).
+ * @param {HTMLElement} element - Élément cible
+ * @param {string} message - Message principal (« La bonne réponse est 42. »)
+ * @param {string} hintText - Texte d'astuce (optionnel)
+ * @param {string} additionalContent - Contenu additionnel en texte (optionnel)
+ * @param {Object} [options]
+ * @param {string} [options.lead] - Mot d'accueil affiché avant le message
+ * @param {Array<{label: string, equation: string}>} [options.facts] - Calculs affichés
+ * @param {{label: string, steps: number[]}} [options.countBy] - Comptage menant au résultat
+ */
+export function setSafeComplexFeedback(
+  element,
+  message,
+  hintText = '',
+  additionalContent = '',
+  options = {}
+) {
   if (!element) return;
 
   element.textContent = '';
+  const { lead = '', countBy = null, facts = [] } = options || {};
 
-  // Conteneur principal avec classe feedback-error
-  const feedbackDiv = createSafeElement('div', '', { class: 'feedback-error' });
+  // Panneau d'explication : encre normale, fond en creux, sans rouge ni secousse
+  const panel = createSafeElement('div', '', { class: 'feedback-error feedback-explain' });
 
-  // Message principal
-  const messageDiv = createSafeElement('div', message);
-  feedbackDiv.appendChild(messageDiv);
-
-  // Bloc d'astuce si fourni
-  if (hintText) {
-    const hintDiv = createSafeElement('div', '', { class: 'quiz-hint-inline' });
-    const hintStrong = createSafeElement('strong', getTranslation('hint') + ': ');
-    const hintSpan = createSafeElement('span', hintText);
-    hintDiv.appendChild(hintStrong);
-    hintDiv.appendChild(hintSpan);
-    feedbackDiv.appendChild(hintDiv);
+  if (lead) {
+    panel.appendChild(createSafeElement('p', lead, { class: 'feedback-lead' }));
   }
 
-  // Contenu additionnel sous forme de texte seulement pour sécurité
-  if (additionalContent) {
-    const additionalDiv = createSafeElement('div', additionalContent);
-    feedbackDiv.appendChild(additionalDiv);
+  panel.appendChild(createSafeElement('p', message, { class: 'feedback-answer' }));
+
+  for (const line of createExplanationLines({ facts, countBy, hintText, additionalContent })) {
+    panel.appendChild(line);
   }
 
-  element.appendChild(feedbackDiv);
+  element.appendChild(panel);
 }

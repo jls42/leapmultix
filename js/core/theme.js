@@ -9,18 +9,28 @@
 import { getTranslation } from '../utils-es6.js';
 import { AudioManager } from './audio.js';
 import { TopBar } from '../components/topBar.js';
+import { setIcon } from '../components/icons.js';
 import { gameState } from '../game.js';
+
+/**
+ * Marque le bouton actif d'un groupe (classe .active et aria-pressed).
+ * @param {string} selector - Boutons du groupe
+ * @param {(btn: Element) => boolean} isActive - Prédicat du bouton sélectionné
+ */
+function markPressed(selector, isActive) {
+  for (const btn of document.querySelectorAll(selector)) {
+    const active = isActive(btn);
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  }
+}
 
 export function initThemes() {
   const savedColorTheme = localStorage.getItem('colorTheme') || 'default';
   if (savedColorTheme !== 'default') {
     document.body.classList.add('theme-' + savedColorTheme);
   }
-  for (const btn of document.querySelectorAll('.color-theme-btn')) {
-    const isActive = btn.dataset.colorTheme === savedColorTheme;
-    btn.classList.toggle('active', isActive);
-    btn.ariaPressed = isActive ? 'true' : 'false';
-  }
+  markPressed('.color-theme-btn', btn => btn.dataset.colorTheme === savedColorTheme);
   applyHighContrastMode(localStorage.getItem('highContrastEnabled') === 'true');
   applyFontSize(localStorage.getItem('fontSize') || 'medium');
 }
@@ -34,14 +44,16 @@ function getMuteButtonTitle(isMuted, translation) {
   return translation;
 }
 
+/* Repli si la barre du haut n'est pas disponible : même icône et même libellé qu'elle */
 function updateMuteButtons(newVolume) {
   const numericVolume = Number(newVolume);
   const isMuted = Number.isNaN(numericVolume) ? false : numericVolume === 0;
   for (const btn of document.querySelectorAll('.mute-btn')) {
-    btn.textContent = isMuted ? '🔇' : '🔊';
+    setIcon(btn, isMuted ? 'volume-x' : 'volume-2');
     const key = isMuted ? 'mute_button_label_off' : 'mute_button_label_on';
-    const translation = getTranslation(key);
-    btn.title = getMuteButtonTitle(isMuted, translation);
+    const label = getMuteButtonTitle(isMuted, getTranslation(key));
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
   }
 }
 
@@ -65,14 +77,13 @@ export function updateVolume(newVolume) {
 
   try {
     AudioManager.setVolume(newVolume);
-  } catch (e) {
-    void e; /* no-op */
+  } catch {
+    /* no-op */
   }
 
   try {
     TopBar.updateVolumeControls(newVolume, isMuted);
-  } catch (e) {
-    void e;
+  } catch {
     updateVolumeControlsFallback(newVolume);
   }
 
@@ -89,19 +100,9 @@ export function applyHighContrastMode(enabled) {
 }
 
 export function applyFontSize(size) {
+  const selected = ['small', 'medium', 'large'].includes(size) ? size : 'medium';
   document.body.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
-
-  if (['small', 'medium', 'large'].includes(size)) {
-    document.body.classList.add(`font-size-${size}`);
-    localStorage.setItem('fontSize', size);
-    for (const btn of document.querySelectorAll('.font-size-btn')) {
-      btn.classList.toggle('active', btn.dataset.size === size);
-    }
-  } else {
-    document.body.classList.add('font-size-medium');
-    localStorage.setItem('fontSize', 'medium');
-    for (const btn of document.querySelectorAll('.font-size-btn')) {
-      btn.classList.toggle('active', btn.dataset.size === 'medium');
-    }
-  }
+  document.body.classList.add(`font-size-${selected}`);
+  localStorage.setItem('fontSize', selected);
+  markPressed('.font-size-btn', btn => btn.dataset.size === selected);
 }

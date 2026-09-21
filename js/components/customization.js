@@ -6,23 +6,215 @@
 import { UserState } from '../core/userState.js';
 import { gameState } from '../game.js';
 import {
-  addArrowKeyNavigation,
   showMessage,
   getTranslation,
   renderAvatarSelector,
   updateWelcomeMessageUI,
   updateBackgroundByAvatar,
-  startBackgroundRotation,
 } from '../utils-es6.js';
+import { getAvatarHeadSrc, normalizeAvatarId } from '../main-helpers.js';
 import { saveParentalLockEnabled } from '../storage.js';
 import { createVirtualKeyboard } from '../virtual-keyboard.js';
+import { singleActivation } from '../ui-feedback.js';
+import { eventBus } from '../core/eventBus.js';
+import UserManager from '../userManager.js';
+import { createIcon } from './icons.js';
+
+/** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
+const SLIDE6_AVATARS = '#slide6 .avatar-selector .avatar-btn';
+const SLIDE6_AVATAR_RADIOS = '#slide6 .avatar-selector .avatar-radio';
+
+/** Libellés accessibles des trois boutons « A » (taille du texte) */
+const FONT_SIZE_LABELS = {
+  small: { key: 'text_size_small', fallback: 'Petit' },
+  medium: { key: 'text_size_medium', fallback: 'Moyen' },
+  large: { key: 'text_size_large', fallback: 'Grand' },
+};
+
+/**
+ * Traduction avec repli lisible tant qu'une clé manque dans les fichiers de langue.
+ * @param {string} key - Clé i18n
+ * @param {string} fallback - Texte de repli
+ * @returns {string}
+ */
+function tr(key, fallback) {
+  try {
+    const value = getTranslation(key);
+    if (typeof value === 'string' && value && !/^\[.*\]$/.test(value)) return value;
+  } catch {
+    // i18n pas encore prêt : on garde le repli
+  }
+  return fallback;
+}
+
+/**
+ * Remplit un modèle de texte : accepte {nom} et {{nom}} (les deux formes existent
+ * dans les fichiers de langue ; getTranslation ne remplace que la première).
+ * @param {string} template
+ * @param {Object<string, string>} params
+ * @returns {string}
+ */
+function fillTemplate(template, params) {
+  let text = String(template || '');
+  for (const [name, value] of Object.entries(params)) {
+    text = text.split(`{{${name}}}`).join(value).split(`{${name}}`).join(value);
+  }
+  return text;
+}
+
+/** Retire un éventuel émoji décoratif en tête d'un libellé (« 🎨 Classique ») */
+function stripLeadingSymbols(text) {
+  return String(text || '')
+    .replace(/^[^\p{L}\p{N}]+/u, '')
+    .trim();
+}
 
 export const Customization = {
+  _languageBound: false,
+
   /**
    * Initialiser le composant Customization
    */
   init() {
-    // No initialization needed - events are set up on-demand in show()
+    this.enhanceStaticControls();
+    if (this._languageBound) return;
+    this._languageBound = true;
+    // Noms des avatars et infobulles : data-translate (main-helpers.js) ;
+    // le texte alternatif de l'avatar actuel suit ici la nouvelle langue.
+    eventBus.on('languageChanged', () => this._updateCurrentAvatarAlt());
+  },
+
+  /** Texte alternatif de « Avatar actuel » : le nom du personnage, dans la langue affichée */
+  _updateCurrentAvatarAlt() {
+    const currentImg = document.getElementById('current-avatar-img');
+    if (!currentImg) return;
+    const current = normalizeAvatarId(gameState.avatar);
+    currentImg.alt = tr(current, current);
+  },
+
+  /**
+   * Prépare une seule fois les contrôles écrits dans index.html :
+   * pastilles de thème, boutons « A » nommés, bouton « Vider le cache ».
+   */
+  enhanceStaticControls() {
+    this._enhanceColorThemeButtons();
+    this._enhanceFontSizeButtons();
+    this._ensureClearCacheButton();
+  },
+
+  /**
+   * Bouton de thème = pastille (couleurs du thème) + libellé.
+   * La pastille porte la classe du thème qu'elle montre : les jetons de
+   * css/themes.css s'y appliquent, sans couleur écrite en dur.
+   */
+  _enhanceColorThemeButtons() {
+    for (const btn of document.querySelectorAll('.color-theme-btn')) {
+      if (btn.querySelector('.color-theme-swatch')) continue;
+      const theme = btn.dataset.colorTheme || 'default';
+      const key = btn.dataset.translate || `color_theme_${theme}`;
+      const fallback = stripLeadingSymbols(btn.textContent);
+
+      // Le texte traduit vit dans le libellé : data-translate sur le bouton effacerait la pastille
+      delete btn.dataset.translate;
+      btn.type = 'button';
+
+      const swatch = document.createElement('span');
+      swatch.className = 'color-theme-swatch';
+      swatch.setAttribute('aria-hidden', 'true');
+      // Classique n'a pas de classe de thème : la feuille lui rend ses jetons (data-theme-preview)
+      const fill = document.createElement('span');
+      fill.className =
+        theme === 'default' ? 'color-theme-swatch-fill' : `color-theme-swatch-fill theme-${theme}`;
+      fill.dataset.themePreview = theme;
+      swatch.appendChild(fill);
+
+      const label = document.createElement('span');
+      label.className = 'color-theme-label';
+      label.dataset.translate = key;
+      label.textContent = tr(key, fallback);
+
+      btn.replaceChildren(swatch, label);
+      if (!btn.hasAttribute('aria-pressed')) {
+        btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
+      }
+    }
+  },
+
+  /** Les trois « A » : un nom accessible chacun et l'état sélectionné (aria-pressed) */
+  _enhanceFontSizeButtons() {
+    const selector = document.querySelector('.font-size-selector');
+    if (!selector) return;
+
+    if (!selector.hasAttribute('role')) {
+      selector.setAttribute('role', 'group');
+      const caption = selector.querySelector(':scope > span');
+      if (caption) {
+        caption.id = caption.id || 'font-size-selector-label';
+        selector.setAttribute('aria-labelledby', caption.id);
+      }
+    }
+
+    for (const btn of selector.querySelectorAll('.font-size-btn')) {
+      const label = FONT_SIZE_LABELS[btn.dataset.size];
+      if (!label) continue;
+      btn.type = 'button';
+      const text = tr(label.key, label.fallback);
+      btn.setAttribute('aria-label', text);
+      btn.dataset.translateAriaLabel = label.key;
+      btn.title = text;
+      btn.dataset.translateTitle = label.key;
+      btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
+    }
+  },
+
+  /** Petit bouton discret « Vider le cache », en fin de section accessibilité */
+  _ensureClearCacheButton() {
+    const opts = document.querySelector('#slide6 .accessibility-options');
+    if (!opts || opts.querySelector('#clear-cache-btn')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'clear-cache-btn';
+    btn.className = 'btn btn-quiet btn-sm clear-cache-btn';
+    btn.dataset.translate = 'clear_cache_button';
+    btn.textContent = tr('clear_cache_button', 'Vider le cache');
+    opts.appendChild(btn);
+  },
+
+  /**
+   * Flèches : déplacent le focus dans un groupe de boutons, à partir du bouton
+   * qui a le focus. Entrée et Espace gardent leur comportement natif.
+   * @param {Element|null} container - Groupe de boutons
+   * @param {string} itemSelector - Boutons navigables
+   */
+  _bindArrowKeys(container, itemSelector) {
+    if (!container || container.dataset.arrowKeysBound) return;
+    const steps = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+    container.addEventListener('keydown', event => {
+      const step = steps[event.key];
+      if (!step) return;
+      const items = [...container.querySelectorAll(itemSelector)].filter(item => !item.disabled);
+      const index = items.indexOf(document.activeElement);
+      if (index === -1) return;
+      event.preventDefault();
+      // La navigation globale au clavier ne doit pas déplacer le focus une seconde fois
+      event.stopPropagation();
+      items[(index + step + items.length) % items.length].focus();
+    });
+    container.dataset.arrowKeysBound = 'true';
+  },
+
+  /**
+   * Si le cadenas d'un avatar verrouillé est encore un émoji dans un <span>, il est
+   * redessiné en SVG ; un cadenas déjà en SVG est laissé tel quel.
+   */
+  _upgradeAvatarLocks() {
+    for (const btn of document.querySelectorAll(SLIDE6_AVATARS)) {
+      const lock = btn.querySelector('.lock-icon');
+      if (lock && !(lock instanceof SVGElement) && !lock.querySelector('svg')) {
+        const icon = createIcon('lock', { size: 20 });
+        if (icon) lock.replaceChildren(icon);
+      }
+    }
   },
 
   /**
@@ -44,113 +236,88 @@ export const Customization = {
     const heroMascotImg = document.getElementById('hero-mascot-img');
     const current = gameState.avatar || 'fox';
     if (currentImg) {
-      currentImg.src = `assets/images/arcade/${current}_head_avatar_128x128.png`;
-      currentImg.alt = current;
+      currentImg.src = getAvatarHeadSrc(current);
+      currentImg.alt = tr(current, current);
     }
-    // Mettre à jour la mascotte hero (haute résolution)
+    // Mascotte de l'accueil : visage 128 px, décoratif (la bulle porte le message)
     if (heroMascotImg) {
-      heroMascotImg.src = `assets/images/arcade/${current}_head_avatar.png`;
-      heroMascotImg.alt = current;
+      heroMascotImg.src = getAvatarHeadSrc(current);
+      heroMascotImg.alt = '';
     }
-    for (const btn of document.querySelectorAll('.avatar-btn')) {
-      btn.classList.toggle('active', btn.dataset.avatar === (gameState.avatar || 'fox'));
+    for (const radio of document.querySelectorAll(SLIDE6_AVATAR_RADIOS)) {
+      radio.checked = radio.value === current;
     }
+    this._upgradeAvatarLocks();
 
     // Mettre à jour le champ de surnom
     const nicknameInput = document.getElementById('nickname-input');
-    /**
-     * Fonction if
-     * @param {*} nicknameInput - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (nicknameInput) {
       nicknameInput.value = gameState.nickname;
     }
 
     // Tâche 5.1: Mettre à jour l'état de la checkbox du code parental
     const parentalLockToggle = document.getElementById('parental-lock-toggle');
-    /**
-     * Fonction if
-     * @param {*} parentalLockToggle - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (parentalLockToggle) {
       parentalLockToggle.checked = userData.parentalLockEnabled === true;
     }
 
-    // Ajouter les écouteurs d'événements
+    // Contrôles statiques (idempotent) puis écouteurs
+    this.enhanceStaticControls();
     this.setupEvents();
+  },
 
-    // Ajouter un petit bouton discret pour vider le cache navigateur (dans la section accessibilité)
-    try {
-      const opts = document.querySelector('#slide6 .accessibility-options');
-      if (opts && !opts.querySelector('#clear-cache-btn')) {
-        const btn = document.createElement('button');
-        btn.id = 'clear-cache-btn';
-        btn.className = 'btn btn-sm-desktop clear-cache-btn';
-        btn.dataset.translate = 'clear_cache_button';
-        btn.title = getTranslation('clear_cache_button') || 'Vider le cache';
-        btn.style.marginLeft = '8px';
-        btn.style.opacity = '0.75';
-        btn.style.float = 'right';
-        btn.textContent = getTranslation('clear_cache_button') || 'Vider le cache';
-        opts.appendChild(btn);
-      }
-    } catch (e) {
-      void e; /* noop */
+  /**
+   * Un seul écouteur, posé sur le groupe : les boutons radio sont refaits à chaque
+   * affichage, le conteneur, lui, reste.
+   * @private
+   */
+  _wireAvatarSelection() {
+    const selector = document.querySelector('#slide6 .avatar-selector');
+    if (!selector || selector.dataset.avatarChangeBound) return;
+    selector.dataset.avatarChangeBound = 'true';
+    selector.addEventListener('change', event => {
+      const avatarName = event.target?.value;
+      if (avatarName) this._applyAvatarChoice(avatarName);
+    });
+  },
+
+  /**
+   * Applique un avatar : aperçu, mascotte, monde illustré, profil et tuile « Qui joue ? ».
+   * @param {string} avatarName
+   * @private
+   */
+  _applyAvatarChoice(avatarName) {
+    gameState.avatar = avatarName;
+    updateBackgroundByAvatar(avatarName);
+
+    const currentImg = document.getElementById('current-avatar-img');
+    if (currentImg) {
+      currentImg.src = getAvatarHeadSrc(avatarName);
+      currentImg.alt = tr(avatarName, avatarName);
     }
+    // Mascotte de l'accueil : visage 128 px, décoratif
+    const heroMascotImg = document.getElementById('hero-mascot-img');
+    if (heroMascotImg) {
+      heroMascotImg.src = getAvatarHeadSrc(avatarName);
+      heroMascotImg.alt = '';
+    }
+
+    const userData = UserState.getCurrentUserData();
+    userData.avatar = avatarName;
+    UserState.updateUserData(userData);
+    // « Qui joue ? » montre le visage de l'avatar : la tuile suit le nouveau choix
+    UserManager.refreshUserList();
   },
 
   /**
    * Configurer les événements de l'écran de personnalisation
    */
   setupEvents() {
-    document.querySelectorAll('.avatar-btn');
-
-    // Sélection d'avatar
-    for (const btn of document.querySelectorAll('.avatar-btn:not(.locked)')) {
-      // Supprimer l'ancien écouteur s'il existe pour éviter les doublons
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-      newBtn.addEventListener('click', () => {
-        const avatarName = newBtn.dataset.avatar;
-        gameState.avatar = avatarName;
-        updateBackgroundByAvatar(avatarName);
-        startBackgroundRotation(avatarName); // Rotation auto après changement d'avatar
-
-        // Mettre à jour la sélection visuelle
-        for (const avatarBtn of document.querySelectorAll('.avatar-btn')) {
-          avatarBtn.classList.toggle('active', avatarBtn.dataset.avatar === avatarName);
-        }
-
-        // Mettre à jour l'image d'avatar actuel
-        const currentImg = document.getElementById('current-avatar-img');
-        if (currentImg) {
-          currentImg.src = `assets/images/arcade/${avatarName}_head_avatar_128x128.png`;
-          currentImg.alt = avatarName;
-        }
-
-        // Mettre à jour la mascotte hero (haute résolution)
-        const heroMascotImg = document.getElementById('hero-mascot-img');
-        if (heroMascotImg) {
-          heroMascotImg.src = `assets/images/arcade/${avatarName}_head_avatar.png`;
-          heroMascotImg.alt = avatarName;
-        }
-
-        // 🔧 FIX: Sauvegarder automatiquement l'avatar sélectionné
-        const userData = UserState.getCurrentUserData();
-        userData.avatar = avatarName;
-        UserState.updateUserData(userData);
-      });
-    }
+    // Sélection d'avatar (seulement ceux de la personnalisation, pas ceux de la création de profil)
+    this._wireAvatarSelection();
 
     // Ajouter le clavier virtuel pour le surnom
     const nicknameInput = document.getElementById('nickname-input');
-    /**
-     * Fonction if
-     * @param {*} nicknameInput - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (nicknameInput) {
       // Afficher le clavier virtuel lorsque l'input reçoit le focus
       nicknameInput.addEventListener('focus', () => {
@@ -161,22 +328,12 @@ export const Customization = {
 
       // Sauvegarde du surnom
       const saveNicknameBtn = document.getElementById('save-nickname-btn');
-      /**
-       * Fonction if
-       * @param {*} saveNicknameBtn - Description du paramètre
-       * @returns {*} Description du retour
-       */
       if (saveNicknameBtn) {
         // Supprimer l'ancien écouteur s'il existe
         const newSaveBtn = saveNicknameBtn.cloneNode(true);
         saveNicknameBtn.parentNode.replaceChild(newSaveBtn, saveNicknameBtn);
         newSaveBtn.addEventListener('click', () => {
           const nickname = nicknameInput.value.trim();
-          /**
-           * Fonction if
-           * @param {*} nickname - Description du paramètre
-           * @returns {*} Description du retour
-           */
           if (nickname) {
             gameState.nickname = nickname;
             showMessage(getTranslation('nickname_saved'));
@@ -190,11 +347,6 @@ export const Customization = {
             // Tâche 1.5: Cacher le clavier virtuel après sauvegarde
             const keyboardId = `virtual-keyboard-${nicknameInput.id}`;
             const keyboardContainer = document.getElementById(keyboardId);
-            /**
-             * Fonction if
-             * @param {*} keyboardContainer - Description du paramètre
-             * @returns {*} Description du retour
-             */
             if (keyboardContainer) {
               keyboardContainer.style.display = 'none';
             }
@@ -225,15 +377,17 @@ export const Customization = {
       // Supprimer l'ancien écouteur s'il existe
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
-      newBtn.addEventListener('click', () => {
-        this.updateColorTheme(newBtn.dataset.colorTheme);
-      });
+      newBtn.addEventListener(
+        'click',
+        singleActivation(() => {
+          this.updateColorTheme(newBtn.dataset.colorTheme);
+        })
+      );
     }
 
-    // Tâche 4.2: Ajouter navigation clavier par flèches aux sélecteurs
-    addArrowKeyNavigation(document.querySelector('.avatar-selector'), '.avatar-btn:not(.locked)');
-    addArrowKeyNavigation(document.querySelector('.theme-selector'), '.theme-btn');
-    addArrowKeyNavigation(document.querySelector('.color-theme-selector'), '.color-theme-btn');
+    // Navigation par flèches dans les thèmes ; les avatars sont des boutons radio
+    // natifs, le navigateur s'en charge déjà.
+    this._bindArrowKeys(document.querySelector('.color-theme-selector'), '.color-theme-btn');
 
     // Bouton « Vider le cache »
     const clearBtn = document.getElementById('clear-cache-btn');
@@ -265,8 +419,8 @@ export const Customization = {
   _notifyClearing() {
     try {
       showMessage(getTranslation('clearing_cache_message') || 'Nettoyage du cache...');
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
   },
 
@@ -274,14 +428,14 @@ export const Customization = {
     const mod = await import('../cache-updater.js');
     try {
       mod.forceDevCacheClear?.();
-    } catch (e) {
-      void e;
+    } catch {
+      /* ignoré volontairement */
     }
     setTimeout(() => {
       try {
         mod.clearCacheAndReload?.();
-      } catch (e) {
-        void e;
+      } catch {
+        /* ignoré volontairement */
       }
     }, 200);
   },
@@ -298,8 +452,7 @@ export const Customization = {
       } else {
         if (globalThis.location) globalThis.location.reload();
       }
-    } catch (err) {
-      void err;
+    } catch {
       if (globalThis.location) globalThis.location.reload();
     }
   },
@@ -315,7 +468,7 @@ export const Customization = {
     for (const btn of document.querySelectorAll('.color-theme-btn')) {
       const isActive = btn.dataset.colorTheme === themeName;
       btn.classList.toggle('active', isActive);
-      btn.ariaPressed = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-pressed', String(isActive));
     }
 
     // Retirer toutes les classes de thème de couleur
@@ -328,19 +481,15 @@ export const Customization = {
     );
 
     // Ajouter la classe pour le nouveau thème si ce n'est pas le thème par défaut
-    /**
-     * Fonction if
-     * @param {*} themeName - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (themeName !== 'default') {
       document.body.classList.add('theme-' + themeName);
     }
 
     // Message de confirmation
+    const label = tr(`color_theme_${themeName}`, themeName);
     showMessage(
-      getTranslation('color_theme_applied', {
-        themeName: getTranslation(`color_theme_${themeName}`) || themeName,
+      fillTemplate(tr('color_theme_applied', 'Thème {themeName} appliqué !'), {
+        themeName: label,
       })
     );
   },
@@ -358,11 +507,6 @@ export const Customization = {
 
     // Tâche 5.1: Sauvegarder l'état du code parental
     const parentalLockToggle = document.getElementById('parental-lock-toggle');
-    /**
-     * Fonction if
-     * @param {*} parentalLockToggle - Description du paramètre
-     * @returns {*} Description du retour
-     */
     if (parentalLockToggle) {
       userData.parentalLockEnabled = parentalLockToggle.checked;
       // Appeler saveParentalLockEnabled pour sauvegarder spécifiquement cette donnée

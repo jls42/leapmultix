@@ -1,4 +1,5 @@
 // coin-effects.js - ESM coin UI effects (no window globals)
+import { createIcon } from './components/icons.js';
 
 /**
  * Affiche l'animation de gain de pièce près d'un élément cible.
@@ -9,7 +10,9 @@ export function showCoinGainAnimation(targetElement) {
 
   const coinEffect = document.createElement('div');
   coinEffect.className = 'coin-gain-effect';
-  coinEffect.textContent = '🪙';
+  // Même pièce que dans la barre du haut (icône SVG partagée, couleurs des jetons)
+  const coinIcon = createIcon('coin', { size: 32, className: 'coin-icon' });
+  if (coinIcon) coinEffect.appendChild(coinIcon);
 
   const { left, top } = computeCoinPosition(targetElement);
 
@@ -24,7 +27,8 @@ export function showCoinGainAnimation(targetElement) {
   coinEffect.style.fontSize = '2em';
   coinEffect.style.background = 'none';
   coinEffect.style.border = 'none';
-  coinEffect.style.zIndex = '9999';
+  // Au-dessus du jeu, au niveau des notifications (jeton --z-toast)
+  coinEffect.style.setProperty('z-index', 'var(--z-toast)');
   coinEffect.style.pointerEvents = 'none';
   coinEffect.title = '';
   coinEffect.classList.add('coin-fly-anim');
@@ -88,6 +92,6 @@ function computeCoinPosition(targetElement) {
 export function triggerCoinCountAnimation() {
   const coinEl = document.querySelector('.top-bar .coin-count');
   if (!coinEl) return;
-  coinEl.classList.add('coin-bounce');
-  setTimeout(() => coinEl.classList.remove('coin-bounce'), 600);
+  coinEl.classList.add('coin-gain');
+  setTimeout(() => coinEl.classList.remove('coin-gain'), 600);
 }

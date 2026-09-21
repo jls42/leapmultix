@@ -78,7 +78,7 @@ function main() {
   const codeFiles = [
     ...walk(path.join(root, 'js'), f => /\.(mjs|js|cjs)$/.test(f)),
     path.join(root, 'index.html'),
-  ].filter(fs.existsSync);
+  ].filter(f => fs.existsSync(f));
 
   const used = new Set();
   const dataTranslateUsed = new Set();
@@ -90,7 +90,8 @@ function main() {
     while ((m = re.exec(src))) used.add(m[1]);
     // data-translate="key"
     const reDT = /data-translate\s*=\s*"([^"]+)"/g;
-    while ((m = reDT.exec(src))) dataTranslateUsed.add(m[1]);
+    // Une clé interpolée (`data-translate="${key}"` dans un gabarit) n'est connue qu'à l'exécution
+    while ((m = reDT.exec(src))) if (!m[1].includes('${')) dataTranslateUsed.add(m[1]);
   }
   for (const k of dataTranslateUsed) used.add(k);
 

@@ -1,5 +1,6 @@
 // multimiam-ui.js - Gestion de l'affichage (score, vies, opération) (ESM)
 // (c) LeapMultix - 2025
+import { InfoBar } from './components/infoBar.js';
 
 /**
  * Initialise l'interface utilisateur pour Pacman.
@@ -17,9 +18,9 @@ export function initPacmanUI(game) {
     const scoreEl = document.getElementById('multimiam-info-score');
     if (scoreEl) scoreEl.textContent = game.score.toString();
 
-    // Vies (❤️ répété)
+    // Vies : cœurs SVG de la barre d'infos, nommés « N vies sur M »
     const livesEl = document.getElementById('multimiam-info-lives');
-    if (livesEl) livesEl.textContent = '❤️'.repeat(Math.max(0, game.lives));
+    if (livesEl) InfoBar.renderLives(livesEl, game.lives);
   }
 
   function updateOperation() {

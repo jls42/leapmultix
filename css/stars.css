@@ -1,49 +1,55 @@
-/* ========== ÉTOILES ========== */
-.star-container {
-  display: flex;
+/* ===========================================
+   LeapMultix : étoiles de récompense (Aventure)
+   Dessinées en SVG : remplissage --color-reward quand l'étoile est gagnée,
+   simple contour sinon. Jamais utilisées comme couleur de texte.
+   =========================================== */
+
+.reward-stars {
+  display: inline-flex;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: var(--space-2);
+  margin: 0;
 }
 
-.star {
-  font-size: 30px;
-  color: #e0e0e0;
-  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.1));
-  transition:
-    transform 0.3s,
-    color 0.3s,
-    filter 0.3s;
+.reward-star {
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
-.star.earned {
-  color: var(--accent-color);
-  filter: drop-shadow(0 0 5px rgb(243 156 18 / 0.7));
-  animation: star-pop 0.7s ease-out;
+.reward-star path {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
 }
 
-@keyframes star-pop {
-  0% {
-    transform: scale(0.5);
-    opacity: 0.5;
+.reward-star.is-earned path {
+  fill: var(--color-reward);
+  stroke: var(--color-reward-edge);
+}
+
+.reward-stars .reward-star.is-earned {
+  animation: reward-star-in var(--dur-slow) var(--ease-out) both;
+}
+
+/* Petites étoiles dans une ligne de texte (tuiles de niveaux, en-tête) */
+.reward-stars--inline {
+  gap: 2px;
+}
+
+.reward-stars--inline .reward-star {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+@keyframes reward-star-in {
+  from {
+    opacity: 0;
+    scale: 0.8;
   }
 
-  50% {
-    transform: scale(1.5);
+  to {
     opacity: 1;
-  }
-
-  75% {
-    transform: scale(0.9);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-@media (max-width: 480px) {
-  .star {
-    font-size: 24px;
+    scale: 1;
   }
 }
