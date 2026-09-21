@@ -8,7 +8,10 @@ echo "======================================"
 # S'assurer que Lighthouse est installé
 if ! command -v lighthouse &> /dev/null; then
     echo "📦 Installation Lighthouse CLI..."
-    npm install -g lighthouse
+    # --ignore-scripts : une installation globale ne doit pas exécuter les
+    # scripts de cycle de vie du paquet. Lighthouse n'en a pas besoin, son
+    # binaire est lié par npm indépendamment.
+    npm install -g --ignore-scripts lighthouse
 fi
 
 # URLs à tester (ajuster selon votre configuration)
@@ -65,7 +68,7 @@ echo "======================"
 
 # Extraction scores rapide depuis JSON
 for file in "$REPORT_DIR"/*.json; do
-    if [ -f "$file" ]; then
+    if [[ -f "$file" ]]; then
         filename=$(basename "$file" .json)
         echo "📱 $filename :"
         

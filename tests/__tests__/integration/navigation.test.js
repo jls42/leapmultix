@@ -84,7 +84,7 @@ describe("Tests d'intégration - Système de navigation", () => {
     const getActiveSlide = () => {
       for (const [slideName, slide] of Object.entries(mockSlides)) {
         if (slide.style.display === 'block') {
-          return parseInt(slideName.replace('slide', ''));
+          return Number.parseInt(slideName.replace('slide', ''));
         }
       }
       return null;
@@ -171,7 +171,7 @@ describe("Tests d'intégration - Système de navigation", () => {
       },
 
       showSlide(slideId) {
-        const slideNumber = parseInt(slideId.replace('slide', ''));
+        const slideNumber = Number.parseInt(slideId.replace('slide', ''));
         return this.goToSlide(slideNumber);
       },
 

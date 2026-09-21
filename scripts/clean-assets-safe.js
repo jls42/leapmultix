@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
-import fs from 'fs';
-// path import removed as it's unused
-import { execSync } from 'child_process';
-import readline from 'readline';
+import fs from 'node:fs';
+import path from 'node:path';
+import readline from 'node:readline';
 
 console.log('🧹 NETTOYAGE SÉCURISÉ DES ASSETS');
 console.log('🛡️  PROTECTION GARANTIE: Images ≥1024px INTOUCHABLES');
@@ -17,7 +16,7 @@ if (!fs.existsSync(analysisFile)) {
   process.exit(1);
 }
 
-// eslint-disable-next-line -- Safe file read from predefined analysis path in controlled script
+// eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe file read from predefined analysis path in controlled script
 const analysis = JSON.parse(fs.readFileSync(analysisFile, 'utf8'));
 
 // Fonction pour créer une sauvegarde
@@ -33,7 +32,13 @@ function createBackup() {
   const assetDirs = ['assets', 'img', 'images', 'sounds', 'audio'];
   for (const dir of assetDirs) {
     if (fs.existsSync(dir)) {
-      execSync(`cp -r ${dir} ${backupDir}/ 2>/dev/null || true`);
+      // Copie par l'API de fichiers : pas d'interpréteur, donc pas d'injection
+      // possible par un nom de répertoire, et le même comportement partout.
+      try {
+        fs.cpSync(dir, path.join(backupDir, dir), { recursive: true });
+      } catch {
+        /* un répertoire absent ou illisible ne doit pas arrêter la sauvegarde */
+      }
     }
   }
 
@@ -127,7 +132,7 @@ function performCleanup(toDelete, mode = 'dry-run') {
   for (const asset of toDelete.safe) {
     if (mode === 'execute') {
       try {
-        // eslint-disable-next-line -- Safe file deletion with asset.path from controlled analysis
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe file deletion with asset.path from controlled analysis
         fs.unlinkSync(asset.path);
         console.log(`🗑️  Supprimé: ${asset.name}`);
       } catch (error) {

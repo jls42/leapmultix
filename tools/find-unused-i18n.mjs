@@ -15,7 +15,7 @@ const keepConfigPath = path.join(translationsDir, 'i18n-keep.json');
 // codeDirs definition moved inline where it's used
 
 function readJSON(fp) {
-  // eslint-disable-next-line -- fp is controlled file path for translation JSON files
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- fp is controlled file path for translation JSON files
   return JSON.parse(fs.readFileSync(fp, 'utf8'));
 }
 
@@ -26,7 +26,7 @@ function flatten(obj, prefix = '') {
     if (v && typeof v === 'object' && !Array.isArray(v)) {
       Object.assign(out, flatten(v, key));
     } else {
-      // eslint-disable-next-line -- key is constructed from object property names, not user input
+      // eslint-disable-next-line security/detect-object-injection -- key is constructed from object property names, not user input
       out[key] = v;
     }
   }
@@ -38,7 +38,7 @@ function listFiles(dir) {
   const stack = [dir];
   while (stack.length) {
     const d = stack.pop();
-    // eslint-disable-next-line -- d is from controlled directory stack
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- d is from controlled directory stack
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
       const p = path.join(d, e.name);
@@ -51,7 +51,7 @@ function listFiles(dir) {
 
 function readFileContent(file) {
   try {
-    // eslint-disable-next-line -- file is from controlled directory traversal
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- file is from controlled directory traversal
     return fs.readFileSync(file, 'utf8');
   } catch {
     return '';
@@ -64,7 +64,7 @@ function extractKeysFromContent(src, used, dynPrefixes) {
     call: /getTranslation\(\s*(['"])(.*?)\1\s*[),]/g,
     tmpl: /getTranslation\(\s*`([^`]+)`\s*(?:,|\))/g,
     arcadeMsg: /showArcadeMessage\(\s*(["'])(.*?)\1/g,
-    // eslint-disable-next-line -- Regex for extracting i18n translation keys, controlled pattern not user input
+    // eslint-disable-next-line security/detect-unsafe-regex -- Regex for extracting i18n translation keys, controlled pattern not user input
     keyLike: /(["'])([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)\1/gi,
   };
 
@@ -108,7 +108,7 @@ function extractAvatarKeys(used) {
   if (m) {
     const items = m[1].match(/['"]([a-zA-Z0-9_-]+)['"]/g) || [];
     for (const it of items) {
-      const id = it.replace(/^(['"])|(["'])$/g, '');
+      const id = it.replace(/(^['"])|(['"]$)/g, '');
       if (id) used.add(id);
     }
   }
@@ -130,8 +130,8 @@ function extractCharacterNames(files, used) {
 }
 
 function collectUsedKeys() {
-  const files = [...listFiles(path.join(root, 'js')), path.join(root, 'index.html')].filter(
-    fs.existsSync
+  const files = [...listFiles(path.join(root, 'js')), path.join(root, 'index.html')].filter(f =>
+    fs.existsSync(f)
   );
   const used = new Set();
   const dynPrefixes = new Set();
@@ -175,7 +175,7 @@ function main() {
 
   // Extract level name/desc keys from AdventureMode configuration
   try {
-    // eslint-disable-next-line -- path is constructed from known root and fixed file path
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is constructed from known root and fixed file path
     const advSrc = fs.readFileSync(path.join(root, 'js', 'modes', 'AdventureMode.js'), 'utf8');
     const nameKeys = advSrc.match(/nameKey:\s*['"]([^'"]+)['"]/g) || [];
     const descKeys = advSrc.match(/descKey:\s*['"]([^'"]+)['"]/g) || [];
@@ -187,7 +187,7 @@ function main() {
 
   // Extract name/desc keys from ArcadeMode availableGames
   try {
-    // eslint-disable-next-line -- path is constructed from known root and fixed file path
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is constructed from known root and fixed file path
     const arcSrc = fs.readFileSync(path.join(root, 'js', 'modes', 'ArcadeMode.js'), 'utf8');
     const nameKeys = arcSrc.match(/nameKey:\s*['"]([^'"]+)['"]/g) || [];
     const descKeys = arcSrc.match(/descKey:\s*['"]([^'"]+)['"]/g) || [];
@@ -236,7 +236,7 @@ function main() {
   };
   let keep = keepDefaults;
   try {
-    // eslint-disable-next-line -- keepConfigPath is constructed from known paths
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- keepConfigPath is constructed from known paths
     const loaded = JSON.parse(fs.readFileSync(keepConfigPath, 'utf8'));
     // Merge with defaults to be safe
     keep = {
@@ -247,7 +247,7 @@ function main() {
   } catch {
     // Ignore if keep config file not found or parsing fails, use defaults
   }
-  // eslint-disable-next-line -- regexes are from configuration file, not user input
+  // eslint-disable-next-line security/detect-non-literal-regexp -- regexes are from configuration file, not user input
   const keepRegexes = (keep.regexes || []).map(r => new RegExp(r));
   const inKeep = key => {
     if ((keep.keys || []).includes(key)) return true;
@@ -261,10 +261,10 @@ function main() {
 
   const unused = Array.from(allKeys)
     .filter(k => !isUsed(k) && !inKeep(k))
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 
   const reportPath = path.join(translationsDir, 'unused_keys.txt');
-  // eslint-disable-next-line -- reportPath is constructed from translationsDir
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- reportPath is constructed from translationsDir
   fs.writeFileSync(reportPath, unused.join('\n') + '\n', 'utf8');
 
   console.log(`Scanned ${used.size} direct keys, ${dynPrefixes.size} dynamic prefixes.`);

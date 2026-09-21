@@ -43,7 +43,8 @@
     "assets:backgrounds": "node scripts/convert-backgrounds.cjs",
     "assets:analyze": "node scripts/analyze-responsive-usage.cjs",
     "plugin:sync": "node scripts/sync-plugin-assets.mjs",
-    "build:sitemap": "node scripts/generate-sitemap.cjs"
+    "build:sitemap": "node scripts/generate-sitemap.cjs",
+    "i18n:readme": "bash scripts/regen-readme-translations.sh"
   },
   "keywords": [
     "education",
