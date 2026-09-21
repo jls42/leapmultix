@@ -7,21 +7,11 @@
  * - l'écran de fin est une phrase « 7 bonnes réponses sur 10 », sans pourcentage.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
+import { createSlidesMock, createUserStateMock } from '../helpers/mode-test-helpers.mjs';
 
 const userStore = { preferredOperator: '×', progressHistory: [] };
-jest.unstable_mockModule('../../js/core/userState.js', () => ({
-  UserState: {
-    getCurrentUserData: () => userStore,
-    updateUserData: u => Object.assign(userStore, u),
-  },
-}));
-jest.unstable_mockModule('../../js/slides.js', () => ({
-  goToSlide: jest.fn(),
-  showSlide: jest.fn(),
-  hideAllSlides: jest.fn(),
-  nextSlide: jest.fn(),
-  prevSlide: jest.fn(),
-}));
+jest.unstable_mockModule('../../js/core/userState.js', () => createUserStateMock(userStore));
+jest.unstable_mockModule('../../js/slides.js', () => createSlidesMock(jest));
 jest.unstable_mockModule('../../js/mode-orchestrator.js', () => ({
   getStartingMode: () => null,
   setStartingMode: jest.fn(),

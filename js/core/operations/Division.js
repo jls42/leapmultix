@@ -9,6 +9,14 @@
 
 import { Operation } from './Operation.js';
 
+const MIN_DIVISOR = 2;
+const MIN_QUOTIENT = 1;
+const OPERAND_LIMITS = {
+  easy: { maxDivisor: 5, maxQuotient: 10 },
+  medium: { maxDivisor: 10, maxQuotient: 10 },
+  hard: { maxDivisor: 12, maxQuotient: 12 },
+};
+
 export class Division extends Operation {
   constructor() {
     super();
@@ -38,32 +46,11 @@ export class Division extends Operation {
    * @returns {{ a: number, b: number }}
    */
   generateOperands(difficulty = 'medium') {
-    const constraints = {
-      easy: {
-        minDivisor: 2, // Éviter division par 1 (trop facile)
-        maxDivisor: 5,
-        minQuotient: 1,
-        maxQuotient: 10,
-      },
-      medium: {
-        minDivisor: 2,
-        maxDivisor: 10,
-        minQuotient: 1,
-        maxQuotient: 10,
-      },
-      hard: {
-        minDivisor: 2,
-        maxDivisor: 12,
-        minQuotient: 1,
-        maxQuotient: 12,
-      },
-    };
-
-    const c = constraints[difficulty] || constraints.medium;
+    const limits = OPERAND_LIMITS[difficulty] || OPERAND_LIMITS.medium;
 
     // Générer diviseur et quotient
-    const b = this._randomInt(c.minDivisor, c.maxDivisor);
-    const quotient = this._randomInt(c.minQuotient, c.maxQuotient);
+    const b = this._randomInt(MIN_DIVISOR, limits.maxDivisor);
+    const quotient = this._randomInt(MIN_QUOTIENT, limits.maxQuotient);
 
     // Calculer dividende pour garantir a % b = 0
     const a = b * quotient;
