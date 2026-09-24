@@ -2,6 +2,8 @@
  * Parental lock popup + minor avatar style patch
  */
 
+import { randomInt } from './random.js';
+
 export function showParentalLockPopup(callbackOnSuccess) {
   const popup = document.getElementById('parental-lock-popup');
   const questionEl = document.getElementById('parental-question');
@@ -10,8 +12,8 @@ export function showParentalLockPopup(callbackOnSuccess) {
 
   if (!popup || !questionEl || !answerInput || !errorEl) return;
 
-  const num1 = Math.floor(Math.random() * 41) + 10;
-  const num2 = Math.floor(Math.random() * 41) + 10;
+  const num1 = randomInt(10, 50);
+  const num2 = randomInt(10, 50);
   const expectedAnswer = num1 + num2;
 
   questionEl.textContent = `${num1} + ${num2} = ?`;

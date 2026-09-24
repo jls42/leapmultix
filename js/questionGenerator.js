@@ -1,15 +1,12 @@
 /* ======================
    Module de génération de questions (centralisé)
    Supporte toutes les opérations: ×, +, −, ÷
-
-   Security note: This module uses Math.random() for generating random math problems
-   and shuffling answer options. This is intentional and safe - it's an educational
-   math game for children, not a security-sensitive application.
    ====================== */
 
 import Storage from './core/storage.js';
 import { getTranslation } from './utils-es6.js';
 import { getOperation } from './core/operations/OperationRegistry.js';
+import { chance, pickRandom, randomFloat } from './core/random.js';
 
 // --- Helpers pour génération d'opérandes ---
 
@@ -52,7 +49,7 @@ function isMultiplicationTableMode(operator, forceTable, tables, weakTables) {
 function determineQuestionType(type, operation, operator) {
   if (type === 'auto') {
     const supportedTypes = operation.getSupportedTypes();
-    return supportedTypes[Math.floor(Math.random() * supportedTypes.length)]; // NOSONAR - Safe: educational game
+    return pickRandom(supportedTypes);
   }
 
   const supportedTypes = operation.getSupportedTypes();
@@ -80,9 +77,9 @@ function handleMcqQuestion(operation, a, b, result) {
 }
 
 function handleTrueFalseQuestion(operation, a, b, result) {
-  const isTrue = Math.random() > 0.5; // NOSONAR - Safe: educational game
-  const offset = Math.random() > 0.5 ? 1 : -1; // NOSONAR
-  const magnitude = Math.random() > 0.5 ? 1 : 2; // NOSONAR
+  const isTrue = chance(0.5);
+  const offset = chance(0.5) ? 1 : -1;
+  const magnitude = chance(0.5) ? 1 : 2;
   const proposedAnswer = isTrue ? result : result + offset * magnitude;
   return { question: operation.formatQuestion(a, b, 'true_false', proposedAnswer), answer: isTrue };
 }
@@ -145,38 +142,11 @@ function generateQuestionByType(chosenType, operation, operator, a, b, result) {
  * @param {number|null} options.forceNum - Forcer un num (multiplication)
  * @returns {Object} { question, answer, type, operator, a, b, table, num }
  */
-export function generateQuestion(options = {}) {
-  const {
-    operator = '×',
-    type = 'auto',
-    difficulty = 'medium',
-    weakTables = [],
-    excludeTables = [],
-    tables = [],
-    minTable = 1,
-    maxTable = 10,
-    minNum = 1,
-    maxNum = 10,
-    forceTable = null,
-    forceNum = null,
-  } = options;
-
+export function generateQuestion(options) {
+  const settings = readQuestionOptions(options);
+  const { operator, type } = settings;
   const operation = getOperation(operator);
-
-  // Générer opérandes selon l'opération
-  let a, b;
-  if (isMultiplicationTableMode(operator, forceTable, tables, weakTables)) {
-    const operands = generateMultiplicationOperands(
-      { forceTable, tables, excludeTables, minTable, maxTable, forceNum, minNum, maxNum },
-      weakTables
-    );
-    a = operands.a;
-    b = operands.b;
-  } else {
-    const operands = operation.generateOperands(difficulty);
-    a = operands.a;
-    b = operands.b;
-  }
+  const { a, b } = generateOperands(operation, settings);
 
   const chosenType = determineQuestionType(type, operation, operator);
   const result = operation.compute(a, b);
@@ -202,6 +172,46 @@ export function generateQuestion(options = {}) {
 }
 
 // --- Helpers pour réduire la complexité de generateQuestion ---
+
+/** Options de generateQuestion, valeurs par défaut comprises */
+function readQuestionOptions({
+  operator = '×',
+  type = 'auto',
+  difficulty = 'medium',
+  weakTables = [],
+  excludeTables = [],
+  tables = [],
+  minTable = 1,
+  maxTable = 10,
+  minNum = 1,
+  maxNum = 10,
+  forceTable = null,
+  forceNum = null,
+} = {}) {
+  return {
+    operator,
+    type,
+    difficulty,
+    weakTables,
+    excludeTables,
+    tables,
+    minTable,
+    maxTable,
+    minNum,
+    maxNum,
+    forceTable,
+    forceNum,
+  };
+}
+
+/** Opérandes : tables de multiplication choisies, ou tirage selon la difficulté */
+function generateOperands(operation, settings) {
+  const { operator, forceTable, tables, weakTables } = settings;
+  if (isMultiplicationTableMode(operator, forceTable, tables, weakTables)) {
+    return generateMultiplicationOperands(settings, weakTables);
+  }
+  return operation.generateOperands(settings.difficulty);
+}
 function getEligibleTables({ forceTable, tables, excludeTables, minTable, maxTable }) {
   if (forceTable !== null) return [forceTable];
 
@@ -266,7 +276,7 @@ function buildWeightedPairs(eligibleTables, eligibleNums, weakTables) {
 
 function selectRandomPair(pairs) {
   const totalWeight = pairs.reduce((sum, p) => sum + p.weight, 0);
-  let r = Math.random() * totalWeight;
+  let r = randomFloat() * totalWeight;
   for (const p of pairs) {
     r -= p.weight;
     if (r <= 0) return p;

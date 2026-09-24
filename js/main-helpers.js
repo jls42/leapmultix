@@ -4,6 +4,7 @@ import { getTranslation } from './utils-es6.js';
 import { gameState } from './game.js';
 import Storage from './core/storage.js';
 import { createIcon } from './components/icons.js';
+import { pickRandom } from './core/random.js';
 
 const AVATAR_LIST = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
 // Anciennes valeurs françaises encore présentes dans certains profils enregistrés
@@ -145,7 +146,7 @@ export async function updateWelcomeMessageUI() {
 export function pickRandomAvatarId() {
   const list = AVATAR_LIST;
   if (!Array.isArray(list) || list.length === 0) return 'fox';
-  return list[Math.floor(Math.random() * list.length)];
+  return pickRandom(list);
 }
 
 const normalizeLang = lang => {
@@ -205,19 +206,13 @@ let _appliedBackgroundKey = null;
 
 /**
  * Tire au sort le monde illustré d'un avatar, une seule fois par session.
- * Le tirage passe par le générateur du navigateur : il n'a rien de sensible,
- * mais les analyseurs signalent tout appel à Math.random, et le repli suffit
- * dans les rares environnements sans Web Crypto (anciens jsdom).
  * @param {string} avatarKey
  * @param {number[]} available
  * @returns {number}
  */
 function chooseImageNumber(avatarKey, available) {
   if (!Object.prototype.hasOwnProperty.call(_chosenImageByAvatar, avatarKey)) {
-    const alea = globalThis.crypto?.getRandomValues
-      ? globalThis.crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32
-      : (Date.now() % available.length) / available.length;
-    _chosenImageByAvatar[avatarKey] = available[Math.floor(alea * available.length)];
+    _chosenImageByAvatar[avatarKey] = pickRandom(available);
   }
   return _chosenImageByAvatar[avatarKey];
 }

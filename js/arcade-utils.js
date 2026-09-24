@@ -1,7 +1,7 @@
 // Utilitaires pour les jeux d'arcade LeapMultix
 // (c) LeapMultix - 2025
 // Fichier reconstruit pour corriger les erreurs de cache
-import { Utils } from './utils-es6.js';
+import { pickRandom, shuffleInPlace } from './core/random.js';
 import { gameState } from './game.js';
 import { UserManager } from './userManager.js';
 
@@ -38,9 +38,7 @@ export function loadSingleAvatar(name) {
 
 // Fonction pour obtenir un avatar aléatoire
 export function getRandomAvatar(avatars) {
-  const randomIndex = Math.floor(Math.random() * avatars.length);
-
-  return avatars[randomIndex];
+  return pickRandom(avatars);
 }
 
 // Fonction pour obtenir l'avatar du joueur
@@ -70,9 +68,7 @@ export function getPlayerAvatar(avatars) {
 export function getRandomMonsters(monsters, count = 4) {
   const selectedMonsters = [];
   for (let i = 0; i < count; i++) {
-    const randomIndex = Math.floor(Math.random() * monsters.length);
-
-    selectedMonsters.push(monsters[randomIndex]);
+    selectedMonsters.push(pickRandom(monsters));
   }
   return selectedMonsters;
 }
@@ -106,18 +102,9 @@ export function resetScores(baseKey) {
   localStorage.setItem(getUserKeyPrefix(baseKey), '[]');
 }
 
-// Fonction shuffle sécurisée
+// Mélange en place (Fisher-Yates)
 export function safeShuffleArray(array) {
-  if (Utils?.shuffleArray) {
-    return Utils.shuffleArray(array);
-  }
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
+  return shuffleInPlace(array);
 }
 
 // Exports des fonctions de score

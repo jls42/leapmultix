@@ -16,6 +16,7 @@ import { getTranslation, speak } from '../utils-es6.js';
 import { UserState } from '../core/userState.js';
 import { getOperation } from '../core/operations/OperationRegistry.js';
 import { appendSanitizedHTML } from '../security-utils.js';
+import { randomInt } from '../core/random.js';
 import {
   keepNumbersTogether,
   preferredScrollBehavior,
@@ -700,7 +701,7 @@ export class DiscoveryMode extends GameMode {
     const level = this._currentLevelOrEasy();
     if (this.operator === '÷') {
       const { divisor, quotient } = DIVISION_LEVELS[level];
-      const d = this.randomInt(divisor[0], divisor[1]);
+      const d = randomInt(divisor[0], divisor[1]);
       const examples = range(quotient[0], quotient[1]).map(q => this._example(d * q, d));
       return {
         examples: examples.slice(0, EXAMPLE_COUNT),
@@ -718,7 +719,7 @@ export class DiscoveryMode extends GameMode {
       visual: this._pickSorted(this._bandPool(VISUAL_BANDS[this.operator][level]), EXAMPLE_COUNT),
       drop: {
         fixed: 'a',
-        value: this.randomInt(drop.first[0], drop.first[1]),
+        value: randomInt(drop.first[0], drop.first[1]),
         items: range(drop.items[0], drop.items[1]),
       },
     };
@@ -774,20 +775,10 @@ export class DiscoveryMode extends GameMode {
     const picked = [...pool];
     const total = Math.min(count, picked.length);
     for (let i = 0; i < total; i++) {
-      const j = this.randomInt(i, picked.length - 1);
+      const j = randomInt(i, picked.length - 1);
       [picked[i], picked[j]] = [picked[j], picked[i]];
     }
     return picked.slice(0, total).sort((x, y) => x.a - y.a || x.b - y.b);
-  }
-
-  /**
-   * Générer un nombre aléatoire entre min et max (inclusif)
-   * @param {number} min - Valeur minimale
-   * @param {number} max - Valeur maximale
-   * @returns {number} Nombre aléatoire
-   */
-  randomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min; // NOSONAR - Safe: educational game randomization
   }
 
   // ======================================

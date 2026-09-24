@@ -7,7 +7,6 @@
 import { generateQuestion } from './questionGenerator.js';
 import { goToSlide } from './slides.js';
 import { gameState } from './game.js';
-import { Utils } from './utils-es6.js';
 import { getTranslation, cleanupGameResources, showArcadeMessage } from './utils-es6.js';
 import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
 import { setStartingMode } from './mode-orchestrator.js';
@@ -32,6 +31,7 @@ import { getDifficultySettings } from './difficulty.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { UserState } from './core/userState.js';
+import { randomInt, shuffleInPlace } from './core/random.js';
 // Dépend des helpers ESM (plus d'assignations window.*)
 
 const FULL_TABLE_SET = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -323,18 +323,9 @@ class MemoryGame {
     return 6;
   }
 
-  // Méthode shuffleArray qui utilise la fonction centralisée
+  // Mélange en place (Fisher-Yates)
   shuffleArray(array) {
-    if (Utils?.shuffleArray) {
-      return Utils.shuffleArray(array);
-    }
-    // Fallback: algorithme Fisher-Yates local
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
+    return shuffleInPlace(array);
   }
 
   // Redimensionne le canvas pour s'adapter à l'écran
@@ -478,7 +469,7 @@ class MemoryGame {
     this.shuffleArray(monsterIndices);
     if (monsterIndices.length < neededCards) {
       while (monsterIndices.length < neededCards) {
-        monsterIndices.push(Math.floor(Math.random() * monsterCount));
+        monsterIndices.push(randomInt(0, monsterCount - 1));
       }
     }
     monsterIndices = monsterIndices.slice(0, neededCards);

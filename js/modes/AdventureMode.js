@@ -43,8 +43,8 @@ import {
 } from '../ui-feedback.js';
 import { UserState } from '../core/userState.js';
 import { checkAndUnlockBadge } from '../badges.js';
-import { updateDailyChallengeProgress } from '../game.js';
-import { gameState } from '../game.js';
+import { gameState, updateDailyChallengeProgress } from '../game.js';
+import { chance, randomInt } from '../core/random.js';
 
 /** Nom des opérations dans les clés de traduction propres à une opération */
 const OPERATION_NAMES = { '+': 'addition', '−': 'subtraction', '÷': 'division' };
@@ -416,7 +416,7 @@ export class AdventureMode extends GameMode {
         this.remainingOperands = Array.from({ length: 10 }, (_, i) => i + 1);
       }
 
-      const randomIndex = Math.floor(Math.random() * this.remainingOperands.length); // NOSONAR - Safe: educational game randomization
+      const randomIndex = randomInt(0, this.remainingOperands.length - 1);
       const multiplicand = this.remainingOperands.splice(randomIndex, 1)[0];
 
       return {
@@ -450,7 +450,7 @@ export class AdventureMode extends GameMode {
 
     // Pour la multiplication et l'addition: inversion aléatoire (commutativité)
     if (operator === '×' || operator === '+') {
-      if (Math.random() < 0.5) {
+      if (chance(0.5)) {
         this.questionElement.textContent = `${b} ${operator} ${a} = ?`;
       } else {
         this.questionElement.textContent = `${a} ${operator} ${b} = ?`;
