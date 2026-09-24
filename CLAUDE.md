@@ -16,7 +16,7 @@ npm run test:core   # Run core functionality tests only
 npm run lint        # Run ESLint
 npm run lint:fix    # Fix ESLint issues automatically
 npm run format      # Format code with Prettier
-npm run verify      # Run lint + test + coverage (quality gate)
+npm run verify      # Run lint + test + test:esm + coverage (quality gate)
 ```
 
 ### Testing Commands
@@ -87,6 +87,7 @@ npm run verify      # Run lint + test + coverage (quality gate)
 - Avoid innerHTML in favor of security-utils functions
 - Keep cognitive complexity under 15 for functions
 - Extract complex functions into smaller helper methods
+- Draw every random value from `core/random.js` (`randomInt`, `chance`, `pickRandom`, `shuffleInPlace`): ESLint rejects `Math.random`
 - Use `security-utils.js` functions for safe DOM manipulation:
   - `appendSanitizedHTML()` instead of innerHTML
   - `createSafeElement()` for safe element creation
@@ -226,6 +227,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `challenge-stats.js` - Challenge mode statistics
 - `daily-challenge.js` - Daily challenge management
 - `utils.js` - Core utility functions (canonical source)
+- `random.js` - Single source of randomness (Web Crypto): `randomInt`, `chance`, `pickRandom`, `shuffleInPlace`
 
 #### Game Modes (`js/modes/`)
 
@@ -421,7 +423,7 @@ The application maintains state through:
 - **Configuration**: `jest.config.cjs`
 - **Location**: `tests/__tests__/` with `*.test.js` naming
 - **Coverage**: Reports to `coverage/` directory, includes all `js/**/*.js` files
-- **ESM Tests**: Separate `tests-esm/` directory for `.mjs` files
+- **ESM Tests**: Separate `tests-esm/` directory for `.mjs` files; tests that load the real modules belong here
 
 ### Build and Quality Tools
 
