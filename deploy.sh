@@ -220,13 +220,33 @@ SYNC_CMD="aws s3 sync --size-only --delete \
 
 if [[ "$DRY_RUN" == "true" ]]; then
     echo -e "${YELLOW}🔍 Mode dry-run - Commande qui serait exécutée:${NC}"
-    echo "$SYNC_CMD --dry-run"
-    eval "$SYNC_CMD --dry-run"
+    # L'option de l'AWS CLI s'écrit --dryrun, sans tiret : avec --dry-run, la
+    # commande échouait en « Unknown options » et la simulation ne montrait rien.
+    echo "$SYNC_CMD --dryrun"
+    eval "$SYNC_CMD --dryrun"
 else
     echo -e "${GREEN}📤 Synchronisation en cours...${NC}"
 
     if eval "$SYNC_CMD"; then
         echo -e "${GREEN}✅ Synchronisation S3 terminée avec succès !${NC}"
+
+        # La synchronisation compare les tailles (--size-only). Or la montée de
+        # version ne change pas la taille : « v19 » et « v20 » font le même
+        # nombre d'octets. Les deux fichiers qui la portent n'étaient donc
+        # JAMAIS renvoyés, et le renouvellement du cache n'arrivait pas en
+        # production — constaté le 21/09/2026, sw.js resté en v19 en ligne alors
+        # que le dépôt était en v20. On les force, ils pèsent quinze kilo-octets.
+        echo -e "${BLUE}📌 Envoi forcé des fichiers porteurs de version...${NC}"
+        for fichier in sw.js js/cache-updater.js; do
+            if [[ -f "$TEMP_DIR/$fichier" ]]; then
+                aws s3 cp "$TEMP_DIR/$fichier" "s3://$S3_BUCKET/$fichier" \
+                    --content-type "text/javascript" --metadata-directive REPLACE > /dev/null
+                echo -e "${GREEN}   ✅ $fichier${NC}"
+            else
+                echo -e "${RED}   ❌ $fichier introuvable — déploiement incohérent${NC}"
+                exit 1
+            fi
+        done
 
         # Invalidation CloudFront si configuré
         if [[ -n "$CLOUDFRONT_DISTRIB" ]]; then
