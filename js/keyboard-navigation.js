@@ -117,6 +117,8 @@ class KeyboardNavigation {
 
   handleGlobalKeydown(event) {
     if (!this.isKeyboardMode) return;
+    // Sur l'écran d'un jeu, flèches et espace pilotent le jeu : ne pas lui prendre le focus
+    if (document.activeElement?.tagName === 'CANVAS') return;
 
     switch (event.key) {
       case 'Enter':
