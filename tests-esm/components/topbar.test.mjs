@@ -3,6 +3,7 @@ import { setTranslations } from '../../js/i18n-store.js';
 import Storage from '../../js/core/storage.js';
 
 const { TopBar } = await import('../../js/components/topBar.js');
+const { isVoiceEnabled } = await import('../../js/speech.js');
 const { UserManager } = await import('../../js/userManager.js');
 
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -112,6 +113,20 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     expect(btn.title).toBe('Activer la voix');
     expect(btn.dataset.translateTitle).toBe('voice_toggle_on');
     expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('speech-off');
+  });
+
+  test('voix : désactivée tant que le joueur ne l’a pas demandée', () => {
+    localStorage.removeItem('voiceEnabled');
+    expect(Storage.loadVoiceEnabled()).toBe(false);
+    expect(isVoiceEnabled()).toBe(false);
+
+    TopBar.injectTopBarIntoSlides();
+    const btn = document.querySelector('#slide7 .voice-toggle');
+    expect(btn.getAttribute('aria-pressed')).toBe('false');
+    expect(btn.title).toBe('Activer la voix');
+
+    Storage.saveVoiceEnabled(true);
+    expect(isVoiceEnabled()).toBe(true);
   });
 
   test('son : l’état suit le volume, même si un émoji a remplacé le contenu', () => {

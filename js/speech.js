@@ -104,7 +104,7 @@ export function isVoiceEnabled() {
   try {
     return Storage.loadVoiceEnabled();
   } catch {
-    return true;
+    return false;
   }
 }
 
