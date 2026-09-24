@@ -11,8 +11,8 @@
  - Dry-run by default; pass --confirm to actually delete.
  - Exits 1 if a prerequisite is missing or invalid, or in dry-run with candidates.
 */
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { normalize, resolveInside, readRuntimeProof } = require('./lib/asset-inputs.cjs');
 
 const root = process.cwd();

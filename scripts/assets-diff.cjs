@@ -9,8 +9,8 @@
    - docs/audit/assets-diff-report.json
    - docs/audit/assets-delete-list.txt (one path per line)
 */
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { normalize, resolveInside, readRuntimeProof } = require('./lib/asset-inputs.cjs');
 
 const root = process.cwd();

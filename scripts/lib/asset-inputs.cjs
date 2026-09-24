@@ -6,12 +6,12 @@
  runtime, elle, doit être lisible : un fichier absent ou invalide arrête le
  script au lieu d'être pris pour « aucun asset utilisé ».
 */
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 /** Chemin de projet normalisé : séparateurs « / », sans « / » initial. */
 function normalize(p) {
-  return String(p).replace(/\\/g, '/').replace(/^\//, '');
+  return String(p).replaceAll('\\', '/').replace(/^\//, '');
 }
 
 /**
@@ -47,7 +47,7 @@ function readRuntimeProof(file) {
     throw new Error('Preuve runtime illisible : JSON invalide.');
   }
   if (!Array.isArray(entries)) {
-    throw new Error('Preuve runtime invalide : un tableau de chemins est attendu.');
+    throw new TypeError('Preuve runtime invalide : un tableau de chemins est attendu.');
   }
   return entries.map(normalize);
 }

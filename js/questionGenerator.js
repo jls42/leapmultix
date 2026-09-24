@@ -173,34 +173,24 @@ export function generateQuestion(options) {
 
 // --- Helpers pour réduire la complexité de generateQuestion ---
 
+/** Valeur reçue, ou valeur par défaut si elle est absente (undefined) */
+const valueOr = (value, fallback) => (value === undefined ? fallback : value);
+
 /** Options de generateQuestion, valeurs par défaut comprises */
-function readQuestionOptions({
-  operator = '×',
-  type = 'auto',
-  difficulty = 'medium',
-  weakTables = [],
-  excludeTables = [],
-  tables = [],
-  minTable = 1,
-  maxTable = 10,
-  minNum = 1,
-  maxNum = 10,
-  forceTable = null,
-  forceNum = null,
-} = {}) {
+function readQuestionOptions(options = {}) {
   return {
-    operator,
-    type,
-    difficulty,
-    weakTables,
-    excludeTables,
-    tables,
-    minTable,
-    maxTable,
-    minNum,
-    maxNum,
-    forceTable,
-    forceNum,
+    operator: valueOr(options.operator, '×'),
+    type: valueOr(options.type, 'auto'),
+    difficulty: valueOr(options.difficulty, 'medium'),
+    weakTables: valueOr(options.weakTables, []),
+    excludeTables: valueOr(options.excludeTables, []),
+    tables: valueOr(options.tables, []),
+    minTable: valueOr(options.minTable, 1),
+    maxTable: valueOr(options.maxTable, 10),
+    minNum: valueOr(options.minNum, 1),
+    maxNum: valueOr(options.maxNum, 10),
+    forceTable: valueOr(options.forceTable, null),
+    forceNum: valueOr(options.forceNum, null),
   };
 }
 
