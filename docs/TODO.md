@@ -29,3 +29,24 @@ critère.
    - audition : rien d'essentiel porté par le seul son.
 5. **Décider ce qui devient un thème** et ce qui devient un réglage à part, puis
    où ces réglages vivent (écran Personnalisation, profil, ou les deux).
+
+## Voix enregistrée : un skill pour la génération (à instruire)
+
+La génération des clips (voir `docs/voix-enregistree.md`) enchaîne des étapes
+qu'il ne faut ni oublier ni inverser : portes (crédits, licence), estimation,
+génération incrémentale, contrôles (fichiers, transcription Whisper locale,
+écoute des formes féminines), envoi des clips, vérification en ligne, index,
+invalidation, ouverture par étapes, coupe-circuit. Un skill Claude Code pourrait
+porter cette procédure.
+
+À instruire avant de coder :
+
+1. **Lire la documentation officielle de création de skills** (Claude Code :
+   structure de `SKILL.md`, description qui déclenche le skill, fichiers de
+   référence, scripts fournis) et les conventions du dépôt : skills locaux dans
+   `.claude/skills/`, copies dans `leapmultix-marketplace/` (voir CLAUDE.md).
+2. **Décider du périmètre** : skill local seulement (il touche une clé privée et
+   un dépôt privé), ou partie publiable sans secret.
+3. **Écrire le skill** une fois les outils de génération en place, en
+   s'appuyant sur les scripts du dépôt plutôt qu'en les recopiant ; le faire
+   relire (agent `plugin-dev:skill-reviewer`).

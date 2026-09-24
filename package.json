@@ -27,6 +27,8 @@
     "i18n:verify": "node scripts/i18n-verify.cjs",
     "i18n:unused": "node scripts/i18n-generate-unused.cjs",
     "i18n:compare": "node scripts/compare-translations.cjs",
+    "voice:corpus": "node scripts/voice/corpus.mjs",
+    "voice:corpus:lock": "node scripts/voice/corpus.mjs --write-lock",
     "audit:accessibility": "node scripts/audit-accessibility.js",
     "audit:mobile": "node scripts/audit-mobile-responsive.js",
     "test:pwa-offline": "node scripts/test-pwa-offline.cjs",

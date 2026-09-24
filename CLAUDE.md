@@ -373,6 +373,22 @@ npm run i18n:compare
 Les paramètres d'un message doivent être les mêmes dans les trois langues
 (`tests-esm/i18n-placeholders.esm.test.mjs`).
 
+#### Phrases parlées : corpus et verrou
+
+Tout ce que le jeu lit à voix haute est énuméré par `scripts/voice/corpus.mjs`, à partir
+du code du jeu (opérations, formateur, formes parlées de `js/core/spoken-text.js`, données
+des modes). La voix enregistrée retrouvera chaque clip par l'empreinte de sa phrase ;
+`scripts/voice/corpus.lock.json` garde, par langue, le nombre de phrases et leur empreinte.
+
+- Changer une phrase parlée (traduction, gabarit, forme d'une question, plage
+  d'opérandes) fait échouer `tests-esm/voice/corpus.esm.test.mjs` : régénérer les clips de
+  la langue, puis `npm run voice:corpus:lock`.
+- Un nouvel appel à `speak()` fait échouer `tests-esm/voice/speak-inventory.esm.test.mjs` :
+  ajouter sa phrase au corpus, puis mettre l'inventaire à jour.
+- `tests-esm/voice/modes-in-corpus.esm.test.mjs` fait jouer les vrais modes dans les trois
+  langues et exige que chaque phrase dite soit dans le corpus.
+- `npm run voice:corpus` résume le corpus ; `--list fr` en donne les phrases.
+
 **Security and Error Handling:**
 
 - `security-utils.js` - Security utilities (XSS protection, sanitization)
