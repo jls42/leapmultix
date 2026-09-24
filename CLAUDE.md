@@ -496,6 +496,27 @@ portant sur zéro fichier ; vingt-trois tests audio au vert qui n'exécutaient
 pas une ligne du module ; des `.sort()` sans comparateur qui plaçaient tout un
 dépôt en note D de fiabilité.
 
+#### Lire les analyseurs par leur API, pas au voyant
+
+Un contrôle vert ne dit pas qu'il n'y a rien : la Quality Gate SonarCloud ne
+juge que le **nouveau code**. Le 24/09/2026, elle était verte alors que `main`
+affichait Sécurité D, Fiabilité C et 27 hotspots jamais revus, remontés sur du
+code ancien par un changement de profil qualité. On compte donc les remontées,
+sur la PR puis sur `main` :
+
+```bash
+PR=52 # numéro de la PR : les trois nombres doivent valoir 0
+curl -s "https://sonarcloud.io/api/issues/search?componentKeys=jls42_leapmultix&pullRequest=$PR&resolved=false" | jq .total
+curl -s "https://sonarcloud.io/api/hotspots/search?projectKey=jls42_leapmultix&pullRequest=$PR" | jq .paging.total
+curl -s "https://app.codacy.com/api/v3/analysis/organizations/gh/jls42/repositories/leapmultix/pull-requests/$PR/issues?status=new" | jq '.data | length'
+
+# Après fusion, notes globales de main : ratings à 1.0 (A), vulnérabilités, bugs et hotspots à 0
+curl -s "https://sonarcloud.io/api/measures/component?component=jls42_leapmultix&branch=main&metricKeys=security_rating,reliability_rating,sqale_rating,security_review_rating,vulnerabilities,bugs,security_hotspots,duplicated_lines_density" \
+  | jq -r '.component.measures[] | "\(.metric) \(.value)"'
+```
+
+Une note globale de `main` qui n'est pas à A se traite comme une remontée de PR.
+
 ### Vérifier : mesuré, jamais supposé
 
 L'utilisateur est le dernier maillon. Quand on lui annonce que c'est bon, ça doit
@@ -539,6 +560,22 @@ Deux points à connaître avant d'y toucher :
   cette condition qui empêche la pull request d'un inconnu d'obtenir les droits
   de déploiement. Il est défini dans le dépôt d'infrastructure
   (`leapmultix-infra`, fichier `github-oidc.tf`).
+- **`aws s3 sync --size-only` ne voit pas un fichier modifié à taille égale.**
+  `sw.js`, `js/cache-updater.js` et `sitemap.xml` (version, dates) sont donc
+  renvoyés d'office par `deploy.sh` ; un autre fichier de ce genre s'ajoute à
+  cette liste.
+
+Après chaque fusion, vérifier en ligne que la prod sert la version fusionnée.
+Le déploiement attend la fin de `verify` : compter 5 à 20 minutes.
+
+```bash
+# Le run de la fusion : attendre que verify et Déploiement soient terminés
+gh api "repos/jls42/leapmultix/actions/runs?head_sha=$(git rev-parse origin/main)" \
+  --jq '.workflow_runs[] | "\(.status) \(.conclusion)"'
+# La version servie doit être celle du dépôt
+curl -s -H 'Cache-Control: no-cache' https://leapmultix.jls42.org/sw.js | grep -m1 'const VERSION'
+git show origin/main:sw.js | grep -m1 'const VERSION'
+```
 
 Variables de dépôt attendues (Settings > Secrets and variables > Actions) :
 `AWS_DEPLOY_ROLE_ARN`, `S3_BUCKET`, `CLOUDFRONT_DISTRIB`, `PLAUSIBLE_DOMAIN`.
