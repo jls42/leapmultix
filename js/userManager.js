@@ -74,36 +74,28 @@ const createDefaultUserData = (nickname = '') => ({
 });
 
 const normalizeUserData = (rawData, currentUser) => {
-  const base = {
-    ...DEFAULT_USER_DATA,
-    ...rawData,
-  };
-
-  const wrongAnswers = ensureObject(rawData?.wrongAnswers);
-  const progressHistory = ensureArray(rawData?.progressHistory);
-  const unlockedAvatars = ensureArray(rawData?.unlockedAvatars, ['fox']);
-  const unlockedBadges = ensureArray(rawData?.unlockedBadges);
-  const starsByTable = ensureObject(rawData?.starsByTable);
-  const tablePreferences = ensureObject(rawData?.tablePreferences, DEFAULT_TABLE_PREFERENCES);
+  // raw.x vaut exactement rawData?.x, quelle que soit la valeur reçue
+  const raw = rawData ?? {};
+  const tablePreferences = ensureObject(raw.tablePreferences, DEFAULT_TABLE_PREFERENCES);
 
   return {
-    ...base,
-    bestScore: ensureNumber(rawData?.bestScore, 0),
-    wrongAnswers,
-    progressHistory,
-    avatar: rawData?.avatar || 'fox',
-    nickname: rawData?.nickname || currentUser,
-    theme: rawData?.theme || 'forest',
-    colorTheme: rawData?.colorTheme || 'default',
-    unlockedAvatars,
-    unlockedBadges,
-    volume:
-      typeof rawData?.volume === 'number' && Number.isFinite(rawData.volume) ? rawData.volume : 1,
-    dailyChallengesCompleted: ensureNumber(rawData?.dailyChallengesCompleted, 0),
-    parentalLockEnabled: rawData?.parentalLockEnabled === true,
-    starsByTable,
-    coins: ensureNumber(rawData?.coins, 0),
-    preferredOperator: rawData?.preferredOperator || '×',
+    ...DEFAULT_USER_DATA,
+    ...rawData,
+    bestScore: ensureNumber(raw.bestScore, 0),
+    wrongAnswers: ensureObject(raw.wrongAnswers),
+    progressHistory: ensureArray(raw.progressHistory),
+    avatar: raw.avatar || 'fox',
+    nickname: raw.nickname || currentUser,
+    theme: raw.theme || 'forest',
+    colorTheme: raw.colorTheme || 'default',
+    unlockedAvatars: ensureArray(raw.unlockedAvatars, ['fox']),
+    unlockedBadges: ensureArray(raw.unlockedBadges),
+    volume: Number.isFinite(raw.volume) ? raw.volume : 1,
+    dailyChallengesCompleted: ensureNumber(raw.dailyChallengesCompleted, 0),
+    parentalLockEnabled: raw.parentalLockEnabled === true,
+    starsByTable: ensureObject(raw.starsByTable),
+    coins: ensureNumber(raw.coins, 0),
+    preferredOperator: raw.preferredOperator || '×',
     tablePreferences: {
       ...DEFAULT_TABLE_PREFERENCES,
       ...tablePreferences,
