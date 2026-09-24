@@ -7,6 +7,37 @@
 import { VERSION_PARAM } from './cache-updater.js';
 import { eventBus } from './core/eventBus.js';
 
+/**
+ * Scripts chargés en module ES, repérés par un fragment de leur chemin :
+ * fichiers dans /modes/, questionGenerator, arcade-es6, ou fichiers connus migrés vers ES6
+ */
+const ES_MODULE_MARKERS = [
+  '/modes/',
+  'questionGenerator',
+  '-es6',
+  'ES6',
+  'quiz.js',
+  'challenge.js',
+  'adventure.js',
+  'discovery.js',
+  'arcade-utils.js',
+  'arcade-invasion.js',
+  'arcade-common.js',
+  'arcade.js',
+  'arcade-multimemory.js',
+  'arcade-multimiam.js',
+  'arcade-multisnake.js',
+  'multimiam.js',
+  'multimiam-questions.js',
+  'multimiam-renderer.js',
+  'multimiam-engine.js',
+  'multimiam-controls.js',
+  'multimiam-ui.js',
+  'multisnake.js',
+];
+
+const isEsModulePath = scriptPath => ES_MODULE_MARKERS.some(marker => scriptPath.includes(marker));
+
 export class LazyLoader {
   constructor() {
     this.loadedModules = new Set();
@@ -144,35 +175,7 @@ export class LazyLoader {
       script.src = finalSrc;
       script.async = true;
 
-      // Détection automatique ES6 modules
-      // Critères: fichiers dans /modes/, questionGenerator, arcade-es6, ou
-      // certains fichiers connus migrés vers ES6
-      const isES6Module =
-        scriptPath.includes('/modes/') ||
-        scriptPath.includes('questionGenerator') ||
-        scriptPath.includes('-es6') ||
-        scriptPath.includes('ES6') ||
-        // Fichiers connus avec imports ES6 après migration
-        scriptPath.includes('quiz.js') ||
-        scriptPath.includes('challenge.js') ||
-        scriptPath.includes('adventure.js') ||
-        scriptPath.includes('discovery.js') ||
-        scriptPath.includes('arcade-utils.js') ||
-        scriptPath.includes('arcade-invasion.js') ||
-        scriptPath.includes('arcade-common.js') ||
-        scriptPath.includes('arcade.js') ||
-        scriptPath.includes('arcade-multimemory.js') ||
-        scriptPath.includes('arcade-multimiam.js') ||
-        scriptPath.includes('arcade-multisnake.js') ||
-        scriptPath.includes('multimiam.js') ||
-        scriptPath.includes('multimiam-questions.js') ||
-        scriptPath.includes('multimiam-renderer.js') ||
-        scriptPath.includes('multimiam-engine.js') ||
-        scriptPath.includes('multimiam-controls.js') ||
-        scriptPath.includes('multimiam-ui.js') ||
-        scriptPath.includes('multisnake.js');
-
-      if (isES6Module) {
+      if (isEsModulePath(scriptPath)) {
         script.type = 'module';
       }
 

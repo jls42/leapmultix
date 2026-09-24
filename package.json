@@ -15,7 +15,7 @@
     "test:integration": "jest --maxWorkers=50% tests/__tests__/integration",
     "test:verbose": "jest --verbose --maxWorkers=50%",
     "test:e2e": "jest --maxWorkers=50% tests/__tests__/e2e",
-    "lint": "eslint js/**/*.js",
+    "lint": "eslint \"js/**/*.js\"",
     "serve": "serve-lite .",
     "serve:dist": "serve -s dist -l 5000",
     "analyze:dependencies": "node scripts/analyze-dependencies.js",
