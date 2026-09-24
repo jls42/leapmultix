@@ -68,7 +68,7 @@ function readVoiceEnabled() {
   try {
     return !!Storage.loadVoiceEnabled();
   } catch {
-    return true;
+    return false;
   }
 }
 

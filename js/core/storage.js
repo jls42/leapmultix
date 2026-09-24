@@ -164,7 +164,8 @@ const Storage = {
    * Charger l'état de la voix
    */
   loadVoiceEnabled() {
-    return this.get(STORAGE_KEYS.VOICE_ENABLED, true);
+    // Désactivée tant que le joueur ne l'a pas demandée : le rendu varie trop selon l'appareil
+    return this.get(STORAGE_KEYS.VOICE_ENABLED, false);
   },
 
   /**

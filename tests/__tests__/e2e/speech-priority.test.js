@@ -56,6 +56,14 @@ async function injectSpeechStub(page) {
 }
 
 /**
+ * La voix est désactivée par défaut : ces tests portent sur un joueur qui l'a activée.
+ * @param {import('puppeteer').Page} page
+ */
+async function enableVoice(page) {
+  await page.evaluateOnNewDocument(() => localStorage.setItem('voiceEnabled', 'true'));
+}
+
+/**
  * Crée un utilisateur factice et contourne l'intro vidéo pour atteindre le menu principal.
  * @param {import('puppeteer').Page} page
  */
@@ -109,6 +117,7 @@ describe('Speech Priority System E2E', () => {
   beforeEach(async () => {
     page = await browser.newPage();
     await injectSpeechStub(page);
+    await enableVoice(page);
     await page.goto(baseUrl, gotoOptions);
   });
 
