@@ -32,7 +32,8 @@ import { formatMessage } from './message-format.js';
 import { setSafeComplexFeedback } from '../security-utils.js';
 import {
   toSpokenForm,
-  spokenOperator,
+  toSpokenQuestion,
+  toSpokenGapQuestion,
   preferredScrollBehavior,
   keepNumbersTogether,
 } from '../ui-feedback.js';
@@ -1374,15 +1375,15 @@ export class GameMode {
     const { operator, a, b, type, question } = current;
 
     if (type === 'true_false') {
-      // Lire exactement l'énoncé affiché (ex: "8 × 6 = 47")
+      // Lire exactement l'égalité proposée : « 8 fois 6 égale 47 »
       speak(toSpokenForm(question));
     } else if (type === 'gap') {
-      // Pour "2 × ? = 18", ne dire que la partie connue
-      speak(`${a} ${spokenOperator(operator)}`);
+      // « 2 × ? = 18 » : « 2 fois combien égale 18 ? », sans la réponse
+      speak(toSpokenGapQuestion(question));
     } else {
-      // Pour classic, mcq, problem: lire l'énoncé sans donner la réponse
+      // classic, mcq : « Combien font 7 fois 8 ? » ; problem : l'énoncé tel quel
       const text = displayed || (question ? String(question) : `${a} ${operator} ${b} = ?`);
-      speak(toSpokenForm(text));
+      speak(toSpokenQuestion(text));
     }
   }
 

@@ -5,6 +5,8 @@ const saveArcadeScore = jest.fn();
 const resetArcadeScores = jest.fn();
 let storedScores = [120, 80];
 const noop = () => undefined;
+const speak = jest.fn();
+let voiceOn = false;
 
 jest.unstable_mockModule('../js/utils-es6.js', () => ({
   // Exports lus par game.js (importé par arcade.js)
@@ -18,8 +20,8 @@ jest.unstable_mockModule('../js/utils-es6.js', () => ({
   // Les paramètres ({game}) apparaissent après « | » pour pouvoir les vérifier
   getTranslation: (k, params) =>
     params && Object.keys(params).length ? `${k}|${Object.values(params).join(',')}` : k,
-  speak: noop,
-  isVoiceEnabled: () => false,
+  speak,
+  isVoiceEnabled: () => voiceOn,
   saveArcadeScore,
   getArcadeScores: () => storedScores,
   resetArcadeScores,
@@ -51,6 +53,8 @@ beforeEach(() => {
   saveArcadeScore.mockClear();
   resetArcadeScores.mockClear();
   invasionStart.mockClear();
+  speak.mockClear();
+  voiceOn = false;
   game.gameState.gameMode = 'multiinvaders';
 });
 
@@ -69,6 +73,18 @@ describe('Écran de fin d’arcade', () => {
     expect(reset.className).toBe('btn btn-quiet btn-danger btn-sm');
     expect(reset.closest('.arcade-top-scores')).toBeTruthy();
     expect(saveArcadeScore).toHaveBeenCalledTimes(1);
+  });
+
+  test('la voix félicite sans dire le score, qui reste affiché', () => {
+    voiceOn = true;
+    arcade.showArcadeGameOver(120);
+    expect(speak).toHaveBeenCalledTimes(1);
+    expect(speak).toHaveBeenCalledWith('arcade_game_over_spoken');
+    expect(document.querySelector('.arcade-final-score strong').textContent).toBe('120');
+
+    speak.mockClear();
+    arcade.showArcadeGameOver(0);
+    expect(speak).toHaveBeenCalledWith('arcade_try_again');
   });
 
   test('les libellés passent par les traductions (plus de français codé en dur)', () => {

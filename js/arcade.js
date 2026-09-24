@@ -92,17 +92,21 @@ function cancelSpeech() {
 
 /**
  * Phrase de fin : encouragement à zéro point, félicitations chiffrées sinon.
+ * La voix ne dit pas le score : il reste affiché, et chaque score serait une phrase à
+ * enregistrer à part.
  * @param {number} score
- * @returns {{key: string, text: string}}
+ * @returns {{key: string, text: string, spoken: string}}
  */
 function gameOverMessage(score) {
   if (score === 0) {
-    return { key: 'arcade_try_again', text: getTranslation('arcade_try_again') };
+    const text = getTranslation('arcade_try_again');
+    return { key: 'arcade_try_again', text, spoken: text };
   }
   // Le score est dynamique : la phrase se compose, elle ne porte pas data-translate
   return {
     key: 'arcade_final_score_message',
     text: `${getTranslation('arcade_final_congrats')} ${score} ${getTranslation('points_label')}`,
+    spoken: getTranslation('arcade_game_over_spoken'),
   };
 }
 
@@ -117,10 +121,10 @@ export function showArcadeGameOver(score, { persist = true } = {}) {
   const mode = globalGameState?.gameMode ?? 'arcade';
   if (persist) saveScoreForMode(mode, score);
   const arcadeScores = getScoresForMode(mode);
-  const { key: endMessageKey, text: endMessage } = gameOverMessage(score);
+  const { key: endMessageKey, text: endMessage, spoken } = gameOverMessage(score);
 
   renderGameOverScreen({ mode, score, endMessageKey, endMessage, arcadeScores, persist });
-  if (persist && isVoiceEnabled()) speak(endMessage);
+  if (persist && isVoiceEnabled()) speak(spoken);
 }
 
 /**

@@ -22,6 +22,7 @@ import {
   preferredScrollBehavior,
   scrollToScreenTop,
   singleActivation,
+  toSpokenForm,
 } from '../ui-feedback.js';
 
 /** Avatars qui ont une tête illustrée (assets/images/arcade/<id>_head_avatar_128x128.png) */
@@ -1845,7 +1846,11 @@ export class DiscoveryMode extends GameMode {
    */
   getSpokenEquation(a, b, result) {
     const symbolic = `${a} ${this.operation.symbol} ${b} = ${result}`;
-    return translateOr(`discovery_speech_${this.operation.name}`, { a, b, result }, symbolic);
+    return translateOr(
+      `discovery_speech_${this.operation.name}`,
+      { a, b, result },
+      toSpokenForm(symbolic)
+    );
   }
 
   // ======================================

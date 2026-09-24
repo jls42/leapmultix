@@ -158,11 +158,22 @@ describe('ESM: Découverte, voix traduite', () => {
     expect(createMode('÷').getSpokenEquation(12, 3, 4)).toBe('12 divisé par 3 égale 4');
   });
 
-  test('sans traduction, lit l’égalité en symboles et jamais « égale » en dur', () => {
+  test('sans traduction, garde les symboles et jamais « égale » en dur', () => {
     lang = 'en';
     const spoken = createMode('+').getSpokenEquation(5, 4, 9);
     expect(spoken).toBe('5 + 4 = 9');
     expect(spoken).not.toMatch(/égale/);
+  });
+
+  test('sans phrase propre à l’opération, lit l’égalité avec les mots des symboles', async () => {
+    const store = await import('../../js/i18n-store.js');
+    store.setTranslations({ speech_plus: 'plus', speech_equals: 'equals' });
+    try {
+      lang = 'en';
+      expect(createMode('+').getSpokenEquation(5, 4, 9)).toBe('5 plus 4 equals 9');
+    } finally {
+      store.setTranslations({});
+    }
   });
 
   test('choisir un niveau fait dire l’opération et le niveau (« Addition, Facile »)', async () => {

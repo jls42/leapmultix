@@ -3,7 +3,8 @@
  * Voix et statistiques des modes Quiz, Défi et Aventure.
  * - Défi : après une erreur, la phrase entière est lue (« Presque ! La bonne réponse
  *   est 8. »), rien ne la coupe ; après une bonne réponse, un seul encouragement.
- * - Aventure : chaque question est lue à voix haute, comme au Quiz et au Défi.
+ * - Aventure : chaque question est lue à voix haute, comme au Quiz et au Défi, avec les
+ *   facteurs dans l'ordre affiché (« Combien font 7 fois 8 ? »).
  * - Une réponse n'est enregistrée qu'une fois dans les statistiques d'opérations.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
@@ -65,6 +66,8 @@ beforeAll(() => {
     adventure_feedback_correct: 'Correct !',
     speech_times: 'fois',
     speech_equals: 'égale',
+    speech_question: 'Combien font {expression} ?',
+    speech_gap_question: '{a} {operator} combien égale {result} ?',
     continue: 'Continuer',
   });
   store.setCurrentLanguage('fr');
@@ -115,8 +118,44 @@ describe('Défi : la voix', () => {
   });
 });
 
+describe('Quiz : chaque forme de question se dit sans la réponse', () => {
+  test('question à trou : le nombre connu et le résultat', async () => {
+    const quiz = new QuizMode();
+    await quiz.start();
+    quiz.state.currentQuestion = {
+      question: '7 × ? = 56',
+      answer: 8,
+      type: 'gap',
+      operator: '×',
+      a: 7,
+      b: 8,
+    };
+    speak.mockClear();
+    quiz.speakQuestion();
+    expect(speak).toHaveBeenCalledWith('7 fois combien égale 56 ?');
+    quiz.stop();
+  });
+
+  test('vrai/faux : l’égalité proposée, lue telle quelle', async () => {
+    const quiz = new QuizMode();
+    await quiz.start();
+    quiz.state.currentQuestion = {
+      question: '8 × 6 = 47',
+      answer: false,
+      type: 'true_false',
+      operator: '×',
+      a: 8,
+      b: 6,
+    };
+    speak.mockClear();
+    quiz.speakQuestion();
+    expect(speak).toHaveBeenCalledWith('8 fois 6 égale 47');
+    quiz.stop();
+  });
+});
+
 describe('Aventure : la voix', () => {
-  test('chaque question est lue à voix haute, sans la réponse', async () => {
+  test('chaque question est lue à voix haute, sans la réponse, dans l’ordre affiché', async () => {
     const adventure = new AdventureMode();
     await adventure.start();
     speak.mockClear();
@@ -124,7 +163,7 @@ describe('Aventure : la voix', () => {
 
     const shown = document.getElementById('adventure-question').textContent;
     const [a, , b] = shown.split(' ');
-    expect(speak).toHaveBeenCalledWith(`${a} fois ${b} égale ?`);
+    expect(speak).toHaveBeenCalledWith(`Combien font ${a} fois ${b} ?`);
     adventure.stop();
   });
 });

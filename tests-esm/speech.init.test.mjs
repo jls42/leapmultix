@@ -89,5 +89,9 @@ describe('Speech audio sync initialization', () => {
 
     speechModule.speak('Message audible');
     expect(speakMock).toHaveBeenCalledTimes(1);
+
+    // Une traduction manquante ne se lit pas : ce serait le nom technique de la clé
+    speechModule.speak('[table_of] 7');
+    expect(speakMock).toHaveBeenCalledTimes(1);
   });
 });

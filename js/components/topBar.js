@@ -538,7 +538,7 @@ export const TopBar = {
             this.updateVoiceToggleUI(next);
             if (next) {
               try {
-                _speak(getTranslation('voice_enabled') || 'Synthèse vocale activée');
+                _speak(getTranslation('voice_enabled'));
               } catch (error) {
                 console.warn('TopBar voice announcement failed', error);
               }

@@ -22,15 +22,24 @@ export function resolveArcadeTone(tone) {
 }
 
 /**
+ * Traduction d'une clé, ou null si elle manque (getTranslation rend alors « [clé] »).
+ * @param {string} key - Clé de traduction
+ * @returns {string|null}
+ */
+function translatedArcadeText(key) {
+  const value = getTranslation(key);
+  if (typeof value !== 'string' || !value || /^\[[^\]]+\]$/.test(value)) return null;
+  return value;
+}
+
+/**
  * Traduit une clé ; si elle manque (« [clé] »), renvoie le texte de repli.
  * @param {string} key - Clé de traduction
  * @param {string} [fallback=key] - Texte de repli
  * @returns {string}
  */
 export function getArcadeText(key, fallback = key) {
-  const value = getTranslation(key);
-  if (typeof value !== 'string' || !value || /^\[[^\]]+\]$/.test(value)) return fallback;
-  return value;
+  return translatedArcadeText(key) ?? fallback;
 }
 
 /**
@@ -62,11 +71,13 @@ export function showArcadeMessage(
   const gameContainer = document.getElementById('game');
   if (!gameContainer) return;
 
-  const messageElement = createArcadeToast(getArcadeText(messageKey, fallback), tone);
+  const translated = translatedArcadeText(messageKey);
+  const messageElement = createArcadeToast(translated ?? fallback, tone);
   gameContainer.appendChild(messageElement);
 
   try {
-    if (isVoiceEnabled()) speak(messageElement.textContent);
+    // Seule une traduction se lit : un repli (clé brute, texte français) reste affiché
+    if (translated && isVoiceEnabled()) speak(translated);
   } catch {
     // Erreur ignorée (non-critique)
   }

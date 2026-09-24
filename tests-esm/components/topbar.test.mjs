@@ -129,6 +129,40 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     expect(isVoiceEnabled()).toBe(true);
   });
 
+  test('voix : l’activation se dit dans la langue du jeu, jamais en français codé en dur', () => {
+    const spoken = [];
+    globalThis.SpeechSynthesisUtterance = function SpeechSynthesisUtterance(text) {
+      this.text = String(text ?? '');
+    };
+    globalThis.speechSynthesis = {
+      speak: utterance => spoken.push(utterance.text),
+      cancel: () => {},
+      getVoices: () => [],
+      speaking: false,
+      pending: false,
+    };
+    try {
+      localStorage.removeItem('voiceEnabled');
+      setTranslations({ ...TRANSLATIONS, voice_enabled: 'Voice enabled' });
+      TopBar.injectTopBarIntoSlides();
+      TopBar.attachVoiceToggles();
+      document.querySelector('#slide7 .voice-toggle').click();
+      expect(spoken).toEqual(['Voice enabled']);
+
+      // Traduction absente : rien n'est dit, ni « [voice_enabled] » ni un repli français
+      localStorage.removeItem('voiceEnabled');
+      setTranslations(TRANSLATIONS);
+      TopBar.injectTopBarIntoSlides();
+      TopBar.attachVoiceToggles();
+      document.querySelector('#slide7 .voice-toggle').click();
+      expect(spoken).toEqual(['Voice enabled']);
+    } finally {
+      delete globalThis.speechSynthesis;
+      delete globalThis.SpeechSynthesisUtterance;
+      setTranslations(TRANSLATIONS);
+    }
+  });
+
   test('son : l’état suit le volume, même si un émoji a remplacé le contenu', () => {
     TopBar.injectTopBarIntoSlides();
     const btn = document.querySelector('#slide7 .mute-btn');

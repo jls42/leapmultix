@@ -118,6 +118,8 @@ let lastAnnouncedVoiceKey = null;
 // Une erreur de synthèse (souvent : aucune voix installée) n'est signalée qu'une fois
 let speechErrorReported = false;
 const BENIGN_SPEECH_ERRORS = new Set(['interrupted', 'canceled']);
+// Marque d'une clé de traduction absente, telle que getTranslation la rend
+const MISSING_TRANSLATION = /\[[\w.-]+\]/;
 
 function getGlobalRoot() {
   if (typeof globalThis !== 'undefined') return globalThis;
@@ -465,6 +467,11 @@ export function speak(text, options = {}) {
 
   // Abort if muted
   if (isMuted) {
+    return;
+  }
+
+  // Une traduction manquante (« [table_of] 7 ») ne se lit pas : ce serait un nom technique
+  if (MISSING_TRANSLATION.test(String(text ?? ''))) {
     return;
   }
 
