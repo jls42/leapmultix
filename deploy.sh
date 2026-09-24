@@ -230,17 +230,24 @@ else
     if eval "$SYNC_CMD"; then
         echo -e "${GREEN}✅ Synchronisation S3 terminée avec succès !${NC}"
 
-        # La synchronisation compare les tailles (--size-only). Or la montée de
-        # version ne change pas la taille : « v19 » et « v20 » font le même
-        # nombre d'octets. Les deux fichiers qui la portent n'étaient donc
-        # JAMAIS renvoyés, et le renouvellement du cache n'arrivait pas en
-        # production — constaté le 21/09/2026, sw.js resté en v19 en ligne alors
-        # que le dépôt était en v20. On les force, ils pèsent quinze kilo-octets.
-        echo -e "${BLUE}📌 Envoi forcé des fichiers porteurs de version...${NC}"
-        for fichier in sw.js js/cache-updater.js; do
+        # La synchronisation compare les tailles (--size-only). Or certains
+        # fichiers changent sans changer de taille, et n'étaient donc JAMAIS
+        # renvoyés :
+        # - la version : « v19 » et « v20 » font le même nombre d'octets.
+        #   Constaté le 21/09/2026, sw.js resté en v19 en ligne alors que le
+        #   dépôt était en v20 : le renouvellement du cache n'arrivait pas ;
+        # - les dates du sitemap : « 2025-11-10 » et « 2025-12-06 » aussi.
+        #   Constaté le 24/09/2026, la prod gardait les anciennes dates.
+        # On les force, avec le type que S3 leur donnait ; ils pèsent quelques
+        # kilo-octets.
+        echo -e "${BLUE}📌 Envoi forcé des fichiers modifiés à taille constante...${NC}"
+        for entree in sw.js:text/javascript js/cache-updater.js:text/javascript \
+            sitemap.xml:application/xml; do
+            fichier="${entree%%:*}"
+            type_mime="${entree#*:}"
             if [[ -f "$TEMP_DIR/$fichier" ]]; then
                 aws s3 cp "$TEMP_DIR/$fichier" "s3://$S3_BUCKET/$fichier" \
-                    --content-type "text/javascript" --metadata-directive REPLACE > /dev/null
+                    --content-type "$type_mime" --metadata-directive REPLACE > /dev/null
                 echo -e "${GREEN}   ✅ $fichier${NC}"
             else
                 echo -e "${RED}   ❌ $fichier introuvable — déploiement incohérent${NC}"
