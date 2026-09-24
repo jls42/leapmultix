@@ -367,6 +367,12 @@ npm run i18n:compare
 - `npm run i18n:unused` - Generate unused translation keys report
 - `scripts/cleanup-i18n-keys.cjs` - Remove unused keys from all translation files
 
+**Accord au pluriel :** un message s'accorde avec la syntaxe ICU, lue par
+`js/core/message-format.js` pour `translate()` comme pour les énoncés des modes :
+`{n, plural, one {# boîte} other {# boîtes}}` (règles de la langue, `#` vaut le nombre).
+Les paramètres d'un message doivent être les mêmes dans les trois langues
+(`tests-esm/i18n-placeholders.esm.test.mjs`).
+
 **Security and Error Handling:**
 
 - `security-utils.js` - Security utilities (XSS protection, sanitization)

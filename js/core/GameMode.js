@@ -27,7 +27,8 @@ import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
 import { generateQuestion } from '../questionGenerator.js';
 import { gameState } from '../game.js';
-import { getTranslations } from '../i18n-store.js';
+import { getTranslations, getCurrentLanguage } from '../i18n-store.js';
+import { formatMessage } from './message-format.js';
 import { setSafeComplexFeedback } from '../security-utils.js';
 import {
   toSpokenForm,
@@ -61,17 +62,14 @@ function problemParams(question) {
 }
 
 /**
- * Remplit un gabarit comme le fait i18n-store (première occurrence de chaque clé)
+ * Remplit un gabarit comme le fait translate() : paramètres et accord au pluriel,
+ * dans la langue active
  * @param {string} template
  * @param {Object} params
  * @returns {string}
  */
 function fillTemplate(template, params) {
-  let text = String(template);
-  for (const [key, value] of Object.entries(params)) {
-    text = text.replace(`{${key}}`, value);
-  }
-  return text;
+  return formatMessage(template, params, getCurrentLanguage());
 }
 
 /**
@@ -107,8 +105,9 @@ function problemGroups(question) {
   const index = question.templateIndex ?? findProblemTemplateIndex(question);
   const template = problemTemplates('×')[index];
   if (typeof template !== 'string') return null;
-  const tablePos = template.indexOf('{table}');
-  const numPos = template.indexOf('{num}');
+  // Le paramètre peut porter un pluriel : « {table} » ou « {table, plural, … } »
+  const tablePos = template.search(/\{\s*table\s*[,}]/);
+  const numPos = template.search(/\{\s*num\s*[,}]/);
   if (tablePos < 0 || numPos < 0) return null;
   return tablePos > numPos
     ? { size: question.a, groups: question.b }

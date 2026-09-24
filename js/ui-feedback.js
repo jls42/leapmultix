@@ -15,6 +15,7 @@ import { speak } from './speech.js';
 import { getTranslation } from './i18n.js';
 import { getCurrentLanguage } from './i18n-store.js';
 import { eventBus } from './core/eventBus.js';
+import { pluralCategory } from './core/message-format.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -225,19 +226,6 @@ export function markQuestionKind(element, question) {
 }
 
 /**
- * Catégorie de pluriel de la langue active (fr : 0 et 1 au singulier).
- * @param {number} count
- * @returns {string} 'one' ou 'other'
- */
-function pluralCategory(count) {
-  try {
-    return new Intl.PluralRules(getCurrentLanguage()).select(count);
-  } catch {
-    return count === 1 ? 'one' : 'other';
-  }
-}
-
-/**
  * Phrase principale de fin de partie : « 7 bonnes réponses sur 10 ».
  * @param {number} correct
  * @param {number} total
@@ -246,7 +234,9 @@ function pluralCategory(count) {
 export function formatCorrectCount(correct, total) {
   if (!total) return getTranslation('results_no_answer');
   const key =
-    pluralCategory(correct) === 'one' ? 'results_correct_count_one' : 'results_correct_count';
+    pluralCategory(correct, getCurrentLanguage()) === 'one'
+      ? 'results_correct_count_one'
+      : 'results_correct_count';
   return getTranslation(key, { correct, total });
 }
 
@@ -257,7 +247,8 @@ export function formatCorrectCount(correct, total) {
  * @returns {string}
  */
 export function formatStarsLabel(stars, total = 3) {
-  const key = pluralCategory(stars) === 'one' ? 'stars_earned_one' : 'stars_earned';
+  const key =
+    pluralCategory(stars, getCurrentLanguage()) === 'one' ? 'stars_earned_one' : 'stars_earned';
   return getTranslation(key, { stars, total });
 }
 

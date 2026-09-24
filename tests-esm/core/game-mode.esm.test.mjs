@@ -7,6 +7,7 @@
  * - un énoncé se retraduit avec le même gabarit.
  */
 import { describe, test, expect, beforeAll, beforeEach, jest } from '@jest/globals';
+import fs from 'node:fs';
 
 jest.unstable_mockModule('../../js/slides.js', () => ({
   goToSlide: jest.fn(),
@@ -18,11 +19,13 @@ jest.unstable_mockModule('../../js/slides.js', () => ({
 
 const store = await import('../../js/i18n-store.js');
 const {
+  GameMode,
   buildErrorExplanation,
   plausibleWrongAnswers,
   buildAnswerOptions,
   findProblemTemplateIndex,
 } = await import('../../js/core/GameMode.js');
+const { formatMessage } = await import('../../js/core/message-format.js');
 const { keepNumbersTogether } = await import('../../js/ui-feedback.js');
 
 const NBSP = '\u00a0';
@@ -215,6 +218,56 @@ describe('Problèmes : le comptage suit la taille des groupes de l’énoncé', 
     expect(keepNumbersTogether('Une fusée fait 9 sauts de 6 cases.')).toBe(
       `Une fusée fait 9${NBSP}sauts de 6${NBSP}cases.`
     );
+  });
+});
+
+describe('Problèmes : énoncés accordés au singulier (vraies traductions)', () => {
+  const REAL = Object.fromEntries(
+    ['fr', 'en'].map(lang => [
+      lang,
+      JSON.parse(fs.readFileSync(`assets/translations/${lang}.json`, 'utf8')),
+    ])
+  );
+
+  /** Énoncé du gabarit n°index, rempli comme à la génération */
+  function realProblem(index, a, b) {
+    const params = { table: a, num: b };
+    const question = formatMessage(REAL.fr.problem_templates[index], params, 'fr');
+    return { question, answer: a * b, type: 'problem', operator: '×', a, b, table: a, num: b };
+  }
+
+  beforeEach(() => {
+    store.setTranslations({ ...FR, problem_templates: REAL.fr.problem_templates });
+    store.setCurrentLanguage('fr');
+  });
+
+  test('retrouve le gabarit d’un énoncé au singulier (« 1 boîte de 7 pommes »)', () => {
+    const q = realProblem(0, 7, 1);
+    expect(q.question).toContain('1 boîte de 7 pommes');
+    expect(findProblemTemplateIndex(q)).toBe(0);
+  });
+
+  test('le comptage suit encore la taille des groupes d’un gabarit au pluriel', () => {
+    // « 1 boîte de 7 pommes » : un groupe de 7
+    expect(steps(buildErrorExplanation(realProblem(0, 7, 1)))).toEqual([7]);
+    // « 3 groupes de 1 enfant » : trois groupes de 1
+    expect(steps(buildErrorExplanation(realProblem(1, 3, 1)))).toEqual([1, 2, 3]);
+  });
+
+  test('retraduit l’énoncé en anglais, singulier compris', () => {
+    const mode = new GameMode('quiz');
+    const q = realProblem(1, 1, 8);
+    q.templateIndex = findProblemTemplateIndex(q);
+    mode.state.currentQuestion = q;
+    mode.questionElement = document.createElement('p');
+    store.setTranslations({ ...FR, problem_templates: REAL.en.problem_templates });
+    store.setCurrentLanguage('en');
+    try {
+      mode.refreshQuestionText();
+      expect(q.question).toBe('There is 1 group of 8 children. How many children in total?');
+    } finally {
+      store.setCurrentLanguage('fr');
+    }
   });
 });
 

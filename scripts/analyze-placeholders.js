@@ -3,6 +3,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { messageArguments } from '../js/core/message-format.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,11 +14,11 @@ const fr = JSON.parse(fs.readFileSync(path.join(translationsDir, 'fr.json'), 'ut
 const en = JSON.parse(fs.readFileSync(path.join(translationsDir, 'en.json'), 'utf8'));
 const es = JSON.parse(fs.readFileSync(path.join(translationsDir, 'es.json'), 'utf8'));
 
-// Fonction pour extraire les placeholders d'une chaîne
+// Paramètres d'une chaîne, lus par le formateur du jeu : « {n, plural, one {…} other {…}} »
+// compte pour « n », et ses branches ne sont pas prises pour des paramètres
 function extractPlaceholders(str) {
   if (typeof str !== 'string') return [];
-  const matches = str.match(/\{([^}]+)\}/g);
-  return matches ? matches.map(m => m.slice(1, -1).trim()) : [];
+  return messageArguments(str);
 }
 
 /**
