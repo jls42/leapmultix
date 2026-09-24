@@ -443,7 +443,13 @@ export const UserManager = {
    */
   loadPlayers() {
     try {
-      return Storage.get('players', {});
+      const players = Storage.get('players', {});
+      // Une valeur illisible (texte, nombre, tableau…) ne doit pas devenir la liste des joueurs
+      if (!players || typeof players !== 'object' || Array.isArray(players)) {
+        console.warn('Liste des joueurs illisible : elle est ignorée.');
+        return {};
+      }
+      return players;
     } catch (error) {
       console.error('Erreur lors du chargement des joueurs:', error);
       return {};

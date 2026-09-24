@@ -29,6 +29,7 @@ describe('UserManager : profils des joueurs', () => {
     UserManager._currentUser = null;
     jest.spyOn(VideoManager, 'playCharacterIntro').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -191,6 +192,18 @@ describe('UserManager : profils des joueurs', () => {
   });
 
   describe('stockage abîmé', () => {
+    test.each([['{pas du json'], ['[1,2,3]'], ['42'], ['null']])(
+      'ignore une liste de joueurs illisible (%s) et permet de repartir',
+      raw => {
+        localStorage.setItem('players', raw);
+        UserManager._players = UserManager.loadPlayers();
+
+        expect(UserManager.getAllPlayers()).toEqual({});
+        expect(UserManager.createUser('Zoé', 'panda')).toBe(true);
+        expect(Object.keys(storedPlayers())).toEqual(['Zoé']);
+      }
+    );
+
     test("continue en mémoire quand le navigateur refuse d'écrire", () => {
       jest.spyOn(localStorage, 'setItem').mockImplementation(() => {
         throw new Error('QuotaExceededError');
