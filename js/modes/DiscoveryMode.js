@@ -18,6 +18,19 @@ import { getOperation } from '../core/operations/OperationRegistry.js';
 import { appendSanitizedHTML } from '../security-utils.js';
 import { randomInt } from '../core/random.js';
 import {
+  DISCOVERY_FACTORS,
+  DISCOVERY_TABLES,
+  DIVISION_LEVELS,
+  DROP_PLANS,
+  EXAMPLE_BANDS,
+  EXAMPLE_COUNT,
+  VISUAL_BANDS,
+  bandExamples,
+  divisionTableExamples,
+  divisionVisualExamples,
+  rangeOf,
+} from './discovery-data.js';
+import {
   keepNumbersTogether,
   preferredScrollBehavior,
   scrollToScreenTop,
@@ -44,67 +57,6 @@ const LEVEL_MAX = {
   '÷': { easy: 50, medium: 100, hard: 144 },
 };
 
-/**
- * Égalités du carrousel (+, −) : chaque niveau commence où finit le précédent,
- * pas de « 1 + 4 » en Difficile. Bornes incluses.
- */
-const EXAMPLE_BANDS = {
-  '+': {
-    easy: { a: [1, 5], b: [1, 5], result: [2, 10] },
-    medium: { a: [1, 10], b: [1, 10], result: [11, 20] },
-    hard: { a: [1, 20], b: [1, 20], result: [21, 40] },
-  },
-  '−': {
-    easy: { a: [2, 10], b: [1, 9], result: [1, 9] },
-    medium: { a: [11, 20], b: [1, 19], result: [1, 19] },
-    hard: { a: [21, 50], b: [1, 49], result: [1, 49] },
-  },
-};
-
-/**
- * Exploration visuelle (+, −) : les plus grands exemples qui se dessinent encore en
- * points (deux groupes de 10 au plus pour +, rangées de 10 pour −)
- */
-const VISUAL_BANDS = {
-  '+': {
-    easy: { a: [1, 5], b: [1, 5], result: [2, 10] },
-    medium: { a: [2, 10], b: [2, 10], result: [11, 20] },
-    hard: { a: [2, 10], b: [2, 10], result: [11, 20] },
-  },
-  '−': {
-    easy: { a: [2, 10], b: [1, 5], result: [1, 9] },
-    medium: { a: [11, 20], b: [2, 10], result: [1, 18] },
-    hard: { a: [11, 20], b: [2, 10], result: [1, 18] },
-  },
-};
-
-/**
- * Division : on explore la « table » d'un diviseur tiré dans la plage du niveau
- * (5 ÷ 5, 10 ÷ 5… 50 ÷ 5) ; le plus grand dividende reste sous le maximum du niveau.
- */
-const DIVISION_LEVELS = {
-  easy: { divisor: [2, 5], quotient: [1, 10] },
-  medium: { divisor: [6, 10], quotient: [1, 10] },
-  hard: { divisor: [11, 12], quotient: [3, 12] },
-};
-
-/**
- * Manipulation (+, −) : premier terme fixé pour la visite et affiché d'emblée,
- * nombres à poser choisis pour que le résultat reste dans le niveau (jamais négatif).
- */
-const DROP_PLANS = {
-  '+': {
-    easy: { first: [1, 5], items: [1, 5] },
-    medium: { first: [6, 10], items: [1, 10] },
-    hard: { first: [21, 30], items: [1, 10] },
-  },
-  '−': {
-    easy: { first: [10, 10], items: [1, 10] },
-    medium: { first: [11, 20], items: [1, 10] },
-    hard: { first: [21, 50], items: [1, 10] },
-  },
-};
-
 /** Ligne numérique : un exemple par niveau ; en Moyen et Difficile, le bond passe la dizaine */
 const NUMBER_LINE_EXAMPLES = {
   '+': { easy: [5, 4], medium: [8, 5], hard: [26, 7] },
@@ -113,9 +65,6 @@ const NUMBER_LINE_EXAMPLES = {
 
 /** Graduations d'une ligne numérique de bonds (16 nombres) */
 const JUMP_LINE_SPAN = 15;
-
-/** Exemples par écran (carrousel, exploration visuelle) */
-const EXAMPLE_COUNT = 10;
 
 /** Déplacement du doigt (px) au-delà duquel un toucher devient un glisser */
 const TOUCH_DRAG_THRESHOLD = 8;
@@ -401,9 +350,7 @@ export class DiscoveryMode extends GameMode {
             <div class="discovery-lab">
                 <p class="discovery-intro">${getTranslation('discovery_lab_intro')}</p>
                 <div class="lab-selector lab-selector--tables" id="table-selector">
-                    ${range(1, 10)
-                      .map(num => this._renderTableTile(num))
-                      .join('')}
+                    ${DISCOVERY_TABLES.map(num => this._renderTableTile(num)).join('')}
                 </div>
             </div>
         `;
@@ -691,23 +638,23 @@ export class DiscoveryMode extends GameMode {
   _buildPlan() {
     if (this.operator === '×') {
       const table = this.currentTable;
-      const examples = range(1, 10).map(b => this._example(table, b));
+      const examples = DISCOVERY_FACTORS.map(b => this._example(table, b));
       return {
         examples,
         visual: examples,
-        drop: { fixed: 'a', value: table, items: range(1, 10) },
+        drop: { fixed: 'a', value: table, items: [...DISCOVERY_FACTORS] },
       };
     }
 
     const level = this._currentLevelOrEasy();
     if (this.operator === '÷') {
-      const { divisor, quotient } = DIVISION_LEVELS[level];
-      const d = randomInt(divisor[0], divisor[1]);
-      const examples = range(quotient[0], quotient[1]).map(q => this._example(d * q, d));
+      const divisionLevel = DIVISION_LEVELS[level];
+      const d = randomInt(divisionLevel.divisor[0], divisionLevel.divisor[1]);
+      const examples = divisionTableExamples(d, divisionLevel, this._compute);
       return {
-        examples: examples.slice(0, EXAMPLE_COUNT),
+        examples,
         visual: this._pickSorted(this._divisionVisualPool(), EXAMPLE_COUNT),
-        drop: { fixed: 'b', value: d, items: examples.map(ex => ex.a).slice(0, EXAMPLE_COUNT) },
+        drop: { fixed: 'b', value: d, items: examples.map(ex => ex.a) },
       };
     }
 
@@ -721,7 +668,7 @@ export class DiscoveryMode extends GameMode {
       drop: {
         fixed: 'a',
         value: randomInt(drop.first[0], drop.first[1]),
-        items: range(drop.items[0], drop.items[1]),
+        items: rangeOf(drop.items),
       },
     };
   }
@@ -737,32 +684,31 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * Toutes les égalités d'une bande ; pour l'addition, 3 + 5 et 5 + 3 ne comptent
-   * qu'une fois (le plus grand nombre d'abord : on compte à partir de lui)
+   * Calcul de l'opération du mode, pour les exemples
+   * @param {number} a
+   * @param {number} b
+   * @returns {number}
+   * @private
+   */
+  _compute = (a, b) => this.operation.compute(a, b);
+
+  /**
+   * Toutes les égalités d'une bande (voir bandExamples)
    * @param {{a: number[], b: number[], result: number[]}} band
    * @returns {Array<{a: number, b: number, result: number}>}
    * @private
    */
   _bandPool(band) {
-    const pool = new Map();
-    for (const x of range(band.a[0], band.a[1])) {
-      for (const y of range(band.b[0], band.b[1])) {
-        const pair = this.operator === '+' ? [Math.max(x, y), Math.min(x, y)] : [x, y];
-        const example = this._example(pair[0], pair[1]);
-        const inBand = example.result >= band.result[0] && example.result <= band.result[1];
-        if (inBand) pool.set(`${pair[0]}|${pair[1]}`, example);
-      }
-    }
-    return [...pool.values()];
+    return bandExamples(this.operator, band, this._compute);
   }
 
   /**
-   * Petites divisions (au plus 20 points) : de 2 à 5 parts de 1 à 4 points
+   * Petites divisions (au plus 20 points)
    * @returns {Array<{a: number, b: number, result: number}>}
    * @private
    */
   _divisionVisualPool() {
-    return range(2, 5).flatMap(b => range(1, 4).map(q => this._example(b * q, b)));
+    return divisionVisualExamples(this._compute);
   }
 
   /**
@@ -1838,7 +1784,7 @@ export class DiscoveryMode extends GameMode {
   /**
    * Phrase prononcée pour une égalité, dans la langue de l'interface
    * (« 7 fois 3 égale 21 », « 7 times 3 equals 21 », « 7 por 3 es igual a 21 »).
-   * Sans traduction, la synthèse lit l'égalité en symboles dans sa propre langue.
+   * Sans cette phrase traduite, l'égalité se lit avec les mots des symboles.
    * @param {number} a
    * @param {number} b
    * @param {number} result

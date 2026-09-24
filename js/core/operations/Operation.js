@@ -64,6 +64,19 @@ export class Operation {
   }
 
   /**
+   * Toutes les paires que generateOperands peut tirer pour une difficulté, calculées sur
+   * les mêmes bornes : le corpus de la voix enregistrée en dépend.
+   * @abstract
+   * @param {string} difficulty - Niveau de difficulté (utilisé par les sous-classes)
+   * @returns {Array<{a: number, b: number}>}
+   * @throws {Error} Si la méthode n'est pas implémentée
+   */
+  // eslint-disable-next-line no-unused-vars -- Abstract method: parameter used by subclasses
+  enumerateOperands(difficulty = 'medium') {
+    throw new Error(`enumerateOperands() must be implemented in ${this.constructor.name}`);
+  }
+
+  /**
    * Formate la question selon le type demandé
    * @param {number} a - Premier opérande
    * @param {number} b - Second opérande

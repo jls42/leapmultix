@@ -17,6 +17,9 @@ const OPERAND_LIMITS = {
   hard: { maxDivisor: 12, maxQuotient: 12 },
 };
 
+/** Entiers de min à max, bornes incluses */
+const between = (min, max) => Array.from({ length: max - min + 1 }, (_, i) => min + i);
+
 export class Division extends Operation {
   constructor() {
     super();
@@ -56,6 +59,18 @@ export class Division extends Operation {
     const a = b * quotient;
 
     return { a, b };
+  }
+
+  /**
+   * Toutes les paires que generateOperands peut tirer : a = b × quotient
+   * @param {string} difficulty - 'easy', 'medium', ou 'hard'
+   * @returns {Array<{a: number, b: number}>}
+   */
+  enumerateOperands(difficulty = 'medium') {
+    const limits = OPERAND_LIMITS[difficulty] || OPERAND_LIMITS.medium;
+    return between(MIN_DIVISOR, limits.maxDivisor).flatMap(b =>
+      between(MIN_QUOTIENT, limits.maxQuotient).map(quotient => ({ a: b * quotient, b }))
+    );
   }
 
   /**

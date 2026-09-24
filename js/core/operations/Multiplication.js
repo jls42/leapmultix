@@ -5,6 +5,16 @@
 
 import { Operation } from './Operation.js';
 
+/** Bornes des deux facteurs, par difficulté (incluses) */
+const FACTOR_RANGES = {
+  easy: { min: 1, max: 5 },
+  medium: { min: 1, max: 10 },
+  hard: { min: 1, max: 12 },
+};
+
+/** Entiers de min à max, bornes incluses */
+const between = (min, max) => Array.from({ length: max - min + 1 }, (_, i) => min + i);
+
 export class Multiplication extends Operation {
   constructor() {
     super();
@@ -30,17 +40,21 @@ export class Multiplication extends Operation {
    * @returns {{ a: number, b: number }}
    */
   generateOperands(difficulty = 'medium') {
-    const ranges = {
-      easy: { min: 1, max: 5 },
-      medium: { min: 1, max: 10 },
-      hard: { min: 1, max: 12 },
-    };
-
-    const range = ranges[difficulty] || ranges.medium;
+    const range = FACTOR_RANGES[difficulty] || FACTOR_RANGES.medium;
     const a = this._randomInt(range.min, range.max);
     const b = this._randomInt(range.min, range.max);
 
     return { a, b };
+  }
+
+  /**
+   * Toutes les paires que generateOperands peut tirer
+   * @param {string} difficulty - 'easy', 'medium', ou 'hard'
+   * @returns {Array<{a: number, b: number}>}
+   */
+  enumerateOperands(difficulty = 'medium') {
+    const { min, max } = FACTOR_RANGES[difficulty] || FACTOR_RANGES.medium;
+    return between(min, max).flatMap(a => between(min, max).map(b => ({ a, b })));
   }
 
   /**

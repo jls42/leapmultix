@@ -5,6 +5,16 @@
 
 import { Operation } from './Operation.js';
 
+/** Bornes du premier terme et plus grand second terme, par difficulté (incluses) */
+const MINUEND_RANGES = {
+  easy: { minuendMin: 1, minuendMax: 10, maxSubtrahend: 10 },
+  medium: { minuendMin: 1, minuendMax: 20, maxSubtrahend: 20 },
+  hard: { minuendMin: 1, minuendMax: 50, maxSubtrahend: 50 },
+};
+
+/** Entiers de min à max, bornes incluses */
+const between = (min, max) => Array.from({ length: max - min + 1 }, (_, i) => min + i);
+
 export class Subtraction extends Operation {
   constructor() {
     super();
@@ -31,25 +41,7 @@ export class Subtraction extends Operation {
    * @returns {{ a: number, b: number }}
    */
   generateOperands(difficulty = 'medium') {
-    const ranges = {
-      easy: {
-        minuendMin: 1,
-        minuendMax: 10,
-        maxSubtrahend: 10,
-      },
-      medium: {
-        minuendMin: 1,
-        minuendMax: 20,
-        maxSubtrahend: 20,
-      },
-      hard: {
-        minuendMin: 1,
-        minuendMax: 50,
-        maxSubtrahend: 50,
-      },
-    };
-
-    const range = ranges[difficulty] || ranges.medium;
+    const range = MINUEND_RANGES[difficulty] || MINUEND_RANGES.medium;
 
     // 1. Générer le minuende (a)
     const a = this._randomInt(range.minuendMin, range.minuendMax);
@@ -63,6 +55,18 @@ export class Subtraction extends Operation {
     const b = a === 1 ? 1 : this._randomInt(minB, maxB);
 
     return { a, b };
+  }
+
+  /**
+   * Toutes les paires que generateOperands peut tirer : 1 ≤ b ≤ a
+   * @param {string} difficulty - 'easy', 'medium', ou 'hard'
+   * @returns {Array<{a: number, b: number}>}
+   */
+  enumerateOperands(difficulty = 'medium') {
+    const range = MINUEND_RANGES[difficulty] || MINUEND_RANGES.medium;
+    return between(range.minuendMin, range.minuendMax).flatMap(a =>
+      between(1, Math.min(a, range.maxSubtrahend)).map(b => ({ a, b }))
+    );
   }
 
   /**
