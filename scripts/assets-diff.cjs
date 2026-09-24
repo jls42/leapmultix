@@ -3,13 +3,15 @@
  Compare static asset references vs runtime-collected usage to produce deletion candidates.
  Usage:
    node scripts/assets-diff.cjs [path/to/runtime-assets.json]
- If runtime JSON is missing, runs static-only and warns (no triple-proof yet).
+ Without runtime JSON, runs static-only (no triple-proof yet). A runtime JSON given as
+ argument must live inside the project and hold an array of paths, otherwise the script stops.
  Output:
    - docs/audit/assets-diff-report.json
    - docs/audit/assets-delete-list.txt (one path per line)
 */
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
+const { normalize, resolveInside, readRuntimeProof } = require('./lib/asset-inputs.cjs');
 
 const root = process.cwd();
 const assetsDirs = [
@@ -48,23 +50,20 @@ function listCodeFiles() {
   return out;
 }
 
-function normalize(relPath) {
-  return relPath.replace(/\\/g, '/').replace(/^\//, '');
+/** Usage runtime facultatif ; s'il est fourni, il doit être lisible et dans le projet. */
+function loadRuntimeUsage(arg) {
+  if (!arg) {
+    return {
+      runtimeUsed: new Set(),
+      runtimeNote: 'Runtime JSON not provided; static-only analysis.',
+    };
+  }
+  const runtimeUsed = new Set(readRuntimeProof(resolveInside(root, arg)));
+  return { runtimeUsed, runtimeNote: `Runtime set loaded: ${runtimeUsed.size} entries.` };
 }
 
 function main() {
-  const runtimePath = process.argv[2] ? path.resolve(process.argv[2]) : null;
-  let runtimeUsed = new Set();
-  let runtimeNote = 'Runtime JSON not provided; static-only analysis.';
-  if (runtimePath && fs.existsSync(runtimePath)) {
-    try {
-      const arr = JSON.parse(fs.readFileSync(runtimePath, 'utf8'));
-      if (Array.isArray(arr)) runtimeUsed = new Set(arr.map(normalize));
-      runtimeNote = `Runtime set loaded: ${runtimeUsed.size} entries.`;
-    } catch (e) {
-      runtimeNote = `Failed to parse runtime JSON: ${e.message}`;
-    }
-  }
+  const { runtimeUsed, runtimeNote } = loadRuntimeUsage(process.argv[2]);
 
   const assetFiles = assetsDirs.flatMap(listFiles).map(p => normalize(path.relative(root, p)));
   const codeFiles = listCodeFiles();
@@ -122,4 +121,9 @@ function main() {
   console.log('Delete list:', path.join('docs', 'audit', 'assets-delete-list.txt'));
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  console.error(error.message);
+  process.exitCode = 1;
+}

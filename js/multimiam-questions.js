@@ -5,6 +5,7 @@ import { generateQuestion } from './questionGenerator.js';
 import { safeShuffleArray } from './arcade-utils.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
+import { chance, randomInt } from './core/random.js';
 
 const isValidIndex = (value, size) => Number.isInteger(value) && value >= 0 && value < size;
 
@@ -135,15 +136,14 @@ export const PacmanQuestions = {
 
     // Compléter avec des valeurs aléatoires proches
     while (answers.length < 4) {
-      const rand =
-        correctResult + (Math.random() < 0.5 ? -1 : 1) * (Math.floor(Math.random() * 5) + 3);
+      const rand = correctResult + (chance(0.5) ? -1 : 1) * randomInt(3, 7);
       pushIf(rand);
     }
 
     // Mélanger sauf la vraie réponse
     const correct = answers.shift();
     safeShuffleArray(answers);
-    answers.splice(Math.floor(Math.random() * 4), 0, correct);
+    answers.splice(randomInt(0, 3), 0, correct);
     return answers;
   },
 
@@ -212,10 +212,11 @@ export const PacmanQuestions = {
     return valids;
   },
 
+  // Consomme la première position valide (valids est modifié sur place)
   placeCorrectAnswer(game, correct, valids) {
     if (valids.length === 0) {
       console.error('Impossible de placer la bonne réponse, aucune position valide trouvée.');
-      return valids;
+      return;
     }
 
     const correctPos = valids.shift();
@@ -226,7 +227,6 @@ export const PacmanQuestions = {
       isCorrect: true,
     });
     game.labyrinth[correctPos.y][correctPos.x] = 3;
-    return valids;
   },
 
   placeIncorrectAnswers(game, valids) {
@@ -255,7 +255,7 @@ export const PacmanQuestions = {
 
     let valids = this.getValidPositions(game, multimiamX, multimiamY);
     valids = this.addFallbackPosition(valids, game, multimiamX, multimiamY);
-    valids = this.placeCorrectAnswer(game, correct, valids);
+    this.placeCorrectAnswer(game, correct, valids);
     this.placeIncorrectAnswers(game, valids);
   },
 };

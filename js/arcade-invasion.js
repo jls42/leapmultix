@@ -43,6 +43,7 @@ import {
   readableCanvasFontSize,
 } from './arcade-common.js';
 import { UserState } from './core/userState.js';
+import { pickRandom, shuffleInPlace } from './core/random.js';
 // Utilise les helpers arcades via window (arcade.js expose des ponts globaux)
 
 // Constants for canvas dimensions
@@ -618,7 +619,7 @@ export function startMultiplicationInvasion() {
     if (availableMonsterSprites.length < nbAliens) {
       availableMonsterSprites = monsterSprites.slice();
     }
-    const shuffledPool = availableMonsterSprites.sort(() => Math.random() - 0.5);
+    const shuffledPool = shuffleInPlace(availableMonsterSprites);
 
     const spritesForWave = shuffledPool.slice(0, nbAliens);
     // Retirer les sprites utilisées du pool
@@ -626,7 +627,7 @@ export function startMultiplicationInvasion() {
     layoutAliens(nbAliens);
     const totalWidth = nbAliens * alienWidth + (nbAliens - 1) * spacing;
     const startX = (displayWidth - totalWidth) / 2;
-    let options = [correctAnswer];
+    const options = [correctAnswer];
     while (options.length < nbAliens) {
       // Génération des distracteurs selon le niveau de difficulté (Cascade 2025)
       // Réutilisation des paramètres de difficulté + support multi-opérations
@@ -639,7 +640,7 @@ export function startMultiplicationInvasion() {
       }).answer;
       if (!options.includes(wrong)) options.push(wrong);
     }
-    options = options.sort(() => Math.random() - 0.5);
+    shuffleInPlace(options);
     for (let i = 0; i < nbAliens; i++) {
       // Position verticale de départ ajustée selon le device
       // Sur mobile, commencer plus haut pour donner plus de temps
@@ -775,7 +776,7 @@ export function startMultiplicationInvasion() {
     const possibleAvatars = ['panda', 'fox', 'astronaut', 'unicorn', 'dragon'].filter(
       a => a !== (globalGameState?.avatar ?? 'fox')
     );
-    const randomAvatar = possibleAvatars[Math.floor(Math.random() * possibleAvatars.length)];
+    const randomAvatar = pickRandom(possibleAvatars);
     const spriteName = `${randomAvatar}_right_128x128`;
     avatarErrorImg = arcadeSpriteLoader.loadSpriteSync(spriteName, 'ui');
     avatarErrorX = alien.x;
@@ -831,7 +832,7 @@ export function startMultiplicationInvasion() {
       const playerAvatar = globalGameState?.avatar ?? 'fox';
       const possibleAvatars = avatarKeys.filter(a => a !== playerAvatar);
 
-      const liberatedAvatar = possibleAvatars[Math.floor(Math.random() * possibleAvatars.length)];
+      const liberatedAvatar = pickRandom(possibleAvatars);
 
       const liberatedSpriteName = `${liberatedAvatar}_right_128x128`;
       avatarImg = arcadeSpriteLoader.loadSpriteSync(liberatedSpriteName, 'ui');
@@ -865,7 +866,7 @@ export function startMultiplicationInvasion() {
     if (isVoiceEnabled() && score >= 1000 && score - lastCongratsScore >= 1000) {
       lastCongratsScore = score;
 
-      const msg = congratsMessages[Math.floor(Math.random() * congratsMessages.length)];
+      const msg = pickRandom(congratsMessages);
       speak(msg);
     }
   }

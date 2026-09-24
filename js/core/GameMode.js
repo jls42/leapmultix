@@ -11,9 +11,6 @@
  *
  * Une erreur est une étape : dans les modes non chronométrés (config.pauseAfterError),
  * l'explication reste affichée et « Continuer » attend l'enfant, sans compte à rebours.
- *
- * Security note: Math.random() is used for generating random questions and shuffling
- * answer options. This is safe - it's an educational game, not security-sensitive.
  */
 
 import {
@@ -38,6 +35,7 @@ import {
   preferredScrollBehavior,
   keepNumbersTogether,
 } from '../ui-feedback.js';
+import { chance, shuffleInPlace } from './random.js';
 
 // ======================================
 // ÉNONCÉS DE PROBLÈMES
@@ -344,17 +342,12 @@ function reverseDigits(value) {
 }
 
 /**
- * Mélange de Fisher-Yates
+ * Copie mélangée d'une liste
  * @param {Array} list
  * @returns {Array}
  */
 function shuffle(list) {
-  const copy = [...list];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1)); // NOSONAR - Safe: educational game randomization
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
+  return shuffleInPlace([...list]);
 }
 
 /**
@@ -1333,7 +1326,7 @@ export class GameMode {
     }
 
     const useWords =
-      question.type === 'mcq' && ['×', '÷'].includes(question.operator) && Math.random() < 0.2; // NOSONAR - Safe: educational game randomization
+      question.type === 'mcq' && ['×', '÷'].includes(question.operator) && chance(0.2);
 
     return buildAnswerOptions(question).map(value => ({
       value,

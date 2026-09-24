@@ -9,6 +9,7 @@ import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
 import PacmanQuestions from './multimiam-questions.js';
 import PacmanRenderer from './multimiam-renderer.js';
 import { initPacmanEngine } from './multimiam-engine.js';
+import { shuffleInPlace } from './core/random.js';
 import { initPacmanControls } from './multimiam-controls.js';
 import { initPacmanUI } from './multimiam-ui.js';
 import { showArcadeGameOver } from './arcade.js';
@@ -16,6 +17,15 @@ import { createArcadeToast, getArcadeText } from './arcade-message.js';
 import { getArcadeCanvasBox } from './arcade-common.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { cleanupGameResources } from './game-cleanup.js';
+
+/** Positions et couleurs de départ des fantômes */
+const INITIAL_GHOSTS = [
+  { x: 9, y: 8, color: '#FF0000' }, // Rouge (Blinky)
+  { x: 10, y: 8, color: '#FFB8FF' }, // Rose (Pinky)
+  { x: 8, y: 8, color: '#00FFFF' }, // Cyan (Inky)
+  { x: 9, y: 7, color: '#FFB852' }, // Orange (Clyde)
+  { x: 10, y: 7, color: '#800080' }, // Violet (Sue)
+];
 
 export class PacmanGame {
   constructor(
@@ -60,39 +70,8 @@ export class PacmanGame {
     // Labyrinthe (0 = vide, 1 = mur, 2 = pastille, 3 = super pastille)
     this.labyrinth = this.createLabyrinth();
 
-    // Pacman
-    this.multimiam = {
-      x: 2, // spawn directly on the first true intersection
-      y: 1,
-      direction: 'RIGHT',
-      nextDirection: 'RIGHT',
-      speed: 5,
-      size: this.cellSize * 0.8,
-      mouthAngle: 0,
-      mouthSpeed: 0.15,
-      isMoving: true, // Indique si Pacman est en mouvement ou arrêté à une intersection
-      isAtIntersection: false, // Indique si Pacman est à une intersection
-    };
-
-    // fantômes - on commence avec seulement Blinky (rouge)
-    this.ghosts = [];
-    // Positions et couleurs initiales des fantômes
-    const initialGhostPositions = [
-      { x: 9, y: 8, color: '#FF0000' }, // Rouge (Blinky)
-      { x: 10, y: 8, color: '#FFB8FF' }, // Rose (Pinky)
-      { x: 8, y: 8, color: '#00FFFF' }, // Cyan (Inky)
-      { x: 9, y: 7, color: '#FFB852' }, // Orange (Clyde)
-      { x: 10, y: 7, color: '#800080' }, // Violet (Sue) - Ajouté
-    ];
-
-    for (let i = 0; i < initialGhostPositions.length; i++) {
-      this.ghosts.push({
-        ...initialGhostPositions[i],
-        direction: 'UP', // Direction initiale
-        vulnerable: false,
-        active: i < 2, // Seuls les 2 premiers sont actifs au départ
-      });
-    }
+    this.multimiam = this.createPlayer();
+    this.ghosts = this.createGhosts();
 
     // Initialisation des monstres (récupération des images)
 
@@ -200,6 +179,32 @@ export class PacmanGame {
     this.applyCanvasStyles(actualWidth, actualHeight);
   }
 
+  /** Pacman au point de départ, à la taille de la grille actuelle */
+  createPlayer() {
+    return {
+      x: 2, // spawn directly on the first true intersection
+      y: 1,
+      direction: 'RIGHT',
+      nextDirection: 'RIGHT',
+      speed: 5,
+      size: this.cellSize * 0.8,
+      mouthAngle: 0,
+      mouthSpeed: 0.15,
+      isMoving: true, // Indique si Pacman est en mouvement ou arrêté à une intersection
+      isAtIntersection: false, // Indique si Pacman est à une intersection
+    };
+  }
+
+  /** Fantômes au point de départ : seuls les deux premiers sont actifs */
+  createGhosts() {
+    return INITIAL_GHOSTS.map((ghost, i) => ({
+      ...ghost,
+      direction: 'UP',
+      vulnerable: false,
+      active: i < 2,
+    }));
+  }
+
   // Créer un labyrinthe de base
   createLabyrinth() {
     // Labyrinthe simple pour le jeu éducatif
@@ -303,39 +308,9 @@ export class PacmanGame {
     this.graceStartTime = Date.now();
     console.log('Période de grâce activée pour', this.graceDuration, 'ms');
 
-    // Réinitialiser Pacman
-    this.multimiam = {
-      x: 2, // spawn directly on the first true intersection
-      y: 1,
-      direction: 'RIGHT',
-      nextDirection: 'RIGHT',
-      speed: 5,
-      size: this.cellSize * 0.8,
-      mouthAngle: 0,
-      mouthSpeed: 0.15,
-      isMoving: true,
-      isAtIntersection: false,
-    };
-
-    // Réinitialiser les fantômes - commencer avec seulement Blinky (rouge)
-    this.ghosts = [];
-    // Positions et couleurs initiales des fantômes
-    const initialGhostPositions = [
-      { x: 9, y: 8, color: '#FF0000' }, // Rouge (Blinky)
-      { x: 10, y: 8, color: '#FFB8FF' }, // Rose (Pinky)
-      { x: 8, y: 8, color: '#00FFFF' }, // Cyan (Inky)
-      { x: 9, y: 7, color: '#FFB852' }, // Orange (Clyde)
-      { x: 10, y: 7, color: '#800080' }, // Violet (Sue) - Ajouté
-    ];
-
-    for (let i = 0; i < initialGhostPositions.length; i++) {
-      this.ghosts.push({
-        ...initialGhostPositions[i],
-        direction: 'UP', // Direction initiale
-        vulnerable: false,
-        active: i < 2, // Seuls les 2 premiers sont actifs au départ
-      });
-    }
+    // Réinitialiser Pacman et les fantômes
+    this.multimiam = this.createPlayer();
+    this.ghosts = this.createGhosts();
 
     // Réinitialiser la vitesse des fantômes
     this.ghostSpeed = 6;
@@ -470,11 +445,8 @@ export class PacmanGame {
       availableIndices.push(i);
     }
 
-    // Mélanger les indices disponibles (algorithme de Fisher-Yates)
-    for (let i = availableIndices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
-    }
+    // Mélanger les indices disponibles
+    shuffleInPlace(availableIndices);
 
     // Précharger les images avec des événements de chargement
     for (let i = 0; i < this.totalMonsters; i++) {

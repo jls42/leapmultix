@@ -13,12 +13,11 @@ import {
 import { recordOperationResult } from './core/operation-stats.js';
 import { showArcadeGameOver } from './arcade.js';
 import { cleanupGameResources } from './game-cleanup.js';
-import { Utils } from './utils-es6.js';
 import { InfoBar } from './components/infoBar.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
+import { randomInt, shuffleInPlace } from './core/random.js';
 // UserState removed - unused import
-// Utilisation de la fonction shuffleArray centralisée via Utils
 
 class SnakeGame {
   constructor(canvasId, mode = 'operation', options = {}) {
@@ -699,12 +698,7 @@ class SnakeGame {
       { value: correctResult + 10, isCorrect: false },
     ];
 
-    // Utiliser la fonction shuffleArray centralisée
-    if (Utils?.shuffleArray) {
-      return Utils.shuffleArray(answers);
-    }
-    // Fallback si le module Utils est indisponible
-    return answers.sort(() => Math.random() - 0.5);
+    return shuffleInPlace(answers);
   }
 
   // Placer les nombres sur la grille
@@ -731,8 +725,8 @@ class SnakeGame {
 
       // Essayer de trouver une position libre
       do {
-        x = Math.floor(Math.random() * (this.cols - 4)) + 2;
-        y = Math.floor(Math.random() * (this.rows - 4)) + 2;
+        x = randomInt(2, this.cols - 3);
+        y = randomInt(2, this.rows - 3);
         attempts++;
       } while (avoidPositions.has(`${x},${y}`) && attempts < 100);
 

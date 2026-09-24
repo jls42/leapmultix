@@ -1,9 +1,14 @@
 /* eslint-env jest, node */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
-const { fetchTranslations, loadIntoStore, getCurrentLanguage, setCurrentLanguage } = await import(
-  '../js/i18n-store.js'
-);
+const {
+  fetchTranslations,
+  loadIntoStore,
+  getCurrentLanguage,
+  setCurrentLanguage,
+  setTranslations,
+  translate,
+} = await import('../js/i18n-store.js');
 
 /** Adresses demandées au réseau pendant le test */
 let adressesDemandees = [];
@@ -57,5 +62,29 @@ describe('i18n-store : la langue ne compose jamais librement une adresse', () =>
     await loadIntoStore('es-MX');
     expect(getCurrentLanguage()).toBe('es');
     expect(adressesDemandees.at(-1)).toContain('assets/translations/es.json');
+  });
+});
+
+describe('i18n-store : une clé à variantes', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    setTranslations({});
+  });
+
+  test('tire chaque variante, de la première à la dernière', () => {
+    setTranslations({ bravo: ['Bravo !', 'Super !', 'Génial !'] });
+    const words = [0, 2 ** 32 - 1];
+    jest.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation(array => {
+      array[0] = words.shift();
+      return array;
+    });
+
+    expect(translate('bravo')).toBe('Bravo !');
+    expect(translate('bravo')).toBe('Génial !');
+  });
+
+  test('applique les paramètres à la variante tirée', () => {
+    setTranslations({ salut: ['Salut {nom} !'] });
+    expect(translate('salut', { nom: 'Zoé' })).toBe('Salut Zoé !');
   });
 });

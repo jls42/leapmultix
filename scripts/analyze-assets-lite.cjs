@@ -5,8 +5,8 @@
  * - Greps for exact filename occurrences across js/css/html
  * - Outputs suspected orphans with basic caveats for dynamic usages
  */
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 function listFiles(dir) {
   const out = [];
@@ -19,20 +19,44 @@ function listFiles(dir) {
   return out;
 }
 
-function listCodeFiles(root, globs = []) {
+function listCodeFiles(root) {
   const out = [];
   if (!fs.existsSync(root)) return out;
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     const full = path.join(root, entry.name);
     if (entry.isDirectory()) {
-      out.push(...listCodeFiles(full, globs));
+      out.push(...listCodeFiles(full));
     } else {
-      const rel = full.replace(/^.*leapmultix\//, '');
       const ext = path.extname(full).toLowerCase();
       if (['.js', '.mjs', '.cjs', '.css', '.html'].includes(ext)) out.push(full);
     }
   }
   return out;
+}
+
+function readCodeContents(files) {
+  const contents = new Map();
+  for (const f of files) {
+    try {
+      contents.set(f, fs.readFileSync(f, 'utf8'));
+    } catch {
+      /* ignore */
+    }
+  }
+  return contents;
+}
+
+/** Fichiers de code qui citent le nom de l'asset (cinq au plus, pour rester lisible). */
+function findReferences(assetFile, codeContents) {
+  const name = path.basename(assetFile);
+  const referencedIn = [];
+  for (const [file, content] of codeContents) {
+    if (content.includes(name)) {
+      referencedIn.push(file);
+      if (referencedIn.length >= 5) break;
+    }
+  }
+  return referencedIn;
 }
 
 function main() {
@@ -47,34 +71,19 @@ function main() {
     ...listCodeFiles(path.join(projectRoot, 'js')),
     ...listCodeFiles(path.join(projectRoot, 'css')),
     path.join(projectRoot, 'index.html'),
-  ]
-    .filter(Boolean)
-    .filter(fs.existsSync);
+  ].filter(f => fs.existsSync(f));
 
-  const codeContents = new Map();
-  for (const f of codeFiles) {
-    try {
-      codeContents.set(f, fs.readFileSync(f, 'utf8'));
-    } catch {
-      /* ignore */
-    }
-  }
-
-  const findings = [];
-  let referencedCount = 0;
-  for (const af of assetFiles) {
-    const name = path.basename(af);
-    let referencedIn = [];
-    for (const [cf, content] of codeContents) {
-      if (content.includes(name)) {
-        referencedIn.push(cf);
-        if (referencedIn.length >= 5) break; // cap list for brevity
-      }
-    }
-    const isReferenced = referencedIn.length > 0;
-    if (isReferenced) referencedCount++;
-    findings.push({ asset: af, name, isReferenced, referencedIn });
-  }
+  const codeContents = readCodeContents(codeFiles);
+  const findings = assetFiles.map(asset => {
+    const referencedIn = findReferences(asset, codeContents);
+    return {
+      asset,
+      name: path.basename(asset),
+      isReferenced: referencedIn.length > 0,
+      referencedIn,
+    };
+  });
+  const referencedCount = findings.filter(f => f.isReferenced).length;
 
   const total = assetFiles.length;
   const orphans = findings.filter(f => !f.isReferenced);

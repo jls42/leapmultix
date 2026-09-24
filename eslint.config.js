@@ -41,6 +41,15 @@ export default [
             'Éviter Element.innerHTML: utiliser security-utils.* ou DOM API (createElement/textContent).',
         },
       ],
+      // Tout tirage passe par core/random.js : une seule source d'aléa, des mélanges non biaisés
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[object.name='Math'][property.name='random']",
+          message:
+            'Tirer au sort via js/core/random.js (randomInt, chance, pickRandom, shuffleInPlace).',
+        },
+      ],
       // Empêche toute réintroduction des modules legacy identifiés comme obsolètes/non câblés
       'no-restricted-imports': [
         'error',
@@ -84,6 +93,8 @@ export default [
     rules: {
       'no-undef': 'off',
       'no-restricted-properties': 'off',
+      // Les tests fabriquent leurs données avec Math.random
+      'no-restricted-syntax': 'off',
       // Permettre les helpers de tests ESM (tests-esm/helpers/ n'est pas le helpers.js legacy)
       'no-restricted-imports': [
         'error',

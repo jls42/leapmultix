@@ -10,6 +10,7 @@
  */
 import { showArcadeMessage, showArcadePoints } from './utils-es6.js';
 import { showArcadePenalty } from './arcade-points.js';
+import { chance, pickRandom } from './core/random.js';
 
 /**
  * Invincibilité après une vie perdue : le personnage clignote, puis redevient normal.
@@ -88,7 +89,7 @@ export function initPacmanEngine(game) {
       return !ctx.isOnCriticalPath(n.x, n.y, multimiam.x, multimiam.y, correct.x, correct.y);
     });
     if (possibles.length === 0) return chosenDir;
-    return possibles[Math.floor(Math.random() * possibles.length)];
+    return pickRandom(possibles);
   }
 
   function ensureTimingState(ctx, now) {
@@ -237,12 +238,12 @@ export function initPacmanEngine(game) {
       if (!ghost.active) continue;
       const possible = computePossibleDirections(this, ghost);
       if (possible.length > 0) {
-        if (Math.random() < 0.3) {
+        if (chance(0.3)) {
           ghost.direction = pickDirectionByDistance(possible, ghost, this.multimiam, true);
-        } else if (correctAnswerPos && Math.random() < 0.5) {
+        } else if (correctAnswerPos && chance(0.5)) {
           ghost.direction = pickDirectionByDistance(possible, ghost, correctAnswerPos, false);
         } else {
-          ghost.direction = possible[Math.floor(Math.random() * possible.length)];
+          ghost.direction = pickRandom(possible);
         }
       }
       ghost.direction = avoidCriticalPath(
