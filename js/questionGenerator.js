@@ -76,11 +76,17 @@ function handleMcqQuestion(operation, a, b, result) {
   return { question: operation.formatQuestion(a, b, 'mcq'), answer: result };
 }
 
+/**
+ * Égalité à juger : le vrai résultat, ou un résultat voisin (±1 ou ±2). Une proposition
+ * fausse n'est jamais négative (« 1 − 1 = −2 ») : sous zéro, l'écart part vers le haut,
+ * ce qui la garde aussi différente du résultat.
+ */
 function handleTrueFalseQuestion(operation, a, b, result) {
   const isTrue = chance(0.5);
   const offset = chance(0.5) ? 1 : -1;
   const magnitude = chance(0.5) ? 1 : 2;
-  const proposedAnswer = isTrue ? result : result + offset * magnitude;
+  let proposedAnswer = isTrue ? result : result + offset * magnitude;
+  if (proposedAnswer < 0) proposedAnswer = result + magnitude;
   return { question: operation.formatQuestion(a, b, 'true_false', proposedAnswer), answer: isTrue };
 }
 
