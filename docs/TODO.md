@@ -41,19 +41,31 @@ Reste à faire : l'éprouver sur une vraie session (génération de l'anglais ou
 puis, s'il se déclenche mal ou saute une étape, lui écrire des évaluations
 (`claude plugin eval`, voir la documentation des plugins).
 
-## Voix enregistrée : essayer le TTS de Mistral (à instruire)
+## Voix enregistrée : Mistral pour l'anglais (fait le 26/09)
 
-Idée du 25/09 : le TTS de Mistral coûterait sans doute moins cher qu'ElevenLabs,
-par exemple pour une voix masculine ou pour une autre langue. À comparer avant la
-prochaine génération :
+Le TTS de Mistral (Voxtral, `voxtral-mini-tts-2603`) a été retenu pour l'anglais.
 
-1. **Prix** par caractère (le français seul fait environ 222 000 caractères, voir
-   `npm run voice:corpus`) et limites de l'API (débit, concurrence).
-2. **Qualité** sur un échantillon du corpus en fr, en et es : questions
-   (« Combien font 7 fois 8 ? »), formes féminines (« une fois 7 », « vingt et une
-   pommes »), énoncés longs ; même banc d'écoute et même contrôle Whisper que pour
-   Lucie.
-3. **Voix disponibles** (masculine, par langue) et **licence** de l'audio généré.
-4. **Branchement** : `scripts/voice/generate.mjs` sépare le fournisseur du reste
-   (corpus, texte dit, traitement ffmpeg, idempotence) ; un fournisseur de plus
-   s'ajoute sans toucher au reste, avec sa voix dans `scripts/voice/voices.json`.
+- **Prix** : 16 $ le million de caractères, environ 3,40 $ pour l'anglais.
+- **Banc** : 0 doute de Whisper sur 72 clips.
+- **Voix** : Jane - Neutral.
+- **Branchement** : fournisseur `scripts/voice/providers/mistral.mjs`, dans la même chaîne que
+  Lucie. Voir `docs/voix-enregistree.md`.
+
+## Voix enregistrée : l'espagnol (à décider)
+
+Mistral n'a aucune voix espagnole prête au 26/09/2026 : Jane et Oliver en anglais
+britannique, Paul en anglais américain, Marie en français. L'essai croisé du 25/09 a échoué :
+Jane disait les nombres en anglais (« tengo sixteen caramelos »), et Marie gardait un accent
+français marqué.
+
+Options :
+
+1. **Cloner une voix native** avec Voxtral, à partir de 2 à 3 s d'enregistrement d'une
+   locutrice qui donne son accord explicite (règle d'usage de Mistral). Coût : environ 3,60 $
+   pour les 223 758 caractères.
+2. **ElevenLabs**, voix de bibliothèque espagnole : environ 123 000 crédits.
+3. **Garder la voix de l'appareil** en espagnol.
+
+Le jour où l'espagnol est publié, la mention `recorded_voice_hint` d'`es.json` doit nommer son
+fournisseur. Elle dit ElevenLabs aujourd'hui, et reste invisible tant que l'espagnol n'a pas de
+clips.
