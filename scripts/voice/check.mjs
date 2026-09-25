@@ -14,11 +14,11 @@
 
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCorpus } from './corpus.mjs';
 import { saidText } from './said-text.mjs';
 import { clipProblem, probeClip } from './audio-process.mjs';
+import { flagOption, parseOptions, pathOption, valueOption } from './cli-options.mjs';
 import { compareTranscript } from './transcript-compare.mjs';
 import { clipFile, readManifest, sha256, storePaths } from './clip-store.mjs';
 import { DEFAULT_OUT, loadVoice } from './generate.mjs';
@@ -131,30 +131,36 @@ export async function checkClips({ lang, phrases, voice, outDir, probe, transcri
   return report;
 }
 
+/** Listes du bilan dont un seul élément rend le rangement incohérent */
+const INCONSISTENCIES = ['stale', 'entriesWithoutFile', 'filesWithoutEntry'];
+/** Les mêmes, établies seulement par --probe (absentes sinon) */
+const PROBE_INCONSISTENCIES = ['invalid', 'changed'];
+
 /** Le rangement est-il cohérent (hors phrases manquantes) ? */
 export function isConsistent(report) {
   return (
-    report.stale.length === 0 &&
-    report.entriesWithoutFile.length === 0 &&
-    report.filesWithoutEntry.length === 0 &&
-    (report.invalid?.length ?? 0) === 0 &&
-    (report.changed?.length ?? 0) === 0
+    INCONSISTENCIES.every(field => report[field].length === 0) &&
+    PROBE_INCONSISTENCIES.every(field => !report[field]?.length)
   );
 }
 
+const CLI_OPTIONS = {
+  '--lang': valueOption('lang'),
+  '--out': pathOption('out'),
+  '--probe': flagOption('probe'),
+  '--allow-missing': flagOption('allowMissing'),
+  '--json': flagOption('json'),
+  '--transcripts': valueOption('transcripts'),
+  '--flagged': valueOption('flagged'),
+};
+
 function parseArgs(argv) {
-  const args = { out: DEFAULT_OUT, probe: false, allowMissing: false, json: false };
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
-    if (arg === '--lang') args.lang = argv[++i];
-    else if (arg === '--out') args.out = path.resolve(argv[++i]);
-    else if (arg === '--probe') args.probe = true;
-    else if (arg === '--allow-missing') args.allowMissing = true;
-    else if (arg === '--json') args.json = true;
-    else if (arg === '--transcripts') args.transcripts = argv[++i];
-    else if (arg === '--flagged') args.flagged = argv[++i];
-    else throw new Error(`Option inconnue : ${arg}`);
-  }
+  const args = parseOptions(argv, CLI_OPTIONS, {
+    out: DEFAULT_OUT,
+    probe: false,
+    allowMissing: false,
+    json: false,
+  });
   if (!args.lang) throw new Error('--lang est requis');
   return args;
 }
@@ -180,15 +186,34 @@ function printSummary(report) {
   console.log(lines.join('\n'));
 }
 
+/** Transcriptions Whisper d'un fichier JSONL, ou undefined sans fichier */
+function readTranscripts(file) {
+  if (!file) return undefined;
+  return fs
+    .readFileSync(file, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map(line => JSON.parse(line));
+}
+
+/** Empreintes à réécouter (transcription douteuse, durée anormale), une par ligne */
+function writeFlagged(file, report) {
+  const keys = [
+    ...(report.transcripts?.flagged ?? []).map(f => f.key),
+    ...report.durationOutliers.map(o => o.key),
+  ];
+  fs.writeFileSync(file, `${[...new Set(keys)].join('\n')}\n`);
+}
+
+/** 1 si le rangement est incohérent, ou si une phrase manque sans --allow-missing */
+function exitCode(report, allowMissing) {
+  if (!isConsistent(report)) return 1;
+  return report.missing.count > 0 && !allowMissing ? 1 : 0;
+}
+
 async function main(argv) {
   const args = parseArgs(argv);
-  const transcripts = args.transcripts
-    ? fs
-        .readFileSync(args.transcripts, 'utf8')
-        .split('\n')
-        .filter(Boolean)
-        .map(line => JSON.parse(line))
-    : undefined;
+  const transcripts = readTranscripts(args.transcripts);
   const report = await checkClips({
     lang: args.lang,
     phrases: buildCorpus(args.lang),
@@ -199,15 +224,8 @@ async function main(argv) {
   });
   if (args.json) console.log(JSON.stringify(report, null, 2));
   else printSummary(report);
-  if (args.flagged) {
-    const keys = [
-      ...(report.transcripts?.flagged ?? []).map(f => f.key),
-      ...report.durationOutliers.map(o => o.key),
-    ];
-    fs.writeFileSync(args.flagged, `${[...new Set(keys)].join('\n')}\n`);
-  }
-  if (!isConsistent(report)) return 1;
-  return report.missing.count > 0 && !args.allowMissing ? 1 : 0;
+  if (args.flagged) writeFlagged(args.flagged, report);
+  return exitCode(report, args.allowMissing);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

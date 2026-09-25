@@ -13,9 +13,17 @@
 // La distribution ne sert les clips qu'aux pages du jeu : la requête porte les en-têtes
 // d'une lecture depuis le jeu (Sec-Fetch-Site: same-origin, Referer du site).
 
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseVoiceIndex, clipPath } from '../../js/core/voice-index.js';
+import {
+  assertLangCode,
+  flagOption,
+  integerOption,
+  parseOptions,
+  pathOption,
+  valueOption,
+  wholeNumber,
+} from './cli-options.mjs';
 import { readManifest, storePaths } from './clip-store.mjs';
 import { DEFAULT_OUT, loadVoice } from './generate.mjs';
 
@@ -31,24 +39,36 @@ export function gameHeaders(base) {
   };
 }
 
+/** Type annoncé d'un clip : audio/mpeg, ou le problème */
+function typeProblem(headers) {
+  const type = headers.get('content-type') ?? '';
+  return type.startsWith('audio/mpeg') ? null : `type ${type || 'absent'}`;
+}
+
+/** Taille annoncée d'un clip : celle du manifeste, ou le problème */
+function sizeProblem(headers, expectedBytes) {
+  const length = Number(headers.get('content-length'));
+  return Number.isFinite(length) && length !== expectedBytes
+    ? `taille ${length} ≠ ${expectedBytes}`
+    : null;
+}
+
+/** Cache d'un clip : immuable, ou le problème */
+function cacheProblem(headers) {
+  return /immutable/.test(headers.get('cache-control') ?? '') ? null : 'cache non immuable';
+}
+
 /** Problème d'une réponse de clip, ou null */
 export function clipResponseProblem(res, expectedBytes) {
   if (res.status !== 200) return `HTTP ${res.status}`;
-  const type = res.headers.get('content-type') ?? '';
-  if (!type.startsWith('audio/mpeg')) return `type ${type || 'absent'}`;
-  const length = Number(res.headers.get('content-length'));
-  if (Number.isFinite(length) && length !== expectedBytes)
-    return `taille ${length} ≠ ${expectedBytes}`;
-  if (!/immutable/.test(res.headers.get('cache-control') ?? '')) return 'cache non immuable';
-  return null;
+  return (
+    typeProblem(res.headers) ?? sizeProblem(res.headers, expectedBytes) ?? cacheProblem(res.headers)
+  );
 }
 
 /** Entier ≥ 1, ou erreur (jamais de NaN silencieux) */
 export function positiveInteger(value, option) {
-  if (!/^\d+$/.test(String(value ?? '')) || Number(value) < 1) {
-    throw new Error(`${option} attend un entier ≥ 1 (reçu : ${value})`);
-  }
-  return Number(value);
+  return wholeNumber(value, option, 1);
 }
 
 async function pool(items, concurrency, task) {
@@ -157,29 +177,27 @@ export function onlineProblems(report, { allowOtherVersion = false } = {}) {
   return problems;
 }
 
-const VALUES = { '--lang': 'lang', '--out': 'out', '--base': 'base' };
-const COUNTS = { '--sample': 'sample', '--concurrency': 'concurrency' };
+const CLI_OPTIONS = {
+  '--lang': valueOption('lang'),
+  '--out': pathOption('out'),
+  '--base': valueOption('base'),
+  '--sample': integerOption('sample', 1),
+  '--concurrency': integerOption('concurrency', 1),
+  '--allow-other-version': flagOption('allowOtherVersion'),
+};
 
 /**
  * Options de la ligne de commande, vérifiées (valeurs présentes, nombres entiers ≥ 1)
  * @param {string[]} argv
  */
 export function parseCheckOnlineArgs(argv) {
-  const args = { out: DEFAULT_OUT, base: DEFAULT_BASE, concurrency: 16, allowOtherVersion: false };
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
-    if (arg === '--allow-other-version') {
-      args.allowOtherVersion = true;
-      continue;
-    }
-    const name = VALUES[arg] ?? COUNTS[arg];
-    if (!name) throw new Error(`Option inconnue : ${arg}`);
-    const value = argv[++i];
-    if (value === undefined || value.startsWith('--')) throw new Error(`Valeur manquante : ${arg}`);
-    args[name] = COUNTS[arg] ? positiveInteger(value, arg) : value;
-  }
-  if (!/^[a-z]{2}$/.test(args.lang ?? '')) throw new Error('--lang attend un code (fr, en, es)');
-  args.out = path.resolve(args.out);
+  const args = parseOptions(argv, CLI_OPTIONS, {
+    out: DEFAULT_OUT,
+    base: DEFAULT_BASE,
+    concurrency: 16,
+    allowOtherVersion: false,
+  });
+  assertLangCode(args.lang);
   return args;
 }
 

@@ -41,6 +41,13 @@ import {
 } from './audio-process.mjs';
 import { createElevenLabs, ProviderError } from './providers/elevenlabs.mjs';
 import {
+  flagOption,
+  integerOption,
+  parseOptions,
+  pathOption,
+  valueOption,
+} from './cli-options.mjs';
+import {
   PART,
   acquireLock,
   cleanLeftovers,
@@ -84,6 +91,9 @@ const MAX_FAILURES = 20;
 
 /** Erreurs du fournisseur qui arrêtent toute l'exécution (au lieu d'une seule phrase) */
 const STOPPING_KINDS = new Set(['quota', 'auth', 'voice', 'response']);
+
+/** Erreurs passagères du fournisseur (débit, serveur, réseau) : un nouvel essai peut réussir */
+const RETRIABLE_KINDS = new Set(['rate', 'server', 'network']);
 
 /** Panne qui n'est pas celle d'une phrase (outil, disque, manifeste) : tout s'arrête */
 export class FatalError extends Error {
@@ -139,15 +149,24 @@ async function inspectWith(probeAudio, file) {
   };
 }
 
-async function withRetries(task, { delays, sleep, signal }) {
+/**
+ * Attente avant un nouvel essai, ou null s'il n'y en a pas : arrêt demandé, erreur qu'un
+ * nouvel essai ne corrigerait pas, ou essais épuisés
+ */
+function retryDelay(error, attempt, { delays, signal }) {
+  const retriable = error instanceof ProviderError && RETRIABLE_KINDS.has(error.kind);
+  if (signal?.aborted || !retriable || attempt >= delays.length) return null;
+  return Math.max(error.retryAfterMs ?? 0, delays[attempt]);
+}
+
+async function withRetries(task, options) {
   for (let attempt = 0; ; attempt++) {
     try {
       return await task();
     } catch (error) {
-      const retriable =
-        error instanceof ProviderError && ['rate', 'server', 'network'].includes(error.kind);
-      if (signal?.aborted || !retriable || attempt >= delays.length) throw error;
-      await sleep(Math.max(error.retryAfterMs ?? 0, delays[attempt]));
+      const delay = retryDelay(error, attempt, options);
+      if (delay === null) throw error;
+      await options.sleep(delay);
     }
   }
 }
@@ -221,37 +240,47 @@ function account(state, chars, cost) {
   if (cost !== null) state.ratio = state.credits / state.chars;
 }
 
-/**
- * Génère (ou retraite) le clip d'une phrase. Rend false si la phrase n'a pas été tentée
- * (budget atteint).
- */
-async function produceClip(phrase, ctx) {
-  const { lang, voice, paths, provider, state, manifest, options } = ctx;
-  const said = saidText(phrase.text, lang);
-  const raw = rawFile(paths, phrase.key, said);
-  let requestId = null;
-  let cost = null;
-  const fresh = !fs.existsSync(raw);
-  if (fresh) {
-    const reservation = reserve(state, charCount(said));
-    if (!reservation) return false;
-    try {
-      const result = await withRetries(
-        () => provider.synthesize({ text: said, voice, signal: options.signal }),
-        options
-      );
-      ({ requestId, cost } = result);
-      // Payé dès la réponse : compté même si l'écriture échoue ensuite
-      account(state, reservation.chars, cost ?? null);
-      try {
-        await writeFileAtomic(raw, result.audio);
-      } catch (error) {
-        throw new FatalError(`Écriture du brut impossible : ${error.message}`);
-      }
-    } finally {
-      release(state, reservation);
-    }
+/** Arrête l'exécution : la première cause et le premier message sont gardés */
+function stopRun(state, reason, message) {
+  state.stop ??= reason;
+  state.stopMessage ??= message;
+}
+
+/** Écrit le brut payé ; un échec ici est une panne (disque), pas celle d'une phrase */
+async function writeRaw(raw, audio) {
+  try {
+    await writeFileAtomic(raw, audio);
+  } catch (error) {
+    throw new FatalError(`Écriture du brut impossible : ${error.message}`);
   }
+}
+
+/**
+ * Demande la synthèse d'une phrase, dans la limite du budget, et écrit son brut. Rend
+ * l'identifiant et le coût de l'appel, ou null si le budget ne permet plus l'appel.
+ * @returns {Promise<{requestId: string|null, cost: number|null}|null>}
+ */
+async function synthesizeRaw(said, raw, ctx) {
+  const { voice, provider, state, options } = ctx;
+  const reservation = reserve(state, charCount(said));
+  if (!reservation) return null;
+  try {
+    const { audio, requestId, cost } = await withRetries(
+      () => provider.synthesize({ text: said, voice, signal: options.signal }),
+      options
+    );
+    // Payé dès la réponse : compté même si l'écriture échoue ensuite
+    account(state, reservation.chars, cost ?? null);
+    await writeRaw(raw, audio);
+    return { requestId, cost };
+  } finally {
+    release(state, reservation);
+  }
+}
+
+/** Traite le brut en clip, le contrôle, puis le range sous son nom final avec son entrée */
+async function finishClip({ phrase, said, raw, requestId, cost }, ctx) {
+  const { voice, paths, manifest, options } = ctx;
   const target = clipFile(paths, phrase.key);
   const part = `${target}${PART}`;
   try {
@@ -277,20 +306,36 @@ async function produceClip(phrase, ctx) {
     }
     throw new FatalError(`Traitement impossible, brut gardé : ${error.message}`);
   }
-  if (fresh) state.generated++;
-  else state.reprocessed++;
+}
+
+/**
+ * Génère (ou retraite) le clip d'une phrase. Rend false si la phrase n'a pas été tentée
+ * (budget atteint).
+ */
+async function produceClip(phrase, ctx) {
+  const said = saidText(phrase.text, ctx.lang);
+  const raw = rawFile(ctx.paths, phrase.key, said);
+  const fresh = !fs.existsSync(raw);
+  // Un brut déjà payé est retraité sans nouvel appel
+  const call = fresh ? await synthesizeRaw(said, raw, ctx) : { requestId: null, cost: null };
+  if (!call) return false;
+  await finishClip({ phrase, said, raw, ...call }, ctx);
+  if (fresh) ctx.state.generated++;
+  else ctx.state.reprocessed++;
   return true;
 }
 
+/** Cause d'arrêt de toute l'exécution, ou null si l'erreur ne touche que sa phrase */
+function stoppingReason(error) {
+  if (error instanceof FatalError) return 'fatal';
+  if (error instanceof ProviderError && STOPPING_KINDS.has(error.kind)) return error.kind;
+  return null;
+}
+
 function recordFailure(state, phrase, error) {
-  if (error instanceof FatalError) {
-    state.stop ??= 'fatal';
-    state.stopMessage ??= error.message;
-    return;
-  }
-  if (error instanceof ProviderError && STOPPING_KINDS.has(error.kind)) {
-    state.stop ??= error.kind;
-    state.stopMessage ??= error.message;
+  const reason = stoppingReason(error);
+  if (reason) {
+    stopRun(state, reason, error.message);
     return;
   }
   state.failed.push({ key: phrase.key, text: phrase.text, error: error.message });
@@ -304,10 +349,7 @@ function scheduleSave(ctx, force = false) {
   state.sinceSave = 0;
   state.saving = state.saving
     .then(() => writeManifest(paths, manifest))
-    .catch(error => {
-      state.stop ??= 'fatal';
-      state.stopMessage ??= `Manifeste impossible à écrire : ${error.message}`;
-    });
+    .catch(error => stopRun(state, 'fatal', `Manifeste impossible à écrire : ${error.message}`));
   return state.saving;
 }
 
@@ -321,23 +363,30 @@ function reportProgress(ctx, total) {
   );
 }
 
+/** L'arrêt a-t-il été demandé (signal) ? Si oui, il devient la cause d'arrêt */
+function stopIfInterrupted({ state, options }) {
+  if (!options.signal?.aborted) return false;
+  state.stop ??= 'interrupted';
+  return true;
+}
+
+/** Clip d'une phrase, échec compris ; false si le budget arrête la file */
+async function workOn(phrase, total, ctx) {
+  try {
+    if (!(await produceClip(phrase, ctx))) return false;
+    await scheduleSave(ctx);
+    reportProgress(ctx, total);
+  } catch (error) {
+    if (!stopIfInterrupted(ctx)) recordFailure(ctx.state, phrase, error);
+  }
+  return true;
+}
+
 async function worker(queue, ctx) {
-  const { state, options } = ctx;
-  while (!state.stop) {
-    if (options.signal?.aborted) {
-      state.stop ??= 'interrupted';
-      return;
-    }
+  while (!ctx.state.stop) {
+    if (stopIfInterrupted(ctx)) return;
     const phrase = queue.shift();
-    if (!phrase) return;
-    try {
-      if (!(await produceClip(phrase, ctx))) return;
-      await scheduleSave(ctx);
-      reportProgress(ctx, queue.total);
-    } catch (error) {
-      if (options.signal?.aborted) state.stop ??= 'interrupted';
-      else recordFailure(state, phrase, error);
-    }
+    if (!phrase || !(await workOn(phrase, queue.total, ctx))) return;
   }
 }
 
@@ -375,12 +424,12 @@ export async function runGeneration(options) {
   }
 }
 
-async function generateLocked(opts, paths) {
-  const { lang, voice, phrases, dryRun } = opts;
-  const manifest = readManifest(paths, lang, voice);
-  const phrasesByKey = new Map(phrases.map(phrase => [phrase.key, phrase]));
-  const said = text => saidText(text, lang);
-
+/**
+ * Remet le dépôt en ordre avant la génération : bruts rangés sous un ancien nom, restes
+ * d'une exécution interrompue, clips à refaire (--redo). Rend les restes trouvés.
+ */
+async function prepareStore(opts, paths, manifest) {
+  const { lang, dryRun } = opts;
   if (!dryRun) {
     await migrateLegacyRaw(paths);
     if (opts.rawFrom) {
@@ -393,43 +442,34 @@ async function generateLocked(opts, paths) {
     // Aussitôt sur disque : un arrêt ensuite ne rendrait pas l'ancienne entrée au nouveau clip
     await writeManifest(paths, manifest);
   }
-  const reconciled = await reconcile({
-    paths,
-    manifest,
-    phrasesByKey,
-    said,
-    inspect: file => inspectWith(opts.probeAudio, file),
-    dryRun,
-  });
+  return leftovers;
+}
 
-  const queue = generationOrder(phrases.filter(phrase => !manifest.clips[phrase.key]));
-  queue.total = queue.length;
-  const summary = {
+/** Bilan avant génération : ce qui est fait, ce qui reste, ce que la réconciliation a trouvé */
+function plannedSummary({ lang, voice, phrases }, queue, leftovers, reconciled) {
+  return {
     lang,
     version: voice.version,
     phrases: phrases.length,
     alreadyDone: phrases.length - queue.length,
     toDo: queue.length,
-    toDoChars: queue.reduce((sum, phrase) => sum + charCount(said(phrase.text)), 0),
+    toDoChars: queue.reduce((sum, phrase) => sum + charCount(saidText(phrase.text, lang)), 0),
     leftovers: leftovers.length,
     ...reconciled,
   };
-  if (dryRun) return { ...summary, dryRun: true, next: queue.slice(0, 20) };
+}
 
-  const state = createState(opts);
-  const ctx = { lang, voice, paths, provider: opts.provider, state, manifest, options: opts };
+/** Génère la file (plusieurs appels à la fois), puis écrit le manifeste une dernière fois */
+async function generateQueue(queue, ctx) {
   if (queue.length) {
-    const workers = Math.max(1, Math.min(opts.concurrency, queue.length));
+    const workers = Math.max(1, Math.min(ctx.options.concurrency, queue.length));
     await Promise.all(Array.from({ length: workers }, () => worker(queue, ctx)));
   }
-  await state.saving;
-  try {
-    await writeManifest(paths, manifest);
-  } catch (error) {
-    state.stop ??= 'fatal';
-    state.stopMessage ??= `Manifeste impossible à écrire : ${error.message}`;
-  }
+  await scheduleSave(ctx, true);
+}
 
+/** Bilan de l'exécution : le bilan prévu, complété de ce qui a été fait et de la cause d'arrêt */
+function finalSummary(summary, { state, manifest, options }) {
   return {
     ...summary,
     generated: state.generated,
@@ -440,8 +480,32 @@ async function generateLocked(opts, paths) {
     failed: state.failed,
     stop: state.stop,
     stopMessage: state.stopMessage ?? null,
-    remaining: phrases.filter(phrase => !manifest.clips[phrase.key]).length,
+    remaining: options.phrases.filter(phrase => !manifest.clips[phrase.key]).length,
   };
+}
+
+async function generateLocked(opts, paths) {
+  const { lang, voice, phrases } = opts;
+  const manifest = readManifest(paths, lang, voice);
+  const leftovers = await prepareStore(opts, paths, manifest);
+  const reconciled = await reconcile({
+    paths,
+    manifest,
+    phrasesByKey: new Map(phrases.map(phrase => [phrase.key, phrase])),
+    said: text => saidText(text, lang),
+    inspect: file => inspectWith(opts.probeAudio, file),
+    dryRun: opts.dryRun,
+  });
+
+  const queue = generationOrder(phrases.filter(phrase => !manifest.clips[phrase.key]));
+  queue.total = queue.length;
+  const summary = plannedSummary(opts, queue, leftovers, reconciled);
+  if (opts.dryRun) return { ...summary, dryRun: true, next: queue.slice(0, 20) };
+
+  const state = createState(opts);
+  const ctx = { lang, voice, paths, provider: opts.provider, state, manifest, options: opts };
+  await generateQueue(queue, ctx);
+  return finalSummary(summary, ctx);
 }
 
 /** Refait le clip d'une empreinte depuis son brut ; le réécrit seulement s'il change */
@@ -507,34 +571,28 @@ export async function reprocessClips(options) {
   }
 }
 
-/** Entier positif ou nul, sans quoi l'option est refusée (pas de NaN silencieux) */
-function wholeNumber(value, option, min = 0) {
-  if (!/^\d+$/.test(String(value ?? '')) || Number(value) < min) {
-    throw new Error(`${option} attend un entier ≥ ${min} (reçu : ${value ?? 'rien'})`);
-  }
-  return Number(value);
-}
+const CLI_OPTIONS = {
+  '--dry-run': flagOption('dryRun'),
+  '--reprocess': flagOption('reprocess'),
+  '--lang': valueOption('lang'),
+  '--out': pathOption('out'),
+  '--redo': valueOption('redoFile'),
+  '--keys': valueOption('keysFile'),
+  '--raw-from': valueOption('rawFrom'),
+  '--max-chars': integerOption('maxChars'),
+  '--limit': integerOption('limit'),
+  '--concurrency': integerOption('concurrency', 1),
+  '--reserve': integerOption('reserve'),
+};
 
 export function parseArgs(argv) {
-  const args = { concurrency: 4, reserve: 0, out: DEFAULT_OUT, dryRun: false, reprocess: false };
-  const numeric = {
-    '--max-chars': ['maxChars', 0],
-    '--limit': ['limit', 0],
-    '--concurrency': ['concurrency', 1],
-    '--reserve': ['reserve', 0],
-  };
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
-    if (arg === '--dry-run') args.dryRun = true;
-    else if (arg === '--reprocess') args.reprocess = true;
-    else if (arg === '--lang') args.lang = argv[++i];
-    else if (arg === '--out') args.out = path.resolve(argv[++i]);
-    else if (arg === '--redo') args.redoFile = argv[++i];
-    else if (arg === '--keys') args.keysFile = argv[++i];
-    else if (arg === '--raw-from') args.rawFrom = argv[++i];
-    else if (numeric[arg]) args[numeric[arg][0]] = wholeNumber(argv[++i], arg, numeric[arg][1]);
-    else throw new Error(`Option inconnue : ${arg}`);
-  }
+  const args = parseOptions(argv, CLI_OPTIONS, {
+    concurrency: 4,
+    reserve: 0,
+    out: DEFAULT_OUT,
+    dryRun: false,
+    reprocess: false,
+  });
   if (!args.lang) throw new Error('--lang est requis (fr, en, es)');
   return args;
 }
@@ -576,42 +634,33 @@ export function exitCodeFor(summary) {
 
 const readList = file => (file ? fs.readFileSync(file, 'utf8').split(/\s+/).filter(Boolean) : []);
 
-async function main(argv) {
-  const args = parseArgs(argv);
-  const voice = loadVoice(args.lang);
-  const phrases = buildCorpus(args.lang);
-  const log = console.log;
-  const redo = readList(args.redoFile);
-  const base = {
-    lang: args.lang,
-    voice,
-    outDir: args.out,
-    phrases,
-    redo,
-    log,
-    rawFrom: args.rawFrom,
-  };
+function logFailures(failed, log) {
+  for (const failure of failed)
+    log(`  échec ${failure.key} « ${failure.text} » : ${failure.error}`);
+}
 
-  if (args.reprocess) {
-    await checkAudioTools();
-    const report = await reprocessClips({
-      ...base,
-      keys: readList(args.keysFile),
-      concurrency: args.concurrency,
-    });
-    log(JSON.stringify({ ...report, missingRaw: report.missingRaw.length }, null, 2));
-    for (const failure of report.failed)
-      log(`  échec ${failure.key} « ${failure.text} » : ${failure.error}`);
-    return report.failed.length ? 4 : 0;
-  }
-
-  if (args.dryRun) {
-    const summary = await runGeneration({ ...base, dryRun: true });
-    log(JSON.stringify(summary, null, 2));
-    return 0;
-  }
-
+/** --reprocess : clips refaits depuis leurs bruts, sans appel */
+async function mainReprocess(args, base) {
   await checkAudioTools();
+  const report = await reprocessClips({
+    ...base,
+    keys: readList(args.keysFile),
+    concurrency: args.concurrency,
+  });
+  base.log(JSON.stringify({ ...report, missingRaw: report.missingRaw.length }, null, 2));
+  logFailures(report.failed, base.log);
+  return report.failed.length ? 4 : 0;
+}
+
+/** --dry-run : ce qui reste à générer, sans appel ni écriture */
+async function mainDryRun(base) {
+  const summary = await runGeneration({ ...base, dryRun: true });
+  base.log(JSON.stringify(summary, null, 2));
+  return 0;
+}
+
+/** Fournisseur de la voix, après avoir vérifié que la voix est utilisable avec cette clé */
+async function openProvider(voice) {
   const createProvider = PROVIDERS[voice.provider];
   if (!createProvider) throw new Error(`Fournisseur inconnu : ${voice.provider}`);
   const provider = createProvider({
@@ -627,8 +676,11 @@ async function main(argv) {
         `depuis la bibliothèque de voix (propriétaire public ${voice.publicOwnerId}).`
     );
   }
-  const maxCredits = await creditBudget(args, provider, log);
+  return provider;
+}
 
+/** Signal d'arrêt levé par Ctrl+C ou SIGTERM : les appels en cours finissent, puis nettoyage */
+function stopSignal(log) {
   const controller = new AbortController();
   const onSignal = () => {
     log('Arrêt demandé : fin des appels en cours, nettoyage…');
@@ -636,6 +688,16 @@ async function main(argv) {
   };
   process.once('SIGINT', onSignal);
   process.once('SIGTERM', onSignal);
+  return controller.signal;
+}
+
+/** Génération payante : budget en crédits, appels, trace dans le journal des exécutions */
+async function mainGenerate(args, base) {
+  const { voice, log } = base;
+  await checkAudioTools();
+  const provider = await openProvider(voice);
+  const maxCredits = await creditBudget(args, provider, log);
+  const signal = stopSignal(log);
 
   const startedAt = new Date();
   const summary = await runGeneration({
@@ -645,16 +707,33 @@ async function main(argv) {
     maxCredits,
     limit: args.limit,
     concurrency: args.concurrency,
-    signal: controller.signal,
+    signal,
   });
   const credits = await provider.credits().catch(() => null);
   const record = { startedAt, endedAt: new Date(), ...summary, creditsAfter: credits };
   const { runLogFile } = storePaths(args.out, args.lang, voice.version);
   await fsp.appendFile(runLogFile, `${JSON.stringify(record)}\n`);
   log(JSON.stringify({ ...summary, failed: summary.failed.length }, null, 2));
-  for (const failure of summary.failed)
-    log(`  échec ${failure.key} « ${failure.text} » : ${failure.error}`);
+  logFailures(summary.failed, log);
   return exitCodeFor(summary);
+}
+
+async function main(argv) {
+  const args = parseArgs(argv);
+  const voice = loadVoice(args.lang);
+  const phrases = buildCorpus(args.lang);
+  const base = {
+    lang: args.lang,
+    voice,
+    outDir: args.out,
+    phrases,
+    redo: readList(args.redoFile),
+    log: console.log,
+    rawFrom: args.rawFrom,
+  };
+  if (args.reprocess) return mainReprocess(args, base);
+  if (args.dryRun) return mainDryRun(base);
+  return mainGenerate(args, base);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

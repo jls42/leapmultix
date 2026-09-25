@@ -33,6 +33,13 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { VOICE_KEY_SCHEMA } from '../../js/core/spoken-text.js';
 import { VOICE_AUDIENCES, parseVoiceIndex } from '../../js/core/voice-index.js';
+import {
+  assertLangCode,
+  flagOption,
+  parseOptions,
+  pathOption,
+  valueOption,
+} from './cli-options.mjs';
 import { readManifest, storePaths } from './clip-store.mjs';
 import { buildCorpus } from './corpus.mjs';
 import { DEFAULT_OUT, loadVoice } from './generate.mjs';
@@ -62,7 +69,7 @@ export async function awsCli(args) {
  * @param {Object|null} current - Index actuel (validé), ou null
  */
 export function withLanguage(current, lang, entry) {
-  const languages = { ...(current?.languages ?? {}) };
+  const languages = { ...current?.languages };
   if (entry) languages[lang] = entry;
   else delete languages[lang];
   return { schema: VOICE_KEY_SCHEMA, languages };
@@ -317,27 +324,26 @@ async function publishLocal(ctx) {
     : null;
   const index = withLanguage(current, lang, indexEntry(voice, { audience, defaultOn }));
   log(`${target} → ${paths.clipDir}`);
-  if (dryRun) return index;
-  await fsp.mkdir(path.dirname(target), { recursive: true });
-  await fsp.rm(target, { recursive: true, force: true });
-  await fsp.symlink(paths.clipDir, target, 'dir');
-  await fsp.writeFile(indexFile, `${JSON.stringify(index, null, 2)}\n`);
+  if (!dryRun) {
+    await fsp.mkdir(path.dirname(target), { recursive: true });
+    await fsp.rm(target, { recursive: true, force: true });
+    await fsp.symlink(paths.clipDir, target, 'dir');
+    await fsp.writeFile(indexFile, `${JSON.stringify(index, null, 2)}\n`);
+  }
   return index;
 }
 
-const FLAGS = {
-  '--dry-run': 'dryRun',
-  '--default-on': 'defaultOn',
-  '--allow-missing': 'allowMissing',
-  '--force': 'force',
-};
-const VALUES = {
-  '--lang': 'lang',
-  '--bucket': 'bucket',
-  '--distribution': 'distribution',
-  '--audience': 'audience',
-  '--out': 'out',
-  '--site': 'site',
+const CLI_OPTIONS = {
+  '--dry-run': flagOption('dryRun'),
+  '--default-on': flagOption('defaultOn'),
+  '--allow-missing': flagOption('allowMissing'),
+  '--force': flagOption('force'),
+  '--lang': valueOption('lang'),
+  '--bucket': valueOption('bucket'),
+  '--distribution': valueOption('distribution'),
+  '--audience': valueOption('audience'),
+  '--out': pathOption('out'),
+  '--site': pathOption('site'),
 };
 
 /**
@@ -347,8 +353,12 @@ const VALUES = {
  * @param {Object} [env]
  */
 export function parsePublishArgs(argv, env = process.env) {
-  const args = {
-    command: argv[0],
+  const [command, ...options] = argv;
+  if (!COMMANDS.includes(command)) {
+    throw new Error(`Commande attendue en premier : ${COMMANDS.join(', ')}`);
+  }
+  const args = parseOptions(options, CLI_OPTIONS, {
+    command,
     out: DEFAULT_OUT,
     audience: 'test',
     defaultOn: false,
@@ -358,24 +368,8 @@ export function parsePublishArgs(argv, env = process.env) {
     site: ROOT,
     bucket: env.VOICE_BUCKET,
     distribution: env.CLOUDFRONT_DISTRIB,
-  };
-  if (!COMMANDS.includes(args.command)) {
-    throw new Error(`Commande attendue en premier : ${COMMANDS.join(', ')}`);
-  }
-  for (let i = 1; i < argv.length; i++) {
-    const arg = argv[i];
-    if (FLAGS[arg]) {
-      args[FLAGS[arg]] = true;
-      continue;
-    }
-    if (!VALUES[arg]) throw new Error(`Option inconnue : ${arg}`);
-    const value = argv[++i];
-    if (value === undefined || value.startsWith('--')) throw new Error(`Valeur manquante : ${arg}`);
-    args[VALUES[arg]] = value;
-  }
-  args.out = path.resolve(args.out);
-  args.site = path.resolve(args.site);
-  if (!/^[a-z]{2}$/.test(args.lang ?? '')) throw new Error('--lang attend un code (fr, en, es)');
+  });
+  assertLangCode(args.lang);
   if (!VOICE_AUDIENCES.includes(args.audience)) {
     throw new Error(`--audience attend ${VOICE_AUDIENCES.join(' ou ')}`);
   }
