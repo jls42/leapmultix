@@ -14,7 +14,7 @@ import {
   speak as _speak,
 } from '../utils-es6.js';
 import { AudioManager } from '../core/audio.js';
-import { cancelSpeech } from '../speech.js';
+import { cancelSpeech, unlockSpeech } from '../speech.js';
 import { goToSlide } from '../slides.js';
 import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
@@ -544,6 +544,8 @@ export const TopBar = {
             eventBus.emit('voice:preference-changed', { enabled: next });
             this.updateVoiceToggleUI(next);
             if (next) {
+              // Ce clic est un geste : il déverrouille le son (iOS) avant la confirmation
+              unlockSpeech();
               try {
                 _speak(getTranslation('voice_enabled'));
               } catch (error) {

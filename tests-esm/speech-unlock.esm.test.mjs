@@ -28,7 +28,7 @@ globalThis.speechSynthesis = {
   pending: false,
 };
 
-const { setSpeechEngine } = await import('../js/speech.js');
+const { setSpeechEngine, unlockSpeech } = await import('../js/speech.js');
 
 let nextResult;
 const engine = {
@@ -114,5 +114,43 @@ describe('Déverrouillage du son au premier geste', () => {
     gesture('keydown');
     await settle();
     expect(engine.unlock).toHaveBeenCalledTimes(4);
+  });
+
+  test('un moteur branché après le déverrouillage l’est au geste suivant, seul', async () => {
+    const primed = primers.length;
+    const later = { start: () => ({ stop: () => {} }), unlock: jest.fn(() => true) };
+    setSpeechEngine(later);
+    gesture('click');
+    await settle();
+    expect(later.unlock).toHaveBeenCalledTimes(1);
+    // La synthèse, déjà déverrouillée, n'est pas réamorcée
+    expect(primers).toHaveLength(primed);
+    gesture('click');
+    await settle();
+    expect(later.unlock).toHaveBeenCalledTimes(1);
+  });
+
+  test('un moteur qui ne peut rien dire n’est pas relancé à chaque geste', async () => {
+    const mute = {
+      start: () => ({ stop: () => {} }),
+      isAvailable: () => false,
+      unlock: jest.fn(() => false),
+    };
+    setSpeechEngine(mute);
+    gesture('click');
+    gesture('keydown');
+    await settle();
+    expect(mute.unlock).not.toHaveBeenCalled();
+  });
+
+  test('unlockSpeech : déverrouille sur demande, même voix coupée (bouton qui l’allume)', async () => {
+    storageState.voiceEnabled = false;
+    const next = { start: () => ({ stop: () => {} }), unlock: jest.fn(() => true) };
+    setSpeechEngine(next);
+    gesture('click');
+    await settle();
+    expect(next.unlock).not.toHaveBeenCalled();
+    expect(await unlockSpeech()).toBe(true);
+    expect(next.unlock).toHaveBeenCalledTimes(1);
   });
 });

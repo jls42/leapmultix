@@ -273,14 +273,20 @@ export function createClipEngine({
 
     /** Déverrouille l'élément <audio> (iOS), dans un geste de l'utilisateur */
     unlock() {
+      // Une phrase tient l'élément : ne pas le toucher (ce serait couper son clip). Un clip
+      // qui joue prouve que l'élément est déjà déverrouillé.
+      if (owner) return Promise.resolve(owner.started);
       let url;
       try {
         url = createObjectURL(silenceBlob());
         audio.src = url;
         return Promise.resolve(audio.play()).then(
           () => {
-            audio.pause();
-            audio.removeAttribute('src');
+            // Un clip a pu prendre l'élément entre-temps : ne pas l'arrêter
+            if (!owner) {
+              audio.pause();
+              audio.removeAttribute('src');
+            }
             revokeObjectURL(url);
             return true;
           },

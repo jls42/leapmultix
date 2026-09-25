@@ -1,10 +1,12 @@
-import { describe, beforeAll, beforeEach, afterEach, test, expect } from '@jest/globals';
+import { describe, beforeAll, beforeEach, afterEach, test, expect, jest } from '@jest/globals';
 import { setTranslations } from '../../js/i18n-store.js';
 import Storage from '../../js/core/storage.js';
 import { eventBus } from '../../js/core/eventBus.js';
 
 const { TopBar } = await import('../../js/components/topBar.js');
-const { isVoiceEnabled, setVoiceEnabledResolver } = await import('../../js/speech.js');
+const { isVoiceEnabled, setVoiceEnabledResolver, setSpeechEngine } = await import(
+  '../../js/speech.js'
+);
 const { UserManager } = await import('../../js/userManager.js');
 
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -149,6 +151,25 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     }
   });
 
+  test('voix allumée par le bouton : ce clic déverrouille le son du moteur', async () => {
+    localStorage.setItem('voiceEnabled', 'false');
+    const engine = {
+      start: () => ({ stop: () => {} }),
+      isAvailable: () => true,
+      unlock: jest.fn(() => true),
+    };
+    setSpeechEngine(engine);
+    try {
+      TopBar.injectTopBarIntoSlides();
+      TopBar.attachVoiceToggles();
+      document.querySelector('#slide7 .voice-toggle').click();
+      expect(engine.unlock).toHaveBeenCalledTimes(1);
+    } finally {
+      setSpeechEngine(null);
+      localStorage.removeItem('voiceEnabled');
+    }
+  });
+
   test('voix : le bouton suit l’état décidé par la voix enregistrée (voice:changed)', () => {
     TopBar.init();
     const btn = document.querySelector('#slide7 .voice-toggle');
@@ -176,7 +197,8 @@ describe('TopBar : icônes SVG, libellés et états', () => {
       TopBar.injectTopBarIntoSlides();
       TopBar.attachVoiceToggles();
       document.querySelector('#slide7 .voice-toggle').click();
-      expect(spoken).toEqual(['Voice enabled']);
+      // L'énoncé vide est l'amorce du déverrouillage (iOS), faite par ce même clic
+      expect(spoken.filter(Boolean)).toEqual(['Voice enabled']);
 
       // Traduction absente : rien n'est dit, ni « [voice_enabled] » ni un repli français
       localStorage.removeItem('voiceEnabled');
@@ -184,7 +206,7 @@ describe('TopBar : icônes SVG, libellés et états', () => {
       TopBar.injectTopBarIntoSlides();
       TopBar.attachVoiceToggles();
       document.querySelector('#slide7 .voice-toggle').click();
-      expect(spoken).toEqual(['Voice enabled']);
+      expect(spoken.filter(Boolean)).toEqual(['Voice enabled']);
     } finally {
       delete globalThis.speechSynthesis;
       delete globalThis.SpeechSynthesisUtterance;

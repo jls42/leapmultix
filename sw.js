@@ -118,6 +118,9 @@ async function voiceIndex(event) {
           .then(pruneVoiceCache)
           .catch(() => {})
       );
+    } else if ([403, 404, 410].includes(response.status)) {
+      // Index retiré : sa copie ne doit pas revenir hors ligne
+      event.waitUntil(cache.delete(VOICE_INDEX));
     }
     return response;
   } catch {

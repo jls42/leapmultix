@@ -195,6 +195,20 @@ describe('Service worker : voix enregistrée', () => {
     expect(await (await request(worker, '/voice/index.json')).json()).toEqual(INDEX);
   });
 
+  test('index retiré (403) : sa copie ne revient pas hors ligne', async () => {
+    let state = 'publié';
+    const worker = loadWorker(() => {
+      if (state === 'hors ligne') throw new TypeError('Failed to fetch');
+      if (state === 'retiré') return new FakeResponse('', { status: 403 });
+      return new FakeResponse(JSON.stringify(INDEX));
+    });
+    await request(worker, '/voice/index.json');
+    state = 'retiré';
+    expect((await request(worker, '/voice/index.json')).status).toBe(403);
+    state = 'hors ligne';
+    expect((await request(worker, '/voice/index.json')).type).toBe('error');
+  });
+
   test('nouvel index : les clips d’autres versions ou langues sont purgés', async () => {
     const worker = loadWorker(url =>
       url.endsWith('index.json') ? new FakeResponse(JSON.stringify(INDEX)) : mp3()

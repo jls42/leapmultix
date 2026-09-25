@@ -460,6 +460,9 @@ export function getSynthesisEngine() {
 export function setSpeechEngine(next) {
   cancelSpeech();
   engine = next ?? SYNTHESIS_ENGINE;
+  // Un moteur pas encore déverrouillé (la voix enregistrée, branchée après le premier geste)
+  // le sera au geste suivant
+  if (typeof document !== 'undefined' && lockedEngines().length) addUnlockListeners();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -653,7 +656,14 @@ export function updateSpeechVoice(langCode) {
 // geste qui autorise le son
 const UNLOCK_EVENTS = ['click', 'touchend', 'keydown'];
 let unlockTried = false;
-let unlocked = false;
+/** Moteurs déjà déverrouillés : un moteur branché plus tard l'est à son tour */
+const unlockedEngines = new WeakSet();
+
+function addUnlockListeners() {
+  for (const type of UNLOCK_EVENTS) {
+    document.addEventListener(type, onUnlockGesture, { capture: true, passive: true });
+  }
+}
 
 function removeUnlockListeners() {
   for (const type of UNLOCK_EVENTS) {
@@ -661,44 +671,61 @@ function removeUnlockListeners() {
   }
 }
 
-function settleUnlock(ok) {
-  if (ok) {
-    unlocked = true;
-    removeUnlockListeners();
-  } else {
-    // Échec : le prochain geste réessaie
-    unlockTried = false;
-  }
-}
-
-function unlockEngines() {
-  const engines = [...new Set([SYNTHESIS_ENGINE, engine])];
-  const results = engines.map(candidate => {
-    try {
-      return candidate.unlock ? candidate.unlock() : true;
-    } catch {
-      return false;
-    }
-  });
-  return Promise.all(results.map(result => Promise.resolve(result).catch(() => false))).then(list =>
-    list.every(Boolean)
+/** Moteurs encore à déverrouiller ; un moteur qui ne peut rien dire n'en a pas besoin */
+function lockedEngines() {
+  return [...new Set([SYNTHESIS_ENGINE, engine])].filter(
+    candidate => !unlockedEngines.has(candidate) && candidate.isAvailable?.() !== false
   );
 }
 
-function onUnlockGesture() {
-  if (unlocked || unlockTried) return;
-  // Voix coupée : rien à déverrouiller, un geste suivant s'en chargera
-  if (isMuted || !isVoiceEnabled()) return;
+function unlockEngine(candidate) {
+  let result;
+  try {
+    result = candidate.unlock ? candidate.unlock() : true;
+  } catch {
+    result = false;
+  }
+  return Promise.resolve(result)
+    .catch(() => false)
+    .then(ok => {
+      if (ok) unlockedEngines.add(candidate);
+      return Boolean(ok);
+    });
+}
+
+/**
+ * Déverrouille le son des moteurs qui ne le sont pas encore ; à appeler pendant un geste
+ * de l'utilisateur. Le bouton de la barre du haut l'appelle en allumant la voix : le
+ * déverrouillage automatique de son clic est passé avant, voix encore coupée.
+ * @returns {Promise<boolean>} true si tout est déverrouillé
+ */
+export function unlockSpeech() {
+  if (unlockTried) return Promise.resolve(false);
+  const pending = lockedEngines();
+  if (!pending.length) {
+    removeUnlockListeners();
+    return Promise.resolve(true);
+  }
   // Posé tout de suite, dans le geste : touchend puis click, ou une touche répétée,
   // n'empilent pas d'énoncés vides
   unlockTried = true;
-  unlockEngines().then(settleUnlock, () => settleUnlock(false));
+  return Promise.all(pending.map(unlockEngine)).then(results => {
+    // Échec : le prochain geste réessaie ; réussite : plus besoin d'écouter les gestes
+    unlockTried = false;
+    if (!lockedEngines().length) removeUnlockListeners();
+    return results.every(Boolean);
+  });
+}
+
+function onUnlockGesture() {
+  if (unlockTried) return;
+  // Voix coupée : rien à déverrouiller, un geste suivant s'en chargera
+  if (isMuted || !isVoiceEnabled()) return;
+  unlockSpeech();
 }
 
 function initializeSpeechLifecycle() {
-  for (const type of UNLOCK_EVENTS) {
-    document.addEventListener(type, onUnlockGesture, { capture: true, passive: true });
-  }
+  addUnlockListeners();
   // Onglet caché : la parole s'arrête (elle ne reprend pas au retour)
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') cancelSpeech();

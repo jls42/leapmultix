@@ -398,6 +398,34 @@ describe('Moteur des clips', () => {
     expect(await engine.unlock()).toBe(false);
   });
 
+  test('déverrouillage pendant qu’une phrase tient l’élément : son clip n’est pas coupé', async () => {
+    const engine = makeEngine();
+    const h = handlers();
+    engine.start('Mode Quiz', h);
+    await flush();
+    audio.fire('playing');
+    const playing = audio.src;
+    expect(await engine.unlock()).toBe(true);
+    expect(audio.src).toBe(playing);
+    expect(audio.paused).toBe(0);
+    expect(audio.plays).toHaveLength(1);
+  });
+
+  test('clip démarré pendant le silence de déverrouillage : le clip n’est pas arrêté', async () => {
+    let resolveSilence;
+    audio.playResult = () => new Promise(resolve => (resolveSilence = resolve));
+    const engine = makeEngine();
+    const unlocking = engine.unlock();
+    audio.playResult = () => Promise.resolve();
+    engine.start('Mode Quiz', handlers());
+    await flush();
+    const clip = audio.src;
+    resolveSilence();
+    expect(await unlocking).toBe(true);
+    expect(audio.src).toBe(clip);
+    expect(audio.paused).toBe(0);
+  });
+
   test('préchargement : une requête par clip, en priorité basse ; un absent n’est plus demandé', async () => {
     respond = async url =>
       url.includes(voiceKey('Mode Défi')) ? new Response('', { status: 404 }) : mp3();
