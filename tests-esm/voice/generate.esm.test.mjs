@@ -27,7 +27,13 @@ import {
 } from '../../scripts/voice/generate.mjs';
 import { ClipContentError } from '../../scripts/voice/audio-process.mjs';
 import { createElevenLabs, ProviderError } from '../../scripts/voice/providers/elevenlabs.mjs';
-import { rawFile, saidHash, storePaths, synthesisHash } from '../../scripts/voice/clip-store.mjs';
+import {
+  rawFile,
+  replacedFile,
+  saidHash,
+  storePaths,
+  synthesisHash,
+} from '../../scripts/voice/clip-store.mjs';
 
 /** Clé factice : le faux serveur la reçoit, aucun fichier ni message ne doit la contenir */
 const FAKE_KEY = 'cle-factice-du-faux-serveur-elevenlabs';
@@ -493,11 +499,18 @@ describe('Génération des clips', () => {
     fs.writeFileSync(paths().manifestFile, JSON.stringify(data));
     const current = rawFile(paths(), PHRASES[0].key, saidText(PHRASES[0].text, 'fr'));
     await fsp.rename(current, rawFile(paths(), PHRASES[0].key, old));
+    const before = fs.readFileSync(clipOf(PHRASES[0]));
+    // Simulé : rien ne bouge
+    await run({ phrases: [PHRASES[0]], dryRun: true });
+    expect(fs.readFileSync(clipOf(PHRASES[0]))).toEqual(before);
+    expect(fs.existsSync(paths().replacedDir)).toBe(false);
     const summary = await run({ phrases: [PHRASES[0]] });
     expect(summary.stale).toBe(1);
     expect(summary.staleRaw).toBe(1);
     expect(summary.generated).toBe(1);
     expect(manifest().clips[PHRASES[0].key].said).toBe('Combien font une fois 7 ?');
+    // L'ancien clip est mis de côté pour la comparaison avant/après de la page d'écoute
+    expect(fs.readFileSync(replacedFile(paths(), PHRASES[0].key))).toEqual(before);
   });
 
   test('nouvelle version qui ne change que l’encodage : clips refaits depuis les bruts, sans appel', async () => {
@@ -553,6 +566,21 @@ describe('Génération des clips', () => {
     const summary = await run({ redo: [PHRASES[3].key] });
     expect(summary.generated).toBe(1);
     expect(server.tts()).toHaveLength(PHRASES.length + 1);
+  });
+
+  test('--redo : l’ancien clip est mis de côté, seul, pour la comparaison avant/après', async () => {
+    server = await startServer(ok);
+    await run();
+    const redone = PHRASES[3];
+    fs.writeFileSync(clipOf(redone), 'ancien clip');
+    await run({ redo: [redone.key] });
+    expect(fs.readFileSync(replacedFile(paths(), redone.key), 'utf8')).toBe('ancien clip');
+    expect(fs.readFileSync(clipOf(redone), 'utf8')).not.toBe('ancien clip');
+    expect(fs.readdirSync(paths().replacedDir)).toEqual([`${redone.key}.mp3`]);
+    // Un --redo simulé ne touche à rien
+    await run({ redo: [PHRASES[0].key], dryRun: true });
+    expect(fs.readdirSync(paths().replacedDir)).toEqual([`${redone.key}.mp3`]);
+    expect(fs.existsSync(clipOf(PHRASES[0]))).toBe(true);
   });
 
   test('--dry-run : ni appel ni écriture', async () => {

@@ -17,7 +17,8 @@
 //                          environ 0,53 crédit par caractère, mesuré sur le français)
 //     --limit <n>          appels au plus pour cette exécution
 //     --concurrency <n>    appels simultanés (défaut : 4)
-//     --redo <fichier>     empreintes à refaire, une par ligne (clip écarté à l'écoute)
+//     --redo <fichier>     empreintes à refaire, une par ligne (clip écarté à l'écoute) ;
+//                          l'ancien clip est mis de côté dans ecoute/avant/ (listen-page.mjs)
 //     --raw-from <version> reprend les bruts rangés sous l'ancien nom d'une autre version
 //                          (mêmes réglages de synthèse, seul l'encodage change)
 //     --reprocess          refait les clips depuis leurs bruts, sans appel (--keys <fichier> :
@@ -45,6 +46,7 @@ import {
   integerOption,
   parseOptions,
   pathOption,
+  readKeyList,
   valueOption,
 } from './cli-options.mjs';
 import {
@@ -54,6 +56,7 @@ import {
   migrateLegacyRaw,
   synthesisHash,
   clipFile,
+  keepReplaced,
   rawFile,
   readManifest,
   reconcile,
@@ -171,11 +174,14 @@ async function withRetries(task, options) {
   }
 }
 
-/** Écarte les clips à refaire (liste d'empreintes) avant la réconciliation */
+/**
+ * Écarte les clips à refaire (liste d'empreintes) avant la réconciliation. Chaque clip écarté
+ * est mis de côté (ecoute/avant/) pour la comparaison avant/après de la page d'écoute.
+ */
 async function forgetKeys(paths, manifest, keys) {
   for (const key of keys) {
     delete manifest.clips[key];
-    await fsp.rm(clipFile(paths, key), { force: true });
+    await keepReplaced(paths, key);
     const raws = fs.existsSync(paths.rawDir) ? fs.readdirSync(paths.rawDir) : [];
     for (const name of raws.filter(n => n.startsWith(`${key}-`))) {
       await fsp.rm(path.join(paths.rawDir, name), { force: true });
@@ -632,8 +638,6 @@ export function exitCodeFor(summary) {
   return EXIT_CODES[summary.stop] ?? (summary.failed.length ? 4 : 0);
 }
 
-const readList = file => (file ? fs.readFileSync(file, 'utf8').split(/\s+/).filter(Boolean) : []);
-
 function logFailures(failed, log) {
   for (const failure of failed)
     log(`  échec ${failure.key} « ${failure.text} » : ${failure.error}`);
@@ -644,7 +648,7 @@ async function mainReprocess(args, base) {
   await checkAudioTools();
   const report = await reprocessClips({
     ...base,
-    keys: readList(args.keysFile),
+    keys: readKeyList(args.keysFile),
     concurrency: args.concurrency,
   });
   base.log(JSON.stringify({ ...report, missingRaw: report.missingRaw.length }, null, 2));
@@ -727,7 +731,7 @@ async function main(argv) {
     voice,
     outDir: args.out,
     phrases,
-    redo: readList(args.redoFile),
+    redo: readKeyList(args.redoFile),
     log: console.log,
     rawFrom: args.rawFrom,
   };

@@ -7,7 +7,9 @@
  * lecture stricte, une option inconnue, une valeur manquante ou un nombre mal écrit
  * arrêtent tout, jamais d'option ignorée ni de NaN en silence.
  */
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect, afterEach } from '@jest/globals';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import {
   assertLangCode,
@@ -15,6 +17,7 @@ import {
   integerOption,
   parseOptions,
   pathOption,
+  readKeyList,
   valueOption,
   wholeNumber,
 } from '../../scripts/voice/cli-options.mjs';
@@ -106,4 +109,38 @@ describe('Valeurs vérifiées', () => {
       expect(() => assertLangCode(lang)).toThrow('--lang attend un code (fr, en, es)');
     }
   });
+});
+
+describe('Listes d’empreintes (--redo, --keys, --compare)', () => {
+  let dir;
+  const listFile = content => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'voice-keys-'));
+    const file = path.join(dir, 'ecartes.txt');
+    fs.writeFileSync(file, content);
+    return file;
+  };
+
+  afterEach(() => {
+    if (dir) fs.rmSync(dir, { recursive: true, force: true });
+    dir = undefined;
+  });
+
+  test('une empreinte par ligne ou séparées par des blancs ; sans fichier, aucune', () => {
+    expect(readKeyList(listFile('11acl29ntod\n  a6k3pck1sx\tfrr8ukemt3\n\n'))).toEqual([
+      '11acl29ntod',
+      'a6k3pck1sx',
+      'frr8ukemt3',
+    ]);
+    expect(readKeyList(undefined)).toEqual([]);
+  });
+
+  test.each(['../../etc/passwd', 'ABC12', 'a6k3pck1sx.mp3', '123456789012', '# commentaire'])(
+    'empreinte mal formée refusée, elle nommerait un fichier : %p',
+    key => {
+      const file = listFile(`a6k3pck1sx\n${key}\n`);
+      expect(() => readKeyList(file)).toThrow(
+        `Empreinte invalide dans ${file} : ${key.split(' ')[0]}`
+      );
+    }
+  );
 });
