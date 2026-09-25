@@ -375,14 +375,31 @@ Les paramètres d'un message doivent être les mêmes dans les trois langues
 
 #### Phrases parlées : corpus et verrou
 
+**Règle, sans exception : une phrase dite modifiée se réenregistre avant sa mise en prod.**
+Chaque phrase que le jeu lit à voix haute a son clip MP3 (voix enregistrée « Lucie »),
+retrouvé par l'empreinte du texte exact. Toucher ce texte (traduction fr/en/es, gabarit,
+forme d'une question, plage d'opérandes, nouvelle phrase) le prive de clip : le jeu la lit
+alors avec la voix de l'appareil, sans erreur ni alerte. Donc, dans la même PR que le
+changement de texte :
+
+1. le test du verrou échoue exprès : c'est le rappel ;
+2. générer les clips manquants avec le skill `generating-voice-clips` (payant : estimation
+   `--dry-run` d'abord, accord du propriétaire), contrôler (Whisper, `voice:check`), faire
+   écouter ;
+3. publier les nouveaux clips (`voice:publish clips`, puis `voice:check-online`) **avant**
+   de fusionner, puis `npm run voice:corpus:lock`.
+
+Un clip qui reste mal dit après plusieurs essais reçoit un texte dit imposé
+(`SAID_OVERRIDES` de `scripts/voice/said-text.mjs`, par exemple un nombre en toutes
+lettres) : la phrase affichée et l'empreinte du clip ne changent pas.
+
 Tout ce que le jeu lit à voix haute est énuméré par `scripts/voice/corpus.mjs`, à partir
 du code du jeu (opérations, formateur, formes parlées de `js/core/spoken-text.js`, données
-des modes). La voix enregistrée retrouvera chaque clip par l'empreinte de sa phrase ;
-`scripts/voice/corpus.lock.json` garde, par langue, le nombre de phrases et leur empreinte.
+des modes). `scripts/voice/corpus.lock.json` garde, par langue, le nombre de phrases et
+leur empreinte.
 
-- Changer une phrase parlée (traduction, gabarit, forme d'une question, plage
-  d'opérandes) fait échouer `tests-esm/voice/corpus.esm.test.mjs` : régénérer les clips de
-  la langue, puis `npm run voice:corpus:lock`.
+- Changer une phrase parlée fait échouer `tests-esm/voice/corpus.esm.test.mjs` : clips
+  d'abord (ci-dessus), verrou ensuite.
 - Un nouvel appel à `speak()` fait échouer `tests-esm/voice/speak-inventory.esm.test.mjs` :
   ajouter sa phrase au corpus, puis mettre l'inventaire à jour.
 - `tests-esm/voice/modes-in-corpus.esm.test.mjs` fait jouer les vrais modes dans les trois
