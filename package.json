@@ -32,6 +32,7 @@
     "voice:generate": "node scripts/voice/generate.mjs",
     "voice:check": "node scripts/voice/check.mjs",
     "voice:listen": "node scripts/voice/listen-page.mjs",
+    "voice:review": "node scripts/voice/review.mjs",
     "voice:publish": "node scripts/voice/publish.mjs",
     "voice:check-online": "node scripts/voice/check-online.mjs",
     "audit:accessibility": "node scripts/audit-accessibility.js",

@@ -377,6 +377,18 @@ export function parseArgs(argv) {
   return args;
 }
 
+/**
+ * Écrit une page dans <dépôt des voix>/ecoute/ et rend son chemin
+ * @param {string} pageDir
+ * @param {{name: string, html: string}} page
+ */
+export async function writePage(pageDir, page) {
+  await fsp.mkdir(pageDir, { recursive: true });
+  const file = path.join(pageDir, page.name);
+  await fsp.writeFile(file, page.html);
+  return file;
+}
+
 async function main(argv) {
   const args = parseArgs(argv);
   const voice = loadVoice(args.lang);
@@ -395,9 +407,7 @@ async function main(argv) {
   const page = args.compare
     ? buildComparePage({ ...context, keys: readKeyList(args.compare) })
     : buildListenPage({ ...context, sample: args.sample });
-  await fsp.mkdir(context.pageDir, { recursive: true });
-  const file = path.join(context.pageDir, page.name);
-  await fsp.writeFile(file, page.html);
+  const file = await writePage(context.pageDir, page);
   console.log(`${page.summary}\n${pathToFileURL(file).href}`);
   return 0;
 }
