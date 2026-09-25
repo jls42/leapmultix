@@ -5,7 +5,7 @@
 import {
   ProviderError,
   assertApiKey,
-  keyMasker,
+  httpCaller,
   looksLikeMp3,
   readErrorDetail,
 } from './common.mjs';
@@ -51,22 +51,14 @@ async function errorFrom(res) {
  */
 export function createElevenLabs({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl = fetch }) {
   assertApiKey(apiKey, 'ELEVENLABS_API_KEY');
-  const hide = keyMasker(apiKey);
-
-  async function call(pathname, init = {}) {
-    let res;
-    try {
-      res = await fetchImpl(`${baseUrl}${pathname}`, {
-        ...init,
-        headers: { 'xi-api-key': apiKey, ...init.headers },
-      });
-    } catch (error) {
-      if (init.signal?.aborted) throw error;
-      throw new ProviderError('network', `ElevenLabs injoignable : ${hide(error.message)}`);
-    }
-    if (!res.ok) throw await errorFrom(res);
-    return res;
-  }
+  const call = httpCaller({
+    label: 'ElevenLabs',
+    apiKey,
+    authHeaders: { 'xi-api-key': apiKey },
+    baseUrl,
+    fetchImpl,
+    errorFrom,
+  });
 
   return {
     name: 'elevenlabs',

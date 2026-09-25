@@ -17,7 +17,7 @@ import path from 'node:path';
 import { voiceKey } from '../../js/core/spoken-text.js';
 import { createMistral } from '../../scripts/voice/providers/mistral.mjs';
 import { createElevenLabs } from '../../scripts/voice/providers/elevenlabs.mjs';
-import { ProviderError } from '../../scripts/voice/providers/common.mjs';
+import { ProviderError, errorDetail } from '../../scripts/voice/providers/common.mjs';
 import {
   charCap,
   creditBudget,
@@ -189,7 +189,26 @@ describe('Fournisseur Mistral : classement des erreurs réelles', () => {
     });
     const error = await errorOf(provider.synthesize({ text: 'a', voice: VOICE }));
     expect(error.kind).toBe('network');
+    expect(error.message).toBe(
+      'Mistral injoignable : connexion refusée (Authorization: Bearer ***)'
+    );
     expect(error.message).not.toContain(KEY);
+  });
+
+  test('appel annulé : son erreur passe telle quelle, sans devenir une panne réseau', async () => {
+    const controller = new AbortController();
+    const provider = createMistral({
+      apiKey: KEY,
+      fetchImpl: async (_url, init) => {
+        controller.abort();
+        throw init.signal.reason;
+      },
+    });
+    const error = await errorOf(
+      provider.synthesize({ text: 'a', voice: VOICE, signal: controller.signal })
+    );
+    expect(error).not.toBeInstanceOf(ProviderError);
+    expect(error.name).toBe('AbortError');
   });
 
   test('clé absente ou mal formée : auth, avec le nom de la variable', () => {
@@ -208,6 +227,13 @@ describe('Fournisseur Mistral : classement des erreurs réelles', () => {
       'auth'
     );
   });
+
+  test.each([null, 'Bad Request', 42, []])(
+    'corps d’erreur sans rien de lisible (%j) : message vide, sans planter',
+    body => {
+      expect(errorDetail(body)).toEqual({ message: '' });
+    }
+  );
 });
 
 describe('Voix anglaise : entrée de voices.json', () => {

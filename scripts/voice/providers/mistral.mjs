@@ -16,7 +16,7 @@
 import {
   ProviderError,
   assertApiKey,
-  keyMasker,
+  httpCaller,
   looksLikeMp3,
   readErrorDetail,
 } from './common.mjs';
@@ -79,22 +79,14 @@ async function audioOf(res) {
  */
 export function createMistral({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl = fetch }) {
   assertApiKey(apiKey, 'MISTRAL_API_KEY');
-  const hide = keyMasker(apiKey);
-
-  async function call(pathname, init = {}) {
-    let res;
-    try {
-      res = await fetchImpl(`${baseUrl}${pathname}`, {
-        ...init,
-        headers: { Authorization: `Bearer ${apiKey}`, ...init.headers },
-      });
-    } catch (error) {
-      if (init.signal?.aborted) throw error;
-      throw new ProviderError('network', `Mistral injoignable : ${hide(error.message)}`);
-    }
-    if (!res.ok) throw await errorFrom(res);
-    return res;
-  }
+  const call = httpCaller({
+    label: 'Mistral',
+    apiKey,
+    authHeaders: { Authorization: `Bearer ${apiKey}` },
+    baseUrl,
+    fetchImpl,
+    errorFrom,
+  });
 
   return {
     name: 'mistral',
