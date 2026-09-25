@@ -600,10 +600,13 @@ Deux points à connaître avant d'y toucher :
   cette condition qui empêche la pull request d'un inconnu d'obtenir les droits
   de déploiement. Il est défini dans le dépôt d'infrastructure
   (`leapmultix-infra`, fichier `github-oidc.tf`).
-- **`aws s3 sync --size-only` ne voit pas un fichier modifié à taille égale.**
-  `sw.js`, `js/cache-updater.js`, `sitemap.xml`, `index.html` et tous les modules
-  `js/**/*.js` (version, dates) sont donc renvoyés d'office par `deploy.sh` ; un
-  autre fichier de ce genre s'ajoute à cette liste.
+- **`aws s3 sync --size-only` ne voit pas un fichier modifié à taille égale** : une
+  version (« v19 » → « v20 »), une date, un mot de même longueur (« ElevenLabs » →
+  « Mistral AI » dans `en.json`, resté ancien en ligne le 26/09/2026). `deploy.sh`
+  renvoie donc d'office **tous les fichiers texte** du site (`.html`, `.js`, `.css`,
+  `.json`, `.xml`, `.txt`) ; seuls les binaires (images, sons, vidéos, polices) s'en
+  tiennent à la taille. Une nouvelle sorte de fichier texte s'ajoute à sa liste
+  d'extensions, et au test `tests-esm/scripts/deploy-text-files.test.mjs`.
 - **Chaque adresse de module porte la version** (`scripts/version-module-urls.mjs`,
   appelé par `deploy.sh` sur la copie à envoyer) : les modules s'importent sans
   version et CloudFront les donne au navigateur pour une semaine, qu'il ressert sans

@@ -80,6 +80,8 @@ echo "=================================="
 # Chargement de la configuration
 if [[ -f "$CONFIG_FILE" ]]; then
     echo -e "${GREEN}📝 Chargement de la configuration: $CONFIG_FILE${NC}"
+    # Fichier choisi à l'exécution (--config), hors dépôt : rien à suivre pour ShellCheck
+    # shellcheck source=/dev/null
     source "$CONFIG_FILE"
 else
     echo -e "${YELLOW}⚠️  Fichier de configuration non trouvé: $CONFIG_FILE${NC}"
@@ -273,42 +275,41 @@ else
     if eval "$SYNC_CMD"; then
         echo -e "${GREEN}✅ Synchronisation S3 terminée avec succès !${NC}"
 
-        # La synchronisation compare les tailles (--size-only). Or certains
-        # fichiers changent sans changer de taille, et n'étaient donc JAMAIS
-        # renvoyés :
+        # La synchronisation compare les tailles (--size-only). Or un fichier texte
+        # peut changer sans changer de taille, et n'était alors JAMAIS renvoyé :
         # - la version : « v19 » et « v20 » font le même nombre d'octets.
         #   Constaté le 21/09/2026, sw.js resté en v19 en ligne alors que le
         #   dépôt était en v20 : le renouvellement du cache n'arrivait pas ;
         # - les dates du sitemap : « 2025-11-10 » et « 2025-12-06 » aussi.
-        #   Constaté le 24/09/2026, la prod gardait les anciennes dates.
-        # On les force, avec le type que S3 leur donnait ; ils pèsent quelques
-        # kilo-octets.
-        echo -e "${BLUE}📌 Envoi forcé des fichiers modifiés à taille constante...${NC}"
-        # - index.html : la balise de la voix enregistrée peut changer sans changer la
-        #   taille du fichier.
-        for entree in sw.js:text/javascript js/cache-updater.js:text/javascript \
-            sitemap.xml:application/xml index.html:text/html; do
-            fichier="${entree%%:*}"
-            type_mime="${entree#*:}"
-            if [[ -f "$TEMP_DIR/$fichier" ]]; then
-                aws s3 cp "$TEMP_DIR/$fichier" "s3://$S3_BUCKET/$fichier" \
-                    --content-type "$type_mime" --metadata-directive REPLACE > /dev/null
-                echo -e "${GREEN}   ✅ $fichier${NC}"
-            else
+        #   Constaté le 24/09/2026, la prod gardait les anciennes dates ;
+        # - les imports des modules JS, qui portent la version (« v22 » → « v23 ») ;
+        # - un mot remplacé par un autre de même longueur. Constaté le 26/09/2026 :
+        #   en.json resté en ligne avec « made with ElevenLabs » au lieu de
+        #   « made with Mistral AI ».
+        # Tous les fichiers texte du site partent donc d'office, avec le type que S3
+        # leur donne : quelques centaines de kilo-octets. Seuls les fichiers binaires
+        # (images, sons, vidéos, polices) s'en tiennent à la taille. Une nouvelle
+        # sorte de fichier texte s'ajoute à la liste des extensions ci-dessous.
+        echo -e "${BLUE}📌 Envoi forcé des fichiers texte (modifiés à taille constante)...${NC}"
+        for fichier in sw.js js/cache-updater.js sitemap.xml index.html; do
+            if [[ ! -f "$TEMP_DIR/$fichier" ]]; then
                 echo -e "${RED}   ❌ $fichier introuvable — déploiement incohérent${NC}"
                 exit 1
             fi
         done
-        # - les modules JS : leurs imports portent la version, qui change sans changer la
-        #   taille des fichiers (« v22 » → « v23 »).
-        if aws s3 cp "$TEMP_DIR/js" "s3://$S3_BUCKET/js" --recursive \
-            --exclude "*" --include "*.js" \
-            --content-type text/javascript --metadata-directive REPLACE > /dev/null; then
-            echo -e "${GREEN}   ✅ js/**/*.js${NC}"
-        else
-            echo -e "${RED}   ❌ Envoi des modules JS en échec${NC}"
-            exit 1
-        fi
+        for entree in '*.html:text/html' '*.js:text/javascript' '*.css:text/css' \
+            '*.json:application/json' '*.xml:application/xml' '*.txt:text/plain'; do
+            motif="${entree%%:*}"
+            type_mime="${entree#*:}"
+            if aws s3 cp "$TEMP_DIR" "s3://$S3_BUCKET" --recursive \
+                --exclude "*" --include "$motif" \
+                --content-type "$type_mime" --metadata-directive REPLACE > /dev/null; then
+                echo -e "${GREEN}   ✅ $motif${NC}"
+            else
+                echo -e "${RED}   ❌ Envoi des fichiers $motif en échec${NC}"
+                exit 1
+            fi
+        done
 
         # Invalidation CloudFront si configuré
         if [[ -n "$CLOUDFRONT_DISTRIB" ]]; then
