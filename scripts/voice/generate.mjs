@@ -434,6 +434,33 @@ async function generateLocked(opts, paths) {
   };
 }
 
+/** Refait le clip d'une empreinte depuis son brut ; le réécrit seulement s'il change */
+async function reprocessOne(key, { opts, paths, manifest, voice, report }) {
+  const entry = manifest.clips[key];
+  const raw = rawFile(paths, key, entry.said);
+  if (!fs.existsSync(raw)) {
+    report.missingRaw.push(key);
+    return;
+  }
+  report.checked++;
+  const part = `${clipFile(paths, key)}${PART}`;
+  try {
+    await opts.processAudio(raw, part, voice.encoding);
+    const fresh = await inspectWith(opts.probeAudio, part);
+    if (fresh.sha256 === entry.sha256) {
+      await fsp.rm(part, { force: true });
+      return;
+    }
+    await fsp.rename(part, clipFile(paths, key));
+    manifest.clips[key] = { ...entry, ...fresh, reprocessedAt: opts.now().toISOString() };
+    report.changed++;
+  } catch (error) {
+    await fsp.rm(part, { force: true });
+    if (!(error instanceof ClipContentError)) throw error;
+    report.failed.push({ key, text: entry.text, error: error.message });
+  }
+}
+
 /**
  * Refait les clips depuis leurs bruts, sans appel au fournisseur (traitement corrigé) :
  * seuls les clips dont le contenu change sont réécrits et leur entrée mise à jour. Pour des
@@ -455,32 +482,13 @@ export async function reprocessClips(options) {
     await cleanLeftovers(paths);
     const keys = opts.keys?.length ? opts.keys : Object.keys(manifest.clips);
     const report = { checked: 0, changed: 0, missingRaw: [], failed: [] };
-    for (const key of keys) {
-      const entry = manifest.clips[key];
-      if (!entry) continue;
-      const raw = rawFile(paths, key, entry.said);
-      if (!fs.existsSync(raw)) {
-        report.missingRaw.push(key);
-        continue;
+    const queue = keys.filter(key => manifest.clips[key]);
+    const workers = Array.from({ length: Math.max(1, opts.concurrency ?? 4) }, async () => {
+      for (let key = queue.shift(); key; key = queue.shift()) {
+        await reprocessOne(key, { opts, paths, manifest, voice, report });
       }
-      report.checked++;
-      const part = `${clipFile(paths, key)}${PART}`;
-      try {
-        await opts.processAudio(raw, part, voice.encoding);
-        const fresh = await inspectWith(opts.probeAudio, part);
-        if (fresh.sha256 === entry.sha256) {
-          await fsp.rm(part, { force: true });
-          continue;
-        }
-        await fsp.rename(part, clipFile(paths, key));
-        manifest.clips[key] = { ...entry, ...fresh, reprocessedAt: opts.now().toISOString() };
-        report.changed++;
-      } catch (error) {
-        await fsp.rm(part, { force: true });
-        if (!(error instanceof ClipContentError)) throw error;
-        report.failed.push({ key, text: entry.text, error: error.message });
-      }
-    }
+    });
+    await Promise.all(workers);
     await writeManifest(paths, manifest);
     return report;
   } finally {
@@ -566,7 +574,11 @@ async function main(argv) {
 
   if (args.reprocess) {
     await checkAudioTools();
-    const report = await reprocessClips({ ...base, keys: readList(args.keysFile) });
+    const report = await reprocessClips({
+      ...base,
+      keys: readList(args.keysFile),
+      concurrency: args.concurrency,
+    });
     log(JSON.stringify({ ...report, missingRaw: report.missingRaw.length }, null, 2));
     for (const failure of report.failed)
       log(`  échec ${failure.key} « ${failure.text} » : ${failure.error}`);
