@@ -61,9 +61,10 @@ def allowed_roots():
 def resolved(flag, value):
     """Chemin réel d'un argument, liens résolus, refusé hors des arborescences permises"""
     path = os.path.realpath(value)
-    if not any(os.path.commonpath([path, root]) == root for root in allowed_roots()):
-        raise SystemExit(f"{flag} {value} : hors des dossiers courant, personnel et temporaire")
-    return path
+    for root in allowed_roots():
+        if os.path.commonpath([root, path]) == root:
+            return path
+    raise SystemExit(f"{flag} {value} : hors des dossiers courant, personnel et temporaire")
 
 
 def existing_file(flag, value, suffix):
