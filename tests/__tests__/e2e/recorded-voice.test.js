@@ -122,18 +122,20 @@ describe('Voix enregistrée E2E', () => {
     try {
       await createUserAndSkipIntro(page);
       await page.click('.mode-btn[data-mode="quiz"]');
-      await page.waitForFunction(() => globalThis.__spoken.some(text => /\?/.test(text)), {
-        timeout: 20000,
-      });
-      const { spoken, played } = await page.evaluate(() => ({
+      // La question tirée au hasard (« Combien font… ? », vrai/faux dit comme une affirmation,
+      // énoncé) n'a pas de clip : elle est la seule phrase qui passe par la synthèse
+      await page.waitForFunction(() => globalThis.__spoken.some(Boolean), { timeout: 20000 });
+      const { spoken, played, question } = await page.evaluate(() => ({
         spoken: globalThis.__spoken.filter(Boolean),
         played: globalThis.__played,
+        question: document.querySelector('#quiz-question')?.textContent ?? '',
       }));
       // L'annonce n'est pas passée par la synthèse, un clip blob: a été joué
       expect(spoken.some(text => /^Mode/.test(text))).toBe(false);
       expect(played.some(src => src.startsWith('blob:'))).toBe(true);
-      // La question, sans clip, est lue par la synthèse, seule
-      expect(spoken.filter(text => /\?/.test(text))).toHaveLength(1);
+      // La question affichée, lue par la synthèse, seule : ses nombres sont ceux de l'écran
+      expect(spoken).toHaveLength(1);
+      expect(spoken[0].match(/\d+/g)).toEqual(question.match(/\d+/g));
       expect(voiceRequests.some(url => url.endsWith('/voice/index.json'))).toBe(true);
     } finally {
       await context.close();
