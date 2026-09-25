@@ -654,6 +654,9 @@ describe('Fournisseur ElevenLabs : classement des erreurs', () => {
       throw new TypeError(`Headers.append: "${FAKE_KEY}" is an invalid header value.`);
     }).catch(e => e);
     expect(error.kind).toBe('network');
+    expect(error.message).toBe(
+      'ElevenLabs injoignable : Headers.append: "***" is an invalid header value.'
+    );
     expect(error.message).not.toContain(FAKE_KEY);
   });
 

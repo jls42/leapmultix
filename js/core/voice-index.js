@@ -8,7 +8,7 @@
  *   "languages": {
  *     "fr": {
  *       "voice": "lucie",                     nom de la voix
- *       "version": "lucie-v3-1",              dossier des clips : /voice/fr/lucie-v3-1/
+ *       "version": "lucie-v3-2",              dossier des clips : /voice/fr/lucie-v3-2/
  *       "format": "mp3",
  *       "audience": "test",                   "test" : navigateurs marqués ?voix=test ; "all"
  *       "defaultOn": false                    parole active par défaut (sans choix du joueur)
@@ -38,11 +38,12 @@ const LANGUAGE_RULES = [
 ];
 
 /**
- * Entrée de langue validée, ou null
+ * Entrée de langue validée, ou null. Les scripts de publication s'en servent aussi : une
+ * entrée que le jeu écarterait n'est jamais publiée.
  * @param {unknown} entry
  * @returns {{voice: string, version: string, format: 'mp3', audience: string, defaultOn: boolean}|null}
  */
-function parseLanguage(entry) {
+export function parseLanguage(entry) {
   if (!isObject(entry) || !LANGUAGE_RULES.every(rule => rule(entry))) return null;
   const { voice, version, format, audience, defaultOn } = entry;
   return { voice, version, format, audience, defaultOn };

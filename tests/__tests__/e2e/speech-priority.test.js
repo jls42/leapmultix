@@ -5,6 +5,7 @@
  */
 
 const puppeteer = require('puppeteer');
+const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
 // Synthèse factice : note chaque énoncé et chaque coupure ; un énoncé ne finit que quand
@@ -59,32 +60,6 @@ async function injectSpeechStub(page) {
  */
 async function enableVoice(page) {
   await page.evaluateOnNewDocument(() => localStorage.setItem('voiceEnabled', 'true'));
-}
-
-/**
- * Crée un utilisateur factice et contourne l'intro vidéo pour atteindre le menu principal.
- * @param {import('puppeteer').Page} page
- */
-async function createUserAndSkipIntro(page) {
-  const userName = 'TestUser-' + Date.now();
-  await page.waitForSelector('#new-user-name', { visible: true, timeout: 10000 });
-  await page.type('#new-user-name', userName);
-  await page.click('#create-user-btn');
-  await page.waitForSelector('.user-container .user-tile', {
-    visible: true,
-    timeout: 10000,
-  });
-  const userButtons = await page.$$('.user-container .user-tile');
-  await userButtons[0].click();
-  await page.waitForSelector('#character-intro-modal', { visible: true, timeout: 10000 });
-  await page.evaluate(() => {
-    document.getElementById('skip-intro-btn')?.click();
-  });
-  await page.waitForFunction(
-    () => document.querySelector('#character-intro-modal')?.style.display === 'none',
-    { timeout: 10000 }
-  );
-  await page.waitForSelector('.mode-btn[data-mode="quiz"]', { visible: true, timeout: 10000 });
 }
 
 /** Énoncés et coupures notés, sans l'énoncé vide qui amorce la synthèse au premier geste */

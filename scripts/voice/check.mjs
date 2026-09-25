@@ -165,7 +165,7 @@ function parseArgs(argv) {
   return args;
 }
 
-function printSummary(report) {
+export function printSummary(report) {
   const lines = [
     `${report.lang} ${report.version} : ${report.clips}/${report.phrases} clips`,
     `  manquants : ${report.missing.count} (${report.missing.chars} caractères) ${JSON.stringify(report.missing.byFamily)}`,
@@ -197,7 +197,7 @@ export function readTranscripts(file) {
 }
 
 /** Empreintes à réécouter (transcription douteuse, durée anormale), une par ligne */
-function writeFlagged(file, report) {
+export function writeFlagged(file, report) {
   const keys = [
     ...(report.transcripts?.flagged ?? []).map(f => f.key),
     ...report.durationOutliers.map(o => o.key),
@@ -206,7 +206,7 @@ function writeFlagged(file, report) {
 }
 
 /** 1 si le rangement est incohérent, ou si une phrase manque sans --allow-missing */
-function exitCode(report, allowMissing) {
+export function exitCode(report, allowMissing) {
   if (!isConsistent(report)) return 1;
   return report.missing.count > 0 && !allowMissing ? 1 : 0;
 }

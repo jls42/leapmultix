@@ -376,11 +376,11 @@ Les paramètres d'un message doivent être les mêmes dans les trois langues
 #### Phrases parlées : corpus et verrou
 
 **Règle, sans exception : une phrase dite modifiée se réenregistre avant sa mise en prod.**
-Chaque phrase que le jeu lit à voix haute a son clip MP3 (voix enregistrée « Lucie »),
-retrouvé par l'empreinte du texte exact. Toucher ce texte (traduction fr/en/es, gabarit,
-forme d'une question, plage d'opérandes, nouvelle phrase) le prive de clip : le jeu la lit
-alors avec la voix de l'appareil, sans erreur ni alerte. Donc, dans la même PR que le
-changement de texte :
+Chaque phrase que le jeu lit à voix haute a son clip MP3 (voix enregistrée : Lucie en
+français, Jane en anglais), retrouvé par l'empreinte du texte exact. Toucher ce texte
+(traduction fr/en/es, gabarit, forme d'une question, plage d'opérandes, nouvelle phrase) le
+prive de clip : le jeu la lit alors avec la voix de l'appareil, sans erreur ni alerte. Donc,
+dans la même PR que le changement de texte :
 
 1. le test du verrou échoue exprès : c'est le rappel ;
 2. générer les clips manquants avec le skill `generating-voice-clips` (payant : estimation

@@ -362,14 +362,18 @@ const state = {
   decision: null,
 };
 
-/** Une cause de repli n'est comptée qu'une fois par session (Plausible) */
+/**
+ * Une cause de repli n'est comptée qu'une fois par session et par langue (Plausible) : les
+ * replis de la voix française et de la voix anglaise se distinguent
+ */
 const reportedFallbacks = new Set();
 
-function reportFallback(cause) {
-  if (reportedFallbacks.has(cause)) return;
-  reportedFallbacks.add(cause);
+function reportFallback(cause, lang) {
+  const id = `${lang}:${cause}`;
+  if (reportedFallbacks.has(id)) return;
+  reportedFallbacks.add(id);
   try {
-    globalThis.plausible?.('Voice fallback', { props: { cause } });
+    globalThis.plausible?.('Voice fallback', { props: { cause, lang } });
   } catch {
     // Mesure d'audience indisponible : rien à faire
   }
@@ -467,7 +471,7 @@ function engineFor(engineId, lang, entry) {
       entry,
       audio: state.audio,
       synthesis: getSynthesisEngine(),
-      onFallback: reportFallback,
+      onFallback: cause => reportFallback(cause, lang),
     });
     state.engines.set(engineId, engine);
     preloadCommonPhrases(engine);

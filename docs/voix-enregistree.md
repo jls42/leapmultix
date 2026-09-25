@@ -11,11 +11,25 @@ place et ce qui vient ensuite.
 
 ## Choix
 
-- **Voix** : ElevenLabs, voix de bibliothèque « Lucie » (`YxrwjAKoUKULGd0g8K9Y`, préavis
-  de retrait de 730 jours), modèle Eleven v3, retenue après un banc d'écoute. Un essai
-  sur la table de 7 a été validé sur téléphone.
+- **Voix, une par langue et par fournisseur** :
+  - **Français : « Lucie »**, ElevenLabs.
+    - Voix de bibliothèque `YxrwjAKoUKULGd0g8K9Y`, avec un préavis de retrait de 730 jours ;
+      modèle Eleven v3.
+    - Retenue après un banc d'écoute ; un essai sur la table de 7 a été validé sur téléphone.
+  - **Anglais : « Jane - Neutral »**, Mistral Voxtral TTS (`voxtral-mini-tts-2603`).
+    - Voix prête `82c99ee6-f932-423f-a4a3-d403c8914b8d`, femme, anglais britannique, avec
+      un préavis de retrait (`retention_notice`) de 30.
+    - Retenue le 25/09/2026 après un banc de 3 variantes × 24 phrases du corpus :
+      - 0 doute de Whisper ;
+      - la plus nette et la plus régulière ;
+      - 0,126 s par caractère sur les questions, contre 0,079 pour Lucie.
+    - Mistral a été choisi pour son coût : environ 3,40 $ pour tout l'anglais.
+  - **Espagnol : pas encore.** Mistral n'a aucune voix espagnole.
+    - L'essai du 25/09 avec deux voix d'autres langues a échoué : Jane disait les nombres en
+      anglais (« sixteen »), et Marie gardait un accent français marqué.
+    - Options : `docs/TODO.md`.
 - **Corpus fini** : le jeu ne dit qu'environ 7 400 phrases par langue. Elles sont
-  toutes enregistrées à l'avance ; aucun appel à ElevenLabs pendant une partie.
+  toutes enregistrées à l'avance ; aucun appel à un fournisseur pendant une partie.
 - **Format** : MP3 mono. Safari et iOS ne lisent l'Opus en WebM qu'à partir de 17.4
   (en partie) et 18.4.
 - **Encodage** : 64 kb/s et 0,15 s de silence avant la phrase. À 48 kb/s avec 0,05 s, Whisper
@@ -61,8 +75,8 @@ milieu d'une partie en anglais.
   des appels à `speak()` ; vrais modes joués dans les trois langues, chaque phrase dite
   devant être dans le corpus.
 
-Chiffres au moment de l'écriture : 7 437 phrases par langue, 221 587 caractères en
-français.
+Chiffres au moment de l'écriture : 7 437 phrases par langue ; 221 587 caractères en
+français, 211 923 en anglais.
 
 ## En place : une seule file de parole
 
@@ -127,15 +141,21 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
   elle (les trois dernières), et le bouton de voix de la barre du haut reste masqué, à sa
   place, jusqu'à la décision. Au-delà, le jeu décide sans l'index (voix coupée) et se reprend
   à son arrivée.
-- **iPhone** : `navigator.audioSession.type = 'playback'` : Lucie suit la règle des
-  bruitages, c'est le bouton muet du jeu qui fait foi.
+- **iPhone** : `navigator.audioSession.type = 'playback'`. La voix enregistrée suit la
+  règle des bruitages : c'est le bouton muet du jeu qui fait foi.
 - **Service worker** (`sw.js`) : clips en cache d'abord dans `leapmultix-voice` (épargné
   par les changements de version), gardés seulement s'ils sont un vrai MP3 du site ; index
   en réseau d'abord ; chaque nouvel index purge les clips des versions qu'il n'annonce plus,
   plafond d'environ 2 000 clips.
 - **Réglage** : case « Voix enregistrée » dans Accessibilité et contrôles, visible là où la
-  voix est disponible ; mention « voix de synthèse créée avec ElevenLabs » (fr, en, es), sur
-  la page parents et dans le README.
+  voix est disponible.
+- **Mention « voix de synthèse »**, dans la langue du jeu (`recorded_voice_hint`) : créée
+  avec ElevenLabs en français, avec Mistral AI en anglais.
+  - Elle doit être en ligne **avant** l'entrée de la langue dans l'index, puisque la case
+    s'affiche dès que la langue y entre.
+  - La page parents et le README présentent aussi les voix.
+- **Plausible** : l'événement `Voice fallback` compte chaque cause de repli, une fois par
+  session et par langue (`{ cause, lang }`).
 
 ## En place : l'infra
 
@@ -156,31 +176,55 @@ Dépôt `leapmultix-infra` (GitLab), fichier `voices.tf` :
 ## Génération des clips
 
 Tout est scripté (`scripts/voice/`) et tourne sur le poste du propriétaire, jamais dans la
-CI publique : la clé ElevenLabs et le dépôt privé des voix n'en sortent pas.
+CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sortent pas.
 
 **Dépôt privé des voix** (`../leapmultix-voices`, GitHub privé `jls42/leapmultix-voices`) :
 
 - `clips/<langue>/<version>/<empreinte>.mp3` : les clips traités, ceux que le jeu lit ;
 - `manifests/<langue>/<version>.json` : pour chaque clip, la phrase, le texte dit, la
-  durée, l'empreinte sha256 et le coût en crédits ; `<version>.runs.jsonl` garde le bilan
-  de chaque exécution ;
-- `raw/` : sorties brutes d'ElevenLabs, gardées en local (hors git) pour retraiter sans
+  durée, l'empreinte sha256, l'identifiant de requête et le coût en crédits (quand le
+  fournisseur le dit). À côté :
+  - `<version>.runs.jsonl` garde le bilan de chaque exécution ;
+  - `<version>.billed.jsonl` inscrit chaque réponse payée dès sa réception, ce qui fait le
+    total du plafond cumulé ;
+- `raw/` : sorties brutes du fournisseur, gardées en local (hors git) pour retraiter sans
   payer ;
 - `ecoute/` (hors git) : pages d'écoute, et dans `avant/` le dernier clip remplacé de chaque
   empreinte (`--redo`, texte dit changé), pour la comparaison avant/après.
 
 **Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
-modèle, les réglages et l'encodage, sous une version (`lucie-v3-1`). Changer un réglage
-impose une nouvelle version : le générateur refuse de mélanger deux réglages sous une même
-version. Le fournisseur est séparé du reste (`scripts/voice/providers/`) : un autre moteur
-s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
+modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en français,
+`jane-v1-1` en anglais).
 
-1. **Portes** : crédits suffisants et licence confirmée.
-2. **Estimation** : `npm run voice:generate -- --lang fr --dry-run` donne les phrases
-   restantes et leurs caractères. Eleven v3 décompte environ 0,53 crédit par caractère
-   (en-tête `character-cost` de chaque réponse, noté au manifeste).
+- Changer un réglage impose une nouvelle version : le générateur refuse de mélanger deux
+  réglages sous une même version.
+- **Fournisseurs** (`scripts/voice/providers/`) : `elevenlabs.mjs` et `mistral.mjs`.
+  - Ils ont la même interface et partagent `common.mjs` : erreurs classées, lecture des
+    corps d'erreur, contrôle du MP3.
+  - Un autre moteur s'ajoute sans toucher au corpus, au texte dit ni au traitement.
+  - Chaque fournisseur a sa clé : `ELEVENLABS_API_KEY` ou `MISTRAL_API_KEY`, lue dans un
+    fichier `.env` hors dépôt.
+
+1. **Portes** : crédits ou solde suffisants, licence confirmée, et un plafond de caractères
+   accordé par le propriétaire.
+2. **Estimation** : `npm run voice:generate -- --lang <langue> --dry-run` donne les phrases
+   restantes, leurs caractères et ce qui a déjà été payé pour la version (`billedChars`).
+   - **ElevenLabs** : Eleven v3 décompte environ 0,53 crédit par caractère. Le coût vient de
+     l'en-tête `character-cost` de chaque réponse et il est noté au manifeste.
+   - **Mistral** : 16 $ le million de caractères. L'API ne dit ni le coût d'un appel ni le
+     solde.
 3. **Génération** :
-   `node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --reserve 5000`.
+   `node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang <langue> --max-total-chars <plafond>`,
+   plus `--reserve 5000` chez ElevenLabs.
+   - **Plafond cumulé** (`--max-total-chars`) :
+     - il vaut pour toute la version, relances et refaits compris ;
+     - il se compte sur le registre `billed.jsonl`, qui résiste à un arrêt brutal ;
+     - avec Mistral, sans solde lisible, il est obligatoire ;
+     - atteint, il arrête l'exécution dès son départ.
+   - **Modération de Mistral** : un texte refusé (403) ne fait échouer que sa phrase, et la
+     génération continue. Le propriétaire choisit alors un texte dit de même sens
+     (`SAID_OVERRIDES`), ou la voix de l'appareil pour cette phrase (`--allow-missing` à la
+     publication).
    - Ordre : annonces, bravos, phrases fixes, erreurs, questions, questions à trou,
      vrai/faux, Découverte, énoncés (les plus longs, en dernier) ; × puis ÷, + et −.
    - **Idempotent** : relancer la même commande ne génère que ce qui manque ; un brut déjà
@@ -188,22 +232,31 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
    - **Aucun fichier à moitié** : chaque fichier s'écrit en `.part`, puis est renommé une
      fois complet et vérifié (ffprobe) ; les restes d'une exécution interrompue (crédits
      épuisés, Ctrl+C, plantage) sont supprimés au démarrage suivant.
-   - **Crédits épuisés** : arrêt propre (code de sortie 3). Reprendre plus tard avec la
-     même commande, au besoin avec la clé d'un autre compte : une voix de bibliothèque
-     garde son identifiant ; si l'outil la dit inaccessible, l'ajouter à ce compte depuis
-     la bibliothèque de voix.
+   - **Crédits ou solde épuisés** : arrêt propre (code de sortie 3). Reprendre plus tard avec
+     la même commande, au besoin avec la clé d'un autre compte.
+     - ElevenLabs : une voix de bibliothèque garde son identifiant. Si l'outil la dit
+       inaccessible, l'ajouter à ce compte depuis la bibliothèque de voix.
+     - Mistral : une voix prête est commune à tous les comptes.
    - **Texte dit** (`said-text.mjs`) : les nombres en 1 s'accordent avec le nom qui suit
      (« Combien font une fois 7 ? », « vingt et une pommes », en espagnol « una caja »,
      « veintiún niños ») ; la phrase de `speak()` reste la clé du clip. Une phrase mal dite
      essai après essai reçoit un texte imposé (`SAID_OVERRIDES`) : « 108 divisé par 12 égale
      9 » se dit « Cent huit divisé par douze égale neuf » (trois essais en chiffres, trois
-     débuts mal dits).
+     débuts mal dits). En anglais, le texte dit est la phrase elle-même.
    - **Traitement** (`audio-process.mjs`) : silences de début et de fin coupés, −20 LUFS,
      pic −1 dBFS, 0,15 s de silence gardé avant la phrase, MP3 mono 64 kb/s ; un clip muet est
      refusé. Un clic isolé par un long silence part avec lui. Changer l'encodage demande une
      nouvelle version, reconstruite depuis les bruts sans appel
      (`generate.mjs --lang fr --limit 0 --raw-from <ancienne version>`).
 4. **Contrôles** :
+   - **`npm run voice:review -- --lang <langue>`** enchaîne les trois étapes ci-dessous en une
+     commande :
+     1. Whisper, sur les clips nouveaux ou changés ;
+     2. le contrôle de `voice:check`, avec `a-reecouter-<langue>.txt` ;
+     3. la page d'écoute.
+
+     Avec `--compare ecartes.txt`, elle construit la page avant/après.
+
    - `npm run voice:check -- --lang fr --probe` : chaque phrase a son clip, manifeste et
      fichiers concordent, chaque MP3 est valide et n'a pas bougé depuis sa génération.
    - **Whisper, en local** (modèle `large-v3-turbo`, GPU si présent) :
@@ -221,6 +274,7 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
      retranscrit ensuite les clips refaits (leur sha256 a changé), puis
      `npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl --compare ecartes.txt`
      compare l'ancien et le nouveau de chaque clip, avec le verdict de Whisper.
+
 5. **Envoi**, une fois l'infra en place :
    - `npm run voice:publish -- clips --lang fr --bucket <bucket>` : seulement les clips
      absents du bucket, en `audio/mpeg`, cache d'un an immuable. Un clip publié n'est
@@ -252,8 +306,14 @@ racine : viser `index.html`).
 
 ## Licence et mentions
 
-- La licence de l'audio est à confirmer avant la génération payante.
-- Les mentions « voix de synthèse » et les crédits sont en ligne avant l'ouverture au
-  public.
+- **Chaque fournisseur a ses conditions**, à confirmer avant toute génération payante :
+  - **ElevenLabs** : voix de bibliothèque Lucie, avec un préavis de retrait de 730 jours ;
+  - **Mistral**, conditions commerciales :
+    - §3.1 : la sortie appartient au client ;
+    - §3.2 : ne pas présenter la voix comme humaine, d'où la mention « voix de synthèse » ;
+    - le préavis de retrait des voix prêtes (30) ne touche pas les clips déjà générés, mais
+      une phrase nouvelle ne pourrait plus être dite par Jane après le retrait.
+- **La mention « voix de synthèse »** et son fournisseur sont en ligne, dans la langue, avant
+  l'ouverture de cette langue au public.
 - Les adresses des clips se déduisent du texte public : l'audio peut être téléchargé
   en masse, comme tout son d'un site.
