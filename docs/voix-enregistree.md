@@ -118,7 +118,15 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
   la session), réponse qui n'est pas un MP3, réseau coupé, lecture refusée, erreur, ou clip
   pas démarré en 1,5 s (le téléchargement continue alors pour le cache). Plausible compte
   une fois par session chaque cause (`Voice fallback`).
-- **Préchargement** des « Bravo », qui reviennent sans cesse.
+- **Préchargement** : les annonces de mode et les « Bravo » dès que la voix est branchée ;
+  pendant chaque question, la phrase de son erreur (« Presque ! La bonne réponse est 56. »),
+  une fois le clip de la question parti pour ne pas lui prendre la bande passante. Dite à la
+  réponse, elle sort du cache.
+- **Première visite** (ni copie de l'index ni choix du joueur) : la décision « parole
+  active ? » attend l'index, au plus 1,5 s. Les phrases demandées entre-temps attendent avec
+  elle (les trois dernières), et le bouton de voix de la barre du haut reste masqué, à sa
+  place, jusqu'à la décision. Au-delà, le jeu décide sans l'index (voix coupée) et se reprend
+  à son arrivée.
 - **iPhone** : `navigator.audioSession.type = 'playback'` : Lucie suit la règle des
   bruitages, c'est le bouton muet du jeu qui fait foi.
 - **Service worker** (`sw.js`) : clips en cache d'abord dans `leapmultix-voice` (épargné
@@ -207,9 +215,17 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
      absents du bucket, en `audio/mpeg`, cache d'un an immuable. Un clip publié n'est
      jamais réécrit : une correction crée une nouvelle version de la voix.
    - `npm run voice:check-online -- --lang fr` : chaque adresse répond 200 en `audio/mpeg`,
-     avec la taille du manifeste.
+     avec la taille du manifeste. Un index qui annonce encore une autre version est une
+     erreur, sauf avec `--allow-other-version` (clips d'une nouvelle version envoyés, index
+     pas encore publié).
    - `npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience test` :
-     la langue entre dans l'index (sans cache), puis invalidation CloudFront.
+     la langue entre dans l'index (sans cache), puis invalidation CloudFront. Seulement si
+     chaque clip du manifeste est en ligne et identique, et si chaque phrase du corpus a son
+     clip : `--allow-missing` accepte des phrases sans clip (voix de l'appareil pour
+     elles), jamais un clip en conflit.
+   - L'index distant n'est réécrit qu'après une lecture sûre : une erreur de lecture, un
+     JSON illisible ou un index invalide arrêtent `index` et `remove`. `--force` repart
+     alors d'un index vide, **les autres langues sont perdues** : dernier recours.
 6. **Ouverture par étapes** : testeurs (`?voix=test`), puis la commande `index` avec
    `--audience all` (les joueurs qui avaient allumé la voix), puis avec
    `--audience all --default-on`. Chaque `index` réécrit toute l'entrée de la langue : sans

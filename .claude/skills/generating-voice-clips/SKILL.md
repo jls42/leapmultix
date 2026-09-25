@@ -73,7 +73,11 @@ racine du dépôt du jeu). Détails, codes de sortie et dépannage : [reference.
    `npm run voice:check-online -- --lang <l>` (0 échec exigé), puis
    `npm run voice:publish -- index --lang <l> --bucket leapmultix-voices --distribution <id> --audience test`.
    `<id>` : distribution du site (`gh variable get CLOUDFRONT_DISTRIB`) ; `publish.mjs` lit
-   aussi `VOICE_BUCKET` et `CLOUDFRONT_DISTRIB` dans l'environnement.
+   aussi `VOICE_BUCKET` et `CLOUDFRONT_DISTRIB` dans l'environnement. `index` refuse tant
+   qu'un clip manque ou diffère : `--allow-missing` (phrases sans clip, voix de l'appareil)
+   et `--force` (index distant illisible : repart d'un index vide, les autres langues
+   perdues) seulement sur accord explicite. Nouvelle version : entre l'envoi de ses clips
+   et son index, `voice:check-online` demande `--allow-other-version`.
 8. **Ouverture** (accord à chaque étape ; la prod doit servir la balise
    `leapmultix-voice-base` à `/voice/`, variable de dépôt `VOICE_BASE`) : tester sur le site
    avec `?voix=test` (`?voix=off` retire la marque), puis relancer la commande `index` de
