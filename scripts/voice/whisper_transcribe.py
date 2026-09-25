@@ -58,6 +58,9 @@ def allowed_roots():
     return {os.path.realpath(root) for root in (os.getcwd(), Path.home(), tempfile.gettempdir())}
 
 
+# Les accès au disque qui suivent portent « NOSONAR » (pythonsecurity:S8707) : chaque chemin
+# y arrive résolu, confiné à ces arborescences et contrôlé par type (fonctions ci-dessous),
+# une validation que l'analyse de flux de SonarCloud ne suit pas.
 def resolved(flag, value):
     """Chemin réel d'un argument, liens résolus, refusé hors des arborescences permises"""
     path = os.path.realpath(value)
@@ -107,7 +110,7 @@ def done_pairs(out):
     """Clips déjà transcrits : (empreinte, sha256) ; sha256 vaut None pour une ligne ancienne"""
     if not out.exists():
         return set()
-    with out.open(encoding="utf-8") as handle:
+    with out.open(encoding="utf-8") as handle:  # NOSONAR - chemin validé (resolved)
         lines = [json.loads(line) for line in handle if line.strip()]
     return {(line["key"], line.get("sha256")) for line in lines}
 
@@ -126,7 +129,7 @@ def pending(clips, already, shard):
 
 def transcribe_all(model, args, clips, todo):
     """Ajoute au fichier de sortie une ligne par clip transcrit"""
-    with args.out.open("a", encoding="utf-8") as out:
+    with args.out.open("a", encoding="utf-8") as out:  # NOSONAR - chemin validé (resolved)
         for index, key in enumerate(todo, 1):
             segments, _ = model.transcribe(
                 str(args.clips / f"{key}.mp3"),
@@ -147,7 +150,7 @@ def transcribe_all(model, args, clips, todo):
 
 def main():
     args = parse_args()
-    clips = json.loads(args.manifest.read_text(encoding="utf-8"))["clips"]
+    clips = json.loads(args.manifest.read_text(encoding="utf-8"))["clips"]  # NOSONAR - validé
     already = done_pairs(args.out)
     for extra in args.also_done:
         already |= done_pairs(extra)
