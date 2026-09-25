@@ -3,8 +3,12 @@
 // du propriétaire (identifiants AWS locaux), jamais dans la CI publique.
 //
 //   clips   envoie les clips manquants dans s3://<bucket>/voice/<langue>/<version>/
-//           (audio/mpeg, cache d'un an, immuable) ; refuse de réécrire un clip publié
-//   index   écrit la langue dans voice/index.json (no-cache), puis invalide son cache
+//           (audio/mpeg, cache d'un an, immuable) ; refuse de réécrire un clip publié,
+//           et d'envoyer un fichier qui ne correspond plus au manifeste
+//   index   écrit la langue dans voice/index.json (no-cache), puis invalide son cache ;
+//           seulement si chaque clip du manifeste est en ligne et identique et si chaque
+//           phrase du corpus a son clip (--allow-missing accepte des manques, jamais un
+//           conflit)
 //   remove  retire la langue de l'index (coupe-circuit), puis invalide
 //   local   prépare <site>/voice/ pour un essai local (?voix=local) : liens vers les
 //           clips et index, rien n'est envoyé
@@ -12,8 +16,11 @@
 // Usage :
 //   node scripts/voice/publish.mjs <commande> --lang fr [--out <dépôt des voix>]
 //     [--bucket <nom>] [--distribution <id CloudFront>] [--audience test|all]
-//     [--default-on] [--site <dossier du jeu>] [--dry-run]
+//     [--default-on] [--site <dossier du jeu>] [--dry-run] [--allow-missing] [--force]
 // Bucket et distribution : options, ou variables VOICE_BUCKET et CLOUDFRONT_DISTRIB.
+// L'index distant n'est réécrit qu'après une lecture sûre : une erreur de lecture (réseau,
+// droits), un JSON illisible ou un index invalide arrêtent index et remove ; --force
+// repart alors d'un index vide (les autres langues seraient perdues).
 // Ordre d'une mise en ligne : check.mjs, clips, check-online.mjs, index (audience test).
 
 import crypto from 'node:crypto';
@@ -27,13 +34,22 @@ import { promisify } from 'node:util';
 import { VOICE_KEY_SCHEMA } from '../../js/core/spoken-text.js';
 import { VOICE_AUDIENCES, parseVoiceIndex } from '../../js/core/voice-index.js';
 import { readManifest, storePaths } from './clip-store.mjs';
+import { buildCorpus } from './corpus.mjs';
 import { DEFAULT_OUT, loadVoice } from './generate.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const CLIP_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 export const INDEX_KEY = 'voice/index.json';
+export const COMMANDS = ['clips', 'index', 'remove', 'local'];
 
-const md5 = data => crypto.createHash('md5').update(data).digest('hex');
+const hash = (algorithm, data) => crypto.createHash(algorithm).update(data).digest('hex');
+
+/** Première ligne d'une erreur de la CLI AWS (message ou sortie d'erreur) */
+const firstLine = error =>
+  String(error?.stderr || error?.message || error)
+    .trim()
+    .split('\n')[0]
+    .slice(0, 200);
 
 /** Exécute la CLI AWS et rend sa sortie standard */
 export async function awsCli(args) {
@@ -74,11 +90,47 @@ export function planUpload(local, remote) {
   return plan;
 }
 
+/** Résumé des langues d'un index : « fr (lucie-v3-1, test, défaut non) » */
+export function describeLanguages(index) {
+  const entries = Object.entries(index?.languages ?? {});
+  if (!entries.length) return 'aucune';
+  return entries
+    .map(
+      ([lang, e]) => `${lang} (${e.version}, ${e.audience}, défaut ${e.defaultOn ? 'oui' : 'non'})`
+    )
+    .join(', ');
+}
+
+/** Un manifeste vide (mauvais --out, --lang ou version) ne publie rien */
+function requireClips(manifest, paths) {
+  if (!Object.keys(manifest.clips).length) {
+    throw new Error(
+      `Manifeste vide ou absent (${paths.manifestFile}) : vérifier --out, --lang et la version`
+    );
+  }
+}
+
+/**
+ * Clips locaux, chacun vérifié contre son entrée de manifeste (taille et sha256) : un
+ * fichier remplacé ou abîmé depuis sa génération ne part jamais
+ */
 async function localClips(paths, manifest) {
   const clips = [];
-  for (const key of Object.keys(manifest.clips)) {
+  const mismatches = [];
+  for (const [key, entry] of Object.entries(manifest.clips)) {
     const file = path.join(paths.clipDir, `${key}.mp3`);
-    clips.push({ key, file, md5: md5(await fsp.readFile(file)) });
+    const data = await fsp.readFile(file).catch(() => null);
+    if (!data) mismatches.push(`${key} (fichier absent)`);
+    else if (data.length !== entry.bytes || hash('sha256', data) !== entry.sha256) {
+      mismatches.push(`${key} (contenu différent du manifeste)`);
+    } else clips.push({ key, file, md5: hash('md5', data) });
+  }
+  if (mismatches.length) {
+    throw new Error(
+      `${mismatches.length} clips ne correspondent pas au manifeste : ` +
+        `${mismatches.slice(0, 5).join(', ')}${mismatches.length > 5 ? '…' : ''} ; ` +
+        'lancer node scripts/voice/check.mjs --lang <langue> --probe'
+    );
   }
   return clips;
 }
@@ -147,12 +199,80 @@ async function publishClips(ctx) {
   return plan;
 }
 
-async function readRemoteIndex(run, bucket) {
+/** La CLI AWS dit-elle seulement que l'objet n'existe pas ? */
+export function isMissingObject(error) {
+  const text = `${error?.message ?? ''} ${error?.stderr ?? ''}`;
+  return /NoSuchKey|\(404\)|Not Found|does not exist/i.test(text);
+}
+
+function refuseUnlessForced(force, reason, fallback = null) {
+  if (force) return fallback;
+  throw new Error(
+    `Index distant : ${reason}. Rien n'est écrit ; --force repart d'un index vide ` +
+      '(les autres langues seraient perdues).'
+  );
+}
+
+function parseRemoteIndex(raw, force) {
+  let data;
   try {
-    return parseVoiceIndex(JSON.parse(await run(['s3', 'cp', `s3://${bucket}/${INDEX_KEY}`, '-'])));
+    data = JSON.parse(raw);
   } catch {
-    return null;
+    return refuseUnlessForced(force, 'JSON illisible');
   }
+  const index = parseVoiceIndex(data);
+  if (!index) return refuseUnlessForced(force, 'index invalide (schéma ou forme)');
+  const dropped = Object.keys(data.languages ?? {}).filter(lang => !index.languages[lang]);
+  if (dropped.length) {
+    return refuseUnlessForced(force, `langues invalides : ${dropped.join(', ')}`, index);
+  }
+  return index;
+}
+
+/**
+ * Index distant validé ; null seulement s'il n'existe pas encore. Réécrire l'index sur une
+ * lecture ratée couperait toutes les langues : toute autre erreur arrête la commande.
+ */
+async function readRemoteIndex(run, bucket, force) {
+  let raw;
+  try {
+    raw = await run(['s3', 'cp', `s3://${bucket}/${INDEX_KEY}`, '-']);
+  } catch (error) {
+    if (isMissingObject(error)) return null;
+    return refuseUnlessForced(force, `lecture impossible (${firstLine(error)})`);
+  }
+  return parseRemoteIndex(raw, force);
+}
+
+/**
+ * Avant d'annoncer une langue : chaque clip du manifeste est en ligne et identique, et
+ * chaque phrase du corpus a son clip. --allow-missing accepte des manques, jamais un
+ * clip en ligne qui diffère du manifeste.
+ */
+async function assertPublishable(ctx) {
+  const { run, bucket, lang, voice, paths, manifest, phrases, allowMissing, log } = ctx;
+  const prefix = `voice/${lang}/${voice.version}/`;
+  const plan = planUpload(
+    await localClips(paths, manifest),
+    await remoteObjects(run, bucket, prefix)
+  );
+  if (plan.conflicts.length) {
+    throw new Error(
+      `${plan.conflicts.length} clips en ligne diffèrent du manifeste : langue non publiée`
+    );
+  }
+  const offline = plan.toUpload.length;
+  const uncovered = phrases.filter(phrase => !manifest.clips[phrase.key]).length;
+  if ((offline || uncovered) && !allowMissing) {
+    throw new Error(
+      `Langue non publiée : ${offline} clips pas encore en ligne, ${uncovered} phrases du ` +
+        'corpus sans clip (commande clips, génération à compléter, ou --allow-missing)'
+    );
+  }
+  log(
+    `${plan.identical.length} clips en ligne et identiques` +
+      (offline || uncovered ? ` ; accepté : ${offline} hors ligne, ${uncovered} sans clip` : '')
+  );
 }
 
 async function writeRemoteIndex(ctx, index) {
@@ -205,66 +325,99 @@ async function publishLocal(ctx) {
   return index;
 }
 
-function parseArgs(argv) {
+const FLAGS = {
+  '--dry-run': 'dryRun',
+  '--default-on': 'defaultOn',
+  '--allow-missing': 'allowMissing',
+  '--force': 'force',
+};
+const VALUES = {
+  '--lang': 'lang',
+  '--bucket': 'bucket',
+  '--distribution': 'distribution',
+  '--audience': 'audience',
+  '--out': 'out',
+  '--site': 'site',
+};
+
+/**
+ * Options de la ligne de commande, vérifiées : commande connue en premier, chaque option à
+ * valeur suivie d'une valeur, langue et audience valides
+ * @param {string[]} argv
+ * @param {Object} [env]
+ */
+export function parsePublishArgs(argv, env = process.env) {
   const args = {
     command: argv[0],
     out: DEFAULT_OUT,
     audience: 'test',
     defaultOn: false,
     dryRun: false,
+    allowMissing: false,
+    force: false,
     site: ROOT,
-    bucket: process.env.VOICE_BUCKET,
-    distribution: process.env.CLOUDFRONT_DISTRIB,
+    bucket: env.VOICE_BUCKET,
+    distribution: env.CLOUDFRONT_DISTRIB,
   };
-  const values = {
-    '--lang': 'lang',
-    '--bucket': 'bucket',
-    '--distribution': 'distribution',
-    '--audience': 'audience',
-  };
+  if (!COMMANDS.includes(args.command)) {
+    throw new Error(`Commande attendue en premier : ${COMMANDS.join(', ')}`);
+  }
   for (let i = 1; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === '--dry-run') args.dryRun = true;
-    else if (arg === '--default-on') args.defaultOn = true;
-    else if (arg === '--out') args.out = path.resolve(argv[++i]);
-    else if (arg === '--site') args.site = path.resolve(argv[++i]);
-    else if (values[arg]) args[values[arg]] = argv[++i];
-    else throw new Error(`Option inconnue : ${arg}`);
+    if (FLAGS[arg]) {
+      args[FLAGS[arg]] = true;
+      continue;
+    }
+    if (!VALUES[arg]) throw new Error(`Option inconnue : ${arg}`);
+    const value = argv[++i];
+    if (value === undefined || value.startsWith('--')) throw new Error(`Valeur manquante : ${arg}`);
+    args[VALUES[arg]] = value;
   }
-  if (!['clips', 'index', 'remove', 'local'].includes(args.command)) {
-    throw new Error('Commande attendue : clips, index, remove ou local');
+  args.out = path.resolve(args.out);
+  args.site = path.resolve(args.site);
+  if (!/^[a-z]{2}$/.test(args.lang ?? '')) throw new Error('--lang attend un code (fr, en, es)');
+  if (!VOICE_AUDIENCES.includes(args.audience)) {
+    throw new Error(`--audience attend ${VOICE_AUDIENCES.join(' ou ')}`);
   }
-  if (!args.lang) throw new Error('--lang est requis');
   if (args.command !== 'local' && !args.bucket)
     throw new Error('--bucket (ou VOICE_BUCKET) requis');
   return args;
 }
 
-/**
- * Exécute une commande de publication
- * @param {Object} args - Voir parseArgs
- * @param {{run?: Function, log?: Function}} [io]
- */
-export async function publish(args, { run = awsCli, log = console.log } = {}) {
-  const voice = args.voice ?? loadVoice(args.lang);
-  const paths = storePaths(args.out, args.lang, voice.version);
-  const manifest = readManifest(paths, args.lang, voice);
-  const ctx = { ...args, voice, paths, manifest, run, log };
-  if (args.command === 'clips') return publishClips(ctx);
-  if (args.command === 'local') return publishLocal(ctx);
-  const current = await readRemoteIndex(run, args.bucket);
-  const entry =
-    args.command === 'index'
-      ? indexEntry(voice, { audience: args.audience, defaultOn: args.defaultOn })
-      : null;
-  const index = withLanguage(current, args.lang, entry);
+async function publishIndex(ctx, entry) {
+  const current = await readRemoteIndex(ctx.run, ctx.bucket, ctx.force);
+  const index = withLanguage(current, ctx.lang, entry);
+  ctx.log(`Langues avant : ${describeLanguages(current)}`);
+  ctx.log(`Langues après : ${describeLanguages(index)}`);
   await writeRemoteIndex(ctx, index);
   return index;
 }
 
+/**
+ * Exécute une commande de publication
+ * @param {Object} args - Voir parsePublishArgs
+ * @param {{run?: Function, log?: Function, phrases?: Array<{key: string}>}} [io]
+ *   phrases : corpus de la langue (défaut : buildCorpus)
+ */
+export async function publish(args, { run = awsCli, log = console.log, phrases } = {}) {
+  const ctx = { ...args, run, log };
+  // Coupe-circuit : ni voix ni manifeste nécessaires, il doit marcher de n'importe où
+  if (args.command === 'remove') return publishIndex(ctx, null);
+  ctx.voice = args.voice ?? loadVoice(args.lang);
+  ctx.paths = storePaths(args.out, args.lang, ctx.voice.version);
+  ctx.manifest = readManifest(ctx.paths, args.lang, ctx.voice);
+  requireClips(ctx.manifest, ctx.paths);
+  if (args.command === 'clips') return publishClips(ctx);
+  if (args.command === 'local') return publishLocal(ctx);
+  ctx.phrases = phrases ?? buildCorpus(args.lang);
+  await assertPublishable(ctx);
+  const entry = indexEntry(ctx.voice, { audience: args.audience, defaultOn: args.defaultOn });
+  return publishIndex(ctx, entry);
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   Promise.resolve()
-    .then(() => publish(parseArgs(process.argv.slice(2))))
+    .then(() => publish(parsePublishArgs(process.argv.slice(2))))
     .catch(error => {
       console.error(error.message);
       process.exitCode = 1;

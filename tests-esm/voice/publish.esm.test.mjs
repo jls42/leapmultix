@@ -18,12 +18,19 @@ import { clipPath, parseVoiceIndex } from '../../js/core/voice-index.js';
 import { loadVoice } from '../../scripts/voice/generate.mjs';
 import {
   CLIP_CACHE_CONTROL,
+  describeLanguages,
   indexEntry,
+  isMissingObject,
+  parsePublishArgs,
   planUpload,
   publish,
   withLanguage,
 } from '../../scripts/voice/publish.mjs';
-import { checkOnline } from '../../scripts/voice/check-online.mjs';
+import {
+  checkOnline,
+  onlineProblems,
+  parseCheckOnlineArgs,
+} from '../../scripts/voice/check-online.mjs';
 import { newManifest, sha256, storePaths, writeManifest } from '../../scripts/voice/clip-store.mjs';
 
 const voice = { ...loadVoice('fr'), version: 'test-1' };
@@ -112,11 +119,15 @@ describe('Index de la voix', () => {
 describe('Publication', () => {
   const texts = ['Mode Quiz', 'Bravo !', 'Combien font 7 fois 8 ?'];
   const clips = texts.map(text => ({ key: voiceKey(text), text, data: `mp3 ${text}` }));
+  const phrases = clips.map(({ key, text }) => ({ key, text }));
+  const online = () => clips.map(c => [c.key, md5(c.data)]);
   let outDir;
   let paths;
   let calls;
+  let logs;
 
   beforeEach(async () => {
+    logs = [];
     outDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'voices-publish-'));
     paths = storePaths(outDir, 'fr', voice.version);
     await fsp.mkdir(paths.clipDir, { recursive: true });
@@ -136,8 +147,18 @@ describe('Publication', () => {
   });
   afterEach(() => fsp.rm(outDir, { recursive: true, force: true }));
 
-  /** CLI AWS simulée : objets distants, index distant, et trace de chaque appel */
-  function fakeAws({ remote = [], index = null } = {}) {
+  /**
+   * CLI AWS simulée : objets distants, index distant (objet, texte brut, ou erreur de
+   * lecture), et trace de chaque appel
+   */
+  function readIndex({ index = null, indexText = null, indexError = null }) {
+    if (indexError) throw indexError;
+    if (indexText !== null) return indexText;
+    if (!index) throw new Error('fatal error: An error occurred (404) when calling HeadObject');
+    return JSON.stringify(index);
+  }
+
+  function fakeAws({ remote = [], ...indexOptions } = {}) {
     return async args => {
       const call = { args };
       calls.push(call);
@@ -149,10 +170,7 @@ describe('Publication', () => {
           })),
         });
       }
-      if (args[0] === 's3' && args[1] === 'cp' && args[3] === '-') {
-        if (!index) throw new Error('NoSuchKey');
-        return JSON.stringify(index);
-      }
+      if (args[0] === 's3' && args[1] === 'cp' && args[3] === '-') return readIndex(indexOptions);
       if (args[0] === 's3' && args[1] === 'cp' && args.includes('--recursive')) {
         call.staged = fs.readdirSync(args[2]).sort();
       }
@@ -173,8 +191,12 @@ describe('Publication', () => {
     defaultOn: false,
     dryRun: false,
   };
-  const run = (args, aws) =>
-    publish({ ...base, out: outDir, ...args }, { run: aws, log: () => {} });
+  const run = (args, aws, io = {}) =>
+    publish(
+      { ...base, out: outDir, ...args },
+      { run: aws, log: message => logs.push(message), phrases, ...io }
+    );
+  const written = () => calls.find(c => c.written)?.written ?? null;
 
   test('clips : seuls les manquants partent, en audio/mpeg immuable', async () => {
     const [first, second, third] = clips;
@@ -206,8 +228,15 @@ describe('Publication', () => {
   });
 
   test('index : la langue rejoint l’index distant, sans cache, puis invalidation', async () => {
-    const aws = fakeAws({ index: { schema: VOICE_KEY_SCHEMA, languages: { es: ENTRY } } });
+    const aws = fakeAws({
+      remote: online(),
+      index: { schema: VOICE_KEY_SCHEMA, languages: { es: ENTRY } },
+    });
     await run({ command: 'index', audience: 'test' }, aws);
+    expect(logs).toContain(`Langues avant : ${describeLanguages({ languages: { es: ENTRY } })}`);
+    expect(
+      logs.some(line => line.startsWith('Langues après : es ') && line.includes('fr (test-1'))
+    ).toBe(true);
     const write = calls.find(c => c.written);
     expect(write.written.languages).toEqual({ es: ENTRY, fr: indexEntry(voice) });
     expect(write.args).toEqual(
@@ -229,6 +258,146 @@ describe('Publication', () => {
     });
     await run({ command: 'remove' }, aws);
     expect(calls.find(c => c.written).written.languages).toEqual({ es: ENTRY });
+  });
+
+  test('index : refusé tant qu’un clip du manifeste n’est pas en ligne', async () => {
+    const aws = fakeAws({ remote: online().slice(1) });
+    await expect(run({ command: 'index' }, aws)).rejects.toThrow(
+      /1 clips pas encore en ligne, 0 phrases du corpus sans clip/
+    );
+    expect(written()).toBeNull();
+  });
+
+  test('index : refusé si une phrase du corpus n’a pas de clip ; --allow-missing l’accepte', async () => {
+    const corpus = [...phrases, { key: voiceKey('Mode Défi'), text: 'Mode Défi' }];
+    const aws = fakeAws({ remote: online() });
+    await expect(run({ command: 'index' }, aws, { phrases: corpus })).rejects.toThrow(
+      /0 clips pas encore en ligne, 1 phrases du corpus sans clip/
+    );
+    expect(written()).toBeNull();
+    await run({ command: 'index', allowMissing: true }, aws, { phrases: corpus });
+    expect(written().languages.fr).toEqual(indexEntry(voice));
+  });
+
+  test('index : un clip en ligne qui diffère du manifeste bloque, même avec --allow-missing', async () => {
+    const remote = online();
+    remote[0][1] = 'autre-empreinte';
+    const aws = fakeAws({ remote });
+    await expect(run({ command: 'index', allowMissing: true }, aws)).rejects.toThrow(
+      /diffèrent du manifeste/
+    );
+    expect(written()).toBeNull();
+  });
+
+  test('clips : un fichier local qui ne correspond plus au manifeste n’est jamais envoyé', async () => {
+    fs.writeFileSync(path.join(paths.clipDir, `${clips[1].key}.mp3`), 'audio d’une autre phrase');
+    fs.rmSync(path.join(paths.clipDir, `${clips[2].key}.mp3`));
+    await expect(run({ command: 'clips' }, fakeAws())).rejects.toThrow(
+      new RegExp(`2 clips ne correspondent pas.*${clips[1].key}.*${clips[2].key}.*check\\.mjs`)
+    );
+    expect(calls.some(c => c.staged)).toBe(false);
+  });
+
+  test.each([
+    ['réseau', new Error('Could not connect to the endpoint URL')],
+    [
+      'droits',
+      Object.assign(new Error('Command failed'), { stderr: 'An error occurred (AccessDenied)' }),
+    ],
+    ['ralentissement', new Error('An error occurred (SlowDown) when calling GetObject')],
+  ])(
+    'index distant illisible (%s) : rien n’est écrit ; --force repart d’un index vide',
+    async (_label, error) => {
+      const aws = fakeAws({ remote: online(), indexError: error });
+      await expect(run({ command: 'remove' }, aws)).rejects.toThrow(/Rien n'est écrit/);
+      expect(written()).toBeNull();
+      await run({ command: 'remove', force: true }, aws);
+      expect(written().languages).toEqual({});
+    }
+  );
+
+  test.each([
+    ['JSON illisible', '{"schema":'],
+    ['autre schéma', JSON.stringify({ schema: 'sha1-1', languages: { es: ENTRY } })],
+    [
+      'langue invalide',
+      JSON.stringify({ schema: VOICE_KEY_SCHEMA, languages: { es: ENTRY, it: { voice: 'x' } } }),
+    ],
+  ])('index distant %s : rien n’est écrit sans --force', async (_label, indexText) => {
+    const aws = fakeAws({ remote: online(), indexText });
+    await expect(run({ command: 'index' }, aws)).rejects.toThrow(/Index distant/);
+    expect(written()).toBeNull();
+  });
+
+  test('--force garde les langues valides d’un index en partie invalide', async () => {
+    const indexText = JSON.stringify({
+      schema: VOICE_KEY_SCHEMA,
+      languages: { es: ENTRY, it: { voice: 'x' } },
+    });
+    await run({ command: 'index', force: true }, fakeAws({ remote: online(), indexText }));
+    expect(Object.keys(written().languages).sort()).toEqual(['es', 'fr']);
+  });
+
+  test('remove : marche sans manifeste ni voix (coupe-circuit depuis n’importe où)', async () => {
+    const empty = await fsp.mkdtemp(path.join(os.tmpdir(), 'voices-empty-'));
+    try {
+      const aws = fakeAws({ index: { schema: VOICE_KEY_SCHEMA, languages: { fr: ENTRY } } });
+      await publish(
+        { ...base, out: empty, voice: undefined, lang: 'it', command: 'remove' },
+        { run: aws, log: () => {} }
+      );
+      expect(written().languages).toEqual({ fr: ENTRY });
+    } finally {
+      await fsp.rm(empty, { recursive: true, force: true });
+    }
+  });
+
+  test.each(['clips', 'index', 'local'])('%s : manifeste vide ou absent, refus', async command => {
+    const empty = await fsp.mkdtemp(path.join(os.tmpdir(), 'voices-empty-'));
+    try {
+      await expect(
+        publish(
+          { ...base, out: empty, command, site: empty },
+          { run: fakeAws({ remote: online() }), log: () => {}, phrases }
+        )
+      ).rejects.toThrow(/Manifeste vide ou absent/);
+      expect(calls).toEqual([]);
+    } finally {
+      await fsp.rm(empty, { recursive: true, force: true });
+    }
+  });
+
+  test('absence de l’index distant : reconnue, sans masquer les autres erreurs', () => {
+    expect(isMissingObject(new Error('An error occurred (NoSuchKey)'))).toBe(true);
+    expect(isMissingObject({ message: 'Command failed', stderr: 'An error occurred (404)' })).toBe(
+      true
+    );
+    expect(isMissingObject(new Error('An error occurred (AccessDenied)'))).toBe(false);
+    expect(isMissingObject(new Error('Could not connect to the endpoint URL'))).toBe(false);
+  });
+
+  test('options : commande en premier, valeurs présentes, langue et audience valides', () => {
+    const env = { VOICE_BUCKET: 'voix' };
+    expect(parsePublishArgs(['index', '--lang', 'fr', '--audience', 'all'], env)).toMatchObject({
+      command: 'index',
+      lang: 'fr',
+      audience: 'all',
+      bucket: 'voix',
+      allowMissing: false,
+      force: false,
+    });
+    expect(parsePublishArgs(['remove', '--lang', 'fr', '--force'], env).force).toBe(true);
+    expect(() => parsePublishArgs(['--lang', 'fr', 'index'], env)).toThrow(/Commande attendue/);
+    expect(() => parsePublishArgs(['index', '--lang'], env)).toThrow(/Valeur manquante/);
+    expect(() => parsePublishArgs(['index', '--bucket', '--dry-run', '--lang', 'fr'], {})).toThrow(
+      /Valeur manquante/
+    );
+    expect(() => parsePublishArgs(['index', '--lang', 'francais'], env)).toThrow(/--lang/);
+    expect(() => parsePublishArgs(['index', '--lang', 'fr', '--audience', 'tous'], env)).toThrow(
+      /--audience/
+    );
+    expect(() => parsePublishArgs(['index', '--lang', 'fr'], {})).toThrow(/--bucket/);
+    expect(() => parsePublishArgs(['index', '--lang', 'fr', '--vite'], env)).toThrow(/inconnue/);
   });
 
   test('local : dossier voice/ du site relié aux clips, index écrit', async () => {
@@ -273,7 +442,8 @@ describe('Vérification en ligne', () => {
     seen = [];
   });
   afterEach(async () => {
-    await new Promise(resolve => server.close(resolve));
+    if (server?.listening) await new Promise(resolve => server.close(resolve));
+    server = null;
     await fsp.rm(outDir, { recursive: true, force: true });
   });
 
@@ -339,13 +509,128 @@ describe('Vérification en ligne', () => {
             headers: {},
             body: JSON.stringify({ schema: VOICE_KEY_SCHEMA, languages: { fr: ENTRY } }),
           }
-        : {
-            status: 200,
-            headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': CLIP_CACHE_CONTROL },
-          }
+        : goodClip(url)
     );
     const report = await checkOnline({ lang: 'fr', voice, outDir, base, sample: 2 });
     expect(report.checked).toBe(2);
     expect(report.index.matchesVersion).toBe(false);
+    expect(onlineProblems(report)).toEqual(["l'index annonce la version lucie-v3-1, pas test-1"]);
+    expect(onlineProblems(report, { allowOtherVersion: true })).toEqual([]);
+  });
+
+  /** Réponse conforme pour le clip demandé : 200, audio/mpeg, taille du manifeste, immuable */
+  function goodClip(url) {
+    const clip = clips.find(c => url.includes(c.key));
+    return {
+      status: 200,
+      headers: {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': String(clip.data.length),
+        'Cache-Control': CLIP_CACHE_CONTROL,
+      },
+    };
+  }
+
+  test.each([
+    ['injoignable', () => null, /index injoignable/],
+    ['en erreur serveur', () => ({ status: 500, headers: {} }), /index : HTTP 500/],
+    ['illisible', () => ({ status: 200, headers: {}, body: '{"schema":' }), /index illisible/],
+    [
+      'invalide',
+      () => ({ status: 200, headers: {}, body: JSON.stringify({ schema: 'x', languages: {} }) }),
+      /index invalide/,
+    ],
+  ])('index %s : échec, pas « langue absente »', async (_label, reply, message) => {
+    const base = await startSite(url =>
+      url.endsWith('index.json') ? (reply() ?? { status: 200, headers: {} }) : goodClip(url)
+    );
+    const fetchImpl = async (url, init) => {
+      if (url.endsWith('index.json') && reply() === null) throw new TypeError('fetch failed');
+      return fetch(url, init);
+    };
+    const report = await checkOnline({ lang: 'fr', voice, outDir, base, fetchImpl });
+    expect(report.failures).toEqual([]);
+    expect(report.indexError).toMatch(message);
+    expect(onlineProblems(report)).toEqual([expect.stringMatching(message)]);
+  });
+
+  test.each([403, 404])(
+    'index pas encore publié (%i) : la langue n’est pas annoncée, sans échec',
+    async status => {
+      const base = await startSite(url =>
+        url.endsWith('index.json') ? { status, headers: {} } : goodClip(url)
+      );
+      const report = await checkOnline({ lang: 'fr', voice, outDir, base });
+      expect(report.index).toBeNull();
+      expect(report.indexError).toBeNull();
+      expect(onlineProblems(report)).toEqual([]);
+    }
+  );
+
+  test('chaque clip compté est une requête réellement faite', async () => {
+    const base = await startSite(url =>
+      url.endsWith('index.json') ? { status: 404, headers: {} } : goodClip(url)
+    );
+    let heads = 0;
+    const fetchImpl = (url, init) => {
+      if (init.method === 'HEAD') heads++;
+      return fetch(url, init);
+    };
+    const report = await checkOnline({
+      lang: 'fr',
+      voice,
+      outDir,
+      base,
+      fetchImpl,
+      concurrency: 2,
+    });
+    expect(report.checked).toBe(heads);
+    expect(report.planned).toBe(3);
+    expect(heads).toBe(3);
+    expect(onlineProblems(report)).toEqual([]);
+  });
+
+  test.each([0, -1, 1.5, 'abc', ''])(
+    'concurrence %p : refusée (aucun faux « OK »)',
+    async value => {
+      const base = await startSite(url => goodClip(url));
+      await expect(
+        checkOnline({ lang: 'fr', voice, outDir, base, concurrency: value })
+      ).rejects.toThrow(/--concurrency/);
+    }
+  );
+
+  test('manifeste vide ou absent : erreur, pas « 0 clips vérifiés »', async () => {
+    const base = await startSite(url => goodClip(url));
+    const empty = await fsp.mkdtemp(path.join(os.tmpdir(), 'voices-empty-'));
+    try {
+      await expect(checkOnline({ lang: 'fr', voice, outDir: empty, base })).rejects.toThrow(
+        /Manifeste vide ou absent/
+      );
+    } finally {
+      await fsp.rm(empty, { recursive: true, force: true });
+    }
+  });
+
+  test('options : nombres entiers ≥ 1, valeurs présentes', () => {
+    expect(parseCheckOnlineArgs(['--lang', 'fr', '--sample', '50'])).toMatchObject({
+      lang: 'fr',
+      sample: 50,
+      concurrency: 16,
+      allowOtherVersion: false,
+    });
+    expect(parseCheckOnlineArgs(['--lang', 'fr', '--allow-other-version']).allowOtherVersion).toBe(
+      true
+    );
+    for (const argv of [
+      ['--lang', 'fr', '--sample', '0'],
+      ['--lang', 'fr', '--sample', '10k'],
+      ['--lang', 'fr', '--concurrency', 'x'],
+      ['--lang', 'fr', '--sample'],
+      ['--lang', 'fr', '--vite'],
+      ['--sample', '5'],
+    ]) {
+      expect(() => parseCheckOnlineArgs(argv)).toThrow();
+    }
   });
 });
