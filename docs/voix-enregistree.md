@@ -92,14 +92,55 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
   du navigateur (`getSynthesisEngine()`) reste le moteur par défaut et le repli. Détail en
   tête de `js/speech.js`.
 
-## À venir
+## En place : le lecteur de clips
 
-1. **Lecteur de clips** : index `/voice/index.json` (voix, version, audience, défaut),
-   lecture et repli, service worker, réglage « Voix enregistrée » ; les textes de
-   l'interface ajoutés passent eux aussi par les trois langues. Il se branche sur la
-   file par `setSpeechEngine` et se replie lui-même sur la synthèse.
-2. **Infra** (dépôt `leapmultix-infra`) : bucket privé, seconde origine CloudFront,
-   règles de cache propres à `/voice/*`, `blob:` dans la CSP.
+`js/voice-clips.js`, branché sur la file par `setSpeechEngine`.
+
+- **Adresse de base** : balise `<meta name="leapmultix-voice-base">`, vide dans le dépôt ;
+  `deploy.sh` y écrit `/voice/` (variable de dépôt `VOICE_BASE`, exigée par le job de
+  déploiement), seule valeur acceptée. Sans elle (forks, développement), aucune requête.
+  En local, `?voix=local` lit `/voice/` du serveur de développement.
+- **Index** `/voice/index.json` (`js/core/voice-index.js`) : langue, voix, version,
+  audience (`test` ou `all`), `defaultOn`. Lu sans cache, sa dernière copie sert hors ligne.
+  `?voix=test` marque le navigateur comme testeur, `?voix=off` retire les marques.
+- **Activation** (`js/core/voice-activation.js`) : la voix est disponible si la langue est
+  dans l'index, ouverte à ce navigateur et que le MP3 est lisible ; la parole est active
+  selon le choix du joueur (bouton de la barre du haut), sinon selon `defaultOn` ; le moteur
+  est la voix enregistrée sauf si la case « Voix enregistrée » est décochée (la parole
+  continue alors avec la voix de l'appareil).
+- **Lecture** : un seul `<audio>`, partagé et déverrouillé au premier geste par un silence
+  MP3 inclus dans le code (la CSP refuse `data:`) ; clip téléchargé par `fetch()` puis joué
+  depuis une URL `blob:`, libérée à la fin. Fin bornée à la durée du clip plus 1 s.
+- **Repli sur la voix de l'appareil**, phrase par phrase : clip absent (403/404, retenu pour
+  la session), réponse qui n'est pas un MP3, réseau coupé, lecture refusée, erreur, ou clip
+  pas démarré en 1,5 s (le téléchargement continue alors pour le cache). Plausible compte
+  une fois par session chaque cause (`Voice fallback`).
+- **Préchargement** des « Bravo », qui reviennent sans cesse.
+- **iPhone** : `navigator.audioSession.type = 'playback'` : Lucie suit la règle des
+  bruitages, c'est le bouton muet du jeu qui fait foi.
+- **Service worker** (`sw.js`) : clips en cache d'abord dans `leapmultix-voice` (épargné
+  par les changements de version), gardés seulement s'ils sont un vrai MP3 du site ; index
+  en réseau d'abord ; chaque nouvel index purge les clips des versions qu'il n'annonce plus,
+  plafond d'environ 2 000 clips.
+- **Réglage** : case « Voix enregistrée » dans Accessibilité et contrôles, visible là où la
+  voix est disponible ; mention « voix de synthèse créée avec ElevenLabs » (fr, en, es), sur
+  la page parents et dans le README.
+
+## En place : l'infra
+
+Dépôt `leapmultix-infra` (GitLab), fichier `voices.tf` :
+
+- bucket privé `leapmultix-voices` (propriétaire imposé, accès public bloqué, versionné,
+  chiffré, TLS seulement), lu par la distribution du site (OAC) sous `voice/` seulement,
+  sans `s3:ListBucket` : une clé absente répond 403 ;
+- deux comportements en tête : `/voice/index.json` jamais en cache à la périphérie
+  (coupe-circuit immédiat), `/voice/*` au cache de l'objet (un an, immuable) ; politiques de
+  cache gérées par AWS (quota de politiques personnalisées atteint) et politique d'en-têtes
+  qui laisse `Cache-Control` à l'objet ;
+- fonction `voice_guard` : `/voice/*` n'est servi qu'aux `fetch()` du jeu
+  (`Sec-Fetch-Site: same-origin`), un frein à l'aspiration des voix, pas une protection
+  absolue ; un navigateur sans cet en-tête (iOS avant 16.4) garde la voix de l'appareil ;
+- `media-src 'self' blob:` dans les trois CSP.
 
 ## Génération des clips
 
