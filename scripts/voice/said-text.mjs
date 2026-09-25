@@ -2,10 +2,25 @@
 // synthèse risque de mal la prononcer. Le clip reste rangé sous l'empreinte de la phrase
 // de speak() ; la voix de l'appareil, en repli, lit toujours cette phrase-là.
 //
-// Seule réécriture aujourd'hui : l'accord en genre des nombres qui finissent par 1, que les
-// chiffres ne portent pas. « Combien font 1 fois 7 ? » se dit « une fois 7 » (fois est
-// féminin), « 21 pommes » se dit « vingt et une pommes » ; en espagnol « 1 caja » se dit
-// « una caja » et « 21 niños » « veintiún niños ». Un nombre seul garde sa lecture par défaut.
+// Deux réécritures :
+// - l'accord en genre des nombres qui finissent par 1, que les chiffres ne portent pas.
+//   « Combien font 1 fois 7 ? » se dit « une fois 7 » (fois est féminin), « 21 pommes » se
+//   dit « vingt et une pommes » ; en espagnol « 1 caja » se dit « una caja » et « 21 niños »
+//   « veintiún niños ». Un nombre seul garde sa lecture par défaut ;
+// - un texte imposé (SAID_OVERRIDES) pour une phrase que la voix prononce mal essai après
+//   essai : la liste se relit, chaque entrée dit pourquoi.
+
+/**
+ * Textes dits imposés, par langue : phrase exacte de speak() → texte envoyé à la synthèse.
+ * Seulement après plusieurs essais mal dits à l'écoute ; une entrée qui ne correspond plus
+ * à une phrase du corpus fait échouer tests-esm/voice/said-text.esm.test.mjs.
+ */
+export const SAID_OVERRIDES = {
+  fr: new Map([
+    // « 108 » en tête de phrase : trois essais sur trois mal dits (écoute du 25/09)
+    ['108 divisé par 12 égale 9', 'Cent huit divisé par douze égale neuf'],
+  ]),
+};
 
 /**
  * Mots qui peuvent suivre un nombre dans une phrase du corpus, par genre. Un mot absent de
@@ -127,6 +142,8 @@ export function wordsAfterNumbers(text) {
  * @returns {string}
  */
 export function saidText(text, lang) {
+  const imposed = SAID_OVERRIDES[lang]?.get(String(text));
+  if (imposed) return imposed;
   const rules = RULES[lang];
   const words = WORDS_AFTER_NUMBERS[lang];
   if (!rules || !words) return text;

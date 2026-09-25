@@ -192,7 +192,10 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
      la bibliothèque de voix.
    - **Texte dit** (`said-text.mjs`) : les nombres en 1 s'accordent avec le nom qui suit
      (« Combien font une fois 7 ? », « vingt et une pommes », en espagnol « una caja »,
-     « veintiún niños ») ; la phrase de `speak()` reste la clé du clip.
+     « veintiún niños ») ; la phrase de `speak()` reste la clé du clip. Une phrase mal dite
+     essai après essai reçoit un texte imposé (`SAID_OVERRIDES`) : « 108 divisé par 12 égale
+     9 » se dit « Cent huit divisé par douze égale neuf » (trois essais en chiffres, trois
+     débuts mal dits).
    - **Traitement** (`audio-process.mjs`) : silences de début et de fin coupés, −20 LUFS,
      pic −1 dBFS, 0,15 s de silence gardé avant la phrase, MP3 mono 64 kb/s ; un clip muet est
      refusé. Un clic isolé par un long silence part avec lui. Changer l'encodage demande une

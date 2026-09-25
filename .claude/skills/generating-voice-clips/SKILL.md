@@ -65,7 +65,10 @@ racine du dépôt du jeu). Détails, codes de sortie et dépannage : [reference.
      7 ») ; refaire ceux qu'il écarte (payant : accord) :
      `node --env-file=<.env> scripts/voice/generate.mjs --lang <l> --redo <ecartes.txt>`
      (seulement les empreintes écartées), puis relancer Whisper (il retranscrit les clips
-     refaits) et `voice:check`, et faire réécouter.
+     refaits) et `voice:check`, et faire réécouter. Un clip encore mal dit après deux ou trois
+     essais (un nombre en tête de phrase, par exemple) : lui imposer un texte dit dans
+     `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`, nombre en toutes lettres), puis relancer
+     `generate.mjs` sans `--redo` : le texte dit a changé, le clip est refait seul.
 6. **Sauvegarde** : proposer au propriétaire le commit du dépôt privé (`clips/`,
    `manifests/` ; `raw/` reste local), puis le pousser.
 7. **Publication** (accord explicite, aperçu `--dry-run` d'abord ; identifiants AWS du

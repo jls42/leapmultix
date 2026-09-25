@@ -4,11 +4,12 @@
 /* eslint-env jest, node */
 /**
  * Texte dit par la voix enregistrée (scripts/voice/said-text.mjs) : les nombres en 1
- * s'accordent avec le nom qui les suit, et la liste des mots qui suivent un nombre
- * correspond exactement au corpus.
+ * s'accordent avec le nom qui les suit, la liste des mots qui suivent un nombre correspond
+ * exactement au corpus, et chaque texte imposé vise une phrase du corpus.
  */
 import { describe, test, expect } from '@jest/globals';
 import {
+  SAID_OVERRIDES,
   WORDS_AFTER_NUMBERS,
   saidText,
   wordsAfterNumbers,
@@ -67,4 +68,32 @@ describe.each(['fr', 'es'])('%s : mots qui suivent un nombre', lang => {
   test('un mot n’a qu’un genre', () => {
     expect(new Set(classified).size).toBe(classified.length);
   });
+});
+
+describe('Texte dit : textes imposés', () => {
+  test('la phrase visée est dite telle qu’imposée, les autres ne changent pas', () => {
+    expect(saidText('108 divisé par 12 égale 9', 'fr')).toBe(
+      'Cent huit divisé par douze égale neuf'
+    );
+    expect(saidText('96 divisé par 12 égale 8', 'fr')).toBe('96 divisé par 12 égale 8');
+    expect(saidText('108 divisé par 12 égale 9', 'en')).toBe('108 divisé par 12 égale 9');
+  });
+
+  test('un texte qui ressemble à une propriété d’objet n’est jamais remplacé', () => {
+    for (const text of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) {
+      expect(saidText(text, 'fr')).toBe(text);
+    }
+  });
+
+  test.each(Object.keys(SAID_OVERRIDES))(
+    '%s : chaque texte imposé vise une phrase du corpus, et dit autre chose',
+    lang => {
+      const corpus = new Set(buildCorpus(lang).map(entry => entry.text));
+      for (const [text, said] of SAID_OVERRIDES[lang]) {
+        expect(corpus.has(text)).toBe(true);
+        expect(said.trim()).not.toBe('');
+        expect(said).not.toBe(text);
+      }
+    }
+  );
 });
