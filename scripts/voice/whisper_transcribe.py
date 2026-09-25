@@ -7,7 +7,10 @@ Usage :
 
 Écrit une ligne JSON par clip : {"key": ..., "heard": ...}, que lit
 `node scripts/voice/check.mjs --transcripts`. Reprend là où il s'est arrêté : les clips
-déjà présents dans le fichier de sortie sont sautés.
+déjà présents dans le fichier de sortie (ou dans ceux de --also-done) sont sautés.
+
+Plusieurs processus se partagent un GPU avec --shard K/N (clips dont le rang modulo N vaut
+K), chacun avec son fichier de sortie ; concaténer les fichiers pour check.mjs.
 
 Installation (une fois) :
   python3 -m venv .venv-whisper
@@ -30,6 +33,9 @@ def parse_args():
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--model", default="large-v3-turbo")
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
+    parser.add_argument("--shard", default="0/1", help="part K/N des clips (défaut : tous)")
+    parser.add_argument("--also-done", action="append", type=Path, default=[],
+                        help="autre fichier de transcriptions dont les clips sont sautés")
     return parser.parse_args()
 
 
@@ -55,7 +61,11 @@ def main():
     args = parse_args()
     clips = json.loads(args.manifest.read_text(encoding="utf-8"))["clips"]
     already = done_keys(args.out)
-    todo = [key for key in sorted(clips) if key not in already]
+    for extra in args.also_done:
+        already |= done_keys(extra)
+    part, parts = (int(n) for n in args.shard.split("/"))
+    todo = [key for index, key in enumerate(sorted(clips))
+            if index % parts == part and key not in already]
     print(f"{len(todo)} clips à transcrire ({len(already)} déjà faits)", file=sys.stderr)
     if not todo:
         return 0
