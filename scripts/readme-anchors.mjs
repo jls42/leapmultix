@@ -21,17 +21,22 @@ import { fileURLToPath } from 'node:url';
 
 /** Bloc de code : ses « # » de commentaire ne sont pas des titres */
 const FENCE = /^\x60\x60\x60[\s\S]*?^\x60\x60\x60/gm;
-const HEADING = /^#{1,6}[ \t]+(.+?)[ \t]*$/gm;
+// Une espace après les « # », puis tout le reste de la ligne (rogné ensuite) : aucun retour
+// arrière possible, quelle que soit la ligne
+const HEADING = /^#{1,6}[ \t](.*)$/gm;
 const LINK = /\]\(#([^)\s]+)\)/g;
 
 /** Ancre GitHub d'un titre, sans le suffixe des doublons */
 export function slugify(title) {
-  return title
-    .replaceAll(/\x60([^\x60]*)\x60/g, '$1')
-    .replaceAll(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .toLowerCase()
-    .replaceAll(/[^\p{L}\p{M}\p{N}_\- ]/gu, '')
-    .replaceAll(' ', '-');
+  return (
+    title
+      .replaceAll(/\x60([^\x60]*)\x60/g, '$1')
+      // Crochets et parenthèses exclus des classes : chaque essai s'arrête au suivant
+      .replaceAll(/\[([^[\]]*)\]\([^()]*\)/g, '$1')
+      .toLowerCase()
+      .replaceAll(/[^\p{L}\p{M}\p{N}_\- ]/gu, '')
+      .replaceAll(' ', '-')
+  );
 }
 
 /** Positions des blocs de code : [début, fin[ */
@@ -43,7 +48,7 @@ function fenceRanges(text) {
 export function headingAnchors(text) {
   const seen = new Map();
   return [...text.replaceAll(FENCE, '').matchAll(HEADING)].map(([, title]) => {
-    const slug = slugify(title);
+    const slug = slugify(title.trim());
     const count = seen.get(slug) ?? 0;
     seen.set(slug, count + 1);
     return count ? `${slug}-${count}` : slug;

@@ -75,7 +75,7 @@ function transcriptsByKey(transcripts) {
 }
 
 /** Ce que Whisper a entendu du contenu actuel (une ligne sans sha256 vaut pour lui) */
-function heardNow(lines = [], sha) {
+function heardNow(lines, sha) {
   return lines.findLast(line => !line.sha256 || line.sha256 === sha)?.heard;
 }
 
@@ -113,7 +113,7 @@ export function listenItems({ manifest, transcripts = [], lang, sample = DEFAULT
   const imposed = SAID_OVERRIDES[lang] ?? new Map();
   const card = (key, reason, detail) => {
     const entry = manifest.clips[key];
-    const heard = heardNow(byKey.get(key), entry.sha256);
+    const heard = heardNow(byKey.get(key) ?? [], entry.sha256);
     return { key, reason, detail, text: entry.text, said: entry.said, sha256: entry.sha256, heard };
   };
   const whisper = transcriptReport(transcripts, manifest, lang).flagged.map(flag =>
