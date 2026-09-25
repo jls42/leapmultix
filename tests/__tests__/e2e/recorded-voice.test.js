@@ -10,6 +10,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const puppeteer = require('puppeteer');
+const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
 // Silence MP3 de 0,157 s, le même que js/voice-clips.js utilise pour déverrouiller le son
@@ -46,20 +47,14 @@ const RECORDERS_SOURCE =
   '  globalThis.__played = played;' +
   '})();';
 
-async function createUserAndSkipIntro(page) {
-  await page.waitForSelector('#new-user-name', { visible: true, timeout: 10000 });
-  await page.type('#new-user-name', 'Voix-' + Date.now());
-  await page.click('#create-user-btn');
-  await page.waitForSelector('.user-container .user-tile', { visible: true, timeout: 10000 });
-  const users = await page.$$('.user-container .user-tile');
-  await users[0].click();
-  await page.waitForSelector('#character-intro-modal', { visible: true, timeout: 10000 });
-  await page.evaluate(() => document.getElementById('skip-intro-btn')?.click());
-  await page.waitForFunction(
-    () => document.querySelector('#character-intro-modal')?.style.display === 'none',
-    { timeout: 10000 }
-  );
-  await page.waitForSelector('.mode-btn[data-mode="quiz"]', { visible: true, timeout: 10000 });
+/** Attend la première phrase de la synthèse : phrases dites, sons joués, question affichée */
+async function firstSpeech(page) {
+  await page.waitForFunction(() => globalThis.__spoken.some(Boolean), { timeout: 20000 });
+  return page.evaluate(() => ({
+    spoken: globalThis.__spoken.filter(Boolean),
+    played: globalThis.__played,
+    question: document.querySelector('#quiz-question')?.textContent ?? '',
+  }));
 }
 
 describe('Voix enregistrée E2E', () => {
@@ -134,19 +129,23 @@ describe('Voix enregistrée E2E', () => {
     return { context, page };
   }
 
-  test('annonce avec clip : jouée en clip ; question sans clip : lue par la synthèse', async () => {
-    const { context, page } = await openGame('?voix=local');
+  /** Ouvre le jeu, crée un joueur, lance le Quiz, puis passe la page à check ; contexte fermé */
+  async function inQuiz(query, options, check) {
+    const { context, page } = await openGame(query, options);
     try {
       await createUserAndSkipIntro(page);
       await page.click('.mode-btn[data-mode="quiz"]');
+      await check(page);
+    } finally {
+      await context.close();
+    }
+  }
+
+  test('annonce avec clip : jouée en clip ; question sans clip : lue par la synthèse', async () => {
+    await inQuiz('?voix=local', {}, async page => {
       // La question tirée au hasard (« Combien font… ? », vrai/faux dit comme une affirmation,
       // énoncé) n'a pas de clip : elle est la seule phrase qui passe par la synthèse
-      await page.waitForFunction(() => globalThis.__spoken.some(Boolean), { timeout: 20000 });
-      const { spoken, played, question } = await page.evaluate(() => ({
-        spoken: globalThis.__spoken.filter(Boolean),
-        played: globalThis.__played,
-        question: document.querySelector('#quiz-question')?.textContent ?? '',
-      }));
+      const { spoken, played, question } = await firstSpeech(page);
       // L'annonce n'est pas passée par la synthèse, un clip blob: a été joué
       expect(spoken.some(text => /^Mode/.test(text))).toBe(false);
       expect(played.some(src => src.startsWith('blob:'))).toBe(true);
@@ -154,28 +153,19 @@ describe('Voix enregistrée E2E', () => {
       expect(spoken).toHaveLength(1);
       expect(spoken[0].match(/\d+/g)).toEqual(question.match(/\d+/g));
       expect(voiceRequests.some(url => url.endsWith('/voice/index.json'))).toBe(true);
-    } finally {
-      await context.close();
-    }
+    });
   }, 60000);
 
   test('jeu en anglais : l’annonce part en clip anglais, sous /voice/en/', async () => {
     voiceRequests.length = 0;
-    const { context, page } = await openGame('?voix=local', { lang: 'en' });
-    try {
-      await createUserAndSkipIntro(page);
-      await page.click('.mode-btn[data-mode="quiz"]');
-      await page.waitForFunction(() => globalThis.__spoken.some(Boolean), { timeout: 20000 });
-      const spoken = await page.evaluate(() => globalThis.__spoken.filter(Boolean));
-      const played = await page.evaluate(() => globalThis.__played);
+    await inQuiz('?voix=local', { lang: 'en' }, async page => {
+      const { spoken, played } = await firstSpeech(page);
       // « Quiz Mode » n'est pas passée par la synthèse : son clip anglais a été joué
       expect(spoken.some(text => /Mode/.test(text))).toBe(false);
       expect(played.some(src => src.startsWith('blob:'))).toBe(true);
       expect(voiceRequests.some(url => url.includes('/voice/en/e2e-en-1/'))).toBe(true);
       expect(voiceRequests.some(url => url.includes('/voice/fr/'))).toBe(false);
-    } finally {
-      await context.close();
-    }
+    });
   }, 60000);
 
   test('première visite, index lent : bouton masqué, phrase retenue puis dite en clip', async () => {
@@ -233,16 +223,11 @@ describe('Voix enregistrée E2E', () => {
 
   test('sans voix enregistrée configurée (forks) : aucune requête /voice/, voix coupée', async () => {
     voiceRequests.length = 0;
-    const { context, page } = await openGame('');
-    try {
-      await createUserAndSkipIntro(page);
-      await page.click('.mode-btn[data-mode="quiz"]');
+    await inQuiz('', {}, async page => {
       await page.waitForSelector('#quiz-question', { visible: true, timeout: 10000 });
       const spoken = await page.evaluate(() => globalThis.__spoken.filter(Boolean));
       expect(voiceRequests).toEqual([]);
       expect(spoken).toEqual([]);
-    } finally {
-      await context.close();
-    }
+    });
   }, 60000);
 });
