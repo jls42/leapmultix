@@ -81,6 +81,7 @@ self.addEventListener('fetch', event => {
 
   if (!sameOrigin(request.url)) return; // skip cross-origin
 
+  const { pathname } = new URL(request.url);
   const dest = request.destination;
 
   // Images: cache-first
@@ -99,7 +100,8 @@ self.addEventListener('fetch', event => {
   }
 
   // Translations JSON: stale-while-revalidate
-  if (request.url.includes('/assets/translations/') && request.url.endsWith('.json')) {
+  // Le chemin seul : les traductions se demandent avec ?v=<version>
+  if (pathname.startsWith('/assets/translations/') && pathname.endsWith('.json')) {
     event.respondWith(
       (async () => {
         const cache = await caches.open(RUNTIME_CACHE);
