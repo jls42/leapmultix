@@ -7,6 +7,10 @@
 //                                              synthèse, si bien qu'une nouvelle version qui
 //                                              ne change que l'encodage retrouve ses bruts
 //   manifests/<langue>/<version>.json          phrase, texte dit et contrôle de chaque clip
+//   ecoute/avant/<langue>/<version>/<empreinte>.mp3
+//                                              dernier clip remplacé (--redo, texte dit
+//                                              changé), gardé en local (hors git) pour la
+//                                              comparaison avant/après de listen-page.mjs
 //
 // Un fichier n'apparaît sous son nom final qu'une fois complet : on écrit un « .part »,
 // puis on renomme. Les « .part » restants sont les traces d'une exécution interrompue, que
@@ -88,12 +92,27 @@ export function storePaths(outDir, lang, version, rawKey = version) {
     manifestFile: path.join(outDir, 'manifests', lang, `${version}.json`),
     runLogFile: path.join(outDir, 'manifests', lang, `${version}.runs.jsonl`),
     lockFile: path.join(outDir, 'manifests', lang, `${version}.lock`),
+    replacedDir: path.join(outDir, 'ecoute', 'avant', lang, version),
   };
 }
 
 export const clipFile = (paths, key) => path.join(paths.clipDir, `${key}.mp3`);
+export const replacedFile = (paths, key) => path.join(paths.replacedDir, `${key}.mp3`);
 export const rawFile = (paths, key, said) =>
   path.join(paths.rawDir, `${key}-${saidHash(said)}.mp3`);
+
+/**
+ * Met de côté le clip d'une empreinte avant qu'il soit refait : la page d'écoute compare
+ * l'ancien et le nouveau. Seul le dernier remplacé est gardé. Même dépôt, donc même
+ * disque : un simple renommage.
+ * @returns {Promise<boolean>} true si un clip a été mis de côté
+ */
+export async function keepReplaced(paths, key) {
+  if (!fs.existsSync(clipFile(paths, key))) return false;
+  await fsp.mkdir(paths.replacedDir, { recursive: true });
+  await fsp.rename(clipFile(paths, key), replacedFile(paths, key));
+  return true;
+}
 
 /** Clé d'un fichier brut : « <empreinte>-<h>.mp3 » */
 export function rawKeyOf(fileName) {
@@ -224,8 +243,8 @@ export async function writeManifest(paths, manifest) {
   await writeFileAtomic(paths.manifestFile, `${JSON.stringify({ ...manifest, clips }, null, 2)}\n`);
 }
 
-/** Entrées du manifeste : sans fichier, retirées ; d'un autre texte dit, clip supprimé */
-async function pruneEntries({ paths, manifest, phrasesByKey, said, remove, report }) {
+/** Entrées du manifeste : sans fichier, retirées ; d'un autre texte dit, clip mis de côté */
+async function pruneEntries({ paths, manifest, phrasesByKey, said, keep, report }) {
   for (const [key, entry] of Object.entries(manifest.clips)) {
     const phrase = phrasesByKey.get(key);
     if (!fs.existsSync(clipFile(paths, key))) {
@@ -233,7 +252,7 @@ async function pruneEntries({ paths, manifest, phrasesByKey, said, remove, repor
       delete manifest.clips[key];
     } else if (phrase && entry.said !== said(phrase.text)) {
       report.stale++;
-      await remove(clipFile(paths, key));
+      await keep(key);
       delete manifest.clips[key];
     }
   }
@@ -292,7 +311,8 @@ async function pruneStaleRaw({ paths, phrasesByKey, said, remove, report }) {
 /**
  * Remet le manifeste d'accord avec les fichiers, avant une génération :
  * - entrée sans fichier : retirée ;
- * - clip dont le texte dit a changé (règles de prononciation) : supprimé, à refaire ;
+ * - clip dont le texte dit a changé (règles de prononciation) : mis de côté (keepReplaced),
+ *   à refaire ;
  * - clip complet sans entrée (arrêt entre le renommage et l'écriture du manifeste) :
  *   repris s'il est valide, supprimé sinon ;
  * - fichier brut d'un autre texte dit, ou d'une phrase sortie du corpus : supprimé.
@@ -305,7 +325,10 @@ export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, 
   const remove = async file => {
     if (!dryRun) await fsp.rm(file, { force: true });
   };
-  const ctx = { paths, manifest, phrasesByKey, said, inspect, remove, report };
+  const keep = async key => {
+    if (!dryRun) await keepReplaced(paths, key);
+  };
+  const ctx = { paths, manifest, phrasesByKey, said, inspect, remove, keep, report };
   await pruneEntries(ctx);
   await adoptUnlistedClips(ctx);
   await pruneStaleRaw(ctx);

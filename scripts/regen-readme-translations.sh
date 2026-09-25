@@ -9,13 +9,16 @@
 #   ./scripts/regen-readme-translations.sh en es        # seulement celles-ci
 #   AIPMT_PROVIDER=--use_claude ./scripts/...           # autre fournisseur
 #
-# Deux particularités de ce dépôt, prises en charge ici :
+# Trois particularités de ce dépôt, prises en charge ici :
 #
 #   1. aipmt écrit « README-en.md » ; nos fichiers s'appellent « README.en.md ».
 #      Le script renomme après chaque traduction réussie.
 #   2. aipmt refuse d'écrire un fichier douteux (jeton perdu, passage resté en
 #      français). C'est une sécurité, pas une panne : elle se déclenche parfois
 #      sur les commentaires des blocs de code. D'où les relances ci-dessous.
+#   3. Le modèle traduit parfois un titre autrement que son lien dans la table
+#      des matières. scripts/readme-anchors.mjs --fix réaligne les liens ; le
+#      test tests-esm/scripts/readme-anchors.test.mjs garde les quinze README.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -99,6 +102,15 @@ for langue in "${langues[@]}"; do
 
       if [[ "$manquants" -gt 0 ]]; then
         echo "   $manquants média(s) perdu(s) : on rejette et on relance"
+        rm -f "$intermediaire"
+        continue
+      fi
+
+      # Table des matières : le modèle nomme parfois un titre autrement que son
+      # lien, qui ne mène alors nulle part. On réaligne chaque lien sur le titre
+      # de même rang ; titres ou liens perdus en route, on rejette et on relance.
+      if ! node scripts/readme-anchors.mjs --fix "$SOURCE" "$intermediaire" > /dev/null; then
+        echo "   ancres irréparables : on rejette et on relance"
         rm -f "$intermediaire"
         continue
       fi

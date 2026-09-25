@@ -1,6 +1,6 @@
 ---
 name: generating-voice-clips
-description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix (voix ElevenLabs « Lucie », dépôt privé leapmultix-voices, bucket S3 servi par CloudFront sur /voice/). À utiliser pour estimer le coût en crédits, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), vérifier les clips (Whisper local) et refaire ceux mal prononcés, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue ou une voix, ou préparer un essai local (?voix=local). (project)
+description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix (voix ElevenLabs « Lucie », dépôt privé leapmultix-voices, bucket S3 servi par CloudFront sur /voice/). À utiliser pour estimer le coût en crédits, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), vérifier les clips (Whisper local), faire écouter les clips signalés sur la page d'écoute (npm run voice:listen) et refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue ou une voix, ou préparer un essai local (?voix=local). (project)
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -61,14 +61,24 @@ racine du dépôt du jeu). Détails, codes de sortie et dépannage : [reference.
      en tâche de fond :
      `.venv-whisper/bin/python scripts/voice/whisper_transcribe.py --manifest ../leapmultix-voices/manifests/<l>/<version>.json --clips ../leapmultix-voices/clips/<l>/<version> --lang <l> --out transcripts-<l>.jsonl`,
      puis `npm run voice:check -- --lang <l> --transcripts transcripts-<l>.jsonl --flagged a-reecouter.txt` ;
-   - faire écouter au propriétaire les clips signalés et des formes féminines (« une fois
-     7 ») ; refaire ceux qu'il écarte (payant : accord) :
-     `node --env-file=<.env> scripts/voice/generate.mjs --lang <l> --redo <ecartes.txt>`
-     (seulement les empreintes écartées), puis relancer Whisper (il retranscrit les clips
-     refaits) et `voice:check`, et faire réécouter. Un clip encore mal dit après deux ou trois
-     essais (un nombre en tête de phrase, par exemple) : lui imposer un texte dit dans
-     `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`, nombre en toutes lettres), puis relancer
-     `generate.mjs` sans `--redo` : le texte dit a changé, le clip est refait seul.
+   - page d'écoute : `npm run voice:listen -- --lang <l> --transcripts transcripts-<l>.jsonl`
+     écrit `../leapmultix-voices/ecoute/<l>-<version>.html` (hors git) et en affiche
+     l'adresse : les clips signalés, puis un échantillon des formes féminines (« une fois
+     7 »), que Whisper ne distingue pas. Le propriétaire l'ouvre dans son navigateur, écoute,
+     coche « à refaire » ; la liste des cases cochées se colle dans `ecartes.txt` (racine du
+     jeu, ignoré par git) ;
+   - refaire les clips écartés (payant : accord) :
+     `node --env-file=<.env> scripts/voice/generate.mjs --lang <l> --redo ecartes.txt`
+     (seulement ces empreintes ; l'ancien clip de chacune est mis de côté dans
+     `ecoute/avant/`), puis relancer Whisper (il ne transcrit que les clips refaits),
+     `voice:check`, et
+     `npm run voice:listen -- --lang <l> --transcripts transcripts-<l>.jsonl --compare ecartes.txt` :
+     page avant/après (`<l>-<version>-refaits.html`) avec le verdict de Whisper sur chaque
+     nouveau clip, à faire réécouter. Un clip encore mal dit après deux ou trois essais (un
+     nombre en tête de phrase, par exemple) : lui imposer un texte dit dans `SAID_OVERRIDES`
+     (`scripts/voice/said-text.mjs`, nombre en toutes lettres), puis relancer `generate.mjs`
+     sans `--redo` : le texte dit a changé, le clip est refait seul (l'ancien mis de côté
+     lui aussi ; comparer avec `--compare` sur un fichier qui contient son empreinte).
 6. **Sauvegarde** : proposer au propriétaire le commit du dépôt privé (`clips/`,
    `manifests/` ; `raw/` reste local), puis le pousser.
 7. **Publication** (accord explicite, aperçu `--dry-run` d'abord ; identifiants AWS du

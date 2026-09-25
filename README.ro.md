@@ -25,7 +25,7 @@
 
 [![CodeFactor](https://www.codefactor.io/repository/github/jls42/leapmultix/badge)](https://www.codefactor.io/repository/github/jls42/leapmultix)
 [![Insignă Codacy](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Starea pragului de calitate](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Starea porții de calitate](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 [![Evaluarea fiabilității](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 [![Evaluarea securității](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
@@ -49,15 +49,16 @@
 - [Dezvoltare](#-dezvoltare)
 - [Compatibilitate](#-compatibilitate)
 - [Localizare](#-localizare)
+- [Voce înregistrată](#-voce-înregistrată)
 - [Stocarea datelor](#-stocarea-datelor)
 - [Raportarea unei probleme](#-raportarea-unei-probleme)
 - [Licență](#-licență)
 
 ## Descriere
 
-LeapMultix este o aplicație web educațională interactivă, destinată copiilor cu vârste între 6 și 12 ani, pentru însușirea celor 4 operații aritmetice: înmulțirea (×), adunarea (+), scăderea (−) și împărțirea (÷). Oferă **5 moduri de joc** și **4 mini-jocuri arcade** într-o interfață intuitivă, accesibilă și multilingvă.
+LeapMultix este o aplicație web educativă și interactivă, destinată copiilor cu vârste între 6 și 12 ani, pentru a stăpâni cele 4 operații aritmetice: înmulțirea (×), adunarea (+), scăderea (−) și împărțirea (÷). Oferă **5 moduri de joc** și **4 minijocuri arcade** într-o interfață intuitivă, accesibilă și multilingvă.
 
-**Suport pentru operații multiple:** toate cele cinci moduri acceptă cele patru operații. Alegerea se face pe ecranul de pornire și se aplică pe întregul parcurs.
+**Suport pentru operații multiple:** toate cele cinci moduri acceptă cele patru operații. Alegerea se face pe ecranul de pornire și se aplică întregului parcurs.
 
 **Dezvoltat de:** Julien LS (contact@jls42.org)
 
@@ -67,31 +68,31 @@ LeapMultix este o aplicație web educațională interactivă, destinată copiilo
 
 ### Ecranele
 
-|                                                                                                                                     |                                                                                                            |
-| :---------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------: |
-|                              ![Ecranul „Cine joacă?”: alegerea profilului](docs/media/01-accueil.webp)                              |          ![Meniul principal: alegerea operației și a celor cinci moduri](docs/media/02-menu.webp)          |
-|                        **Cine joacă?** — câte un profil pentru fiecare copil, cu avatarul și progresul său.                         |                **Meniul** — operația se alege aici, apoi se pot deschide cele cinci moduri.                |
-|                 ![Modul Descoperire: tabla înmulțirii cu 4 reprezentată prin puncte](docs/media/03-decouverte.webp)                 |        ![Modul Quiz: răspunsul greșit cu roșu, răspunsul corect cu verde](docs/media/04-quiz.webp)         |
-|         **Descoperire** — fiecare egalitate este reprezentată prin puncte, salturi sau numărare, împreună cu trucul tablei.         |  **Quiz** — alegerea copilului rămâne afișată lângă răspunsul corect, iar explicația detaliază calculul.   |
-|                      ![Modul Provocare: numărătoare inversă și serie în desfășurare](docs/media/05-defi.webp)                       | ![Modul Aventură: harta celor zece niveluri, cu următoarele niveluri blocate](docs/media/06-aventure.webp) |
-| **Provocare** — cursă contra cronometru. În cazul unei greșeli, cronometrul se oprește pentru a permite citirea răspunsului corect. |            **Aventură** — zece niveluri care se deschid unul după altul, în schimbul stelelor.             |
-|                                 ![Meniul Arcade: cele patru mini-jocuri](docs/media/07-arcade.webp)                                 |     ![Panoul de control: stele pentru fiecare tablă și statistici](docs/media/08-tableau-de-bord.webp)     |
-|                             **Arcade** — patru mini-jocuri, cu reglarea dificultății și alegerea navei.                             |     **Panoul de control** — stele pentru fiecare tablă, table de repetat, scoruri pentru fiecare mod.      |
-|                        ![Personalizare: avatare, teme, accesibilitate](docs/media/09-personnalisation.webp)                         |                                                                                                            |
-|                  **Personalizare** — avatar, temă cromatică, dimensiunea textului, contrast ridicat, cod parental.                  |                                                                                                            |
+|                                                                                                                              |                                                                                                         |
+| :--------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------: |
+|                          ![Ecranul „Cine joacă?”: alegerea profilului](docs/media/01-accueil.webp)                           |        ![Meniul principal: alegerea operației și a celor cinci moduri](docs/media/02-menu.webp)         |
+|                     **Cine joacă?** — câte un profil pentru fiecare copil, cu avatarul și progresul său.                     |                 **Meniul** — operația se alege aici, apoi se deschid cele cinci moduri.                 |
+|              ![Modul Descoperire: tabla înmulțirii cu 4 prezentată prin puncte](docs/media/03-decouverte.webp)               |         ![Modul Quiz: răspuns greșit cu roșu, răspuns corect cu verde](docs/media/04-quiz.webp)         |
+|   **Descoperire** — fiecare egalitate este prezentată prin puncte, salturi sau numărare, împreună cu trucul pentru tablă.    | **Quiz** — alegerea copilului rămâne afișată lângă răspunsul corect, iar explicația detaliază calculul. |
+|                   ![Modul Provocare: numărătoare inversă și serie în desfășurare](docs/media/05-defi.webp)                   |    ![Modul Aventură: harta celor zece niveluri, cu următoarele blocate](docs/media/06-aventure.webp)    |
+| **Provocare** — cursă contra cronometru. În cazul unei greșeli, cronometrul se oprește cât timp este citit răspunsul corect. |           **Aventură** — zece niveluri care se deschid unul după altul, în schimbul stelelor.           |
+|                              ![Meniul Arcade: cele patru minijocuri](docs/media/07-arcade.webp)                              |     ![Tablou de bord: stele pentru fiecare tablă și statistici](docs/media/08-tableau-de-bord.webp)     |
+|                          **Arcade** — patru minijocuri, cu reglarea dificultății și alegerea navei.                          |     **Tablou de bord** — stele pentru fiecare tablă, table de repetat, scoruri pentru fiecare mod.      |
+|                     ![Personalizare: avatare, teme, accesibilitate](docs/media/09-personnalisation.webp)                     |                                                                                                         |
+|              **Personalizare** — avatar, temă cromatică, dimensiunea textului, contrast ridicat, cod parental.               |                                                                                                         |
 
-### Mini-jocurile arcade
+### Minijocurile arcade
 
 Patru jocuri care pun aceeași întrebare — cea afișată deasupra zonei de
 joc, împreună cu timpul rămas și viețile — dar necesită de fiecare dată un gest
 diferit.
 
-|                                                                                                                                    |                                                                                                        |
-| :--------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
-|       ![MultiInvaders: monștri care poartă numere, cu o navă în partea de jos a ecranului](docs/media/10-multiinvaders.webp)       | ![MultiMiam: un labirint în care pastilele poartă răspunsurile posibile](docs/media/11-multimiam.webp) |
-|    **MultiInvaders** — trage în răspunsurile greșite și cruță-l pe cel corect: acesta ascunde un prieten care trebuie eliberat.    |        **MultiMiam** — străbate labirintul pentru a prinde rezultatul corect, evitând monștrii.        |
-| ![MultiMemory: o grilă de cărți, dintre care două sunt întoarse și afișează un calcul și un număr](docs/media/12-multimemory.webp) |         ![MultiSnake: un șarpe și mere numerotate pe o pajiște](docs/media/13-multisnake.webp)         |
-|                          **MultiMemory** — amintește-ți care carte conține rezultatul calculului întors.                           |           **MultiSnake** — crește înghițind numerele corecte și evită-le pe toate celelalte.           |
+|                                                                                                                                 |                                                                                                        |
+| :-----------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
+|      ![MultiInvaders: monștri care poartă numere și o navă în partea de jos a ecranului](docs/media/10-multiinvaders.webp)      | ![MultiMiam: un labirint în care pastilele poartă răspunsurile posibile](docs/media/11-multimiam.webp) |
+|  **MultiInvaders** — trage în răspunsurile greșite și cruță-l pe cel corect: acesta ascunde un prieten care trebuie eliberat.   |        **MultiMiam** — parcurge labirintul pentru a prinde rezultatul corect, evitând monștrii.        |
+| ![MultiMemory: o grilă de cărți, dintre care două sunt întoarse și arată un calcul și un număr](docs/media/12-multimemory.webp) |        ![MultiSnake: un șarpe și mere numerotate într-o pajiște](docs/media/13-multisnake.webp)        |
+|                          **MultiMemory** — amintește-ți ce carte conține rezultatul calculului întors.                          |           **MultiSnake** — crește înghițind numerele corecte și evită-le pe toate celelalte.           |
 
 ## ✨ Funcționalități
 
@@ -102,12 +103,12 @@ diferit.
 - **Modul Provocare**: Cursă contra cronometru cu cele 4 operații (×, +, −, ÷) și diferite niveluri de dificultate
 - **Modul Aventură**: Progres narativ pe niveluri, cu suport pentru cele 4 operații
 
-### 🕹️ Mini-jocuri Arcade
+### 🕹️ Minijocuri Arcade
 
-- **MultiInvaders**: Space Invaders educațional - Distruge răspunsurile greșite
+- **MultiInvaders**: Space Invaders educativ - Distruge răspunsurile greșite
 - **MultiMiam**: Pac-Man matematic - Colectează răspunsurile corecte
 - **MultiMemory**: Joc de memorie - Asociază operațiile cu rezultatele
-- **MultiSnake**: Snake educațional - Crește mâncând numerele corecte
+- **MultiSnake**: Snake educativ - Crește mâncând numerele corecte
 
 ### ➕ Suport pentru operații multiple
 
@@ -123,11 +124,12 @@ LeapMultix oferă exersarea completă a celor 4 operații aritmetice în **toate
 
 ### 🌍 Funcționalități generale
 
-- **Utilizatori multipli**: Gestionarea profilurilor individuale, cu progresul salvat
+- **Utilizatori multipli**: Gestionarea profilurilor individuale cu progres salvat
 - **Multilingv**: Suport pentru franceză, engleză și spaniolă
 - **Personalizare**: Avatare, teme cromatice, fundaluri
-- **Accesibilitate**: Navigare cu tastatura, suport tactil, conformitate WCAG 2.1 AA
-- **Design responsiv pentru dispozitive mobile**: Interfață optimizată pentru tablete și smartphone-uri
+- **Accesibilitate**: Navigare prin tastatură, suport tactil, conformitate WCAG 2.1 AA
+- **Voce înregistrată**: întrebări și încurajări citite de o voce de sinteză preînregistrată (creată cu ElevenLabs), cu revenire automată la vocea dispozitivului; clipurile nu sunt incluse în depozitul public (consultați [Voce înregistrată](#-voce-înregistrată))
+- **Adaptare pentru dispozitive mobile**: Interfață optimizată pentru tablete și smartphone-uri
 - **Sistem de progres**: Scoruri, insigne, provocări zilnice
 
 ## 🚀 Pornire rapidă
@@ -206,14 +208,23 @@ npm run serve:dist     # Servir dist/ sur http://localhost:5000 (ou port disponi
 # PWA et Service Worker
 npm run sw:disable     # Désactiver le service worker
 npm run sw:fix         # Corriger les problèmes de service worker
+
+# Voix enregistrée (poste du propriétaire, clips hors dépôt)
+npm run voice:corpus       # Résumé des phrases dites, par langue
+npm run voice:corpus:lock  # Mettre à jour le verrou du corpus
+npm run voice:generate     # Générer les clips (ElevenLabs)
+npm run voice:check        # Contrôler les clips (fichiers, MP3, Whisper)
+npm run voice:listen       # Page d'écoute : clips signalés, avant/après
+npm run voice:publish      # Publier les clips et l'index de la langue
+npm run voice:check-online # Vérifier les clips servis en ligne
 ```
 
-## 🏗️ Arhitectură
+## 🧱 Arhitectură
 
 ### Structura fișierelor
 
-Modulele JavaScript sunt **plasate direct în `js/`**, cu excepția a trei directoare:
-`core/`, `components/` și `modes/`. Prin urmare, numele fișierului indică
+Modulele JavaScript sunt **organizate la același nivel în `js/`**, cu excepția a trei directoare:
+`core/`, `components/` și `modes/`. Prin urmare, numele fișierului este cel care indică
 gruparea (`arcade-*`, `multimiam-*`, `i18n*`…).
 
 ```
@@ -251,6 +262,7 @@ leapmultix/
 │   ├── i18n.js, i18n-store.js                # Internationalisation
 │   ├── security-utils.js, error-handlers.js, logger.js
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
+│   ├── voice-clips.js      # Lecteur de la voix enregistrée (repli : speech.js)
 │   ├── slides.js, mode-orchestrator.js, lazy-loader.js, game-cleanup.js
 │   ├── VideoManager.js, responsive-image-loader.js
 │   ├── userManager.js, main-helpers.js, utils-es6.js, questionGenerator.js
@@ -264,21 +276,22 @@ leapmultix/
 ├── tests/__tests__/        # Tests Jest (jsdom, et bout-en-bout via Puppeteer)
 ├── tests-esm/              # Tests Jest en modules ES (.mjs)
 ├── scripts/                # Génération d'assets, i18n, rapports
+│   └── voice/              # Voix enregistrée : corpus, génération, écoute, publication
 ├── docs/media/             # Captures et animations du README
 └── dist/                   # Build de production (généré)
 ```
 
 ### Arhitectură tehnică
 
-**Module ES6 moderne**: Proiectul utilizează o arhitectură modulară, cu clase ES6 și importuri/exporturi native.
+**Module ES6 moderne**: Proiectul utilizează o arhitectură modulară cu clase ES6 și importuri/exporturi native.
 
 **Componente reutilizabile**: Interfață construită cu componente UI centralizate (TopBar, InfoBar, Dashboard, Customization).
 
-**Lazy Loading**: Încărcarea inteligentă la cerere a modulelor prin `lazy-loader.js`, pentru optimizarea performanței inițiale.
+**Lazy Loading**: Încărcarea inteligentă la cerere a modulelor prin `lazy-loader.js` pentru optimizarea performanței inițiale.
 
 **Sistem unificat de stocare**: API centralizat pentru persistența datelor utilizatorilor prin LocalStorage, cu mecanisme de rezervă.
 
-**Gestionare audio centralizată**: Controlul sunetului, cu suport multilingv și preferințe pentru fiecare utilizator.
+**Gestionare audio centralizată**: Controlul sunetului cu suport multilingv și preferințe pentru fiecare utilizator.
 
 **Event Bus**: Comunicare decuplată bazată pe evenimente între componente, pentru o arhitectură ușor de întreținut.
 
@@ -292,9 +305,9 @@ leapmultix/
 
 Interfață pentru explorarea vizuală a tablelor înmulțirii, cu:
 
-- Vizualizarea interactivă a înmulțirilor
+- Vizualizare interactivă a înmulțirilor
 - Animații și mijloace mnemonice
-- Funcționalitate educațională de glisare și plasare
+- Tragere și plasare educativă
 - Progres liber pentru fiecare tablă
 
 ### Modul Quiz
@@ -302,7 +315,7 @@ Interfață pentru explorarea vizuală a tablelor înmulțirii, cu:
 Întrebări cu variante multiple, cu:
 
 - 10 întrebări pe sesiune
-- Progres adaptiv în funcție de răspunsurile corecte
+- Progres adaptiv în funcție de reușite
 - Tastatură numerică virtuală
 - Sistem de streak (serie de răspunsuri corecte)
 
@@ -320,34 +333,34 @@ Cursă contra cronometru, cu:
 Progres narativ, cu:
 
 - 10 niveluri tematice care pot fi deblocate
-- Hartă interactivă, cu reprezentarea vizuală a progresului
-- Poveste captivantă, cu personaje
+- Hartă interactivă cu progres vizual
+- Poveste captivantă cu personaje
 - Sistem de stele și recompense
 
-### Mini-jocuri Arcade
+### Minijocuri Arcade
 
-Fiecare mini-joc oferă:
+Fiecare minijoc oferă:
 
 - Alegerea dificultății și personalizare
 - Sistem de vieți și scor
-- Comenzi prin tastatură și ecran tactil
+- Comenzi prin tastatură și tactile
 - Clasamente individuale pentru fiecare utilizator
 
-## 🛠️ Dezvoltare
+## 🔧 Dezvoltare
 
 ### Flux de lucru pentru dezvoltare
 
-**Nu faceți niciodată commit direct pe main.** Proiectul folosește ramuri pentru
-funcționalități.
+**Nu faceți niciodată commit direct pe main.** Proiectul lucrează cu ramuri de
+funcționalitate.
 
-**1. Creați o ramură**, `feat/` pentru o funcționalitate, `fix/` pentru o corecție:
+**1. Creați o ramură**, `feat/` pentru o funcționalitate, `fix/` pentru o remediere:
 
 ```bash
 git checkout -b feat/nom-de-la-fonctionnalite
 ```
 
-**2. Dezvoltați și verificați.** Formatarea este verificată prima: CI respinge codul
-înainte chiar de a rula testele.
+**2. Dezvoltați și verificați.** Formatarea este verificată prima: CI respinge modificările
+înainte chiar de a executa testele.
 
 ```bash
 npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
@@ -366,19 +379,19 @@ git push -u origin feat/nom-de-la-fonctionnalite
 ```
 
 **4. Deschideți un pull request** și așteptați analizele: verify, Codacy,
-CodeFactor și SonarCloud. Corectați problemele până când toate verificările sunt verzi, înainte de a face merge.
+CodeFactor și SonarCloud. Corectați problemele până când toate verificările sunt verzi, înainte de fuziune.
 
 **Stilul commiturilor**: Mesaje concise, la modul imperativ (de exemplu: „Fix arcade init errors”, „Refactor cache updater”)
 
-**Pragul de calitate**: Asigurați-vă că `npm run lint`, `npm test` și `npm run test:coverage` trec înaintea fiecărui commit
+**Poarta de calitate**: Asigurați-vă că `npm run lint`, `npm test` și `npm run test:coverage` trec înaintea fiecărui commit
 
 ### Arhitectura componentelor
 
-**GameMode (clasă de bază)**: Toate modurile moștenesc o clasă comună, cu metode standardizate.
+**GameMode (clasă de bază)**: Toate modurile moștenesc o clasă comună cu metode standardizate.
 
 **GameModeManager**: Orchestrarea centralizată a lansării și gestionării modurilor.
 
-**Componente UI**: TopBar, InfoBar, Dashboard și Customization asigură o interfață coerentă.
+**Componente UI**: TopBar, InfoBar, Dashboard și Customization oferă o interfață coerentă.
 
 **Lazy Loading**: Modulele sunt încărcate la cerere pentru optimizarea performanței inițiale.
 
@@ -391,7 +404,7 @@ Proiectul include o suită completă de teste:
 - Teste unitare pentru modulele core
 - Teste de integrare pentru componente
 - Teste pentru modurile de joc
-- Acoperire automată a codului
+- Acoperire automatizată a codului
 
 ```bash
 npm test              # Tous les tests (CJS)
@@ -401,12 +414,12 @@ npm test:coverage     # Rapport de couverture
 npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 ```
 
-### Build pentru producție
+### Build de producție
 
 - **Rollup**: Grupează `js/main-es6.js` în ESM, cu code-splitting și sourcemaps
 - **Terser**: Minificare automată pentru optimizare
 - **Post-build**: Copierea `css/` și `assets/`, a faviconurilor (`favicon.ico`, `favicon.png`, `favicon.svg`), a `sw.js` și rescrierea `dist/index.html` către fișierul de intrare cu hash (de exemplu: `main-es6-*.js`)
-- **Director final**: `dist/`, pregătit pentru a fi servit static
+- **Director final**: `dist/` pregătit pentru servire statică
 
 ```bash
 npm run build      # génère dist/
@@ -418,7 +431,7 @@ npm run serve:dist # sert dist/ (port 5000)
 **GitHub Actions**: `.github/workflows/ci.yml`, declanșat la fiecare push pe
 `main` și la fiecare pull request.
 
-**`verify`** — pragul de calitate, cu rol de blocare:
+**`verify`** — poarta de calitate, obligatorie:
 
 - `npm ci`, apoi `npm run verify` (ESLint, teste Jest, acoperire)
 - `npm run format:check` (Prettier)
@@ -427,7 +440,7 @@ npm run serve:dist # sert dist/ (port 5000)
 urmărirea în timp a metricilor SEO.
 
 **Analize externe** conectate la pull request-uri: Codacy, CodeFactor și
-SonarCloud. Pragul SonarCloud impune calificativul A pentru fiabilitatea, securitatea și
+SonarCloud. Poarta SonarCloud impune evaluări A pentru fiabilitate, securitate și
 mentenabilitatea codului nou.
 
 **Implementare**: `./deploy.sh` sincronizează site-ul cu S3 și invalidează memoria cache
@@ -439,10 +452,10 @@ LeapMultix este o PWA completă, cu suport offline și posibilitate de instalare
 
 **Service Worker** (`sw.js`):
 
-- Navigare: Network-first, cu fallback offline către `offline.html`
+- Navigare: Network-first cu fallback offline către `offline.html`
 - Imagini: Cache-first pentru optimizarea performanței
 - Traduceri: Stale-while-revalidate pentru actualizarea în fundal
-- JS/CSS: Network-first pentru a servi întotdeauna cea mai recentă versiune
+- JS/CSS: Network-first pentru a furniza întotdeauna cea mai recentă versiune
 - Gestionare automată a versiunilor prin `cache-updater.js`
 
 **Manifest** (`manifest.json`):
@@ -459,8 +472,8 @@ LeapMultix este o PWA completă, cu suport offline și posibilitate de instalare
 npm run serve
 ```
 
-Manual: dezactivați rețeaua din instrumentele pentru dezvoltatori (fila Rețea,
-modul offline), apoi reîmprospătați pagina. Trebuie să se afișeze `offline.html`.
+Manual: dezactivați rețeaua în instrumentele pentru dezvoltatori (fila Rețea,
+modul offline), apoi reîmprospătați pagina. `offline.html` trebuie să se afișeze.
 
 Automat, cu Puppeteer:
 
@@ -468,7 +481,7 @@ Automat, cu Puppeteer:
 npm run test:pwa-offline
 ```
 
-**Scripturi de gestionare a Service Worker-ului**:
+**Scripturi de gestionare a Service Workerului**:
 
 ```bash
 npm run sw:disable  # Désactiver le service worker
@@ -479,48 +492,49 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 **Instrumente pentru calitatea codului**:
 
-- **ESLint**: Configurare modernă, cu flat config (`eslint.config.js`), suport ES2022
-- **Prettier**: Formatarea automată a codului (`.prettierrc`)
+- **ESLint**: Configurație modernă cu flat config (`eslint.config.js`), suport pentru ES2022
+- **Prettier**: Formatare automată a codului (`.prettierrc`)
 - **Stylelint**: Validare CSS (`.stylelintrc.json`)
-- **JSDoc**: Documentarea automată a funcțiilor, cu analiza acoperirii
+- **JSDoc**: Documentare automată a funcțiilor cu analiză de acoperire
 
 **Reguli importante pentru cod**:
 
-- Eliminați variabilele și parametrii neutilizați (`no-unused-vars`)
-- Utilizați o gestionare specifică a erorilor (fără blocuri catch goale)
-- Evitați `innerHTML` în favoarea funcțiilor `security-utils.js`
-- Mențineți complexitatea cognitivă < 15 pentru funcții
-- Extrageți funcțiile complexe în funcții helper mai mici
+- Eliminarea variabilelor și parametrilor neutilizați (`no-unused-vars`)
+- Utilizarea unei gestionări specifice a erorilor (fără blocuri catch goale)
+- Evitarea `innerHTML` în favoarea funcțiilor `security-utils.js`
+- Menținerea unei complexități cognitive < 15 pentru funcții
+- Extragerea funcțiilor complexe în helpers mai mici
 
 **Securitate**:
 
-- **Protecție XSS**: Utilizați funcțiile din `security-utils.js`:
+- **Protecție XSS**: Utilizarea funcțiilor din `security-utils.js`:
   - `appendSanitizedHTML()` în loc de `innerHTML`
   - `createSafeElement()` pentru a crea elemente securizate
   - `setSafeMessage()` pentru conținutul text
 - **Scripturi externe**: Atributul `crossorigin="anonymous"` este obligatoriu
-- **Validarea datelor de intrare**: Sanitizați întotdeauna datele externe
-- **Content Security Policy**: Headere CSP pentru restricționarea surselor scripturilor
+- **Validarea datelor de intrare**: Datele externe trebuie întotdeauna sanitizate
+- **Content Security Policy**: Headere CSP pentru restricționarea surselor de scripturi
 
 **Accesibilitate**:
 
-- Conformitate WCAG 2.1 AA
+- Conformitate cu WCAG 2.1 AA
 - Navigare completă cu tastatura
-- Roluri ARIA și etichete corespunzătoare
-- Contraste cromatice conforme
+- Roluri ARIA și etichete adecvate
+- Contraste de culoare conforme
 
 **Performanță**:
 
 - Lazy loading al modulelor prin `lazy-loader.js`
-- Optimizări CSS și resurse responsive
+- Optimizări CSS și assets responsive
 - Service Worker pentru stocare inteligentă în cache
 - Code splitting și minificare în producție
 
 ## 📱 Compatibilitate
 
-### Browsere suportate
+### Browsere acceptate
 
-Interfața se bazează pe `oklch()` pentru culori și pe `:has()` pentru stările contextuale, ceea ce stabilește cerințele minime:
+Interfața se bazează pe `oklch()` pentru culori și pe `:has()` pentru
+stările contextuale, ceea ce stabilește versiunile minime:
 
 - Chrome / Chromium 111+
 - Edge 111+
@@ -529,14 +543,14 @@ Interfața se bazează pe `oklch()` pentru culori și pe `:has()` pentru stăril
 
 ### Dispozitive
 
-- **Desktop**: Comenzi prin tastatură și mouse
+- **Desktop**: Control prin tastatură și mouse
 - **Tablete**: Interfață tactilă optimizată
 - **Smartphone-uri**: Design responsive adaptiv
 
 ### Accesibilitate
 
-- Navigare completă cu tastatura (Tab, săgeți, Esc)
-- Roluri și etichete ARIA pentru cititoarele de ecran
+- Navigare completă cu tastatura (Tab, săgeți, Escape)
+- Roluri ARIA și etichete pentru cititoarele de ecran
 - Contraste de culoare conforme
 - Suport pentru tehnologiile asistive
 
@@ -562,9 +576,9 @@ Suport multilingv complet:
 }
 ```
 
-### Scripturi de gestionare i18n
+### Scripturi pentru gestionarea i18n
 
-**`npm run i18n:verify`** - Verificarea consecvenței cheilor de traducere
+**`npm run i18n:verify`** - Verificarea coerenței cheilor de traducere
 
 **`npm run i18n:unused`** - Listarea cheilor de traducere neutilizate
 
@@ -575,10 +589,10 @@ Acest script (`scripts/compare-translations.cjs`) asigură sincronizarea tuturor
 **Funcționalități:**
 
 - Detectarea cheilor lipsă (prezente în fr.json, dar absente din alte limbi)
-- Detectarea cheilor suplimentare (prezente în alte limbi, dar absente din fr.json)
+- Detectarea cheilor suplimentare (prezente în alte limbi, dar nu în fr.json)
 - Identificarea valorilor goale (`""`, `null`, `undefined`, `[]`)
-- Verificarea consecvenței tipurilor (string vs array)
-- Aplatizarea structurilor JSON imbricate în notație cu puncte (ex.: `arcade.multiMemory.title`)
+- Verificarea coerenței tipurilor (string vs array)
+- Aplatizarea structurilor JSON imbricate în notație cu puncte (de exemplu: `arcade.multiMemory.title`)
 - Generarea unui raport detaliat în consolă
 - Salvarea raportului JSON în `docs/translations-comparison-report.json`
 
@@ -609,12 +623,70 @@ Acest script (`scripts/compare-translations.cjs`) asigură sincronizarea tuturor
 
 **Acoperirea traducerilor:**
 
-- Interfață cu utilizatorul completă
+- Interfață de utilizator completă
 - Instrucțiunile jocurilor
-- Mesaje de eroare și feedback
+- Mesaje de eroare și de feedback
 - Descrieri și ajutor contextual
 - Conținutul narativ al modului Aventură
 - Etichete de accesibilitate și ARIA
+
+## 🔊 Voce înregistrată
+
+Jocul citește cu voce tare întrebările, încurajările și explicațiile. În franceză, vocea este **Lucie**, o voce sintetizată creată cu ElevenLabs (modelul Eleven v3). Jocul rostește doar un set finit de fraze, aproximativ 7.400 pentru fiecare limbă: toate sunt înregistrate în prealabil și nicio componentă nu apelează ElevenLabs. Pentru moment, engleza și spaniola păstrează vocea dispozitivului.
+
+- **Revenire automată** la vocea dispozitivului, frază cu frază: clip absent sau cu eroare, redare refuzată de browser, clip care nu pornește în 1,5 s sau utilizare offline fără clipul în cache.
+- **Setări**: butonul pentru voce din bara de sus activează sau dezactivează redarea; caseta „Voce înregistrată” (Accesibilitate și comenzi) permite alegerea între Lucie și vocea dispozitivului.
+- **Offline**: clipurile deja ascultate rămân în cache (service worker).
+
+### Clipurile nu se află în acest depozit
+
+Clipurile se află într-un depozit privat și într-un bucket S3 dedicat, furnizat prin CloudFront la `/voice/*`. Prin urmare, un fork sau dezvoltarea locală păstrează vocea dispozitivului: în depozit, tagul `<meta name="leapmultix-voice-base">` este gol și numai implementarea în producție scrie acolo `/voice/`.
+
+Dacă există clipurile pe calculator (depozitul privat clonat lângă joc, în `../leapmultix-voices`), parametrul `?voix=local` permite redarea lor de către serverul de dezvoltare:
+
+```bash
+npm run voice:publish -- local --lang fr --audience all --default-on   # relie voice/ (ignoré par git) aux clips
+npm run serve
+# puis ouvrir http://localhost:8080/index.html?voix=local
+```
+
+### Generarea clipurilor
+
+Fluxul este automatizat prin scripturi în `scripts/voice/` și rulează pe calculatorul proprietarului, niciodată în CI-ul public. Cheia ElevenLabs rămâne într-un fișier `.env` din afara depozitului, transmis prin `node --env-file`: nicio cheie nu ajunge în git. Skill-ul Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) prezintă procedura pas cu pas (puncte de control, aprobări, reluări); detaliile se află în [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
+
+1. **Estimarea** frazelor rămase și a caracterelor care trebuie plătite (Eleven v3: aproximativ 0,53 credite per caracter).
+2. **Generarea**. Relansarea aceleiași comenzi reia ceea ce lipsește. Când creditele se epuizează, scriptul se oprește corect (cod 3), fără a lăsa vreun fișier scris doar parțial.
+3. **Verificarea**: fiecare frază are propriul clip și fiecare MP3 este valid. Apoi Whisper transcrie local fiecare clip, iar `voice:check` semnalează numerele înțelese greșit și duratele anormale.
+4. **Ascultarea** pe pagina de ascultare (`voice:listen`) a clipurilor semnalate și a unui eșantion de forme feminine („une fois 7”), pe care Whisper nu le distinge. Fiecare clip are o casetă „de refăcut”, care îl adaugă în lista clipurilor respinse.
+5. **Refacerea** clipurilor respinse (`--redo`) și relansarea Whisper, apoi compararea fiecărui clip înainte și după pe o a doua pagină. Un clip pronunțat în continuare greșit după două sau trei încercări primește un text impus în `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), de exemplu numărul scris cu litere.
+6. **Publicarea** clipurilor, verificarea faptului că răspund online, apoi publicarea indexului limbii, mai întâi pentru testeri (`?voix=test`).
+7. **Punerea** vocii la dispoziția tuturor, apoi activarea ei implicită. Întrerupătorul de siguranță (`voice:publish -- remove`) elimină o limbă din index: jocul revine la vocea dispozitivului.
+
+```bash
+# 1. Estimer (sans frais)
+npm run voice:generate -- --lang fr --dry-run
+# 2. Générer (payant)
+node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --reserve 5000
+# 3. Contrôler (Whisper s'installe une fois : voir l'en-tête de whisper_transcribe.py)
+npm run voice:check -- --lang fr --probe
+.venv-whisper/bin/python scripts/voice/whisper_transcribe.py --manifest ../leapmultix-voices/manifests/fr/<version>.json --clips ../leapmultix-voices/clips/fr/<version> --lang fr --out transcripts-fr.jsonl
+npm run voice:check -- --lang fr --transcripts transcripts-fr.jsonl
+# 4. Écouter (page locale ; la liste « à refaire » va dans ecartes.txt)
+npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl
+# 5. Refaire (payant), relancer Whisper (il ne transcrit que les clips refaits), comparer
+node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --redo ecartes.txt
+npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl --compare ecartes.txt
+# 6. Publier
+npm run voice:publish -- clips --lang fr --bucket <bucket>
+npm run voice:check-online -- --lang fr
+npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience test
+# 7. Ouvrir
+npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience all --default-on
+```
+
+### Regulă: o frază rostită care este modificată se reînregistrează înainte de lansarea în producție
+
+Fiecare frază rostită provine din traduceri (`assets/translations/{fr,en,es}.json`) și face parte din corpus. Prin urmare, modificarea unei fraze rostite provoacă eșecul testului de blocare a corpusului (`scripts/voice/corpus.lock.json`). Pentru o limbă care dispune de o voce înregistrată, se generează clipurile frazelor afectate, se verifică și se ascultă, apoi se publică **înainte** de merge. La final, se actualizează blocarea (`npm run voice:corpus:lock`). Fără aceste clipuri, fraza modificată este citită cu vocea dispozitivului.
 
 ## 📊 Stocarea datelor
 
@@ -634,10 +706,10 @@ Acest script (`scripts/compare-translations.cjs`) asigură sincronizarea tuturor
 
 ## 🐛 Raportarea unei probleme
 
-Problemele pot fi raportate prin issue-urile GitHub. Vă rugăm să includeți:
+Problemele pot fi raportate prin issues GitHub. Vă rugăm să includeți:
 
 - Descrierea detaliată a problemei
-- Pașii pentru reproducerea acesteia
+- Pașii necesari pentru reproducerea ei
 - Browserul și versiunea
 - Capturi de ecran, dacă sunt relevante
 

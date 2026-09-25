@@ -1,8 +1,10 @@
 // Options de la ligne de commande des scripts de la voix, lues d'après une table : option
 // → clé du résultat et genre de valeur (drapeau, texte, chemin, entier). Lecture stricte :
 // une option inconnue, une valeur manquante ou un nombre mal écrit arrêtent le script,
-// jamais d'option ignorée ni de NaN en silence.
+// jamais d'option ignorée ni de NaN en silence. Les listes d'empreintes passées en fichier
+// (--redo, --keys, --compare) se lisent ici aussi, avec la même rigueur.
 
+import fs from 'node:fs';
 import path from 'node:path';
 
 /** Entier ≥ min, sans quoi l'option est refusée (pas de NaN silencieux) */
@@ -62,4 +64,21 @@ export function parseOptions(argv, table, defaults = {}) {
     args[key] = read ? read(rest.shift(), option) : true;
   }
   return args;
+}
+
+/** Empreinte d'un clip (voiceKey : cyrb53 en base 36, 11 caractères au plus) */
+const CLIP_KEY = /^[0-9a-z]{1,11}$/;
+
+/**
+ * Empreintes d'un fichier, séparées par des blancs (une par ligne) ; sans fichier, aucune.
+ * Une empreinte mal formée arrête le script : elle sert à nommer des fichiers.
+ * @param {string} [file]
+ * @returns {string[]}
+ */
+export function readKeyList(file) {
+  if (!file) return [];
+  const keys = fs.readFileSync(file, 'utf8').split(/\s+/).filter(Boolean);
+  const invalid = keys.find(key => !CLIP_KEY.test(key));
+  if (invalid !== undefined) throw new Error(`Empreinte invalide dans ${file} : ${invalid}`);
+  return keys;
 }

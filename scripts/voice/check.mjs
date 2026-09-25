@@ -50,7 +50,7 @@ async function probeEntries(entries, paths, probe) {
   return { invalid, changed };
 }
 
-function durationOutliers(entries) {
+export function durationOutliers(entries) {
   return entries
     .map(([key, entry]) => ({
       key,
@@ -65,7 +65,7 @@ function durationOutliers(entries) {
  * Transcriptions comparées aux phrases. La dernière ligne d'un clip fait foi ; une ligne
  * écrite pour un autre contenu du clip (refait depuis) est périmée et ignorée.
  */
-function transcriptReport(transcripts, manifest, lang) {
+export function transcriptReport(transcripts, manifest, lang) {
   const latest = new Map(transcripts.map(line => [line.key, line]));
   const flagged = [];
   let checked = 0;
@@ -187,7 +187,7 @@ function printSummary(report) {
 }
 
 /** Transcriptions Whisper d'un fichier JSONL, ou undefined sans fichier */
-function readTranscripts(file) {
+export function readTranscripts(file) {
   if (!file) return undefined;
   return fs
     .readFileSync(file, 'utf8')
