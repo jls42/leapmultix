@@ -14,6 +14,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { VOICE_KEY_SCHEMA } from '../../js/core/spoken-text.js';
+import { ClipContentError } from './audio-process.mjs';
 
 export const PART = '.part';
 
@@ -62,6 +63,7 @@ export function storePaths(outDir, lang, version) {
     clipDir: path.join(outDir, 'clips', lang, version),
     manifestFile: path.join(outDir, 'manifests', lang, `${version}.json`),
     runLogFile: path.join(outDir, 'manifests', lang, `${version}.runs.jsonl`),
+    lockFile: path.join(outDir, 'manifests', lang, `${version}.lock`),
   };
 }
 
@@ -92,6 +94,41 @@ export async function cleanLeftovers(paths, { dryRun = false } = {}) {
     }
   }
   return removed;
+}
+
+function isAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === 'EPERM';
+  }
+}
+
+/**
+ * Verrou d'une version de voix : deux générations simultanées paieraient deux fois et se
+ * gêneraient (le nettoyage de l'une effacerait les fichiers en cours de l'autre). Un verrou
+ * dont le processus n'existe plus est repris.
+ * @returns {Promise<{release: () => Promise<void>}>}
+ */
+export async function acquireLock(paths, { pid = process.pid, alive = isAlive } = {}) {
+  await fsp.mkdir(path.dirname(paths.lockFile), { recursive: true });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const handle = await fsp.open(paths.lockFile, 'wx');
+      await handle.writeFile(`${pid}\n`);
+      await handle.close();
+      return { release: () => fsp.rm(paths.lockFile, { force: true }) };
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      const owner = Number((await fsp.readFile(paths.lockFile, 'utf8').catch(() => '')).trim());
+      if (owner && alive(owner)) {
+        throw new Error(`Une génération tourne déjà (processus ${owner}) : attendre sa fin`);
+      }
+      await fsp.rm(paths.lockFile, { force: true });
+    }
+  }
+  throw new Error(`Verrou impossible à prendre : ${paths.lockFile}`);
 }
 
 /** Écrit un fichier en entier sous un nom temporaire, puis le renomme */
@@ -180,7 +217,11 @@ export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, 
       report.orphans++;
       continue;
     }
-    const entry = await inspect(clipFile(paths, key)).catch(() => null);
+    // Seul un contenu jugé mauvais est rejeté ; une panne d'outil (ffprobe absent) arrête tout
+    const entry = await inspect(clipFile(paths, key)).catch(error => {
+      if (error instanceof ClipContentError) return null;
+      throw error;
+    });
     if (entry) {
       report.adopted++;
       manifest.clips[key] = {

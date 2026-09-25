@@ -16,7 +16,16 @@ import os from 'node:os';
 import path from 'node:path';
 import { voiceKey } from '../../js/core/spoken-text.js';
 import { saidText } from '../../scripts/voice/said-text.mjs';
-import { generationOrder, loadVoice, runGeneration } from '../../scripts/voice/generate.mjs';
+import {
+  creditBudget,
+  exitCodeFor,
+  generationOrder,
+  loadVoice,
+  parseArgs,
+  reprocessClips,
+  runGeneration,
+} from '../../scripts/voice/generate.mjs';
+import { ClipContentError } from '../../scripts/voice/audio-process.mjs';
 import { createElevenLabs, ProviderError } from '../../scripts/voice/providers/elevenlabs.mjs';
 import { rawFile, saidHash, storePaths } from '../../scripts/voice/clip-store.mjs';
 
@@ -88,10 +97,12 @@ const quotaExceeded = () => ({
   }),
 });
 
-/** Traitement factice : copie, sauf un brut marqué CASSÉ */
+/** Traitement factice : copie ; un brut marqué CASSÉ est un mauvais contenu, PANNE une panne d'outil */
 async function fakeProcess(raw, out) {
   const data = await fsp.readFile(raw);
-  if (data.includes('CASSÉ')) throw new Error('ffmpeg : entrée invalide');
+  if (data.includes('CASSÉ')) throw new ClipContentError('clip muet');
+  if (data.includes('PANNE'))
+    throw Object.assign(new Error('spawn ffmpeg ENOENT'), { code: 'ENOENT' });
   await fsp.writeFile(out, data);
 }
 
@@ -235,6 +246,18 @@ describe('Génération des clips', () => {
     expect(partFiles()).toEqual([]);
   });
 
+  test('ffprobe absent pendant la réconciliation : arrêt, le clip complet n’est pas supprimé', async () => {
+    server = await startServer(ok);
+    await fsp.mkdir(paths().clipDir, { recursive: true });
+    await fsp.writeFile(clipOf(PHRASES[0]), fakeMp3('complet'));
+    const missingTool = async () => {
+      throw Object.assign(new Error('spawn ffprobe ENOENT'), { code: 'ENOENT' });
+    };
+    await expect(run({ probeAudio: missingTool })).rejects.toThrow(/ENOENT/);
+    expect(fs.existsSync(clipOf(PHRASES[0]))).toBe(true);
+    expect(server.tts()).toEqual([]);
+  });
+
   test('entrée de manifeste sans clip : retirée, le clip est refait depuis le brut, sans appel', async () => {
     server = await startServer(ok);
     await run();
@@ -288,6 +311,87 @@ describe('Génération des clips', () => {
     const second = await run();
     expect(second.generated).toBe(1);
     expect(second.remaining).toBe(0);
+  });
+
+  test('panne d’outil pendant le traitement : brut payé gardé, arrêt, reprise sans nouvel appel', async () => {
+    let broken = true;
+    server = await startServer(request =>
+      broken && request.body.text === 'Mode Quiz'
+        ? { status: 200, headers: { 'Content-Type': 'audio/mpeg' }, body: fakeMp3('PANNE') }
+        : ok(request)
+    );
+    const first = await run();
+    expect(first.stop).toBe('fatal');
+    expect(first.stopMessage).toMatch(/brut gardé/);
+    expect(first.failed).toEqual([]);
+    const raws = fs.readdirSync(paths().rawDir).filter(n => n.startsWith(voiceKey('Mode Quiz')));
+    expect(raws).toHaveLength(1);
+    expect(exitCodeFor(first)).toBe(1);
+    // Outil réparé : le brut est retraité, pas redemandé
+    broken = false;
+    fs.writeFileSync(path.join(paths().rawDir, raws[0]), fakeMp3('Mode Quiz'));
+    const requestsBefore = server.tts().length;
+    const second = await run();
+    expect(second.reprocessed).toBe(1);
+    expect(server.tts().filter(r => r.body.text === 'Mode Quiz')).toHaveLength(1);
+    // La panne est tombée sur la première phrase : les quatre autres restaient à générer
+    expect(server.tts().length - requestsBefore).toBe(PHRASES.length - 1);
+  });
+
+  test('réponse payée impossible à écrire : crédits comptés, arrêt', async () => {
+    server = await startServer(ok);
+    // Dossier des bruts en lecture seule : l'écriture échoue après la réponse payée
+    await fsp.mkdir(paths().rawDir, { recursive: true });
+    await fsp.chmod(paths().rawDir, 0o555);
+    try {
+      const summary = await run({ phrases: [PHRASES[2]] });
+      expect(summary.stop).toBe('fatal');
+      expect(summary.stopMessage).toMatch(/Écriture du brut impossible/);
+      expect(summary.credits).toBe(costOf('Mode Quiz'));
+      expect(server.tts()).toHaveLength(1);
+    } finally {
+      await fsp.chmod(paths().rawDir, 0o755);
+    }
+  });
+
+  test('réponse 200 qui n’est pas un MP3 : arrêt au premier appel, sans nouvel essai', async () => {
+    server = await startServer(() => ({
+      status: 200,
+      headers: { 'Content-Type': 'text/html' },
+      body: '<html>',
+    }));
+    const summary = await run();
+    expect(summary.stop).toBe('response');
+    expect(server.tts()).toHaveLength(1);
+    expect(exitCodeFor(summary)).toBe(1);
+  });
+
+  test('verrou : une deuxième exécution simultanée est refusée, un verrou périmé est repris', async () => {
+    server = await startServer(ok);
+    await fsp.mkdir(path.dirname(paths().lockFile), { recursive: true });
+    await fsp.writeFile(paths().lockFile, '4242\n');
+    await expect(run({ lockOptions: { alive: () => true } })).rejects.toThrow(/tourne déjà/);
+    expect(server.tts()).toHaveLength(0);
+    const summary = await run({ lockOptions: { alive: () => false } });
+    expect(summary.generated).toBe(PHRASES.length);
+    expect(fs.existsSync(paths().lockFile)).toBe(false);
+  });
+
+  test('--redo : le manifeste sur disque oublie le clip avant tout, même si la suite plante', async () => {
+    server = await startServer(ok);
+    await run();
+    const redone = PHRASES[3];
+    // Un clip hors manifeste et ffprobe en panne : l'exécution s'arrête en pleine réconciliation
+    const stray = phrase('Bravo, c’est correct !', 'bravo');
+    await fsp.writeFile(clipOf(stray), fakeMp3('isolé'));
+    const missingTool = async () => {
+      throw Object.assign(new Error('spawn ffprobe ENOENT'), { code: 'ENOENT' });
+    };
+    await expect(
+      run({ phrases: [...PHRASES, stray], redo: [redone.key], probeAudio: missingTool })
+    ).rejects.toThrow(/ENOENT/);
+    expect(manifest().clips[redone.key]).toBeUndefined();
+    expect(manifest().clips[PHRASES[0].key]).toBeDefined();
   });
 
   test('débit dépassé puis panne serveur : nouvel essai, un seul clip', async () => {
@@ -457,9 +561,39 @@ describe('Fournisseur ElevenLabs : classement des erreurs', () => {
     expect(error.retryAfterMs).toBe(3000);
   });
 
-  test('une réponse 200 qui n’est pas un MP3 est une panne', async () => {
+  test('une réponse 200 qui n’est pas un MP3 arrête tout (réessayer repaierait)', async () => {
     const error = await synth(reply(200, '<html>erreur</html>')).catch(e => e);
-    expect(error.kind).toBe('server');
+    expect(error.kind).toBe('response');
+  });
+
+  test('erreur de validation (422, liste) : son message est gardé', async () => {
+    const error = await synth(
+      reply(422, { detail: [{ msg: 'text too long', loc: ['body'] }] })
+    ).catch(e => e);
+    expect(error.kind).toBe('request');
+    expect(error.message).toContain('text too long');
+  });
+
+  test('erreur réseau qui citerait la clé : masquée', async () => {
+    const error = await synth(async () => {
+      throw new TypeError(`Headers.append: "${FAKE_KEY}" is an invalid header value.`);
+    }).catch(e => e);
+    expect(error.kind).toBe('network');
+    expect(error.message).not.toContain(FAKE_KEY);
+  });
+
+  test('clé mal formée : refus sans jamais la citer', () => {
+    const bad = 'cle-factice\nsuite';
+    const error = (() => {
+      try {
+        createElevenLabs({ apiKey: bad });
+        return null;
+      } catch (e) {
+        return e;
+      }
+    })();
+    expect(error.kind).toBe('auth');
+    expect(error.message).not.toContain('cle-factice');
   });
 
   test('réseau coupé : erreur réseau (nouvel essai possible)', async () => {
@@ -470,6 +604,14 @@ describe('Fournisseur ElevenLabs : classement des erreurs', () => {
     expect(error.message).not.toContain(FAKE_KEY);
   });
 
+  test('crédits illisibles ou incohérents : null', async () => {
+    const provider = createElevenLabs({
+      apiKey: FAKE_KEY,
+      fetchImpl: reply(200, { character_count: 'x' }),
+    });
+    expect(await provider.credits()).toBeNull();
+  });
+
   test('sans clé : refus immédiat', () => {
     expect(() => createElevenLabs({ apiKey: '' })).toThrow(ProviderError);
   });
@@ -477,5 +619,78 @@ describe('Fournisseur ElevenLabs : classement des erreurs', () => {
   test('empreinte du texte dit : stable et courte', () => {
     expect(saidHash('Mode Quiz')).toMatch(/^[0-9a-f]{12}$/);
     expect(saidHash('Mode Quiz')).toBe(saidHash('Mode Quiz'));
+  });
+});
+
+describe('Options et budget de la génération', () => {
+  test.each([
+    [['--max-chars', '10k']],
+    [['--limit', '5 000']],
+    [['--reserve']],
+    [['--concurrency', '0']],
+  ])('%j : refusé, jamais un budget NaN', extra => {
+    expect(() => parseArgs(['--lang', 'fr', ...extra])).toThrow(/attend un entier/);
+  });
+
+  test('options valides lues comme des nombres', () => {
+    expect(parseArgs(['--lang', 'fr', '--max-chars', '1200', '--reserve', '5000'])).toMatchObject({
+      maxChars: 1200,
+      reserve: 5000,
+    });
+  });
+
+  test('crédits illisibles : départ refusé sans --max-chars, plafonné sinon', async () => {
+    const provider = { credits: async () => null };
+    await expect(creditBudget({ reserve: 0 }, provider, () => {})).rejects.toThrow(/--max-chars/);
+    expect(await creditBudget({ reserve: 0, maxChars: 900 }, provider, () => {})).toBe(Infinity);
+    const known = { credits: async () => ({ used: 100, limit: 1000 }) };
+    expect(await creditBudget({ reserve: 50 }, known, () => {})).toBe(850);
+  });
+
+  test('code de sortie : une phrase en échec n’est jamais un succès', () => {
+    expect(exitCodeFor({ stop: null, failed: [] })).toBe(0);
+    expect(exitCodeFor({ stop: null, failed: [{}] })).toBe(4);
+    expect(exitCodeFor({ stop: 'quota', failed: [] })).toBe(3);
+    expect(exitCodeFor({ stop: 'budget', failed: [] })).toBe(0);
+  });
+});
+
+describe('Retraitement des clips depuis leurs bruts', () => {
+  test('seuls les clips dont le contenu change sont réécrits ; un brut manquant est signalé', async () => {
+    server = await startServer(ok);
+    await run();
+    const [changed, missing] = PHRASES;
+    const raws = fs.readdirSync(paths().rawDir);
+    fs.writeFileSync(
+      path.join(
+        paths().rawDir,
+        raws.find(n => n.startsWith(changed.key))
+      ),
+      fakeMp3('nouveau traitement')
+    );
+    fs.rmSync(
+      path.join(
+        paths().rawDir,
+        raws.find(n => n.startsWith(missing.key))
+      )
+    );
+    const before = manifest().clips[PHRASES[2].key].sha256;
+    const report = await reprocessClips({
+      lang: 'fr',
+      voice: VOICE,
+      outDir,
+      phrases: PHRASES,
+      processAudio: fakeProcess,
+      probeAudio: fakeProbe,
+    });
+    expect(report).toMatchObject({
+      checked: PHRASES.length - 1,
+      changed: 1,
+      missingRaw: [missing.key],
+    });
+    expect(fs.readFileSync(clipOf(changed)).includes('nouveau traitement')).toBe(true);
+    expect(manifest().clips[changed.key]).toMatchObject({ reprocessedAt: expect.any(String) });
+    expect(manifest().clips[PHRASES[2].key].sha256).toBe(before);
+    expect(server.tts()).toHaveLength(PHRASES.length);
   });
 });

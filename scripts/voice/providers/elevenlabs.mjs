@@ -5,7 +5,7 @@
 /** Erreur d'un fournisseur, classée pour décider de la suite (réessayer, arrêter…) */
 export class ProviderError extends Error {
   /**
-   * @param {'quota'|'auth'|'voice'|'rate'|'server'|'request'|'network'} kind
+   * @param {'quota'|'auth'|'voice'|'rate'|'server'|'request'|'network'|'response'} kind
    * @param {string} message
    * @param {{retryAfterMs?: number}} [options]
    */
@@ -22,6 +22,10 @@ export const DEFAULT_BASE_URL = 'https://api.elevenlabs.io';
 async function readDetail(res) {
   try {
     const body = await res.json();
+    // Erreur de validation (422) : une liste de { msg, loc }
+    if (Array.isArray(body?.detail)) {
+      return { message: body.detail.map(item => item?.msg ?? JSON.stringify(item)).join(' ; ') };
+    }
     if (body && typeof body.detail === 'object' && body.detail) return body.detail;
     return { message: String(body?.detail ?? body?.message ?? '') };
   } catch {
@@ -56,6 +60,14 @@ function looksLikeMp3(buffer) {
  */
 export function createElevenLabs({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl = fetch }) {
   if (!apiKey) throw new ProviderError('auth', 'ELEVENLABS_API_KEY manquante');
+  // Une clé avec un espace ou un saut de ligne ferait citer sa valeur par fetch
+  if (!/^[\x21-\x7e]+$/.test(apiKey)) {
+    throw new ProviderError(
+      'auth',
+      'ELEVENLABS_API_KEY mal formée (espace, saut de ligne ou caractère invisible)'
+    );
+  }
+  const hide = message => String(message).replaceAll(apiKey, '***');
 
   async function call(pathname, init = {}) {
     let res;
@@ -66,7 +78,7 @@ export function createElevenLabs({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl
       });
     } catch (error) {
       if (init.signal?.aborted) throw error;
-      throw new ProviderError('network', `ElevenLabs injoignable : ${error.message}`);
+      throw new ProviderError('network', `ElevenLabs injoignable : ${hide(error.message)}`);
     }
     if (!res.ok) throw await errorFrom(res);
     return res;
@@ -79,7 +91,9 @@ export function createElevenLabs({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl
     async credits() {
       try {
         const data = await (await call('/v1/user/subscription')).json();
-        return { used: data.character_count, limit: data.character_limit };
+        const used = Number(data.character_count);
+        const limit = Number(data.character_limit);
+        return Number.isFinite(used) && Number.isFinite(limit) ? { used, limit } : null;
       } catch (error) {
         if (error instanceof ProviderError && error.kind === 'auth') return null;
         throw error;
@@ -111,8 +125,9 @@ export function createElevenLabs({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl
       });
       const audio = Buffer.from(await res.arrayBuffer());
       if (!looksLikeMp3(audio)) {
+        // Réponse payée mais inutilisable : réessayer repaierait, on arrête tout
         throw new ProviderError(
-          'server',
+          'response',
           `ElevenLabs : réponse qui n'est pas un MP3 (${audio.length} octets)`
         );
       }

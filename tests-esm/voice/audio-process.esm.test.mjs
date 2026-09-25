@@ -12,7 +12,14 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { clipProblem, processClip, probeClip } from '../../scripts/voice/audio-process.mjs';
+import {
+  ClipContentError,
+  clipProblem,
+  detectSilences,
+  processClip,
+  probeClip,
+  usefulRange,
+} from '../../scripts/voice/audio-process.mjs';
 import { loadVoice } from '../../scripts/voice/generate.mjs';
 
 const ENCODING = loadVoice('fr').encoding;
@@ -37,6 +44,36 @@ describe('Caractéristiques d’un clip valide', () => {
     [{ codec: 'mp3', channels: 1, duration: 45 }, 'trop long (45 s)'],
   ])('%j → %s', (info, problem) => {
     expect(clipProblem(info)).toBe(problem);
+  });
+});
+
+describe('Partie utile : un clic isolé par un long silence part avec lui', () => {
+  test.each([
+    ['phrase seule', { duration: 2, silences: [] }, { start: 0, end: 2 }],
+    [
+      'clic final après 3 s de silence',
+      { duration: 5.1, silences: [{ start: 1.9, end: 4.95 }] },
+      { start: 0, end: 1.95 },
+    ],
+    [
+      'clic initial avant la phrase',
+      { duration: 4, silences: [{ start: 0.1, end: 2 }] },
+      { start: 1.95, end: 4 },
+    ],
+    [
+      'pause entre deux phrases : gardée',
+      { duration: 5, silences: [{ start: 2, end: 3 }] },
+      { start: 0, end: 5 },
+    ],
+    [
+      'silence final sans clic : gardé',
+      { duration: 3, silences: [{ start: 2, end: 3 }] },
+      { start: 0, end: 2.05 },
+    ],
+  ])('%s', (_label, analysis, range) => {
+    const result = usefulRange(analysis);
+    expect(result.start).toBeCloseTo(range.start, 5);
+    expect(result.end).toBeCloseTo(range.end, 5);
   });
 });
 
@@ -81,6 +118,12 @@ describe('Caractéristiques d’un clip valide', () => {
       'aevalsrc=if(between(t\\,0.5\\,1.5)\\,0.03*sin(2*PI*440*t)\\,0):s=44100:d=2'
     );
     makeRaw('silence.mp3', 'anullsrc=r=44100:cl=stereo:d=1');
+    // Son d'1 s, 3 s de silence, puis un clic de 0,05 s : le piège vu dans les vrais bruts
+    makeRaw(
+      'click.mp3',
+      'aevalsrc=if(lt(t\\,1)\\,0.03*sin(2*PI*440*t)\\,if(between(t\\,4\\,4.05)\\,0.2*sin(2*PI*2000*t)\\,0)):s=44100:d=4.1'
+    );
+    fs.writeFileSync(file('garbage.mp3'), 'pas un mp3');
   });
 
   afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -101,6 +144,17 @@ describe('Caractéristiques d’un clip valide', () => {
     await processClip(file('raw.mp3'), file('a.mp3'), ENCODING);
     await processClip(file('raw.mp3'), file('b.mp3'), ENCODING);
     expect(fs.readFileSync(file('a.mp3')).equals(fs.readFileSync(file('b.mp3')))).toBe(true);
+  });
+
+  test('clic isolé après un long silence : coupé avec le silence', async () => {
+    await processClip(file('click.mp3'), file('click-out.mp3'), ENCODING);
+    const info = await probeClip(file('click-out.mp3'));
+    expect(info.duration).toBeLessThan(1.3);
+    expect((await detectSilences(file('click-out.mp3'))).silences).toEqual([]);
+  });
+
+  test('fichier illisible : erreur de contenu (le brut ne vaut rien)', async () => {
+    await expect(probeClip(file('garbage.mp3'))).rejects.toBeInstanceOf(ClipContentError);
   });
 
   test('un brut muet est refusé, sans fichier temporaire', async () => {
