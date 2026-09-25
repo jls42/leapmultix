@@ -15,6 +15,13 @@ import { speak } from './speech.js';
 import { getTranslation } from './i18n.js';
 import { getCurrentLanguage } from './i18n-store.js';
 import { eventBus } from './core/eventBus.js';
+import { pluralCategory } from './core/message-format.js';
+import {
+  spokenEquation,
+  spokenGapQuestion,
+  spokenOperatorWord,
+  spokenQuestion,
+} from './core/spoken-text.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -225,19 +232,6 @@ export function markQuestionKind(element, question) {
 }
 
 /**
- * Catégorie de pluriel de la langue active (fr : 0 et 1 au singulier).
- * @param {number} count
- * @returns {string} 'one' ou 'other'
- */
-function pluralCategory(count) {
-  try {
-    return new Intl.PluralRules(getCurrentLanguage()).select(count);
-  } catch {
-    return count === 1 ? 'one' : 'other';
-  }
-}
-
-/**
  * Phrase principale de fin de partie : « 7 bonnes réponses sur 10 ».
  * @param {number} correct
  * @param {number} total
@@ -246,7 +240,9 @@ function pluralCategory(count) {
 export function formatCorrectCount(correct, total) {
   if (!total) return getTranslation('results_no_answer');
   const key =
-    pluralCategory(correct) === 'one' ? 'results_correct_count_one' : 'results_correct_count';
+    pluralCategory(correct, getCurrentLanguage()) === 'one'
+      ? 'results_correct_count_one'
+      : 'results_correct_count';
   return getTranslation(key, { correct, total });
 }
 
@@ -257,7 +253,8 @@ export function formatCorrectCount(correct, total) {
  * @returns {string}
  */
 export function formatStarsLabel(stars, total = 3) {
-  const key = pluralCategory(stars) === 'one' ? 'stars_earned_one' : 'stars_earned';
+  const key =
+    pluralCategory(stars, getCurrentLanguage()) === 'one' ? 'stars_earned_one' : 'stars_earned';
   return getTranslation(key, { stars, total });
 }
 
@@ -334,36 +331,19 @@ export function createResultsSummary({ lead, leadTag = 'h2', message = '', detai
   return frag;
 }
 
-/**
- * Mots prononcés pour les symboles d'une question, dans la langue de l'interface.
- * Sans traduction, repli sur les mots français (comportement historique).
- */
-const SPOKEN_SYMBOLS = [
-  ['×', 'speech_times', 'fois'],
-  ['+', 'speech_plus', 'plus'],
-  ['−', 'speech_minus', 'moins'],
-  ['÷', 'speech_divided_by', 'divisé par'],
-  ['=', 'speech_equals', 'égale'],
-];
-
-function spokenWord(key, fallback) {
-  const value = getTranslation(key);
-  return typeof value === 'string' && value && !/^\[.+\]$/.test(value) ? value : fallback;
+/** Texte traduit, ou null si la clé manque (getTranslation rend alors « [clé] ») */
+function translatedOrNull(key, params) {
+  const value = getTranslation(key, params);
+  return typeof value === 'string' && value && !/^\[.+\]$/.test(value) ? value : null;
 }
 
 /**
- * Forme prononcée d'une question : « 7 × 8 = ? » → « 7 fois 8 égale ? ».
+ * Forme prononcée d'une égalité : « 8 × 6 = 47 » → « 8 fois 6 égale 47 ».
  * @param {string} text
  * @returns {string}
  */
 export function toSpokenForm(text) {
-  let spoken = String(text);
-  for (const [symbol, key, fallback] of SPOKEN_SYMBOLS) {
-    if (spoken.includes(symbol)) {
-      spoken = spoken.replaceAll(symbol, ` ${spokenWord(key, fallback)} `);
-    }
-  }
-  return spoken.replace(/\s+/g, ' ').trim();
+  return spokenEquation(text, translatedOrNull);
 }
 
 /**
@@ -372,8 +352,25 @@ export function toSpokenForm(text) {
  * @returns {string}
  */
 export function spokenOperator(operator) {
-  const entry = SPOKEN_SYMBOLS.find(([symbol]) => symbol === operator);
-  return entry ? spokenWord(entry[1], entry[2]) : String(operator);
+  return spokenOperatorWord(operator, translatedOrNull);
+}
+
+/**
+ * Question lue à voix haute : « 7 × 8 = ? » → « Combien font 7 fois 8 ? ».
+ * @param {string} text - Question affichée
+ * @returns {string}
+ */
+export function toSpokenQuestion(text) {
+  return spokenQuestion(text, translatedOrNull);
+}
+
+/**
+ * Question à trou lue à voix haute : « 7 × ? = 56 » → « 7 fois combien égale 56 ? ».
+ * @param {string} text - Question affichée
+ * @returns {string}
+ */
+export function toSpokenGapQuestion(text) {
+  return spokenGapQuestion(text, translatedOrNull);
 }
 
 /**

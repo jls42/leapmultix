@@ -162,6 +162,8 @@
   "good_job": "Bon travail !",
   "gradient_bg": "Dégradé",
   "high_contrast_mode": "Contraste élevé",
+  "recorded_voice_toggle": "Voix enregistrée",
+  "recorded_voice_hint": "Voix de synthèse créée avec ElevenLabs. Décochée, le jeu lit avec la voix de l'appareil.",
   "hint": "Indice",
   "incorrect": "Presque !",
   "incorrect_answer_was_false": "La bonne réponse est Faux.",
@@ -322,6 +324,7 @@
   "arcade_memory_title": "MultiMemory",
   "arcade_life_lost": "Vie perdue",
   "arcade_try_again": "Essaie encore !",
+  "arcade_game_over_spoken": "Bravo, belle partie !",
   "arcade_load_error": "Impossible de lancer le jeu. Réessaie.",
   "level_2_desc": "Double chaque pas : apprends la table de 2 pour traverser la rivière scintillante.",
   "level_3_desc": "Suis le rythme 5, 10, 15... la table de 5 illumine le sentier du marché.",
@@ -356,19 +359,19 @@
   "stars_label": "Étoiles",
   "no_scores_yet": "Aucun score",
   "problem_templates": [
-    "Si j'ai {num} boîtes de {table} pommes, combien de pommes ai-je ?",
-    "Il y a {table} groupes de {num} enfants. Combien d'enfants au total ?",
-    "Une fusée fait {table} sauts de {num} cases. Quelle distance totale ?"
+    "Si j'ai {num, plural, one {# boîte} other {# boîtes}} de {table, plural, one {# pomme} other {# pommes}}, combien de pommes ai-je ?",
+    "Il y a {table, plural, one {# groupe} other {# groupes}} de {num, plural, one {# enfant} other {# enfants}}. Combien d'enfants au total ?",
+    "Une fusée fait {table, plural, one {# saut} other {# sauts}} de {num, plural, one {# case} other {# cases}}. Quelle distance totale ?"
   ],
   "problem_templates_addition": [
-    "J'ai {a} chocolats dans mon panier et j'en ajoute {b} autres. Combien de chocolats ai-je ?",
-    "Il y a {a} oiseaux sur une branche, puis {b} oiseaux les rejoignent. Combien d'oiseaux au total ?",
-    "Tu as {a} billes rouges et {b} billes bleues. Combien de billes as-tu en tout ?"
+    "J'ai {a, plural, one {# chocolat} other {# chocolats}} dans mon panier et j'en ajoute {b, plural, one {# autre} other {# autres}}. Combien de chocolats ai-je ?",
+    "Il y a {a, plural, one {# oiseau} other {# oiseaux}} sur une branche, puis {b, plural, one {# autre oiseau arrive} other {# autres oiseaux arrivent}}. Combien d'oiseaux au total ?",
+    "Tu as {a, plural, one {# bille rouge} other {# billes rouges}} et {b, plural, one {# bille bleue} other {# billes bleues}}. Combien de billes as-tu en tout ?"
   ],
   "problem_templates_subtraction": [
-    "J'ai {a} bonbons et j'en mange {b}. Combien de bonbons me reste-t-il ?",
-    "Il y a {a} ballons et {b} éclatent. Combien de ballons reste-t-il ?",
-    "Tu as {a} crayons et tu en donnes {b} à ton ami. Combien de crayons te reste-t-il ?"
+    "J'ai {a, plural, one {# bonbon} other {# bonbons}} et j'en mange {b}. Combien de bonbons me reste-t-il ?",
+    "Il y a {a, plural, one {# ballon} other {# ballons}} et {b, plural, one {# éclate} other {# éclatent}}. Combien de ballons reste-t-il ?",
+    "Tu as {a, plural, one {# crayon} other {# crayons}} et tu en donnes {b} à ton ami. Combien de crayons te reste-t-il ?"
   ],
   "problem_templates_division": [
     "J'ai {a} bonbons à partager équitablement entre {b} amis. Combien chaque ami recevra-t-il de bonbons ?",
@@ -640,6 +643,8 @@
   "speech_minus": "moins",
   "speech_divided_by": "divisé par",
   "speech_equals": "égale",
+  "speech_question": "Combien font {expression} ?",
+  "speech_gap_question": "{a} {operator} combien égale {result} ?",
   "close_video": "Fermer la vidéo",
   "arcade_game_area_label": "Zone de jeu",
   "arcade_game_screen_label": "Écran de jeu",

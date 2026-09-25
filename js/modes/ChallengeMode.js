@@ -6,7 +6,7 @@
  * d'avertissement), sans clignotement. La bonne tuile est cochée après chaque choix.
  */
 
-import { GameMode } from '../core/GameMode.js';
+import { GameMode, GOOD_SOUND_MS } from '../core/GameMode.js';
 import {
   getTranslation,
   showCoinGainAnimation,
@@ -408,7 +408,7 @@ export class ChallengeMode extends GameMode {
       this.sessionBestStreak = Math.max(this.sessionBestStreak, this.state.streak);
       this.showCorrectFeedback();
     } else {
-      this.showIncorrectFeedback(correctAnswer);
+      this.showIncorrectFeedback();
     }
   }
 
@@ -426,28 +426,37 @@ export class ChallengeMode extends GameMode {
 
     // Le retour s'affiche sans être lu : la voix dit un seul encouragement
     this.displayFeedback(message, 'success', false);
+    // Le bip, puis « Bravo » juste après lui
     playSound('good');
-    speak(getTranslation('correct'));
+    this.addTimer(() => speak(getTranslation('correct')), GOOD_SOUND_MS);
   }
 
   /**
-   * Réponse fausse : ton calme, sans son d'alerte ; la bonne tuile est déjà cochée
-   * @param {*} correctAnswer
+   * Phrase dite après une erreur, affichée telle quelle : « Presque ! La bonne réponse
+   * est 8. » (GameMode.speakQuestion la charge d'avance)
+   * @returns {string|null}
    */
-  showIncorrectFeedback(correctAnswer) {
+  spokenErrorText() {
+    const question = this.state.currentQuestion;
+    if (!question) return null;
     let message;
-    if (this.state.currentQuestion.type === 'true_false') {
+    if (question.type === 'true_false') {
       message =
-        correctAnswer === true
+        question.answer === true
           ? getTranslation('incorrect_answer_was_true')
           : getTranslation('incorrect_answer_was_false');
     } else {
-      message = getTranslation('challenge_feedback_incorrect', { correctAnswer });
+      message = getTranslation('challenge_feedback_incorrect', { correctAnswer: question.answer });
     }
+    return `${getTranslation('incorrect')} ${message}`;
+  }
 
-    // La phrase entière est lue : « Presque ! La bonne réponse est 8. »
-    const lead = getTranslation('incorrect');
-    this.displayFeedback(`${lead} ${message}`, 'error', true);
+  /**
+   * Réponse fausse : ton calme, sans son d'alerte ; la bonne tuile est déjà cochée, la
+   * phrase entière est lue
+   */
+  showIncorrectFeedback() {
+    this.displayFeedback(this.spokenErrorText(), 'error', true);
   }
 
   /**

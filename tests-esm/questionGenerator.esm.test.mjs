@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterEach, jest } from '@jest/globals';
 import { generateQuestion } from '../js/questionGenerator.js';
 
 beforeAll(() => {
@@ -35,3 +35,38 @@ describe('ESM: generateQuestion', () => {
   });
 });
 /* eslint-env jest, node */
+
+describe('Vrai/faux : une proposition jamais négative', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  /** Nombre proposé dans « a op b = n » */
+  const proposed = question => Number(question.question.split('=')[1]);
+
+  test('sous zéro, l’écart part vers le haut : « 1 × 1 = 3 », jamais « = −1 »', () => {
+    // Tous les tirages au maximum : proposition fausse, écart vers le bas, de 2
+    jest.spyOn(globalThis.crypto, 'getRandomValues').mockImplementation(array => {
+      array[0] = 2 ** 32 - 1;
+      return array;
+    });
+    const question = generateQuestion({
+      operator: '×',
+      type: 'true_false',
+      forceTable: 1,
+      forceNum: 1,
+    });
+    expect(question.question).toBe('1 × 1 = 3');
+    expect(question.answer).toBe(false);
+  });
+
+  test('au hasard, toute proposition fausse est positive et différente du résultat', () => {
+    for (let i = 0; i < 300; i++) {
+      const question = generateQuestion({ operator: '−', type: 'true_false', difficulty: 'easy' });
+      const result = question.a - question.b;
+      expect(proposed(question)).toBeGreaterThanOrEqual(0);
+      if (question.answer === false) expect(proposed(question)).not.toBe(result);
+      else expect(proposed(question)).toBe(result);
+    }
+  });
+});

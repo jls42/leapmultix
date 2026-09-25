@@ -6,9 +6,10 @@ jest.unstable_mockModule('../js/i18n.js', () => ({
   getTranslation: k => (k === 'arcade_life_lost' ? 'Vie perdue' : `[${k}]`),
 }));
 const speakMock = jest.fn();
+let voiceOn = false;
 jest.unstable_mockModule('../js/speech.js', () => ({
   speak: speakMock,
-  isVoiceEnabled: () => false,
+  isVoiceEnabled: () => voiceOn,
 }));
 const playSoundMock = jest.fn();
 jest.unstable_mockModule('../js/core/audio.js', () => ({
@@ -115,6 +116,22 @@ describe('Messages d’arcade : ton porté par une classe, jamais par une couleu
     const toast = document.querySelector('.arcade-toast');
     expect(toast.classList.contains('arcade-toast--danger')).toBe(false);
     expect(toast.classList.contains('arcade-toast--neutral')).toBe(true);
+  });
+
+  test('la voix lit une traduction, jamais un texte de repli', () => {
+    voiceOn = true;
+    speakMock.mockClear();
+    try {
+      showArcadeMessage('arcade_life_lost', 'neutral', 1000);
+      expect(speakMock).toHaveBeenCalledWith('Vie perdue');
+
+      speakMock.mockClear();
+      showArcadeMessage('cle_absente', 'neutral', 1000, 'Oups ! Ne tire pas sur la bonne réponse.');
+      expect(document.querySelectorAll('.arcade-toast')).toHaveLength(2);
+      expect(speakMock).not.toHaveBeenCalled();
+    } finally {
+      voiceOn = false;
+    }
   });
 
   test('une clé absente affiche le texte de repli, pas « [clé] »', () => {

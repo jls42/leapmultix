@@ -152,6 +152,8 @@
   "good_job": "Good job!",
   "gradient_bg": "Gradient",
   "high_contrast_mode": "High contrast",
+  "recorded_voice_toggle": "Recorded voice",
+  "recorded_voice_hint": "Synthetic voice made with ElevenLabs. When unchecked, the game reads with the device's voice.",
   "hint": "Hint",
   "incorrect": "Almost!",
   "incorrect_answer_was_false": "The right answer is False.",
@@ -312,6 +314,7 @@
   "arcade_memory_title": "MultiMemory",
   "arcade_life_lost": "Life lost",
   "arcade_try_again": "Try again!",
+  "arcade_game_over_spoken": "Well done, great game!",
   "arcade_load_error": "Couldn't launch the game. Please try again.",
   "level_2_desc": "Double every step - master the 2 times table to cross the crystal river.",
   "level_3_desc": "March to the rhythm 5, 10, 15... the 5 times table lights up the market trail.",
@@ -346,19 +349,19 @@
   "stars_label": "Stars",
   "no_scores_yet": "No scores yet",
   "problem_templates": [
-    "If I have {num} boxes of {table} apples, how many apples do I have?",
-    "There are {table} groups of {num} children. How many children in total?",
-    "A rocket makes {table} jumps of {num} squares. What is the total distance?"
+    "If I have {num, plural, one {# box} other {# boxes}} of {table, plural, one {# apple} other {# apples}}, how many apples do I have?",
+    "There {table, plural, one {is # group} other {are # groups}} of {num, plural, one {# child} other {# children}}. How many children in total?",
+    "A rocket makes {table, plural, one {# jump} other {# jumps}} of {num, plural, one {# square} other {# squares}}. What is the total distance?"
   ],
   "problem_templates_addition": [
-    "I have {a} chocolates in my basket and I add {b} more. How many chocolates do I have?",
-    "There are {a} birds on a branch, then {b} birds join them. How many birds in total?",
-    "You have {a} red marbles and {b} blue marbles. How many marbles do you have in total?"
+    "I have {a, plural, one {# chocolate} other {# chocolates}} in my basket and I add {b} more. How many chocolates do I have?",
+    "There {a, plural, one {is # bird} other {are # birds}} on a branch, then {b, plural, one {# more bird arrives} other {# more birds arrive}}. How many birds in total?",
+    "You have {a, plural, one {# red marble} other {# red marbles}} and {b, plural, one {# blue marble} other {# blue marbles}}. How many marbles do you have in total?"
   ],
   "problem_templates_subtraction": [
-    "I have {a} candies and I eat {b}. How many candies do I have left?",
-    "There are {a} balloons and {b} pop. How many balloons are left?",
-    "You have {a} pencils and you give {b} to your friend. How many pencils do you have left?"
+    "I have {a, plural, one {# candy} other {# candies}} and I eat {b}. How many candies do I have left?",
+    "There {a, plural, one {is # balloon} other {are # balloons}} and {b, plural, one {# pops} other {# pop}}. How many balloons are left?",
+    "You have {a, plural, one {# pencil} other {# pencils}} and you give {b} to your friend. How many pencils do you have left?"
   ],
   "problem_templates_division": [
     "I have {a} candies to share equally among {b} friends. How many candies will each friend get?",
@@ -630,6 +633,8 @@
   "speech_minus": "minus",
   "speech_divided_by": "divided by",
   "speech_equals": "equals",
+  "speech_question": "What is {expression}?",
+  "speech_gap_question": "{a} {operator} what equals {result}?",
   "close_video": "Close the video",
   "arcade_game_area_label": "Game area",
   "arcade_game_screen_label": "Game screen",

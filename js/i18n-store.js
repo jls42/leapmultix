@@ -7,6 +7,7 @@
 import { VERSION_PARAM } from './cache-updater.js';
 import { eventBus } from './core/eventBus.js';
 import { pickRandom } from './core/random.js';
+import { formatMessage } from './core/message-format.js';
 
 /**
  * Ramène une langue quelconque à une des trois langues livrées avec l'application.
@@ -65,7 +66,7 @@ export function translate(key, params = {}) {
   if (value === undefined) return `[${key}]`;
   if (Array.isArray(value)) value = pickRandom(value);
   if (typeof value === 'string' && params && Object.keys(params).length > 0) {
-    for (const p in params) value = value.replace(`{${p}}`, params[p]);
+    value = formatMessage(value, params, _currentLanguage);
   }
   return value;
 }

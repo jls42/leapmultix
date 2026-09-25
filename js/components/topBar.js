@@ -14,6 +14,7 @@ import {
   speak as _speak,
 } from '../utils-es6.js';
 import { AudioManager } from '../core/audio.js';
+import { cancelSpeech, isSpeechDecisionPending, unlockSpeech } from '../speech.js';
 import { goToSlide } from '../slides.js';
 import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
@@ -64,9 +65,10 @@ function tr(key, fallback) {
   return fallback;
 }
 
+/** Parole active : le choix du joueur, ou la voix enregistrée activée par défaut */
 function readVoiceEnabled() {
   try {
-    return !!Storage.loadVoiceEnabled();
+    return !!_isVoiceEnabled();
   } catch {
     return false;
   }
@@ -167,6 +169,9 @@ function applyMuteState(button, soundOn) {
 }
 
 function applyVoiceState(button, enabled) {
+  // Première visite : l'état attend l'index de la voix enregistrée (au plus 1,5 s) ; le
+  // bouton reste masqué, à sa place, plutôt que d'afficher un état qui changerait aussitôt
+  button.toggleAttribute('data-voice-pending', isSpeechDecisionPending());
   button.setAttribute('aria-pressed', String(enabled));
   renderIconButton(button, enabled ? 'speech' : 'speech-off');
   setButtonLabel(button, VOICE_LABEL.key, VOICE_LABEL.fallback);
@@ -221,6 +226,10 @@ export const TopBar = {
       eventBus.on('volumeChanged', event => {
         const detail = event?.detail || {};
         this.updateVolumeControls(detail.volume, detail.muted);
+      });
+      // Voix enregistrée : l'index reçu peut activer la parole par défaut
+      eventBus.on('voice:changed', event => {
+        this.updateVoiceToggleUI(event?.detail?.active);
       });
     } catch {
       /* no-op: listener optional */
@@ -532,16 +541,22 @@ export const TopBar = {
       if (!btn.dataset.topBarListenerAttached) {
         const toggleVoice = singleActivation(() => {
           try {
-            const enabled = !!Storage.loadVoiceEnabled();
-            const next = !enabled;
+            // Le bouton bascule l'état effectif, puis l'enregistre comme choix du joueur
+            const next = !readVoiceEnabled();
             Storage.saveVoiceEnabled(next);
+            eventBus.emit('voice:preference-changed', { enabled: next });
             this.updateVoiceToggleUI(next);
             if (next) {
+              // Ce clic est un geste : il déverrouille le son (iOS) avant la confirmation
+              unlockSpeech();
               try {
-                _speak(getTranslation('voice_enabled') || 'Synthèse vocale activée');
+                _speak(getTranslation('voice_enabled'));
               } catch (error) {
                 console.warn('TopBar voice announcement failed', error);
               }
+            } else {
+              // Voix coupée : la phrase en cours s'arrête aussitôt
+              cancelSpeech();
             }
           } catch (error) {
             console.warn('TopBar voice toggle failed', error);

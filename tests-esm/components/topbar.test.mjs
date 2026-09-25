@@ -1,9 +1,11 @@
-import { describe, beforeAll, beforeEach, afterEach, test, expect } from '@jest/globals';
+import { describe, beforeAll, beforeEach, afterEach, test, expect, jest } from '@jest/globals';
 import { setTranslations } from '../../js/i18n-store.js';
 import Storage from '../../js/core/storage.js';
+import { eventBus } from '../../js/core/eventBus.js';
 
 const { TopBar } = await import('../../js/components/topBar.js');
-const { isVoiceEnabled } = await import('../../js/speech.js');
+const { isVoiceEnabled, setVoiceEnabledResolver, setSpeechEngine, holdSpeechDecision } =
+  await import('../../js/speech.js');
 const { UserManager } = await import('../../js/userManager.js');
 
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -127,6 +129,106 @@ describe('TopBar : icônes SVG, libellés et états', () => {
 
     Storage.saveVoiceEnabled(true);
     expect(isVoiceEnabled()).toBe(true);
+  });
+
+  test('voix enregistrée active par défaut : le bouton l’affiche, le premier clic la coupe', () => {
+    localStorage.removeItem('voiceEnabled');
+    // Règle de la voix enregistrée : sans choix du joueur, la parole est active
+    setVoiceEnabledResolver(() => Storage.get('voiceEnabled', null) ?? true);
+    try {
+      TopBar.injectTopBarIntoSlides();
+      TopBar.attachVoiceToggles();
+      const btn = document.querySelector('#slide7 .voice-toggle');
+      expect(btn.getAttribute('aria-pressed')).toBe('true');
+      btn.click();
+      expect(localStorage.getItem('voiceEnabled')).toBe('false');
+      expect(isVoiceEnabled()).toBe(false);
+      expect(btn.getAttribute('aria-pressed')).toBe('false');
+    } finally {
+      setVoiceEnabledResolver(null);
+      localStorage.removeItem('voiceEnabled');
+    }
+  });
+
+  test('voix allumée par le bouton : ce clic déverrouille le son du moteur', async () => {
+    localStorage.setItem('voiceEnabled', 'false');
+    const engine = {
+      start: () => ({ stop: () => {} }),
+      isAvailable: () => true,
+      unlock: jest.fn(() => true),
+    };
+    setSpeechEngine(engine);
+    try {
+      TopBar.injectTopBarIntoSlides();
+      TopBar.attachVoiceToggles();
+      document.querySelector('#slide7 .voice-toggle').click();
+      expect(engine.unlock).toHaveBeenCalledTimes(1);
+    } finally {
+      setSpeechEngine(null);
+      localStorage.removeItem('voiceEnabled');
+    }
+  });
+
+  test('voix : le bouton suit l’état décidé par la voix enregistrée (voice:changed)', () => {
+    TopBar.init();
+    const btn = document.querySelector('#slide7 .voice-toggle');
+    eventBus.emit('voice:changed', { available: true, active: true, engine: 'clips' });
+    expect(btn.getAttribute('aria-pressed')).toBe('true');
+    eventBus.emit('voice:changed', { available: false, active: false, engine: 'synthesis' });
+    expect(btn.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  test('voix, première visite : bouton masqué tant que la décision attend, puis son état', () => {
+    const release = holdSpeechDecision();
+    try {
+      TopBar.init();
+      const btn = document.querySelector('#slide7 .voice-toggle');
+      expect(btn.hasAttribute('data-voice-pending')).toBe(true);
+      // Un état annoncé pendant l'attente ne le montre pas encore
+      eventBus.emit('voice:changed', { available: false, active: false, engine: 'synthesis' });
+      expect(btn.hasAttribute('data-voice-pending')).toBe(true);
+      release();
+      eventBus.emit('voice:changed', { available: true, active: true, engine: 'clips' });
+      expect(btn.hasAttribute('data-voice-pending')).toBe(false);
+      expect(btn.getAttribute('aria-pressed')).toBe('true');
+    } finally {
+      release();
+    }
+  });
+
+  test('voix : l’activation se dit dans la langue du jeu, jamais en français codé en dur', () => {
+    const spoken = [];
+    globalThis.SpeechSynthesisUtterance = function SpeechSynthesisUtterance(text) {
+      this.text = String(text ?? '');
+    };
+    globalThis.speechSynthesis = {
+      speak: utterance => spoken.push(utterance.text),
+      cancel: () => {},
+      getVoices: () => [],
+      speaking: false,
+      pending: false,
+    };
+    try {
+      localStorage.removeItem('voiceEnabled');
+      setTranslations({ ...TRANSLATIONS, voice_enabled: 'Voice enabled' });
+      TopBar.injectTopBarIntoSlides();
+      TopBar.attachVoiceToggles();
+      document.querySelector('#slide7 .voice-toggle').click();
+      // L'énoncé vide est l'amorce du déverrouillage (iOS), faite par ce même clic
+      expect(spoken.filter(Boolean)).toEqual(['Voice enabled']);
+
+      // Traduction absente : rien n'est dit, ni « [voice_enabled] » ni un repli français
+      localStorage.removeItem('voiceEnabled');
+      setTranslations(TRANSLATIONS);
+      TopBar.injectTopBarIntoSlides();
+      TopBar.attachVoiceToggles();
+      document.querySelector('#slide7 .voice-toggle').click();
+      expect(spoken.filter(Boolean)).toEqual(['Voice enabled']);
+    } finally {
+      delete globalThis.speechSynthesis;
+      delete globalThis.SpeechSynthesisUtterance;
+      setTranslations(TRANSLATIONS);
+    }
   });
 
   test('son : l’état suit le volume, même si un émoji a remplacé le contenu', () => {

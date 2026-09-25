@@ -1,5 +1,42 @@
-// speech.js - ESM wrapper for speech synthesis utilities
-// Provides speak() and isVoiceEnabled() without relying on window globals.
+// speech.js - Lecture à voix haute : une seule file de parole.
+//
+// La file tient deux emplacements, chacun avec son jeton :
+// - la phrase active, même pendant qu'un moteur la prépare (un clip qui se télécharge) ;
+// - une phrase en attente, une seule.
+//
+// Règles :
+// - une annonce (priority: 'high') coupe la phrase active, annonce précédente comprise,
+//   et oublie la phrase en attente : la dernière annonce gagne ;
+// - une phrase normale arrivée pendant une annonce ne la coupe pas : elle attend sa fin
+//   (en attente, la dernière arrivée gagne). Sinon, elle coupe la phrase active et part
+//   tout de suite ;
+// - une phrase « queue » (la question qui suit un « Bravo ») attend la fin de la phrase
+//   active sans la couper. Elle est oubliée si une autre phrase arrive ou si l'enfant
+//   répond (GameMode.handleAnswer appelle cancelSpeech) ;
+// - une phrase coupée, remplacée ou oubliée est invalidée : ses événements tardifs (fin,
+//   erreur, téléchargement, minuteur) ne font plus rien, ni lecture ni repli ;
+// - fin bornée, quel que soit le moteur : au-delà d'une durée estimée d'après le texte,
+//   la phrase est tenue pour finie et la file avance. Un son bloqué ne retient rien.
+// Chaque phrase part seule vers le moteur : plus aucun texte recollé.
+//
+// Contrat d'un moteur (setSpeechEngine), pour la voix enregistrée :
+//   engine.start(text, { lang, token, volume, onStarted, onEnded, onFailed, setDeadline })
+//     → { stop(), setVolume?(volume) }
+//   - start lance la phrase ; onStarted() quand le son part ; onEnded() à la fin ;
+//     onFailed(error) si la phrase ne peut pas être dite (la file passe à la suite).
+//   - setDeadline(ms) fixe la fin bornée à ms depuis maintenant, pour un moteur qui
+//     connaît la durée réelle (un clip : sa durée plus 1 s).
+//   - stop() coupe le son ; la file ignore ensuite tout rappel de cette phrase.
+//   - setVolume(volume) applique le volume à la phrase en cours, si le moteur le peut.
+//   - isAvailable() (facultatif) : false si le moteur ne peut rien dire du tout.
+//   - unlock() (facultatif) : appelé pendant un geste de l'utilisateur pour déverrouiller
+//     le son (iOS) ; rend un booléen ou une promesse de booléen.
+//   - preload(texts) (facultatif) : prépare des phrases sans les dire (preloadSpeech).
+//   Le moteur par défaut est la synthèse du navigateur (getSynthesisEngine()).
+//
+// Première visite : la voix enregistrée peut suspendre la décision « parole active ? »
+// jusqu'à l'arrivée de son index (holdSpeechDecision). Les phrases demandées entre-temps
+// attendent, puis entrent dans la file dans leur ordre d'arrivée.
 
 import Storage from './core/storage.js';
 import { AudioManager } from './core/audio.js';
@@ -38,6 +75,7 @@ const defaultPreferredVoices = { local: [], remote: [] };
 
 /**
  * Updates the module's state from an audio event or initial state.
+ * Couper le son arrête la parole ; un autre volume s'applique à la phrase en cours.
  * @param {{volume: number, muted: boolean}} audioState - The new audio state.
  */
 function updateAudioState(audioState) {
@@ -46,14 +84,13 @@ function updateAudioState(audioState) {
   isMuted = muted;
 
   if (isMuted) {
-    const Root = getGlobalRoot();
-    if (Root?.speechSynthesis) {
-      try {
-        Root.speechSynthesis.cancel();
-      } catch {
-        // ignore
-      }
-    }
+    cancelSpeech();
+    return;
+  }
+  try {
+    active?.handle?.setVolume?.(effectiveVolume());
+  } catch {
+    /* le moteur ne sait pas changer le volume en cours de phrase */
   }
 }
 
@@ -91,18 +128,22 @@ function initializeAudioSync() {
   }
 }
 
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeAudioSync, { once: true });
-  } else {
-    // DOM is already ready: synchronise immediately for late imports
-    initializeAudioSync();
-  }
+/** Règle par défaut : le choix du joueur, voix coupée tant qu'il n'a rien choisi (v21) */
+const storedVoiceChoice = () => Boolean(Storage.loadVoiceEnabled());
+let voiceEnabledResolver = storedVoiceChoice;
+
+/**
+ * Remplace la règle qui dit si la parole est active : la voix enregistrée
+ * (js/voice-clips.js) l'active par défaut là où elle est disponible
+ * @param {(() => boolean)|null} resolver - null : retour à la règle par défaut
+ */
+export function setVoiceEnabledResolver(resolver) {
+  voiceEnabledResolver = resolver ?? storedVoiceChoice;
 }
 
 export function isVoiceEnabled() {
   try {
-    return Storage.loadVoiceEnabled();
+    return Boolean(voiceEnabledResolver());
   } catch {
     return false;
   }
@@ -110,14 +151,14 @@ export function isVoiceEnabled() {
 
 let speechSettings = { lang: 'fr-FR', rate: 0.9, pitch: 1.1 };
 let selectedVoice = null;
-let currentSpeechPriority = null; // Track priority of current speech
-let lastHighText = '';
-let pendingHighReplay = null;
 let waitingForVoiceLoad = false;
 let lastAnnouncedVoiceKey = null;
-// Une erreur de synthèse (souvent : aucune voix installée) n'est signalée qu'une fois
+// Une erreur de lecture (souvent : aucune voix installée) n'est signalée qu'une fois
 let speechErrorReported = false;
+let unavailableReported = false;
 const BENIGN_SPEECH_ERRORS = new Set(['interrupted', 'canceled']);
+// Marque d'une clé de traduction absente, telle que getTranslation la rend
+const MISSING_TRANSLATION = /\[[\w.-]+\]/;
 
 function getGlobalRoot() {
   if (typeof globalThis !== 'undefined') return globalThis;
@@ -338,155 +379,319 @@ function setupUtterance(text, settings) {
   return utterance;
 }
 
-function ensureSpeechReady(Root) {
-  if (!Root || !('speechSynthesis' in Root)) {
-    console.warn('[Speech] speechSynthesis API not available');
+function reportSpeechError(reason, detail) {
+  if (speechErrorReported) return;
+  speechErrorReported = true;
+  console.warn(
+    `[Speech] Lecture à voix haute indisponible (${reason}) : les textes restent affichés.`,
+    detail
+  );
+}
+
+/**
+ * Moteur de synthèse du navigateur (speechSynthesis). Une seule phrase à la fois : la
+ * file ne lui confie jamais deux énoncés en même temps.
+ */
+function createSynthesisEngine() {
+  const synthesis = () => getGlobalRoot()?.speechSynthesis;
+  return {
+    name: 'synthesis',
+
+    isAvailable() {
+      return Boolean(synthesis()) && typeof SpeechSynthesisUtterance !== 'undefined';
+    },
+
+    start(text, { volume, onStarted, onEnded, onFailed }) {
+      const synth = synthesis();
+      let done = false;
+      const settle = callback => event => {
+        if (done) return;
+        done = true;
+        callback(event);
+      };
+      if (!synth) {
+        settle(onFailed)(new Error('speechSynthesis indisponible'));
+        return { stop() {} };
+      }
+      const utterance = setupUtterance(text, speechSettings);
+      utterance.volume = volume;
+      utterance.onstart = () => {
+        if (!done) onStarted();
+      };
+      utterance.onend = settle(onEnded);
+      utterance.onerror = settle(event => {
+        // Une coupure venue d'ailleurs (autre onglet, système) vaut fin de phrase
+        if (BENIGN_SPEECH_ERRORS.has(event?.error)) onEnded();
+        else onFailed(event);
+      });
+      synth.speak(utterance);
+      return {
+        stop() {
+          done = true;
+          try {
+            synth.cancel();
+          } catch (error) {
+            console.warn('[Speech] Error cancelling:', error);
+          }
+        },
+      };
+    },
+
+    /** Amorce la synthèse dans un geste de l'utilisateur (iOS) : un énoncé vide */
+    unlock() {
+      const synth = synthesis();
+      if (!synth || typeof SpeechSynthesisUtterance === 'undefined') return false;
+      const primer = new SpeechSynthesisUtterance('');
+      primer.volume = 0;
+      synth.speak(primer);
+      return true;
+    },
+  };
+}
+
+const SYNTHESIS_ENGINE = createSynthesisEngine();
+let engine = SYNTHESIS_ENGINE;
+
+/** Moteur de synthèse du navigateur, celui de la file par défaut et du repli */
+export function getSynthesisEngine() {
+  return SYNTHESIS_ENGINE;
+}
+
+/**
+ * Branche un autre moteur sur la file (la voix enregistrée), ou revient à la synthèse.
+ * La phrase en cours est coupée : elle appartenait à l'ancien moteur.
+ * @param {Object|null} next - Moteur (voir le contrat en tête de fichier), null : synthèse
+ */
+export function setSpeechEngine(next) {
+  // Les phrases retenues par la première décision attendent le moteur qu'elle choisit
+  cancelQueue();
+  engine = next ?? SYNTHESIS_ENGINE;
+  // Un moteur pas encore déverrouillé (la voix enregistrée, branchée après le premier geste)
+  // le sera au geste suivant
+  if (typeof document !== 'undefined' && lockedEngines().length) addUnlockListeners();
+}
+
+// ---------------------------------------------------------------------------------------
+// File de parole
+// ---------------------------------------------------------------------------------------
+
+/**
+ * Fin bornée de la synthèse : large, pour ne jamais couper une voix lente (Android lit
+ * parfois moins de 8 caractères par seconde à ce débit) ; elle ne sert qu'à débloquer un
+ * son qui ne signale jamais sa fin. 5 caractères par seconde, plus 3 s.
+ */
+const MS_PER_CHARACTER = 200;
+const END_MARGIN_MS = 3000;
+/** Délai accordé au moteur pour faire partir le son (voix distante, clip qui charge) */
+const START_ALLOWANCE_MS = 4000;
+
+/**
+ * Durée au-delà de laquelle une phrase lue par la synthèse est tenue pour finie
+ * @param {string} text
+ * @returns {number} millisecondes
+ */
+export function estimateSpeechDurationMs(text) {
+  return END_MARGIN_MS + [...String(text ?? '')].length * MS_PER_CHARACTER;
+}
+
+let nextToken = 0;
+/** @type {{token: number, text: string, priority: string, handle: Object|null, deadline: any}|null} */
+let active = null;
+/** @type {{token: number, text: string, priority: string}|null} */
+let pending = null;
+
+function effectiveVolume() {
+  if (isMuted) return 0;
+  return Math.max(0, Math.min(1, Number(currentVolume || 0)));
+}
+
+function clearDeadline(phrase) {
+  if (phrase?.deadline) {
+    clearTimeout(phrase.deadline);
+    phrase.deadline = null;
+  }
+}
+
+/** Coupe et invalide la phrase active */
+function stopActive() {
+  const phrase = active;
+  if (!phrase) return;
+  active = null;
+  clearDeadline(phrase);
+  try {
+    phrase.handle?.stop();
+  } catch (error) {
+    console.warn('[Speech] Arrêt de la phrase impossible :', error);
+  }
+}
+
+/** Fait partir la phrase en attente, s'il y en a une */
+function playPending() {
+  const next = pending;
+  pending = null;
+  if (next) startPhrase(next);
+}
+
+/** Fin (ou abandon) de la phrase active : la file passe à la suite */
+function finishActive(phrase) {
+  if (active !== phrase) return;
+  active = null;
+  clearDeadline(phrase);
+  playPending();
+}
+
+function setDeadlineFor(phrase, ms) {
+  if (active !== phrase) return;
+  clearDeadline(phrase);
+  phrase.deadline = setTimeout(() => {
+    if (active !== phrase) return;
+    // Son bloqué ou fin jamais signalée : la phrase est tenue pour finie
+    stopActive();
+    playPending();
+  }, ms);
+}
+
+function startPhrase(phrase) {
+  active = phrase;
+  const isCurrent = () => active === phrase;
+  setDeadlineFor(phrase, START_ALLOWANCE_MS + estimateSpeechDurationMs(phrase.text));
+  try {
+    const handle = engine.start(phrase.text, {
+      lang: speechSettings.lang,
+      token: phrase.token,
+      volume: effectiveVolume(),
+      onStarted: () => {
+        if (isCurrent()) setDeadlineFor(phrase, estimateSpeechDurationMs(phrase.text));
+      },
+      onEnded: () => finishActive(phrase),
+      onFailed: error => {
+        if (!isCurrent()) return;
+        reportSpeechError(error?.error || error?.message || 'unknown', error);
+        finishActive(phrase);
+      },
+      setDeadline: ms => setDeadlineFor(phrase, ms),
+    });
+    // Une phrase déjà finie pendant start (fin signalée tout de suite) n'a rien à arrêter :
+    // stop() couperait la phrase suivante, déjà partie
+    if (isCurrent()) phrase.handle = handle;
+  } catch (error) {
+    console.error('[Speech] Exception:', error);
+    finishActive(phrase);
+  }
+}
+
+function cancelQueue() {
+  pending = null;
+  stopActive();
+}
+
+/**
+ * Coupe la phrase en cours et oublie les phrases qui attendent : sortie de mode,
+ * navigation, « Continuer », changement de langue, voix ou son coupés, onglet caché.
+ */
+export function cancelSpeech() {
+  heldPhrases = [];
+  cancelQueue();
+}
+
+// ---------------------------------------------------------------------------------------
+// Première décision (voir l'en-tête) et préchargement
+// ---------------------------------------------------------------------------------------
+
+/** Phrases retenues pendant la première décision : les plus récentes seulement */
+const MAX_HELD_PHRASES = 3;
+/** Attente en cours : son jeton, null sinon */
+let decisionHold = null;
+/** @type {{text: string, options: Object}[]} */
+let heldPhrases = [];
+
+/**
+ * Suspend la décision « parole active ? » : speak() retient les phrases au lieu de les
+ * dire, jusqu'à l'appel de la fonction rendue. Celle-ci les fait entrer dans la file,
+ * dans leur ordre d'arrivée ; chacune n'est dite que si la parole est alors active.
+ * @returns {() => void} Fin de l'attente (sans effet après le premier appel, ou si une
+ *   autre attente a pris sa place)
+ */
+export function holdSpeechDecision() {
+  const hold = {};
+  decisionHold = hold;
+  return () => {
+    if (decisionHold !== hold) return;
+    decisionHold = null;
+    const phrases = heldPhrases;
+    heldPhrases = [];
+    for (const { text, options } of phrases) speak(text, options);
+  };
+}
+
+/** La décision « parole active ? » attend-elle encore ? (bouton de la barre du haut) */
+export function isSpeechDecisionPending() {
+  return decisionHold !== null;
+}
+
+/**
+ * Prépare des phrases que le jeu dira peut-être bientôt (la phrase d'une erreur) : le
+ * moteur en place les charge sans les dire. Sans effet si la parole est coupée, ou pour
+ * la synthèse, qui n'a rien à charger.
+ * @param {string[]} texts
+ */
+export function preloadSpeech(texts) {
+  if (isMuted || !engine.preload || !isVoiceEnabled()) return;
+  const sayable = texts.filter(
+    text => typeof text === 'string' && text.trim() && !MISSING_TRANSLATION.test(text)
+  );
+  try {
+    if (sayable.length) engine.preload(sayable);
+  } catch (error) {
+    console.warn('[Speech] Préchargement impossible :', error);
+  }
+}
+
+function canSpeak(text) {
+  if (isMuted) return false;
+  // Une traduction manquante (« [table_of] 7 ») ne se lit pas : ce serait un nom technique
+  if (!text.trim() || MISSING_TRANSLATION.test(text)) return false;
+  if (!isVoiceEnabled()) return false;
+  if (engine.isAvailable && !engine.isAvailable()) {
+    if (!unavailableReported) {
+      unavailableReported = true;
+      console.warn('[Speech] speechSynthesis API not available');
+    }
     return false;
   }
-
-  if (!isVoiceEnabled()) {
-    console.warn('[Speech] Voice is disabled (check 🗣️ button in top bar)');
-    return false;
-  }
-
   return true;
 }
 
-function handleHighPriority(text) {
-  currentSpeechPriority = 'high';
-  lastHighText = String(text || '');
-}
-
-function cancelNormalSpeech(Root) {
-  try {
-    Root.speechSynthesis.cancel();
-  } catch (error) {
-    console.warn('[Speech] Error cancelling:', error);
-  }
-  currentSpeechPriority = null;
-}
-
-function interruptHighSpeech(Root) {
-  try {
-    Root.speechSynthesis.cancel();
-  } catch (error) {
-    console.warn('[Speech] Error cancelling HIGH speech:', error);
-  }
-  currentSpeechPriority = null;
-  pendingHighReplay = lastHighText;
-}
-
-function handleNormalPriority({ Root, allowInterruptHigh, isActive }) {
-  if (!isActive) {
-    currentSpeechPriority = 'normal';
-    return;
-  }
-
-  if (currentSpeechPriority === 'high') {
-    if (!allowInterruptHigh) {
-      return;
-    }
-
-    interruptHighSpeech(Root);
-    return;
-  }
-
-  cancelNormalSpeech(Root);
-}
-
-function preparePriorityQueue({ Root, priority, allowInterruptHigh, text }) {
-  const isActive = Root.speechSynthesis.speaking || Root.speechSynthesis.pending;
-
-  if (priority === 'high') {
-    handleHighPriority(text);
-    return;
-  }
-
-  handleNormalPriority({ Root, allowInterruptHigh, isActive });
-}
-
-function buildFinalText(priority, rawText) {
-  const baseText = String(rawText || '');
-
-  if (priority === 'high') {
-    pendingHighReplay = null;
-    return baseText;
-  }
-
-  if (!pendingHighReplay) {
-    return baseText;
-  }
-
-  const combined = `${pendingHighReplay}. ${baseText}`.trim();
-  pendingHighReplay = null;
-  return combined;
-}
-
-function attachUtteranceEvents(utterance, priority) {
-  utterance.onstart = () => {
-    currentSpeechPriority = priority;
-    if (priority === 'high') {
-      pendingHighReplay = null;
-    }
-  };
-
-  utterance.onend = () => {
-    currentSpeechPriority = null;
-    if (priority === 'high') {
-      pendingHighReplay = null;
-    }
-  };
-
-  utterance.onerror = event => {
-    if (BENIGN_SPEECH_ERRORS.has(event?.error)) {
-      return;
-    }
-
-    currentSpeechPriority = null;
-    if (priority === 'high') {
-      pendingHighReplay = null;
-    }
-    if (speechErrorReported) return;
-    speechErrorReported = true;
-    const reason = event?.error || event?.message || 'unknown';
-    console.warn(
-      `[Speech] Lecture à voix haute indisponible (${reason}) : les textes restent affichés.`,
-      event
-    );
-  };
-}
-
+/**
+ * Lit une phrase à voix haute, selon les règles de la file (en tête de fichier).
+ * @param {string} text - Phrase telle qu'elle doit être dite
+ * @param {{priority?: 'high'|'normal', queue?: boolean}} [options]
+ *   priority 'high' : annonce de mode ; queue : attendre la fin de la phrase en cours
+ */
 export function speak(text, options = {}) {
-  const {
-    priority = 'normal', // 'high' (mode announcements) or 'normal' (game feedback)
-    allowInterruptHigh = true,
-  } = options;
-  const Root = getGlobalRoot();
-
-  // Abort if muted
-  if (isMuted) {
+  const { priority = 'normal', queue = false } = options;
+  const phraseText = String(text ?? '');
+  if (decisionHold) {
+    heldPhrases = [...heldPhrases, { text: phraseText, options }].slice(-MAX_HELD_PHRASES);
     return;
   }
+  if (!canSpeak(phraseText)) return;
 
-  if (!ensureSpeechReady(Root)) {
+  const phrase = { token: ++nextToken, text: phraseText, priority, handle: null, deadline: null };
+  if (priority === 'high') {
+    cancelSpeech();
+    startPhrase(phrase);
     return;
   }
-
-  try {
-    preparePriorityQueue({ Root, priority, allowInterruptHigh, text });
-
-    const spokenText = buildFinalText(priority, text);
-    const utterance = setupUtterance(spokenText, speechSettings);
-
-    // Use the live volume from the event bus, and allow it to be 0
-    utterance.volume = Math.max(0, Math.min(1, Number(currentVolume || 0)));
-
-    attachUtteranceEvents(utterance, priority);
-
-    Root.speechSynthesis.speak(utterance);
-  } catch (error) {
-    console.error('[Speech] Exception:', error);
+  if (queue || active?.priority === 'high') {
+    if (active) {
+      pending = phrase;
+      return;
+    }
+  } else {
+    cancelSpeech();
   }
+  startPhrase(phrase);
 }
 
 export function updateSpeechVoice(langCode) {
@@ -504,9 +709,105 @@ export function updateSpeechVoice(langCode) {
   if (speechSettings.lang === voiceLang) {
     return;
   }
+  // Une phrase de l'ancienne langue ne continue pas dans la nouvelle
+  cancelSpeech();
   speechSettings = { ...speechSettings, lang: voiceLang };
   // Update the selected voice when the language changes
   updateVoiceSelection('language-change');
+}
+
+// ---------------------------------------------------------------------------------------
+// Déverrouillage du son (iOS) : la première lecture doit partir d'un geste
+// ---------------------------------------------------------------------------------------
+
+// click, touchend et keydown : pour un doigt, WebKit ne compte pas pointerdown comme un
+// geste qui autorise le son
+const UNLOCK_EVENTS = ['click', 'touchend', 'keydown'];
+let unlockTried = false;
+/** Moteurs déjà déverrouillés : un moteur branché plus tard l'est à son tour */
+const unlockedEngines = new WeakSet();
+
+function addUnlockListeners() {
+  for (const type of UNLOCK_EVENTS) {
+    document.addEventListener(type, onUnlockGesture, { capture: true, passive: true });
+  }
+}
+
+function removeUnlockListeners() {
+  for (const type of UNLOCK_EVENTS) {
+    document.removeEventListener(type, onUnlockGesture, true);
+  }
+}
+
+/** Moteurs encore à déverrouiller ; un moteur qui ne peut rien dire n'en a pas besoin */
+function lockedEngines() {
+  return [...new Set([SYNTHESIS_ENGINE, engine])].filter(
+    candidate => !unlockedEngines.has(candidate) && candidate.isAvailable?.() !== false
+  );
+}
+
+function unlockEngine(candidate) {
+  let result;
+  try {
+    result = candidate.unlock ? candidate.unlock() : true;
+  } catch {
+    result = false;
+  }
+  return Promise.resolve(result)
+    .catch(() => false)
+    .then(ok => {
+      if (ok) unlockedEngines.add(candidate);
+      return Boolean(ok);
+    });
+}
+
+/**
+ * Déverrouille le son des moteurs qui ne le sont pas encore ; à appeler pendant un geste
+ * de l'utilisateur. Le bouton de la barre du haut l'appelle en allumant la voix : le
+ * déverrouillage automatique de son clic est passé avant, voix encore coupée.
+ * @returns {Promise<boolean>} true si tout est déverrouillé
+ */
+export function unlockSpeech() {
+  if (unlockTried) return Promise.resolve(false);
+  const pending = lockedEngines();
+  if (!pending.length) {
+    removeUnlockListeners();
+    return Promise.resolve(true);
+  }
+  // Posé tout de suite, dans le geste : touchend puis click, ou une touche répétée,
+  // n'empilent pas d'énoncés vides
+  unlockTried = true;
+  return Promise.all(pending.map(unlockEngine)).then(results => {
+    // Échec : le prochain geste réessaie ; réussite : plus besoin d'écouter les gestes
+    unlockTried = false;
+    if (!lockedEngines().length) removeUnlockListeners();
+    return results.every(Boolean);
+  });
+}
+
+function onUnlockGesture() {
+  if (unlockTried) return;
+  // Voix coupée : rien à déverrouiller, un geste suivant s'en chargera
+  if (isMuted || !isVoiceEnabled()) return;
+  unlockSpeech();
+}
+
+function initializeSpeechLifecycle() {
+  addUnlockListeners();
+  // Onglet caché : la parole s'arrête (elle ne reprend pas au retour)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') cancelSpeech();
+  });
+}
+
+if (typeof document !== 'undefined') {
+  initializeSpeechLifecycle();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAudioSync, { once: true });
+  } else {
+    // DOM is already ready: synchronise immediately for late imports
+    initializeAudioSync();
+  }
 }
 
 // Initial voice selection when the module is loaded

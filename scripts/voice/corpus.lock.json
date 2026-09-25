@@ -1,0 +1,17 @@
+{
+  "schema": "cyrb53-nfc-1",
+  "languages": {
+    "fr": {
+      "phrases": 7437,
+      "sha256": "8ecd77209aae7e364c6bb1e7034e179c0eea771ba51bbc5d399166095d345d18"
+    },
+    "en": {
+      "phrases": 7437,
+      "sha256": "950c7785591954fc2e93ef4c127b5d010e29bab35e8d89394fc0630cf24b1cfa"
+    },
+    "es": {
+      "phrases": 7437,
+      "sha256": "7b10c8991532b90088bfa96f23d65e39d447a1a394cee6686dcc3da690ac91f5"
+    }
+  }
+}

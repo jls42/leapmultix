@@ -1,43 +1,36 @@
 /**
- * Tests E2E - Validation du système de priorités de synthèse vocale
+ * Tests E2E - File de parole : l'annonce va au bout, la phrase en attente part ensuite,
+ * chaque phrase est un énoncé à part (plus de texte recollé).
  * @jest-environment node
  */
 
 const puppeteer = require('puppeteer');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
+// Synthèse factice : note chaque énoncé et chaque coupure ; un énoncé ne finit que quand
+// le test appelle __endUtterance() (le début est signalé tout de suite, comme un navigateur)
 const SPEECH_STUB_SOURCE =
   '(() => {' +
   '  const actions = [];' +
   '  globalThis.SpeechSynthesisUtterance = function speechStub(text) {' +
   "    this.text = String(text ?? '');" +
-  "    this.lang = 'fr-FR';" +
-  '    this.rate = 0.9;' +
-  '    this.pitch = 1.1;' +
   '    this.volume = 1;' +
   '    this.onstart = null;' +
   '    this.onend = null;' +
   '    this.onerror = null;' +
   '  };' +
+  '  let current = null;' +
   '  const speechSynthesis = {' +
   '    speaking: false,' +
   '    pending: false,' +
-  '    _currentUtterance: null,' +
   '    speak(utterance) {' +
   "      actions.push({ type: 'speak', text: utterance.text });" +
-  '      this.speaking = true;' +
-  '      this.pending = false;' +
-  '      this._currentUtterance = utterance;' +
+  '      current = utterance;' +
   "      if (typeof utterance.onstart === 'function') utterance.onstart();" +
   '    },' +
   '    cancel() {' +
   "      actions.push({ type: 'cancel' });" +
-  '      this.speaking = false;' +
-  '      this.pending = false;' +
-  "      if (this._currentUtterance && typeof this._currentUtterance.onend === 'function') {" +
-  '        this._currentUtterance.onend();' +
-  '      }' +
-  '      this._currentUtterance = null;' +
+  '      current = null;' +
   '    },' +
   '    getVoices() {' +
   '      return [];' +
@@ -49,6 +42,11 @@ const SPEECH_STUB_SOURCE =
   '    value: speechSynthesis,' +
   '  });' +
   '  globalThis.__speechActions = actions;' +
+  '  globalThis.__endUtterance = () => {' +
+  '    const utterance = current;' +
+  '    current = null;' +
+  "    if (utterance && typeof utterance.onend === 'function') utterance.onend();" +
+  '  };' +
   '})();';
 
 async function injectSpeechStub(page) {
@@ -89,6 +87,13 @@ async function createUserAndSkipIntro(page) {
   await page.waitForSelector('.mode-btn[data-mode="quiz"]', { visible: true, timeout: 10000 });
 }
 
+/** Énoncés et coupures notés, sans l'énoncé vide qui amorce la synthèse au premier geste */
+function recordedActions(page) {
+  return page.evaluate(() =>
+    (globalThis.__speechActions || []).filter(a => a.type !== 'speak' || a.text !== '')
+  );
+}
+
 describe('Speech Priority System E2E', () => {
   let browser;
   let page;
@@ -125,67 +130,55 @@ describe('Speech Priority System E2E', () => {
     await page.close();
   });
 
-  test('Mode announcement should use high priority', async () => {
+  test('l’annonce du mode va au bout ; la question l’attend, puis part seule', async () => {
     await createUserAndSkipIntro(page);
     await page.click('.mode-btn[data-mode="quiz"]');
 
     await page.waitForFunction(
-      () => {
-        const actions = globalThis.__speechActions || [];
-        return actions.some(action => action.type === 'speak' && /^Mode/i.test(action.text || ''));
-      },
+      () =>
+        (globalThis.__speechActions || []).some(
+          action => action.type === 'speak' && /^Mode/i.test(action.text || '')
+        ),
       { timeout: 20000 }
     );
+    // La question est affichée pendant l'annonce : elle attend, sans la couper
+    await page.waitForSelector('#quiz-question', { visible: true, timeout: 10000 });
+    const during = await recordedActions(page);
+    const announcementIndex = during.findIndex(a => a.type === 'speak' && /^Mode/i.test(a.text));
+    expect(during.slice(announcementIndex + 1)).toEqual([]);
 
+    await page.evaluate(() => globalThis.__endUtterance());
     await page.waitForFunction(
-      () => (globalThis.__speechActions || []).some(action => action.type === 'cancel'),
-      { timeout: 20000 }
+      () =>
+        (globalThis.__speechActions || []).filter(a => a.type === 'speak' && a.text).length >= 2,
+      { timeout: 5000 }
     );
-
-    const interruptInfo = await page.evaluate(() => {
-      const actions = globalThis.__speechActions || [];
-      const firstModeIndex = actions.findIndex(
-        action => action.type === 'speak' && /^Mode/i.test(action.text || '')
-      );
-      if (firstModeIndex === -1) {
-        return { cancelFound: false, nextSpeakText: null };
-      }
-
-      let cancelFound = false;
-      let nextSpeakText = null;
-      for (let i = firstModeIndex + 1; i < actions.length; i += 1) {
-        const action = actions[i];
-        if (action.type === 'cancel') {
-          cancelFound = true;
-          continue;
-        }
-        if (cancelFound && action.type === 'speak') {
-          nextSpeakText = action.text;
-          break;
-        }
-      }
-
-      return { cancelFound, nextSpeakText };
-    });
-
-    expect(interruptInfo.cancelFound).toBe(true);
-    expect(interruptInfo.nextSpeakText).toBeTruthy();
-    expect(interruptInfo.nextSpeakText).toMatch(/Mode|fois/i);
+    const after = await recordedActions(page);
+    const next = after.slice(announcementIndex + 1);
+    expect(next).toHaveLength(1);
+    expect(next[0].type).toBe('speak');
+    // Un énoncé à part : jamais « Mode Quiz. Combien font… »
+    expect(next[0].text).not.toMatch(/^Mode/i);
+    expect(next[0].text.length).toBeGreaterThan(0);
   }, 40000);
 
-  test('Game feedback should cancel previous speech', async () => {
+  test('une phrase normale coupe la précédente et part seule', async () => {
     await createUserAndSkipIntro(page);
 
     await page.evaluate(async currentBaseUrl => {
       const modulePath = new URL('./js/speech.js', currentBaseUrl).href;
       const speechModule = await import(modulePath);
-      speechModule.speak('Première annonce', { priority: 'normal' });
-      speechModule.speak('Annonce suivante', { priority: 'normal' });
+      globalThis.__speechActions.length = 0;
+      speechModule.speak('Première phrase');
+      speechModule.speak('Phrase suivante');
     }, baseUrl);
 
-    const actions = await page.evaluate(() => globalThis.__speechActions || []);
-    const cancelCount = actions.filter(action => action.type === 'cancel').length;
-    expect(cancelCount).toBeGreaterThanOrEqual(1);
+    const actions = await recordedActions(page);
+    expect(actions).toEqual([
+      { type: 'speak', text: 'Première phrase' },
+      { type: 'cancel' },
+      { type: 'speak', text: 'Phrase suivante' },
+    ]);
   }, 20000);
 
   test('Speech synthesis should be available in browser', async () => {

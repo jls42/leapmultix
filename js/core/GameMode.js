@@ -23,15 +23,18 @@ import {
 import { recordOperationResult } from './operation-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
+import { cancelSpeech, preloadSpeech } from '../speech.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
 import { generateQuestion } from '../questionGenerator.js';
 import { gameState } from '../game.js';
-import { getTranslations } from '../i18n-store.js';
+import { getTranslations, getCurrentLanguage } from '../i18n-store.js';
+import { formatMessage } from './message-format.js';
 import { setSafeComplexFeedback } from '../security-utils.js';
 import {
   toSpokenForm,
-  spokenOperator,
+  toSpokenQuestion,
+  toSpokenGapQuestion,
   preferredScrollBehavior,
   keepNumbersTogether,
 } from '../ui-feedback.js';
@@ -61,17 +64,14 @@ function problemParams(question) {
 }
 
 /**
- * Remplit un gabarit comme le fait i18n-store (première occurrence de chaque clé)
+ * Remplit un gabarit comme le fait translate() : paramètres et accord au pluriel,
+ * dans la langue active
  * @param {string} template
  * @param {Object} params
  * @returns {string}
  */
 function fillTemplate(template, params) {
-  let text = String(template);
-  for (const [key, value] of Object.entries(params)) {
-    text = text.replace(`{${key}}`, value);
-  }
-  return text;
+  return formatMessage(template, params, getCurrentLanguage());
 }
 
 /**
@@ -107,8 +107,9 @@ function problemGroups(question) {
   const index = question.templateIndex ?? findProblemTemplateIndex(question);
   const template = problemTemplates('×')[index];
   if (typeof template !== 'string') return null;
-  const tablePos = template.indexOf('{table}');
-  const numPos = template.indexOf('{num}');
+  // Le paramètre peut porter un pluriel : « {table} » ou « {table, plural, … } »
+  const tablePos = template.search(/\{\s*table\s*[,}]/);
+  const numPos = template.search(/\{\s*num\s*[,}]/);
   if (tablePos < 0 || numPos < 0) return null;
   return tablePos > numPos
     ? { size: question.a, groups: question.b }
@@ -461,6 +462,12 @@ export function buildAnswerOptions(question, count = 4) {
   return shuffle([question.answer, ...plausibleWrongAnswers(question, count - 1)]);
 }
 
+/**
+ * Durée audible du bip de bonne réponse (son « good ») : le « Bravo » part juste après
+ * lui, jamais par-dessus, sans attendre la fin du fichier.
+ */
+export const GOOD_SOUND_MS = 200;
+
 export class GameMode {
   /**
    * Fonction constructor
@@ -518,8 +525,9 @@ export class GameMode {
    */
   async start() {
     try {
-      // Navigation vers l'écran de jeu
-      goToSlide(4);
+      // Navigation vers l'écran de jeu, attendue : elle arrête l'ancien mode, et cet arrêt
+      // couperait l'annonce du nouveau s'il arrivait après elle
+      await goToSlide(4);
       gameState.gameMode = this.modeName;
 
       // Réinitialiser l'état
@@ -550,16 +558,8 @@ export class GameMode {
   stop() {
     this.state.isActive = false;
 
-    // Arrêter la synthèse vocale et les sons en cours
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root && 'speechSynthesis' in Root) {
-      Root.speechSynthesis.cancel();
-    }
+    // Arrêter la voix et les sons en cours
+    cancelSpeech();
     if (AudioManager && typeof AudioManager.stopAll === 'function') {
       AudioManager.stopAll();
     }
@@ -587,6 +587,7 @@ export class GameMode {
     };
     this._continuePending = false;
     this._holdProgress = false;
+    this._queueNextQuestionSpeech = false;
 
     gameState.streak = 0;
   }
@@ -901,6 +902,10 @@ export class GameMode {
     // Une réponse par question : l'explication en cours attend « Continuer »
     if (this._continuePending) return;
 
+    // L'enfant a répondu : la question en cours de lecture s'arrête, aucune phrase en
+    // attente ne part après (même un clip encore en chargement)
+    cancelSpeech();
+
     // Désactiver les boutons
     this.disableOptions();
 
@@ -1040,6 +1045,17 @@ export class GameMode {
   }
 
   /**
+   * Phrase dite après une erreur sur la question en cours : « Presque ! », puis la bonne
+   * réponse (l'explication affichée par showErrorExplanation)
+   * @returns {string|null}
+   */
+  spokenErrorText() {
+    const question = this.state.currentQuestion;
+    if (!question) return null;
+    return `${getTranslation('incorrect')} ${buildErrorExplanation(question).message}`;
+  }
+
+  /**
    * Affiche « Continuer » et suspend l'avance jusqu'à ce que l'enfant l'active.
    * Le focus y est placé après l'événement clavier en cours, pour qu'Entrée
    * sur une réponse ne valide pas aussitôt l'explication.
@@ -1078,6 +1094,8 @@ export class GameMode {
   continueAfterError() {
     if (!this._continuePending) return;
     this.hideContinueButton();
+    // « Continuer » coupe la fin de l'explication
+    cancelSpeech();
 
     if (this.shouldContinue()) {
       this.generateQuestion();
@@ -1093,6 +1111,10 @@ export class GameMode {
    */
   scheduleNextQuestion(isCorrect = true) {
     const delay = isCorrect ? this.config.nextQuestionDelay : this.config.wrongAnswerDelay;
+
+    // Après une bonne réponse, la question suivante attend la fin du « Bravo » au lieu de
+    // le couper ; après une erreur, elle coupe la fin de l'explication (Défi)
+    this._queueNextQuestionSpeech = isCorrect;
 
     // Les modes chronométrés suspendent leur décompte pendant cette lecture
     if (!isCorrect) this.onWrongAnswerPause(delay);
@@ -1366,25 +1388,39 @@ export class GameMode {
   }
 
   /**
-   * Lit la question à voix haute sans jamais donner la réponse
-   * @param {string} [displayed] - Texte affiché, s'il diffère de l'énoncé généré
+   * Texte dit pour la question affichée, sans jamais donner la réponse
+   * @param {string} [displayed] - Question telle qu'elle est affichée
+   * @returns {string|null}
+   */
+  spokenQuestionText(displayed) {
+    const current = this.state.currentQuestion;
+    if (!current) return null;
+    const { operator, a, b, type, question } = current;
+    // Vrai/faux : l'égalité proposée telle quelle, « 8 fois 6 égale 47 »
+    if (type === 'true_false') return toSpokenForm(question);
+    // « 2 × ? = 18 » : « 2 fois combien égale 18 ? », sans la réponse
+    if (type === 'gap') return toSpokenGapQuestion(question);
+    // classic, mcq : « Combien font 7 fois 8 ? » ; problem : l'énoncé tel quel
+    const text = displayed || (question ? String(question) : `${a} ${operator} ${b} = ?`);
+    return toSpokenQuestion(text);
+  }
+
+  /**
+   * Lit la question à voix haute. Après une bonne réponse, elle attend la fin du
+   * « Bravo » (voir scheduleNextQuestion) ; sinon elle coupe la phrase en cours.
+   * @param {string} [displayed] - Question telle qu'elle est affichée
    */
   speakQuestion(displayed) {
-    const current = this.state.currentQuestion;
-    if (!current) return;
-    const { operator, a, b, type, question } = current;
-
-    if (type === 'true_false') {
-      // Lire exactement l'énoncé affiché (ex: "8 × 6 = 47")
-      speak(toSpokenForm(question));
-    } else if (type === 'gap') {
-      // Pour "2 × ? = 18", ne dire que la partie connue
-      speak(`${a} ${spokenOperator(operator)}`);
-    } else {
-      // Pour classic, mcq, problem: lire l'énoncé sans donner la réponse
-      const text = displayed || (question ? String(question) : `${a} ${operator} ${b} = ?`);
-      speak(toSpokenForm(text));
-    }
+    const queued = this._queueNextQuestionSpeech === true;
+    this._queueNextQuestionSpeech = false;
+    const text = this.spokenQuestionText(displayed);
+    if (!text) return;
+    if (queued) speak(text, { queue: true });
+    else speak(text);
+    // La phrase d'une erreur se charge d'avance (voix enregistrée), après le démarrage de
+    // la question : dite dès la réponse, elle n'attend pas le réseau
+    const errorText = this.spokenErrorText();
+    if (errorText) preloadSpeech([errorText]);
   }
 
   /**

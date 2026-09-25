@@ -18,6 +18,7 @@ import {
   getArcadeScoresMemory,
   resetArcadeScoresMemory,
 } from './utils-es6.js';
+import { cancelSpeech } from './speech.js';
 import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
 // showArcadeMessage import not needed here
 import { gameState as globalGameState } from './game.js';
@@ -80,29 +81,23 @@ export function arcadeKeyUp(e) {
  * @param {{persist?: boolean}} [options] - persist: false pour réafficher l'écran
  *   (après une remise à zéro) sans réenregistrer le score ni le relire à voix haute
  */
-/** Coupe la voix en cours : l'écran de fin ne parle pas par-dessus la partie. */
-function cancelSpeech() {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  try {
-    window.speechSynthesis.cancel();
-  } catch {
-    /* ignoré volontairement */
-  }
-}
-
 /**
  * Phrase de fin : encouragement à zéro point, félicitations chiffrées sinon.
+ * La voix ne dit pas le score : il reste affiché, et chaque score serait une phrase à
+ * enregistrer à part.
  * @param {number} score
- * @returns {{key: string, text: string}}
+ * @returns {{key: string, text: string, spoken: string}}
  */
 function gameOverMessage(score) {
   if (score === 0) {
-    return { key: 'arcade_try_again', text: getTranslation('arcade_try_again') };
+    const text = getTranslation('arcade_try_again');
+    return { key: 'arcade_try_again', text, spoken: text };
   }
   // Le score est dynamique : la phrase se compose, elle ne porte pas data-translate
   return {
     key: 'arcade_final_score_message',
     text: `${getTranslation('arcade_final_congrats')} ${score} ${getTranslation('points_label')}`,
+    spoken: getTranslation('arcade_game_over_spoken'),
   };
 }
 
@@ -111,16 +106,17 @@ export function showArcadeGameOver(score, { persist = true } = {}) {
   // écouteurs (arcade:stop). Sinon, à la fin du temps, la partie continuait sans être
   // vue : messages sur l'écran de fin, second enregistrement du score, touches avalées.
   stopArcadeMode();
+  // L'écran de fin ne parle pas par-dessus la partie
   cancelSpeech();
 
   // Historique des scores, par utilisateur et par mode
   const mode = globalGameState?.gameMode ?? 'arcade';
   if (persist) saveScoreForMode(mode, score);
   const arcadeScores = getScoresForMode(mode);
-  const { key: endMessageKey, text: endMessage } = gameOverMessage(score);
+  const { key: endMessageKey, text: endMessage, spoken } = gameOverMessage(score);
 
   renderGameOverScreen({ mode, score, endMessageKey, endMessage, arcadeScores, persist });
-  if (persist && isVoiceEnabled()) speak(endMessage);
+  if (persist && isVoiceEnabled()) speak(spoken);
 }
 
 /**

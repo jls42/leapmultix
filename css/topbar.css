@@ -61,6 +61,11 @@
   clip-path: inset(50%);
 }
 
+/* Première visite : état de la voix pas encore décidé (js/voice-clips.js) */
+.top-bar .voice-toggle[data-voice-pending] {
+  visibility: hidden;
+}
+
 /* Voix active : bouton enfoncé (fond teinté, contour d'action) */
 .top-bar .voice-toggle[aria-pressed='true'] {
   background: var(--color-action-tint);

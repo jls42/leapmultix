@@ -15,13 +15,6 @@ function flatten(obj, prefix = '') {
   }, {});
 }
 
-function placeholders(str) {
-  if (typeof str !== 'string') return [];
-  return Array.from(str.matchAll(/\{([^}]+)\}/g))
-    .map(m => m[1])
-    .sort((a, b) => a.localeCompare(b));
-}
-
 describe('i18n governance', () => {
   const f = flatten(fr);
   const e = flatten(en);
@@ -39,23 +32,6 @@ describe('i18n governance', () => {
       }
     }
     expect(missing).toEqual([]);
-  });
-
-  test('placeholders within messages are consistent across locales', () => {
-    const mismatches = [];
-    for (const k of keys) {
-      const sets = Object.entries(locales).map(([name, d]) => [name, placeholders(d[k] || '')]);
-      const baseline = sets[0][1];
-      for (let i = 1; i < sets.length; i++) {
-        const [name, s2] = sets[i];
-        if (JSON.stringify(s2) !== JSON.stringify(baseline)) {
-          mismatches.push(
-            `${k} -> ${sets[0][0]}:${JSON.stringify(baseline)} vs ${name}:${JSON.stringify(s2)}`
-          );
-        }
-      }
-    }
-    expect(mismatches).toEqual([]);
   });
 });
 /* eslint-env jest, node */

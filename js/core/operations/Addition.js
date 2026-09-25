@@ -5,6 +5,16 @@
 
 import { Operation } from './Operation.js';
 
+/** Bornes des termes et du résultat, par difficulté (incluses) */
+const TERM_CONSTRAINTS = {
+  easy: { minA: 1, maxA: 5, minB: 1, maxB: 5, maxResult: 10 },
+  medium: { minA: 1, maxA: 10, minB: 1, maxB: 10, maxResult: 20 },
+  hard: { minA: 1, maxA: 20, minB: 1, maxB: 20, maxResult: 40 },
+};
+
+/** Entiers de min à max, bornes incluses */
+const between = (min, max) => Array.from({ length: max - min + 1 }, (_, i) => min + i);
+
 export class Addition extends Operation {
   constructor() {
     super();
@@ -31,31 +41,7 @@ export class Addition extends Operation {
    * @returns {{ a: number, b: number }}
    */
   generateOperands(difficulty = 'medium') {
-    const constraints = {
-      easy: {
-        minA: 1,
-        maxA: 5,
-        minB: 1,
-        maxB: 5,
-        maxResult: 10,
-      },
-      medium: {
-        minA: 1,
-        maxA: 10,
-        minB: 1,
-        maxB: 10,
-        maxResult: 20,
-      },
-      hard: {
-        minA: 1,
-        maxA: 20,
-        minB: 1,
-        maxB: 20,
-        maxResult: 40,
-      },
-    };
-
-    const c = constraints[difficulty] || constraints.medium;
+    const c = TERM_CONSTRAINTS[difficulty] || TERM_CONSTRAINTS.medium;
     let a, b;
 
     // Boucle jusqu'à obtenir un résultat valide
@@ -78,6 +64,21 @@ export class Addition extends Operation {
     } while (a + b > c.maxResult);
 
     return { a, b };
+  }
+
+  /**
+   * Toutes les paires que generateOperands peut tirer (le repli après 1000 essais,
+   * les deux minimums, en fait partie)
+   * @param {string} difficulty - 'easy', 'medium', ou 'hard'
+   * @returns {Array<{a: number, b: number}>}
+   */
+  enumerateOperands(difficulty = 'medium') {
+    const c = TERM_CONSTRAINTS[difficulty] || TERM_CONSTRAINTS.medium;
+    return between(c.minA, c.maxA).flatMap(a =>
+      between(c.minB, c.maxB)
+        .filter(b => a + b <= c.maxResult)
+        .map(b => ({ a, b }))
+    );
   }
 
   /**

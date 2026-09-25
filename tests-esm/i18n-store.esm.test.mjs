@@ -88,3 +88,24 @@ describe('i18n-store : une clé à variantes', () => {
     expect(translate('salut', { nom: 'Zoé' })).toBe('Salut Zoé !');
   });
 });
+
+describe('i18n-store : accord au pluriel', () => {
+  afterEach(() => {
+    setTranslations({});
+    setCurrentLanguage('fr');
+  });
+
+  test('accorde selon les règles de la langue active', () => {
+    setTranslations({ boites: '{n, plural, one {# boîte} other {# boîtes}}' });
+    setCurrentLanguage('fr');
+    expect(translate('boites', { n: 0 })).toBe('0 boîte');
+    setCurrentLanguage('en');
+    expect(translate('boites', { n: 0 })).toBe('0 boîtes');
+    expect(translate('boites', { n: 1 })).toBe('1 boîte');
+  });
+
+  test('remplace chaque occurrence d’un paramètre', () => {
+    setTranslations({ echo: '{x}, encore {x}' });
+    expect(translate('echo', { x: 'oui' })).toBe('oui, encore oui');
+  });
+});

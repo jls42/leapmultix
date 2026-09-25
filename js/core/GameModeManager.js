@@ -11,6 +11,7 @@
 
 import { goToSlide } from '../slides.js';
 import { AudioManager } from '../core/audio.js';
+import { cancelSpeech } from '../speech.js';
 import { getTranslation, showMessage } from '../utils-es6.js';
 
 export class GameModeManager {
@@ -191,17 +192,7 @@ export class GameModeManager {
     if (!this.currentMode) return;
 
     // Annuler toute narration et sons restants
-    {
-      const Root =
-        typeof globalThis !== 'undefined'
-          ? globalThis
-          : typeof window !== 'undefined'
-            ? window
-            : undefined;
-      if (Root && 'speechSynthesis' in Root) {
-        Root.speechSynthesis.cancel();
-      }
-    }
+    cancelSpeech();
     try {
       AudioManager.stopAll();
     } catch {

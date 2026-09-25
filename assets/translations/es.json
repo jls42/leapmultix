@@ -158,6 +158,8 @@
   "good_job": "¡Buen trabajo!",
   "gradient_bg": "Degradado",
   "high_contrast_mode": "Alto contraste",
+  "recorded_voice_toggle": "Voz grabada",
+  "recorded_voice_hint": "Voz sintética creada con ElevenLabs. Desmarcada, el juego lee con la voz del dispositivo.",
   "hint": "Pista",
   "incorrect": "¡Casi!",
   "incorrect_answer_was_false": "La respuesta correcta es Falso.",
@@ -318,6 +320,7 @@
   "arcade_memory_title": "MultiMemory",
   "arcade_life_lost": "Vida perdida",
   "arcade_try_again": "¡Inténtalo de nuevo!",
+  "arcade_game_over_spoken": "¡Muy bien, buena partida!",
   "arcade_load_error": "No se pudo iniciar el juego. Inténtalo de nuevo.",
   "level_2_desc": "Duplica cada paso: domina la tabla del 2 para cruzar el río brillante.",
   "level_3_desc": "Sigue el ritmo 5, 10, 15... la tabla del 5 ilumina el camino del mercado.",
@@ -352,19 +355,19 @@
   "stars_label": "Estrellas",
   "no_scores_yet": "Sin puntuaciones",
   "problem_templates": [
-    "Si tengo {num} cajas de {table} manzanas, ¿cuántas manzanas tengo?",
-    "Hay {table} grupos de {num} niños. ¿Cuántos niños en total?",
-    "Un cohete hace {table} saltos de {num} casillas. ¿Cuál es la distancia total?"
+    "Si tengo {num, plural, one {# caja} other {# cajas}} de {table, plural, one {# manzana} other {# manzanas}}, ¿cuántas manzanas tengo?",
+    "Hay {table, plural, one {# grupo} other {# grupos}} de {num, plural, one {# niño} other {# niños}}. ¿Cuántos niños en total?",
+    "Un cohete hace {table, plural, one {# salto} other {# saltos}} de {num, plural, one {# casilla} other {# casillas}}. ¿Cuál es la distancia total?"
   ],
   "problem_templates_addition": [
-    "Tengo {a} chocolates en mi cesta y añado {b} más. ¿Cuántos chocolates tengo?",
-    "Hay {a} pájaros en una rama, luego {b} pájaros se unen. ¿Cuántos pájaros en total?",
-    "Tienes {a} canicas rojas y {b} canicas azules. ¿Cuántas canicas tienes en total?"
+    "Tengo {a, plural, one {# chocolate} other {# chocolates}} en mi cesta y añado {b} más. ¿Cuántos chocolates tengo?",
+    "Hay {a, plural, one {# pájaro} other {# pájaros}} en una rama, luego {b, plural, one {# pájaro se une} other {# pájaros se unen}}. ¿Cuántos pájaros en total?",
+    "Tienes {a, plural, one {# canica roja} other {# canicas rojas}} y {b, plural, one {# canica azul} other {# canicas azules}}. ¿Cuántas canicas tienes en total?"
   ],
   "problem_templates_subtraction": [
-    "Tengo {a} caramelos y me como {b}. ¿Cuántos caramelos me quedan?",
-    "Hay {a} globos y {b} explotan. ¿Cuántos globos quedan?",
-    "Tienes {a} lápices y le das {b} a tu amigo. ¿Cuántos lápices te quedan?"
+    "Tengo {a, plural, one {# caramelo} other {# caramelos}} y me como {b}. ¿Cuántos caramelos me quedan?",
+    "Hay {a, plural, one {# globo} other {# globos}} y {b, plural, one {# explota} other {# explotan}}. ¿Cuántos globos quedan?",
+    "Tienes {a, plural, one {# lápiz} other {# lápices}} y le das {b} a tu amigo. ¿Cuántos lápices te quedan?"
   ],
   "problem_templates_division": [
     "Tengo {a} caramelos para compartir equitativamente entre {b} amigos. ¿Cuántos caramelos recibirá cada amigo?",
@@ -636,6 +639,8 @@
   "speech_minus": "menos",
   "speech_divided_by": "dividido entre",
   "speech_equals": "es igual a",
+  "speech_question": "¿Cuánto es {expression}?",
+  "speech_gap_question": "¿{a} {operator} cuánto es {result}?",
   "close_video": "Cerrar el vídeo",
   "arcade_game_area_label": "Zona de juego",
   "arcade_game_screen_label": "Pantalla de juego",

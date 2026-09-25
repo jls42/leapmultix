@@ -559,8 +559,7 @@ export class AdventureMode extends GameMode {
     }
 
     // Erreur : explication calme, lue à voix haute, qui attend « Continuer »
-    const spoken = this.showErrorExplanation();
-    if (spoken) speak(`${spoken.lead} ${spoken.message}`);
+    if (this.showErrorExplanation()) speak(this.spokenErrorText());
     this.showContinueButton();
   }
 

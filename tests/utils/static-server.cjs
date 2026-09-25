@@ -17,9 +17,61 @@ const MIME_TYPES = {
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
   '.mp4': 'video/mp4',
+  '.mp3': 'audio/mpeg',
 };
 
-async function startStaticServer(networkIdleSetting = 'networkidle2') {
+function contentType(filePath) {
+  return MIME_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
+}
+
+/**
+ * Voix enregistrée : /voice/ se sert depuis un dossier de test (options.voiceDir), avec un
+ * vrai 404 pour un clip absent, jamais le repli sur index.html
+ */
+async function serveVoice(req, res, pathname, voiceDir) {
+  const filePath = voiceDir && path.join(voiceDir, pathname.slice('/voice/'.length));
+  let data;
+  try {
+    // Le séparateur final écarte un dossier voisin qui commencerait par le même nom
+    if (!filePath?.startsWith(voiceDir + path.sep)) throw new Error('hors du dossier');
+    data = await fs.readFile(filePath);
+  } catch {
+    res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found');
+    return;
+  }
+  res.writeHead(200, { 'Content-Type': contentType(filePath) });
+  res.end(req.method === 'HEAD' ? undefined : data);
+}
+
+/** Fichier demandé du site : index.html pour la racine ou un dossier */
+function sitePath(pathname) {
+  if (!pathname || pathname === '/') return '/index.html';
+  return pathname.endsWith('/') ? `${pathname}index.html` : pathname;
+}
+
+/** Page du site ; un fichier absent retombe sur index.html (navigation par diapositives) */
+async function serveSite(req, res, pathname, rootDir) {
+  let filePath = path.join(rootDir, sitePath(pathname));
+  if (!filePath.startsWith(rootDir + path.sep)) {
+    res.writeHead(403).end();
+    return;
+  }
+  let data;
+  try {
+    data = await fs.readFile(filePath);
+  } catch {
+    filePath = path.join(rootDir, 'index.html');
+    data = await fs.readFile(filePath);
+  }
+  res.writeHead(200, { 'Content-Type': contentType(filePath) });
+  res.end(req.method === 'HEAD' ? undefined : data);
+}
+
+/**
+ * @param {string} [networkIdleSetting]
+ * @param {{voiceDir?: string}} [options] - voiceDir : dossier servi sous /voice/
+ */
+async function startStaticServer(networkIdleSetting = 'networkidle2', options = {}) {
   if (process.env.E2E_BASE_URL) {
     const url = process.env.E2E_BASE_URL;
     const waitUntil = url.startsWith('http') ? networkIdleSetting : 'load';
@@ -39,38 +91,9 @@ async function startStaticServer(networkIdleSetting = 'networkidle2') {
 
     try {
       const requestUrl = new URL(req.url, 'http://localhost');
-      let pathname = decodeURIComponent(requestUrl.pathname || '/');
-      if (!pathname || pathname === '/') {
-        pathname = '/index.html';
-      }
-      if (pathname.endsWith('/')) {
-        pathname += 'index.html';
-      }
-
-      let filePath = path.join(rootDir, pathname);
-      if (!filePath.startsWith(rootDir)) {
-        res.writeHead(403).end();
-        return;
-      }
-
-      let data;
-      try {
-        data = await fs.readFile(filePath);
-      } catch {
-        filePath = path.join(rootDir, 'index.html');
-        data = await fs.readFile(filePath);
-      }
-
-      const ext = path.extname(filePath).toLowerCase();
-      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': contentType });
-
-      if ((req.method || '') === 'HEAD') {
-        res.end();
-        return;
-      }
-
-      res.end(data);
+      const pathname = decodeURIComponent(requestUrl.pathname || '/');
+      if (pathname.startsWith('/voice/')) await serveVoice(req, res, pathname, options.voiceDir);
+      else await serveSite(req, res, pathname, rootDir);
     } catch (error) {
       res.writeHead(500).end(String(error));
     }
