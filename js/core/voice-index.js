@@ -25,23 +25,27 @@ const NAME = /^[a-z0-9][a-z0-9-]{0,31}$/;
 const VERSION = /^[a-z0-9][a-z0-9.-]{0,63}$/;
 const LANG = /^[a-z]{2}$/;
 
+const isObject = value => Boolean(value) && typeof value === 'object';
+const matches = (value, pattern) => typeof value === 'string' && pattern.test(value);
+
+/** Règles d'une entrée de langue, une par champ */
+const LANGUAGE_RULES = [
+  ({ voice }) => matches(voice, NAME),
+  ({ version }) => matches(version, VERSION),
+  ({ format }) => format === 'mp3',
+  ({ audience }) => VOICE_AUDIENCES.includes(audience),
+  ({ defaultOn }) => typeof defaultOn === 'boolean',
+];
+
 /**
  * Entrée de langue validée, ou null
  * @param {unknown} entry
  * @returns {{voice: string, version: string, format: 'mp3', audience: string, defaultOn: boolean}|null}
  */
 function parseLanguage(entry) {
-  if (!entry || typeof entry !== 'object') return null;
+  if (!isObject(entry) || !LANGUAGE_RULES.every(rule => rule(entry))) return null;
   const { voice, version, format, audience, defaultOn } = entry;
-  const valid =
-    typeof voice === 'string' &&
-    NAME.test(voice) &&
-    typeof version === 'string' &&
-    VERSION.test(version) &&
-    format === 'mp3' &&
-    VOICE_AUDIENCES.includes(audience) &&
-    typeof defaultOn === 'boolean';
-  return valid ? { voice, version, format, audience, defaultOn } : null;
+  return { voice, version, format, audience, defaultOn };
 }
 
 /**
@@ -51,8 +55,9 @@ function parseLanguage(entry) {
  * @returns {{schema: string, languages: Object<string, Object>}|null}
  */
 export function parseVoiceIndex(data) {
-  if (!data || typeof data !== 'object' || data.schema !== VOICE_KEY_SCHEMA) return null;
-  if (!data.languages || typeof data.languages !== 'object') return null;
+  if (!isObject(data) || data.schema !== VOICE_KEY_SCHEMA || !isObject(data.languages)) {
+    return null;
+  }
   const languages = {};
   for (const [lang, entry] of Object.entries(data.languages)) {
     const parsed = LANG.test(lang) ? parseLanguage(entry) : null;

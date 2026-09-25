@@ -107,7 +107,7 @@ export async function fetchVoiceIndex(base, fetchImpl = fetch) {
 const isMp3Response = res => (res.headers.get('content-type') ?? '').startsWith('audio/mpeg');
 
 function silenceBlob() {
-  const bytes = Uint8Array.from(atob(SILENCE_MP3), char => char.charCodeAt(0));
+  const bytes = Uint8Array.from(atob(SILENCE_MP3), char => char.codePointAt(0));
   return new Blob([bytes], { type: 'audio/mpeg' });
 }
 
@@ -211,19 +211,20 @@ export function createClipEngine({
     }
   }
 
+  /**
+   * audio.play(), appelé tout de suite, sous forme de promesse : un refus immédiat
+   * (exception) et un refus différé (promesse rejetée) arrivent par le même chemin
+   */
+  function startPlayback() {
+    return new Promise(resolve => resolve(audio.play()));
+  }
+
   function play(phrase, blob) {
     owner = phrase;
     phrase.blobUrl = createObjectURL(blob);
     audio.src = phrase.blobUrl;
     applyVolume(phrase.handlers.volume ?? 1);
-    let started;
-    try {
-      started = audio.play();
-    } catch {
-      fallBack(phrase, 'refused');
-      return;
-    }
-    Promise.resolve(started).catch(() => {
+    startPlayback().catch(() => {
       if (owner === phrase && !phrase.started) fallBack(phrase, 'refused');
     });
   }
@@ -309,29 +310,26 @@ export function createClipEngine({
       // Une phrase tient l'élément : ne pas le toucher (ce serait couper son clip). Un clip
       // qui joue prouve que l'élément est déjà déverrouillé.
       if (owner) return Promise.resolve(owner.started);
-      let url;
-      try {
+      let url = null;
+      return new Promise(resolve => {
         url = createObjectURL(silenceBlob());
         audio.src = url;
-        return Promise.resolve(audio.play()).then(
+        resolve(audio.play());
+      })
+        .then(
           () => {
             // Un clip a pu prendre l'élément entre-temps : ne pas l'arrêter
             if (!owner) {
               audio.pause();
               audio.removeAttribute('src');
             }
-            revokeObjectURL(url);
             return true;
           },
-          () => {
-            revokeObjectURL(url);
-            return false;
-          }
-        );
-      } catch {
-        if (url) revokeObjectURL(url);
-        return false;
-      }
+          () => false
+        )
+        .finally(() => {
+          if (url) revokeObjectURL(url);
+        });
     },
 
     /**
@@ -505,11 +503,19 @@ function createSharedAudio() {
   return new Audio();
 }
 
+/** Ce que la page dit de la voix : paramètre ?voix=, hôte, balise de l'adresse de base */
+function pageVoiceContext() {
+  const location = globalThis.location;
+  return {
+    param: new URLSearchParams(location?.search ?? '').get('voix'),
+    hostname: location?.hostname ?? '',
+    meta: globalThis.document?.querySelector(`meta[name="${META_NAME}"]`)?.content ?? null,
+  };
+}
+
 function defaultDeps() {
-  const params = new URLSearchParams(globalThis.location?.search ?? '');
-  const hostname = globalThis.location?.hostname ?? '';
-  applyVoiceParam(params.get('voix'), { hostname });
-  const meta = globalThis.document?.querySelector(`meta[name="${META_NAME}"]`)?.content ?? null;
+  const { param, hostname, meta } = pageVoiceContext();
+  applyVoiceParam(param, { hostname });
   const localMark = Boolean(Storage.get(VOICE_STORAGE_KEYS.local, false));
   return {
     base: resolveVoiceBase({ meta, localMark, hostname }),

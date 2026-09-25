@@ -118,16 +118,26 @@ function formatArgument(block, params, lang) {
   if (simple) {
     return Object.hasOwn(params, simple[1]) ? String(params[simple[1]]) : block;
   }
+  return formatPlural(inner, params, lang) ?? block;
+}
+
+/**
+ * Valeur d'un bloc pluriel « n, plural, … » (sans ses accolades)
+ * @returns {string|null} null si le bloc ne se remplit pas
+ */
+function formatPlural(inner, params, lang) {
   const plural = PLURAL_ARGUMENT.exec(inner);
-  if (!plural || !Object.hasOwn(params, plural[1])) return block;
+  if (!plural || !Object.hasOwn(params, plural[1])) return null;
   const cases = parsePluralCases(inner.slice(plural[0].length));
-  if (!cases) return block;
+  if (!cases) return null;
   const value = params[plural[1]];
-  const count = Number(value);
-  const chosen =
-    cases.get(`=${count}`) ?? cases.get(pluralCategory(count, lang)) ?? cases.get('other');
-  if (chosen === undefined) return block;
-  return formatBranch(chosen, String(value), params, lang);
+  const chosen = choosePluralCase(cases, Number(value), lang);
+  return chosen === undefined ? null : formatBranch(chosen, String(value), params, lang);
+}
+
+/** Branche d'un pluriel : cas exact (=n), puis catégorie de la langue, puis other */
+function choosePluralCase(cases, count, lang) {
+  return cases.get(`=${count}`) ?? cases.get(pluralCategory(count, lang)) ?? cases.get('other');
 }
 
 /**
@@ -162,22 +172,33 @@ export function formatMessage(template, params = {}, lang = 'fr') {
  * @param {Set<string>} names
  */
 function collectArguments(text, names) {
+  for (const inner of blocksOf(text)) collectBlock(inner, names);
+}
+
+/** Contenus (sans accolades) des blocs {…} de premier niveau d'un texte, dans l'ordre */
+function* blocksOf(text) {
   let index = 0;
   while (index < text.length) {
     const open = text.indexOf('{', index);
     const close = open < 0 ? -1 : matchingBrace(text, open);
     if (close < 0) return;
-    const inner = text.slice(open + 1, close);
-    const simple = SIMPLE_ARGUMENT.exec(inner);
-    const plural = simple ? null : PLURAL_ARGUMENT.exec(inner);
-    if (simple) names.add(simple[1]);
-    if (plural) {
-      names.add(plural[1]);
-      const cases = parsePluralCases(inner.slice(plural[0].length));
-      for (const body of cases?.values() ?? []) collectArguments(body, names);
-    }
+    yield text.slice(open + 1, close);
     index = close + 1;
   }
+}
+
+/** Paramètres d'un bloc : son nom, et ceux des branches d'un pluriel */
+function collectBlock(inner, names) {
+  const simple = SIMPLE_ARGUMENT.exec(inner);
+  if (simple) {
+    names.add(simple[1]);
+    return;
+  }
+  const plural = PLURAL_ARGUMENT.exec(inner);
+  if (!plural) return;
+  names.add(plural[1]);
+  const cases = parsePluralCases(inner.slice(plural[0].length));
+  for (const body of cases?.values() ?? []) collectArguments(body, names);
 }
 
 /**

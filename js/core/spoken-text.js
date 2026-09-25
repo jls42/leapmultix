@@ -98,6 +98,17 @@ export function normalizeSpokenText(text) {
     .trim();
 }
 
+// Constantes de cyrb53. Tout entier inférieur à 2^53 est exact en double : PMD (Codacy) lit
+// ces littéraux comme des flottants 32 bits et croit à tort qu'ils changent de valeur à
+// l'exécution. Faux positif, écarté ligne par ligne.
+const SEED_1 = 0xdeadbeef; // NOPMD - entier exact en double
+const SEED_2 = 0x41c6ce57; // NOPMD - entier exact en double
+const PRIME_1 = 2654435761; // NOPMD - entier exact en double
+const PRIME_2 = 1597334677; // NOPMD - entier exact en double
+const MIX_1 = 2246822507; // NOPMD - entier exact en double
+const MIX_2 = 3266489909; // NOPMD - entier exact en double
+const TWO_POW_32 = 4294967296; // NOPMD - entier exact en double
+
 /**
  * Empreinte cyrb53 (53 bits) d'une chaîne, calculée sur ses unités UTF-16.
  * Algorithme de bryc, versé au domaine public.
@@ -105,18 +116,19 @@ export function normalizeSpokenText(text) {
  * @returns {number}
  */
 function cyrb53(str) {
-  let h1 = 0xdeadbeef;
-  let h2 = 0x41c6ce57;
+  let h1 = SEED_1;
+  let h2 = SEED_2;
   for (let i = 0; i < str.length; i++) {
-    const ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
+    // Unités UTF-16, pas points de code : c'est la définition du schéma d'empreinte
+    const ch = str.charCodeAt(i); // NOSONAR - codePointAt changerait les empreintes
+    h1 = Math.imul(h1 ^ ch, PRIME_1);
+    h2 = Math.imul(h2 ^ ch, PRIME_2);
   }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
-  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+  h1 = Math.imul(h1 ^ (h1 >>> 16), MIX_1);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), MIX_2);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), MIX_1);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), MIX_2);
+  return TWO_POW_32 * (2097151 & h2) + (h1 >>> 0);
 }
 
 /** Version du schéma d'empreinte : elle change si la normalisation ou le calcul change */
