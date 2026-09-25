@@ -29,10 +29,20 @@ describe('Ancre d’un titre, comme GitHub', () => {
   });
 
   test('doublons suffixés, commentaires des blocs de code ignorés', () => {
-    const text = ['# Titre', '```bash', '# Pas un titre', '```', '## Titre', '### Titre'].join(
+    const text = ['# Titre', '```bash', '# Pas un titre', '```', '## Titre   ', '### Titre'].join(
       '\n'
     );
     expect(headingAnchors(text)).toEqual(['titre', 'titre-1', 'titre-2']);
+  });
+
+  test('entrées pathologiques traitées en temps linéaire (pas de retour arrière)', () => {
+    const start = performance.now();
+    slugify('['.repeat(50000));
+    slugify(`[a](${'('.repeat(50000)}`);
+    // Une longue suite d'espaces au milieu d'un titre : chaque essai de la fin de ligne la
+    // reparcourait
+    headingAnchors(`## x${' '.repeat(50000)}y`);
+    expect(performance.now() - start).toBeLessThan(1000);
   });
 });
 
