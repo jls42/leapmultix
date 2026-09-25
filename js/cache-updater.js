@@ -4,7 +4,7 @@
  */
 
 // Version globale de l'application - doit correspondre à sw.js
-export const APP_VERSION = 'v23';
+export const APP_VERSION = 'v24';
 export const VERSION_PARAM = `v=${APP_VERSION}`;
 
 const runtime = globalThis;
@@ -238,18 +238,35 @@ export function clearCacheAndReload() {
 
 // Fonction développement exposée globalement
 
+function isSameOrigin(src, origin) {
+  try {
+    return new URL(src, origin).origin === origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Les scripts du site mêlent-ils adresses versionnées (?v=) et non versionnées ? Seuls
+ * comptent ceux de notre origine : un script externe (Plausible) n'a jamais de version,
+ * et le prendre en compte déclenchait un nettoyage complet à chaque visite depuis que
+ * deploy.sh versionne toutes les adresses du site (v23).
+ * @param {Iterable<{src: string}>} scripts
+ * @param {string} origin
+ * @returns {boolean}
+ */
+export function hasMixedScriptVersions(scripts, origin) {
+  const own = Array.from(scripts).filter(
+    script => script.src.includes('.js') && isSameOrigin(script.src, origin)
+  );
+  const versioned = own.filter(script => script.src.includes('?v=')).length;
+  return versioned > 0 && versioned < own.length;
+}
+
 // Nettoyage automatique seulement si détection de problème de cache
 function autoDetectCacheIssues() {
-  // Vérifier si on a des scripts obsolètes en mémoire
-  const scripts = Array.from(document.querySelectorAll('script[src]'));
-  const hasVersionedScripts = scripts.some(script => script.src.includes('?v='));
-  const hasUnversionedScripts = scripts.some(
-    script =>
-      !script.src.includes('?v=') && !script.src.includes('localhost') && script.src.includes('.js')
-  );
-
-  // Si on a un mélange de scripts versionnés et non-versionnés, nettoyer
-  if (hasVersionedScripts && hasUnversionedScripts) {
+  const origin = runtime.location?.origin ?? '';
+  if (hasMixedScriptVersions(document.querySelectorAll('script[src]'), origin)) {
     console.warn('🔧 Détection de problème de cache - Nettoyage automatique');
     forceDevCacheClear();
   }
