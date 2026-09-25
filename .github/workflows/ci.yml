@@ -94,10 +94,11 @@ jobs:
           S3_BUCKET: ${{ vars.S3_BUCKET }}
           CLOUDFRONT_DISTRIB: ${{ vars.CLOUDFRONT_DISTRIB }}
           PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
+          VOICE_BASE: ${{ vars.VOICE_BASE }}
           ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
         run: |
           manquantes=''
-          for nom in S3_BUCKET CLOUDFRONT_DISTRIB PLAUSIBLE_DOMAIN ROLE_ARN; do
+          for nom in S3_BUCKET CLOUDFRONT_DISTRIB PLAUSIBLE_DOMAIN VOICE_BASE ROLE_ARN; do
             [ -n "${!nom}" ] || manquantes="$manquantes $nom"
           done
           if [ -n "$manquantes" ]; then
@@ -159,6 +160,7 @@ jobs:
           TF_VAR_leapmultixs3bucket: ${{ vars.S3_BUCKET }}
           CLOUDFRONT_DISTRIB: ${{ vars.CLOUDFRONT_DISTRIB }}
           PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
+          VOICE_BASE: ${{ vars.VOICE_BASE }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           # deploy.config n'est pas versionné : deploy.sh retombe alors sur les

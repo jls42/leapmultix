@@ -106,6 +106,19 @@ else
     PLAUSIBLE_DOMAIN=""
 fi
 
+# Voix enregistrée (optionnel) : adresse de base des clips, écrite dans index.html.
+# Seule valeur acceptée : /voice/ (servi par CloudFront depuis le bucket des voix). Sans
+# elle, le jeu garde la voix de l'appareil.
+if [[ -n "$VOICE_BASE" ]]; then
+    if [[ "$VOICE_BASE" != "/voice/" ]]; then
+        echo -e "${RED}❌ VOICE_BASE doit valoir /voice/ (reçu : $VOICE_BASE)${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}🔊 Voix enregistrée : $VOICE_BASE${NC}"
+else
+    echo -e "${YELLOW}⚠️  VOICE_BASE non définie - voix enregistrée désactivée${NC}"
+fi
+
 # Vérification de CloudFront (optionnel)
 if [[ -n "$CLOUDFRONT_DISTRIB" ]]; then
     echo -e "${GREEN}☁️  Distribution CloudFront: $CLOUDFRONT_DISTRIB${NC}"
@@ -138,6 +151,7 @@ rsync -av \
   --include='favicon.png' \
   --include='robots.txt' \
   --include='sitemap.xml' \
+  --exclude='assets/voice/***' \
   --include='assets/***' \
   --include='css/***' \
   --include='js/***' \
@@ -186,6 +200,18 @@ else
     echo -e "${YELLOW}   ⚠️  Scripts Plausible supprimés (pas de domaine)${NC}"
 fi
 
+# Adresse de base de la voix enregistrée (balise vide dans le dépôt)
+if [[ -n "$VOICE_BASE" ]]; then
+    VOICE_META_EMPTY='<meta name="leapmultix-voice-base" content="" />'
+    VOICE_META='<meta name="leapmultix-voice-base" content="/voice/" />'
+    sed -i.bak "s|$VOICE_META_EMPTY|$VOICE_META|" "$TEMP_DIR/index.html" && rm "$TEMP_DIR/index.html.bak"
+    if ! grep -qF "$VOICE_META" "$TEMP_DIR/index.html"; then
+        echo -e "${RED}❌ Balise leapmultix-voice-base introuvable dans index.html${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}   ✅ Voix enregistrée configurée${NC}"
+fi
+
 # Autres remplacements potentiels peuvent être ajoutés ici
 # sed -i "s/{{AUTRE_PLACEHOLDER}}/valeur/g" "$TEMP_DIR/fichier.html"
 
@@ -216,7 +242,8 @@ SYNC_CMD="aws s3 sync --size-only --delete \
   --include \"assets/*\" \
   --include \"css/*\" \
   --include \"js/*\" \
-  --include \"img/*\""
+  --include \"img/*\" \
+  --exclude \"assets/voice/*\""
 
 if [[ "$DRY_RUN" == "true" ]]; then
     echo -e "${YELLOW}🔍 Mode dry-run - Commande qui serait exécutée:${NC}"
@@ -241,8 +268,10 @@ else
         # On les force, avec le type que S3 leur donnait ; ils pèsent quelques
         # kilo-octets.
         echo -e "${BLUE}📌 Envoi forcé des fichiers modifiés à taille constante...${NC}"
+        # - index.html : la balise de la voix enregistrée peut changer sans changer la
+        #   taille du fichier.
         for entree in sw.js:text/javascript js/cache-updater.js:text/javascript \
-            sitemap.xml:application/xml; do
+            sitemap.xml:application/xml index.html:text/html; do
             fichier="${entree%%:*}"
             type_mime="${entree#*:}"
             if [[ -f "$TEMP_DIR/$fichier" ]]; then
