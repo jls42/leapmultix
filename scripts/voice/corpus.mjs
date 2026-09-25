@@ -266,10 +266,11 @@ function addErrorPhrases(ctx) {
 function addDiscoveryChoicePhrases(ctx) {
   const { t, add } = ctx;
   DISCOVERY_TABLES.forEach(table => add('découverte', `${t('table_of')} ${table}`));
+  const levelNames = LEVELS.map(level => t(`difficulty_${level}`));
   for (const operator of ['+', '−', '÷']) {
     const { name } = getOperation(operator);
     const operationName = t(`operation_${name}`) ?? name;
-    LEVELS.forEach(level => add('découverte', `${operationName}, ${t(`difficulty_${level}`)}`));
+    levelNames.forEach(levelName => add('découverte', `${operationName}, ${levelName}`));
   }
 }
 
@@ -332,33 +333,46 @@ export function currentLock() {
   return { schema: VOICE_KEY_SCHEMA, languages };
 }
 
-function main(argv) {
-  if (argv.includes('--write-lock')) {
-    fs.writeFileSync(LOCK_PATH, `${JSON.stringify(currentLock(), null, 2)}\n`);
-    console.log(`Verrou écrit : ${path.relative(ROOT, LOCK_PATH)}`);
-    return 0;
-  }
-  if (argv.includes('--check')) {
-    const expected = JSON.stringify(currentLock());
-    const locked = fs.existsSync(LOCK_PATH)
-      ? JSON.stringify(JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8')))
-      : '';
-    if (expected === locked) return 0;
-    console.error('Les phrases parlées ont changé : régénère les clips, puis --write-lock.');
-    return 1;
-  }
-  const listIndex = argv.indexOf('--list');
-  if (listIndex >= 0) {
-    const lang = argv[listIndex + 1] || 'fr';
-    for (const entry of buildCorpus(lang)) console.log(JSON.stringify(entry));
-    return 0;
-  }
+/** --write-lock : met le verrou à jour */
+function writeLock() {
+  fs.writeFileSync(LOCK_PATH, `${JSON.stringify(currentLock(), null, 2)}\n`);
+  console.log(`Verrou écrit : ${path.relative(ROOT, LOCK_PATH)}`);
+  return 0;
+}
+
+/** --check : échoue si le verrou n'est plus à jour */
+function checkLock() {
+  const expected = JSON.stringify(currentLock());
+  const locked = fs.existsSync(LOCK_PATH)
+    ? JSON.stringify(JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8')))
+    : '';
+  if (expected === locked) return 0;
+  console.error('Les phrases parlées ont changé : régénère les clips, puis --write-lock.');
+  return 1;
+}
+
+/** --list : phrases d'une langue, une par ligne */
+function listPhrases(lang) {
+  for (const entry of buildCorpus(lang)) console.log(JSON.stringify(entry));
+  return 0;
+}
+
+/** Sans option : résumé par langue */
+function printSummary() {
   for (const lang of LANGS) {
     const corpus = buildCorpus(lang);
     const characters = corpus.reduce((sum, entry) => sum + [...entry.text].length, 0);
     console.log(`${lang} : ${corpus.length} phrases, ${characters} caractères`);
   }
   return 0;
+}
+
+function main(argv) {
+  if (argv.includes('--write-lock')) return writeLock();
+  if (argv.includes('--check')) return checkLock();
+  const listIndex = argv.indexOf('--list');
+  if (listIndex >= 0) return listPhrases(argv[listIndex + 1] || 'fr');
+  return printSummary();
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

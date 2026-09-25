@@ -19,33 +19,57 @@ export class ProviderError extends Error {
 
 export const DEFAULT_BASE_URL = 'https://api.elevenlabs.io';
 
+/**
+ * Détail d'un corps d'erreur : l'objet detail tel quel, sinon { message } (liste de
+ * validation jointe, texte du corps, ou vide)
+ */
+function detailOf(body) {
+  const detail = body?.detail;
+  // Erreur de validation (422) : une liste de { msg, loc }
+  if (Array.isArray(detail)) {
+    return { message: detail.map(item => item?.msg ?? JSON.stringify(item)).join(' ; ') };
+  }
+  if (detail && typeof detail === 'object') return detail;
+  return { message: String(detail ?? body?.message ?? '') };
+}
+
 async function readDetail(res) {
   try {
-    const body = await res.json();
-    // Erreur de validation (422) : une liste de { msg, loc }
-    if (Array.isArray(body?.detail)) {
-      return { message: body.detail.map(item => item?.msg ?? JSON.stringify(item)).join(' ; ') };
-    }
-    if (body && typeof body.detail === 'object' && body.detail) return body.detail;
-    return { message: String(body?.detail ?? body?.message ?? '') };
+    return detailOf(await res.json());
   } catch {
     return { message: '' };
   }
 }
 
+/**
+ * Classement d'une erreur HTTP : le premier cas qui s'applique l'emporte, « request » si
+ * aucun. Seules les erreurs passagères gardent le délai annoncé par retry-after.
+ */
+const ERROR_KINDS = [
+  { kind: 'quota', applies: (code, status) => status === 'quota_exceeded' || code === 402 },
+  { kind: 'rate', applies: code => code === 429, transient: true },
+  { kind: 'server', applies: code => code >= 500, transient: true },
+  { kind: 'voice', applies: (code, status) => status === 'voice_not_found' || code === 404 },
+  { kind: 'auth', applies: code => code === 401 || code === 403 },
+];
+
+function classifyError(code, status) {
+  return ERROR_KINDS.find(rule => rule.applies(code, status)) ?? { kind: 'request' };
+}
+
+/** « ElevenLabs <code> <statut> : <texte> », sans les morceaux vides */
+function errorMessage(code, status, detailMessage) {
+  const text = String(detailMessage ?? '').slice(0, 200);
+  return [`ElevenLabs ${code}`, status, text && `: ${text}`].filter(Boolean).join(' ');
+}
+
 async function errorFrom(res) {
   const detail = await readDetail(res);
   const status = typeof detail.status === 'string' ? detail.status : '';
-  const text = String(detail.message ?? '').slice(0, 200);
-  const message = `ElevenLabs ${res.status}${status ? ` ${status}` : ''}${text ? ` : ${text}` : ''}`;
+  const message = errorMessage(res.status, status, detail.message);
   const retryAfterMs = Number(res.headers.get('retry-after')) * 1000 || undefined;
-  if (status === 'quota_exceeded' || res.status === 402) return new ProviderError('quota', message);
-  if (res.status === 429) return new ProviderError('rate', message, { retryAfterMs });
-  if (res.status >= 500) return new ProviderError('server', message, { retryAfterMs });
-  if (status === 'voice_not_found' || res.status === 404)
-    return new ProviderError('voice', message);
-  if (res.status === 401 || res.status === 403) return new ProviderError('auth', message);
-  return new ProviderError('request', message);
+  const { kind, transient } = classifyError(res.status, status);
+  return new ProviderError(kind, message, transient ? { retryAfterMs } : {});
 }
 
 /** Premiers octets d'un MP3 : balise ID3 ou mot de synchronisation d'une trame */

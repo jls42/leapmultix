@@ -56,7 +56,9 @@ export async function detectSilences(
     '-',
   ]);
   const clock = /Duration: (\d+):(\d+):([\d.]+)/.exec(stderr);
-  const duration = clock ? Number(clock[1]) * 3600 + Number(clock[2]) * 60 + Number(clock[3]) : NaN;
+  const duration = clock
+    ? Number(clock[1]) * 3600 + Number(clock[2]) * 60 + Number(clock[3])
+    : Number.NaN;
   const starts = [...stderr.matchAll(/silence_start: (-?[\d.]+)/g)].map(m => Number(m[1]));
   const ends = [...stderr.matchAll(/silence_end: ([\d.]+)/g)].map(m => Number(m[1]));
   const silences = starts.map((start, i) => ({
@@ -144,6 +146,66 @@ async function cutIsolatedBlips(wavPath) {
   }
 }
 
+/** Décode le brut en WAV mono intermédiaire, silences de début et de fin coupés */
+async function decodeTrimmed(rawPath, wavPath, encoding) {
+  await run('ffmpeg', [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-y',
+    '-i',
+    rawPath,
+    '-af',
+    trimFilter(encoding),
+    '-ac',
+    '1',
+    '-f',
+    'wav',
+    wavPath,
+  ]);
+}
+
+/**
+ * Gain qui amène le clip à la sonie visée sans dépasser le pic permis
+ * @throws {ClipContentError} si la sonie est illisible ou le clip muet
+ */
+async function loudnessGain(wavPath, encoding) {
+  const { integrated, peak } = await measureLoudness(wavPath);
+  if (!Number.isFinite(integrated) || !Number.isFinite(peak)) {
+    throw new ClipContentError('sonie illisible');
+  }
+  // ebur128 plafonne le silence à −70 LUFS (et annonce alors un pic de 0 dBFS)
+  if (integrated <= SILENT_LUFS) throw new ClipContentError('clip muet');
+  return Math.min(encoding.loudnessLufs - integrated, encoding.truePeakDb - peak);
+}
+
+/** Encode le WAV en MP3 mono à débit constant, gain appliqué, sans métadonnées */
+async function encodeMp3(wavPath, outPath, gain, bitrateKbps) {
+  await run('ffmpeg', [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-y',
+    '-i',
+    wavPath,
+    '-af',
+    `volume=${gain.toFixed(2)}dB`,
+    '-map_metadata',
+    '-1',
+    '-ac',
+    '1',
+    '-c:a',
+    'libmp3lame',
+    '-b:a',
+    `${bitrateKbps}k`,
+    '-id3v2_version',
+    '0',
+    '-f',
+    'mp3',
+    outPath,
+  ]);
+}
+
 /**
  * Traite un clip brut vers outPath (écrit tel quel : à l'appelant de passer un nom
  * temporaire, puis de renommer).
@@ -154,52 +216,10 @@ async function cutIsolatedBlips(wavPath) {
 export async function processClip(rawPath, outPath, encoding) {
   const wavPath = `${outPath}.wav.part`;
   try {
-    await run('ffmpeg', [
-      '-hide_banner',
-      '-loglevel',
-      'error',
-      '-y',
-      '-i',
-      rawPath,
-      '-af',
-      trimFilter(encoding),
-      '-ac',
-      '1',
-      '-f',
-      'wav',
-      wavPath,
-    ]);
+    await decodeTrimmed(rawPath, wavPath, encoding);
     await cutIsolatedBlips(wavPath);
-    const { integrated, peak } = await measureLoudness(wavPath);
-    if (!Number.isFinite(integrated) || !Number.isFinite(peak)) {
-      throw new ClipContentError('sonie illisible');
-    }
-    // ebur128 plafonne le silence à −70 LUFS (et annonce alors un pic de 0 dBFS)
-    if (integrated <= SILENT_LUFS) throw new ClipContentError('clip muet');
-    const gain = Math.min(encoding.loudnessLufs - integrated, encoding.truePeakDb - peak);
-    await run('ffmpeg', [
-      '-hide_banner',
-      '-loglevel',
-      'error',
-      '-y',
-      '-i',
-      wavPath,
-      '-af',
-      `volume=${gain.toFixed(2)}dB`,
-      '-map_metadata',
-      '-1',
-      '-ac',
-      '1',
-      '-c:a',
-      'libmp3lame',
-      '-b:a',
-      `${encoding.bitrateKbps}k`,
-      '-id3v2_version',
-      '0',
-      '-f',
-      'mp3',
-      outPath,
-    ]);
+    const gain = await loudnessGain(wavPath, encoding);
+    await encodeMp3(wavPath, outPath, gain, encoding.bitrateKbps);
   } finally {
     await fs.rm(wavPath, { force: true });
   }
@@ -260,7 +280,8 @@ export async function checkAudioTools() {
 export function clipProblem(info) {
   if (info.codec !== 'mp3') return `codec ${info.codec || 'inconnu'}`;
   if (info.channels !== 1) return `${info.channels} canaux`;
-  if (!(info.duration >= CLIP_LIMITS.minSeconds)) return `trop court (${info.duration} s)`;
   if (info.duration > CLIP_LIMITS.maxSeconds) return `trop long (${info.duration} s)`;
-  return null;
+  // Toute durée qui n'atteint pas le minimum est trop courte, une durée illisible (NaN) comprise
+  if (info.duration >= CLIP_LIMITS.minSeconds) return null;
+  return `trop court (${info.duration} s)`;
 }

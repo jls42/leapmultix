@@ -28,7 +28,8 @@ function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
   if (value && typeof value === 'object') {
     const keys = Object.keys(value).sort((a, b) => a.localeCompare(b));
-    return `{${keys.map(k => `${JSON.stringify(k)}:${canonicalJson(value[k])}`).join(',')}}`;
+    const members = keys.map(k => `${JSON.stringify(k)}:${canonicalJson(value[k])}`);
+    return `{${members.join(',')}}`;
   }
   return JSON.stringify(value);
 }
@@ -223,23 +224,8 @@ export async function writeManifest(paths, manifest) {
   await writeFileAtomic(paths.manifestFile, `${JSON.stringify({ ...manifest, clips }, null, 2)}\n`);
 }
 
-/**
- * Remet le manifeste d'accord avec les fichiers, avant une génération :
- * - entrée sans fichier : retirée ;
- * - clip dont le texte dit a changé (règles de prononciation) : supprimé, à refaire ;
- * - clip complet sans entrée (arrêt entre le renommage et l'écriture du manifeste) :
- *   repris s'il est valide, supprimé sinon ;
- * - fichier brut d'un autre texte dit, ou d'une phrase sortie du corpus : supprimé.
- * Les clips hors corpus restent (orphelins, signalés par check.mjs). En dryRun, seul le
- * manifeste en mémoire change : aucun fichier n'est touché.
- * @returns {Promise<{dropped: number, stale: number, adopted: number, rejected: number, staleRaw: number, orphans: number}>}
- */
-export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, dryRun = false }) {
-  const report = { dropped: 0, stale: 0, adopted: 0, rejected: 0, staleRaw: 0, orphans: 0 };
-  const remove = async file => {
-    if (!dryRun) await fsp.rm(file, { force: true });
-  };
-
+/** Entrées du manifeste : sans fichier, retirées ; d'un autre texte dit, clip supprimé */
+async function pruneEntries({ paths, manifest, phrasesByKey, said, remove, report }) {
   for (const [key, entry] of Object.entries(manifest.clips)) {
     const phrase = phrasesByKey.get(key);
     if (!fs.existsSync(clipFile(paths, key))) {
@@ -251,7 +237,18 @@ export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, 
       delete manifest.clips[key];
     }
   }
+}
 
+/** Clips complets sans entrée : repris s'ils sont valides, supprimés sinon (orphelins gardés) */
+async function adoptUnlistedClips({
+  paths,
+  manifest,
+  phrasesByKey,
+  said,
+  inspect,
+  remove,
+  report,
+}) {
   for (const name of listDir(paths.clipDir).filter(n => n.endsWith('.mp3'))) {
     const key = name.slice(0, -'.mp3'.length);
     if (manifest.clips[key]) continue;
@@ -278,7 +275,10 @@ export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, 
       await remove(clipFile(paths, key));
     }
   }
+}
 
+/** Bruts d'un autre texte dit, ou d'une phrase sortie du corpus : supprimés */
+async function pruneStaleRaw({ paths, phrasesByKey, said, remove, report }) {
   for (const name of listDir(paths.rawDir)) {
     const parsed = rawKeyOf(name);
     const phrase = parsed && phrasesByKey.get(parsed.key);
@@ -287,5 +287,27 @@ export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, 
       await remove(path.join(paths.rawDir, name));
     }
   }
+}
+
+/**
+ * Remet le manifeste d'accord avec les fichiers, avant une génération :
+ * - entrée sans fichier : retirée ;
+ * - clip dont le texte dit a changé (règles de prononciation) : supprimé, à refaire ;
+ * - clip complet sans entrée (arrêt entre le renommage et l'écriture du manifeste) :
+ *   repris s'il est valide, supprimé sinon ;
+ * - fichier brut d'un autre texte dit, ou d'une phrase sortie du corpus : supprimé.
+ * Les clips hors corpus restent (orphelins, signalés par check.mjs). En dryRun, seul le
+ * manifeste en mémoire change : aucun fichier n'est touché.
+ * @returns {Promise<{dropped: number, stale: number, adopted: number, rejected: number, staleRaw: number, orphans: number}>}
+ */
+export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, dryRun = false }) {
+  const report = { dropped: 0, stale: 0, adopted: 0, rejected: 0, staleRaw: 0, orphans: 0 };
+  const remove = async file => {
+    if (!dryRun) await fsp.rm(file, { force: true });
+  };
+  const ctx = { paths, manifest, phrasesByKey, said, inspect, remove, report };
+  await pruneEntries(ctx);
+  await adoptUnlistedClips(ctx);
+  await pruneStaleRaw(ctx);
   return report;
 }
