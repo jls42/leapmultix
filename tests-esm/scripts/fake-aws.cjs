@@ -12,8 +12,8 @@ const note = entry => fs.appendFileSync(process.env.AWS_LOG, `${JSON.stringify(e
 
 /** Motif d'un filtre de l'AWS CLI : « * » vaut n'importe quelle suite, « / » compris */
 function matches(pattern, file) {
-  const parts = pattern.split('*').map(part => part.replaceAll(/[.+?^${}()|[\]\\]/g, '\\$&'));
-  return new RegExp(`^${parts.join('.*')}$`).test(file);
+  const escape = part => part.replaceAll(/[.+?^${}()|[\]\\]/g, String.raw`\$&`);
+  return new RegExp(`^${pattern.split('*').map(escape).join('.*')}$`).test(file);
 }
 
 /** Filtres --exclude et --include, dans l'ordre : le dernier qui s'applique l'emporte */
