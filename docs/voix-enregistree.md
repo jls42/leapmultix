@@ -165,7 +165,9 @@ CI publique : la clé ElevenLabs et le dépôt privé des voix n'en sortent pas.
   durée, l'empreinte sha256 et le coût en crédits ; `<version>.runs.jsonl` garde le bilan
   de chaque exécution ;
 - `raw/` : sorties brutes d'ElevenLabs, gardées en local (hors git) pour retraiter sans
-  payer.
+  payer ;
+- `ecoute/` (hors git) : pages d'écoute, et dans `avant/` le dernier clip remplacé de chaque
+  empreinte (`--redo`, texte dit changé), pour la comparaison avant/après.
 
 **Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
 modèle, les réglages et l'encodage, sous une version (`lucie-v3-1`). Changer un réglage
@@ -209,10 +211,16 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
      (installation dans l'en-tête du script), puis
      `npm run voice:check -- --lang fr --transcripts transcripts-fr.jsonl --flagged a-reecouter.txt` :
      nombres entendus différents de la phrase, phrase trop différente ou durée anormale.
-   - **Écoute** des clips signalés et d'un échantillon de formes féminines, que Whisper
-     ne distingue pas (« un » et « une » s'écrivent « 1 »). Refaire un clip :
-     `generate.mjs --lang fr --redo ecartes.txt` (seulement les clips écartés à l'écoute) ;
-     Whisper retranscrit ensuite les clips refaits (leur sha256 a changé).
+   - **Écoute** : `npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl`
+     écrit une page locale (`ecoute/fr-<version>.html` dans le dépôt des voix) : les clips
+     signalés, puis un échantillon de formes féminines, que Whisper ne distingue pas (« un »
+     et « une » s'écrivent « 1 »). Une case « à refaire » par clip ; les cases cochées
+     forment la liste à copier dans `ecartes.txt`.
+   - **Refaire** : `generate.mjs --lang fr --redo ecartes.txt` (seulement les clips écartés
+     à l'écoute ; l'ancien de chacun est mis de côté dans `ecoute/avant/`). Whisper
+     retranscrit ensuite les clips refaits (leur sha256 a changé), puis
+     `npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl --compare ecartes.txt`
+     compare l'ancien et le nouveau de chaque clip, avec le verdict de Whisper.
 5. **Envoi**, une fois l'infra en place :
    - `npm run voice:publish -- clips --lang fr --bucket <bucket>` : seulement les clips
      absents du bucket, en `audio/mpeg`, cache d'un an immuable. Un clip publié n'est

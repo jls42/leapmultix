@@ -385,7 +385,7 @@ changement de texte :
 1. le test du verrou échoue exprès : c'est le rappel ;
 2. générer les clips manquants avec le skill `generating-voice-clips` (payant : estimation
    `--dry-run` d'abord, accord du propriétaire), contrôler (Whisper, `voice:check`), faire
-   écouter ;
+   écouter (page d'écoute : `npm run voice:listen`) ;
 3. publier les nouveaux clips (`voice:publish clips`, puis `voice:check-online`) **avant**
    de fusionner, puis `npm run voice:corpus:lock`.
 

@@ -2,15 +2,39 @@
 
 ## Dépôt privé des voix (`../leapmultix-voices`, GitHub privé `jls42/leapmultix-voices`)
 
-| Chemin                                | Contenu                                                                   |
-| ------------------------------------- | ------------------------------------------------------------------------- |
-| `clips/<l>/<version>/<empreinte>.mp3` | clips traités, MP3 mono 64 kb/s, −20 LUFS : ceux que le jeu lit           |
-| `manifests/<l>/<version>.json`        | par clip : phrase, texte dit, durée, sha256, coût, identifiant de requête |
-| `manifests/<l>/<version>.runs.jsonl`  | bilan de chaque exécution de la génération                                |
-| `raw/` (hors git)                     | sorties brutes d'ElevenLabs, pour retraiter sans payer                    |
+| Chemin                                | Contenu                                                                    |
+| ------------------------------------- | -------------------------------------------------------------------------- |
+| `clips/<l>/<version>/<empreinte>.mp3` | clips traités, MP3 mono 64 kb/s, −20 LUFS : ceux que le jeu lit            |
+| `manifests/<l>/<version>.json`        | par clip : phrase, texte dit, durée, sha256, coût, identifiant de requête  |
+| `manifests/<l>/<version>.runs.jsonl`  | bilan de chaque exécution de la génération                                 |
+| `raw/` (hors git)                     | sorties brutes d'ElevenLabs, pour retraiter sans payer                     |
+| `ecoute/` (hors git)                  | pages d'écoute (`voice:listen`) ; `avant/<l>/<version>/` : clips remplacés |
 
 L'empreinte est `voiceKey(phrase)` (`js/core/spoken-text.js`) : la phrase exacte passée à
 `speak()`. Le texte envoyé à la synthèse peut différer (`scripts/voice/said-text.mjs`).
+
+## Page d'écoute (`npm run voice:listen`)
+
+`scripts/voice/listen-page.mjs --lang <l> [--transcripts <fichier.jsonl>] [--sample <n>]
+[--compare <fichier>] [--out <dépôt des voix>]` écrit une page HTML autonome dans
+`ecoute/` du dépôt des voix et en affiche l'adresse `file://`.
+
+- **Sans `--compare`** (`<l>-<version>.html`) : clips signalés (Whisper : nombres entendus
+  différents ou phrase éloignée ; durée anormale, comme `voice:check`), puis un échantillon
+  (`--sample`, 24 par défaut) des phrases dont le texte dit diffère : textes imposés
+  (`SAID_OVERRIDES`) d'abord, puis accords en genre régulièrement espacés. Sans
+  `--transcripts`, seules les durées signalent.
+- **Avec `--compare <fichier>`** (`<l>-<version>-refaits.html`) : pour chaque empreinte de la
+  liste, l'ancien clip (mis de côté par `generate.mjs` dans `ecoute/avant/`, le dernier
+  remplacé seulement) et le nouveau, ce que Whisper a entendu de chacun, et son verdict sur
+  le nouveau (juste, douteux, pas encore transcrit). Une empreinte sans clip est listée à
+  part (génération à relancer).
+- **Cases « à refaire »** : les cases cochées forment la liste à copier (bouton « Copier la
+  liste », sinon la liste est sélectionnée pour Ctrl+C). Elles restent cochées d'une
+  ouverture à l'autre (stockage local du navigateur, par page), tant que le clip n'a pas
+  changé : un clip refait depuis n'est plus coché.
+- Les listes d'empreintes (`--compare`, comme `--redo` et `--keys` de `generate.mjs`) sont
+  vérifiées : une empreinte mal formée arrête le script.
 
 ## Génération : codes de sortie et arrêts
 
