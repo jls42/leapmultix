@@ -58,9 +58,9 @@ def allowed_roots():
     return {os.path.realpath(root) for root in (os.getcwd(), Path.home(), tempfile.gettempdir())}
 
 
-# Les accès au disque qui suivent portent « NOSONAR » (pythonsecurity:S8707) : chaque chemin
-# y arrive résolu, confiné à ces arborescences et contrôlé par type (fonctions ci-dessous),
-# une validation que l'analyse de flux de SonarCloud ne suit pas.
+# Les accès au disque qui suivent sont marqués pour SonarCloud (pythonsecurity:S8707) :
+# chaque chemin y arrive résolu, confiné à ces arborescences et contrôlé par type (fonctions
+# ci-dessous), une validation que son analyse de flux ne suit pas.
 def resolved(flag, value):
     """Chemin réel d'un argument, liens résolus, refusé hors des arborescences permises"""
     path = os.path.realpath(value)
