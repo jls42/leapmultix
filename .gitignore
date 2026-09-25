@@ -45,6 +45,8 @@ coverage/
 # (clips dans le dépôt privé leapmultix-voices, clé en variable d'environnement)
 /voice/
 /assets/voice/
+# Environnement Python du contrôle Whisper (scripts/voice/whisper_transcribe.py)
+/.venv-whisper/
 
 # Deployment config (may contain secrets)
 deploy.config

@@ -66,8 +66,7 @@ français.
 1. **File de parole unique** (`js/speech.js`) : une annonce va au bout, la phrase
    suivante attend, sans collage ; arrêts propres (changement de mode, de langue,
    onglet caché) ; déverrouillage du son sur iPhone au premier toucher.
-2. **Outils de génération** (`scripts/voice/`) : génération, contrôles et envoi,
-   décrits ci-dessous.
+2. **Outils de génération** (`scripts/voice/`) : en place, décrits ci-dessous.
 3. **Lecteur de clips** : index `/voice/index.json` (voix, version, audience, défaut),
    lecture et repli, service worker, réglage « Voix enregistrée » ; les textes de
    l'interface ajoutés passent eux aussi par les trois langues.
@@ -76,27 +75,74 @@ français.
 
 ## Génération des clips
 
-Tout est scripté ; le script tourne sur le poste du propriétaire, jamais dans la CI
-publique (clé ElevenLabs et dépôt privé).
+Tout est scripté (`scripts/voice/`) et tourne sur le poste du propriétaire, jamais dans la
+CI publique : la clé ElevenLabs et le dépôt privé des voix n'en sortent pas.
 
-1. **Portes** : crédits suffisants et licence confirmée, avant toute génération payante.
-2. **Estimation** : `--dry-run` compte les caractères, donc les crédits.
-3. **Génération** incrémentale : seules les phrases nouvelles ou modifiées sont
-   générées. Le texte envoyé peut différer de la phrase-clé quand la prononciation
-   l'exige (« une boîte », « vingt et une billes », en espagnol « una caja »).
-   Silences rognés, volume égalisé (−20 LUFS), MP3 mono ; sortie dans le dépôt privé.
-4. **Contrôles** : chaque phrase a son fichier ; transcription Whisper **en local**
-   (modèle `large-v3-turbo`), qui compare les nombres entendus à ceux de la phrase et
-   liste les clips à réécouter ; écoute d'un échantillon, surtout des formes féminines,
-   que Whisper ne distingue pas (« un » et « une » s'écrivent « 1 »).
-5. **Envoi** : les clips d'abord (`audio/mpeg`, cache long et immuable), une
-   vérification en ligne, puis l'index (`no-cache`) et son invalidation CloudFront.
-6. **Ouverture par étapes** : testeurs (`?voix=test`), puis les joueurs qui avaient
-   allumé la voix, puis la voix activée par défaut.
+**Dépôt privé des voix** (`../leapmultix-voices`, GitHub privé `jls42/leapmultix-voices`) :
 
-Un clip publié n'est jamais réécrit : une correction crée une nouvelle version.
-**Coupe-circuit** : retirer la langue de l'index, puis l'invalider ; le jeu revient à
-la voix de l'appareil au prochain chargement en ligne.
+- `clips/<langue>/<version>/<empreinte>.mp3` : les clips traités, ceux que le jeu lit ;
+- `manifests/<langue>/<version>.json` : pour chaque clip, la phrase, le texte dit, la
+  durée, l'empreinte sha256 et le coût en crédits ; `<version>.runs.jsonl` garde le bilan
+  de chaque exécution ;
+- `raw/` : sorties brutes d'ElevenLabs, gardées en local (hors git) pour retraiter sans
+  payer.
+
+**Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
+modèle, les réglages et l'encodage, sous une version (`lucie-v3-1`). Changer un réglage
+impose une nouvelle version : le générateur refuse de mélanger deux réglages sous une même
+version. Le fournisseur est séparé du reste (`scripts/voice/providers/`) : un autre moteur
+s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
+
+1. **Portes** : crédits suffisants et licence confirmée.
+2. **Estimation** : `npm run voice:generate -- --lang fr --dry-run` donne les phrases
+   restantes et leurs caractères. Eleven v3 décompte environ 0,5 crédit par caractère
+   (en-tête `character-cost` de chaque réponse, noté au manifeste).
+3. **Génération** :
+   `node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --reserve 5000`.
+   - Ordre : annonces, bravos, phrases fixes, erreurs, questions, questions à trou,
+     vrai/faux, Découverte, énoncés (les plus longs, en dernier) ; × puis ÷, + et −.
+   - **Idempotent** : relancer la même commande ne génère que ce qui manque ; un brut déjà
+     payé est retraité sans nouvel appel.
+   - **Aucun fichier à moitié** : chaque fichier s'écrit en `.part`, puis est renommé une
+     fois complet et vérifié (ffprobe) ; les restes d'une exécution interrompue (crédits
+     épuisés, Ctrl+C, plantage) sont supprimés au démarrage suivant.
+   - **Crédits épuisés** : arrêt propre (code de sortie 3). Reprendre plus tard avec la
+     même commande, au besoin avec la clé d'un autre compte : une voix de bibliothèque
+     garde son identifiant ; si l'outil la dit inaccessible, l'ajouter à ce compte depuis
+     la bibliothèque de voix.
+   - **Texte dit** (`said-text.mjs`) : les nombres en 1 s'accordent avec le nom qui suit
+     (« Combien font une fois 7 ? », « vingt et une pommes », en espagnol « una caja »,
+     « veintiún niños ») ; la phrase de `speak()` reste la clé du clip.
+   - **Traitement** (`audio-process.mjs`) : silences de début et de fin coupés, −20 LUFS,
+     pic −1 dBFS, MP3 mono 48 kb/s ; un clip muet est refusé.
+4. **Contrôles** :
+   - `npm run voice:check -- --lang fr --probe` : chaque phrase a son clip, manifeste et
+     fichiers concordent, chaque MP3 est valide et n'a pas bougé depuis sa génération.
+   - **Whisper, en local** (modèle `large-v3-turbo`, GPU si présent) :
+     `python3 scripts/voice/whisper_transcribe.py --manifest <dépôt>/manifests/fr/<version>.json --clips <dépôt>/clips/fr/<version> --lang fr --out transcripts-fr.jsonl`
+     (installation dans l'en-tête du script), puis
+     `npm run voice:check -- --lang fr --transcripts transcripts-fr.jsonl --flagged a-reecouter.txt` :
+     nombres entendus différents de la phrase, phrase trop différente ou durée anormale.
+   - **Écoute** des clips signalés et d'un échantillon de formes féminines, que Whisper
+     ne distingue pas (« un » et « une » s'écrivent « 1 »). Refaire un clip :
+     `generate.mjs --lang fr --redo a-reecouter.txt`.
+5. **Envoi**, une fois l'infra en place :
+   - `npm run voice:publish -- clips --lang fr --bucket <bucket>` : seulement les clips
+     absents du bucket, en `audio/mpeg`, cache d'un an immuable. Un clip publié n'est
+     jamais réécrit : une correction crée une nouvelle version de la voix.
+   - `npm run voice:check-online -- --lang fr` : chaque adresse répond 200 en `audio/mpeg`,
+     avec la taille du manifeste.
+   - `npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience test` :
+     la langue entre dans l'index (sans cache), puis invalidation CloudFront.
+6. **Ouverture par étapes** : testeurs (`?voix=test`), puis `--audience all` (les
+   joueurs qui avaient allumé la voix), puis `--default-on`.
+
+**Coupe-circuit** : `npm run voice:publish -- remove --lang fr --bucket <bucket> --distribution <id>` ;
+le jeu revient à la voix de l'appareil au prochain chargement en ligne.
+
+**Essai local** : `npm run voice:publish -- local --lang fr --audience all --default-on`
+relie le dossier `voice/` du site (ignoré par git) aux clips du dépôt privé ; ouvrir le jeu
+avec `?voix=local`.
 
 ## Licence et mentions
 
