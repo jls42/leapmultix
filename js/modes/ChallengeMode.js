@@ -6,7 +6,7 @@
  * d'avertissement), sans clignotement. La bonne tuile est cochée après chaque choix.
  */
 
-import { GameMode } from '../core/GameMode.js';
+import { GameMode, GOOD_SOUND_MS } from '../core/GameMode.js';
 import {
   getTranslation,
   showCoinGainAnimation,
@@ -426,8 +426,9 @@ export class ChallengeMode extends GameMode {
 
     // Le retour s'affiche sans être lu : la voix dit un seul encouragement
     this.displayFeedback(message, 'success', false);
+    // Le bip, puis « Bravo » juste après lui
     playSound('good');
-    speak(getTranslation('correct'));
+    this.addTimer(() => speak(getTranslation('correct')), GOOD_SOUND_MS);
   }
 
   /**

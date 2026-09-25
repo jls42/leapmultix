@@ -15,6 +15,7 @@ jest.unstable_mockModule('../../js/speech.js', () => ({
   speak,
   isVoiceEnabled: () => true,
   updateSpeechVoice: () => {},
+  cancelSpeech: () => {},
 }));
 const recordOperationResult = jest.fn();
 jest.unstable_mockModule('../../js/core/operation-stats.js', () => ({ recordOperationResult }));
@@ -32,6 +33,7 @@ const { AudioManager } = await import('../../js/core/audio.js');
 const { QuizMode } = await import('../../js/modes/QuizMode.js');
 const { ChallengeMode } = await import('../../js/modes/ChallengeMode.js');
 const { AdventureMode } = await import('../../js/modes/AdventureMode.js');
+const { GOOD_SOUND_MS } = await import('../../js/core/GameMode.js');
 
 const KNOWN = {
   question: '4 × 2 = ?',
@@ -108,10 +110,14 @@ describe('Défi : la voix', () => {
     challenge.stop();
   });
 
-  test('après une bonne réponse, un seul encouragement', async () => {
+  test('après une bonne réponse, le bip seul, puis un seul encouragement', async () => {
     const challenge = await startChallenge();
     option('challenge', false).click();
 
+    // « Bravo » ne couvre pas le bip : il part juste après lui
+    expect(AudioManager.playSound.mock.calls.map(([name]) => name)).toEqual(['good']);
+    expect(speak).not.toHaveBeenCalled();
+    await new Promise(r => setTimeout(r, GOOD_SOUND_MS + 20));
     const spoken = speak.mock.calls.map(([text]) => text);
     expect(spoken).toEqual(['Bravo !']);
     challenge.stop();

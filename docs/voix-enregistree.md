@@ -61,16 +61,44 @@ milieu d'une partie en anglais.
 Chiffres au moment de l'écriture : 7 437 phrases par langue, 221 587 caractères en
 français.
 
+## En place : une seule file de parole
+
+`js/speech.js` ne confie au moteur qu'une phrase à la fois, exactement celle passée à
+`speak()` : plus aucun texte recollé (« Mode Quiz. Combien font… »), donc chaque phrase
+dite reste une phrase du corpus.
+
+- **Deux emplacements**, chacun avec son jeton : la phrase active, même pendant qu'un
+  moteur la prépare, et une phrase en attente. Une phrase coupée ou remplacée est
+  invalidée : ses événements tardifs (fin, erreur, clip arrivé trop tard) ne font rien.
+- **Annonce** (`priority: 'high'`) : elle coupe tout, la dernière gagne. Une phrase
+  normale arrivée pendant une annonce attend sa fin, sans la couper ; sinon elle coupe la
+  phrase en cours.
+- **Question en file** (`queue: true`) : après une bonne réponse, la question suivante
+  attend la fin du « Bravo » ; elle est oubliée si l'enfant répond avant. Après une
+  erreur, dans le Défi, la question suivante coupe la fin de l'explication.
+- **Fin bornée** : au-delà d'une durée estimée d'après le texte (large : 3 s plus 200 ms
+  par caractère, pour ne jamais couper une voix lente), la phrase est tenue pour finie et
+  la file avance. Un son bloqué ne retient rien.
+- **Arrêts** (`cancelSpeech()`) : réponse de l'enfant, « Continuer », sortie de mode,
+  navigation, écran de fin d'arcade, changement de langue, voix ou son coupés, onglet
+  caché. Un mode n'annonce qu'après la navigation, qui arrête l'ancien mode.
+- **iPhone** : le premier geste (`click`, `touchend` ou `keydown`, jamais `pointerdown`)
+  amorce la synthèse par un énoncé vide et muet ; un échec réarme le geste suivant.
+- **Bip de bonne réponse** rogné à 0,25 s (le son utile durait 0,196 s sur 2 s) ; le
+  « Bravo » part 0,2 s après lui, jamais par-dessus.
+- **Contrat de moteur**, pour la voix enregistrée : `setSpeechEngine(moteur)` branche un
+  moteur `{ start(texte, { lang, token, volume, onStarted, onEnded, onFailed,
+setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la synthèse
+  du navigateur (`getSynthesisEngine()`) reste le moteur par défaut et le repli. Détail en
+  tête de `js/speech.js`.
+
 ## À venir
 
-1. **File de parole unique** (`js/speech.js`) : une annonce va au bout, la phrase
-   suivante attend, sans collage ; arrêts propres (changement de mode, de langue,
-   onglet caché) ; déverrouillage du son sur iPhone au premier toucher.
-2. **Outils de génération** (`scripts/voice/`) : en place, décrits ci-dessous.
-3. **Lecteur de clips** : index `/voice/index.json` (voix, version, audience, défaut),
+1. **Lecteur de clips** : index `/voice/index.json` (voix, version, audience, défaut),
    lecture et repli, service worker, réglage « Voix enregistrée » ; les textes de
-   l'interface ajoutés passent eux aussi par les trois langues.
-4. **Infra** (dépôt `leapmultix-infra`) : bucket privé, seconde origine CloudFront,
+   l'interface ajoutés passent eux aussi par les trois langues. Il se branche sur la
+   file par `setSpeechEngine` et se replie lui-même sur la synthèse.
+2. **Infra** (dépôt `leapmultix-infra`) : bucket privé, seconde origine CloudFront,
    règles de cache propres à `/voice/*`, `blob:` dans la CSP.
 
 ## Génération des clips

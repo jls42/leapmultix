@@ -398,7 +398,8 @@ des modes). La voix enregistrée retrouvera chaque clip par l'empreinte de sa ph
 **Accessibility and Input:**
 
 - `accessibility.js` - Accessibility features
-- `speech.js` - Speech synthesis support
+- `speech.js` - Single speech queue (see `docs/voix-enregistree.md`): `speak(text, {priority, queue})`,
+  `cancelSpeech()`, pluggable engine (`setSpeechEngine`); never call `speechSynthesis` directly
 
 **Integration and Analytics:**
 

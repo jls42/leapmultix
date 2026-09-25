@@ -7,7 +7,7 @@
  * WCAG 2.2.1). Après une bonne réponse, la partie avance seule.
  */
 
-import { GameMode } from '../core/GameMode.js';
+import { GameMode, GOOD_SOUND_MS } from '../core/GameMode.js';
 import { setGameMode } from '../mode-orchestrator.js';
 import { getTranslation, getWeakTables, showFeedback, playSound, speak } from '../utils-es6.js';
 import { setSafeFeedback } from '../security-utils.js';
@@ -230,9 +230,9 @@ export class QuizMode extends GameMode {
     const points = this.calculatePoints();
     const message = this._getCorrectAnswerMessage(points);
 
-    // Audio feedback pour réponse correcte
+    // Le bip, puis « Bravo » juste après lui
     playSound('good');
-    speak(getTranslation('correct'));
+    this.addTimer(() => speak(getTranslation('correct')), GOOD_SOUND_MS);
 
     this._displayCorrectFeedback(message);
   }

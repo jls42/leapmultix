@@ -18,6 +18,7 @@ import {
   getArcadeScoresMemory,
   resetArcadeScoresMemory,
 } from './utils-es6.js';
+import { cancelSpeech } from './speech.js';
 import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
 // showArcadeMessage import not needed here
 import { gameState as globalGameState } from './game.js';
@@ -80,16 +81,6 @@ export function arcadeKeyUp(e) {
  * @param {{persist?: boolean}} [options] - persist: false pour réafficher l'écran
  *   (après une remise à zéro) sans réenregistrer le score ni le relire à voix haute
  */
-/** Coupe la voix en cours : l'écran de fin ne parle pas par-dessus la partie. */
-function cancelSpeech() {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  try {
-    window.speechSynthesis.cancel();
-  } catch {
-    /* ignoré volontairement */
-  }
-}
-
 /**
  * Phrase de fin : encouragement à zéro point, félicitations chiffrées sinon.
  * La voix ne dit pas le score : il reste affiché, et chaque score serait une phrase à
@@ -115,6 +106,7 @@ export function showArcadeGameOver(score, { persist = true } = {}) {
   // écouteurs (arcade:stop). Sinon, à la fin du temps, la partie continuait sans être
   // vue : messages sur l'écran de fin, second enregistrement du score, touches avalées.
   stopArcadeMode();
+  // L'écran de fin ne parle pas par-dessus la partie
   cancelSpeech();
 
   // Historique des scores, par utilisateur et par mode

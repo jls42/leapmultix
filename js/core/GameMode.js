@@ -23,6 +23,7 @@ import {
 import { recordOperationResult } from './operation-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
+import { cancelSpeech } from '../speech.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
 import { generateQuestion } from '../questionGenerator.js';
@@ -461,6 +462,12 @@ export function buildAnswerOptions(question, count = 4) {
   return shuffle([question.answer, ...plausibleWrongAnswers(question, count - 1)]);
 }
 
+/**
+ * Durée audible du bip de bonne réponse (son « good ») : le « Bravo » part juste après
+ * lui, jamais par-dessus, sans attendre la fin du fichier.
+ */
+export const GOOD_SOUND_MS = 200;
+
 export class GameMode {
   /**
    * Fonction constructor
@@ -518,8 +525,9 @@ export class GameMode {
    */
   async start() {
     try {
-      // Navigation vers l'écran de jeu
-      goToSlide(4);
+      // Navigation vers l'écran de jeu, attendue : elle arrête l'ancien mode, et cet arrêt
+      // couperait l'annonce du nouveau s'il arrivait après elle
+      await goToSlide(4);
       gameState.gameMode = this.modeName;
 
       // Réinitialiser l'état
@@ -550,16 +558,8 @@ export class GameMode {
   stop() {
     this.state.isActive = false;
 
-    // Arrêter la synthèse vocale et les sons en cours
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root && 'speechSynthesis' in Root) {
-      Root.speechSynthesis.cancel();
-    }
+    // Arrêter la voix et les sons en cours
+    cancelSpeech();
     if (AudioManager && typeof AudioManager.stopAll === 'function') {
       AudioManager.stopAll();
     }
@@ -587,6 +587,7 @@ export class GameMode {
     };
     this._continuePending = false;
     this._holdProgress = false;
+    this._queueNextQuestionSpeech = false;
 
     gameState.streak = 0;
   }
@@ -901,6 +902,10 @@ export class GameMode {
     // Une réponse par question : l'explication en cours attend « Continuer »
     if (this._continuePending) return;
 
+    // L'enfant a répondu : la question en cours de lecture s'arrête, aucune phrase en
+    // attente ne part après (même un clip encore en chargement)
+    cancelSpeech();
+
     // Désactiver les boutons
     this.disableOptions();
 
@@ -1078,6 +1083,8 @@ export class GameMode {
   continueAfterError() {
     if (!this._continuePending) return;
     this.hideContinueButton();
+    // « Continuer » coupe la fin de l'explication
+    cancelSpeech();
 
     if (this.shouldContinue()) {
       this.generateQuestion();
@@ -1093,6 +1100,10 @@ export class GameMode {
    */
   scheduleNextQuestion(isCorrect = true) {
     const delay = isCorrect ? this.config.nextQuestionDelay : this.config.wrongAnswerDelay;
+
+    // Après une bonne réponse, la question suivante attend la fin du « Bravo » au lieu de
+    // le couper ; après une erreur, elle coupe la fin de l'explication (Défi)
+    this._queueNextQuestionSpeech = isCorrect;
 
     // Les modes chronométrés suspendent leur décompte pendant cette lecture
     if (!isCorrect) this.onWrongAnswerPause(delay);
@@ -1366,25 +1377,35 @@ export class GameMode {
   }
 
   /**
-   * Lit la question à voix haute sans jamais donner la réponse
-   * @param {string} [displayed] - Texte affiché, s'il diffère de l'énoncé généré
+   * Texte dit pour la question affichée, sans jamais donner la réponse
+   * @param {string} [displayed] - Question telle qu'elle est affichée
+   * @returns {string|null}
+   */
+  spokenQuestionText(displayed) {
+    const current = this.state.currentQuestion;
+    if (!current) return null;
+    const { operator, a, b, type, question } = current;
+    // Vrai/faux : l'égalité proposée telle quelle, « 8 fois 6 égale 47 »
+    if (type === 'true_false') return toSpokenForm(question);
+    // « 2 × ? = 18 » : « 2 fois combien égale 18 ? », sans la réponse
+    if (type === 'gap') return toSpokenGapQuestion(question);
+    // classic, mcq : « Combien font 7 fois 8 ? » ; problem : l'énoncé tel quel
+    const text = displayed || (question ? String(question) : `${a} ${operator} ${b} = ?`);
+    return toSpokenQuestion(text);
+  }
+
+  /**
+   * Lit la question à voix haute. Après une bonne réponse, elle attend la fin du
+   * « Bravo » (voir scheduleNextQuestion) ; sinon elle coupe la phrase en cours.
+   * @param {string} [displayed] - Question telle qu'elle est affichée
    */
   speakQuestion(displayed) {
-    const current = this.state.currentQuestion;
-    if (!current) return;
-    const { operator, a, b, type, question } = current;
-
-    if (type === 'true_false') {
-      // Lire exactement l'égalité proposée : « 8 fois 6 égale 47 »
-      speak(toSpokenForm(question));
-    } else if (type === 'gap') {
-      // « 2 × ? = 18 » : « 2 fois combien égale 18 ? », sans la réponse
-      speak(toSpokenGapQuestion(question));
-    } else {
-      // classic, mcq : « Combien font 7 fois 8 ? » ; problem : l'énoncé tel quel
-      const text = displayed || (question ? String(question) : `${a} ${operator} ${b} = ?`);
-      speak(toSpokenQuestion(text));
-    }
+    const queued = this._queueNextQuestionSpeech === true;
+    this._queueNextQuestionSpeech = false;
+    const text = this.spokenQuestionText(displayed);
+    if (!text) return;
+    if (queued) speak(text, { queue: true });
+    else speak(text);
   }
 
   /**

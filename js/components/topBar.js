@@ -14,6 +14,7 @@ import {
   speak as _speak,
 } from '../utils-es6.js';
 import { AudioManager } from '../core/audio.js';
+import { cancelSpeech } from '../speech.js';
 import { goToSlide } from '../slides.js';
 import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
@@ -542,6 +543,9 @@ export const TopBar = {
               } catch (error) {
                 console.warn('TopBar voice announcement failed', error);
               }
+            } else {
+              // Voix coupée : la phrase en cours s'arrête aussitôt
+              cancelSpeech();
             }
           } catch (error) {
             console.warn('TopBar voice toggle failed', error);

@@ -27,9 +27,10 @@ const EXPECTED = {
   'js/arcade.js': { speak: 1 },
   // voice_enabled
   'js/components/topBar.js': { speak: 1 },
-  // annonce du mode, trois formes de question ; showFeedback : retours de la classe de
+  // annonce du mode ; la question, dite tout de suite ou en file après un « Bravo » (ses
+  // trois formes viennent de spokenQuestionText) ; showFeedback : retours de la classe de
   // base, remplacés par chaque mode (feedback_correct, dont les points ne sont pas bornés)
-  'js/core/GameMode.js': { speak: 4, showFeedback: 2 },
+  'js/core/GameMode.js': { speak: 3, showFeedback: 2 },
   // bravo, erreur ; showFeedback sans voix
   'js/modes/AdventureMode.js': { speak: 2, showFeedback: 1 },
   // bravo ; displayFeedback lit l'erreur (challenge_feedback_incorrect)
