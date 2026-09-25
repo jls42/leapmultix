@@ -76,7 +76,6 @@ describe('Speech audio sync initialization', () => {
 
     expect(getVolumeMock).toHaveBeenCalledTimes(1);
     expect(isMutedMock).toHaveBeenCalledTimes(1);
-    expect(cancelMock).toHaveBeenCalledTimes(1);
     expect(eventBusOnMock).toHaveBeenCalledTimes(1);
     expect(eventBusOnMock.mock.calls[0][0]).toBe('volumeChanged');
     expect(typeof eventBusOnMock.mock.calls[0][1]).toBe('function');
@@ -89,6 +88,12 @@ describe('Speech audio sync initialization', () => {
 
     speechModule.speak('Message audible');
     expect(speakMock).toHaveBeenCalledTimes(1);
+
+    // Couper le son arrête la phrase en cours
+    expect(cancelMock).not.toHaveBeenCalled();
+    handler({ detail: { volume: 0, muted: true } });
+    expect(cancelMock).toHaveBeenCalledTimes(1);
+    handler({ detail: { volume: 0.8, muted: false } });
 
     // Une traduction manquante ne se lit pas : ce serait le nom technique de la clé
     speechModule.speak('[table_of] 7');
