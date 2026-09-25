@@ -23,7 +23,7 @@ import {
 import { recordOperationResult } from './operation-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
-import { cancelSpeech } from '../speech.js';
+import { cancelSpeech, preloadSpeech } from '../speech.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
 import { generateQuestion } from '../questionGenerator.js';
@@ -1045,6 +1045,17 @@ export class GameMode {
   }
 
   /**
+   * Phrase dite après une erreur sur la question en cours : « Presque ! », puis la bonne
+   * réponse (l'explication affichée par showErrorExplanation)
+   * @returns {string|null}
+   */
+  spokenErrorText() {
+    const question = this.state.currentQuestion;
+    if (!question) return null;
+    return `${getTranslation('incorrect')} ${buildErrorExplanation(question).message}`;
+  }
+
+  /**
    * Affiche « Continuer » et suspend l'avance jusqu'à ce que l'enfant l'active.
    * Le focus y est placé après l'événement clavier en cours, pour qu'Entrée
    * sur une réponse ne valide pas aussitôt l'explication.
@@ -1406,6 +1417,10 @@ export class GameMode {
     if (!text) return;
     if (queued) speak(text, { queue: true });
     else speak(text);
+    // La phrase d'une erreur se charge d'avance (voix enregistrée), après le démarrage de
+    // la question : dite dès la réponse, elle n'attend pas le réseau
+    const errorText = this.spokenErrorText();
+    if (errorText) preloadSpeech([errorText]);
   }
 
   /**

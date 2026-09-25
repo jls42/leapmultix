@@ -16,7 +16,7 @@
  */
 import Storage from './core/storage.js';
 import { eventBus } from './core/eventBus.js';
-import { voiceKey } from './core/spoken-text.js';
+import { ANNOUNCED_MODES, voiceKey } from './core/spoken-text.js';
 import { clipPath, parseVoiceIndex } from './core/voice-index.js';
 import { isSpeechActive, recordedVoiceEntry, speechEngineFor } from './core/voice-activation.js';
 import { getCurrentLanguage, getTranslations } from './i18n-store.js';
@@ -133,8 +133,30 @@ export function createClipEngine({
   const preloaded = new Set();
   /** Phrase qui possède l'élément <audio> */
   let owner = null;
+  /** Phrases dont le clip se télécharge pour être joué : les préchargements leur cèdent la
+   * bande passante et attendent qu'elles démarrent ou s'arrêtent */
+  const loading = new Set();
+  let deferredPreloads = [];
 
   const urlFor = key => `${base}${clipPath(lang, entry, key)}`;
+
+  function preloadNow(texts) {
+    for (const text of texts) {
+      const key = voiceKey(text);
+      if (absent.has(key) || preloaded.has(key)) continue;
+      preloaded.add(key);
+      fetchImpl(urlFor(key), { priority: 'low' })
+        .then(res => (res.ok && isMp3Response(res) ? res.blob() : absent.add(key)))
+        .catch(() => preloaded.delete(key));
+    }
+  }
+
+  function doneLoading(phrase) {
+    if (!loading.delete(phrase) || loading.size) return;
+    const texts = deferredPreloads;
+    deferredPreloads = [];
+    preloadNow(texts);
+  }
 
   function releaseAudio(phrase) {
     if (owner === phrase) {
@@ -152,6 +174,7 @@ export function createClipEngine({
     if (phrase.done) return false;
     phrase.done = true;
     clearTimeout(phrase.timer);
+    doneLoading(phrase);
     return true;
   }
 
@@ -220,6 +243,7 @@ export function createClipEngine({
     if (!phrase || phrase.done || phrase.started) return;
     phrase.started = true;
     clearTimeout(phrase.timer);
+    doneLoading(phrase);
     phrase.handlers.onStarted();
     if (Number.isFinite(audio.duration))
       phrase.handlers.setDeadline?.(audio.duration * 1000 + 1000);
@@ -255,6 +279,7 @@ export function createClipEngine({
         () => fallBack(phrase, 'timeout', { keepDownload: true }),
         startTimeoutMs
       );
+      loading.add(phrase);
       download(phrase, key);
       return {
         stop() {
@@ -301,16 +326,13 @@ export function createClipEngine({
       }
     },
 
-    /** Télécharge des clips à l'avance, sans les jouer (le service worker les garde) */
+    /**
+     * Télécharge des clips à l'avance, sans les jouer (le service worker les garde) ;
+     * après le démarrage du clip en cours, pour ne pas lui prendre la bande passante
+     */
     preload(texts) {
-      for (const text of texts) {
-        const key = voiceKey(text);
-        if (absent.has(key) || preloaded.has(key)) continue;
-        preloaded.add(key);
-        fetchImpl(urlFor(key), { priority: 'low' })
-          .then(res => (res.ok && isMp3Response(res) ? res.blob() : absent.add(key)))
-          .catch(() => preloaded.delete(key));
-      }
+      if (loading.size) deferredPreloads.push(...texts);
+      else preloadNow(texts);
     },
   };
 }
@@ -415,11 +437,17 @@ export function refreshVoiceEngine() {
   });
 }
 
-/** Les « Bravo » reviennent sans cesse : leurs clips se chargent d'avance */
+/**
+ * Clips chargés d'avance : les annonces de mode, première phrase de chaque partie, et les
+ * « Bravo », qui reviennent sans cesse
+ */
 function preloadCommonPhrases(engine) {
-  const correct = state.deps.translations()?.correct;
-  const variants = Array.isArray(correct) ? correct : [correct];
-  engine.preload?.(variants.filter(text => typeof text === 'string' && text));
+  const translations = state.deps.translations() ?? {};
+  const texts = [
+    ...ANNOUNCED_MODES.map(mode => translations[`${mode}_mode`]),
+    translations.correct,
+  ];
+  engine.preload?.(texts.flat().filter(text => typeof text === 'string' && text));
 }
 
 function engineFor(engineId, lang, entry) {

@@ -55,7 +55,14 @@ function fakeBus() {
 }
 
 /** Dépendances factices : index servi (ou réseau coupé), stockage, faux moteurs */
-function setup({ index, offline = false, stored = {}, lang = 'fr', base = '/voice/' } = {}) {
+function setup({
+  index,
+  offline = false,
+  stored = {},
+  lang = 'fr',
+  base = '/voice/',
+  translations = { correct: ['Bravo !', 'Super !'] },
+} = {}) {
   const ctx = { lang, engines: [], storage: memoryStorage(stored), bus: fakeBus() };
   ctx.deps = {
     base,
@@ -63,7 +70,7 @@ function setup({ index, offline = false, stored = {}, lang = 'fr', base = '/voic
     storage: ctx.storage,
     eventBus: ctx.bus,
     lang: () => ctx.lang,
-    translations: () => ({ correct: ['Bravo !', 'Super !'] }),
+    translations: () => translations,
     canPlayMp3: () => true,
     fetchImpl: async () => {
       if (offline) throw new TypeError('Failed to fetch');
@@ -128,6 +135,30 @@ describe('Voix enregistrée dans le jeu', () => {
       event: 'voice:changed',
       detail: { available: true, active: true, engine: 'clips' },
     });
+  });
+
+  test('clips chargés d’avance : les annonces de mode, puis les « Bravo »', async () => {
+    const ctx = setup({
+      index: indexWith({ fr: ENTRY }),
+      translations: {
+        quiz_mode: 'Mode Quiz',
+        challenge_mode: 'Mode Défi',
+        adventure_mode: 'Mode Aventure',
+        discovery_mode: 'Mode Découverte',
+        arcade_mode: 'Mode Arcade',
+        correct: ['Bravo !', 'Super !'],
+      },
+    });
+    await initRecordedVoice(ctx.deps);
+    expect(ctx.engines[0].preload).toHaveBeenCalledWith([
+      'Mode Quiz',
+      'Mode Défi',
+      'Mode Aventure',
+      'Mode Découverte',
+      'Mode Arcade',
+      'Bravo !',
+      'Super !',
+    ]);
   });
 
   test('voix coupée par le joueur : elle le reste, même activée par défaut', async () => {

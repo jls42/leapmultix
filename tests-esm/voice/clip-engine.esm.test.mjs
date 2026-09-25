@@ -438,4 +438,67 @@ describe('Moteur des clips', () => {
     expect(fetches).toHaveLength(2);
     expect(synthesis.start).toHaveBeenCalledTimes(1);
   });
+
+  describe('préchargement pendant qu’une phrase se télécharge : il attend', () => {
+    const ERROR_TEXT = 'Presque ! La bonne réponse est 56.';
+    let releaseQuestion;
+
+    beforeEach(() => {
+      // Le clip de la question arrive quand le test le décide ; les préchargements, aussitôt
+      respond = (url, init) =>
+        init?.priority === 'low'
+          ? Promise.resolve(mp3())
+          : new Promise(resolve => {
+              releaseQuestion = () => resolve(mp3());
+            });
+    });
+
+    const preloads = () => fetches.filter(f => f.init?.priority === 'low').map(f => f.url);
+
+    test('le départ du clip en cours', async () => {
+      const engine = makeEngine();
+      engine.start('Combien font 7 fois 8 ?', handlers());
+      engine.preload([ERROR_TEXT]);
+      await flush();
+      expect(preloads()).toEqual([]);
+      releaseQuestion();
+      await flush();
+      expect(preloads()).toEqual([]);
+      audio.fire('playing');
+      expect(preloads()).toEqual([`/voice/fr/lucie-v3-1/${voiceKey(ERROR_TEXT)}.mp3`]);
+    });
+
+    test('ou la fin de la phrase : coupée, ou repliée sur la synthèse après 1,5 s', async () => {
+      const engine = makeEngine();
+      const handle = engine.start('Combien font 7 fois 8 ?', handlers());
+      engine.preload([ERROR_TEXT]);
+      handle.stop();
+      expect(preloads()).toHaveLength(1);
+
+      jest.useFakeTimers();
+      try {
+        const slow = makeEngine();
+        slow.start('Combien font 9 fois 6 ?', handlers());
+        slow.preload(['Presque ! La bonne réponse est 54.']);
+        expect(preloads()).toHaveLength(1);
+        jest.advanceTimersByTime(1500);
+        expect(fallbacks).toEqual(['timeout']);
+        expect(preloads()).toHaveLength(2);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    test('sans phrase en cours, ou une fois le clip parti, il part tout de suite', async () => {
+      const engine = makeEngine();
+      engine.preload([ERROR_TEXT]);
+      expect(preloads()).toHaveLength(1);
+      engine.start('Combien font 7 fois 8 ?', handlers());
+      releaseQuestion();
+      await flush();
+      audio.fire('playing');
+      engine.preload(['Presque ! La bonne réponse est 54.']);
+      expect(preloads()).toHaveLength(2);
+    });
+  });
 });

@@ -277,8 +277,7 @@ export class QuizMode extends GameMode {
   _handleIncorrectAnswer() {
     this.errors++;
 
-    const spoken = this.showErrorExplanation();
-    if (spoken) speak(`${spoken.lead} ${spoken.message}`);
+    if (this.showErrorExplanation()) speak(this.spokenErrorText());
 
     this.showContinueButton();
   }

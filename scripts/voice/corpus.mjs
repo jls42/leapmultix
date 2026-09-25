@@ -16,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { formatMessage } from '../../js/core/message-format.js';
 import {
+  ANNOUNCED_MODES,
   VOICE_KEY_SCHEMA,
   normalizeSpokenText,
   spokenEquation,
@@ -55,9 +56,6 @@ export const LOCK_PATH = path.join(ROOT, 'scripts/voice/corpus.lock.json');
 export const LANGS = ['fr', 'en', 'es'];
 const OPERATORS = ['×', '+', '−', '÷'];
 const LEVELS = ['easy', 'medium', 'hard'];
-
-/** Modes annoncés au démarrage (GameMode.start : « <mode>_mode ») */
-const ANNOUNCED_MODES = ['quiz', 'challenge', 'adventure', 'discovery', 'arcade'];
 
 /** Quiz et Défi, multiplication : tables 1 à 10, multiplicandes 1 à 10 (getQuestionOptions) */
 const QUIZ_FACTORS = Array.from({ length: 10 }, (_, i) => i + 1);

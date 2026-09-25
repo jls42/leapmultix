@@ -28,6 +28,7 @@ const {
   getSynthesisEngine,
   estimateSpeechDurationMs,
   updateSpeechVoice,
+  preloadSpeech,
 } = speech;
 
 /** Moteur factice : chaque phrase reçue garde ses rappels et sa poignée */
@@ -401,5 +402,45 @@ describe('Moteur de synthèse', () => {
     expect(spoken.map(u => u.text)).toEqual(['Mode Quiz']);
     spoken[0].onend();
     expect(spoken.map(u => u.text)).toEqual(['Mode Quiz', 'Combien font 7 fois 8 ?']);
+  });
+});
+
+describe('Préchargement', () => {
+  function preloadingEngine() {
+    const clips = createFakeEngine();
+    clips.preload = jest.fn();
+    return clips;
+  }
+
+  test('le moteur en place charge les phrases qui peuvent se dire, sans les dire', () => {
+    const clips = preloadingEngine();
+    setSpeechEngine(clips);
+    preloadSpeech(['Presque ! La bonne réponse est 56.', '[incorrect] 56', '  ', null]);
+    expect(clips.preload).toHaveBeenCalledWith(['Presque ! La bonne réponse est 56.']);
+    expect(clips.texts()).toEqual([]);
+  });
+
+  test('voix coupée ou son coupé : rien n’est chargé', () => {
+    const clips = preloadingEngine();
+    setSpeechEngine(clips);
+    storageState.voiceEnabled = false;
+    preloadSpeech(['Bravo !']);
+    storageState.voiceEnabled = true;
+    emitVolume({ volume: 1, muted: true });
+    preloadSpeech(['Bravo !']);
+    emitVolume({ volume: 1, muted: false });
+    expect(clips.preload).not.toHaveBeenCalled();
+    preloadSpeech(['Bravo !']);
+    expect(clips.preload).toHaveBeenCalledTimes(1);
+  });
+
+  test('moteur sans préchargement (synthèse) ou préchargement en échec : rien ne remonte', () => {
+    expect(() => preloadSpeech(['Bravo !'])).not.toThrow();
+    const clips = preloadingEngine();
+    clips.preload.mockImplementation(() => {
+      throw new Error('stockage plein');
+    });
+    setSpeechEngine(clips);
+    expect(() => preloadSpeech(['Bravo !'])).not.toThrow();
   });
 });

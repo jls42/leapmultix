@@ -1,17 +1,20 @@
 /* eslint-env jest, node */
 /**
  * Les vrais modes jouent, dans les trois langues et pour les quatre opérations : tout
- * ce qu'ils passent à speak() doit figurer dans le corpus de la voix enregistrée
- * (scripts/voice/corpus.mjs). Une phrase absente du corpus n'aurait pas de clip : elle
- * retomberait sur la voix de l'appareil sans que personne ne le voie.
+ * ce qu'ils passent à speak(), ou chargent d'avance (preloadSpeech), doit figurer dans
+ * le corpus de la voix enregistrée (scripts/voice/corpus.mjs). Une phrase absente du
+ * corpus n'aurait pas de clip : elle retomberait sur la voix de l'appareil sans que
+ * personne ne le voie.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 import fs from 'node:fs';
 import { createSlidesMock, createUserStateMock } from '../helpers/mode-test-helpers.mjs';
 
 const speak = jest.fn();
+const preloadSpeech = jest.fn();
 jest.unstable_mockModule('../../js/speech.js', () => ({
   speak,
+  preloadSpeech,
   isVoiceEnabled: () => true,
   updateSpeechVoice: () => {},
   cancelSpeech: () => {},
@@ -73,6 +76,38 @@ function spokenTexts() {
   return speak.mock.calls.map(([text]) => normalizeSpokenText(text));
 }
 
+function preloadedTexts() {
+  return preloadSpeech.mock.calls.flatMap(([texts]) => texts).map(normalizeSpokenText);
+}
+
+/** Une réponse fausse, quelle que soit la forme de la question */
+function wrongAnswerFor(expected) {
+  if (typeof expected === 'boolean') return !expected;
+  return typeof expected === 'number' ? expected + 1 : `${expected}?`;
+}
+
+/**
+ * Questions toutes ratées : la phrase d'erreur dite doit être l'une de celles chargées
+ * d'avance pendant la question (sinon le préchargement ne sert à rien)
+ * @returns {{said: string, preloaded: string[]}[]} Les erreurs dites sans préchargement
+ */
+function errorsWithoutPreload(mode, count) {
+  const misses = [];
+  for (let i = 0; i < count; i++) {
+    mode.hideContinueButton();
+    mode.state.isActive = true;
+    speak.mockClear();
+    preloadSpeech.mockClear();
+    mode.generateQuestion();
+    const preloaded = preloadedTexts();
+    speak.mockClear();
+    mode.handleAnswer(wrongAnswerFor(mode.state.currentQuestion.answer));
+    const said = spokenTexts();
+    if (said.length !== 1 || !preloaded.includes(said[0])) misses.push({ said, preloaded });
+  }
+  return misses;
+}
+
 beforeEach(() => {
   document.body.innerHTML =
     '<section id="slide4" class="slide"><div id="game"></div></section><div id="results"></div>';
@@ -100,12 +135,14 @@ describe.each(LANGS)('%s : les phrases des modes sont toutes dans le corpus', la
   beforeEach(() => {
     store.setTranslations(translations[lang]);
     store.setCurrentLanguage(lang);
+    preloadSpeech.mockClear();
   });
 
   function expectAllInCorpus() {
     const spoken = spokenTexts();
     expect(spoken.length).toBeGreaterThan(0);
     expect(spoken.filter(text => !corpus.has(text))).toEqual([]);
+    expect(preloadedTexts().filter(text => !corpus.has(text))).toEqual([]);
   }
 
   test.each(OPERATORS)('Quiz, %s : questions de toutes formes, bravos et erreurs', async op => {
@@ -138,6 +175,27 @@ describe.each(LANGS)('%s : les phrases des modes sont toutes dans le corpus', la
     }
     adventure.stop();
     expectAllInCorpus();
+  });
+
+  test.each(OPERATORS)('%s : la phrase d’erreur dite est celle chargée d’avance', async op => {
+    userStore.preferredOperator = op;
+    const quiz = new QuizMode();
+    await quiz.start();
+    expect(errorsWithoutPreload(quiz, 30)).toEqual([]);
+    quiz.stop();
+
+    const challenge = new ChallengeMode();
+    await challenge.start();
+    document.querySelector('.difficulty-btn[data-difficulty="easy"]').click();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(errorsWithoutPreload(challenge, 30)).toEqual([]);
+    challenge.stop();
+
+    const adventure = new AdventureMode();
+    await adventure.start();
+    await adventure.startLevel(3);
+    expect(errorsWithoutPreload(adventure, 12)).toEqual([]);
+    adventure.stop();
   });
 
   test.each(OPERATORS)('Découverte, %s : tables, niveaux et égalités dites', async op => {

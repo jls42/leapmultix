@@ -8,6 +8,9 @@
 // Les fonctions qui composent une phrase reçoivent `translate(key, params)`, qui rend
 // le texte traduit ou null si la clé manque.
 
+/** Modes annoncés à leur démarrage (GameMode.start : « <mode>_mode ») */
+export const ANNOUNCED_MODES = ['quiz', 'challenge', 'adventure', 'discovery', 'arcade'];
+
 /** Mots prononcés pour les symboles d'une égalité */
 const SPOKEN_SYMBOL_KEYS = [
   ['×', 'speech_times'],

@@ -408,7 +408,7 @@ export class ChallengeMode extends GameMode {
       this.sessionBestStreak = Math.max(this.sessionBestStreak, this.state.streak);
       this.showCorrectFeedback();
     } else {
-      this.showIncorrectFeedback(correctAnswer);
+      this.showIncorrectFeedback();
     }
   }
 
@@ -432,23 +432,31 @@ export class ChallengeMode extends GameMode {
   }
 
   /**
-   * Réponse fausse : ton calme, sans son d'alerte ; la bonne tuile est déjà cochée
-   * @param {*} correctAnswer
+   * Phrase dite après une erreur, affichée telle quelle : « Presque ! La bonne réponse
+   * est 8. » (GameMode.speakQuestion la charge d'avance)
+   * @returns {string|null}
    */
-  showIncorrectFeedback(correctAnswer) {
+  spokenErrorText() {
+    const question = this.state.currentQuestion;
+    if (!question) return null;
     let message;
-    if (this.state.currentQuestion.type === 'true_false') {
+    if (question.type === 'true_false') {
       message =
-        correctAnswer === true
+        question.answer === true
           ? getTranslation('incorrect_answer_was_true')
           : getTranslation('incorrect_answer_was_false');
     } else {
-      message = getTranslation('challenge_feedback_incorrect', { correctAnswer });
+      message = getTranslation('challenge_feedback_incorrect', { correctAnswer: question.answer });
     }
+    return `${getTranslation('incorrect')} ${message}`;
+  }
 
-    // La phrase entière est lue : « Presque ! La bonne réponse est 8. »
-    const lead = getTranslation('incorrect');
-    this.displayFeedback(`${lead} ${message}`, 'error', true);
+  /**
+   * Réponse fausse : ton calme, sans son d'alerte ; la bonne tuile est déjà cochée, la
+   * phrase entière est lue
+   */
+  showIncorrectFeedback() {
+    this.displayFeedback(this.spokenErrorText(), 'error', true);
   }
 
   /**

@@ -31,6 +31,7 @@
 //   - isAvailable() (facultatif) : false si le moteur ne peut rien dire du tout.
 //   - unlock() (facultatif) : appelé pendant un geste de l'utilisateur pour déverrouiller
 //     le son (iOS) ; rend un booléen ou une promesse de booléen.
+//   - preload(texts) (facultatif) : prépare des phrases sans les dire (preloadSpeech).
 //   Le moteur par défaut est la synthèse du navigateur (getSynthesisEngine()).
 
 import Storage from './core/storage.js';
@@ -581,6 +582,24 @@ function startPhrase(phrase) {
 export function cancelSpeech() {
   pending = null;
   stopActive();
+}
+
+/**
+ * Prépare des phrases que le jeu dira peut-être bientôt (la phrase d'une erreur) : le
+ * moteur en place les charge sans les dire. Sans effet si la parole est coupée, ou pour
+ * la synthèse, qui n'a rien à charger.
+ * @param {string[]} texts
+ */
+export function preloadSpeech(texts) {
+  if (isMuted || !engine.preload || !isVoiceEnabled()) return;
+  const sayable = texts.filter(
+    text => typeof text === 'string' && text.trim() && !MISSING_TRANSLATION.test(text)
+  );
+  try {
+    if (sayable.length) engine.preload(sayable);
+  } catch (error) {
+    console.warn('[Speech] Préchargement impossible :', error);
+  }
 }
 
 function canSpeak(text) {
