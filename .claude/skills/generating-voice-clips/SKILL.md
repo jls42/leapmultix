@@ -89,6 +89,7 @@ racine du dépôt du jeu). Détails, codes de sortie et dépannage : [reference.
 **Coupe-circuit** : `npm run voice:publish -- remove --lang <l> --bucket leapmultix-voices --distribution <id>`.
 
 **Essai local** : `npm run voice:publish -- local --lang <l> --audience all --default-on`,
-`npm run serve`, puis ouvrir le jeu avec `?voix=local` (localhost seulement).
+`npm run serve`, puis ouvrir `http://localhost:8080/index.html?voix=local` (localhost
+seulement ; `serve-lite` liste les fichiers à la racine, d'où `index.html`).
 
 **Nouvelle langue ou nouvelle voix** : voir [reference.md](reference.md#nouvelle-langue-ou-nouvelle-voix).

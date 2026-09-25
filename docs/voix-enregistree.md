@@ -235,8 +235,9 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
 le jeu revient à la voix de l'appareil au prochain chargement en ligne.
 
 **Essai local** : `npm run voice:publish -- local --lang fr --audience all --default-on`
-relie le dossier `voice/` du site (ignoré par git) aux clips du dépôt privé ; ouvrir le jeu
-avec `?voix=local`.
+relie le dossier `voice/` du site (ignoré par git) aux clips du dépôt privé ; `npm run serve`,
+puis ouvrir `http://localhost:8080/index.html?voix=local` (`serve-lite` liste les fichiers à la
+racine : viser `index.html`).
 
 ## Licence et mentions
 
