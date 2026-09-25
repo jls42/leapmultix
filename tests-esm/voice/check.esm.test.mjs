@@ -74,8 +74,18 @@ describe('Transcription comparée à la phrase', () => {
       'fr'
     );
     expect(result.numbersMatch).toBe(true);
-    expect(result.similarity).toBeLessThan(0.75);
+    expect(result.similarity).toBeLessThan(0.5);
     expect(result.flagged).toBe(true);
+  });
+
+  test('homophone de Whisper avec les bons nombres : pas à réécouter', () => {
+    const result = compareTranscript(
+      'Tu as 18 crayons et tu en donnes 5 à ton ami. Combien de crayons te reste-t-il ?',
+      'Tu as 18 crayons et tu en donnes 5 à ton ami. Combien de crayons te restent-ils ?',
+      'fr'
+    );
+    expect(result.numbersMatch).toBe(true);
+    expect(result.flagged).toBe(false);
   });
 
   test('ponctuation et majuscules ne comptent pas', () => {
@@ -180,6 +190,22 @@ describe('Contrôle du rangement des clips', () => {
     expect(report.invalid.map(i => i.key)).toEqual([phrases[0].key]);
     expect(report.changed.map(c => c.key)).toEqual([phrases[2].key]);
     expect(isConsistent(report)).toBe(false);
+  });
+
+  test('transcriptions : la dernière d’un clip fait foi, une transcription d’un ancien contenu est ignorée', async () => {
+    const entries = await Promise.all(phrases.map(p => addClip(p)));
+    await saveManifest(entries);
+    const [first, second] = entries;
+    const report = await check({
+      transcripts: [
+        { key: first[0], sha256: first[1].sha256, heard: 'Mode Quiz 2' },
+        { key: first[0], sha256: first[1].sha256, heard: 'Mode Quiz' },
+        { key: second[0], sha256: 'ancien-contenu', heard: 'Combien font une fois huit ?' },
+      ],
+    });
+    expect(report.transcripts.checked).toBe(1);
+    expect(report.transcripts.stale).toBe(1);
+    expect(report.transcripts.flagged).toEqual([]);
   });
 
   test('durées anormales et transcriptions douteuses : signalées, sans rendre incohérent', async () => {

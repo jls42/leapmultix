@@ -61,17 +61,27 @@ function durationOutliers(entries) {
     .filter(({ perChar }) => perChar < SECONDS_PER_CHAR.min || perChar > SECONDS_PER_CHAR.max);
 }
 
+/**
+ * Transcriptions comparées aux phrases. La dernière ligne d'un clip fait foi ; une ligne
+ * écrite pour un autre contenu du clip (refait depuis) est périmée et ignorée.
+ */
 function transcriptReport(transcripts, manifest, lang) {
+  const latest = new Map(transcripts.map(line => [line.key, line]));
   const flagged = [];
   let checked = 0;
-  for (const { key, heard } of transcripts) {
+  let stale = 0;
+  for (const { key, heard, sha256: heardSha } of latest.values()) {
     const entry = manifest.clips[key];
     if (!entry) continue;
+    if (heardSha && heardSha !== entry.sha256) {
+      stale++;
+      continue;
+    }
     checked++;
     const result = compareTranscript(entry.text, heard, lang);
     if (result.flagged) flagged.push({ key, text: entry.text, said: entry.said, heard, ...result });
   }
-  return { checked, flagged };
+  return { checked, stale, flagged };
 }
 
 /**
@@ -161,7 +171,10 @@ function printSummary(report) {
   }
   if (report.transcripts) {
     lines.push(
-      `  Whisper : ${report.transcripts.checked} transcrits, ${report.transcripts.flagged.length} à réécouter`
+      `  Whisper : ${report.transcripts.checked} transcrits, ${report.transcripts.flagged.length} à réécouter` +
+        (report.transcripts.stale
+          ? `, ${report.transcripts.stale} transcriptions périmées (relancer Whisper)`
+          : '')
     );
   }
   console.log(lines.join('\n'));

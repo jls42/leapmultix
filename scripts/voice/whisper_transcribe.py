@@ -5,9 +5,10 @@ Usage :
   python3 scripts/voice/whisper_transcribe.py --manifest <dépôt>/manifests/fr/<version>.json \\
       --clips <dépôt>/clips/fr/<version> --lang fr --out transcripts-fr.jsonl
 
-Écrit une ligne JSON par clip : {"key": ..., "heard": ...}, que lit
-`node scripts/voice/check.mjs --transcripts`. Reprend là où il s'est arrêté : les clips
-déjà présents dans le fichier de sortie (ou dans ceux de --also-done) sont sautés.
+Écrit une ligne JSON par clip : {"key": ..., "sha256": ..., "heard": ...}, que lit
+`node scripts/voice/check.mjs --transcripts`. Reprend là où il s'est arrêté : un clip déjà
+transcrit dans le fichier de sortie (ou dans ceux de --also-done) est sauté, sauf si son
+contenu a changé depuis (sha256 du manifeste différent, clip refait par --redo).
 
 Plusieurs processus se partagent un GPU avec --shard K/N (clips dont le rang modulo N vaut
 K), chacun avec son fichier de sortie ; concaténer les fichiers pour check.mjs.
@@ -50,22 +51,28 @@ def load_model(name, device):
     return WhisperModel(name, device=device, compute_type=compute)
 
 
-def done_keys(out):
+def done_pairs(out):
+    """Clips déjà transcrits : (empreinte, sha256) ; sha256 vaut None pour une ligne ancienne"""
     if not out.exists():
         return set()
     with out.open(encoding="utf-8") as handle:
-        return {json.loads(line)["key"] for line in handle if line.strip()}
+        lines = [json.loads(line) for line in handle if line.strip()]
+    return {(line["key"], line.get("sha256")) for line in lines}
 
 
 def main():
     args = parse_args()
     clips = json.loads(args.manifest.read_text(encoding="utf-8"))["clips"]
-    already = done_keys(args.out)
+    already = done_pairs(args.out)
     for extra in args.also_done:
-        already |= done_keys(extra)
+        already |= done_pairs(extra)
+
+    def is_done(key):
+        return (key, clips[key].get("sha256")) in already or (key, None) in already
+
     part, parts = (int(n) for n in args.shard.split("/"))
     todo = [key for index, key in enumerate(sorted(clips))
-            if index % parts == part and key not in already]
+            if index % parts == part and not is_done(key)]
     print(f"{len(todo)} clips à transcrire ({len(already)} déjà faits)", file=sys.stderr)
     if not todo:
         return 0
@@ -82,7 +89,8 @@ def main():
                 without_timestamps=True,
             )
             heard = "".join(segment.text for segment in segments).strip()
-            out.write(json.dumps({"key": key, "heard": heard}, ensure_ascii=False) + "\n")
+            line = {"key": key, "sha256": clips[key].get("sha256"), "heard": heard}
+            out.write(json.dumps(line, ensure_ascii=False) + "\n")
             if index % 250 == 0:
                 out.flush()
                 print(f"  {index}/{len(todo)}", file=sys.stderr)

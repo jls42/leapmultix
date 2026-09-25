@@ -186,8 +186,12 @@ function editDistance(a, b) {
   return row[b.length];
 }
 
-/** Seuil de ressemblance en dessous duquel un clip est à réécouter */
-export const MIN_SIMILARITY = 0.75;
+/**
+ * Ressemblance en dessous de laquelle un clip est à réécouter, même avec les bons nombres.
+ * Basse exprès : Whisper confond souvent des homophones (« éclatent » / « éclates »,
+ * « reste-t-il » / « restent-ils ») ; ce sont les nombres qui signalent un vrai défaut.
+ */
+export const MIN_SIMILARITY = 0.5;
 
 /**
  * Compare la transcription d'un clip à sa phrase
