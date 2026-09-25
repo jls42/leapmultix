@@ -406,6 +406,57 @@ describe('Publication', () => {
     expect(() => parsePublishArgs(['index', '--lang', 'fr', '--vite'], env)).toThrow(/inconnue/);
   });
 
+  test('entrée refusée par les règles du jeu : index ne lit ni n’envoie rien, local n’écrit rien', async () => {
+    const badVoice = { ...voice, voice: 'Jane - Neutral' };
+    await expect(run({ command: 'index', voice: badVoice }, fakeAws())).rejects.toThrow(
+      /refusée par les règles du jeu : voix « Jane - Neutral »/
+    );
+    expect(calls).toEqual([]);
+    const site = await fsp.mkdtemp(path.join(os.tmpdir(), 'site-'));
+    try {
+      await expect(run({ command: 'local', site, voice: badVoice }, fakeAws())).rejects.toThrow(
+        /règles du jeu/
+      );
+      expect(fs.existsSync(path.join(site, 'voice'))).toBe(false);
+    } finally {
+      await fsp.rm(site, { recursive: true, force: true });
+    }
+    expect(() => indexEntry({ voice: 'jane', version: 'jane v1' })).toThrow(/version « jane v1 »/);
+    expect(indexEntry({ voice: 'jane', version: 'jane-v1-1' })).toEqual({
+      voice: 'jane',
+      version: 'jane-v1-1',
+      format: 'mp3',
+      audience: 'test',
+      defaultOn: false,
+    });
+  });
+
+  test('local : la langue rejoint l’index du site sans effacer les autres', async () => {
+    const site = await fsp.mkdtemp(path.join(os.tmpdir(), 'site-'));
+    try {
+      const jane = {
+        voice: 'jane',
+        version: 'jane-v1-1',
+        format: 'mp3',
+        audience: 'all',
+        defaultOn: false,
+      };
+      await fsp.mkdir(path.join(site, 'voice'), { recursive: true });
+      fs.writeFileSync(
+        path.join(site, 'voice', 'index.json'),
+        JSON.stringify({ schema: VOICE_KEY_SCHEMA, languages: { en: jane } })
+      );
+      await run({ command: 'local', site, audience: 'all', defaultOn: true }, fakeAws());
+      const index = JSON.parse(fs.readFileSync(path.join(site, 'voice', 'index.json'), 'utf8'));
+      expect(parseVoiceIndex(index).languages).toEqual({
+        en: jane,
+        fr: { voice: 'lucie', version: 'test-1', format: 'mp3', audience: 'all', defaultOn: true },
+      });
+    } finally {
+      await fsp.rm(site, { recursive: true, force: true });
+    }
+  });
+
   test('local : dossier voice/ du site relié aux clips, index écrit', async () => {
     const site = await fsp.mkdtemp(path.join(os.tmpdir(), 'site-'));
     try {

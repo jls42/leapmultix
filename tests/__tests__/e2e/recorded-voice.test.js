@@ -80,22 +80,31 @@ describe('Voix enregistrée E2E', () => {
         '--mute-audio',
       ],
     });
-    // Empreinte de l'annonce du Quiz, calculée par le jeu lui-même
+    // Empreintes de l'annonce du Quiz, en français et en anglais, calculées par le jeu lui-même
     const page = await browser.newPage();
     await page.goto(server.url, server.gotoOptions);
-    const key = await page.evaluate(async base => {
+    const [key, keyEn] = await page.evaluate(async base => {
       const { voiceKey } = await import(new URL('./js/core/spoken-text.js', base).href);
-      return voiceKey('Mode Quiz');
+      return [voiceKey('Mode Quiz'), voiceKey('Quiz Mode')];
     }, server.url);
     await page.close();
     fs.mkdirSync(path.join(voiceDir, 'fr', 'e2e-1'), { recursive: true });
     fs.writeFileSync(path.join(voiceDir, 'fr', 'e2e-1', `${key}.mp3`), silenceMp3());
+    fs.mkdirSync(path.join(voiceDir, 'en', 'e2e-en-1'), { recursive: true });
+    fs.writeFileSync(path.join(voiceDir, 'en', 'e2e-en-1', `${keyEn}.mp3`), silenceMp3());
     fs.writeFileSync(
       path.join(voiceDir, 'index.json'),
       JSON.stringify({
         schema: 'cyrb53-nfc-1',
         languages: {
           fr: { voice: 'essai', version: 'e2e-1', format: 'mp3', audience: 'all', defaultOn: true },
+          en: {
+            voice: 'essai-en',
+            version: 'e2e-en-1',
+            format: 'mp3',
+            audience: 'all',
+            defaultOn: true,
+          },
         },
       })
     );
@@ -107,10 +116,17 @@ describe('Voix enregistrée E2E', () => {
     fs.rmSync(voiceDir, { recursive: true, force: true });
   });
 
-  async function openGame(query) {
+  async function openGame(query, { lang = null } = {}) {
     const context = await browser.createBrowserContext();
     const page = await context.newPage();
     await page.evaluateOnNewDocument(RECORDERS_SOURCE);
+    // Langue du jeu choisie d'avance (clé « language » de js/core/storage.js, en JSON)
+    if (lang) {
+      await page.evaluateOnNewDocument(
+        value => localStorage.setItem('language', JSON.stringify(value)),
+        lang
+      );
+    }
     page.on('request', request => {
       if (new URL(request.url()).pathname.startsWith('/voice/')) voiceRequests.push(request.url());
     });
@@ -138,6 +154,25 @@ describe('Voix enregistrée E2E', () => {
       expect(spoken).toHaveLength(1);
       expect(spoken[0].match(/\d+/g)).toEqual(question.match(/\d+/g));
       expect(voiceRequests.some(url => url.endsWith('/voice/index.json'))).toBe(true);
+    } finally {
+      await context.close();
+    }
+  }, 60000);
+
+  test('jeu en anglais : l’annonce part en clip anglais, sous /voice/en/', async () => {
+    voiceRequests.length = 0;
+    const { context, page } = await openGame('?voix=local', { lang: 'en' });
+    try {
+      await createUserAndSkipIntro(page);
+      await page.click('.mode-btn[data-mode="quiz"]');
+      await page.waitForFunction(() => globalThis.__spoken.some(Boolean), { timeout: 20000 });
+      const spoken = await page.evaluate(() => globalThis.__spoken.filter(Boolean));
+      const played = await page.evaluate(() => globalThis.__played);
+      // « Quiz Mode » n'est pas passée par la synthèse : son clip anglais a été joué
+      expect(spoken.some(text => /Mode/.test(text))).toBe(false);
+      expect(played.some(src => src.startsWith('blob:'))).toBe(true);
+      expect(voiceRequests.some(url => url.includes('/voice/en/e2e-en-1/'))).toBe(true);
+      expect(voiceRequests.some(url => url.includes('/voice/fr/'))).toBe(false);
     } finally {
       await context.close();
     }

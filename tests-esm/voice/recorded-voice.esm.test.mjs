@@ -245,6 +245,73 @@ describe('Voix enregistrée dans le jeu', () => {
     expect(ctx.engines).toHaveLength(1);
   });
 
+  test('français et anglais : chaque langue a son moteur, sa version et son « par défaut »', async () => {
+    const JANE = {
+      voice: 'jane',
+      version: 'jane-v1-1',
+      format: 'mp3',
+      audience: 'all',
+      defaultOn: false,
+    };
+    document.body.innerHTML = `
+      <label id="recorded-voice-option" hidden>
+        <input type="checkbox" id="recorded-voice-toggle" checked />
+      </label>`;
+    const ctx = setup({ index: indexWith({ fr: ENTRY, en: JANE }) });
+    await initRecordedVoice(ctx.deps);
+    attachRecordedVoiceSetting(document);
+    // Français activé par défaut : Lucie parle sans choix du joueur
+    expect(saidByClips(ctx, 'Mode Quiz')).toBe(true);
+    ctx.lang = 'en';
+    ctx.bus.emit('languageChanged', { lang: 'en' });
+    // Anglais disponible (case visible), mais pas activé par défaut : voix coupée
+    expect(isRecordedVoiceAvailable()).toBe(true);
+    expect(document.getElementById('recorded-voice-option').hidden).toBe(false);
+    expect(isVoiceEnabled()).toBe(false);
+    // Le joueur allume la voix : Jane parle, avec son propre moteur
+    ctx.storage.set('voiceEnabled', true);
+    ctx.bus.emit('voice:preference-changed', {});
+    expect(saidByClips(ctx, 'Quiz Mode')).toBe(true);
+    expect(ctx.engines.map(e => [e.options.lang, e.options.entry.version])).toEqual([
+      ['fr', 'lucie-v3-1'],
+      ['en', 'jane-v1-1'],
+    ]);
+  });
+
+  test('repli : Plausible reçoit la cause et la langue, une fois par cause et par langue', async () => {
+    const JANE = {
+      voice: 'jane',
+      version: 'jane-v1-1',
+      format: 'mp3',
+      audience: 'all',
+      defaultOn: true,
+    };
+    globalThis.plausible = jest.fn();
+    try {
+      const ctx = setup({
+        index: indexWith({ fr: ENTRY, en: JANE }),
+        stored: { voiceEnabled: true },
+      });
+      await initRecordedVoice(ctx.deps);
+      saidByClips(ctx, 'Mode Quiz');
+      ctx.lang = 'en';
+      ctx.bus.emit('languageChanged', { lang: 'en' });
+      saidByClips(ctx, 'Quiz Mode');
+      const [french, english] = ctx.engines;
+      french.options.onFallback('absent');
+      french.options.onFallback('absent');
+      english.options.onFallback('absent');
+      english.options.onFallback('slow');
+      expect(globalThis.plausible.mock.calls).toEqual([
+        ['Voice fallback', { props: { cause: 'absent', lang: 'fr' } }],
+        ['Voice fallback', { props: { cause: 'absent', lang: 'en' } }],
+        ['Voice fallback', { props: { cause: 'slow', lang: 'en' } }],
+      ]);
+    } finally {
+      delete globalThis.plausible;
+    }
+  });
+
   test('case décochée : synthèse, parole toujours active ; recochée : le même moteur revient', async () => {
     const ctx = setup({ index: indexWith({ fr: ENTRY }) });
     await initRecordedVoice(ctx.deps);

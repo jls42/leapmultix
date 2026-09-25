@@ -32,7 +32,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { VOICE_KEY_SCHEMA } from '../../js/core/spoken-text.js';
-import { VOICE_AUDIENCES, parseVoiceIndex } from '../../js/core/voice-index.js';
+import { VOICE_AUDIENCES, parseLanguage, parseVoiceIndex } from '../../js/core/voice-index.js';
 import {
   assertLangCode,
   flagOption,
@@ -75,10 +75,21 @@ export function withLanguage(current, lang, entry) {
   return { schema: VOICE_KEY_SCHEMA, languages };
 }
 
-/** Entrée d'index d'une voix */
+/**
+ * Entrée d'index d'une voix, validée avec les règles du jeu (js/core/voice-index.js) avant
+ * toute écriture : une entrée que le jeu écarterait serait publiée pour rien, puis
+ * bloquerait les index et remove suivants
+ */
 export function indexEntry(voice, { audience = 'test', defaultOn = false } = {}) {
   if (!VOICE_AUDIENCES.includes(audience)) throw new Error(`Audience inconnue : ${audience}`);
-  return { voice: voice.voice, version: voice.version, format: 'mp3', audience, defaultOn };
+  const entry = { voice: voice.voice, version: voice.version, format: 'mp3', audience, defaultOn };
+  if (!parseLanguage(entry)) {
+    throw new Error(
+      `Entrée d'index refusée par les règles du jeu : voix « ${voice.voice} », version ` +
+        `« ${voice.version} » (voir js/core/voice-index.js)`
+    );
+  }
+  return entry;
 }
 
 /**
@@ -403,9 +414,10 @@ export async function publish(args, { run = awsCli, log = console.log, phrases }
   requireClips(ctx.manifest, ctx.paths);
   if (args.command === 'clips') return publishClips(ctx);
   if (args.command === 'local') return publishLocal(ctx);
+  // L'entrée d'abord : refusée par les règles du jeu, rien n'est ni lu ni envoyé
+  const entry = indexEntry(ctx.voice, { audience: args.audience, defaultOn: args.defaultOn });
   ctx.phrases = phrases ?? buildCorpus(args.lang);
   await assertPublishable(ctx);
-  const entry = indexEntry(ctx.voice, { audience: args.audience, defaultOn: args.defaultOn });
   return publishIndex(ctx, entry);
 }
 

@@ -223,6 +223,33 @@ describe('Service worker : voix enregistrée', () => {
     );
   });
 
+  test('français et anglais dans l’index : les clips des deux sont gardés, l’ancienne version purgée', async () => {
+    const both = {
+      ...INDEX,
+      languages: {
+        ...INDEX.languages,
+        en: {
+          voice: 'jane',
+          version: 'jane-v1-1',
+          format: 'mp3',
+          audience: 'all',
+          defaultOn: false,
+        },
+      },
+    };
+    const worker = loadWorker(url =>
+      url.endsWith('index.json') ? new FakeResponse(JSON.stringify(both)) : mp3()
+    );
+    const french = clipUrl('fr', 'lucie-v3-2', 'a1');
+    const english = clipUrl('en', 'jane-v1-1', 'b2');
+    const oldEnglish = clipUrl('en', 'jane-v1-0', 'b2');
+    for (const url of [french, english, oldEnglish]) await request(worker, url);
+    await request(worker, '/voice/index.json');
+    expect([...(await voiceCache(worker)).keys()].sort()).toEqual(
+      [french, english, `${ORIGIN}/voice/index.json`].sort()
+    );
+  });
+
   test('plafond : au-delà de 2 000 clips, les plus anciens partent', async () => {
     const worker = loadWorker(url =>
       url.endsWith('index.json') ? new FakeResponse(JSON.stringify(INDEX)) : mp3()
