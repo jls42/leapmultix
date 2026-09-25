@@ -221,6 +221,22 @@ if grep -q "{{" "$TEMP_DIR/index.html"; then
     grep -n "{{.*}}" "$TEMP_DIR/index.html" || true
 fi
 
+# Numéro de version dans chaque adresse de module et de feuille de style. Les modules
+# s'importent entre eux sans version et le navigateur les garde une semaine sans consulter
+# le service worker : sans cela, un joueur déjà venu mélangeait anciens et nouveaux
+# modules après un déploiement (export absent, mode qui ne démarre pas). Constaté le
+# 25/09/2026 au passage en v22. Voir scripts/version-module-urls.mjs.
+APP_VERSION_SITE=$(sed -n "s/^export const APP_VERSION = '\(.*\)';$/\1/p" "$TEMP_DIR/js/cache-updater.js")
+if [[ -z "$APP_VERSION_SITE" ]]; then
+    echo -e "${RED}❌ APP_VERSION introuvable dans js/cache-updater.js${NC}"
+    exit 1
+fi
+echo -e "${BLUE}🔢 Version dans les adresses des modules : ${APP_VERSION_SITE}${NC}"
+if ! node scripts/version-module-urls.mjs "$TEMP_DIR" "$APP_VERSION_SITE"; then
+    echo -e "${RED}❌ Versionnage des adresses des modules en échec${NC}"
+    exit 1
+fi
+
 # Synchronisation S3
 echo -e "${BLUE}☁️  Synchronisation S3...${NC}"
 
@@ -283,6 +299,16 @@ else
                 exit 1
             fi
         done
+        # - les modules JS : leurs imports portent la version, qui change sans changer la
+        #   taille des fichiers (« v22 » → « v23 »).
+        if aws s3 cp "$TEMP_DIR/js" "s3://$S3_BUCKET/js" --recursive \
+            --exclude "*" --include "*.js" \
+            --content-type text/javascript --metadata-directive REPLACE > /dev/null; then
+            echo -e "${GREEN}   ✅ js/**/*.js${NC}"
+        else
+            echo -e "${RED}   ❌ Envoi des modules JS en échec${NC}"
+            exit 1
+        fi
 
         # Invalidation CloudFront si configuré
         if [[ -n "$CLOUDFRONT_DISTRIB" ]]; then
