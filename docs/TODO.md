@@ -50,3 +50,20 @@ porter cette procédure.
 3. **Écrire le skill** une fois les outils de génération en place, en
    s'appuyant sur les scripts du dépôt plutôt qu'en les recopiant ; le faire
    relire (agent `plugin-dev:skill-reviewer`).
+
+## Voix enregistrée : essayer le TTS de Mistral (à instruire)
+
+Idée du 25/09 : le TTS de Mistral coûterait sans doute moins cher qu'ElevenLabs,
+par exemple pour une voix masculine ou pour une autre langue. À comparer avant la
+prochaine génération :
+
+1. **Prix** par caractère (le français seul fait environ 222 000 caractères, voir
+   `npm run voice:corpus`) et limites de l'API (débit, concurrence).
+2. **Qualité** sur un échantillon du corpus en fr, en et es : questions
+   (« Combien font 7 fois 8 ? »), formes féminines (« une fois 7 », « vingt et une
+   pommes »), énoncés longs ; même banc d'écoute et même contrôle Whisper que pour
+   Lucie.
+3. **Voix disponibles** (masculine, par langue) et **licence** de l'audio généré.
+4. **Branchement** : `scripts/voice/generate.mjs` sépare le fournisseur du reste
+   (corpus, texte dit, traitement ffmpeg, idempotence) ; un fournisseur de plus
+   s'ajoute sans toucher au reste, avec sa voix dans `scripts/voice/voices.json`.

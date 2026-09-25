@@ -202,22 +202,22 @@ function addQuizPhrases(ctx, operator) {
   const { symbol } = operation;
   for (const { a, b } of quizPairs(operator)) {
     const result = operation.compute(a, b);
-    add('question', spokenQuestion(`${a} ${symbol} ${b} = ?`, t));
+    add('question', spokenQuestion(`${a} ${symbol} ${b} = ?`, t), operator);
     challengeAnswers.add(result);
     quizAnswers.add(result);
     if (types.includes('gap')) {
-      add('question à trou', spokenGapQuestion(`${a} ${symbol} ? = ${result}`, t));
+      add('question à trou', spokenGapQuestion(`${a} ${symbol} ? = ${result}`, t), operator);
       quizAnswers.add(b);
     }
     if (types.includes('true_false')) {
       for (const proposal of trueFalseProposals(result)) {
-        add('vrai ou faux', spokenEquation(`${a} ${symbol} ${b} = ${proposal}`, t));
+        add('vrai ou faux', spokenEquation(`${a} ${symbol} ${b} = ${proposal}`, t), operator);
       }
     }
     if (types.includes('problem')) {
       const params = operator === '×' ? { table: a, num: b } : { a, b };
       const statements = variantsOf(dict, lang, PROBLEM_TEMPLATE_KEYS[operator], params);
-      statements.forEach(statement => add('énoncé', spokenQuestion(statement, t)));
+      statements.forEach(statement => add('énoncé', spokenQuestion(statement, t), operator));
     }
   }
 }
@@ -233,13 +233,14 @@ function addAdventureAndDiscoveryPhrases(ctx, operator) {
   const operation = getOperation(operator);
   const { symbol } = operation;
   for (const { a, b } of adventurePairs(operator)) {
-    add('question', spokenQuestion(`${a} ${symbol} ${b} = ?`, t));
+    add('question', spokenQuestion(`${a} ${symbol} ${b} = ?`, t), operator);
     quizAnswers.add(operation.compute(a, b));
   }
   for (const { a, b } of uniquePairs(discoveryExamples(operator))) {
     const result = operation.compute(a, b);
     const symbolic = spokenEquation(`${a} ${symbol} ${b} = ${result}`, t);
-    add('découverte', t(`discovery_speech_${operation.name}`, { a, b, result }) ?? symbolic);
+    const spoken = t(`discovery_speech_${operation.name}`, { a, b, result }) ?? symbolic;
+    add('découverte', spoken, operator);
   }
 }
 
@@ -275,16 +276,17 @@ function addDiscoveryChoicePhrases(ctx) {
 }
 
 /**
- * Phrases d'une langue, dédoublonnées sur leur forme canonique.
+ * Phrases d'une langue, dédoublonnées sur leur forme canonique. Une phrase garde la
+ * famille et l'opération de sa première occurrence (operator : null hors opération).
  * @param {string} lang
  * @param {Object} [dict] - Traductions (lues sur disque par défaut)
- * @returns {Array<{text: string, key: string, family: string}>}
+ * @returns {Array<{text: string, key: string, family: string, operator: string|null}>}
  */
 export function buildCorpus(lang, dict = readTranslations(lang)) {
   const phrases = new Map();
-  const add = (family, text) => {
+  const add = (family, text, operator = null) => {
     const canonical = normalizeSpokenText(text);
-    if (canonical && !phrases.has(canonical)) phrases.set(canonical, family);
+    if (canonical && !phrases.has(canonical)) phrases.set(canonical, { family, operator });
   };
   const ctx = {
     dict,
@@ -310,7 +312,7 @@ export function buildCorpus(lang, dict = readTranslations(lang)) {
   addDiscoveryChoicePhrases(ctx);
 
   return [...phrases.entries()]
-    .map(([text, family]) => ({ text, key: voiceKey(text), family }))
+    .map(([text, { family, operator }]) => ({ text, key: voiceKey(text), family, operator }))
     .sort((x, y) => (x.text < y.text ? -1 : Number(x.text > y.text)));
 }
 

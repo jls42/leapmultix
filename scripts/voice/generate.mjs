@@ -1,0 +1,483 @@
+#!/usr/bin/env node
+// Génère les clips de la voix enregistrée d'une langue, dans le dépôt privé des voix
+// (rangement : voir clip-store.mjs).
+//
+// Idempotent : une relance ne génère que ce qui manque. Un clip n'existe sous son nom
+// final qu'une fois complet et vérifié (ffprobe) ; tout reste d'une exécution
+// interrompue (crédits épuisés, arrêt, plantage) est supprimé au démarrage suivant. Un
+// fichier brut déjà payé est retraité sans nouvel appel.
+//
+// Usage :
+//   node --env-file=<fichier .env> scripts/voice/generate.mjs --lang fr [options]
+//     --out <dossier>      dépôt privé des voix (défaut : ../leapmultix-voices)
+//     --dry-run            compte ce qui reste à générer, sans appel ni écriture
+//     --max-chars <n>      caractères envoyés au plus pour cette exécution
+//     --reserve <n>        crédits à laisser sur le compte (défaut : 0) ; le budget se compte
+//                          en crédits réels (en-tête character-cost : Eleven v3 décompte
+//                          environ 0,5 crédit par caractère)
+//     --limit <n>          appels au plus pour cette exécution
+//     --concurrency <n>    appels simultanés (défaut : 4)
+//     --redo <fichier>     empreintes à refaire, une par ligne (clip écarté à l'écoute)
+// Clé : variable d'environnement ELEVENLABS_API_KEY, jamais écrite ni affichée.
+
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { buildCorpus } from './corpus.mjs';
+import { saidText } from './said-text.mjs';
+import { processClip, probeClip, clipProblem } from './audio-process.mjs';
+import { createElevenLabs, ProviderError } from './providers/elevenlabs.mjs';
+import {
+  PART,
+  cleanLeftovers,
+  clipFile,
+  rawFile,
+  readManifest,
+  reconcile,
+  sha256,
+  storePaths,
+  writeFileAtomic,
+  writeManifest,
+} from './clip-store.mjs';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+export const VOICES_PATH = path.join(ROOT, 'scripts/voice/voices.json');
+export const DEFAULT_OUT = path.resolve(ROOT, '../leapmultix-voices');
+
+const PROVIDERS = { elevenlabs: createElevenLabs };
+
+/** Ordre de génération : ce qu'on entend le plus d'abord, les longs énoncés en dernier */
+export const FAMILY_ORDER = [
+  'annonce',
+  'bravo',
+  'phrase fixe',
+  'erreur',
+  'question',
+  'question à trou',
+  'vrai ou faux',
+  'découverte',
+  'énoncé',
+];
+export const OPERATOR_ORDER = ['×', '÷', '+', '−'];
+
+/** Attentes avant chaque nouvel essai (débit dépassé, serveur ou réseau en panne) */
+export const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 15000, 30000];
+
+/** Au-delà de ce nombre de phrases en échec, l'exécution s'arrête */
+const MAX_FAILURES = 20;
+
+/** Erreurs qui arrêtent toute l'exécution (au lieu d'une seule phrase) */
+const STOPPING_KINDS = new Set(['quota', 'auth', 'voice']);
+
+const rank = (list, value) => {
+  const index = list.indexOf(value);
+  return index < 0 ? list.length : index;
+};
+
+/**
+ * Phrases dans l'ordre de génération
+ * @param {Array<{text: string, family: string, operator?: string|null}>} phrases
+ */
+export function generationOrder(phrases) {
+  return [...phrases].sort(
+    (x, y) =>
+      rank(FAMILY_ORDER, x.family) - rank(FAMILY_ORDER, y.family) ||
+      rank(OPERATOR_ORDER, x.operator) - rank(OPERATOR_ORDER, y.operator) ||
+      x.text.localeCompare(y.text)
+  );
+}
+
+/**
+ * Voix d'une langue dans voices.json
+ * @param {string} lang
+ * @param {string} [voicesPath]
+ */
+export function loadVoice(lang, voicesPath = VOICES_PATH) {
+  const voices = JSON.parse(fs.readFileSync(voicesPath, 'utf8'));
+  const voice = voices[lang];
+  if (!voice)
+    throw new Error(`Aucune voix pour « ${lang} » dans ${path.relative(ROOT, voicesPath)}`);
+  return { ...voice, lang };
+}
+
+const charCount = text => [...text].length;
+
+/** Contrôle d'un clip traité : son entrée de manifeste, ou une erreur */
+async function inspectWith(probeAudio, file) {
+  const info = await probeAudio(file);
+  const problem = clipProblem(info);
+  if (problem) throw new Error(problem);
+  const data = await fsp.readFile(file);
+  return {
+    duration: Math.round(info.duration * 1000) / 1000,
+    bytes: data.length,
+    sha256: sha256(data),
+  };
+}
+
+async function withRetries(task, { delays, sleep, signal }) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await task();
+    } catch (error) {
+      const retriable =
+        error instanceof ProviderError && ['rate', 'server', 'network'].includes(error.kind);
+      if (signal?.aborted || !retriable || attempt >= delays.length) throw error;
+      await sleep(Math.max(error.retryAfterMs ?? 0, delays[attempt]));
+    }
+  }
+}
+
+/** Écarte les clips à refaire (liste d'empreintes) avant la réconciliation */
+async function forgetKeys(paths, manifest, keys) {
+  for (const key of keys) {
+    delete manifest.clips[key];
+    await fsp.rm(clipFile(paths, key), { force: true });
+    const raws = fs.existsSync(paths.rawDir) ? fs.readdirSync(paths.rawDir) : [];
+    for (const name of raws.filter(n => n.startsWith(`${key}-`))) {
+      await fsp.rm(path.join(paths.rawDir, name), { force: true });
+    }
+  }
+}
+
+function createState(options) {
+  return {
+    stop: null,
+    chars: 0,
+    reserved: 0,
+    requests: 0,
+    generated: 0,
+    reprocessed: 0,
+    failed: [],
+    sinceSave: 0,
+    saving: Promise.resolve(),
+    credits: 0,
+    reservedCredits: 0,
+    // Crédits par caractère : 1 tant qu'aucun coût réel n'est connu (estimation prudente)
+    ratio: 1,
+    maxChars: options.maxChars ?? Infinity,
+    maxCredits: options.maxCredits ?? Infinity,
+    limit: options.limit ?? Infinity,
+  };
+}
+
+/**
+ * Réserve le budget d'un appel (caractères, et crédits estimés au coût moyen observé) ;
+ * null (et arrêt) si la phrase n'y tient plus. On s'arrête à la première phrase qui
+ * dépasse, pour respecter l'ordre de génération.
+ * @returns {{chars: number, credits: number}|null}
+ */
+function reserve(state, chars) {
+  if (state.requests >= state.limit) {
+    state.stop ??= 'limit';
+    return null;
+  }
+  const credits = chars * state.ratio;
+  const overChars = state.chars + state.reserved + chars > state.maxChars;
+  const overCredits = state.credits + state.reservedCredits + credits > state.maxCredits;
+  if (overChars || overCredits) {
+    state.stop ??= 'budget';
+    return null;
+  }
+  state.requests++;
+  state.reserved += chars;
+  state.reservedCredits += credits;
+  return { chars, credits };
+}
+
+function release(state, reservation) {
+  state.reserved -= reservation.chars;
+  state.reservedCredits -= reservation.credits;
+}
+
+/** Compte un appel payé : caractères envoyés et crédits réels (estimés s'ils manquent) */
+function account(state, chars, cost) {
+  state.chars += chars;
+  state.credits += cost ?? chars * state.ratio;
+  if (cost !== null) state.ratio = state.credits / state.chars;
+}
+
+/**
+ * Génère (ou retraite) le clip d'une phrase. Rend false si la phrase n'a pas été tentée
+ * (budget atteint).
+ */
+async function produceClip(phrase, ctx) {
+  const { lang, voice, paths, provider, state, manifest, options } = ctx;
+  const said = saidText(phrase.text, lang);
+  const raw = rawFile(paths, phrase.key, said);
+  let requestId = null;
+  let cost = null;
+  const fresh = !fs.existsSync(raw);
+  if (fresh) {
+    const reservation = reserve(state, charCount(said));
+    if (!reservation) return false;
+    try {
+      const result = await withRetries(
+        () => provider.synthesize({ text: said, voice, signal: options.signal }),
+        options
+      );
+      await writeFileAtomic(raw, result.audio);
+      ({ requestId, cost } = result);
+      account(state, reservation.chars, cost ?? null);
+    } finally {
+      release(state, reservation);
+    }
+  }
+  const target = clipFile(paths, phrase.key);
+  const part = `${target}${PART}`;
+  try {
+    await fsp.mkdir(paths.clipDir, { recursive: true });
+    await options.processAudio(raw, part, voice.encoding);
+    const entry = await inspectWith(options.probeAudio, part);
+    await fsp.rename(part, target);
+    manifest.clips[phrase.key] = {
+      text: phrase.text,
+      said,
+      ...entry,
+      requestId,
+      cost,
+      at: options.now().toISOString(),
+    };
+  } catch (error) {
+    // Un brut qui ne se traite pas est inutilisable : il sera redemandé
+    await fsp.rm(part, { force: true });
+    await fsp.rm(raw, { force: true });
+    throw error;
+  }
+  if (fresh) state.generated++;
+  else state.reprocessed++;
+  return true;
+}
+
+function recordFailure(state, phrase, error) {
+  if (error instanceof ProviderError && STOPPING_KINDS.has(error.kind)) {
+    state.stop ??= error.kind;
+    state.stopMessage ??= error.message;
+    return;
+  }
+  state.failed.push({ key: phrase.key, text: phrase.text, error: error.message });
+  if (state.failed.length >= MAX_FAILURES) state.stop ??= 'failures';
+}
+
+function scheduleSave(ctx, force = false) {
+  const { state, paths, manifest } = ctx;
+  state.sinceSave++;
+  if (!force && state.sinceSave < 20) return state.saving;
+  state.sinceSave = 0;
+  state.saving = state.saving.then(() => writeManifest(paths, manifest));
+  return state.saving;
+}
+
+function reportProgress(ctx, total) {
+  const { state, options } = ctx;
+  const done = state.generated + state.reprocessed;
+  if (done % 25 !== 0) return;
+  options.log(
+    `  ${done}/${total} clips, ${state.chars} caractères, ${Math.round(state.credits)} crédits` +
+      (state.failed.length ? `, ${state.failed.length} en échec` : '')
+  );
+}
+
+async function worker(queue, ctx) {
+  const { state, options } = ctx;
+  while (!state.stop) {
+    if (options.signal?.aborted) {
+      state.stop ??= 'interrupted';
+      return;
+    }
+    const phrase = queue.shift();
+    if (!phrase) return;
+    try {
+      if (!(await produceClip(phrase, ctx))) return;
+      await scheduleSave(ctx);
+      reportProgress(ctx, queue.total);
+    } catch (error) {
+      if (options.signal?.aborted) state.stop ??= 'interrupted';
+      else recordFailure(state, phrase, error);
+    }
+  }
+}
+
+/**
+ * Génère les clips manquants d'une langue.
+ * @param {Object} options
+ * @param {string} options.lang
+ * @param {Array<{text: string, key: string, family: string, operator?: string|null}>} options.phrases
+ * @param {Object} options.voice - Entrée de voices.json
+ * @param {string} options.outDir - Dépôt privé des voix
+ * @param {Object} [options.provider] - Fournisseur (inutile en dryRun)
+ * @returns {Promise<Object>} bilan de l'exécution
+ */
+export async function runGeneration(options) {
+  const opts = {
+    concurrency: 4,
+    dryRun: false,
+    redo: [],
+    delays: RETRY_DELAYS_MS,
+    sleep: ms => new Promise(resolve => setTimeout(resolve, ms)),
+    processAudio: processClip,
+    probeAudio: probeClip,
+    now: () => new Date(),
+    log: console.log,
+    ...options,
+  };
+  const { lang, voice, outDir, phrases, dryRun } = opts;
+  const paths = storePaths(outDir, lang, voice.version);
+  const manifest = readManifest(paths, lang, voice);
+  const phrasesByKey = new Map(phrases.map(phrase => [phrase.key, phrase]));
+  const said = text => saidText(text, lang);
+
+  const leftovers = await cleanLeftovers(paths, { dryRun });
+  if (!dryRun) await forgetKeys(paths, manifest, opts.redo);
+  const reconciled = await reconcile({
+    paths,
+    manifest,
+    phrasesByKey,
+    said,
+    inspect: file => inspectWith(opts.probeAudio, file),
+    dryRun,
+  });
+
+  const queue = generationOrder(phrases.filter(phrase => !manifest.clips[phrase.key]));
+  queue.total = queue.length;
+  const summary = {
+    lang,
+    version: voice.version,
+    phrases: phrases.length,
+    alreadyDone: phrases.length - queue.length,
+    toDo: queue.length,
+    toDoChars: queue.reduce((sum, phrase) => sum + charCount(said(phrase.text)), 0),
+    leftovers: leftovers.length,
+    ...reconciled,
+  };
+  if (dryRun) return { ...summary, dryRun: true, next: queue.slice(0, 20) };
+
+  const state = createState(opts);
+  const ctx = { lang, voice, paths, provider: opts.provider, state, manifest, options: opts };
+  if (queue.length) {
+    const workers = Math.max(1, Math.min(opts.concurrency, queue.length));
+    await Promise.all(Array.from({ length: workers }, () => worker(queue, ctx)));
+  }
+  await state.saving;
+  await writeManifest(paths, manifest);
+
+  return {
+    ...summary,
+    generated: state.generated,
+    reprocessed: state.reprocessed,
+    chars: state.chars,
+    credits: Math.round(state.credits),
+    requests: state.requests,
+    failed: state.failed,
+    stop: state.stop,
+    stopMessage: state.stopMessage ?? null,
+    remaining: phrases.filter(phrase => !manifest.clips[phrase.key]).length,
+  };
+}
+
+function parseArgs(argv) {
+  const args = { concurrency: 4, reserve: 0, out: DEFAULT_OUT, dryRun: false };
+  const numeric = {
+    '--max-chars': 'maxChars',
+    '--limit': 'limit',
+    '--concurrency': 'concurrency',
+    '--reserve': 'reserve',
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === '--dry-run') args.dryRun = true;
+    else if (arg === '--lang') args.lang = argv[++i];
+    else if (arg === '--out') args.out = path.resolve(argv[++i]);
+    else if (arg === '--redo') args.redoFile = argv[++i];
+    else if (numeric[arg]) args[numeric[arg]] = Number(argv[++i]);
+    else throw new Error(`Option inconnue : ${arg}`);
+  }
+  if (!args.lang) throw new Error('--lang est requis (fr, en, es)');
+  return args;
+}
+
+/** Crédits que l'exécution peut dépenser : les crédits restants moins la réserve */
+async function creditBudget(args, provider, log) {
+  const credits = await provider.credits();
+  if (!credits) {
+    log('Crédits : illisibles avec cette clé (droit user_read absent)');
+    return Infinity;
+  }
+  const left = credits.limit - credits.used;
+  log(`Crédits : ${credits.used} utilisés sur ${credits.limit}, ${left} restants`);
+  return left - args.reserve;
+}
+
+const EXIT_CODES = { quota: 3, failures: 4, auth: 1, voice: 1, interrupted: 130 };
+
+async function main(argv) {
+  const args = parseArgs(argv);
+  const voice = loadVoice(args.lang);
+  const phrases = buildCorpus(args.lang);
+  const log = console.log;
+  const redo = args.redoFile
+    ? fs.readFileSync(args.redoFile, 'utf8').split(/\s+/).filter(Boolean)
+    : [];
+  const base = { lang: args.lang, voice, outDir: args.out, phrases, redo, log };
+
+  if (args.dryRun) {
+    const summary = await runGeneration({ ...base, dryRun: true });
+    log(JSON.stringify(summary, null, 2));
+    return 0;
+  }
+
+  const createProvider = PROVIDERS[voice.provider];
+  if (!createProvider) throw new Error(`Fournisseur inconnu : ${voice.provider}`);
+  const provider = createProvider({
+    apiKey: process.env.ELEVENLABS_API_KEY,
+    baseUrl: process.env.ELEVENLABS_BASE_URL || undefined,
+  });
+  try {
+    await provider.checkVoice(voice);
+  } catch (error) {
+    throw new Error(
+      `${error.message}\nLa voix ${voice.voiceId} n'est pas utilisable avec cette clé : l'ajouter ` +
+        `depuis la bibliothèque de voix (propriétaire public ${voice.publicOwnerId}).`
+    );
+  }
+  const maxCredits = await creditBudget(args, provider, log);
+
+  const controller = new AbortController();
+  const onSignal = () => {
+    log('Arrêt demandé : fin des appels en cours, nettoyage…');
+    controller.abort();
+  };
+  process.once('SIGINT', onSignal);
+  process.once('SIGTERM', onSignal);
+
+  const startedAt = new Date();
+  const summary = await runGeneration({
+    ...base,
+    provider,
+    maxChars: args.maxChars,
+    maxCredits,
+    limit: args.limit,
+    concurrency: args.concurrency,
+    signal: controller.signal,
+  });
+  const credits = await provider.credits().catch(() => null);
+  const record = { startedAt, endedAt: new Date(), ...summary, creditsAfter: credits };
+  const { runLogFile } = storePaths(args.out, args.lang, voice.version);
+  await fsp.appendFile(runLogFile, `${JSON.stringify(record)}\n`);
+  log(JSON.stringify({ ...summary, failed: summary.failed.length }, null, 2));
+  for (const failure of summary.failed)
+    log(`  échec ${failure.key} « ${failure.text} » : ${failure.error}`);
+  return EXIT_CODES[summary.stop] ?? 0;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main(process.argv.slice(2))
+    .then(code => {
+      process.exitCode = code;
+    })
+    .catch(error => {
+      console.error(error.message);
+      process.exitCode = 1;
+    });
+}

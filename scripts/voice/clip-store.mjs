@@ -1,0 +1,207 @@
+// Rangement des clips d'une voix dans le dépôt privé des voix :
+//
+//   clips/<langue>/<version>/<empreinte>.mp3   clips traités, ceux que le jeu lit
+//   raw/<langue>/<version>/<empreinte>-<h>.mp3 sortie brute de la synthèse (h : empreinte
+//                                              du texte dit), gardée pour retraiter sans payer
+//   manifests/<langue>/<version>.json          phrase, texte dit et contrôle de chaque clip
+//
+// Un fichier n'apparaît sous son nom final qu'une fois complet : on écrit un « .part »,
+// puis on renomme. Les « .part » restants sont les traces d'une exécution interrompue, que
+// cleanLeftovers supprime.
+
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
+import { VOICE_KEY_SCHEMA } from '../../js/core/spoken-text.js';
+
+export const PART = '.part';
+
+/** Champs d'une voix qui ne changent pas le son : les modifier ne demande pas de version */
+const DESCRIPTIVE_FIELDS = new Set(['version', 'voice', 'publicOwnerId', 'lang']);
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const keys = Object.keys(value).sort((a, b) => a.localeCompare(b));
+    return `{${keys.map(k => `${JSON.stringify(k)}:${canonicalJson(value[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+export function sha256(data) {
+  return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+/**
+ * Empreinte des réglages qui font le son d'une voix. Une version de voix n'a qu'un jeu de
+ * réglages : les changer impose une nouvelle version dans voices.json.
+ * @param {Object} voice
+ * @returns {string}
+ */
+export function voiceConfigHash(voice) {
+  const sound = Object.fromEntries(
+    Object.entries(voice).filter(([key]) => !DESCRIPTIVE_FIELDS.has(key))
+  );
+  return sha256(canonicalJson(sound)).slice(0, 16);
+}
+
+/** Empreinte courte du texte dit, dans le nom du fichier brut */
+export function saidHash(said) {
+  return sha256(said).slice(0, 12);
+}
+
+/**
+ * @param {string} outDir - Racine du dépôt privé des voix
+ * @param {string} lang
+ * @param {string} version
+ */
+export function storePaths(outDir, lang, version) {
+  return {
+    rawDir: path.join(outDir, 'raw', lang, version),
+    clipDir: path.join(outDir, 'clips', lang, version),
+    manifestFile: path.join(outDir, 'manifests', lang, `${version}.json`),
+    runLogFile: path.join(outDir, 'manifests', lang, `${version}.runs.jsonl`),
+  };
+}
+
+export const clipFile = (paths, key) => path.join(paths.clipDir, `${key}.mp3`);
+export const rawFile = (paths, key, said) =>
+  path.join(paths.rawDir, `${key}-${saidHash(said)}.mp3`);
+
+/** Clé d'un fichier brut : « <empreinte>-<h>.mp3 » */
+export function rawKeyOf(fileName) {
+  const match = /^([0-9a-z]+)-([0-9a-f]{12})\.mp3$/.exec(fileName);
+  return match ? { key: match[1], hash: match[2] } : null;
+}
+
+function listDir(dir) {
+  return fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+}
+
+/**
+ * Supprime les fichiers « .part » laissés par une exécution interrompue
+ * @returns {Promise<string[]>} fichiers supprimés
+ */
+export async function cleanLeftovers(paths, { dryRun = false } = {}) {
+  const removed = [];
+  for (const dir of [paths.rawDir, paths.clipDir, path.dirname(paths.manifestFile)]) {
+    for (const name of listDir(dir).filter(n => n.endsWith(PART))) {
+      removed.push(path.join(dir, name));
+      if (!dryRun) await fsp.rm(path.join(dir, name), { force: true });
+    }
+  }
+  return removed;
+}
+
+/** Écrit un fichier en entier sous un nom temporaire, puis le renomme */
+export async function writeFileAtomic(file, data) {
+  await fsp.mkdir(path.dirname(file), { recursive: true });
+  const part = `${file}${PART}`;
+  await fsp.writeFile(part, data);
+  await fsp.rename(part, file);
+}
+
+export function newManifest(lang, voice) {
+  return {
+    schema: VOICE_KEY_SCHEMA,
+    lang,
+    version: voice.version,
+    config: voiceConfigHash(voice),
+    clips: {},
+  };
+}
+
+/**
+ * Manifeste d'une version de voix (nouveau s'il n'existe pas). Refuse un manifeste écrit
+ * avec d'autres réglages ou un autre schéma d'empreinte.
+ */
+export function readManifest(paths, lang, voice) {
+  if (!fs.existsSync(paths.manifestFile)) return newManifest(lang, voice);
+  const manifest = JSON.parse(fs.readFileSync(paths.manifestFile, 'utf8'));
+  if (manifest.schema !== VOICE_KEY_SCHEMA) {
+    throw new Error(
+      `Schéma d'empreinte ${manifest.schema} ≠ ${VOICE_KEY_SCHEMA} : nouvelle version`
+    );
+  }
+  if (manifest.config !== voiceConfigHash(voice)) {
+    throw new Error(
+      `Les réglages de la voix ${voice.version} ont changé depuis ses premiers clips : ` +
+        'donner une nouvelle version dans scripts/voice/voices.json'
+    );
+  }
+  return manifest;
+}
+
+/** Écrit le manifeste, clips triés par empreinte (diffs stables) */
+export async function writeManifest(paths, manifest) {
+  const clips = Object.fromEntries(
+    Object.keys(manifest.clips)
+      .sort((a, b) => a.localeCompare(b))
+      .map(key => [key, manifest.clips[key]])
+  );
+  await writeFileAtomic(paths.manifestFile, `${JSON.stringify({ ...manifest, clips }, null, 2)}\n`);
+}
+
+/**
+ * Remet le manifeste d'accord avec les fichiers, avant une génération :
+ * - entrée sans fichier : retirée ;
+ * - clip dont le texte dit a changé (règles de prononciation) : supprimé, à refaire ;
+ * - clip complet sans entrée (arrêt entre le renommage et l'écriture du manifeste) :
+ *   repris s'il est valide, supprimé sinon ;
+ * - fichier brut d'un autre texte dit, ou d'une phrase sortie du corpus : supprimé.
+ * Les clips hors corpus restent (orphelins, signalés par check.mjs). En dryRun, seul le
+ * manifeste en mémoire change : aucun fichier n'est touché.
+ * @returns {Promise<{dropped: number, stale: number, adopted: number, rejected: number, staleRaw: number, orphans: number}>}
+ */
+export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, dryRun = false }) {
+  const report = { dropped: 0, stale: 0, adopted: 0, rejected: 0, staleRaw: 0, orphans: 0 };
+  const remove = async file => {
+    if (!dryRun) await fsp.rm(file, { force: true });
+  };
+
+  for (const [key, entry] of Object.entries(manifest.clips)) {
+    const phrase = phrasesByKey.get(key);
+    if (!fs.existsSync(clipFile(paths, key))) {
+      report.dropped++;
+      delete manifest.clips[key];
+    } else if (phrase && entry.said !== said(phrase.text)) {
+      report.stale++;
+      await remove(clipFile(paths, key));
+      delete manifest.clips[key];
+    }
+  }
+
+  for (const name of listDir(paths.clipDir).filter(n => n.endsWith('.mp3'))) {
+    const key = name.slice(0, -'.mp3'.length);
+    if (manifest.clips[key]) continue;
+    const phrase = phrasesByKey.get(key);
+    if (!phrase) {
+      report.orphans++;
+      continue;
+    }
+    const entry = await inspect(clipFile(paths, key)).catch(() => null);
+    if (entry) {
+      report.adopted++;
+      manifest.clips[key] = {
+        text: phrase.text,
+        said: said(phrase.text),
+        ...entry,
+        requestId: null,
+      };
+    } else {
+      report.rejected++;
+      await remove(clipFile(paths, key));
+    }
+  }
+
+  for (const name of listDir(paths.rawDir)) {
+    const parsed = rawKeyOf(name);
+    const phrase = parsed && phrasesByKey.get(parsed.key);
+    if (!phrase || parsed.hash !== saidHash(said(phrase.text))) {
+      report.staleRaw++;
+      await remove(path.join(paths.rawDir, name));
+    }
+  }
+  return report;
+}

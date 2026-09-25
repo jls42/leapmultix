@@ -1,0 +1,25 @@
+{
+  "fr": {
+    "provider": "elevenlabs",
+    "voice": "lucie",
+    "version": "lucie-v3-1",
+    "voiceId": "YxrwjAKoUKULGd0g8K9Y",
+    "publicOwnerId": "53d56d1e766535d6232a30f650da70c99c78955695b21e29a29241b73aed2723",
+    "model": "eleven_v3",
+    "languageCode": "fr",
+    "sourceFormat": "mp3_44100_128",
+    "settings": {
+      "stability": 0.5,
+      "similarity_boost": 0.75,
+      "style": 0,
+      "use_speaker_boost": true,
+      "speed": 1.02
+    },
+    "encoding": {
+      "bitrateKbps": 48,
+      "loudnessLufs": -20,
+      "truePeakDb": -1,
+      "silenceDb": -50
+    }
+  }
+}

@@ -29,6 +29,7 @@
     "i18n:compare": "node scripts/compare-translations.cjs",
     "voice:corpus": "node scripts/voice/corpus.mjs",
     "voice:corpus:lock": "node scripts/voice/corpus.mjs --write-lock",
+    "voice:generate": "node scripts/voice/generate.mjs",
     "audit:accessibility": "node scripts/audit-accessibility.js",
     "audit:mobile": "node scripts/audit-mobile-responsive.js",
     "test:pwa-offline": "node scripts/test-pwa-offline.cjs",
