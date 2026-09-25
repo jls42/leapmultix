@@ -531,6 +531,22 @@ describe('Génération des clips', () => {
     expect(fs.existsSync(legacy)).toBe(false);
   });
 
+  test('--raw-from : une nouvelle version reprend les bruts d’une autre, sans appel', async () => {
+    server = await startServer(ok);
+    await run();
+    const legacy = storePaths(outDir, 'fr', VOICE.version).rawDir;
+    await fsp.rename(paths().rawDir, legacy);
+    const next = {
+      ...VOICE,
+      version: 'test-2',
+      encoding: { ...VOICE.encoding, leadSeconds: 0.15 },
+    };
+    const summary = await run({ voice: next, limit: 0, rawFrom: VOICE.version });
+    expect(summary.reprocessed).toBe(PHRASES.length);
+    expect(summary.stop).toBeNull();
+    expect(server.tts()).toHaveLength(PHRASES.length);
+  });
+
   test('--redo : le clip écarté est refait, les autres non', async () => {
     server = await startServer(ok);
     await run();

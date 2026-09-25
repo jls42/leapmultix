@@ -159,18 +159,18 @@ export async function acquireLock(paths, { pid = process.pid, alive = isAlive } 
  * synthèse, une fois, pour qu'une autre version les retrouve
  * @returns {Promise<number>} fichiers déplacés
  */
-export async function migrateLegacyRaw(paths) {
-  if (paths.legacyRawDir === paths.rawDir || !fs.existsSync(paths.legacyRawDir)) return 0;
+export async function migrateLegacyRaw(paths, legacyRawDir = paths.legacyRawDir) {
+  if (legacyRawDir === paths.rawDir || !fs.existsSync(legacyRawDir)) return 0;
   await fsp.mkdir(paths.rawDir, { recursive: true });
   let moved = 0;
-  for (const name of listDir(paths.legacyRawDir)) {
+  for (const name of listDir(legacyRawDir)) {
     const target = path.join(paths.rawDir, name);
     if (!fs.existsSync(target)) {
-      await fsp.rename(path.join(paths.legacyRawDir, name), target);
+      await fsp.rename(path.join(legacyRawDir, name), target);
       moved++;
     }
   }
-  if (!listDir(paths.legacyRawDir).length) await fsp.rmdir(paths.legacyRawDir);
+  if (!listDir(legacyRawDir).length) await fsp.rmdir(legacyRawDir);
   return moved;
 }
 

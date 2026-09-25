@@ -18,6 +18,8 @@
 //     --limit <n>          appels au plus pour cette exécution
 //     --concurrency <n>    appels simultanés (défaut : 4)
 //     --redo <fichier>     empreintes à refaire, une par ligne (clip écarté à l'écoute)
+//     --raw-from <version> reprend les bruts rangés sous l'ancien nom d'une autre version
+//                          (mêmes réglages de synthèse, seul l'encodage change)
 //     --reprocess          refait les clips depuis leurs bruts, sans appel (--keys <fichier> :
 //                          seulement ces empreintes) ; pour des clips pas encore publiés
 // Clé : variable d'environnement ELEVENLABS_API_KEY, jamais écrite ni affichée.
@@ -379,7 +381,12 @@ async function generateLocked(opts, paths) {
   const phrasesByKey = new Map(phrases.map(phrase => [phrase.key, phrase]));
   const said = text => saidText(text, lang);
 
-  if (!dryRun) await migrateLegacyRaw(paths);
+  if (!dryRun) {
+    await migrateLegacyRaw(paths);
+    if (opts.rawFrom) {
+      await migrateLegacyRaw(paths, storePaths(opts.outDir, lang, opts.rawFrom).legacyRawDir);
+    }
+  }
   const leftovers = await cleanLeftovers(paths, { dryRun });
   if (!dryRun && opts.redo.length) {
     await forgetKeys(paths, manifest, opts.redo);
@@ -524,6 +531,7 @@ export function parseArgs(argv) {
     else if (arg === '--out') args.out = path.resolve(argv[++i]);
     else if (arg === '--redo') args.redoFile = argv[++i];
     else if (arg === '--keys') args.keysFile = argv[++i];
+    else if (arg === '--raw-from') args.rawFrom = argv[++i];
     else if (numeric[arg]) args[numeric[arg][0]] = wholeNumber(argv[++i], arg, numeric[arg][1]);
     else throw new Error(`Option inconnue : ${arg}`);
   }
@@ -574,7 +582,15 @@ async function main(argv) {
   const phrases = buildCorpus(args.lang);
   const log = console.log;
   const redo = readList(args.redoFile);
-  const base = { lang: args.lang, voice, outDir: args.out, phrases, redo, log };
+  const base = {
+    lang: args.lang,
+    voice,
+    outDir: args.out,
+    phrases,
+    redo,
+    log,
+    rawFrom: args.rawFrom,
+  };
 
   if (args.reprocess) {
     await checkAudioTools();
