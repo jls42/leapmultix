@@ -18,6 +18,9 @@ place et ce qui vient ensuite.
   toutes enregistrées à l'avance ; aucun appel à ElevenLabs pendant une partie.
 - **Format** : MP3 mono. Safari et iOS ne lisent l'Opus en WebM qu'à partir de 17.4
   (en partie) et 18.4.
+- **Encodage** : 64 kb/s et 0,15 s de silence avant la phrase. À 48 kb/s avec 0,05 s, Whisper
+  entendait mal le début du premier mot (« vingt », « huit ») : sur 17 clips qu'il entendait
+  juste en brut et faux une fois traités, 0 redevenait juste ; à 64 kb/s avec 0,15 s, 11.
 - **Audio hors du dépôt public** : les clips vivent dans un dépôt privé et dans un
   bucket S3 dédié, servi par CloudFront sur `/voice/*`. Les forks et le développement
   local gardent la voix de l'appareil.
@@ -183,7 +186,10 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
      (« Combien font une fois 7 ? », « vingt et une pommes », en espagnol « una caja »,
      « veintiún niños ») ; la phrase de `speak()` reste la clé du clip.
    - **Traitement** (`audio-process.mjs`) : silences de début et de fin coupés, −20 LUFS,
-     pic −1 dBFS, MP3 mono 48 kb/s ; un clip muet est refusé.
+     pic −1 dBFS, 0,15 s de silence gardé avant la phrase, MP3 mono 64 kb/s ; un clip muet est
+     refusé. Un clic isolé par un long silence part avec lui. Changer l'encodage demande une
+     nouvelle version, reconstruite depuis les bruts sans appel
+     (`generate.mjs --lang fr --limit 0 --raw-from <ancienne version>`).
 4. **Contrôles** :
    - `npm run voice:check -- --lang fr --probe` : chaque phrase a son clip, manifeste et
      fichiers concordent, chaque MP3 est valide et n'a pas bougé depuis sa génération.

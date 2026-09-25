@@ -133,8 +133,10 @@ describe('Partie utile : un clic isolé par un long silence part avec lui', () =
     const info = await probeClip(file('out.mp3'));
     expect(info.codec).toBe('mp3');
     expect(info.channels).toBe(1);
-    expect(info.duration).toBeGreaterThan(0.85);
-    expect(info.duration).toBeLessThan(1.25);
+    // Son d'1 s, plus le silence gardé avant et après la phrase (réglages de la voix)
+    const kept = (ENCODING.leadSeconds ?? 0.05) + (ENCODING.trailSeconds ?? 0.05);
+    expect(info.duration).toBeGreaterThan(0.9 + kept);
+    expect(info.duration).toBeLessThan(1.1 + kept);
     expect(Math.abs(info.bitRate - ENCODING.bitrateKbps * 1000)).toBeLessThan(3000);
     expect(Math.abs(loudness(file('out.mp3')) - ENCODING.loudnessLufs)).toBeLessThan(1.5);
     expect(fs.readdirSync(dir).filter(name => name.endsWith('.part'))).toEqual([]);

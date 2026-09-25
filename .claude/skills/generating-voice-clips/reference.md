@@ -4,7 +4,7 @@
 
 | Chemin                                | Contenu                                                                   |
 | ------------------------------------- | ------------------------------------------------------------------------- |
-| `clips/<l>/<version>/<empreinte>.mp3` | clips traités, MP3 mono 48 kb/s, −20 LUFS : ceux que le jeu lit           |
+| `clips/<l>/<version>/<empreinte>.mp3` | clips traités, MP3 mono 64 kb/s, −20 LUFS : ceux que le jeu lit           |
 | `manifests/<l>/<version>.json`        | par clip : phrase, texte dit, durée, sha256, coût, identifiant de requête |
 | `manifests/<l>/<version>.runs.jsonl`  | bilan de chaque exécution de la génération                                |
 | `raw/` (hors git)                     | sorties brutes d'ElevenLabs, pour retraiter sans payer                    |

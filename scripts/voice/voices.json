@@ -2,7 +2,7 @@
   "fr": {
     "provider": "elevenlabs",
     "voice": "lucie",
-    "version": "lucie-v3-1",
+    "version": "lucie-v3-2",
     "voiceId": "YxrwjAKoUKULGd0g8K9Y",
     "publicOwnerId": "53d56d1e766535d6232a30f650da70c99c78955695b21e29a29241b73aed2723",
     "model": "eleven_v3",
@@ -16,10 +16,12 @@
       "speed": 1.02
     },
     "encoding": {
-      "bitrateKbps": 48,
+      "bitrateKbps": 64,
       "loudnessLufs": -20,
       "truePeakDb": -1,
-      "silenceDb": -50
+      "silenceDb": -50,
+      "leadSeconds": 0.15,
+      "trailSeconds": 0.08
     }
   }
 }
