@@ -212,11 +212,11 @@ export function createClipEngine({
   }
 
   /**
-   * audio.play(), appelé tout de suite, sous forme de promesse : un refus immédiat
-   * (exception) et un refus différé (promesse rejetée) arrivent par le même chemin
+   * audio.play(), appelé tout de suite ; fonction async : un refus immédiat (exception)
+   * devient un rejet, comme un refus différé, et les deux arrivent par le même chemin
    */
-  function startPlayback() {
-    return new Promise(resolve => resolve(audio.play()));
+  async function startPlayback() {
+    return audio.play();
   }
 
   function play(phrase, blob) {
