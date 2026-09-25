@@ -47,6 +47,10 @@ coverage/
 /assets/voice/
 # Environnement Python du contrôle Whisper (scripts/voice/whisper_transcribe.py)
 /.venv-whisper/
+# Fichiers de travail des contrôles (transcriptions, clips à réécouter ou à refaire)
+/transcripts-*.jsonl
+/a-reecouter.txt
+/ecartes.txt
 
 # Deployment config (may contain secrets)
 deploy.config

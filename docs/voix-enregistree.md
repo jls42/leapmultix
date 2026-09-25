@@ -164,7 +164,7 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
 
 1. **Portes** : crédits suffisants et licence confirmée.
 2. **Estimation** : `npm run voice:generate -- --lang fr --dry-run` donne les phrases
-   restantes et leurs caractères. Eleven v3 décompte environ 0,5 crédit par caractère
+   restantes et leurs caractères. Eleven v3 décompte environ 0,53 crédit par caractère
    (en-tête `character-cost` de chaque réponse, noté au manifeste).
 3. **Génération** :
    `node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --reserve 5000`.
@@ -188,13 +188,14 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
    - `npm run voice:check -- --lang fr --probe` : chaque phrase a son clip, manifeste et
      fichiers concordent, chaque MP3 est valide et n'a pas bougé depuis sa génération.
    - **Whisper, en local** (modèle `large-v3-turbo`, GPU si présent) :
-     `python3 scripts/voice/whisper_transcribe.py --manifest <dépôt>/manifests/fr/<version>.json --clips <dépôt>/clips/fr/<version> --lang fr --out transcripts-fr.jsonl`
+     `.venv-whisper/bin/python scripts/voice/whisper_transcribe.py --manifest <dépôt>/manifests/fr/<version>.json --clips <dépôt>/clips/fr/<version> --lang fr --out transcripts-fr.jsonl`
      (installation dans l'en-tête du script), puis
      `npm run voice:check -- --lang fr --transcripts transcripts-fr.jsonl --flagged a-reecouter.txt` :
      nombres entendus différents de la phrase, phrase trop différente ou durée anormale.
    - **Écoute** des clips signalés et d'un échantillon de formes féminines, que Whisper
      ne distingue pas (« un » et « une » s'écrivent « 1 »). Refaire un clip :
-     `generate.mjs --lang fr --redo a-reecouter.txt`.
+     `generate.mjs --lang fr --redo ecartes.txt` (seulement les clips écartés à l'écoute) ;
+     Whisper retranscrit ensuite les clips refaits (leur sha256 a changé).
 5. **Envoi**, une fois l'infra en place :
    - `npm run voice:publish -- clips --lang fr --bucket <bucket>` : seulement les clips
      absents du bucket, en `audio/mpeg`, cache d'un an immuable. Un clip publié n'est
@@ -203,8 +204,10 @@ s'y ajoute sans toucher au corpus, au texte dit ni au traitement.
      avec la taille du manifeste.
    - `npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience test` :
      la langue entre dans l'index (sans cache), puis invalidation CloudFront.
-6. **Ouverture par étapes** : testeurs (`?voix=test`), puis `--audience all` (les
-   joueurs qui avaient allumé la voix), puis `--default-on`.
+6. **Ouverture par étapes** : testeurs (`?voix=test`), puis la commande `index` avec
+   `--audience all` (les joueurs qui avaient allumé la voix), puis avec
+   `--audience all --default-on`. Chaque `index` réécrit toute l'entrée de la langue : sans
+   `--audience all`, l'audience revient à `test`.
 
 **Coupe-circuit** : `npm run voice:publish -- remove --lang fr --bucket <bucket> --distribution <id>` ;
 le jeu revient à la voix de l'appareil au prochain chargement en ligne.

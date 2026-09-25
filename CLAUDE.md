@@ -601,7 +601,8 @@ git show origin/main:sw.js | grep -m1 'const VERSION'
 ```
 
 Variables de dépôt attendues (Settings > Secrets and variables > Actions) :
-`AWS_DEPLOY_ROLE_ARN`, `S3_BUCKET`, `CLOUDFRONT_DISTRIB`, `PLAUSIBLE_DOMAIN`.
+`AWS_DEPLOY_ROLE_ARN`, `S3_BUCKET`, `CLOUDFRONT_DISTRIB`, `PLAUSIBLE_DOMAIN`, `VOICE_BASE`
+(`/voice/` : adresse des clips de la voix enregistrée, voir `docs/voix-enregistree.md`).
 
 Déploiement manuel toujours possible : `./deploy.sh` en local (lit `deploy.config`),
 ou l'onglet Actions avec l'option `dry_run` pour simuler sans rien écrire.
