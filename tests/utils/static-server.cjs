@@ -17,9 +17,34 @@ const MIME_TYPES = {
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
   '.mp4': 'video/mp4',
+  '.mp3': 'audio/mpeg',
 };
 
-async function startStaticServer(networkIdleSetting = 'networkidle2') {
+/**
+ * Voix enregistrée : /voice/ se sert depuis un dossier de test (options.voiceDir), avec un
+ * vrai 404 pour un clip absent, jamais le repli sur index.html
+ */
+async function serveVoice(req, res, pathname, voiceDir) {
+  const filePath = voiceDir && path.join(voiceDir, pathname.slice('/voice/'.length));
+  let data;
+  try {
+    if (!filePath || !filePath.startsWith(voiceDir)) throw new Error('hors du dossier');
+    data = await fs.readFile(filePath);
+  } catch {
+    res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found');
+    return;
+  }
+  res.writeHead(200, {
+    'Content-Type': MIME_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
+  });
+  res.end((req.method || '') === 'HEAD' ? undefined : data);
+}
+
+/**
+ * @param {string} [networkIdleSetting]
+ * @param {{voiceDir?: string}} [options] - voiceDir : dossier servi sous /voice/
+ */
+async function startStaticServer(networkIdleSetting = 'networkidle2', options = {}) {
   if (process.env.E2E_BASE_URL) {
     const url = process.env.E2E_BASE_URL;
     const waitUntil = url.startsWith('http') ? networkIdleSetting : 'load';
@@ -40,6 +65,10 @@ async function startStaticServer(networkIdleSetting = 'networkidle2') {
     try {
       const requestUrl = new URL(req.url, 'http://localhost');
       let pathname = decodeURIComponent(requestUrl.pathname || '/');
+      if (pathname.startsWith('/voice/')) {
+        await serveVoice(req, res, pathname, options.voiceDir);
+        return;
+      }
       if (!pathname || pathname === '/') {
         pathname = '/index.html';
       }
