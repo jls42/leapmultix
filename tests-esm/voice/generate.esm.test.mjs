@@ -27,7 +27,7 @@ import {
 } from '../../scripts/voice/generate.mjs';
 import { ClipContentError } from '../../scripts/voice/audio-process.mjs';
 import { createElevenLabs, ProviderError } from '../../scripts/voice/providers/elevenlabs.mjs';
-import { rawFile, saidHash, storePaths } from '../../scripts/voice/clip-store.mjs';
+import { rawFile, saidHash, storePaths, synthesisHash } from '../../scripts/voice/clip-store.mjs';
 
 /** Clé factice : le faux serveur la reçoit, aucun fichier ni message ne doit la contenir */
 const FAKE_KEY = 'cle-factice-du-faux-serveur-elevenlabs';
@@ -133,7 +133,7 @@ function run(options = {}) {
   });
 }
 
-const paths = () => storePaths(outDir, 'fr', VOICE.version);
+const paths = (voice = VOICE) => storePaths(outDir, 'fr', voice.version, synthesisHash(voice));
 const manifest = () => JSON.parse(fs.readFileSync(paths().manifestFile, 'utf8'));
 const clipOf = p => path.join(paths().clipDir, `${p.key}.mp3`);
 
@@ -498,6 +498,37 @@ describe('Génération des clips', () => {
     expect(summary.staleRaw).toBe(1);
     expect(summary.generated).toBe(1);
     expect(manifest().clips[PHRASES[0].key].said).toBe('Combien font une fois 7 ?');
+  });
+
+  test('nouvelle version qui ne change que l’encodage : clips refaits depuis les bruts, sans appel', async () => {
+    server = await startServer(ok);
+    await run();
+    const encoded = {
+      ...VOICE,
+      version: 'test-2',
+      encoding: { ...VOICE.encoding, bitrateKbps: 64 },
+    };
+    expect(synthesisHash(encoded)).toBe(synthesisHash(VOICE));
+    const summary = await run({ voice: encoded, limit: 0 });
+    expect(summary.reprocessed).toBe(PHRASES.length);
+    expect(summary.generated).toBe(0);
+    expect(server.tts()).toHaveLength(PHRASES.length);
+    expect(
+      Object.keys(JSON.parse(fs.readFileSync(paths(encoded).manifestFile, 'utf8')).clips)
+    ).toHaveLength(PHRASES.length);
+  });
+
+  test('bruts rangés sous l’ancien nom (la version) : déplacés, puis retrouvés sans appel', async () => {
+    server = await startServer(ok);
+    await run();
+    const current = paths();
+    const legacy = storePaths(outDir, 'fr', VOICE.version).rawDir;
+    await fsp.rename(current.rawDir, legacy);
+    await fsp.rm(current.clipDir, { recursive: true });
+    const summary = await run();
+    expect(summary.reprocessed).toBe(PHRASES.length);
+    expect(server.tts()).toHaveLength(PHRASES.length);
+    expect(fs.existsSync(legacy)).toBe(false);
   });
 
   test('--redo : le clip écarté est refait, les autres non', async () => {

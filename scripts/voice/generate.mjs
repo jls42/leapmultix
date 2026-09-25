@@ -42,6 +42,8 @@ import {
   PART,
   acquireLock,
   cleanLeftovers,
+  migrateLegacyRaw,
+  synthesisHash,
   clipFile,
   rawFile,
   readManifest,
@@ -361,7 +363,7 @@ export async function runGeneration(options) {
     ...options,
   };
   const { lang, voice, outDir, dryRun } = opts;
-  const paths = storePaths(outDir, lang, voice.version);
+  const paths = storePaths(outDir, lang, voice.version, synthesisHash(voice));
   // Le verrou d'abord : le nettoyage ci-dessous effacerait les fichiers d'une autre exécution
   const lock = dryRun ? null : await acquireLock(paths, opts.lockOptions);
   try {
@@ -377,6 +379,7 @@ async function generateLocked(opts, paths) {
   const phrasesByKey = new Map(phrases.map(phrase => [phrase.key, phrase]));
   const said = text => saidText(text, lang);
 
+  if (!dryRun) await migrateLegacyRaw(paths);
   const leftovers = await cleanLeftovers(paths, { dryRun });
   if (!dryRun && opts.redo.length) {
     await forgetKeys(paths, manifest, opts.redo);
@@ -475,10 +478,11 @@ export async function reprocessClips(options) {
     ...options,
   };
   const { lang, voice, outDir } = opts;
-  const paths = storePaths(outDir, lang, voice.version);
+  const paths = storePaths(outDir, lang, voice.version, synthesisHash(voice));
   const lock = await acquireLock(paths, opts.lockOptions);
   try {
     const manifest = readManifest(paths, lang, voice);
+    await migrateLegacyRaw(paths);
     await cleanLeftovers(paths);
     const keys = opts.keys?.length ? opts.keys : Object.keys(manifest.clips);
     const report = { checked: 0, changed: 0, missingRaw: [], failed: [] };

@@ -1,8 +1,11 @@
 // Rangement des clips d'une voix dans le dépôt privé des voix :
 //
 //   clips/<langue>/<version>/<empreinte>.mp3   clips traités, ceux que le jeu lit
-//   raw/<langue>/<version>/<empreinte>-<h>.mp3 sortie brute de la synthèse (h : empreinte
-//                                              du texte dit), gardée pour retraiter sans payer
+//   raw/<langue>/<réglages>/<empreinte>-<h>.mp3 sortie brute de la synthèse (h : empreinte
+//                                              du texte dit), gardée pour retraiter sans payer ;
+//                                              <réglages> : empreinte des seuls réglages de
+//                                              synthèse, si bien qu'une nouvelle version qui
+//                                              ne change que l'encodage retrouve ses bruts
 //   manifests/<langue>/<version>.json          phrase, texte dit et contrôle de chaque clip
 //
 // Un fichier n'apparaît sous son nom final qu'une fois complet : on écrit un « .part »,
@@ -34,6 +37,24 @@ export function sha256(data) {
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
+/** Champs de l'encodage : ils ne changent pas le brut de la synthèse */
+const ENCODING_FIELDS = new Set(['encoding']);
+
+/**
+ * Empreinte des seuls réglages de synthèse (voix, modèle, réglages, format du brut) : le
+ * dossier des bruts en dépend, pas de l'encodage des clips.
+ * @param {Object} voice
+ * @returns {string}
+ */
+export function synthesisHash(voice) {
+  const synthesis = Object.fromEntries(
+    Object.entries(voice).filter(
+      ([key]) => !DESCRIPTIVE_FIELDS.has(key) && !ENCODING_FIELDS.has(key)
+    )
+  );
+  return `s-${sha256(canonicalJson(synthesis)).slice(0, 12)}`;
+}
+
 /**
  * Empreinte des réglages qui font le son d'une voix. Une version de voix n'a qu'un jeu de
  * réglages : les changer impose une nouvelle version dans voices.json.
@@ -56,10 +77,12 @@ export function saidHash(said) {
  * @param {string} outDir - Racine du dépôt privé des voix
  * @param {string} lang
  * @param {string} version
+ * @param {string} [rawKey] - Dossier des bruts (synthesisHash) ; par défaut la version
  */
-export function storePaths(outDir, lang, version) {
+export function storePaths(outDir, lang, version, rawKey = version) {
   return {
-    rawDir: path.join(outDir, 'raw', lang, version),
+    rawDir: path.join(outDir, 'raw', lang, rawKey),
+    legacyRawDir: path.join(outDir, 'raw', lang, version),
     clipDir: path.join(outDir, 'clips', lang, version),
     manifestFile: path.join(outDir, 'manifests', lang, `${version}.json`),
     runLogFile: path.join(outDir, 'manifests', lang, `${version}.runs.jsonl`),
@@ -129,6 +152,26 @@ export async function acquireLock(paths, { pid = process.pid, alive = isAlive } 
     }
   }
   throw new Error(`Verrou impossible à prendre : ${paths.lockFile}`);
+}
+
+/**
+ * Bruts rangés sous l'ancien nom (la version) : déplacés sous l'empreinte des réglages de
+ * synthèse, une fois, pour qu'une autre version les retrouve
+ * @returns {Promise<number>} fichiers déplacés
+ */
+export async function migrateLegacyRaw(paths) {
+  if (paths.legacyRawDir === paths.rawDir || !fs.existsSync(paths.legacyRawDir)) return 0;
+  await fsp.mkdir(paths.rawDir, { recursive: true });
+  let moved = 0;
+  for (const name of listDir(paths.legacyRawDir)) {
+    const target = path.join(paths.rawDir, name);
+    if (!fs.existsSync(target)) {
+      await fsp.rename(path.join(paths.legacyRawDir, name), target);
+      moved++;
+    }
+  }
+  if (!listDir(paths.legacyRawDir).length) await fsp.rmdir(paths.legacyRawDir);
+  return moved;
 }
 
 /** Écrit un fichier en entier sous un nom temporaire, puis le renomme */

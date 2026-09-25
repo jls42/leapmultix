@@ -89,9 +89,14 @@ export function usefulRange(
   return { start, end };
 }
 
-function trimFilter(silenceDb) {
-  const silence = `silenceremove=start_periods=1:start_threshold=${silenceDb}dB:start_silence=0.05`;
-  return `${silence},areverse,${silence},areverse`;
+/**
+ * Coupe des silences de début et de fin. Un peu de silence reste avant la phrase
+ * (leadSeconds) : le début du premier mot (« vingt », « huit ») s'entendait mal sans lui.
+ */
+function trimFilter({ silenceDb, leadSeconds = 0.05, trailSeconds = 0.05 }) {
+  const silence = keep =>
+    `silenceremove=start_periods=1:start_threshold=${silenceDb}dB:start_silence=${keep}`;
+  return `${silence(leadSeconds)},areverse,${silence(trailSeconds)},areverse`;
 }
 
 async function measureLoudness(wavPath) {
@@ -157,7 +162,7 @@ export async function processClip(rawPath, outPath, encoding) {
       '-i',
       rawPath,
       '-af',
-      trimFilter(encoding.silenceDb),
+      trimFilter(encoding),
       '-ac',
       '1',
       '-f',
