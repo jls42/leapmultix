@@ -162,6 +162,8 @@
   "good_job": "Bon travail !",
   "gradient_bg": "Dégradé",
   "high_contrast_mode": "Contraste élevé",
+  "recorded_voice_toggle": "Voix enregistrée",
+  "recorded_voice_hint": "Voix de synthèse créée avec ElevenLabs. Décochée, le jeu lit avec la voix de l'appareil.",
   "hint": "Indice",
   "incorrect": "Presque !",
   "incorrect_answer_was_false": "La bonne réponse est Faux.",

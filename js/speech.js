@@ -123,9 +123,22 @@ function initializeAudioSync() {
   }
 }
 
+/** Règle par défaut : le choix du joueur, voix coupée tant qu'il n'a rien choisi (v21) */
+const storedVoiceChoice = () => Boolean(Storage.loadVoiceEnabled());
+let voiceEnabledResolver = storedVoiceChoice;
+
+/**
+ * Remplace la règle qui dit si la parole est active : la voix enregistrée
+ * (js/voice-clips.js) l'active par défaut là où elle est disponible
+ * @param {(() => boolean)|null} resolver - null : retour à la règle par défaut
+ */
+export function setVoiceEnabledResolver(resolver) {
+  voiceEnabledResolver = resolver ?? storedVoiceChoice;
+}
+
 export function isVoiceEnabled() {
   try {
-    return Storage.loadVoiceEnabled();
+    return Boolean(voiceEnabledResolver());
   } catch {
     return false;
   }

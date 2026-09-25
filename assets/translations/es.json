@@ -158,6 +158,8 @@
   "good_job": "¡Buen trabajo!",
   "gradient_bg": "Degradado",
   "high_contrast_mode": "Alto contraste",
+  "recorded_voice_toggle": "Voz grabada",
+  "recorded_voice_hint": "Voz sintética creada con ElevenLabs. Desmarcada, el juego lee con la voz del dispositivo.",
   "hint": "Pista",
   "incorrect": "¡Casi!",
   "incorrect_answer_was_false": "La respuesta correcta es Falso.",

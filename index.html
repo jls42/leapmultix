@@ -24,6 +24,8 @@
       content="tables de multiplication, addition, soustraction, division, opérations arithmétiques, calcul mental, mathématiques CE1 CE2 CM1 CM2, apprentissage ludique, jeux éducatifs, PWA, gratuit, open source, RGPD"
     />
     <meta name="author" content="Julien LS." />
+    <!-- Voix enregistrée : deploy.sh y écrit « /voice/ » (variable VOICE_BASE) ; vide, aucune requête -->
+    <meta name="leapmultix-voice-base" content="" />
     <meta
       name="robots"
       content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
@@ -861,6 +863,24 @@
               <label>
                 <input type="checkbox" id="high-contrast-toggle" />
                 <span data-translate="high_contrast_mode">Mode Contraste Élevé</span>
+              </label>
+              <label id="recorded-voice-option" hidden>
+                <input
+                  type="checkbox"
+                  id="recorded-voice-toggle"
+                  checked
+                  aria-describedby="recorded-voice-hint"
+                />
+                <span>
+                  <span data-translate="recorded_voice_toggle">Voix enregistrée</span>
+                  <small
+                    id="recorded-voice-hint"
+                    class="recorded-voice-hint"
+                    data-translate="recorded_voice_hint"
+                    >Voix de synthèse créée avec ElevenLabs. Décochée, le jeu lit avec la voix de
+                    l'appareil.</small
+                  >
+                </span>
               </label>
               <label>
                 <input type="checkbox" id="parental-lock-toggle" />

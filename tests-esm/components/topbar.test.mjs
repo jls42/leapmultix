@@ -1,9 +1,10 @@
 import { describe, beforeAll, beforeEach, afterEach, test, expect } from '@jest/globals';
 import { setTranslations } from '../../js/i18n-store.js';
 import Storage from '../../js/core/storage.js';
+import { eventBus } from '../../js/core/eventBus.js';
 
 const { TopBar } = await import('../../js/components/topBar.js');
-const { isVoiceEnabled } = await import('../../js/speech.js');
+const { isVoiceEnabled, setVoiceEnabledResolver } = await import('../../js/speech.js');
 const { UserManager } = await import('../../js/userManager.js');
 
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -127,6 +128,34 @@ describe('TopBar : icônes SVG, libellés et états', () => {
 
     Storage.saveVoiceEnabled(true);
     expect(isVoiceEnabled()).toBe(true);
+  });
+
+  test('voix enregistrée active par défaut : le bouton l’affiche, le premier clic la coupe', () => {
+    localStorage.removeItem('voiceEnabled');
+    // Règle de la voix enregistrée : sans choix du joueur, la parole est active
+    setVoiceEnabledResolver(() => Storage.get('voiceEnabled', null) ?? true);
+    try {
+      TopBar.injectTopBarIntoSlides();
+      TopBar.attachVoiceToggles();
+      const btn = document.querySelector('#slide7 .voice-toggle');
+      expect(btn.getAttribute('aria-pressed')).toBe('true');
+      btn.click();
+      expect(localStorage.getItem('voiceEnabled')).toBe('false');
+      expect(isVoiceEnabled()).toBe(false);
+      expect(btn.getAttribute('aria-pressed')).toBe('false');
+    } finally {
+      setVoiceEnabledResolver(null);
+      localStorage.removeItem('voiceEnabled');
+    }
+  });
+
+  test('voix : le bouton suit l’état décidé par la voix enregistrée (voice:changed)', () => {
+    TopBar.init();
+    const btn = document.querySelector('#slide7 .voice-toggle');
+    eventBus.emit('voice:changed', { available: true, active: true, engine: 'clips' });
+    expect(btn.getAttribute('aria-pressed')).toBe('true');
+    eventBus.emit('voice:changed', { available: false, active: false, engine: 'synthesis' });
+    expect(btn.getAttribute('aria-pressed')).toBe('false');
   });
 
   test('voix : l’activation se dit dans la langue du jeu, jamais en français codé en dur', () => {

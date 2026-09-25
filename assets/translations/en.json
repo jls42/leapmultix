@@ -152,6 +152,8 @@
   "good_job": "Good job!",
   "gradient_bg": "Gradient",
   "high_contrast_mode": "High contrast",
+  "recorded_voice_toggle": "Recorded voice",
+  "recorded_voice_hint": "Synthetic voice made with ElevenLabs. When unchecked, the game reads with the device's voice.",
   "hint": "Hint",
   "incorrect": "Almost!",
   "incorrect_answer_was_false": "The right answer is False.",

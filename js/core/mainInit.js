@@ -23,6 +23,7 @@ import { VideoManager } from '../VideoManager.js';
 import { OperationSelector } from '../components/operationSelector.js';
 import { initModeAvailability } from '../components/operationModeAvailability.js';
 import { autoMigrate } from './stats-migration.js';
+import { attachRecordedVoiceSetting, initRecordedVoice } from '../voice-clips.js';
 
 const logInitWarning = (message, error) => {
   console.warn(`[MainInit] ${message}`, error);
@@ -364,6 +365,8 @@ async function runInit() {
   scheduleInitialBackground();
   const resolvedLang = await prepareLanguage();
   safeUpdateSeoHeroImage(resolvedLang);
+  // Avant la barre du haut, qui affiche l'état de la voix ; l'index arrive ensuite
+  initRecordedVoice().catch(error => logInitWarning('Voix enregistrée indisponible', error));
   refreshAudioControls();
 
   // Migration des anciennes stats vers le nouveau format (sécurisé)
@@ -378,6 +381,7 @@ async function runInit() {
   initComponentModules();
   updateHeroMascot();
   wireUiHandlers();
+  attachRecordedVoiceSetting();
   safeRemoveAvatarAfterCadenas();
 }
 

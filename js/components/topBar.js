@@ -65,9 +65,10 @@ function tr(key, fallback) {
   return fallback;
 }
 
+/** Parole active : le choix du joueur, ou la voix enregistrée activée par défaut */
 function readVoiceEnabled() {
   try {
-    return !!Storage.loadVoiceEnabled();
+    return !!_isVoiceEnabled();
   } catch {
     return false;
   }
@@ -222,6 +223,10 @@ export const TopBar = {
       eventBus.on('volumeChanged', event => {
         const detail = event?.detail || {};
         this.updateVolumeControls(detail.volume, detail.muted);
+      });
+      // Voix enregistrée : l'index reçu peut activer la parole par défaut
+      eventBus.on('voice:changed', event => {
+        this.updateVoiceToggleUI(event?.detail?.active);
       });
     } catch {
       /* no-op: listener optional */
@@ -533,9 +538,10 @@ export const TopBar = {
       if (!btn.dataset.topBarListenerAttached) {
         const toggleVoice = singleActivation(() => {
           try {
-            const enabled = !!Storage.loadVoiceEnabled();
-            const next = !enabled;
+            // Le bouton bascule l'état effectif, puis l'enregistre comme choix du joueur
+            const next = !readVoiceEnabled();
             Storage.saveVoiceEnabled(next);
+            eventBus.emit('voice:preference-changed', { enabled: next });
             this.updateVoiceToggleUI(next);
             if (next) {
               try {

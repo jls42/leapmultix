@@ -127,6 +127,7 @@ LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans 
 - **Multilingue** : Support français, anglais et espagnol
 - **Personnalisation** : Avatars, thèmes de couleur, arrière-plans
 - **Accessibilité** : Navigation clavier, support tactile, conformité WCAG 2.1 AA
+- **Voix enregistrée** : questions et encouragements lus par une voix de synthèse pré-enregistrée (créée avec ElevenLabs), avec repli automatique sur la voix de l'appareil ; clips hors du dépôt public (voir `docs/voix-enregistree.md`)
 - **Mobile responsive** : Interface optimisée pour tablettes et smartphones
 - **Système de progression** : Scores, badges, défis quotidiens
 

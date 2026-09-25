@@ -14,6 +14,10 @@
   text-align: start;
 }
 
+.accessibility-options label[hidden] {
+  display: none;
+}
+
 .accessibility-options label {
   display: flex;
   align-items: center;
@@ -98,4 +102,10 @@
 /* --- « Vider le cache » : action d'adulte, discrète, dans la carte --- */
 .accessibility-options .clear-cache-btn {
   margin: var(--space-3) 0 0;
+}
+
+.recorded-voice-hint {
+  display: block;
+  font-size: 0.85em;
+  opacity: 0.8;
 }
