@@ -158,25 +158,31 @@ describe('Publication', () => {
     return JSON.stringify(index);
   }
 
+  /** Réponse de list-objects-v2 : les clips déjà en ligne, avec leur ETag */
+  function listing(remote) {
+    return JSON.stringify({
+      Contents: remote.map(([key, etag]) => ({
+        Key: `voice/fr/test-1/${key}.mp3`,
+        ETag: `"${etag}"`,
+      })),
+    });
+  }
+
+  /** Garde la trace de ce qu'une copie vers S3 envoie : les clips préparés, ou l'index écrit */
+  function traceCopy(call) {
+    const [, , from, to] = call.args;
+    if (call.args.includes('--recursive')) call.staged = fs.readdirSync(from).sort();
+    if (to?.endsWith('index.json')) call.written = JSON.parse(fs.readFileSync(from, 'utf8'));
+  }
+
   function fakeAws({ remote = [], ...indexOptions } = {}) {
     return async args => {
       const call = { args };
       calls.push(call);
-      if (args[0] === 's3api' && args[1] === 'list-objects-v2') {
-        return JSON.stringify({
-          Contents: remote.map(([key, etag]) => ({
-            Key: `voice/fr/test-1/${key}.mp3`,
-            ETag: `"${etag}"`,
-          })),
-        });
-      }
-      if (args[0] === 's3' && args[1] === 'cp' && args[3] === '-') return readIndex(indexOptions);
-      if (args[0] === 's3' && args[1] === 'cp' && args.includes('--recursive')) {
-        call.staged = fs.readdirSync(args[2]).sort();
-      }
-      if (args[0] === 's3' && args[1] === 'cp' && args[3]?.endsWith('index.json')) {
-        call.written = JSON.parse(fs.readFileSync(args[2], 'utf8'));
-      }
+      if (args[0] === 's3api' && args[1] === 'list-objects-v2') return listing(remote);
+      if (args[0] !== 's3' || args[1] !== 'cp') return '';
+      if (args[3] === '-') return readIndex(indexOptions);
+      traceCopy(call);
       return '';
     };
   }
@@ -309,7 +315,7 @@ describe('Publication', () => {
     'index distant illisible (%s) : rien n’est écrit ; --force repart d’un index vide',
     async (_label, error) => {
       const aws = fakeAws({ remote: online(), indexError: error });
-      await expect(run({ command: 'remove' }, aws)).rejects.toThrow(/Rien n'est écrit/);
+      await expect(run({ command: 'remove' }, aws)).rejects.toThrow("Rien n'est écrit");
       expect(written()).toBeNull();
       await run({ command: 'remove', force: true }, aws);
       expect(written().languages).toEqual({});
@@ -447,10 +453,15 @@ describe('Vérification en ligne', () => {
     await fsp.rm(outDir, { recursive: true, force: true });
   });
 
+  /** Faux site : respond(url) donne la réponse, ou null pour couper la connexion sans répondre */
   async function startSite(respond) {
     server = http.createServer((req, res) => {
       seen.push({ url: req.url, method: req.method, headers: req.headers });
       const reply = respond(req.url);
+      if (reply === null) {
+        res.destroy();
+        return;
+      }
       res.writeHead(reply.status, reply.headers);
       res.end(req.method === 'HEAD' ? undefined : reply.body);
     });
@@ -541,14 +552,8 @@ describe('Vérification en ligne', () => {
       /index invalide/,
     ],
   ])('index %s : échec, pas « langue absente »', async (_label, reply, message) => {
-    const base = await startSite(url =>
-      url.endsWith('index.json') ? (reply() ?? { status: 200, headers: {} }) : goodClip(url)
-    );
-    const fetchImpl = async (url, init) => {
-      if (url.endsWith('index.json') && reply() === null) throw new TypeError('fetch failed');
-      return fetch(url, init);
-    };
-    const report = await checkOnline({ lang: 'fr', voice, outDir, base, fetchImpl });
+    const base = await startSite(url => (url.endsWith('index.json') ? reply() : goodClip(url)));
+    const report = await checkOnline({ lang: 'fr', voice, outDir, base });
     expect(report.failures).toEqual([]);
     expect(report.indexError).toMatch(message);
     expect(onlineProblems(report)).toEqual([expect.stringMatching(message)]);
@@ -571,19 +576,9 @@ describe('Vérification en ligne', () => {
     const base = await startSite(url =>
       url.endsWith('index.json') ? { status: 404, headers: {} } : goodClip(url)
     );
-    let heads = 0;
-    const fetchImpl = (url, init) => {
-      if (init.method === 'HEAD') heads++;
-      return fetch(url, init);
-    };
-    const report = await checkOnline({
-      lang: 'fr',
-      voice,
-      outDir,
-      base,
-      fetchImpl,
-      concurrency: 2,
-    });
+    const report = await checkOnline({ lang: 'fr', voice, outDir, base, concurrency: 2 });
+    // Requêtes comptées par le site lui-même : celles qui l'ont réellement atteint
+    const heads = seen.filter(request => request.method === 'HEAD').length;
     expect(report.checked).toBe(heads);
     expect(report.planned).toBe(3);
     expect(heads).toBe(3);

@@ -108,6 +108,21 @@ function errorsWithoutPreload(mode, count) {
   return misses;
 }
 
+/** Opérandes d'un élément à glisser : l'élément lui-même et la valeur fixée */
+function dropOperands(drop, item) {
+  return drop.fixed === 'b' ? [item, drop.value] : [drop.value, item];
+}
+
+/** Fait dire tout ce qu'une visite de la découverte dit : exemples, visuel, égalités à glisser */
+function speakDiscoveryPlan(mode, plan) {
+  for (const { a, b } of [...plan.examples, ...plan.visual]) mode.speakOperation(a, b);
+  for (const item of plan.drop.items) {
+    const [a, b] = dropOperands(plan.drop, item);
+    const result = mode.operation.compute(a, b);
+    if (Number.isInteger(result) && result >= 0) mode.speakOperation(a, b);
+  }
+}
+
 beforeEach(() => {
   document.body.innerHTML =
     '<section id="slide4" class="slide"><div id="game"></div></section><div id="results"></div>';
@@ -207,16 +222,7 @@ describe.each(LANGS)('%s : les phrases des modes sont toutes dans le corpus', la
       if (op === '×') await mode.showTable(choice);
       else await mode.showLevel(choice);
       // Plusieurs visites : diviseur et premier terme sont tirés au hasard
-      for (let visit = 0; visit < 8; visit++) {
-        const plan = mode._buildPlan();
-        for (const { a, b } of [...plan.examples, ...plan.visual]) mode.speakOperation(a, b);
-        for (const item of plan.drop.items) {
-          const a = plan.drop.fixed === 'b' ? item : plan.drop.value;
-          const b = plan.drop.fixed === 'b' ? plan.drop.value : item;
-          const result = mode.operation.compute(a, b);
-          if (Number.isInteger(result) && result >= 0) mode.speakOperation(a, b);
-        }
-      }
+      for (let visit = 0; visit < 8; visit++) speakDiscoveryPlan(mode, mode._buildPlan());
     }
     mode.stop();
     expectAllInCorpus();

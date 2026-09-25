@@ -70,7 +70,7 @@ describe('Activation : table de vérité', () => {
     [null, { ...ENTRY, defaultOn: true }, true],
     [null, { ...ENTRY, defaultOn: false }, false],
     [null, null, false],
-    [true, null, true],
+    [true, { ...ENTRY, defaultOn: false }, true],
   ])('choix %p, entrée %j : parole active %p', (voicePreference, entry, active) => {
     expect(isSpeechActive({ voicePreference, entry })).toBe(active);
   });
@@ -445,7 +445,7 @@ describe('Moteur des clips', () => {
 
     beforeEach(() => {
       // Le clip de la question arrive quand le test le décide ; les préchargements, aussitôt
-      respond = (url, init) =>
+      respond = (_url, init) =>
         init?.priority === 'low'
           ? Promise.resolve(mp3())
           : new Promise(resolve => {
