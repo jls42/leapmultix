@@ -38,6 +38,14 @@ export function assertApiKey(apiKey, variable) {
 /** Masque la clé dans un message (erreur réseau qui citerait l'en-tête) */
 export const keyMasker = apiKey => message => String(message).replaceAll(apiKey, '***');
 
+/** Messages d'une liste de validation (422) : chaque { msg }, joints */
+const validationMessages = list => list.map(item => item?.msg ?? JSON.stringify(item)).join(' ; ');
+
+/** Texte d'un champ message : tel quel, ou lu dans l'objet qu'il contient */
+function messageText(message) {
+  return message && typeof message === 'object' ? errorDetail(message).message : message;
+}
+
 /**
  * Détail d'un corps d'erreur :
  * - { detail: [{ msg }] } (validation, 422) : les messages joints ;
@@ -47,14 +55,10 @@ export const keyMasker = apiKey => message => String(message).replaceAll(apiKey,
  */
 export function errorDetail(body) {
   const detail = body?.detail;
-  if (Array.isArray(detail)) {
-    return { message: detail.map(item => item?.msg ?? JSON.stringify(item)).join(' ; ') };
-  }
+  if (Array.isArray(detail)) return { message: validationMessages(detail) };
   if (detail && typeof detail === 'object') return detail;
-  const nested = body?.message;
-  const message = nested && typeof nested === 'object' ? errorDetail(nested).message : nested;
   const type = typeof body?.type === 'string' ? body.type : undefined;
-  return { message: String(detail ?? message ?? ''), type };
+  return { message: String(detail ?? messageText(body?.message) ?? ''), type };
 }
 
 /** Détail du corps d'une réponse en erreur ; vide si le corps n'est pas du JSON */
