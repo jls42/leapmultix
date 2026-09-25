@@ -219,7 +219,7 @@ npm run voice:publish      # Publier les clips et l'index de la langue
 npm run voice:check-online # Vérifier les clips servis en ligne
 ```
 
-## 🏗️ Architecture
+## 🧱 Architecture
 
 ### Structure des fichiers
 
@@ -346,7 +346,7 @@ Chaque mini-jeu propose :
 - Contrôles clavier et tactile
 - Classements individuels par utilisateur
 
-## 🛠️ Développement
+## 🔧 Développement
 
 ### Workflow de développement
 
