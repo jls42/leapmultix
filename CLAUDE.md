@@ -601,9 +601,16 @@ Deux points à connaître avant d'y toucher :
   de déploiement. Il est défini dans le dépôt d'infrastructure
   (`leapmultix-infra`, fichier `github-oidc.tf`).
 - **`aws s3 sync --size-only` ne voit pas un fichier modifié à taille égale.**
-  `sw.js`, `js/cache-updater.js` et `sitemap.xml` (version, dates) sont donc
-  renvoyés d'office par `deploy.sh` ; un autre fichier de ce genre s'ajoute à
-  cette liste.
+  `sw.js`, `js/cache-updater.js`, `sitemap.xml`, `index.html` et tous les modules
+  `js/**/*.js` (version, dates) sont donc renvoyés d'office par `deploy.sh` ; un
+  autre fichier de ce genre s'ajoute à cette liste.
+- **Chaque adresse de module porte la version** (`scripts/version-module-urls.mjs`,
+  appelé par `deploy.sh` sur la copie à envoyer) : les modules s'importent sans
+  version et CloudFront les donne au navigateur pour une semaine, qu'il ressert sans
+  consulter le service worker. Sans ce versionnage, un joueur déjà venu mélangeait
+  anciens et nouveaux modules après un déploiement (export absent : le mode ne
+  démarre pas, constaté le 25/09/2026 en v22). **Monter `APP_VERSION` à chaque mise
+  en prod** : c'est elle qui change toutes les adresses.
 
 Après chaque fusion, vérifier en ligne que la prod sert la version fusionnée.
 Le déploiement attend la fin de `verify` : compter 5 à 20 minutes.
