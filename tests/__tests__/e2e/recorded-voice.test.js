@@ -1,7 +1,8 @@
 /**
  * Tests E2E - Voix enregistrée : dans un vrai navigateur, une phrase qui a son clip part en
  * clip (MP3 servi sous /voice/, joué depuis une URL blob:), une phrase sans clip part par la
- * synthèse ; sans voix enregistrée configurée, aucune requête /voice/.
+ * synthèse ; à la première visite, la parole attend l'index ; sans voix enregistrée
+ * configurée, aucune requête /voice/.
  * @jest-environment node
  */
 
@@ -138,6 +139,59 @@ describe('Voix enregistrée E2E', () => {
       expect(spoken[0].match(/\d+/g)).toEqual(question.match(/\d+/g));
       expect(voiceRequests.some(url => url.endsWith('/voice/index.json'))).toBe(true);
     } finally {
+      await context.close();
+    }
+  }, 60000);
+
+  test('première visite, index lent : bouton masqué, phrase retenue puis dite en clip', async () => {
+    const context = await browser.createBrowserContext();
+    const page = await context.newPage();
+    await page.evaluateOnNewDocument(RECORDERS_SOURCE);
+    // L'index attend le feu vert du test (moins de 1,5 s : au-delà, le jeu décide sans lui)
+    let releaseIndex;
+    const indexHeld = new Promise(resolve => {
+      releaseIndex = resolve;
+    });
+    await page.setRequestInterception(true);
+    page.on('request', async request => {
+      if (new URL(request.url()).pathname === '/voice/index.json') await indexHeld;
+      request.continue();
+    });
+    const voiceButtons = () =>
+      page.$$eval('.top-bar .voice-toggle', buttons =>
+        buttons.map(button => ({
+          pending: button.hasAttribute('data-voice-pending'),
+          visibility: getComputedStyle(button).visibility,
+          pressed: button.getAttribute('aria-pressed'),
+        }))
+      );
+    try {
+      await page.goto(server.url + '?voix=local', { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('.top-bar .voice-toggle');
+      const during = await voiceButtons();
+      expect(during.length).toBeGreaterThan(0);
+      expect(during.every(b => b.pending && b.visibility === 'hidden')).toBe(true);
+
+      // Une phrase demandée pendant l'attente, par la file du jeu lui-même
+      const heldWhileSpeaking = await page.evaluate(async base => {
+        const speech = await import(new URL('./js/speech.js', base).href);
+        speech.speak('Mode Quiz', { priority: 'high' });
+        return speech.isSpeechDecisionPending();
+      }, server.url);
+      expect(heldWhileSpeaking).toBe(true);
+      expect(await page.evaluate(() => globalThis.__played.length)).toBe(0);
+
+      releaseIndex();
+      await page.waitForFunction(() => globalThis.__played.some(src => src.startsWith('blob:')), {
+        timeout: 10000,
+      });
+      const spoken = await page.evaluate(() => globalThis.__spoken.filter(Boolean));
+      expect(spoken).toEqual([]);
+      const after = await voiceButtons();
+      expect(after.every(b => !b.pending && b.visibility !== 'hidden')).toBe(true);
+      expect(after.every(b => b.pressed === 'true')).toBe(true);
+    } finally {
+      releaseIndex();
       await context.close();
     }
   }, 60000);

@@ -4,9 +4,8 @@ import Storage from '../../js/core/storage.js';
 import { eventBus } from '../../js/core/eventBus.js';
 
 const { TopBar } = await import('../../js/components/topBar.js');
-const { isVoiceEnabled, setVoiceEnabledResolver, setSpeechEngine } = await import(
-  '../../js/speech.js'
-);
+const { isVoiceEnabled, setVoiceEnabledResolver, setSpeechEngine, holdSpeechDecision } =
+  await import('../../js/speech.js');
 const { UserManager } = await import('../../js/userManager.js');
 
 const EMOJI = /\p{Extended_Pictographic}/u;
@@ -177,6 +176,24 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     expect(btn.getAttribute('aria-pressed')).toBe('true');
     eventBus.emit('voice:changed', { available: false, active: false, engine: 'synthesis' });
     expect(btn.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  test('voix, première visite : bouton masqué tant que la décision attend, puis son état', () => {
+    const release = holdSpeechDecision();
+    try {
+      TopBar.init();
+      const btn = document.querySelector('#slide7 .voice-toggle');
+      expect(btn.hasAttribute('data-voice-pending')).toBe(true);
+      // Un état annoncé pendant l'attente ne le montre pas encore
+      eventBus.emit('voice:changed', { available: false, active: false, engine: 'synthesis' });
+      expect(btn.hasAttribute('data-voice-pending')).toBe(true);
+      release();
+      eventBus.emit('voice:changed', { available: true, active: true, engine: 'clips' });
+      expect(btn.hasAttribute('data-voice-pending')).toBe(false);
+      expect(btn.getAttribute('aria-pressed')).toBe('true');
+    } finally {
+      release();
+    }
   });
 
   test('voix : l’activation se dit dans la langue du jeu, jamais en français codé en dur', () => {

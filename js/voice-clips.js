@@ -20,12 +20,20 @@ import { ANNOUNCED_MODES, voiceKey } from './core/spoken-text.js';
 import { clipPath, parseVoiceIndex } from './core/voice-index.js';
 import { isSpeechActive, recordedVoiceEntry, speechEngineFor } from './core/voice-activation.js';
 import { getCurrentLanguage, getTranslations } from './i18n-store.js';
-import { getSynthesisEngine, setSpeechEngine, setVoiceEnabledResolver } from './speech.js';
+import {
+  cancelSpeech,
+  getSynthesisEngine,
+  holdSpeechDecision,
+  setSpeechEngine,
+  setVoiceEnabledResolver,
+} from './speech.js';
 
 export const ACCEPTED_VOICE_BASE = '/voice/';
 const META_NAME = 'leapmultix-voice-base';
 /** Un clip qui n'a pas démarré dans ce délai laisse la place à la synthèse */
 export const CLIP_START_TIMEOUT_MS = 1500;
+/** Première visite : attente maximale de l'index avant de décider si la parole est active */
+export const FIRST_DECISION_TIMEOUT_MS = 1500;
 
 export const VOICE_STORAGE_KEYS = {
   index: 'voiceIndexCopy',
@@ -352,6 +360,8 @@ const state = {
   /** Un seul élément <audio> pour tous les moteurs : iOS n'en déverrouille qu'un */
   audio: null,
   deps: null,
+  /** Première visite : attente de l'index avant de décider (holdFirstDecision) */
+  decision: null,
 };
 
 /** Une cause de repli n'est comptée qu'une fois par session (Plausible) */
@@ -516,9 +526,36 @@ function defaultDeps() {
 }
 
 /**
+ * Première visite : la décision « parole active ? » attend l'index, au plus timeoutMs.
+ * Le bouton de la barre du haut reste masqué jusque-là.
+ * @returns {Object} L'attente, à passer à endFirstDecision
+ */
+function holdFirstDecision(timeoutMs) {
+  const decision = { release: holdSpeechDecision(), timer: null };
+  decision.timer = setTimeout(() => endFirstDecision(decision), timeoutMs);
+  state.decision = decision;
+  return decision;
+}
+
+/**
+ * Fin de l'attente (index reçu, réseau absent ou délai écoulé) : les phrases retenues
+ * partent avec le moteur choisi, ou pas si la parole reste coupée, puis la barre du haut
+ * reçoit l'état (voice:changed)
+ * @param {Object|null} decision
+ */
+function endFirstDecision(decision) {
+  if (!decision || state.decision !== decision) return;
+  state.decision = null;
+  clearTimeout(decision.timer);
+  decision.release();
+  refreshVoiceEngine();
+}
+
+/**
  * Met en place la voix enregistrée : décision immédiate d'après la dernière copie de
- * l'index, puis d'après l'index reçu. Sans adresse de base (forks, développement), rien
- * ne change : synthèse, voix coupée par défaut.
+ * l'index, puis d'après l'index reçu. Première visite (ni copie ni choix du joueur) : la
+ * décision attend l'index, au plus 1,5 s. Sans adresse de base (forks, développement),
+ * rien ne change : synthèse, voix coupée par défaut.
  * @param {Object} [deps] - Dépendances (tests)
  * @returns {Promise<void>}
  */
@@ -530,17 +567,30 @@ export async function initRecordedVoice(deps = defaultDeps()) {
   setVoiceEnabledResolver(resolveVoiceEnabled);
   deps.eventBus.on('languageChanged', refreshVoiceEngine);
   deps.eventBus.on('voice:preference-changed', refreshVoiceEngine);
+  const decision =
+    !state.index && voicePreference() === null
+      ? holdFirstDecision(deps.firstDecisionTimeoutMs ?? FIRST_DECISION_TIMEOUT_MS)
+      : null;
   refreshVoiceEngine();
 
   const fresh = await fetchVoiceIndex(state.base, deps.fetchImpl);
-  if (fresh === undefined) return; // hors ligne : la copie fait foi
-  state.index = fresh;
-  saveIndexCopy(fresh);
-  refreshVoiceEngine();
+  // undefined : hors ligne, la copie fait foi
+  if (fresh !== undefined) {
+    state.index = fresh;
+    saveIndexCopy(fresh);
+    refreshVoiceEngine();
+  }
+  endFirstDecision(decision);
 }
 
 /** Remet le module à zéro (tests) */
 export function resetRecordedVoiceForTests() {
+  if (state.decision) {
+    clearTimeout(state.decision.timer);
+    cancelSpeech();
+    state.decision.release();
+    state.decision = null;
+  }
   state.base = null;
   state.index = null;
   state.engine = null;

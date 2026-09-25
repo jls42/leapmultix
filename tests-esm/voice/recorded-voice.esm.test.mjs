@@ -6,6 +6,7 @@
  */
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import {
+  FIRST_DECISION_TIMEOUT_MS,
   VOICE_STORAGE_KEYS,
   attachRecordedVoiceSetting,
   initRecordedVoice,
@@ -15,6 +16,7 @@ import {
 } from '../../js/voice-clips.js';
 import {
   cancelSpeech,
+  isSpeechDecisionPending,
   isVoiceEnabled,
   setSpeechEngine,
   setVoiceEnabledResolver,
@@ -54,10 +56,23 @@ function fakeBus() {
   };
 }
 
-/** Dépendances factices : index servi (ou réseau coupé), stockage, faux moteurs */
+/** Promesse réglée quand le test le décide */
+function deferred() {
+  let resolve;
+  const promise = new Promise(done => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+/**
+ * Dépendances factices : index servi (ou réseau coupé, ou retenu jusqu'à gate.resolve()),
+ * stockage, faux moteurs
+ */
 function setup({
   index,
   offline = false,
+  gate = null,
   stored = {},
   lang = 'fr',
   base = '/voice/',
@@ -73,6 +88,7 @@ function setup({
     translations: () => translations,
     canPlayMp3: () => true,
     fetchImpl: async () => {
+      if (gate) await gate.promise;
       if (offline) throw new TypeError('Failed to fetch');
       return { ok: true, json: async () => index };
     },
@@ -259,5 +275,86 @@ describe('Voix enregistrée dans le jeu', () => {
     ctx.lang = 'en';
     ctx.bus.emit('languageChanged', { lang: 'en' });
     expect(option.hidden).toBe(true);
+  });
+});
+
+describe('Première visite : la décision attend l’index (au plus 1,5 s)', () => {
+  test('une phrase demandée avant l’index est dite par les clips à son arrivée', async () => {
+    const gate = deferred();
+    const ctx = setup({ index: indexWith({ fr: ENTRY }), gate });
+    const init = initRecordedVoice(ctx.deps);
+    expect(isSpeechDecisionPending()).toBe(true);
+    speak('Mode Quiz', { priority: 'high' });
+    expect(ctx.engines).toHaveLength(0);
+    gate.resolve();
+    await init;
+    expect(isSpeechDecisionPending()).toBe(false);
+    expect(ctx.engines[0].spoken).toEqual(['Mode Quiz']);
+  });
+
+  test('l’état n’est annoncé décidé qu’à la fin de l’attente (barre du haut)', async () => {
+    const gate = deferred();
+    const ctx = setup({ index: indexWith({ fr: ENTRY }), gate });
+    const pendingAtEmit = [];
+    ctx.bus.on('voice:changed', () => pendingAtEmit.push(isSpeechDecisionPending()));
+    const init = initRecordedVoice(ctx.deps);
+    gate.resolve();
+    await init;
+    expect(pendingAtEmit.at(-1)).toBe(false);
+    expect(ctx.bus.emitted.at(-1)).toEqual({
+      event: 'voice:changed',
+      detail: { available: true, active: true, engine: 'clips' },
+    });
+  });
+
+  test('index trop lent : décision sans lui, phrase retenue oubliée ; il agit à son arrivée', async () => {
+    jest.useFakeTimers();
+    try {
+      const gate = deferred();
+      const ctx = setup({ index: indexWith({ fr: ENTRY }), gate });
+      const init = initRecordedVoice(ctx.deps);
+      speak('Mode Quiz', { priority: 'high' });
+      jest.advanceTimersByTime(FIRST_DECISION_TIMEOUT_MS - 1);
+      expect(isSpeechDecisionPending()).toBe(true);
+      jest.advanceTimersByTime(1);
+      expect(isSpeechDecisionPending()).toBe(false);
+      expect(isVoiceEnabled()).toBe(false);
+      expect(ctx.bus.emitted.at(-1).detail.active).toBe(false);
+      gate.resolve();
+      await init;
+      expect(isVoiceEnabled()).toBe(true);
+      expect(ctx.engines).toHaveLength(1);
+      expect(ctx.engines[0].spoken).toEqual([]);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('réseau coupé à la première visite : décision aussitôt, voix coupée (v21)', async () => {
+    const ctx = setup({ offline: true });
+    await initRecordedVoice(ctx.deps);
+    expect(isSpeechDecisionPending()).toBe(false);
+    expect(isVoiceEnabled()).toBe(false);
+  });
+
+  test.each([
+    ['une copie de l’index', { [VOICE_STORAGE_KEYS.index]: indexWith({ fr: ENTRY }) }],
+    ['un choix du joueur', { voiceEnabled: false }],
+  ])('avec %s, pas d’attente : la décision est immédiate', async (_label, stored) => {
+    const gate = deferred();
+    const ctx = setup({ index: indexWith({ fr: ENTRY }), gate, stored });
+    const init = initRecordedVoice(ctx.deps);
+    expect(isSpeechDecisionPending()).toBe(false);
+    gate.resolve();
+    await init;
+  });
+
+  test('remise à zéro (tests) : l’attente est levée sans rien dire', () => {
+    const ctx = setup({ index: indexWith({ fr: ENTRY }), gate: deferred() });
+    initRecordedVoice(ctx.deps);
+    speak('Mode Quiz', { priority: 'high' });
+    resetRecordedVoiceForTests();
+    expect(isSpeechDecisionPending()).toBe(false);
+    expect(ctx.engines).toHaveLength(0);
   });
 });

@@ -33,6 +33,10 @@
 //     le son (iOS) ; rend un booléen ou une promesse de booléen.
 //   - preload(texts) (facultatif) : prépare des phrases sans les dire (preloadSpeech).
 //   Le moteur par défaut est la synthèse du navigateur (getSynthesisEngine()).
+//
+// Première visite : la voix enregistrée peut suspendre la décision « parole active ? »
+// jusqu'à l'arrivée de son index (holdSpeechDecision). Les phrases demandées entre-temps
+// attendent, puis entrent dans la file dans leur ordre d'arrivée.
 
 import Storage from './core/storage.js';
 import { AudioManager } from './core/audio.js';
@@ -459,7 +463,8 @@ export function getSynthesisEngine() {
  * @param {Object|null} next - Moteur (voir le contrat en tête de fichier), null : synthèse
  */
 export function setSpeechEngine(next) {
-  cancelSpeech();
+  // Les phrases retenues par la première décision attendent le moteur qu'elle choisit
+  cancelQueue();
   engine = next ?? SYNTHESIS_ENGINE;
   // Un moteur pas encore déverrouillé (la voix enregistrée, branchée après le premier geste)
   // le sera au geste suivant
@@ -575,13 +580,53 @@ function startPhrase(phrase) {
   }
 }
 
-/**
- * Coupe la phrase en cours et oublie la phrase en attente : sortie de mode, navigation,
- * « Continuer », changement de langue, voix ou son coupés, onglet caché.
- */
-export function cancelSpeech() {
+function cancelQueue() {
   pending = null;
   stopActive();
+}
+
+/**
+ * Coupe la phrase en cours et oublie les phrases qui attendent : sortie de mode,
+ * navigation, « Continuer », changement de langue, voix ou son coupés, onglet caché.
+ */
+export function cancelSpeech() {
+  heldPhrases = [];
+  cancelQueue();
+}
+
+// ---------------------------------------------------------------------------------------
+// Première décision (voir l'en-tête) et préchargement
+// ---------------------------------------------------------------------------------------
+
+/** Phrases retenues pendant la première décision : les plus récentes seulement */
+const MAX_HELD_PHRASES = 3;
+/** Attente en cours : son jeton, null sinon */
+let decisionHold = null;
+/** @type {{text: string, options: Object}[]} */
+let heldPhrases = [];
+
+/**
+ * Suspend la décision « parole active ? » : speak() retient les phrases au lieu de les
+ * dire, jusqu'à l'appel de la fonction rendue. Celle-ci les fait entrer dans la file,
+ * dans leur ordre d'arrivée ; chacune n'est dite que si la parole est alors active.
+ * @returns {() => void} Fin de l'attente (sans effet après le premier appel, ou si une
+ *   autre attente a pris sa place)
+ */
+export function holdSpeechDecision() {
+  const hold = {};
+  decisionHold = hold;
+  return () => {
+    if (decisionHold !== hold) return;
+    decisionHold = null;
+    const phrases = heldPhrases;
+    heldPhrases = [];
+    for (const { text, options } of phrases) speak(text, options);
+  };
+}
+
+/** La décision « parole active ? » attend-elle encore ? (bouton de la barre du haut) */
+export function isSpeechDecisionPending() {
+  return decisionHold !== null;
 }
 
 /**
@@ -626,6 +671,10 @@ function canSpeak(text) {
 export function speak(text, options = {}) {
   const { priority = 'normal', queue = false } = options;
   const phraseText = String(text ?? '');
+  if (decisionHold) {
+    heldPhrases = [...heldPhrases, { text: phraseText, options }].slice(-MAX_HELD_PHRASES);
+    return;
+  }
   if (!canSpeak(phraseText)) return;
 
   const phrase = { token: ++nextToken, text: phraseText, priority, handle: null, deadline: null };

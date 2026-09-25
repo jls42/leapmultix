@@ -14,7 +14,7 @@ import {
   speak as _speak,
 } from '../utils-es6.js';
 import { AudioManager } from '../core/audio.js';
-import { cancelSpeech, unlockSpeech } from '../speech.js';
+import { cancelSpeech, isSpeechDecisionPending, unlockSpeech } from '../speech.js';
 import { goToSlide } from '../slides.js';
 import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
@@ -169,6 +169,9 @@ function applyMuteState(button, soundOn) {
 }
 
 function applyVoiceState(button, enabled) {
+  // Première visite : l'état attend l'index de la voix enregistrée (au plus 1,5 s) ; le
+  // bouton reste masqué, à sa place, plutôt que d'afficher un état qui changerait aussitôt
+  button.toggleAttribute('data-voice-pending', isSpeechDecisionPending());
   button.setAttribute('aria-pressed', String(enabled));
   renderIconButton(button, enabled ? 'speech' : 'speech-off');
   setButtonLabel(button, VOICE_LABEL.key, VOICE_LABEL.fallback);

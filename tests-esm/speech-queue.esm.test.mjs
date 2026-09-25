@@ -28,6 +28,8 @@ const {
   getSynthesisEngine,
   estimateSpeechDurationMs,
   updateSpeechVoice,
+  holdSpeechDecision,
+  isSpeechDecisionPending,
   preloadSpeech,
 } = speech;
 
@@ -55,6 +57,9 @@ function emitVolume(detail) {
 let engine;
 
 beforeEach(() => {
+  // Aucune attente de décision laissée par un test précédent
+  cancelSpeech();
+  holdSpeechDecision()();
   storageState.voiceEnabled = true;
   emitVolume({ volume: 1, muted: false });
   engine = createFakeEngine();
@@ -402,6 +407,88 @@ describe('Moteur de synthèse', () => {
     expect(spoken.map(u => u.text)).toEqual(['Mode Quiz']);
     spoken[0].onend();
     expect(spoken.map(u => u.text)).toEqual(['Mode Quiz', 'Combien font 7 fois 8 ?']);
+  });
+});
+
+describe('Première décision (voix enregistrée, première visite)', () => {
+  test('les phrases demandées pendant l’attente partent ensuite, dans l’ordre, selon les règles', () => {
+    const release = holdSpeechDecision();
+    expect(isSpeechDecisionPending()).toBe(true);
+    speak('Mode Quiz', { priority: 'high' });
+    speak('Combien font 7 fois 8 ?');
+    expect(engine.texts()).toEqual([]);
+    release();
+    expect(isSpeechDecisionPending()).toBe(false);
+    // L'annonce part ; la question attend sa fin, sans la couper
+    expect(engine.texts()).toEqual(['Mode Quiz']);
+    engine.last().ctx.onEnded();
+    expect(engine.texts()).toEqual(['Mode Quiz', 'Combien font 7 fois 8 ?']);
+  });
+
+  test('pendant l’attente, une parole encore coupée n’empêche pas de retenir la phrase', () => {
+    storageState.voiceEnabled = false;
+    const release = holdSpeechDecision();
+    speak('Mode Quiz', { priority: 'high' });
+    // L'index arrive : la voix enregistrée active la parole par défaut
+    storageState.voiceEnabled = true;
+    release();
+    expect(engine.texts()).toEqual(['Mode Quiz']);
+  });
+
+  test('parole coupée au moment de la décision : les phrases retenues ne se disent pas', () => {
+    const release = holdSpeechDecision();
+    speak('Mode Quiz', { priority: 'high' });
+    storageState.voiceEnabled = false;
+    release();
+    expect(engine.texts()).toEqual([]);
+    storageState.voiceEnabled = true;
+    speak('Bravo !');
+    expect(engine.texts()).toEqual(['Bravo !']);
+  });
+
+  test('un arrêt pendant l’attente (navigation, langue, son coupé) oublie les phrases retenues', () => {
+    const release = holdSpeechDecision();
+    speak('Mode Quiz', { priority: 'high' });
+    cancelSpeech();
+    release();
+    expect(engine.texts()).toEqual([]);
+  });
+
+  test('le moteur branché par la décision reçoit les phrases retenues', () => {
+    const release = holdSpeechDecision();
+    speak('Mode Quiz', { priority: 'high' });
+    const clips = createFakeEngine();
+    setSpeechEngine(clips);
+    release();
+    expect(clips.texts()).toEqual(['Mode Quiz']);
+    expect(engine.texts()).toEqual([]);
+  });
+
+  test('seules les trois phrases les plus récentes sont retenues', () => {
+    const release = holdSpeechDecision();
+    for (const n of [1, 2, 3, 4, 5]) speak(`Phrase ${n}`, { priority: 'high' });
+    const said = [];
+    const recorder = createFakeEngine();
+    const start = recorder.start.bind(recorder);
+    recorder.start = (text, ctx) => {
+      said.push(text);
+      return start(text, ctx);
+    };
+    setSpeechEngine(recorder);
+    release();
+    expect(said).toEqual(['Phrase 3', 'Phrase 4', 'Phrase 5']);
+  });
+
+  test('fin d’attente sans effet la seconde fois, ou quand une autre attente l’a remplacée', () => {
+    const first = holdSpeechDecision();
+    const second = holdSpeechDecision();
+    speak('Mode Quiz', { priority: 'high' });
+    first();
+    expect(isSpeechDecisionPending()).toBe(true);
+    expect(engine.texts()).toEqual([]);
+    second();
+    second();
+    expect(engine.texts()).toEqual(['Mode Quiz']);
   });
 });
 
