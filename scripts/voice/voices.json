@@ -23,5 +23,24 @@
       "leadSeconds": 0.15,
       "trailSeconds": 0.08
     }
+  },
+  "en": {
+    "provider": "mistral",
+    "voice": "jane",
+    "version": "jane-v1-1",
+    "voiceId": "82c99ee6-f932-423f-a4a3-d403c8914b8d",
+    "voiceName": "Jane - Neutral",
+    "model": "voxtral-mini-tts-2603",
+    "languageCode": "en",
+    "sourceFormat": "mp3",
+    "settings": {},
+    "encoding": {
+      "bitrateKbps": 64,
+      "loudnessLufs": -20,
+      "truePeakDb": -1,
+      "silenceDb": -50,
+      "leadSeconds": 0.15,
+      "trailSeconds": 0.08
+    }
   }
 }

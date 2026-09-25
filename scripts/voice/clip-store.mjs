@@ -7,6 +7,8 @@
 //                                              synthèse, si bien qu'une nouvelle version qui
 //                                              ne change que l'encodage retrouve ses bruts
 //   manifests/<langue>/<version>.json          phrase, texte dit et contrôle de chaque clip
+//   manifests/<langue>/<version>.billed.jsonl  une ligne par réponse payée, écrite aussitôt :
+//                                              le total payé survit à un arrêt brutal
 //   ecoute/avant/<langue>/<version>/<empreinte>.mp3
 //                                              dernier clip remplacé (--redo, texte dit
 //                                              changé), gardé en local (hors git) pour la
@@ -26,7 +28,7 @@ import { ClipContentError } from './audio-process.mjs';
 export const PART = '.part';
 
 /** Champs d'une voix qui ne changent pas le son : les modifier ne demande pas de version */
-const DESCRIPTIVE_FIELDS = new Set(['version', 'voice', 'publicOwnerId', 'lang']);
+const DESCRIPTIVE_FIELDS = new Set(['version', 'voice', 'voiceName', 'publicOwnerId', 'lang']);
 
 function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
@@ -92,6 +94,7 @@ export function storePaths(outDir, lang, version, rawKey = version) {
     manifestFile: path.join(outDir, 'manifests', lang, `${version}.json`),
     runLogFile: path.join(outDir, 'manifests', lang, `${version}.runs.jsonl`),
     lockFile: path.join(outDir, 'manifests', lang, `${version}.lock`),
+    billedFile: path.join(outDir, 'manifests', lang, `${version}.billed.jsonl`),
     replacedDir: path.join(outDir, 'ecoute', 'avant', lang, version),
   };
 }
@@ -333,4 +336,38 @@ export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, 
   await adoptUnlistedClips(ctx);
   await pruneStaleRaw(ctx);
   return report;
+}
+
+/** Lignes JSON d'un fichier ; aucune s'il n'existe pas, une ligne illisible compte pour rien */
+function readJsonLines(file) {
+  if (!fs.existsSync(file)) return [];
+  return fs
+    .readFileSync(file, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map(line => {
+      try {
+        return JSON.parse(line);
+      } catch {
+        return {};
+      }
+    });
+}
+
+const sumChars = lines => lines.reduce((sum, line) => sum + (Number(line.chars) || 0), 0);
+
+/**
+ * Caractères déjà payés pour une version : le registre des réponses payées, plus les
+ * exécutions d'avant le registre (lignes du journal runs.jsonl sans « ledger »)
+ * @returns {number}
+ */
+export function billedChars(paths) {
+  const legacyRuns = readJsonLines(paths.runLogFile).filter(run => !run.ledger);
+  return sumChars(readJsonLines(paths.billedFile)) + sumChars(legacyRuns);
+}
+
+/** Inscrit une réponse payée au registre, aussitôt reçue */
+export async function recordBilled(paths, line) {
+  await fsp.mkdir(path.dirname(paths.billedFile), { recursive: true });
+  await fsp.appendFile(paths.billedFile, `${JSON.stringify(line)}\n`);
 }

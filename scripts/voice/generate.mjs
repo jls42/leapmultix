@@ -12,6 +12,9 @@
 //     --out <dossier>      dépôt privé des voix (défaut : ../leapmultix-voices)
 //     --dry-run            compte ce qui reste à générer, sans appel ni écriture
 //     --max-chars <n>      caractères envoyés au plus pour cette exécution
+//     --max-total-chars <n>  caractères payés au plus pour la version, toutes exécutions
+//                          comprises (registre <version>.billed.jsonl) ; suffit sans solde
+//                          lisible (Mistral)
 //     --reserve <n>        crédits à laisser sur le compte (défaut : 0) ; le budget se compte
 //                          en crédits réels (en-tête character-cost : Eleven v3 décompte
 //                          environ 0,53 crédit par caractère, mesuré sur le français)
@@ -23,7 +26,8 @@
 //                          (mêmes réglages de synthèse, seul l'encodage change)
 //     --reprocess          refait les clips depuis leurs bruts, sans appel (--keys <fichier> :
 //                          seulement ces empreintes) ; pour des clips pas encore publiés
-// Clé : variable d'environnement ELEVENLABS_API_KEY, jamais écrite ni affichée.
+// Clé : ELEVENLABS_API_KEY ou MISTRAL_API_KEY selon le fournisseur de la voix (voices.json),
+// en variable d'environnement, jamais écrite ni affichée.
 // Codes de sortie : 0 fait, 1 erreur ou panne, 3 crédits épuisés, 4 phrases en échec,
 // 130 interrompu.
 
@@ -40,8 +44,11 @@ import {
   processClip,
   probeClip,
 } from './audio-process.mjs';
-import { createElevenLabs, ProviderError } from './providers/elevenlabs.mjs';
+import { ProviderError } from './providers/common.mjs';
+import { createElevenLabs } from './providers/elevenlabs.mjs';
+import { createMistral } from './providers/mistral.mjs';
 import {
+  assertLangCode,
   flagOption,
   integerOption,
   parseOptions,
@@ -52,6 +59,7 @@ import {
 import {
   PART,
   acquireLock,
+  billedChars,
   cleanLeftovers,
   migrateLegacyRaw,
   synthesisHash,
@@ -60,6 +68,7 @@ import {
   rawFile,
   readManifest,
   reconcile,
+  recordBilled,
   sha256,
   storePaths,
   writeFileAtomic,
@@ -70,7 +79,29 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 export const VOICES_PATH = path.join(ROOT, 'scripts/voice/voices.json');
 export const DEFAULT_OUT = path.resolve(ROOT, '../leapmultix-voices');
 
-const PROVIDERS = { elevenlabs: createElevenLabs };
+/**
+ * Fournisseurs de synthèse : fabrique, variable de la clé, adresse de test, conseil quand la
+ * voix est inaccessible
+ */
+const PROVIDERS = {
+  elevenlabs: {
+    create: createElevenLabs,
+    keyVariable: 'ELEVENLABS_API_KEY',
+    baseUrlVariable: 'ELEVENLABS_BASE_URL',
+    voiceHelp: voice =>
+      `La voix ${voice.voiceId} n'est pas utilisable avec cette clé : l'ajouter depuis la ` +
+      `bibliothèque de voix (propriétaire public ${voice.publicOwnerId}).`,
+  },
+  mistral: {
+    create: createMistral,
+    keyVariable: 'MISTRAL_API_KEY',
+    baseUrlVariable: 'MISTRAL_BASE_URL',
+    voiceHelp: voice =>
+      `La voix ${voice.voiceId} (${voice.voiceName ?? voice.voice}) n'existe plus ou n'est pas ` +
+      'accessible avec cette clé : voir GET /v1/audio/voices (une voix prête a un préavis de ' +
+      'retrait, retention_notice).',
+  },
+};
 
 /** Ordre de génération : ce qu'on entend le plus d'abord, les longs énoncés en dernier */
 export const FAMILY_ORDER = [
@@ -204,6 +235,9 @@ function createState(options) {
     reservedCredits: 0,
     // Crédits par caractère : 1 tant qu'aucun coût réel n'est connu (estimation prudente)
     ratio: 1,
+    // Le fournisseur dit-il le coût de ses appels ? Sinon (Mistral) on ne parle que de
+    // caractères
+    costSeen: false,
     maxChars: options.maxChars ?? Infinity,
     maxCredits: options.maxCredits ?? Infinity,
     limit: options.limit ?? Infinity,
@@ -243,7 +277,23 @@ function release(state, reservation) {
 function account(state, chars, cost) {
   state.chars += chars;
   state.credits += cost ?? chars * state.ratio;
-  if (cost !== null) state.ratio = state.credits / state.chars;
+  if (cost === null) return;
+  state.costSeen = true;
+  state.ratio = state.credits / state.chars;
+}
+
+/**
+ * Appel payé : compté, puis inscrit au registre aussitôt (le total payé doit survivre à un
+ * arrêt brutal, avant que le journal des exécutions ne soit écrit)
+ */
+async function recordPaid(ctx, key, chars, cost) {
+  account(ctx.state, chars, cost);
+  try {
+    const at = ctx.options.now().toISOString();
+    await recordBilled(ctx.paths, { key, chars, cost, at });
+  } catch (error) {
+    throw new FatalError(`Registre des caractères payés impossible à écrire : ${error.message}`);
+  }
 }
 
 /** Arrête l'exécution : la première cause et le premier message sont gardés */
@@ -266,7 +316,7 @@ async function writeRaw(raw, audio) {
  * l'identifiant et le coût de l'appel, ou null si le budget ne permet plus l'appel.
  * @returns {Promise<{requestId: string|null, cost: number|null}|null>}
  */
-async function synthesizeRaw(said, raw, ctx) {
+async function synthesizeRaw(key, said, raw, ctx) {
   const { voice, provider, state, options } = ctx;
   const reservation = reserve(state, charCount(said));
   if (!reservation) return null;
@@ -276,9 +326,15 @@ async function synthesizeRaw(said, raw, ctx) {
       options
     );
     // Payé dès la réponse : compté même si l'écriture échoue ensuite
-    account(state, reservation.chars, cost ?? null);
+    await recordPaid(ctx, key, reservation.chars, cost ?? null);
     await writeRaw(raw, audio);
     return { requestId, cost };
+  } catch (error) {
+    // Réponse payée mais inutilisable : payée quand même, donc comptée
+    if (error instanceof ProviderError && error.kind === 'response') {
+      await recordPaid(ctx, key, reservation.chars, null);
+    }
+    throw error;
   } finally {
     release(state, reservation);
   }
@@ -323,7 +379,9 @@ async function produceClip(phrase, ctx) {
   const raw = rawFile(ctx.paths, phrase.key, said);
   const fresh = !fs.existsSync(raw);
   // Un brut déjà payé est retraité sans nouvel appel
-  const call = fresh ? await synthesizeRaw(said, raw, ctx) : { requestId: null, cost: null };
+  const call = fresh
+    ? await synthesizeRaw(phrase.key, said, raw, ctx)
+    : { requestId: null, cost: null };
   if (!call) return false;
   await finishClip({ phrase, said, raw, ...call }, ctx);
   if (fresh) ctx.state.generated++;
@@ -363,10 +421,9 @@ function reportProgress(ctx, total) {
   const { state, options } = ctx;
   const done = state.generated + state.reprocessed;
   if (done % 25 !== 0) return;
-  options.log(
-    `  ${done}/${total} clips, ${state.chars} caractères, ${Math.round(state.credits)} crédits` +
-      (state.failed.length ? `, ${state.failed.length} en échec` : '')
-  );
+  const credits = state.costSeen ? `, ${Math.round(state.credits)} crédits` : '';
+  const failed = state.failed.length ? `, ${state.failed.length} en échec` : '';
+  options.log(`  ${done}/${total} clips, ${state.chars} caractères${credits}${failed}`);
 }
 
 /** L'arrêt a-t-il été demandé (signal) ? Si oui, il devient la cause d'arrêt */
@@ -481,7 +538,8 @@ function finalSummary(summary, { state, manifest, options }) {
     generated: state.generated,
     reprocessed: state.reprocessed,
     chars: state.chars,
-    credits: Math.round(state.credits),
+    // Coût inconnu du fournisseur (Mistral) : pas de crédits inventés
+    credits: state.costSeen ? Math.round(state.credits) : null,
     requests: state.requests,
     failed: state.failed,
     stop: state.stop,
@@ -586,6 +644,7 @@ const CLI_OPTIONS = {
   '--keys': valueOption('keysFile'),
   '--raw-from': valueOption('rawFrom'),
   '--max-chars': integerOption('maxChars'),
+  '--max-total-chars': integerOption('maxTotalChars'),
   '--limit': integerOption('limit'),
   '--concurrency': integerOption('concurrency', 1),
   '--reserve': integerOption('reserve'),
@@ -600,19 +659,42 @@ export function parseArgs(argv) {
     reprocess: false,
   });
   if (!args.lang) throw new Error('--lang est requis (fr, en, es)');
+  assertLangCode(args.lang);
   return args;
 }
 
 /**
+ * Plafond de caractères de l'exécution : --max-chars, borné par ce qui reste du plafond
+ * cumulé --max-total-chars une fois déduit ce qui a déjà été payé pour la version. Refuse de
+ * partir si ce plafond cumulé est déjà atteint.
+ * @param {{maxChars?: number, maxTotalChars?: number}} args
+ * @param {number} billed - Caractères déjà payés (billedChars)
+ * @returns {number|undefined} undefined : aucun plafond de caractères
+ */
+export function charCap({ maxChars, maxTotalChars }, billed) {
+  if (maxTotalChars === undefined) return maxChars;
+  const left = maxTotalChars - billed;
+  if (left <= 0) {
+    throw new Error(
+      `Plafond cumulé atteint : ${billed} caractères déjà payés pour un plafond de ` +
+        `${maxTotalChars} (--max-total-chars)`
+    );
+  }
+  return Math.min(maxChars ?? Infinity, left);
+}
+
+/**
  * Crédits que l'exécution peut dépenser : les crédits restants moins la réserve. Crédits
- * illisibles (clé sans droit user_read) : départ refusé sans plafond --max-chars.
+ * illisibles (clé sans droit user_read, ou fournisseur sans solde comme Mistral) : départ
+ * refusé sans plafond de caractères (--max-chars ou --max-total-chars).
  */
 export async function creditBudget(args, provider, log) {
   const credits = await provider.credits();
   if (!credits) {
     if (args.maxChars === undefined) {
       throw new Error(
-        'Crédits illisibles avec cette clé : donner --max-chars pour plafonner la dépense'
+        'Crédits illisibles avec cette clé : donner --max-chars ou --max-total-chars pour ' +
+          'plafonner la dépense'
       );
     }
     log(`Crédits : illisibles avec cette clé, plafond ${args.maxChars} caractères`);
@@ -659,26 +741,29 @@ async function mainReprocess(args, base) {
 /** --dry-run : ce qui reste à générer, sans appel ni écriture */
 async function mainDryRun(base) {
   const summary = await runGeneration({ ...base, dryRun: true });
-  base.log(JSON.stringify(summary, null, 2));
+  const billed = billedChars(storePaths(base.outDir, base.lang, base.voice.version));
+  base.log(JSON.stringify({ ...summary, billedChars: billed }, null, 2));
   return 0;
 }
 
-/** Fournisseur de la voix, après avoir vérifié que la voix est utilisable avec cette clé */
-async function openProvider(voice) {
-  const createProvider = PROVIDERS[voice.provider];
-  if (!createProvider) throw new Error(`Fournisseur inconnu : ${voice.provider}`);
-  const provider = createProvider({
-    apiKey: process.env.ELEVENLABS_API_KEY,
-    baseUrl: process.env.ELEVENLABS_BASE_URL || undefined,
+/**
+ * Fournisseur de la voix, après avoir vérifié que la voix est utilisable avec cette clé. La
+ * clé est lue dans la variable propre au fournisseur (ELEVENLABS_API_KEY, MISTRAL_API_KEY).
+ * @param {Object} voice - Entrée de voices.json
+ * @param {Object} [env] - Variables d'environnement
+ */
+export async function openProvider(voice, env = process.env) {
+  const entry = Object.hasOwn(PROVIDERS, voice.provider) ? PROVIDERS[voice.provider] : null;
+  if (!entry) throw new Error(`Fournisseur inconnu : ${voice.provider}`);
+  const provider = entry.create({
+    apiKey: env[entry.keyVariable],
+    baseUrl: env[entry.baseUrlVariable] || undefined,
   });
   try {
     await provider.checkVoice(voice);
   } catch (error) {
     if (error.kind !== 'voice') throw error;
-    throw new Error(
-      `${error.message}\nLa voix ${voice.voiceId} n'est pas utilisable avec cette clé : l'ajouter ` +
-        `depuis la bibliothèque de voix (propriétaire public ${voice.publicOwnerId}).`
-    );
+    throw new Error(`${error.message}\n${entry.voiceHelp(voice)}`);
   }
   return provider;
 }
@@ -700,21 +785,31 @@ async function mainGenerate(args, base) {
   const { voice, log } = base;
   await checkAudioTools();
   const provider = await openProvider(voice);
-  const maxCredits = await creditBudget(args, provider, log);
+  const billed = billedChars(storePaths(args.out, args.lang, voice.version));
+  log(`Déjà payé pour ${voice.version} : ${billed} caractères`);
+  const maxChars = charCap(args, billed);
+  const maxCredits = await creditBudget({ ...args, maxChars }, provider, log);
   const signal = stopSignal(log);
 
   const startedAt = new Date();
   const summary = await runGeneration({
     ...base,
     provider,
-    maxChars: args.maxChars,
+    maxChars,
     maxCredits,
     limit: args.limit,
     concurrency: args.concurrency,
     signal,
   });
   const credits = await provider.credits().catch(() => null);
-  const record = { startedAt, endedAt: new Date(), ...summary, creditsAfter: credits };
+  // ledger : les appels de cette exécution sont au registre des caractères payés
+  const record = {
+    startedAt,
+    endedAt: new Date(),
+    ...summary,
+    creditsAfter: credits,
+    ledger: true,
+  };
   const { runLogFile } = storePaths(args.out, args.lang, voice.version);
   await fsp.appendFile(runLogFile, `${JSON.stringify(record)}\n`);
   log(JSON.stringify({ ...summary, failed: summary.failed.length }, null, 2));
