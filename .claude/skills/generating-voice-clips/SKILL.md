@@ -15,7 +15,7 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
 | ------ | ---------------------------- | ---------------------------------------------- | -------------------- | ------------------------------------------------------------ | ------------------------- |
 | fr     | Lucie (`lucie-v3-2`)         | ElevenLabs, Eleven v3                          | `ELEVENLABS_API_KEY` | environ 0,53 crédit par caractère (en-tête `character-cost`) | oui : `--reserve` protège |
 | en     | Jane - Neutral (`jane-v1-1`) | Mistral, Voxtral TTS (`voxtral-mini-tts-2603`) | `MISTRAL_API_KEY`    | 16 $ le million de caractères, que l'API ne dit pas          | non                       |
-| es     | aucune pour l'instant        | –                                              | –                    | –                                                            | –                         |
+| es     | Jane - Neutral (`jane-v1-1`) | Mistral, Voxtral TTS (`voxtral-mini-tts-2603`) | `MISTRAL_API_KEY`    | 16 $ le million de caractères ; nombres dits en lettres      | non                       |
 
 `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix et la version.
 `generate.mjs` lit la clé du fournisseur de la voix.
