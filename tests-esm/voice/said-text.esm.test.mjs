@@ -12,6 +12,7 @@ import { describe, test, expect } from '@jest/globals';
 import {
   SAID_OVERRIDES,
   WORDS_AFTER_NUMBERS,
+  hasAgreement,
   saidText,
   wordsAfterNumbers,
 } from '../../scripts/voice/said-text.mjs';
@@ -78,6 +79,18 @@ describe('Texte dit : en espagnol, les nombres en lettres', () => {
       .map(phrase => saidText(phrase.text, 'es'))
       .filter(said => /\d/.test(said));
     expect(left).toEqual([]);
+  });
+
+  test.each([
+    ['fr', 'Combien font 1 fois 7 ?', true],
+    ['fr', '7 fois 8 égale 54', false],
+    ['es', 'Si tengo 1 caja de 10 manzanas', true],
+    ['es', 'Hay 21 grupos de 5 niños', true],
+    ['es', '7 por 8 es igual a 54', false],
+    ['es', '¿Cuánto es 1 por 7?', false],
+    ['en', 'What is 1 times 7? 21 apples', false],
+  ])('%s : « %s » porte un accord en genre : %s', (lang, text, expected) => {
+    expect(hasAgreement(text, lang)).toBe(expected);
   });
 
   test('le français et l’anglais gardent leurs chiffres', () => {

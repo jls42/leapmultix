@@ -27,7 +27,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SAID_OVERRIDES } from './said-text.mjs';
+import { SAID_OVERRIDES, hasAgreement } from './said-text.mjs';
 import { compareTranscript } from './transcript-compare.mjs';
 import { durationOutliers, readTranscripts, transcriptReport } from './check.mjs';
 import { clipFile, readManifest, replacedFile, sha256, storePaths } from './clip-store.mjs';
@@ -99,7 +99,11 @@ export function saidSample(manifest, lang, size) {
     .filter(key => manifest.clips[key].said !== manifest.clips[key].text)
     .sort((a, b) => a.localeCompare(b));
   const first = differing.filter(key => imposed.has(manifest.clips[key].text));
-  const others = differing.filter(key => !imposed.has(manifest.clips[key].text));
+  // Accords en genre seulement : en espagnol, les nombres dits en lettres font différer
+  // presque tous les textes dits, et l'échantillon ne viserait plus rien
+  const others = differing.filter(
+    key => !imposed.has(manifest.clips[key].text) && hasAgreement(manifest.clips[key].text, lang)
+  );
   return [...first, ...evenlySpaced(others, size - first.length)].slice(0, size);
 }
 
