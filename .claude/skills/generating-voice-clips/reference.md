@@ -49,8 +49,9 @@ cette page : c'est la commande habituelle. `voice:listen` refait seulement la pa
 [--compare <fichier>] [--out <dépôt des voix>]` écrit une page HTML autonome dans
 `ecoute/` du dépôt des voix et en affiche l'adresse `file://`.
 
-- **Sans `--compare`** (`<l>-<version>.html`) : clips signalés (Whisper : nombres entendus
-  différents ou phrase éloignée ; durée anormale, comme `voice:check`), puis un échantillon
+- **Sans `--compare`** (`<l>-<version>.html`) : clips signalés, par les règles de
+  `voice:check` (voir l'étape « Contrôles » du skill : nombres, ressemblance et mots en trop,
+  durée rapportée au débit de la voix), puis un échantillon
   (`--sample`, 24 par défaut) des phrases dont le texte dit diffère : textes imposés
   (`SAID_OVERRIDES`) d'abord, puis accords en genre régulièrement espacés. Sans
   `--transcripts`, seules les durées signalent.
