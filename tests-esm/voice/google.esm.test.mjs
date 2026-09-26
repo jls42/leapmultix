@@ -131,94 +131,97 @@ describe('Fournisseur Google : requête et réponse', () => {
   });
 });
 
-describe('Fournisseur Google : classement des erreurs réelles', () => {
-  test.each([
-    [
-      'voix inconnue',
-      400,
-      googleError(400, 'INVALID_ARGUMENT', "Voice 'es-ES-X' does not exist. Is it misspelled?"),
-      'voice',
-      'does not exist',
-    ],
-    [
-      'clé invalide',
-      400,
-      googleError(400, 'INVALID_ARGUMENT', 'API key not valid.', 'API_KEY_INVALID'),
-      'auth',
-      'API_KEY_INVALID',
-    ],
-    [
-      'clé restreinte à une autre API',
+/** Erreurs réelles de Cloud TTS (26/09/2026) : [cas, statut, corps, kind attendu, fragment] */
+const REAL_ERRORS = [
+  [
+    'voix inconnue',
+    400,
+    googleError(400, 'INVALID_ARGUMENT', "Voice 'es-ES-X' does not exist. Is it misspelled?"),
+    'voice',
+    'does not exist',
+  ],
+  [
+    'clé invalide',
+    400,
+    googleError(400, 'INVALID_ARGUMENT', 'API key not valid.', 'API_KEY_INVALID'),
+    'auth',
+    'API_KEY_INVALID',
+  ],
+  [
+    'clé restreinte à une autre API',
+    403,
+    googleError(
       403,
-      googleError(
-        403,
-        'PERMISSION_DENIED',
-        'Requests to this API are blocked.',
-        'API_KEY_SERVICE_BLOCKED'
-      ),
-      'auth',
-      'blocked',
-    ],
-    [
-      'clé liée à un compte de service',
+      'PERMISSION_DENIED',
+      'Requests to this API are blocked.',
+      'API_KEY_SERVICE_BLOCKED'
+    ),
+    'auth',
+    'blocked',
+  ],
+  [
+    'clé liée à un compte de service',
+    401,
+    googleError(
       401,
-      googleError(
-        401,
-        'UNAUTHENTICATED',
-        'API keys are not supported by this API.',
-        'CREDENTIALS_MISSING'
-      ),
-      'auth',
-      'not supported',
-    ],
-    [
-      'API désactivée',
+      'UNAUTHENTICATED',
+      'API keys are not supported by this API.',
+      'CREDENTIALS_MISSING'
+    ),
+    'auth',
+    'not supported',
+  ],
+  [
+    'API désactivée',
+    403,
+    googleError(403, 'PERMISSION_DENIED', 'The API is disabled.', 'SERVICE_DISABLED'),
+    'auth',
+    'disabled',
+  ],
+  [
+    'facturation absente',
+    403,
+    googleError(
       403,
-      googleError(403, 'PERMISSION_DENIED', 'The API is disabled.', 'SERVICE_DISABLED'),
-      'auth',
-      'disabled',
-    ],
-    [
-      'facturation absente',
-      403,
-      googleError(
-        403,
-        'PERMISSION_DENIED',
-        'This API method requires billing to be enabled.',
-        'BILLING_DISABLED'
-      ),
-      'quota',
-      'billing',
-    ],
-    [
-      'texte refusé',
-      400,
-      googleError(400, 'INVALID_ARGUMENT', 'This request contains sentences that are too long.'),
-      'request',
-      'too long',
-    ],
-    [
-      'autre refus',
-      403,
-      googleError(403, 'PERMISSION_DENIED', 'Permission denied.'),
-      'auth',
-      'Permission',
-    ],
-    [
-      'débit dépassé',
-      429,
-      googleError(429, 'RESOURCE_EXHAUSTED', 'Quota exceeded.'),
-      'rate',
-      'Quota',
-    ],
-    [
-      'panne',
-      503,
-      googleError(503, 'UNAVAILABLE', 'The service is unavailable.'),
-      'server',
-      'unavailable',
-    ],
-  ])('%s → %s', async (_label, status, body, kind, fragment) => {
+      'PERMISSION_DENIED',
+      'This API method requires billing to be enabled.',
+      'BILLING_DISABLED'
+    ),
+    'quota',
+    'billing',
+  ],
+  [
+    'texte refusé',
+    400,
+    googleError(400, 'INVALID_ARGUMENT', 'This request contains sentences that are too long.'),
+    'request',
+    'too long',
+  ],
+  [
+    'autre refus',
+    403,
+    googleError(403, 'PERMISSION_DENIED', 'Permission denied.'),
+    'auth',
+    'Permission',
+  ],
+  [
+    'débit dépassé',
+    429,
+    googleError(429, 'RESOURCE_EXHAUSTED', 'Quota exceeded.'),
+    'rate',
+    'Quota',
+  ],
+  [
+    'panne',
+    503,
+    googleError(503, 'UNAVAILABLE', 'The service is unavailable.'),
+    'server',
+    'unavailable',
+  ],
+];
+
+describe('Fournisseur Google : classement des erreurs réelles', () => {
+  test.each(REAL_ERRORS)('%s → %s', async (_label, status, body, kind, fragment) => {
     const { provider } = providerWith(() => json(status, body));
     const error = await errorOf(provider.synthesize({ text: 'a', voice: VOICE }));
     expect(error).toBeInstanceOf(ProviderError);
@@ -233,7 +236,9 @@ describe('Fournisseur Google : classement des erreurs réelles', () => {
     expect(error.kind).toBe('server');
     expect(error.message).toBe('Google TTS 500');
   });
+});
 
+describe('Fournisseur Google : délai, réseau, clé', () => {
   test('débit dépassé : le délai annoncé est gardé ; pas pour une erreur définitive', async () => {
     const rate = providerWith(() =>
       json(429, googleError(429, 'RESOURCE_EXHAUSTED', 'Quota exceeded.'), { 'retry-after': '7' })
