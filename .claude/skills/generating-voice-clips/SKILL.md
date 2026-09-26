@@ -24,7 +24,7 @@ Mistral (Voxtral TTS, `MISTRAL_API_KEY`, 16 $ le million de caractères) reste b
 (`jane-v1-1`) a été la voix anglaise jusqu'au passage à Sulafat, et ses clips restent en ligne.
 
 **Clé Google** : une clé API classique (`AIza…`), restreinte à Cloud Text-to-Speech, dans un
-projet avec facturation. Les clés liées à un compte de service (`AQ.…`, celles d'AI Studio)
+projet avec facturation, rangée dans le même fichier `.env` hors dépôt que les autres clés. Les clés liées à un compte de service (`AQ.…`, celles d'AI Studio)
 sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en WAV sans perte
 (`sourceFormat: "wav"`, LINEAR16) : le MP3 de Cloud TTS n'est qu'à 32 kb/s.
 
@@ -121,6 +121,11 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
      Les écritures de Whisper sans défaut de voix ne comptent pas : « watt » pour « what »,
      « 18-4 » pour « 18 minus 4 », « 8 x 10 » pour « 8 times 10 ».
 
+     Restent signalées, mais saines à l'écoute (Sulafat en espagnol, 26/09/2026) : « es tres »
+     entendu « estrés », « cuánto es » entendu « cuántos », et les intitulés courts (« Suma,
+     Fácil ») longs seulement en proportion, à cause des silences fixes. Les refaire ne change
+     rien : les laisser à l'écoute du propriétaire.
+
    - `npm run voice:check -- --lang <l> --probe` vérifie que chaque MP3 est valide et
      inchangé (ffprobe, plus lent).
    - **Page d'écoute** (`ecoute/<l>-<version>.html`, à ouvrir pour le propriétaire :
@@ -128,6 +133,9 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
      formes féminines (« une fois 7 »), que Whisper ne distingue pas. Il coche « à refaire » ;
      la liste du bandeau se colle dans `ecartes.txt` (racine du jeu, ignoré par git).
      L'écoute revient au propriétaire : ne jamais cocher à sa place.
+   - **Propriétaire loin du poste** : publier la page de contrôle en artifact, les clips
+     joints en fichiers, avec des cases « à refaire » gardées dans le stockage de l'artifact.
+     Les relire ensuite pour écrire `ecartes.txt`.
    - **Refaits** (payants : accord) :
      `node --env-file=<.env> scripts/voice/generate.mjs --lang <l> --redo ecartes.txt --max-total-chars <plafond>`.
      Seuls ces clips sont refaits, l'ancien de chacun mis de côté dans `ecoute/avant/`.
