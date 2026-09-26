@@ -66,6 +66,21 @@ describe('Navigation clavier globale', () => {
     expect(clic).not.toHaveBeenCalled();
   });
 
+  test('menu déroulant, curseur, champ de texte : flèches, Début et Fin restent au contrôle', () => {
+    bouton('Accueil', 0);
+    const select = placer(document.createElement('select'), 100);
+    select.append(new Option('Sulafat', 'sulafat'), new Option('Jane', 'jane'));
+    const range = placer(Object.assign(document.createElement('input'), { type: 'range' }), 200);
+    const text = placer(Object.assign(document.createElement('input'), { type: 'text' }), 300);
+    for (const control of [select, range, text]) {
+      control.focus();
+      for (const key of ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'Home', 'End']) {
+        appuyer(key);
+        expect(document.activeElement).toBe(control);
+      }
+    }
+  });
+
   test('hors jeu, les flèches passent toujours d’un bouton à l’autre', () => {
     const premier = bouton('Quiz', 0);
     const second = bouton('Défi', 100);
