@@ -5,7 +5,9 @@
 //                                              du texte dit), gardée pour retraiter sans payer ;
 //                                              <réglages> : empreinte des seuls réglages de
 //                                              synthèse, si bien qu'une nouvelle version qui
-//                                              ne change que l'encodage retrouve ses bruts
+//                                              ne change que l'encodage retrouve ses bruts ;
+//                                              « .wav » quand la voix livre un WAV
+//                                              (sourceFormat « wav »)
 //   manifests/<langue>/<version>.json          phrase, texte dit et contrôle de chaque clip
 //   manifests/<langue>/<version>.billed.jsonl  une ligne par réponse payée, écrite aussitôt :
 //                                              le total payé survit à un arrêt brutal
@@ -85,10 +87,12 @@ export function saidHash(said) {
  * @param {string} lang
  * @param {string} version
  * @param {string} [rawKey] - Dossier des bruts (synthesisHash) ; par défaut la version
+ * @param {'mp3'|'wav'} [rawExt] - Extension des bruts (rawExtension)
  */
-export function storePaths(outDir, lang, version, rawKey = version) {
+export function storePaths(outDir, lang, version, rawKey = version, rawExt = 'mp3') {
   return {
     rawDir: path.join(outDir, 'raw', lang, rawKey),
+    rawExt,
     legacyRawDir: path.join(outDir, 'raw', lang, version),
     clipDir: path.join(outDir, 'clips', lang, version),
     manifestFile: path.join(outDir, 'manifests', lang, `${version}.json`),
@@ -102,7 +106,12 @@ export function storePaths(outDir, lang, version, rawKey = version) {
 export const clipFile = (paths, key) => path.join(paths.clipDir, `${key}.mp3`);
 export const replacedFile = (paths, key) => path.join(paths.replacedDir, `${key}.mp3`);
 export const rawFile = (paths, key, said) =>
-  path.join(paths.rawDir, `${key}-${saidHash(said)}.mp3`);
+  path.join(paths.rawDir, `${key}-${saidHash(said)}.${paths.rawExt ?? 'mp3'}`);
+
+/** Extension des bruts d'une voix : « wav » si elle livre un WAV, « mp3 » sinon */
+export function rawExtension(sourceFormat) {
+  return sourceFormat === 'wav' ? 'wav' : 'mp3';
+}
 
 /**
  * Met de côté le clip d'une empreinte avant qu'il soit refait : la page d'écoute compare
@@ -117,9 +126,9 @@ export async function keepReplaced(paths, key) {
   return true;
 }
 
-/** Clé d'un fichier brut : « <empreinte>-<h>.mp3 » */
+/** Clé d'un fichier brut : « <empreinte>-<h>.mp3 » ou « .wav » */
 export function rawKeyOf(fileName) {
-  const match = /^([0-9a-z]+)-([0-9a-f]{12})\.mp3$/.exec(fileName);
+  const match = /^([0-9a-z]+)-([0-9a-f]{12})\.(?:mp3|wav)$/.exec(fileName);
   return match ? { key: match[1], hash: match[2] } : null;
 }
 

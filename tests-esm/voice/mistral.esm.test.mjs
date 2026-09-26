@@ -15,7 +15,6 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { voiceKey } from '../../js/core/spoken-text.js';
-import { parseLanguage } from '../../js/core/voice-index.js';
 import { createMistral } from '../../scripts/voice/providers/mistral.mjs';
 import { createElevenLabs } from '../../scripts/voice/providers/elevenlabs.mjs';
 import { ProviderError, errorDetail } from '../../scripts/voice/providers/common.mjs';
@@ -35,7 +34,23 @@ import {
 } from '../../scripts/voice/clip-store.mjs';
 
 const KEY = 'cle-factice-mistral-0123456789';
-const VOICE = { ...loadVoice('en'), version: 'test-en-1' };
+/**
+ * Jane, la voix Mistral publiée en anglais (jane-v1-1), figée ici : voices.json est passé à
+ * Sulafat (Google). Son empreinte doit rester celle des manifestes publiés.
+ */
+const JANE = {
+  provider: 'mistral',
+  voice: 'jane',
+  version: 'jane-v1-1',
+  voiceId: '82c99ee6-f932-423f-a4a3-d403c8914b8d',
+  voiceName: 'Jane - Neutral',
+  model: 'voxtral-mini-tts-2603',
+  languageCode: 'en',
+  sourceFormat: 'mp3',
+  settings: {},
+  encoding: loadVoice('fr').encoding,
+};
+const VOICE = { ...JANE, version: 'test-en-1' };
 const fakeMp3 = text => Buffer.concat([Buffer.from([0xff, 0xfb, 0x90, 0x64]), Buffer.from(text)]);
 const json = (status, body, headers = {}) =>
   new Response(JSON.stringify(body), {
@@ -237,35 +252,17 @@ describe('Fournisseur Mistral : classement des erreurs réelles', () => {
   );
 });
 
-describe('Voix anglaise : entrée de voices.json', () => {
-  test('nom et version admis par l’index du jeu ; empreintes publiées inchangées', () => {
+describe('Jane, voix Mistral publiée en anglais', () => {
+  test('empreintes des manifestes publiés inchangées ; le nom affiché n’y entre pas', () => {
     expect(VOICE.provider).toBe('mistral');
-    expect(loadVoice('en')).toMatchObject({ voice: 'jane', version: 'jane-v1-1' });
     // voiceName est descriptif : il n'entre pas dans les empreintes
-    const renamed = { ...loadVoice('en'), voiceName: 'Autre nom' };
-    expect(voiceConfigHash(renamed)).toBe(voiceConfigHash(loadVoice('en')));
-    expect(synthesisHash(renamed)).toBe(synthesisHash(loadVoice('en')));
+    const renamed = { ...JANE, voiceName: 'Autre nom' };
+    expect(voiceConfigHash(renamed)).toBe(voiceConfigHash(JANE));
+    expect(synthesisHash(renamed)).toBe(synthesisHash(JANE));
     // Empreintes des manifestes publiés (manifests/fr/lucie-v3-2.json, manifests/en/jane-v1-1.json) :
     // ne doivent pas bouger, un clip publié n'est jamais réécrit
     expect(voiceConfigHash(loadVoice('fr'))).toBe('819e47334ba57974');
-    expect(voiceConfigHash(loadVoice('en'))).toBe('2f293cad167f16be');
-  });
-});
-
-describe('Voix espagnole : entrée de voices.json', () => {
-  test('Jane aussi, en espagnol : nom et version admis par l’index, bruts à part', () => {
-    const es = loadVoice('es');
-    expect(es).toMatchObject({
-      provider: 'mistral',
-      voice: 'jane',
-      version: 'jane-v1-1',
-      voiceId: loadVoice('en').voiceId,
-      languageCode: 'es',
-    });
-    const entry = { voice: es.voice, version: es.version, format: 'mp3', audience: 'test' };
-    expect(parseLanguage({ ...entry, defaultOn: false })).not.toBeNull();
-    // La langue entre dans l'empreinte : les bruts espagnols ne se mêlent pas aux anglais
-    expect(synthesisHash(es)).not.toBe(synthesisHash(loadVoice('en')));
+    expect(voiceConfigHash(JANE)).toBe('2f293cad167f16be');
   });
 });
 

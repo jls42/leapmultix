@@ -88,8 +88,10 @@ describe('voice:review', () => {
     expect(result.stdout).toContain('Whisper : 2 transcrits, 1 à réécouter');
     const flagged = fs.readFileSync(path.join(work, 'a-reecouter-en.txt'), 'utf8');
     expect(flagged.trim()).toBe(voiceKey(WRONG));
-    expect(fs.readFileSync(pageFile('en-jane-v1-1.html'), 'utf8')).toContain(voiceKey(WRONG));
-    expect(result.stdout).toContain(`file://${pageFile('en-jane-v1-1.html')}`);
+    expect(fs.readFileSync(pageFile(`en-${VOICE.version}.html`), 'utf8')).toContain(
+      voiceKey(WRONG)
+    );
+    expect(result.stdout).toContain(`file://${pageFile(`en-${VOICE.version}.html`)}`);
     // Whisper reçoit la langue, le manifeste, les clips et le fichier de transcriptions
     const args = JSON.parse(fs.readFileSync(path.join(work, 'args.json'), 'utf8'));
     expect(args.slice(1)).toEqual([
@@ -156,7 +158,7 @@ describe('voice:review', () => {
     fs.writeFileSync(path.join(work, 'ecartes-en.txt'), `${voiceKey(WRONG)}\n`);
     const result = run(['--python', fake, '--allow-missing', '--compare', 'ecartes-en.txt']);
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('Comparaison en jane-v1-1 : 1 clip refait');
-    expect(fs.existsSync(pageFile('en-jane-v1-1-refaits.html'))).toBe(true);
+    expect(result.stdout).toContain(`Comparaison en ${VOICE.version} : 1 clip refait`);
+    expect(fs.existsSync(pageFile(`en-${VOICE.version}-refaits.html`))).toBe(true);
   });
 });
