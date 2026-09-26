@@ -67,21 +67,17 @@ Le TTS de Mistral (Voxtral, `voxtral-mini-tts-2603`) a été retenu pour l'angla
   attaques de mot trop faibles (« Ten » entendu « hen », « Table » entendu « Pable »), un
   charabia inventé, quelques débits très lents.
 
-## Voix enregistrée : l'espagnol (à décider)
+## Voix enregistrée : l'espagnol (décidé le 26/09, génération à faire)
 
-Mistral n'a aucune voix espagnole prête au 26/09/2026 : Jane et Oliver en anglais
-britannique, Paul en anglais américain, Marie en français. L'essai croisé du 25/09 a échoué :
-Jane disait les nombres en anglais (« tengo sixteen caramelos »), et Marie gardait un accent
-français marqué.
+Mistral n'a aucune voix espagnole prête : ses 30 voix sont anglaises ou françaises. Au banc
+des 30 voix, le propriétaire retient **Jane - Neutral**, la voix de l'anglais.
 
-Options :
-
-1. **Cloner une voix native** avec Voxtral, à partir de 2 à 3 s d'enregistrement d'une
-   locutrice qui donne son accord explicite (règle d'usage de Mistral). Coût : environ 3,60 $
-   pour les 223 758 caractères.
-2. **ElevenLabs**, voix de bibliothèque espagnole : environ 123 000 crédits.
-3. **Garder la voix de l'appareil** en espagnol.
-
-Le jour où l'espagnol est publié, la mention `recorded_voice_hint` d'`es.json` doit nommer son
-fournisseur. Elle dit ElevenLabs aujourd'hui, et reste invisible tant que l'espagnol n'a pas de
-clips.
+- **Nombres en lettres** : en chiffres, Jane les dit en anglais. Le texte dit espagnol les
+  écrit donc tous en lettres (`scripts/voice/said-text.mjs`) : 5 phrases sur 5 justes à
+  Whisper, contre 6 sur 8 en chiffres.
+- **Coût** : 323 098 caractères, environ 5,17 $. Vérifier le solde Mistral avant.
+- **Mention** : `es.json` nomme Mistral AI (v27), avant toute entrée `es` dans l'index.
+- **Accent** : Jane est britannique ; un hispanophone l'entend. Ouvrir à tous, avec ou sans
+  `--default-on`, reste au choix du propriétaire.
+- **Mieux, plus tard** : cloner une voix native avec Voxtral, à partir de 2 à 3 s
+  d'enregistrement d'une locutrice qui donne son accord explicite (règle d'usage de Mistral).

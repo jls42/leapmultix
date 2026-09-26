@@ -24,10 +24,15 @@ place et ce qui vient ensuite.
       - la plus nette et la plus régulière ;
       - 0,126 s par caractère sur les questions, contre 0,079 pour Lucie.
     - Mistral a été choisi pour son coût : environ 3,40 $ pour tout l'anglais.
-  - **Espagnol : pas encore.** Mistral n'a aucune voix espagnole.
-    - L'essai du 25/09 avec deux voix d'autres langues a échoué : Jane disait les nombres en
-      anglais (« sixteen »), et Marie gardait un accent français marqué.
-    - Options : `docs/TODO.md`.
+  - **Espagnol : Jane - Neutral aussi**, décidé le 26/09/2026. Mistral n'a aucune voix
+    espagnole.
+    - Banc des 30 voix prêtes : le propriétaire retient Jane, les autres ne convainquent pas.
+    - En chiffres, Jane dit les nombres en anglais (« 7 por 8 » : charabia pour Whisper,
+      « 9 » dit « nine ») : 6 phrases sur 8 justes. En lettres (« siete por ocho »), 5 sur 5.
+    - Le texte dit espagnol écrit donc **tous les nombres en lettres** (`said-text.mjs`), avec
+      l'accord devant un nom (« veintiún caramelos », « veintiuna manzanas »).
+    - Coût : 323 098 caractères, environ 5,17 $ (3,58 $ en chiffres).
+    - Jane reste une voix britannique qui parle espagnol : un hispanophone entend l'accent.
 - **Corpus fini** : le jeu ne dit qu'environ 7 400 phrases par langue. Elles sont
   toutes enregistrées à l'avance ; aucun appel à un fournisseur pendant une partie.
 - **Format** : MP3 mono. Safari et iOS ne lisent l'Opus en WebM qu'à partir de 17.4
@@ -150,7 +155,7 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
 - **Réglage** : case « Voix enregistrée » dans Accessibilité et contrôles, visible là où la
   voix est disponible.
 - **Mention « voix de synthèse »**, dans la langue du jeu (`recorded_voice_hint`) : créée
-  avec ElevenLabs en français, avec Mistral AI en anglais.
+  avec ElevenLabs en français, avec Mistral AI en anglais et en espagnol.
   - Elle doit être en ligne **avant** l'entrée de la langue dans l'index, puisque la case
     s'affiche dès que la langue y entre.
   - La page parents et le README présentent aussi les voix.
