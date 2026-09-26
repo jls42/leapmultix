@@ -55,7 +55,11 @@ let pageDir;
 
 const contentOf = p => `mp3 ${p.text}`;
 
-async function addClip(p, { duration = 1.2, data = contentOf(p) } = {}) {
+// Durée d'une vraie voix : proportionnelle au texte dit (0,1 s par caractère)
+async function addClip(
+  p,
+  { duration = [...saidText(p.text, 'fr')].length * 0.1, data = contentOf(p) } = {}
+) {
   await fsp.mkdir(paths.clipDir, { recursive: true });
   await fsp.writeFile(path.join(paths.clipDir, `${p.key}.mp3`), data);
   const entry = { text: p.text, said: saidText(p.text, 'fr'), duration, sha256: sha256(data) };
@@ -412,7 +416,9 @@ describe('Commande', () => {
   });
 
   test('écrit la page dans ecoute/ du dépôt des voix et en donne l’adresse', async () => {
-    await saveManifest([await addClip(SLOW, { duration: 6 }), await addClip(FEMININE)], liveVoice);
+    // La durée se juge au débit médian de la voix : il faut assez de clips normaux autour
+    const normal = await Promise.all([FEMININE, FINE].map(p => addClip(p)));
+    await saveManifest([await addClip(SLOW, { duration: 6 }), ...normal], liveVoice);
     const transcripts = path.join(outDir, 'transcripts-fr.jsonl');
     fs.writeFileSync(
       transcripts,

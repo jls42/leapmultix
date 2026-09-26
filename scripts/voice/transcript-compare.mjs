@@ -194,25 +194,66 @@ function editDistance(a, b) {
 export const MIN_SIMILARITY = 0.5;
 
 /**
+ * Langues au contrôle strict : ressemblance d'au moins 0,85, et pas plus d'un mot en trop.
+ * Réglé sur les 7 437 clips anglais de Jane (Mistral), le 26/09/2026 : la règle de base
+ * laissait passer une attaque de mot ratée (« Try again! » entendu « Cry again ») et un
+ * charabia inventé par la synthèse, que les nombres ne trahissent pas. Le français garde la
+ * règle de base : sans transcriptions pour le régler, ses homophones le noieraient d'alertes.
+ */
+const STRICT = { minSimilarity: 0.85, maxExtraWords: 1 };
+export const STRICT_LANGS = { en: STRICT, es: STRICT };
+
+/**
+ * Écritures de Whisper sans défaut de voix, ramenées aux mots de la phrase avant la
+ * comparaison : « watt » pour le « what » des questions à trou, « 18-4 » pour « 18 minus 4 »,
+ * « 8 x 10 » pour « 8 times 10 »
+ */
+const WHISPER_SPELLINGS = {
+  en: [
+    [/\bwatt\b/gi, 'what'],
+    [/(\d)\s*-\s*(\d)/g, '$1 minus $2'],
+    [/(\d)\s*[x×]\s*(\d)/gi, '$1 times $2'],
+  ],
+  es: [
+    [/(\d)\s*-\s*(\d)/g, '$1 menos $2'],
+    [/(\d)\s*[x×]\s*(\d)/gi, '$1 por $2'],
+  ],
+};
+
+/** Transcription aux écritures de Whisper ramenées (voir WHISPER_SPELLINGS) */
+function respelled(heard, lang) {
+  return (WHISPER_SPELLINGS[lang] ?? []).reduce(
+    (text, [pattern, replacement]) => text.replace(pattern, replacement),
+    String(heard)
+  );
+}
+
+/**
  * Compare la transcription d'un clip à sa phrase
  * @param {string} expected - Phrase de speak() (ou texte dit)
  * @param {string} heard - Transcription
  * @param {string} lang
- * @returns {{numbersMatch: boolean, similarity: number, flagged: boolean, expectedNumbers: number[], heardNumbers: number[]}}
+ * @returns {{numbersMatch: boolean, similarity: number, extraWords: number, flagged: boolean, expectedNumbers: number[], heardNumbers: number[]}}
  */
 export function compareTranscript(expected, heard, lang) {
   const a = normalizeForComparison(expected, lang);
-  const b = normalizeForComparison(heard, lang);
+  const b = normalizeForComparison(respelled(heard, lang), lang);
   const expectedNumbers = numbersOf(a);
   const heardNumbers = numbersOf(b);
   const numbersMatch =
     expectedNumbers.length === heardNumbers.length &&
     expectedNumbers.every((n, i) => n === heardNumbers[i]);
   const similarity = 1 - editDistance(a, b) / Math.max(a.length, b.length, 1);
+  const extraWords = b.length - a.length;
+  const strict = STRICT_LANGS[lang];
+  const doubtful = strict
+    ? similarity < strict.minSimilarity || extraWords > strict.maxExtraWords
+    : similarity < MIN_SIMILARITY;
   return {
     numbersMatch,
     similarity: Math.round(similarity * 1000) / 1000,
-    flagged: !numbersMatch || similarity < MIN_SIMILARITY,
+    extraWords,
+    flagged: !numbersMatch || doubtful,
     expectedNumbers,
     heardNumbers,
   };
