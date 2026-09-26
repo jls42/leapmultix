@@ -24,6 +24,15 @@ function usesControlKeys(element) {
   return element.tagName === 'INPUT' && TEXT_LIKE_INPUTS.has(element.type);
 }
 
+/** L'élément actif garde-t-il cette touche pour lui ? */
+function activeElementOwnsKey(key) {
+  const active = document.activeElement;
+  // Sur l'écran d'un jeu, flèches et espace pilotent le jeu : ne pas lui prendre le focus
+  if (active?.tagName === 'CANVAS') return true;
+  // Menu déroulant, curseur, champ de texte : ces touches règlent le contrôle lui-même
+  return CONTROL_KEYS.has(key) && usesControlKeys(active);
+}
+
 class KeyboardNavigation {
   constructor() {
     this.isKeyboardMode = false;
@@ -139,11 +148,7 @@ class KeyboardNavigation {
   }
 
   handleGlobalKeydown(event) {
-    if (!this.isKeyboardMode) return;
-    // Sur l'écran d'un jeu, flèches et espace pilotent le jeu : ne pas lui prendre le focus
-    if (document.activeElement?.tagName === 'CANVAS') return;
-    // Menu déroulant, curseur, champ de texte : ces touches règlent le contrôle lui-même
-    if (CONTROL_KEYS.has(event.key) && usesControlKeys(document.activeElement)) return;
+    if (!this.isKeyboardMode || activeElementOwnsKey(event.key)) return;
 
     switch (event.key) {
       case 'Enter':

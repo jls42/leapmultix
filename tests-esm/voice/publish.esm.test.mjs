@@ -551,7 +551,7 @@ describe('Publication', () => {
           {},
           fakeAws({ remote: online(), index: { schema: VOICE_KEY_SCHEMA, languages: {} } })
         )
-      ).rejects.toThrow(/pas dans l'index/);
+      ).rejects.toThrow("pas dans l'index");
       await expect(
         alternative({ version: 'sulafat-v1-1' }, fakeAws({ index: indexWithEn(EN) }))
       ).rejects.toThrow(/voix par défaut/);
@@ -608,7 +608,7 @@ describe('Publication', () => {
       for (const command of ['index', 'remove']) {
         expect(() =>
           parsePublishArgs([command, '--lang', 'en', '--version', 'jane-v1-1'], env)
-        ).toThrow(/--version ne va qu'avec clips, local, alternative/);
+        ).toThrow("--version ne va qu'avec clips, local, alternative");
       }
       for (const command of ['clips', 'local']) {
         expect(

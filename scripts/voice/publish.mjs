@@ -142,6 +142,27 @@ export function alternativeEntry(voice, audience = 'test') {
   };
 }
 
+/** Entrée de la langue dans l'index : une autre voix ne rejoint qu'une langue déjà publiée */
+function requireLanguage(current, lang) {
+  const entry = current?.languages?.[lang];
+  if (!entry) {
+    throw new Error(
+      `La langue ${lang} n'est pas dans l'index : publier d'abord sa voix par défaut`
+    );
+  }
+  return entry;
+}
+
+/** Refuse une entrée dont les règles du jeu écarteraient l'autre voix de cette version */
+function assertAlternativeKept(next, version, alternative) {
+  const kept = parseLanguage(next)?.alternatives ?? [];
+  if (kept.some(voice => voice.version === version)) return;
+  throw new Error(
+    `Autre voix refusée par les règles du jeu : « ${alternative.voice} » (${version}) ; nom ` +
+      `ou version déjà pris par la voix par défaut, ou plus de ${MAX_ALTERNATIVES} voix`
+  );
+}
+
 /**
  * Index avec une autre voix de la langue ajoutée ou mise à jour (même version ou même nom),
  * ou retirée si alternative est null. Refusé si la langue manque, ou si les règles du jeu
@@ -152,25 +173,13 @@ export function alternativeEntry(voice, audience = 'test') {
  * @param {Object|null} alternative - Voir alternativeEntry
  */
 export function withAlternative(current, lang, version, alternative) {
-  const entry = current?.languages?.[lang];
-  if (!entry) {
-    throw new Error(
-      `La langue ${lang} n'est pas dans l'index : publier d'abord sa voix par défaut`
-    );
-  }
-  const { alternatives: previous = [], ...main } = entry;
+  const { alternatives: previous = [], ...main } = requireLanguage(current, lang);
   const others = previous.filter(
     voice => voice.version !== version && voice.voice !== alternative?.voice
   );
   const alternatives = alternative ? [...others, alternative] : others;
   const next = alternatives.length ? { ...main, alternatives } : main;
-  const kept = parseLanguage(next)?.alternatives ?? [];
-  if (alternative && !kept.some(voice => voice.version === version)) {
-    throw new Error(
-      `Autre voix refusée par les règles du jeu : « ${alternative.voice} » (${version}) ; nom ` +
-        `ou version déjà pris par la voix par défaut, ou plus de ${MAX_ALTERNATIVES} voix`
-    );
-  }
+  if (alternative) assertAlternativeKept(next, version, alternative);
   return { schema: VOICE_KEY_SCHEMA, languages: { ...current.languages, [lang]: next } };
 }
 
@@ -481,16 +490,21 @@ export function parsePublishArgs(argv, env = process.env) {
   }
   if (args.command !== 'local' && !args.bucket)
     throw new Error('--bucket (ou VOICE_BUCKET) requis');
-  if (args.command === 'alternative' && !args.version) {
+  assertVersionOption(args);
+  return args;
+}
+
+/** --version : exigé par alternative, refusé à index et remove (voix par défaut seulement) */
+function assertVersionOption({ command, version }) {
+  if (command === 'alternative' && !version) {
     throw new Error('alternative : --version requis (une voix de alternatives.json)');
   }
-  if (args.version && !VERSION_COMMANDS.includes(args.command)) {
+  if (version && !VERSION_COMMANDS.includes(command)) {
     throw new Error(
-      `${args.command} : --version ne va qu'avec ${VERSION_COMMANDS.join(', ')} ; ` +
+      `${command} : --version ne va qu'avec ${VERSION_COMMANDS.join(', ')} ; ` +
         "l'index ne publie que la voix par défaut (voices.json)"
     );
   }
-  return args;
 }
 
 /** Lit l'index distant, le transforme, puis l'écrit (avec le résumé avant et après) */
@@ -511,12 +525,13 @@ function publishIndex(ctx, entry) {
  * Autre voix de la langue : ajoutée si chacun de ses clips est en ligne et identique (et
  * chaque phrase du corpus couverte), ou retirée (--remove) sans rien vérifier
  */
-async function publishAlternative(ctx) {
+async function publishAlternative(ctx, phrases) {
   const { lang, version } = ctx;
   if (version === loadVoice(lang).version) {
     throw new Error(`${version} est la voix par défaut de ${lang} : commande index`);
   }
   if (ctx.remove) return updateIndex(ctx, current => withAlternative(current, lang, version, null));
+  ctx.phrases = phrases ?? buildCorpus(lang);
   ctx.voice = loadVoiceVersion(lang, version);
   ctx.paths = storePaths(ctx.out, lang, version);
   ctx.manifest = readManifest(ctx.paths, lang, ctx.voice);
@@ -536,20 +551,31 @@ export async function publish(args, { run = awsCli, log = console.log, phrases }
   const ctx = { ...args, run, log };
   // Coupe-circuit : ni voix ni manifeste nécessaires, il doit marcher de n'importe où
   if (args.command === 'remove') return publishIndex(ctx, null);
-  if (args.command === 'alternative') {
-    ctx.phrases = phrases ?? buildCorpus(args.lang);
-    return publishAlternative(ctx);
-  }
-  ctx.voice = args.voice ?? loadVoiceVersion(args.lang, args.version);
-  ctx.alternative = Boolean(args.version) && args.version !== loadVoice(args.lang).version;
-  ctx.paths = storePaths(args.out, args.lang, ctx.voice.version);
-  ctx.manifest = readManifest(ctx.paths, args.lang, ctx.voice);
-  requireClips(ctx.manifest, ctx.paths);
+  if (args.command === 'alternative') return publishAlternative(ctx, phrases);
+  openStore(ctx);
   if (args.command === 'clips') return publishClips(ctx);
   if (args.command === 'local') return publishLocal(ctx);
+  return publishLanguage(ctx, phrases);
+}
+
+/**
+ * Voix visée (--version, sinon la voix par défaut), son rangement et son manifeste, dont
+ * chaque clip doit être là
+ */
+function openStore(ctx) {
+  const { lang, version } = ctx;
+  ctx.voice ??= loadVoiceVersion(lang, version);
+  ctx.alternative = Boolean(version) && version !== loadVoice(lang).version;
+  ctx.paths = storePaths(ctx.out, lang, ctx.voice.version);
+  ctx.manifest = readManifest(ctx.paths, lang, ctx.voice);
+  requireClips(ctx.manifest, ctx.paths);
+}
+
+/** Voix par défaut de la langue dans l'index distant */
+async function publishLanguage(ctx, phrases) {
   // L'entrée d'abord : refusée par les règles du jeu, rien n'est ni lu ni envoyé
-  const entry = indexEntry(ctx.voice, { audience: args.audience, defaultOn: args.defaultOn });
-  ctx.phrases = phrases ?? buildCorpus(args.lang);
+  const entry = indexEntry(ctx.voice, { audience: ctx.audience, defaultOn: ctx.defaultOn });
+  ctx.phrases = phrases ?? buildCorpus(ctx.lang);
   await assertPublishable(ctx);
   return publishIndex(ctx, entry);
 }

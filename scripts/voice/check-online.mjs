@@ -150,8 +150,6 @@ export async function checkOnline({
 
   const online = await readOnlineIndex(fetchImpl, base, headers);
   const listed = online.index?.languages[lang] ?? null;
-  // La version vérifiée est la voix par défaut de la langue, ou l'une de ses autres voix
-  const announced = [listed?.version, ...(listed?.alternatives ?? []).map(v => v.version)];
   return {
     lang,
     version: voice.version,
@@ -159,8 +157,18 @@ export async function checkOnline({
     checked,
     failures,
     indexError: online.error ?? null,
-    index: listed ? { ...listed, matchesVersion: announced.includes(voice.version) } : null,
+    index: listed
+      ? { ...listed, matchesVersion: announcedVersions(listed).includes(voice.version) }
+      : null,
   };
+}
+
+/**
+ * Versions qu'annonce l'entrée d'une langue : sa voix par défaut et ses autres voix. La
+ * version vérifiée doit être l'une d'elles.
+ */
+function announcedVersions(entry) {
+  return [entry.version, ...(entry.alternatives ?? []).map(voice => voice.version)];
 }
 
 /**
