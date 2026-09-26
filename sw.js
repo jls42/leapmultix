@@ -7,7 +7,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v29'; // bump to trigger client update
+const VERSION = 'v30'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -84,6 +84,12 @@ async function voiceClip(event) {
   return response;
 }
 
+/** Versions qu'annonce une langue de l'index : sa voix par défaut et ses autres voix */
+function announcedVersions(entry) {
+  const others = Array.isArray(entry?.alternatives) ? entry.alternatives : [];
+  return [entry?.version, ...others.map(voice => voice?.version)];
+}
+
 /**
  * Nouvel index : retire les clips des versions (ou des langues) qu'il n'annonce plus,
  * puis les plus anciens au-delà du plafond. Hors du chemin de la réponse.
@@ -97,7 +103,7 @@ async function pruneVoiceCache(index) {
   );
   const isCurrent = request => {
     const [, lang, version] = VOICE_CLIP.exec(new URL(request.url).pathname);
-    return languages[lang]?.version === version;
+    return announcedVersions(languages[lang]).includes(version);
   };
   const stale = clips.filter(request => !isCurrent(request));
   const kept = clips.filter(isCurrent);

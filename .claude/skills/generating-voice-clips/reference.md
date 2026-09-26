@@ -32,7 +32,7 @@ Les erreurs sont des `ProviderError` (`providers/common.mjs`), classées par kin
 
 Le classement est propre à chaque fournisseur :
 
-|             | ElevenLabs (fr)                                      | Google (en, es)                                                                                | Mistral (Jane, en jusqu'au 26/09)                                          |
+|             | ElevenLabs (fr)                                      | Google (en, es)                                                                                | Mistral (Jane, autre voix de l'anglais)                                    |
 | ----------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | Clé         | `ELEVENLABS_API_KEY`, en-tête `xi-api-key`           | `GOOGLE_TTS_API_KEY` (classique, `AIza…`), en-tête `x-goog-api-key`                            | `MISTRAL_API_KEY`, en-tête `Authorization: Bearer`                         |
 | Coût        | en-tête `character-cost` (≈ 0,53 crédit/caractère)   | inconnu de l'API ; 30 $ le million de caractères, le premier million du mois offert            | inconnu de l'API ; 16 $ le million de caractères                           |
@@ -41,6 +41,33 @@ Le classement est propre à chaque fournisseur :
 | Voix        | bibliothèque (préavis de 730 jours), `publicOwnerId` | Chirp 3 HD, une voix par langue (`es-ES-Chirp3-HD-Sulafat`) ; 400 « does not exist » : `voice` | voix prête (`retention_notice` : 30), ou clonage avec consentement         |
 | Brut        | MP3 128 kb/s                                         | WAV sans perte (LINEAR16, `sourceFormat: "wav"`)                                               | MP3                                                                        |
 | Identifiant | en-tête `request-id`                                 | aucun                                                                                          | en-tête `mistral-correlation-id`                                           |
+
+## Autres voix d'une langue
+
+Le menu « Voix » des réglages (v30) propose, dans une langue, plusieurs voix enregistrées :
+en anglais, Sulafat (Google) et Jane (Mistral AI).
+
+- **Déclaration** : `scripts/voice/alternatives.json`, `{ "<langue>": [ { …champs de
+voices.json… } ] }`. `loadVoiceVersion(lang, version)` (`generate.mjs`) rend la voix par
+  défaut sans version ou avec la sienne, sinon l'autre voix de cette version, sinon une erreur
+  (« Aucune voix … »).
+- **Index** : l'entrée de la langue garde la voix par défaut en tête, puis `alternatives`,
+  chacune `{ voice, version, format, audience, provider }`. Le jeu écarte une autre voix
+  invalide, au nom ou à la version déjà pris, ou au-delà de 4 ; `publish alternative` refuse
+  de l'écrire. Un jeu d'avant la v30 ignore `alternatives` et `provider`.
+- **Jeu** : menu visible dès que deux voix de la langue sont ouvertes à ce navigateur ;
+  choix gardé par langue (`recordedVoiceChoice`), qui revient à la voix par défaut si le
+  choix quitte l'index. Chaque voix a son moteur de clips ; la mention nomme son service
+  (`recorded_voice_hint_<provider>`). Le service worker garde les clips de chaque version
+  annoncée, par défaut ou autre. `Voice fallback` porte `{ cause, lang, voice }`.
+- **Outils** : `--version` sur `generate.mjs`, `voice:review`, `voice:check`,
+  `voice:listen`, `voice:check-online` et `voice:publish -- clips|local|alternative`.
+  `voice:check-online --version` accepte un index qui annonce la version parmi les autres
+  voix ; avant `alternative`, il lui faut `--allow-other-version`.
+- **Publication** : `alternative --version <v> [--audience test|all]` ajoute ou met à jour
+  l'autre voix, aux conditions de `index` (clips en ligne et identiques, corpus couvert) ;
+  `--remove` la retire sans rien vérifier. La langue doit déjà être dans l'index. `index`
+  garde les autres voix, sauf celle qui deviendrait la voix par défaut.
 
 ## Page d'écoute (`npm run voice:listen`)
 
@@ -157,16 +184,22 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
 3. **Règles du texte dit** pour la langue (`said-text.mjs`) : le test
    `tests-esm/voice/said-text.esm.test.mjs` exige que chaque mot qui suit un nombre dans le
    corpus soit classé. L'anglais n'en a pas besoin.
-4. **Mention « voix de synthèse »** : `recorded_voice_hint` du fichier de traduction de la
-   langue nomme le fournisseur. Elle part en ligne **avant** l'index de la langue, puisque la
-   case s'affiche dès que la langue y entre.
+4. **Mention « voix de synthèse »** : `recorded_voice_hint_<provider>` (fr, en, es) nomme le
+   service de la voix entendue, d'après le `provider` de l'index ; `recorded_voice_hint` de la
+   langue sert quand l'index ne le donne pas, et doit nommer le service de sa voix par défaut.
+   Elles partent en ligne **avant** l'index de la langue, puisque la case s'affiche dès que la
+   langue y entre.
 5. **Nouveau fournisseur** :
    - un module dans `scripts/voice/providers/`, sur l'interface ci-dessus, avec les outils de
      `common.mjs` ;
    - son entrée dans `PROVIDERS` de `generate.mjs` : fabrique, variable de la clé, adresse
      de test, conseil quand la voix est inaccessible ;
    - des tests sur le modèle de `tests-esm/voice/google.esm.test.mjs` ou `mistral.esm.test.mjs`, sur les réponses
-     réelles de l'API.
+     réelles de l'API ;
+   - côté jeu : son nom dans `VOICE_PROVIDERS` (`js/core/voice-index.js`) et
+     `PROVIDER_LABELS` (`js/voice-clips.js`), sa mention `recorded_voice_hint_<provider>` en
+     fr, en et es. Sans eux, l'index publié ne porte pas son `provider`, le menu la nomme sans
+     service et la mention reste celle de la langue.
 
 ## Infra (dépôt `leapmultix-infra`, `voices.tf`)
 

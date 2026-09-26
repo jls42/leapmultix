@@ -23,6 +23,7 @@ import {
   creditBudget,
   exitCodeFor,
   loadVoice,
+  loadVoiceVersion,
   openProvider,
   runGeneration,
 } from '../../scripts/voice/generate.mjs';
@@ -35,21 +36,11 @@ import {
 
 const KEY = 'cle-factice-mistral-0123456789';
 /**
- * Jane, la voix Mistral publiée en anglais (jane-v1-1), figée ici : voices.json est passé à
- * Sulafat (Google). Son empreinte doit rester celle des manifestes publiés.
+ * Jane, la voix Mistral publiée en anglais (jane-v1-1), autre voix au choix du joueur depuis
+ * le passage à Sulafat : ses réglages vivent dans alternatives.json, et leur empreinte doit
+ * rester celle des manifestes publiés.
  */
-const JANE = {
-  provider: 'mistral',
-  voice: 'jane',
-  version: 'jane-v1-1',
-  voiceId: '82c99ee6-f932-423f-a4a3-d403c8914b8d',
-  voiceName: 'Jane - Neutral',
-  model: 'voxtral-mini-tts-2603',
-  languageCode: 'en',
-  sourceFormat: 'mp3',
-  settings: {},
-  encoding: loadVoice('fr').encoding,
-};
+const JANE = loadVoiceVersion('en', 'jane-v1-1');
 const VOICE = { ...JANE, version: 'test-en-1' };
 const fakeMp3 = text => Buffer.concat([Buffer.from([0xff, 0xfb, 0x90, 0x64]), Buffer.from(text)]);
 const json = (status, body, headers = {}) =>

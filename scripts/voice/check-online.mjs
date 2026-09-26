@@ -6,6 +6,9 @@
 // Usage :
 //   node scripts/voice/check-online.mjs --lang fr [--base https://leapmultix.jls42.org/voice/]
 //     [--out <dépôt des voix>] [--sample <n>] [--concurrency <n>] [--allow-other-version]
+//     [--version <version d'une autre voix>]
+// --version vérifie une autre voix de la langue (alternatives.json) : l'index doit alors
+// l'annoncer parmi les autres voix, ou pas du tout.
 // Code de sortie 1 : un clip en échec ou non vérifié, un manifeste vide, un index
 // illisible, ou un index qui annonce une autre version (--allow-other-version l'accepte :
 // clips d'une nouvelle version envoyés, index pas encore publié). Un index absent (403,
@@ -25,7 +28,7 @@ import {
   wholeNumber,
 } from './cli-options.mjs';
 import { readManifest, storePaths } from './clip-store.mjs';
-import { DEFAULT_OUT, loadVoice } from './generate.mjs';
+import { DEFAULT_OUT, loadVoiceVersion } from './generate.mjs';
 
 export const DEFAULT_BASE = 'https://leapmultix.jls42.org/voice/';
 
@@ -147,6 +150,8 @@ export async function checkOnline({
 
   const online = await readOnlineIndex(fetchImpl, base, headers);
   const listed = online.index?.languages[lang] ?? null;
+  // La version vérifiée est la voix par défaut de la langue, ou l'une de ses autres voix
+  const announced = [listed?.version, ...(listed?.alternatives ?? []).map(v => v.version)];
   return {
     lang,
     version: voice.version,
@@ -154,7 +159,7 @@ export async function checkOnline({
     checked,
     failures,
     indexError: online.error ?? null,
-    index: listed ? { ...listed, matchesVersion: listed.version === voice.version } : null,
+    index: listed ? { ...listed, matchesVersion: announced.includes(voice.version) } : null,
   };
 }
 
@@ -184,6 +189,7 @@ const CLI_OPTIONS = {
   '--sample': integerOption('sample', 1),
   '--concurrency': integerOption('concurrency', 1),
   '--allow-other-version': flagOption('allowOtherVersion'),
+  '--version': valueOption('version'),
 };
 
 /**
@@ -210,7 +216,7 @@ async function main(argv) {
   const args = parseCheckOnlineArgs(argv);
   const report = await checkOnline({
     lang: args.lang,
-    voice: loadVoice(args.lang),
+    voice: loadVoiceVersion(args.lang, args.version),
     outDir: args.out,
     base: args.base,
     sample: args.sample,

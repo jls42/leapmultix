@@ -15,7 +15,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { voiceKey, VOICE_KEY_SCHEMA } from '../../js/core/spoken-text.js';
 import { clipPath, parseVoiceIndex } from '../../js/core/voice-index.js';
-import { loadVoice } from '../../scripts/voice/generate.mjs';
+import { loadVoice, loadVoiceVersion } from '../../scripts/voice/generate.mjs';
 import {
   CLIP_CACHE_CONTROL,
   describeLanguages,
@@ -24,6 +24,7 @@ import {
   parsePublishArgs,
   planUpload,
   publish,
+  withAlternative,
   withLanguage,
 } from '../../scripts/voice/publish.mjs';
 import {
@@ -91,6 +92,7 @@ describe('Index de la voix', () => {
       format: 'mp3',
       audience: 'all',
       defaultOn: true,
+      provider: 'elevenlabs',
     });
     expect(added.languages.es).toEqual(ENTRY);
     expect(withLanguage(added, 'fr', null).languages).toEqual({ es: ENTRY });
@@ -450,7 +452,14 @@ describe('Publication', () => {
       const index = JSON.parse(fs.readFileSync(path.join(site, 'voice', 'index.json'), 'utf8'));
       expect(parseVoiceIndex(index).languages).toEqual({
         en: jane,
-        fr: { voice: 'lucie', version: 'test-1', format: 'mp3', audience: 'all', defaultOn: true },
+        fr: {
+          voice: 'lucie',
+          version: 'test-1',
+          format: 'mp3',
+          audience: 'all',
+          defaultOn: true,
+          provider: 'elevenlabs',
+        },
       });
     } finally {
       await fsp.rm(site, { recursive: true, force: true });
@@ -472,6 +481,159 @@ describe('Publication', () => {
     } finally {
       await fsp.rm(site, { recursive: true, force: true });
     }
+  });
+
+  describe('autres voix de la langue (alternative)', () => {
+    const jane = loadVoiceVersion('en', 'jane-v1-1');
+    const EN = {
+      voice: 'sulafat',
+      version: 'sulafat-v1-1',
+      format: 'mp3',
+      audience: 'all',
+      defaultOn: true,
+      provider: 'google',
+    };
+    const JANE = {
+      voice: 'jane',
+      version: 'jane-v1-1',
+      format: 'mp3',
+      audience: 'test',
+      provider: 'mistral',
+    };
+    const indexWithEn = en => ({ schema: VOICE_KEY_SCHEMA, languages: { es: ENTRY, en } });
+
+    /** Clips de Jane dans le dépôt des voix, conformes à leur manifeste */
+    async function janeStore() {
+      const janePaths = storePaths(outDir, 'en', jane.version);
+      await fsp.mkdir(janePaths.clipDir, { recursive: true });
+      const manifest = newManifest('en', jane);
+      for (const clip of clips) {
+        await fsp.writeFile(path.join(janePaths.clipDir, `${clip.key}.mp3`), clip.data);
+        manifest.clips[clip.key] = {
+          text: clip.text,
+          said: clip.text,
+          duration: 1,
+          bytes: clip.data.length,
+          sha256: sha256(clip.data),
+        };
+      }
+      await writeManifest(janePaths, manifest);
+    }
+    const alternative = (args, aws) =>
+      run({ command: 'alternative', lang: 'en', version: 'jane-v1-1', ...args }, aws);
+
+    test('Jane rejoint l’anglais ; la voix par défaut et les autres langues ne bougent pas', async () => {
+      await janeStore();
+      const aws = fakeAws({ remote: online(), index: indexWithEn(EN) });
+      await alternative({ audience: 'test' }, aws);
+      expect(written().languages).toEqual({ es: ENTRY, en: { ...EN, alternatives: [JANE] } });
+      expect(logs.some(line => line.includes('aussi jane-v1-1 test'))).toBe(true);
+    });
+
+    test('même voix republiée : mise à jour (audience) ; --remove la retire sans rien vérifier', async () => {
+      await janeStore();
+      const current = indexWithEn({ ...EN, alternatives: [JANE] });
+      await alternative({ audience: 'all' }, fakeAws({ remote: online(), index: current }));
+      expect(written().languages.en.alternatives).toEqual([{ ...JANE, audience: 'all' }]);
+      calls = [];
+      await alternative({ remove: true }, fakeAws({ index: current }));
+      expect(written().languages.en).toEqual(EN);
+      expect(calls.some(c => c.args[1] === 'list-objects-v2')).toBe(false);
+    });
+
+    test('refus : clips pas en ligne, langue absente, voix par défaut donnée comme autre voix', async () => {
+      await janeStore();
+      await expect(
+        alternative({}, fakeAws({ remote: [], index: indexWithEn(EN) }))
+      ).rejects.toThrow(/pas encore en ligne/);
+      await expect(
+        alternative(
+          {},
+          fakeAws({ remote: online(), index: { schema: VOICE_KEY_SCHEMA, languages: {} } })
+        )
+      ).rejects.toThrow(/pas dans l'index/);
+      await expect(
+        alternative({ version: 'sulafat-v1-1' }, fakeAws({ index: indexWithEn(EN) }))
+      ).rejects.toThrow(/voix par défaut/);
+      expect(calls.some(c => c.written)).toBe(false);
+    });
+
+    test('index republié : les autres voix sont gardées, sauf celle qui devient la voix par défaut', () => {
+      const current = indexWithEn({ ...EN, alternatives: [JANE] });
+      expect(
+        withLanguage(current, 'en', { ...EN, audience: 'test' }).languages.en.alternatives
+      ).toEqual([JANE]);
+      const janeFirst = { ...JANE, defaultOn: true };
+      expect(withLanguage(current, 'en', janeFirst).languages.en).toEqual(janeFirst);
+      expect(() =>
+        withAlternative(current, 'en', 'x-1', { ...JANE, voice: 'sulafat', version: 'x-1' })
+      ).toThrow(/règles du jeu/);
+    });
+
+    test('clips --version : les clips de Jane partent dans son dossier', async () => {
+      await janeStore();
+      await run(
+        { command: 'clips', lang: 'en', voice: undefined, version: jane.version },
+        fakeAws()
+      );
+      const upload = calls.find(c => c.staged);
+      expect(upload.staged).toEqual(clips.map(c => `${c.key}.mp3`).sort());
+      expect(upload.args).toContain('s3://voix-test/voice/en/jane-v1-1/');
+    });
+
+    test('local --version : Jane rejoint les voix de l’anglais de l’index local', async () => {
+      await janeStore();
+      const site = await fsp.mkdtemp(path.join(os.tmpdir(), 'site-'));
+      try {
+        await fsp.mkdir(path.join(site, 'voice'), { recursive: true });
+        const indexFile = path.join(site, 'voice', 'index.json');
+        fs.writeFileSync(indexFile, JSON.stringify(indexWithEn(EN)));
+        const args = { command: 'local', lang: 'en', voice: undefined, version: jane.version };
+        await run({ ...args, site, audience: 'all' }, fakeAws());
+        const index = parseVoiceIndex(JSON.parse(fs.readFileSync(indexFile, 'utf8')));
+        expect(index.languages).toEqual({
+          es: ENTRY,
+          en: { ...EN, alternatives: [{ ...JANE, audience: 'all' }] },
+        });
+        const linked = path.join(site, 'voice', 'en', jane.version, `${clips[0].key}.mp3`);
+        expect(fs.readFileSync(linked, 'utf8')).toBe(clips[0].data);
+        expect(calls).toEqual([]);
+      } finally {
+        await fsp.rm(site, { recursive: true, force: true });
+      }
+    });
+
+    test('ligne de commande : --version refusé à index et remove, qui publient la voix par défaut', () => {
+      const env = { VOICE_BUCKET: 'voix' };
+      for (const command of ['index', 'remove']) {
+        expect(() =>
+          parsePublishArgs([command, '--lang', 'en', '--version', 'jane-v1-1'], env)
+        ).toThrow(/--version ne va qu'avec clips, local, alternative/);
+      }
+      for (const command of ['clips', 'local']) {
+        expect(
+          parsePublishArgs([command, '--lang', 'en', '--version', 'jane-v1-1'], env).version
+        ).toBe('jane-v1-1');
+      }
+    });
+
+    test('ligne de commande : alternative exige --version', () => {
+      expect(() => parsePublishArgs(['alternative', '--lang', 'en', '--bucket', 'b'])).toThrow(
+        /--version requis/
+      );
+      expect(
+        parsePublishArgs([
+          'alternative',
+          '--lang',
+          'en',
+          '--bucket',
+          'b',
+          '--version',
+          'jane-v1-1',
+          '--remove',
+        ])
+      ).toMatchObject({ command: 'alternative', version: 'jane-v1-1', remove: true });
+    });
   });
 });
 
@@ -578,6 +740,22 @@ describe('Vérification en ligne', () => {
     expect(report.index.matchesVersion).toBe(false);
     expect(onlineProblems(report)).toEqual(["l'index annonce la version lucie-v3-1, pas test-1"]);
     expect(onlineProblems(report, { allowOtherVersion: true })).toEqual([]);
+  });
+
+  test('autre voix de la langue : un index qui l’annonce parmi les autres voix convient', async () => {
+    const other = { voice: 'test', version: 'test-1', format: 'mp3', audience: 'all' };
+    const announced = {
+      schema: VOICE_KEY_SCHEMA,
+      languages: { fr: { ...ENTRY, alternatives: [other] } },
+    };
+    const base = await startSite(url =>
+      url.endsWith('index.json')
+        ? { status: 200, headers: {}, body: JSON.stringify(announced) }
+        : goodClip(url)
+    );
+    const report = await checkOnline({ lang: 'fr', voice, outDir, base, sample: 2 });
+    expect(report.index.matchesVersion).toBe(true);
+    expect(onlineProblems(report)).toEqual([]);
   });
 
   /** Réponse conforme pour le clip demandé : 200, audio/mpeg, taille du manifeste, immuable */

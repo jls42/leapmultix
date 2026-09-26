@@ -1,6 +1,6 @@
 ---
 name: generating-voice-clips
-description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix, Lucie en français (ElevenLabs) et Sulafat en anglais et en espagnol (Google Cloud Text-to-Speech, Chirp 3 HD ; Jane de Mistral Voxtral TTS avant elle en anglais), rangés dans le dépôt privé leapmultix-voices et servis par CloudFront sur /voice/ depuis un bucket S3. À utiliser pour estimer le coût, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), contrôler les clips en une commande (npm run voice:review, Whisper local, page d'écoute), refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue, une voix ou un fournisseur, ou préparer un essai local (?voix=local). (project)
+description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix, Lucie en français (ElevenLabs) et Sulafat en anglais et en espagnol (Google Cloud Text-to-Speech, Chirp 3 HD ; Jane de Mistral Voxtral TTS avant elle en anglais), rangés dans le dépôt privé leapmultix-voices et servis par CloudFront sur /voice/ depuis un bucket S3. À utiliser pour estimer le coût, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), contrôler les clips en une commande (npm run voice:review, Whisper local, page d'écoute), refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue, une voix ou un fournisseur, proposer une autre voix au choix du joueur (menu « Voix », alternatives.json, --version), ou préparer un essai local (?voix=local). (project)
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -21,7 +21,13 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
 `generate.mjs` lit la clé du fournisseur de la voix.
 
 Mistral (Voxtral TTS, `MISTRAL_API_KEY`, 16 $ le million de caractères) reste branché : Jane
-(`jane-v1-1`) a été la voix anglaise jusqu'au passage à Sulafat, et ses clips restent en ligne.
+(`jane-v1-1`), la voix anglaise jusqu'au passage à Sulafat, est une **autre voix** de
+l'anglais, au choix du joueur.
+
+**Autres voix** : `scripts/voice/alternatives.json` déclare, par langue, les voix proposées en
+plus de la voix par défaut (mêmes champs que `voices.json`). Le jeu les montre dans le menu
+« Voix » des réglages. Chaque outil vise l'une d'elles avec `--version <version>` ; sans
+`--version`, c'est la voix par défaut de `voices.json`.
 
 **Clé Google** : une clé API classique (`AIza…`), restreinte à Cloud Text-to-Speech, dans un
 projet avec facturation, rangée dans le même fichier `.env` hors dépôt que les autres clés. Les clés liées à un compte de service (`AQ.…`, celles d'AI Studio)
@@ -53,7 +59,9 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
     régénérer.
   - Écouter et refaire **avant** de publier.
 - **Toute phrase dite vient des traductions** (fr, en, es). Changer une phrase, c'est
-  changer le corpus (`npm run voice:corpus:lock`), donc générer ses clips.
+  changer le corpus (`npm run voice:corpus:lock`), donc générer ses clips **pour chaque voix
+  de la langue** : la voix par défaut et chacune de ses autres voix (`--version`). Une voix
+  sans le clip d'une phrase la lit avec la voix de l'appareil.
 
 ## Procédure (copier la liste et la cocher)
 
@@ -71,7 +79,8 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
 1. **État.**
    - `git -C ../leapmultix-voices pull`, pour ne jamais repayer des clips déjà poussés.
    - `node scripts/voice/corpus.mjs --check`. S'il échoue, des phrases ont changé : générer
-     leurs clips (étapes 2 à 6), puis `npm run voice:corpus:lock`.
+     leurs clips pour chaque voix de la langue (étapes 2 à 7, `--version <version>` pour une
+     autre voix), puis `npm run voice:corpus:lock`.
 2. **Estimation** : `npm run voice:generate -- --lang <l> --dry-run`. La commande rend les
    phrases restantes, leurs caractères (`toDoChars`) et ce qui a déjà été payé pour la
    version (`billedChars`).
@@ -162,7 +171,10 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
    - `index` :
      - refuse une entrée que le jeu écarterait (nom, version) ;
      - refuse tant qu'un clip manque ou diffère ;
-     - garde les autres langues de l'index. Après publication, relire `/voice/index.json`.
+     - garde les autres langues de l'index, et les autres voix de la langue. Après
+       publication, relire `/voice/index.json`.
+   - `--version` ne va qu'avec `clips`, `local` et `alternative` : `index` et `remove` ne
+     publient que la voix par défaut.
    - Deux options, seulement sur accord explicite :
      - `--allow-missing` : des phrases sans clip, lues par la voix de l'appareil ;
      - `--force` : l'index distant est illisible, on repart d'un index vide, et les autres
@@ -184,10 +196,29 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
 
 **Coupe-circuit** : `npm run voice:publish -- remove --lang <l> --bucket leapmultix-voices --distribution <id>`.
 
+**Autre voix au choix du joueur** (menu « Voix », au plus 4 par langue) :
+
+1. La déclarer sous sa langue dans `scripts/voice/alternatives.json`, avec un nom et une
+   version distincts de ceux de la voix par défaut. Son `provider` doit être connu du jeu :
+   voir [reference.md](reference.md#autres-voix-dune-langue).
+2. Générer, contrôler et sauvegarder ses clips (étapes 2 à 6), avec `--version <version>` sur
+   chaque commande. `voice:review` range alors ses fichiers de travail sous la version
+   (`transcripts-<l>-<version>.jsonl`).
+3. Publier, accord et `--dry-run` d'abord :
+   1. `npm run voice:publish -- clips --lang <l> --version <version> --bucket leapmultix-voices` ;
+   2. `npm run voice:check-online -- --lang <l> --version <version> --allow-other-version` ;
+   3. `npm run voice:publish -- alternative --lang <l> --version <version> --bucket leapmultix-voices --distribution <id> --audience test`,
+      refusé tant qu'un clip manque ou diffère.
+4. Tester avec `?voix=test` (menu « Voix » de la langue), puis relancer `alternative` avec
+   `--audience all`. `voice:check-online -- --lang <l> --version <version>` montre alors
+   l'entrée servie.
+5. Retirer : `alternative` avec `--remove`. La voix par défaut n'est pas touchée.
+
 **Essai local** :
 
 1. `npm run voice:publish -- local --lang <l> --audience all --default-on`. La commande
-   garde les autres langues de l'index local.
+   garde les autres langues de l'index local. Pour le menu « Voix », ajouter ensuite une
+   autre voix : `npm run voice:publish -- local --lang <l> --version <version> --audience all`.
 2. `npm run serve`.
 3. Ouvrir `http://localhost:8080/index.html?voix=local`. Cela ne marche que sur localhost,
    et `?voix=local` y vaut marque de testeur. `serve-lite` liste les fichiers à la racine,

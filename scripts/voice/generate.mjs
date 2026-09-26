@@ -10,11 +10,13 @@
 // Usage :
 //   node --env-file=<fichier .env> scripts/voice/generate.mjs --lang fr [options]
 //     --out <dossier>      dépôt privé des voix (défaut : ../leapmultix-voices)
+//     --version <version>  une autre voix de la langue (alternatives.json), au lieu de sa
+//                          voix par défaut (voices.json)
 //     --dry-run            compte ce qui reste à générer, sans appel ni écriture
 //     --max-chars <n>      caractères envoyés au plus pour cette exécution
 //     --max-total-chars <n>  caractères payés au plus pour la version, toutes exécutions
 //                          comprises (registre <version>.billed.jsonl) ; suffit sans solde
-//                          lisible (Mistral)
+//                          lisible (Google, Mistral)
 //     --reserve <n>        crédits à laisser sur le compte (défaut : 0) ; le budget se compte
 //                          en crédits réels (en-tête character-cost : Eleven v3 décompte
 //                          environ 0,53 crédit par caractère, mesuré sur le français)
@@ -26,8 +28,8 @@
 //                          (mêmes réglages de synthèse, seul l'encodage change)
 //     --reprocess          refait les clips depuis leurs bruts, sans appel (--keys <fichier> :
 //                          seulement ces empreintes) ; pour des clips pas encore publiés
-// Clé : ELEVENLABS_API_KEY ou MISTRAL_API_KEY selon le fournisseur de la voix (voices.json),
-// en variable d'environnement, jamais écrite ni affichée.
+// Clé : ELEVENLABS_API_KEY, GOOGLE_TTS_API_KEY ou MISTRAL_API_KEY selon le fournisseur de la
+// voix, en variable d'environnement, jamais écrite ni affichée.
 // Codes de sortie : 0 fait, 1 erreur ou panne, 3 crédits épuisés, 4 phrases en échec,
 // 130 interrompu.
 
@@ -79,6 +81,8 @@ import {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const VOICES_PATH = path.join(ROOT, 'scripts/voice/voices.json');
+/** Autres voix publiées d'une langue, au choix du joueur : leurs réglages, par version */
+export const ALTERNATIVES_PATH = path.join(ROOT, 'scripts/voice/alternatives.json');
 export const DEFAULT_OUT = path.resolve(ROOT, '../leapmultix-voices');
 
 /**
@@ -179,6 +183,33 @@ export function loadVoice(lang, voicesPath = VOICES_PATH) {
   const voice = voices[lang];
   if (!voice)
     throw new Error(`Aucune voix pour « ${lang} » dans ${path.relative(ROOT, voicesPath)}`);
+  return { ...voice, lang };
+}
+
+/**
+ * Voix d'une langue dans une version donnée : celle de voices.json si c'est la sienne (ou
+ * sans version), sinon une autre voix publiée de la langue (alternatives.json)
+ * @param {string} lang
+ * @param {string} [version]
+ * @param {{voicesPath?: string, alternativesPath?: string}} [paths]
+ */
+export function loadVoiceVersion(
+  lang,
+  version,
+  { voicesPath = VOICES_PATH, alternativesPath = ALTERNATIVES_PATH } = {}
+) {
+  const main = loadVoice(lang, voicesPath);
+  if (!version || version === main.version) return main;
+  const others = fs.existsSync(alternativesPath)
+    ? (JSON.parse(fs.readFileSync(alternativesPath, 'utf8'))[lang] ?? [])
+    : [];
+  const voice = others.find(other => other.version === version);
+  if (!voice) {
+    throw new Error(
+      `Aucune voix « ${version} » pour « ${lang} » dans ${path.relative(ROOT, voicesPath)} ` +
+        `ni ${path.relative(ROOT, alternativesPath)}`
+    );
+  }
   return { ...voice, lang };
 }
 
@@ -653,6 +684,7 @@ const CLI_OPTIONS = {
   '--dry-run': flagOption('dryRun'),
   '--reprocess': flagOption('reprocess'),
   '--lang': valueOption('lang'),
+  '--version': valueOption('version'),
   '--out': pathOption('out'),
   '--redo': valueOption('redoFile'),
   '--keys': valueOption('keysFile'),
@@ -834,7 +866,7 @@ async function mainGenerate(args, base) {
 
 async function main(argv) {
   const args = parseArgs(argv);
-  const voice = loadVoice(args.lang);
+  const voice = loadVoiceVersion(args.lang, args.version);
   const phrases = buildCorpus(args.lang);
   const base = {
     lang: args.lang,

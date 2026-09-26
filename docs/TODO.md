@@ -51,7 +51,7 @@ Deux leçons pour les outils de contrôle, intégrées ensuite à `voice:check` 
 Reste à faire : s'il se déclenche mal ou saute une étape, lui écrire des évaluations
 (`claude plugin eval`, voir la documentation des plugins).
 
-## Voix enregistrée : Mistral pour l'anglais (26/09, remplacée par Sulafat)
+## Voix enregistrée : Mistral pour l'anglais (26/09, remplacée par Sulafat, puis au choix)
 
 Le TTS de Mistral (Voxtral, `voxtral-mini-tts-2603`) a été retenu pour l'anglais.
 
@@ -93,15 +93,20 @@ Jane, voix anglaise, a d'abord été générée en espagnol (374 895 caractères
   via agy (`AIPMT_PROVIDER=--use_antigravity npm run i18n:readme`, aipmt ≥ 1.15.0, quota de
   l'abonnement Google). « À propos » et la FAQ du site présentent aussi les voix.
 
-## Voix enregistrée : choisir sa voix dans les paramètres (à faire)
+## Voix enregistrée : choisir sa voix dans les paramètres (fait, v30)
 
-Le propriétaire veut un menu « Voix » dans les paramètres, par exemple Sulafat (Google) ou Jane
-(Mistral) en anglais.
+Menu « Voix » sous la case « Voix enregistrée » (Accessibilité et contrôles), visible là où la
+langue propose plusieurs voix : en anglais, Sulafat (Google) ou Jane (Mistral AI).
 
-- L'index des voix ne décrit aujourd'hui qu'une voix par langue : il faudra plusieurs versions
-  par langue, puis toucher le menu, le moteur de clips, le cache hors ligne et `publish.mjs`.
-- Les clips `jane-v1-1` restent donc en ligne après le passage de l'anglais à Sulafat : ne pas
-  les retirer du bucket.
+- **Index** : deux champs facultatifs, `provider` et `alternatives` (au plus 4 autres voix par
+  langue). Un jeu d'avant la v30 les ignore et lit la voix par défaut.
+- **Jeu** : choix gardé par langue, mention qui nomme le service de la voix entendue, cache hors
+  ligne qui garde les clips de chaque voix annoncée, événement Plausible qui nomme la voix.
+- **Outils** : `scripts/voice/alternatives.json`, `--version` sur chaque outil de la voix, et
+  `voice:publish -- alternative` pour ajouter ou retirer une autre voix.
+- **Après la fusion** : publier Jane comme autre voix de l'anglais (testeurs, puis tous), et
+  republier les index fr, en et es, qui gagnent leur `provider`.
+- Les clips `jane-v1-1` restent en ligne : ne pas les retirer du bucket.
 - Diffuser les clips (dépôt ouvert, par exemple) : la sortie appartient au client chez Mistral
   (conditions commerciales, §3.1) comme chez Google (« Generated Output is Customer Data »).
   Relire les conditions propres à chaque voix avant de publier.

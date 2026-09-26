@@ -17,6 +17,8 @@
 // Usage :
 //   node scripts/voice/listen-page.mjs --lang fr [--out <dépôt des voix>]
 //     [--transcripts <fichier.jsonl>] [--sample <n>] [--compare <fichier>]
+//     [--version <version>]
+//   --version     : une autre voix de la langue (alternatives.json)
 //   --transcripts : sortie de whisper_transcribe.py (sans elle, seules les durées signalent)
 //   --sample      : taille de l'échantillon des textes dits différents (défaut : 24)
 //   --compare     : empreintes des clips refaits, une par ligne
@@ -31,7 +33,7 @@ import { SAID_OVERRIDES, hasAgreement } from './said-text.mjs';
 import { compareTranscript } from './transcript-compare.mjs';
 import { durationOutliers, readTranscripts, transcriptReport } from './check.mjs';
 import { clipFile, readManifest, replacedFile, sha256, storePaths } from './clip-store.mjs';
-import { DEFAULT_OUT, loadVoice } from './generate.mjs';
+import { DEFAULT_OUT, loadVoiceVersion } from './generate.mjs';
 import {
   assertLangCode,
   integerOption,
@@ -369,6 +371,7 @@ ${absent}`;
 
 const CLI_OPTIONS = {
   '--lang': valueOption('lang'),
+  '--version': valueOption('version'),
   '--out': pathOption('out'),
   '--transcripts': pathOption('transcripts'),
   '--sample': integerOption('sample'),
@@ -395,7 +398,7 @@ export async function writePage(pageDir, page) {
 
 async function main(argv) {
   const args = parseArgs(argv);
-  const voice = loadVoice(args.lang);
+  const voice = loadVoiceVersion(args.lang, args.version);
   const paths = storePaths(args.out, args.lang, voice.version);
   if (!fs.existsSync(paths.manifestFile)) {
     throw new Error(`Manifeste introuvable : ${paths.manifestFile} (dépôt des voix : --out)`);
