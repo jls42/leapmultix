@@ -128,7 +128,7 @@ LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans 
 - **Multilingue** : Support français, anglais et espagnol
 - **Personnalisation** : Avatars, thèmes de couleur, arrière-plans
 - **Accessibilité** : Navigation clavier, support tactile, conformité WCAG 2.1 AA
-- **Voix enregistrée** : questions et encouragements lus par une voix de synthèse pré-enregistrée (Lucie en français, créée avec ElevenLabs ; Jane en anglais, créée avec Mistral AI), avec repli automatique sur la voix de l'appareil ; clips hors du dépôt public (voir [Voix enregistrée](#-voix-enregistrée))
+- **Voix enregistrée** : le jeu sait lire questions et encouragements avec une voix de synthèse pré-enregistrée, avec repli automatique sur la voix de l'appareil. Les voix ne sont pas dans ce dépôt : le site leapmultix.jls42.org sert Lucie en français et Sulafat en anglais et en espagnol (voir [Voix enregistrée](#-voix-enregistrée))
 - **Mobile responsive** : Interface optimisée pour tablettes et smartphones
 - **Système de progression** : Scores, badges, défis quotidiens
 
@@ -212,7 +212,7 @@ npm run sw:fix         # Corriger les problèmes de service worker
 # Voix enregistrée (poste du propriétaire, clips hors dépôt)
 npm run voice:corpus       # Résumé des phrases dites, par langue
 npm run voice:corpus:lock  # Mettre à jour le verrou du corpus
-npm run voice:generate     # Générer les clips (ElevenLabs ou Mistral)
+npm run voice:generate     # Générer les clips (ElevenLabs, Google ou Mistral)
 npm run voice:check        # Contrôler les clips (fichiers, MP3, Whisper)
 npm run voice:review       # Whisper, contrôle et page d'écoute en une commande
 npm run voice:listen       # Page d'écoute : clips signalés, avant/après
@@ -633,22 +633,18 @@ Ce script (`scripts/compare-translations.cjs`) assure la synchronisation de tous
 
 ## 🔊 Voix enregistrée
 
-Le jeu lit à voix haute les questions, les encouragements et les explications, avec une voix de synthèse enregistrée à l'avance :
+Le jeu lit à voix haute les questions, les encouragements et les explications. Il ne dit qu'un ensemble fini de phrases, environ 7 400 par langue : elles peuvent donc être enregistrées une fois pour toutes, et aucune partie n'appelle alors un service de synthèse. Sans clips, le jeu lit avec la voix de l'appareil.
 
-- en français, **Lucie**, créée avec ElevenLabs (modèle Eleven v3) ;
-- en anglais, **Jane**, créée avec Mistral AI (Voxtral TTS).
+### Dans ce dépôt : l'application, sans les voix
 
-Le jeu ne dit qu'un ensemble fini de phrases, environ 7 400 par langue : toutes sont enregistrées à l'avance, et aucune partie n'appelle un service de synthèse. L'espagnol garde pour l'instant la voix de l'appareil.
+Le code sait lire des clips pré-enregistrés, et il contient la chaîne qui les fabrique. Les clips n'y sont pas, pas plus que les clés des fournisseurs : un fork ou une installation locale lit avec la voix de l'appareil.
 
 - **Repli automatique** sur la voix de l'appareil, phrase par phrase : clip absent ou en erreur, lecture refusée par le navigateur, clip qui ne démarre pas en 1,5 s, ou hors ligne sans le clip en cache.
-- **Réglages** : le bouton de voix de la barre du haut active ou coupe la lecture ; la case « Voix enregistrée » (Accessibilité et contrôles) choisit entre la voix enregistrée (Lucie ou Jane) et la voix de l'appareil.
+- **Réglages** : le bouton de voix de la barre du haut active ou coupe la lecture ; la case « Voix enregistrée » (Accessibilité et contrôles) choisit entre la voix enregistrée et la voix de l'appareil. Elle n'apparaît que dans les langues où une voix est publiée.
 - **Hors ligne** : les clips déjà entendus restent en cache (service worker).
+- **Où le jeu cherche les clips** : dans la balise `<meta name="leapmultix-voice-base">`, vide dans le dépôt. Seul le déploiement de production y écrit `/voice/`.
 
-### Les clips ne sont pas dans ce dépôt
-
-Les clips vivent dans un dépôt privé et dans un bucket S3 dédié, servi par CloudFront sur `/voice/*`. Un fork ou le développement local garde donc la voix de l'appareil : dans le dépôt, la balise `<meta name="leapmultix-voice-base">` est vide, et seul le déploiement de production y écrit `/voice/`.
-
-Avec les clips sur le poste (dépôt privé cloné à côté du jeu, dans `../leapmultix-voices`), le paramètre `?voix=local` les fait lire par le serveur de développement :
+Avec vos propres clips sur le poste (fabriqués par la chaîne ci-dessous, rangés à côté du jeu dans `../leapmultix-voices`), le paramètre `?voix=local` les fait lire par le serveur de développement :
 
 ```bash
 npm run voice:publish -- local --lang fr --audience all --default-on   # relie voice/ (ignoré par git) aux clips
@@ -656,12 +652,21 @@ npm run serve
 # puis ouvrir http://localhost:8080/index.html?voix=local
 ```
 
+### Sur leapmultix.jls42.org : les voix de l'hébergement
+
+Le site proposé par l'auteur sert des voix de synthèse enregistrées :
+
+- en français, **Lucie**, créée avec ElevenLabs (modèle Eleven v3) ;
+- en anglais britannique et en espagnol d'Espagne, **Sulafat**, créée avec Google Cloud Text-to-Speech (voix Chirp 3 HD).
+
+Les clips vivent dans un dépôt privé et dans un bucket S3 dédié, servi par CloudFront sur `/voice/*`. Dans les réglages, chaque langue nomme le service qui a créé sa voix.
+
 ### Générer les clips
 
-La chaîne est scriptée dans `scripts/voice/` et tourne sur le poste du propriétaire, jamais dans la CI publique. Les clés des fournisseurs (ElevenLabs pour le français, Mistral pour l'anglais) restent dans un fichier `.env` hors dépôt, passé par `node --env-file` : aucune clé n'entre dans git. Le skill Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) déroule la procédure pas à pas (portes, accords, reprises) ; le détail est dans [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
+La chaîne est scriptée dans `scripts/voice/` et tourne sur le poste du propriétaire, jamais dans la CI publique. Les clés des fournisseurs (ElevenLabs pour le français, Google Cloud Text-to-Speech pour l'anglais et l'espagnol ; Mistral reste branché) restent dans un fichier `.env` hors dépôt, passé par `node --env-file` : aucune clé n'entre dans git. Le skill Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) déroule la procédure pas à pas (portes, accords, reprises) ; le détail est dans [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
 
-1. **Estimer** les phrases restantes et les caractères à payer (Eleven v3 : environ 0,53 crédit par caractère ; Voxtral TTS : 16 $ le million de caractères).
-2. **Générer**. Relancer la même commande reprend ce qui manque. Quand les crédits sont épuisés, le script s'arrête proprement (code 3) sans laisser de fichier à moitié écrit. `--max-total-chars` plafonne la dépense cumulée de la version : chaque réponse payée est inscrite dès sa réception dans un registre, qui survit à un arrêt brutal. Chez Mistral, qui ne donne aucun solde lisible, c'est la seule protection.
+1. **Estimer** les phrases restantes et les caractères à payer (Eleven v3 : environ 0,53 crédit par caractère ; Chirp 3 HD : 30 $ le million de caractères, le premier million de chaque mois offert ; Voxtral TTS : 16 $ le million).
+2. **Générer**. Relancer la même commande reprend ce qui manque. Quand les crédits sont épuisés, le script s'arrête proprement (code 3) sans laisser de fichier à moitié écrit. `--max-total-chars` plafonne la dépense cumulée de la version : chaque réponse payée est inscrite dès sa réception dans un registre, qui survit à un arrêt brutal. Chez Google et Mistral, qui ne donnent aucun solde lisible, c'est la seule protection.
 3. **Contrôler** : chaque phrase a son clip et chaque MP3 est valide. Whisper transcrit ensuite chaque clip en local, et le contrôle signale les nombres mal entendus et les durées anormales. `voice:review` enchaîne Whisper, ce contrôle et la page d'écoute en une commande.
 4. **Écouter** sur la page d'écoute (`voice:listen`) les clips signalés et un échantillon de formes féminines (« une fois 7 »), que Whisper ne distingue pas. Chaque clip a une case « à refaire », qui l'ajoute à la liste des clips écartés.
 5. **Refaire** les clips écartés (`--redo`) et relancer Whisper, puis comparer chaque clip avant et après sur une seconde page. Un clip encore mal dit après deux ou trois essais reçoit un texte imposé dans `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), par exemple le nombre en toutes lettres.

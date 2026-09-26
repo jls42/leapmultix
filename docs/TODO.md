@@ -88,9 +88,10 @@ Jane, voix anglaise, a d'abord été générée en espagnol (374 895 caractères
   de cause.
 - **Reste à trancher** : garder hors git ou supprimer les clips espagnols de Jane
   (`clips/es/jane-v1-1` du dépôt des voix, non commités).
-- **README et ses 14 traductions** : ils présentent encore Jane (Mistral) en anglais. À mettre
-  à jour (Sulafat, Google, anglais et espagnol) avec l'outil de traduction, reporté faute de
-  quota.
+- **README et ses 14 traductions** : à jour le 27/09. Le README sépare l'application du dépôt
+  (sans voix) de l'hébergement leapmultix.jls42.org (Lucie, Sulafat) ; traductions par Gemini
+  via agy (`AIPMT_PROVIDER=--use_antigravity npm run i18n:readme`, aipmt ≥ 1.15.0, quota de
+  l'abonnement Google). « À propos » et la FAQ du site présentent aussi les voix.
 
 ## Voix enregistrée : choisir sa voix dans les paramètres (à faire)
 
