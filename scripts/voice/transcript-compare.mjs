@@ -206,7 +206,7 @@ export const STRICT_LANGS = { en: STRICT, es: STRICT };
 /**
  * Écritures de Whisper sans défaut de voix, ramenées aux mots de la phrase avant la
  * comparaison : « watt » pour le « what » des questions à trou, « 18-4 » pour « 18 minus 4 »,
- * « 8 x 10 » pour « 8 times 10 »
+ * « 8 x 10 » pour « 8 times 10 », et en espagnol « 30 y 1 » pour « treinta y uno » (31)
  */
 const WHISPER_SPELLINGS = {
   en: [
@@ -215,10 +215,14 @@ const WHISPER_SPELLINGS = {
     [/(\d)\s*[x×]\s*(\d)/gi, '$1 times $2'],
   ],
   es: [
+    [/\b([2-9]0) y ([1-9])\b/g, (_match, tens, unit) => String(Number(tens) + Number(unit))],
     [/(\d)\s*-\s*(\d)/g, '$1 menos $2'],
     [/(\d)\s*[x×]\s*(\d)/gi, '$1 por $2'],
   ],
 };
+
+/** Mot sans ses accents : Whisper les oublie souvent (« Facil » pour « Fácil ») */
+const withoutAccents = word => word.normalize('NFD').replaceAll(/\p{M}/gu, '');
 
 /** Transcription aux écritures de Whisper ramenées (voir WHISPER_SPELLINGS) */
 function respelled(heard, lang) {
@@ -243,7 +247,10 @@ export function compareTranscript(expected, heard, lang) {
   const numbersMatch =
     expectedNumbers.length === heardNumbers.length &&
     expectedNumbers.every((n, i) => n === heardNumbers[i]);
-  const similarity = 1 - editDistance(a, b) / Math.max(a.length, b.length, 1);
+  // Les accents ne comptent pas dans la ressemblance ; les nombres, déjà lus, ne changent pas
+  const similarity =
+    1 -
+    editDistance(a.map(withoutAccents), b.map(withoutAccents)) / Math.max(a.length, b.length, 1);
   const extraWords = b.length - a.length;
   const strict = STRICT_LANGS[lang];
   const doubtful = strict

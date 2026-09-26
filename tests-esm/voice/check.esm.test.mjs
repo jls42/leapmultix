@@ -119,6 +119,11 @@ describe('Contrôle strict en anglais et en espagnol (voix Mistral)', () => {
     ['¡Casi! La respuesta correcta es 56.', 'Casi. La respuesta correcta es 56.', false],
     ['¿Cuánto es 7 por 8?', 'Conto, Sivan, Inés, Bonad, Juan Osor.', true],
     ['Modo Quiz', 'Viva havn. Modo Quiz.', true],
+    // Écritures de Whisper : « 30 y 1 » pour 31, accents oubliés
+    ['31 menos 4 es igual a 27', '30 y 1 menos 4 es igual a 27.', false],
+    ['Resta, Fácil', 'Resta, Facil.', false],
+    // Un nombre mal dit reste signalé (« quince » entendu « Prince »)
+    ['15 más 12 es igual a 27', 'Prince más doce es igual a 27.', true],
   ])('es : « %s » entendu « %s » → à réécouter : %s', (expected, heard, flagged) => {
     expect(compareTranscript(expected, heard, 'es').flagged).toBe(flagged);
   });
