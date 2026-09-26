@@ -86,8 +86,8 @@ Jane, voix anglaise, a d'abord été générée en espagnol (374 895 caractères
   générative « as part of » un site destiné aux moins de 18 ans. Le jeu n'appelle jamais Google,
   il sert des fichiers générés une fois : le propriétaire a jugé l'usage permis, en connaissance
   de cause.
-- **Reste à trancher** : garder hors git ou supprimer les clips espagnols de Jane
-  (`clips/es/jane-v1-1` du dépôt des voix, non commités).
+- **Clips espagnols de Jane** : supprimés le 27/09 à la demande du propriétaire (jamais
+  publiés ni commités).
 - **README et ses 14 traductions** : à jour le 27/09. Le README sépare l'application du dépôt
   (sans voix) de l'hébergement leapmultix.jls42.org (Lucie, Sulafat) ; traductions par Gemini
   via agy (`AIPMT_PROVIDER=--use_antigravity npm run i18n:readme`, aipmt ≥ 1.15.0, quota de
