@@ -15,6 +15,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { voiceKey } from '../../js/core/spoken-text.js';
+import { parseLanguage } from '../../js/core/voice-index.js';
 import { createMistral } from '../../scripts/voice/providers/mistral.mjs';
 import { createElevenLabs } from '../../scripts/voice/providers/elevenlabs.mjs';
 import { ProviderError, errorDetail } from '../../scripts/voice/providers/common.mjs';
@@ -237,15 +238,34 @@ describe('Fournisseur Mistral : classement des erreurs réelles', () => {
 });
 
 describe('Voix anglaise : entrée de voices.json', () => {
-  test('nom et version admis par l’index du jeu ; empreinte du français inchangée', () => {
+  test('nom et version admis par l’index du jeu ; empreintes publiées inchangées', () => {
     expect(VOICE.provider).toBe('mistral');
     expect(loadVoice('en')).toMatchObject({ voice: 'jane', version: 'jane-v1-1' });
     // voiceName est descriptif : il n'entre pas dans les empreintes
     const renamed = { ...loadVoice('en'), voiceName: 'Autre nom' };
     expect(voiceConfigHash(renamed)).toBe(voiceConfigHash(loadVoice('en')));
     expect(synthesisHash(renamed)).toBe(synthesisHash(loadVoice('en')));
-    // Empreinte du manifeste de Lucie (manifests/fr/lucie-v3-2.json) : ne doit pas bouger
+    // Empreintes des manifestes publiés (manifests/fr/lucie-v3-2.json, manifests/en/jane-v1-1.json) :
+    // ne doivent pas bouger, un clip publié n'est jamais réécrit
     expect(voiceConfigHash(loadVoice('fr'))).toBe('819e47334ba57974');
+    expect(voiceConfigHash(loadVoice('en'))).toBe('2f293cad167f16be');
+  });
+});
+
+describe('Voix espagnole : entrée de voices.json', () => {
+  test('Jane aussi, en espagnol : nom et version admis par l’index, bruts à part', () => {
+    const es = loadVoice('es');
+    expect(es).toMatchObject({
+      provider: 'mistral',
+      voice: 'jane',
+      version: 'jane-v1-1',
+      voiceId: loadVoice('en').voiceId,
+      languageCode: 'es',
+    });
+    const entry = { voice: es.voice, version: es.version, format: 'mp3', audience: 'test' };
+    expect(parseLanguage({ ...entry, defaultOn: false })).not.toBeNull();
+    // La langue entre dans l'empreinte : les bruts espagnols ne se mêlent pas aux anglais
+    expect(synthesisHash(es)).not.toBe(synthesisHash(loadVoice('en')));
   });
 });
 
