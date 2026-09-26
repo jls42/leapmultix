@@ -4,8 +4,9 @@
 /* eslint-env jest, node */
 /**
  * Texte dit par la voix enregistrée (scripts/voice/said-text.mjs) : les nombres en 1
- * s'accordent avec le nom qui les suit, la liste des mots qui suivent un nombre correspond
- * exactement au corpus, et chaque texte imposé vise une phrase du corpus.
+ * s'accordent avec le nom qui les suit, l'espagnol dit tous ses nombres en lettres, la liste
+ * des mots qui suivent un nombre correspond exactement au corpus, et chaque texte imposé vise
+ * une phrase du corpus.
  */
 import { describe, test, expect } from '@jest/globals';
 import {
@@ -40,15 +41,48 @@ describe('Texte dit : accord des nombres en 1', () => {
     ['Hay 21 grupos de 1 niño', 'Hay veintiún grupos de un niño'],
     ['31 canicas y 71 globos', 'treinta y una canicas y setenta y un globos'],
     ['101 casillas, 121 saltos', 'ciento una casillas, ciento veintiún saltos'],
-    ['11 cajas', '11 cajas'],
-    ['¿Cuánto es 1 por 7?', '¿Cuánto es 1 por 7?'],
-    ['Hay 1 globo y 1 explota.', 'Hay un globo y 1 explota.'],
+    ['11 cajas', 'once cajas'],
+    ['¿Cuánto es 1 por 7?', '¿Cuánto es uno por siete?'],
+    ['Hay 1 globo y 1 explota.', 'Hay un globo y uno explota.'],
   ])('es : %s', (text, said) => {
     expect(saidText(text, 'es')).toBe(said);
   });
 
   test('en : rien ne change', () => {
     expect(saidText('What is 1 times 7? 21 apples', 'en')).toBe('What is 1 times 7? 21 apples');
+  });
+});
+
+describe('Texte dit : en espagnol, les nombres en lettres', () => {
+  test.each([
+    ['7 por 8 es igual a 54', 'siete por ocho es igual a cincuenta y cuatro'],
+    ['¿90 dividido entre cuánto es 9?', '¿noventa dividido entre cuánto es nueve?'],
+    ['¡Casi! La respuesta correcta es 56.', '¡Casi! La respuesta correcta es cincuenta y seis.'],
+    ['Tabla del 7', 'Tabla del siete'],
+    ['Tengo 16 caramelos y me como 3.', 'Tengo dieciséis caramelos y me como tres.'],
+    [
+      '0, 15, 16, 21, 22, 30, 44, 99',
+      'cero, quince, dieciséis, veintiuno, veintidós, treinta, cuarenta y cuatro, noventa y nueve',
+    ],
+    [
+      '100, 101, 110, 121, 144, 200, 999',
+      'cien, ciento uno, ciento diez, ciento veintiuno, ciento cuarenta y cuatro, doscientos, novecientos noventa y nueve',
+    ],
+    ['Año 2026', 'Año 2026'],
+  ])('%s', (text, said) => {
+    expect(saidText(text, 'es')).toBe(said);
+  });
+
+  test('aucun chiffre ne reste dans le texte dit d’une phrase du corpus espagnol', () => {
+    const left = buildCorpus('es')
+      .map(phrase => saidText(phrase.text, 'es'))
+      .filter(said => /\d/.test(said));
+    expect(left).toEqual([]);
+  });
+
+  test('le français et l’anglais gardent leurs chiffres', () => {
+    expect(saidText('7 fois 8 égale 54', 'fr')).toBe('7 fois 8 égale 54');
+    expect(saidText('7 times 8 equals 54', 'en')).toBe('7 times 8 equals 54');
   });
 });
 
