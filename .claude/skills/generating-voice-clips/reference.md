@@ -53,7 +53,9 @@ cette page : c'est la commande habituelle. `voice:listen` refait seulement la pa
   `voice:check` (voir l'étape « Contrôles » du skill : nombres, ressemblance et mots en trop,
   durée rapportée au débit de la voix), puis un échantillon
   (`--sample`, 24 par défaut) des phrases dont le texte dit diffère : textes imposés
-  (`SAID_OVERRIDES`) d'abord, puis accords en genre régulièrement espacés. Sans
+  (`SAID_OVERRIDES`) d'abord, puis les phrases où un nombre s'accorde en genre (« une fois 7 »,
+  « una caja »), régulièrement espacées. En espagnol, où les nombres se disent en lettres,
+  presque tous les textes dits diffèrent : seuls les accords s'écoutent. Sans
   `--transcripts`, seules les durées signalent.
 - **Avec `--compare <fichier>`** (`<l>-<version>-refaits.html`) : pour chaque empreinte de la
   liste, l'ancien clip (mis de côté par `generate.mjs` dans `ecoute/avant/`, le dernier

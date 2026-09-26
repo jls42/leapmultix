@@ -206,6 +206,32 @@ export function wordsAfterNumbers(text) {
   return [...String(text).matchAll(NUMBER_BEFORE_WORD)].map(match => match[2].toLowerCase());
 }
 
+/** Première réécriture : les nombres en 1 accordés avec le nom qui les suit */
+function agreed(text, rules, words) {
+  return String(text).replace(NUMBER_BEFORE_WORD, (digits, _group, word) => {
+    const n = Number(digits);
+    if (n % 10 !== 1 || n > 199 || rules.invariable(n)) return digits;
+    const lower = word.toLowerCase();
+    if (words.feminine.includes(lower)) return rules.feminine(n);
+    if (rules.masculine && words.masculine.includes(lower)) return rules.masculine(n);
+    return digits;
+  });
+}
+
+/**
+ * La phrase a-t-elle un nombre accordé en genre (« une fois 7 », « una caja », « veintiún
+ * niños ») ? Whisper écrit ces formes en chiffres, sans le genre : elles s'écoutent.
+ * @param {string} text - Phrase telle que speak() la reçoit
+ * @param {string} lang
+ * @returns {boolean}
+ */
+export function hasAgreement(text, lang) {
+  const rules = RULES[lang];
+  const words = WORDS_AFTER_NUMBERS[lang];
+  if (!rules || !words) return false;
+  return agreed(text, rules, words) !== String(text);
+}
+
 /**
  * Texte envoyé à la synthèse pour une phrase de speak()
  * @param {string} text - Phrase telle que speak() la reçoit
@@ -218,14 +244,7 @@ export function saidText(text, lang) {
   const rules = RULES[lang];
   const words = WORDS_AFTER_NUMBERS[lang];
   if (!rules || !words) return text;
-  const agreed = String(text).replace(NUMBER_BEFORE_WORD, (digits, _group, word) => {
-    const n = Number(digits);
-    if (n % 10 !== 1 || n > 199 || rules.invariable(n)) return digits;
-    const lower = word.toLowerCase();
-    if (words.feminine.includes(lower)) return rules.feminine(n);
-    if (rules.masculine && words.masculine.includes(lower)) return rules.masculine(n);
-    return digits;
-  });
-  if (!rules.spelled) return agreed;
-  return agreed.replace(LONE_NUMBER, digits => rules.spelled(Number(digits)) ?? digits);
+  const withAgreement = agreed(text, rules, words);
+  if (!rules.spelled) return withAgreement;
+  return withAgreement.replace(LONE_NUMBER, digits => rules.spelled(Number(digits)) ?? digits);
 }

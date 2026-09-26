@@ -227,6 +227,23 @@ describe('Page d’écoute : formes féminines et textes imposés', () => {
     expect(evenlySpaced([0, 1], 5)).toEqual([0, 1]);
     expect(evenlySpaced([0, 1], 0)).toEqual([]);
   });
+
+  test('en espagnol, l’échantillon vise les accords, pas les nombres dits en lettres', () => {
+    const spanish = [
+      '7 por 8 es igual a 54',
+      '¿Cuánto es 1 por 7?',
+      'Si tengo 1 caja de 10 manzanas, ¿cuántas manzanas tengo?',
+      'Hay 21 grupos de 5 niños',
+    ].map(phrase);
+    const manifest = {
+      clips: Object.fromEntries(
+        spanish.map(p => [p.key, { text: p.text, said: saidText(p.text, 'es'), duration: 2 }])
+      ),
+    };
+    // Les quatre textes dits diffèrent (nombres en lettres) ; deux seulement portent un accord
+    expect(Object.values(manifest.clips).every(e => e.said !== e.text)).toBe(true);
+    expect(saidSample(manifest, 'es', 10).sort()).toEqual([spanish[2].key, spanish[3].key].sort());
+  });
 });
 
 describe('Cases « à refaire » (script de la page)', () => {
