@@ -37,8 +37,19 @@ génération, contrôles, sauvegarde, publication, ouverture, coupe-circuit, nou
 écrit d'après la documentation officielle des skills et relu (`plugin-dev:skill-reviewer`).
 Local seulement : il touche une clé privée et un dépôt privé.
 
-Reste à faire : l'éprouver sur une vraie session (génération de l'anglais ou de l'espagnol),
-puis, s'il se déclenche mal ou saute une étape, lui écrire des évaluations
+Éprouvé le 26/09/2026 sur toute la génération de l'anglais, de l'estimation à l'ouverture.
+Deux leçons pour les outils de contrôle :
+
+- **La borne de durée de `voice:check` est calée sur Lucie** (`SECONDS_PER_CHAR`, 0,2 s par
+  caractère au plus). Jane parle plus lentement : 404 clips sains la dépassent, et noient les
+  7 vrais défauts (au-delà de 0,25 s). La rendre propre à chaque voix.
+- **La règle de Whisper laisse passer des défauts** : elle ne signale un clip aux bons nombres
+  que sous 0,5 de ressemblance. Un charabia ajouté sans nombre, ou « Try again! » entendu
+  « Cry again », passent. Un tri plus strict (ressemblance sous 0,85, mots en trop, durée
+  anormale) a désigné les 36 clips refaits. L'intégrer à `voice:check`, en neutralisant les
+  écritures de Whisper sans défaut (« watt » pour « what », « 18-4 » pour « 18 minus 4 »).
+
+Reste à faire : s'il se déclenche mal ou saute une étape, lui écrire des évaluations
 (`claude plugin eval`, voir la documentation des plugins).
 
 ## Voix enregistrée : Mistral pour l'anglais (fait le 26/09)
@@ -50,6 +61,11 @@ Le TTS de Mistral (Voxtral, `voxtral-mini-tts-2603`) a été retenu pour l'angla
 - **Voix** : Jane - Neutral.
 - **Branchement** : fournisseur `scripts/voice/providers/mistral.mjs`, dans la même chaîne que
   Lucie. Voir `docs/voix-enregistree.md`.
+- **En ligne le 26/09/2026**, ouverte à tous et activée par défaut : 7 437 clips `jane-v1-1`,
+  212 636 caractères payés (environ 3,40 $), aucun texte refusé par la modération.
+- **36 clips refaits** après Whisper et l'écoute du propriétaire (deux l'ont été deux fois) :
+  attaques de mot trop faibles (« Ten » entendu « hen », « Table » entendu « Pable »), un
+  charabia inventé, quelques débits très lents.
 
 ## Voix enregistrée : l'espagnol (à décider)
 
