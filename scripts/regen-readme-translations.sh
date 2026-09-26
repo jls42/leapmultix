@@ -7,7 +7,12 @@
 #
 #   ./scripts/regen-readme-translations.sh              # toutes les langues
 #   ./scripts/regen-readme-translations.sh en es        # seulement celles-ci
+#   AIPMT_PROVIDER=--use_antigravity ./scripts/...      # Gemini par agy, quota de
+#                                                       # l'abonnement Google (aipmt ≥ 1.15.0)
 #   AIPMT_PROVIDER=--use_claude ./scripts/...           # autre fournisseur
+#
+# Ne jamais modifier ce script pendant qu'il tourne : bash le lit au fil de
+# l'exécution, et reprendrait après la boucle au mauvais endroit du fichier.
 #
 # Trois particularités de ce dépôt, prises en charge ici :
 #

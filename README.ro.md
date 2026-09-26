@@ -24,19 +24,19 @@
 ![Licență: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/jls42/leapmultix/badge)](https://www.codefactor.io/repository/github/jls42/leapmultix)
-[![Insignă Codacy](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Starea pragului de calitate](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-[![Evaluarea fiabilității](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Evaluarea securității](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Evaluarea mentenabilității](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Datorie tehnică](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-[![Erori](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Vulnerabilități](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Probleme de calitate a codului](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Linii duplicate (%)](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Linii de cod](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 ## Cuprins
 
@@ -51,14 +51,14 @@
 - [Localizare](#-localizare)
 - [Voce înregistrată](#-voce-înregistrată)
 - [Stocarea datelor](#-stocarea-datelor)
-- [Raportarea unei probleme](#-raportarea-unei-probleme)
+- [Raportarea unei probleme](#-semnalarea-unei-probleme)
 - [Licență](#-licență)
 
 ## Descriere
 
-LeapMultix este o aplicație web educațională interactivă destinată copiilor cu vârste cuprinse între 6 și 12 ani, pentru a stăpâni cele 4 operații aritmetice: înmulțirea (×), adunarea (+), scăderea (−) și împărțirea (÷). Oferă **5 moduri de joc** și **4 mini-jocuri arcade** într-o interfață intuitivă, accesibilă și multilingvă.
+LeapMultix este o aplicație web educațională interactivă destinată copiilor cu vârste între 6 și 12 ani pentru stăpânirea celor 4 operații aritmetice: înmulțire (×), adunare (+), scădere (−) și împărțire (÷). Aceasta oferă **5 moduri de joc** și **4 mini-jocuri arcade** într-o interfață intuitivă, accesibilă și multilingvă.
 
-**Compatibilitate cu mai multe operații:** toate cele cinci moduri acceptă cele patru operații. Alegerea se face pe ecranul de pornire și se aplică întregului parcurs.
+**Suport multi-operații:** toate cele cinci moduri acceptă cele patru operații. Selectarea se face pe ecranul principal și este valabilă pentru întregul parcurs.
 
 **Dezvoltat de:** Julien LS (contact@jls42.org)
 
@@ -68,51 +68,51 @@ LeapMultix este o aplicație web educațională interactivă destinată copiilor
 
 ### Ecranele
 
-|                                                                                                                      |                                                                                                         |
-| :------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------: |
-|                      ![Ecranul „Cine joacă?”: alegerea profilului](docs/media/01-accueil.webp)                       |        ![Meniul principal: alegerea operației și a celor cinci moduri](docs/media/02-menu.webp)         |
-|                 **Cine joacă?** — câte un profil pentru fiecare copil, cu avatarul și progresul său.                 |               **Meniul** — operația este aleasă aici, apoi se deschid cele cinci moduri.                |
-|              ![Modul Descoperire: tabla lui 4 reprezentată prin puncte](docs/media/03-decouverte.webp)               |         ![Modul Quiz: răspuns greșit cu roșu, răspuns corect cu verde](docs/media/04-quiz.webp)         |
-| **Descoperire** — fiecare egalitate este reprezentată prin puncte, salturi sau numărare, împreună cu trucul tablei.  | **Quiz** — alegerea copilului rămâne afișată lângă răspunsul corect, iar explicația detaliază calculul. |
-|                  ![Modul Provocare: numărătoare inversă și serie în curs](docs/media/05-defi.webp)                   |    ![Modul Aventură: harta celor zece niveluri, cu următoarele blocate](docs/media/06-aventure.webp)    |
-| **Provocare** — cursă contra cronometru. La o greșeală, cronometrul se oprește cât timp este citit răspunsul corect. |              **Aventură** — zece niveluri care se deschid succesiv, în schimbul stelelor.               |
-|                         ![Meniul Arcade: cele patru mini-jocuri](docs/media/07-arcade.webp)                          |     ![Tablou de bord: stele pentru fiecare tablă și statistici](docs/media/08-tableau-de-bord.webp)     |
-|                     **Arcade** — patru mini-jocuri, cu reglarea dificultății și alegerea navei.                      |         **Tablou de bord** — stele pentru fiecare tablă, table de revizuit, scoruri pe moduri.          |
-|                 ![Personalizare: avatare, teme, accesibilitate](docs/media/09-personnalisation.webp)                 |                                                                                                         |
-|          **Personalizare** — avatar, temă cromatică, dimensiunea textului, contrast ridicat, cod parental.           |                                                                                                         |
+|                                                                                                                             |                                                                                                               |
+| :-------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------: |
+|                          ![Ecranul „Cine joacă?”: alegerea profilului](docs/media/01-accueil.webp)                          |           ![Meniul principal: alegerea operației și a celor cinci moduri](docs/media/02-menu.webp)            |
+|                       **Cine joacă?** — un profil pentru fiecare copil, cu avatarul și progresul său.                       |                  **Meniul** — operația se alege de aici, apoi se deschid cele cinci moduri.                   |
+|                   ![Modul Descoperire: tabla lui 4 ilustrată prin puncte](docs/media/03-decouverte.webp)                    |            ![Modul Quiz: răspuns greșit în roșu, răspuns corect în verde](docs/media/04-quiz.webp)            |
+| **Descoperire** — fiecare egalitate este ilustrată prin puncte, sărituri sau numărare, împreună cu trucul specific tablei.  | **Quiz** — opțiunea aleasă de copil rămâne afișată lângă răspunsul corect, iar explicația detaliază calculul. |
+|                       ![Modul Provocare: cronometru și serie în desfășurare](docs/media/05-defi.webp)                       |        ![Modul Aventură: harta celor zece niveluri, următoarele blocate](docs/media/06-aventure.webp)         |
+| **Provocare** — cursă contra cronometru. La o eroare, cronometrul se oprește temporar cât timp este citit răspunsul corect. |               **Aventură** — zece niveluri care se deblochează succesiv, în schimbul stelelor.                |
+|                             ![Meniul Arcade: cele patru mini-jocuri](docs/media/07-arcade.webp)                             |              ![Tablou de bord: stele pe tablă și statistici](docs/media/08-tableau-de-bord.webp)              |
+|                        **Arcade** — patru mini-jocuri, cu ajustarea dificultății și alegerea navei.                         |                 **Tablou de bord** — stele pe tablă, table de recapitulat, scoruri pe moduri.                 |
+|                    ![Personalizare: avatare, teme, accesibilitate](docs/media/09-personnalisation.webp)                     |                                                                                                               |
+|              **Personalizare** — avatar, temă de culori, dimensiunea textului, contrast ridicat, cod parental.              |                                                                                                               |
 
 ### Mini-jocurile arcade
 
-Patru jocuri care pun aceeași întrebare — cea afișată deasupra zonei de
-joc, alături de timpul rămas și de vieți — dar necesită de fiecare dată o acțiune
+Patru jocuri care adresează aceeași întrebare — cea afișată deasupra zonei de joc,
+împreună cu timpul rămas și viețile — dar care necesită de fiecare dată o acțiune
 diferită.
 
-|                                                                                                                                 |                                                                                                        |
-| :-----------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
-|       ![MultiInvaders: monștri care poartă numere, o navă în partea de jos a ecranului](docs/media/10-multiinvaders.webp)       | ![MultiMiam: un labirint în care pastilele poartă răspunsurile posibile](docs/media/11-multimiam.webp) |
-|       **MultiInvaders** — trage în răspunsurile greșite și cruță-l pe cel corect: acesta ascunde un prieten de eliberat.        |        **MultiMiam** — străbate labirintul pentru a prinde rezultatul corect, evitând monștrii.        |
-| ![MultiMemory: o grilă de cărți, dintre care două sunt întoarse și arată un calcul și un număr](docs/media/12-multimemory.webp) |         ![MultiSnake: un șarpe și mere numerotate pe o pajiște](docs/media/13-multisnake.webp)         |
-|                         **MultiMemory** — amintește-ți care carte conține rezultatul calculului întors.                         |           **MultiSnake** — crește înghițind numerele corecte și evită-le pe toate celelalte.           |
+|                                                                                                                   |                                                                                                       |
+| :---------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------: |
+|  ![MultiInvaders: monștri purtând numere, o navă în partea de jos a ecranului](docs/media/10-multiinvaders.webp)  | ![MultiMiam: un labirint în care bulinele poartă răspunsurile posibile](docs/media/11-multimiam.webp) |
+| **MultiInvaders** — trage în răspunsurile greșite, cruță-l pe cel corect: ascunde un prieten ce trebuie eliberat. |       **MultiMiam** — parcurge labirintul pentru a prinde rezultatul corect, evitând monștrii.        |
+|   ![MultiMemory: o grilă de cărți, două întoarse arătând un calcul și un număr](docs/media/12-multimemory.webp)   |        ![MultiSnake: un șarpe și mere numerotate pe o pajiște](docs/media/13-multisnake.webp)         |
+|               **MultiMemory** — găsește din memorie ce carte conține rezultatul calculului întors.                |            **MultiSnake** — crește mâncând numerele corecte, evită-le pe toate celelalte.             |
 
 ## ✨ Funcționalități
 
 ### 🎮 Moduri de joc
 
 - **Modul Descoperire**: Explorare vizuală și interactivă adaptată fiecărei operații
-- **Modul Quiz**: Întrebări cu variante multiple, compatibile cu cele 4 operații (×, +, −, ÷), și progres adaptiv
+- **Modul Quiz**: Întrebări cu variante multiple de răspuns cu suport pentru cele 4 operații (×, +, −, ÷) și progresie adaptivă
 - **Modul Provocare**: Cursă contra cronometru cu cele 4 operații (×, +, −, ÷) și diferite niveluri de dificultate
-- **Modul Aventură**: Progres narativ pe niveluri, compatibil cu cele 4 operații
+- **Modul Aventură**: Progresie narativă pe niveluri cu suport pentru cele 4 operații
 
-### 🕹️ Mini-jocuri Arcade
+### 🕹️ Mini-jocuri arcade
 
 - **MultiInvaders**: Space Invaders educațional - Distruge răspunsurile greșite
 - **MultiMiam**: Pac-Man matematic - Colectează răspunsurile corecte
-- **MultiMemory**: Joc de memorie - Asociază operațiile cu rezultatele
+- **MultiMemory**: Joc de memorie - Asociază operațiile și rezultatele
 - **MultiSnake**: Snake educațional - Crește mâncând numerele corecte
 
-### ➕ Compatibilitate cu mai multe operații
+### ➕ Suport multi-operații
 
-LeapMultix oferă exersarea completă a celor 4 operații aritmetice în **toate modurile**:
+LeapMultix oferă un antrenament complet pentru cele 4 operații aritmetice în **toate modurile**:
 
 | Mod         | ×   | +   | −   | ÷   |
 | ----------- | --- | --- | --- | --- |
@@ -122,21 +122,21 @@ LeapMultix oferă exersarea completă a celor 4 operații aritmetice în **toate
 | Aventură    | ✅  | ✅  | ✅  | ✅  |
 | Arcade      | ✅  | ✅  | ✅  | ✅  |
 
-### 🌍 Funcționalități generale
+### 🌍 Funcționalități transversale
 
-- **Utilizatori multipli**: Gestionarea profilurilor individuale, cu progres salvat
-- **Multilingv**: Compatibilitate cu limbile franceză, engleză și spaniolă
-- **Personalizare**: Avatare, teme cromatice, fundaluri
-- **Accesibilitate**: Navigare cu tastatura, compatibilitate tactilă, conformitate WCAG 2.1 AA
-- **Voce înregistrată**: întrebări și încurajări citite de o voce sintetizată preînregistrată (Lucie în franceză, creată cu ElevenLabs; Jane în engleză, creată cu Mistral AI), cu revenire automată la vocea dispozitivului; clipurile nu sunt incluse în depozitul public (consultați [Voce înregistrată](#-voce-înregistrată))
-- **Adaptare pentru dispozitive mobile**: Interfață optimizată pentru tablete și smartphone-uri
-- **Sistem de progres**: Scoruri, insigne, provocări zilnice
+- **Multi-utilizator**: Gestionare de profiluri individuale cu progresie salvată
+- **Multilingv**: Suport pentru franceză, engleză și spaniolă
+- **Personalizare**: Avatare, teme de culori, fundaluri
+- **Accesibilitate**: Navigare prin tastatură, suport tactil, conformitate WCAG 2.1 AA
+- **Voce înregistrată**: jocul poate citi întrebările și încurajările cu o voce sintetizată preînregistrată, cu revenire automată la vocea dispozitivului. Vocile nu se află în acest depozit: site-ul leapmultix.jls42.org le oferă pe Lucie în franceză și pe Sulafat în engleză și spaniolă (vezi [Voce înregistrată](#-voce-înregistrată))
+- **Mobile responsive**: Interfață optimizată pentru tablete și smartphone-uri
+- **Sistem de progresie**: Scoruri, insigne, provocări zilnice
 
 ## 🚀 Pornire rapidă
 
 ### Cerințe preliminare
 
-- Node.js (versiunea 16 sau ulterioară)
+- Node.js (versiunea 16 sau superioară)
 - Un browser web modern
 
 ### Instalare
@@ -212,7 +212,7 @@ npm run sw:fix         # Corriger les problèmes de service worker
 # Voix enregistrée (poste du propriétaire, clips hors dépôt)
 npm run voice:corpus       # Résumé des phrases dites, par langue
 npm run voice:corpus:lock  # Mettre à jour le verrou du corpus
-npm run voice:generate     # Générer les clips (ElevenLabs ou Mistral)
+npm run voice:generate     # Générer les clips (ElevenLabs, Google ou Mistral)
 npm run voice:check        # Contrôler les clips (fichiers, MP3, Whisper)
 npm run voice:review       # Whisper, contrôle et page d'écoute en une commande
 npm run voice:listen       # Page d'écoute : clips signalés, avant/après
@@ -224,8 +224,8 @@ npm run voice:check-online # Vérifier les clips servis en ligne
 
 ### Structura fișierelor
 
-Modulele JavaScript sunt **organizate fără subdirectoare în `js/`**, cu excepția a trei directoare:
-`core/`, `components/` și `modes/`. Prin urmare, numele fișierului indică
+Modulele JavaScript se află **direct în directorul rădăcină al `js/`**, cu excepția a trei foldere:
+`core/`, `components/` și `modes/`. Prin urmare, numele fișierului este cel care definește
 gruparea (`arcade-*`, `multimiam-*`, `i18n*`…).
 
 ```
@@ -284,19 +284,19 @@ leapmultix/
 
 ### Arhitectură tehnică
 
-**Module ES6 moderne**: Proiectul utilizează o arhitectură modulară, cu clase ES6 și importuri/exporturi native.
+**Module ES6 moderne**: Proiectul utilizează o arhitectură modulară cu clase ES6 și importuri/exporturi native.
 
 **Componente reutilizabile**: Interfață construită cu componente UI centralizate (TopBar, InfoBar, Dashboard, Customization).
 
-**Lazy Loading**: Încărcarea inteligentă la cerere a modulelor prin `lazy-loader.js`, pentru optimizarea performanței inițiale.
+**Lazy Loading**: Încărcare inteligentă a modulelor la cerere prin `lazy-loader.js` pentru optimizarea performanței inițiale.
 
-**Sistem unificat de stocare**: API centralizat pentru persistența datelor utilizatorilor prin LocalStorage, cu mecanisme de rezervă.
+**Sistem unificat de stocare**: API centralizat pentru persistența datelor utilizatorului prin LocalStorage cu mecanisme de fallback.
 
-**Gestionare audio centralizată**: Controlul sunetului, cu compatibilitate multilingvă și preferințe pentru fiecare utilizator.
+**Gestionare audio centralizată**: Control al sunetului cu suport multilingv și preferințe per utilizator.
 
-**Event Bus**: Comunicare bazată pe evenimente și decuplată între componente, pentru o arhitectură ușor de întreținut.
+**Event Bus**: Comunicare decuplată bazată pe evenimente între componente pentru o arhitectură ușor de întreținut.
 
-**Navigare prin slide-uri**: Sistem de navigare bazat pe slide-uri numerotate (slide0, slide1 etc.), cu `goToSlide()`.
+**Navigare prin slide-uri**: Sistem de navigare bazat pe slide-uri numerotate (slide0, slide1 etc.) cu `goToSlide()`.
 
 **Securitate**: Protecție XSS și sanitizare prin `security-utils.js` pentru toate manipulările DOM.
 
@@ -304,64 +304,64 @@ leapmultix/
 
 ### Modul Descoperire
 
-Interfață de explorare vizuală a tablelor înmulțirii, cu:
+Interfață de explorare vizuală a tablelor de înmulțire cu:
 
-- Vizualizarea interactivă a înmulțirilor
-- Animații și mijloace mnemonice
-- Funcționalitate educațională de glisare și fixare
-- Progres liber pentru fiecare tablă
+- Vizualizare interactivă a înmulțirilor
+- Animații și elemente de sprijin pentru memorare
+- Drag-and-drop educațional
+- Progresie liberă pe fiecare tablă
 
 ### Modul Quiz
 
-Întrebări cu variante multiple, cu:
+Întrebări cu variante multiple de răspuns cu:
 
 - 10 întrebări pe sesiune
-- Progres adaptiv în funcție de reușite
+- Progresie adaptivă în funcție de reușite
 - Tastatură numerică virtuală
 - Sistem de streak (serie de răspunsuri corecte)
 
 ### Modul Provocare
 
-Cursă contra cronometru, cu:
+Cursă contra cronometru cu:
 
 - 3 niveluri de dificultate (Începător, Mediu, Dificil)
 - Bonus de timp pentru răspunsurile corecte
 - Sistem de vieți
-- Clasamentul celor mai bune scoruri
+- Clasament al celor mai bune scoruri
 
 ### Modul Aventură
 
-Progres narativ, cu:
+Progresie narativă cu:
 
 - 10 niveluri tematice deblocabile
-- Hartă interactivă, cu reprezentarea vizuală a progresului
-- Poveste captivantă, cu personaje
+- Hartă interactivă cu progresie vizuală
+- Poveste captivantă cu personaje
 - Sistem de stele și recompense
 
-### Mini-jocuri Arcade
+### Mini-jocuri arcade
 
 Fiecare mini-joc oferă:
 
 - Alegerea dificultății și personalizare
 - Sistem de vieți și scor
-- Comenzi prin tastatură și ecran tactil
-- Clasamente individuale pentru fiecare utilizator
+- Comenzi prin tastatură și tactile
+- Clasamente individuale per utilizator
 
 ## 🔧 Dezvoltare
 
 ### Flux de lucru pentru dezvoltare
 
-**Nu efectuați niciodată commit direct pe main.** Proiectul utilizează ramuri pentru
+**Nu faceți commit direct pe main.** Proiectul funcționează pe bază de branch-uri de
 funcționalități.
 
-**1. Creați o ramură**, `feat/` pentru o funcționalitate, `fix/` pentru o remediere:
+**1. Creați un branch**, `feat/` pentru o funcționalitate nouă, `fix/` pentru o remediere:
 
 ```bash
 git checkout -b feat/nom-de-la-fonctionnalite
 ```
 
-**2. Dezvoltați și verificați.** Formatarea este verificată prima: CI respinge codul
-înainte chiar de a rula testele.
+**2. Dezvoltați și verificați.** Formatarea este pe primul loc: CI-ul o respinge
+chiar înainte de a rula testele.
 
 ```bash
 npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
@@ -371,7 +371,7 @@ npm run test          # Tests
 npm run test:coverage # Couverture
 ```
 
-**3. Efectuați commit pe ramură**, apoi trimiteți-o:
+**3. Faceți commit pe branch**, apoi trimiteți-l:
 
 ```bash
 git add .
@@ -380,21 +380,21 @@ git push -u origin feat/nom-de-la-fonctionnalite
 ```
 
 **4. Deschideți un pull request** și așteptați analizele: verify, Codacy,
-CodeFactor și SonarCloud. Remediați problemele până când toate verificările sunt verzi, înainte de îmbinare.
+CodeFactor și SonarCloud. Corectăm până când totul este verde înainte de fuziune.
 
-**Stilul mesajelor de commit**: Mesaje concise, la modul imperativ (de exemplu: „Fix arcade init errors”, „Refactor cache updater”)
+**Stilul de commit**: Mesaje concise, mod imperativ (ex.: "Fix arcade init errors", "Refactor cache updater")
 
-**Prag de calitate**: Asigurați-vă că `npm run lint`, `npm test` și `npm run test:coverage` trec înaintea fiecărui commit
+**Quality gate**: Asigurați-vă că `npm run lint`, `npm test` și `npm run test:coverage` trec cu succes înainte de fiecare commit
 
 ### Arhitectura componentelor
 
-**GameMode (clasă de bază)**: Toate modurile moștenesc o clasă comună, cu metode standardizate.
+**GameMode (clasa de bază)**: Toate modurile moștenesc o clasă comună cu metode standardizate.
 
-**GameModeManager**: Orchestrarea centralizată a pornirii și gestionării modurilor.
+**GameModeManager**: Gestionare și orchestrare centralizată a lansării modurilor.
 
 **Componente UI**: TopBar, InfoBar, Dashboard și Customization oferă o interfață coerentă.
 
-**Lazy Loading**: Modulele sunt încărcate la cerere pentru optimizarea performanței inițiale.
+**Lazy Loading**: Modulele sunt încărcate la cerere pentru a optimiza performanțele inițiale.
 
 **Event Bus**: Comunicare decuplată între componente prin sistemul de evenimente.
 
@@ -402,10 +402,10 @@ CodeFactor și SonarCloud. Remediați problemele până când toate verificăril
 
 Proiectul include o suită completă de teste:
 
-- Teste unitare pentru modulele core
+- Teste unitare pentru modulele de bază
 - Teste de integrare pentru componente
 - Teste pentru modurile de joc
-- Acoperire automatizată a codului
+- Acoperire automată a codului
 
 ```bash
 npm test              # Tous les tests (CJS)
@@ -417,10 +417,10 @@ npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 
 ### Build de producție
 
-- **Rollup**: Împachetează `js/main-es6.js` în ESM, cu code-splitting și sourcemaps
+- **Rollup**: Împachetează `js/main-es6.js` în ESM cu code-splitting și sourcemap-uri
 - **Terser**: Minificare automată pentru optimizare
-- **Post-build**: Copiază `css/` și `assets/`, pictogramele favicon (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js` și rescrie `dist/index.html` către fișierul de intrare cu hash (de exemplu: `main-es6-*.js`)
-- **Director final**: `dist/`, pregătit pentru a fi servit static
+- **Post-build**: Copiază `css/` și `assets/`, faviconurile (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js` și rescrie `dist/index.html` către fișierul de intrare cu hash (ex.: `main-es6-*.js`)
+- **Folderul final**: `dist/` gata de a fi servit static
 
 ```bash
 npm run build      # génère dist/
@@ -432,49 +432,49 @@ npm run serve:dist # sert dist/ (port 5000)
 **GitHub Actions**: `.github/workflows/ci.yml`, declanșat la fiecare push pe
 `main` și la fiecare pull request.
 
-**`verify`** — pragul de calitate, cu caracter blocant:
+**`verify`** — bariera de calitate (quality gate), blocantă:
 
 - `npm ci`, apoi `npm run verify` (ESLint, teste Jest, acoperire)
 - `npm run format:check` (Prettier)
 
 **`seo-report`** — după `verify`: audit Lighthouse al site-ului online, pentru
-urmărirea în timp a metricilor SEO.
+a monitoriza metricele SEO în timp.
 
 **Analize externe** conectate la pull request-uri: Codacy, CodeFactor și
-SonarCloud. Pragul SonarCloud impune calificativul A pentru fiabilitatea, securitatea și
-mentenabilitatea codului nou.
+SonarCloud. Bariera SonarCloud impune calificative de nota A pentru fiabilitate, securitate și
+mentenanță pe codul nou.
 
-**Implementare**: `./deploy.sh` sincronizează site-ul cu S3 și invalidează memoria cache
-CloudFront. Scriptul regenerează, dacă este necesar, imaginile responsive care lipsesc din git.
+**Implementare (Deployment)**: `./deploy.sh` sincronizează site-ul pe S3 și invalidează memoria cache
+CloudFront. Scriptul regenerează, dacă este necesar, imaginile responsive absente din git.
 
 ### PWA (Progressive Web App)
 
-LeapMultix este o PWA completă, cu compatibilitate offline și posibilitate de instalare.
+LeapMultix este un PWA complet cu suport offline și posibilitate de instalare.
 
 **Service Worker** (`sw.js`):
 
-- Navigare: Network-first, cu fallback offline către `offline.html`
+- Navigare: Network-first cu fallback offline către `offline.html`
 - Imagini: Cache-first pentru optimizarea performanței
-- Traduceri: Stale-while-revalidate pentru actualizarea în fundal
-- JS/CSS: Network-first pentru a furniza întotdeauna cea mai recentă versiune
+- Traduceri: Stale-while-revalidate pentru actualizare în fundal
+- JS/CSS: Network-first pentru a servi întotdeauna cea mai recentă versiune
 - Gestionare automată a versiunii prin `cache-updater.js`
 
 **Manifest** (`manifest.json`):
 
 - Pictograme SVG și PNG pentru toate dispozitivele
-- Posibilitate de instalare pe dispozitive mobile (Add to Home Screen)
-- Configurație standalone pentru o experiență similară unei aplicații
-- Compatibilitate cu teme și culori
+- Posibilitate de instalare pe mobil (Add to Home Screen)
+- Configurație standalone pentru o experiență de tip aplicație nativă
+- Suport pentru teme și culori
 
-**Testați local modul offline.** Porniți serverul, apoi deschideți
+**Testarea modului offline la nivel local.** Porniți serverul, apoi deschideți
 `http://localhost:8080` (sau portul afișat):
 
 ```bash
 npm run serve
 ```
 
-Manual: dezactivați rețeaua din instrumentele pentru dezvoltatori (fila Rețea,
-modul offline), apoi reîmprospătați pagina. Trebuie să se afișeze `offline.html`.
+Manual: întrerupeți conexiunea la rețea în instrumentele pentru dezvoltatori (fila Rețea,
+mod offline), apoi reîmprospătați pagina. `offline.html` trebuie să fie afișat.
 
 Automat, cu Puppeteer:
 
@@ -491,48 +491,48 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 ### Standarde de calitate
 
-**Instrumente pentru calitatea codului**:
+**Instrumente de calitate a codului**:
 
 - **ESLint**: Configurație modernă cu flat config (`eslint.config.js`), suport ES2022
-- **Prettier**: Formatarea automată a codului (`.prettierrc`)
-- **Stylelint**: Validarea CSS (`.stylelintrc.json`)
-- **JSDoc**: Documentarea automată a funcțiilor cu analiza acoperirii
+- **Prettier**: Formatare automată a codului (`.prettierrc`)
+- **Stylelint**: Validare CSS (`.stylelintrc.json`)
+- **JSDoc**: Documentare automată a funcțiilor cu analiză de acoperire
 
-**Reguli importante pentru cod**:
+**Reguli importante de cod**:
 
 - Eliminarea variabilelor și parametrilor neutilizați (`no-unused-vars`)
 - Utilizarea unei gestionări specifice a erorilor (fără blocuri catch goale)
 - Evitarea `innerHTML` în favoarea funcțiilor `security-utils.js`
 - Menținerea unei complexități cognitive < 15 pentru funcții
-- Extragerea funcțiilor complexe în helpers mai mici
+- Extragerea funcțiilor complexe în funcții helper mai mici
 
 **Securitate**:
 
 - **Protecție XSS**: Utilizarea funcțiilor din `security-utils.js`:
   - `appendSanitizedHTML()` în loc de `innerHTML`
-  - `createSafeElement()` pentru crearea elementelor securizate
+  - `createSafeElement()` pentru a crea elemente sigure
   - `setSafeMessage()` pentru conținutul text
-- **Scripturi externe**: Atributul `crossorigin="anonymous"` este obligatoriu
-- **Validarea datelor de intrare**: Datele externe trebuie întotdeauna sanitizate
-- **Content Security Policy**: Headere CSP pentru restricționarea surselor de scripturi
+- **Scripturi externe**: Atribut `crossorigin="anonymous"` obligatoriu
+- **Validarea intrărilor**: Întotdeauna igienizați datele externe
+- **Content Security Policy**: Antete CSP pentru a restricționa sursele de scripturi
 
 **Accesibilitate**:
 
-- Conformitate cu WCAG 2.1 AA
-- Navigare completă cu tastatura
+- Conformitate WCAG 2.1 AA
+- Navigare completă de la tastatură
 - Roluri ARIA și etichete adecvate
 - Contraste de culoare conforme
 
 **Performanță**:
 
 - Lazy loading al modulelor prin `lazy-loader.js`
-- Optimizări CSS și asset-uri responsive
-- Service Worker pentru memorare inteligentă în cache
+- Optimizări CSS și active responsive
+- Service Worker pentru stocare inteligentă în memoria cache
 - Code splitting și minificare în producție
 
 ## 📱 Compatibilitate
 
-### Browsere acceptate
+### Navigatoare compatibile
 
 Interfața se bazează pe `oklch()` pentru culori și pe `:has()` pentru
 stările contextuale, ceea ce stabilește cerințele minime:
@@ -544,16 +544,16 @@ stările contextuale, ceea ce stabilește cerințele minime:
 
 ### Dispozitive
 
-- **Desktop**: Comenzi prin tastatură și mouse
+- **Desktop**: Comenzi prin tastatură și maus
 - **Tablete**: Interfață tactilă optimizată
-- **Smartphone-uri**: Design responsive adaptiv
+- **Smartphone-uri**: Design adaptiv și responsive
 
 ### Accesibilitate
 
-- Navigare completă cu tastatura (Tab, săgeți, Esc)
-- Roluri ARIA și etichete pentru cititoarele de ecran
+- Navigare completă de la tastatură (Tab, săgeți, Esc)
+- Roluri ARIA și etichete pentru cititoare de ecran
 - Contraste de culoare conforme
-- Suport pentru tehnologiile asistive
+- Suport pentru tehnologii de asistență
 
 ## 🌍 Localizare
 
@@ -579,25 +579,25 @@ Suport multilingv complet:
 
 ### Scripturi de gestionare i18n
 
-**`npm run i18n:verify`** - Verificarea coerenței cheilor de traducere
+**`npm run i18n:verify`** - Verifică consistența cheilor de traducere
 
-**`npm run i18n:unused`** - Listarea cheilor de traducere neutilizate
+**`npm run i18n:unused`** - Listează cheile de traducere neutilizate
 
-**`npm run i18n:compare`** - Compararea fișierelor de traducere cu fr.json (referință)
+**`npm run i18n:compare`** - Compară fișierele de traducere cu fr.json (referință)
 
 Acest script (`scripts/compare-translations.cjs`) asigură sincronizarea tuturor fișierelor de limbă:
 
 **Funcționalități:**
 
-- Detectarea cheilor lipsă (prezente în fr.json, dar absente din alte limbi)
-- Detectarea cheilor suplimentare (prezente în alte limbi, dar nu și în fr.json)
+- Detectarea cheilor lipsă (prezente în fr.json, dar absente în alte limbi)
+- Detectarea cheilor suplimentare (prezente în alte limbi, dar nu în fr.json)
 - Identificarea valorilor goale (`""`, `null`, `undefined`, `[]`)
-- Verificarea coerenței tipurilor (string vs array)
-- Aplatizarea structurilor JSON imbricate în notație cu puncte (de exemplu: `arcade.multiMemory.title`)
+- Verificarea consistenței tipurilor (string vs array)
+- Aplatizarea structurilor JSON imbricate în notație cu punct (ex: `arcade.multiMemory.title`)
 - Generarea unui raport detaliat în consolă
 - Salvarea raportului JSON în `docs/translations-comparison-report.json`
 
-**Exemplu de rezultat:**
+**Exemplu de ieșire:**
 
 ```
 🔍 Analyse comparative des fichiers de traduction
@@ -624,31 +624,27 @@ Acest script (`scripts/compare-translations.cjs`) asigură sincronizarea tuturor
 
 **Acoperirea traducerilor:**
 
-- Interfață cu utilizatorul completă
-- Instrucțiunile jocurilor
+- Interfață utilizator completă
+- Instrucțiuni pentru jocuri
 - Mesaje de eroare și feedback
 - Descrieri și ajutor contextual
-- Conținutul narativ al modului Aventură
+- Conținut narativ pentru modul Aventură
 - Etichete de accesibilitate și ARIA
 
 ## 🔊 Voce înregistrată
 
-Jocul citește cu voce tare întrebările, încurajările și explicațiile, folosind o voce sintetizată și înregistrată în prealabil:
+Jocul citește cu voce tare întrebările, încurajările și explicațiile. Acesta rostește doar un set finit de fraze, aproximativ 7.400 pentru fiecare limbă: prin urmare, acestea pot fi înregistrate o dată pentru totdeauna și nicio partidă nu apelează vreun serviciu de sinteză. Fără clipuri, jocul citește cu vocea dispozitivului.
 
-- în franceză, **Lucie**, creată cu ElevenLabs (modelul Eleven v3);
-- în engleză, **Jane**, creată cu Mistral AI (Voxtral TTS).
+### În acest depozit: aplicația, fără voci
 
-Jocul rostește doar un set finit de fraze, aproximativ 7.400 pentru fiecare limbă: toate sunt înregistrate în prealabil și nicio componentă nu apelează un serviciu de sinteză. Pentru moment, limba spaniolă folosește în continuare vocea dispozitivului.
+Codul poate reda clipuri preînregistrate și conține fluxul de procesare care le generează. Clipurile nu se află aici, la fel cum nu se află nici cheile furnizorilor: un fork sau o instalare locală citește cu vocea dispozitivului.
 
-- **Revenire automată** la vocea dispozitivului, frază cu frază: clip absent sau cu eroare, redare refuzată de browser, clip care nu pornește în 1,5 s ori utilizare offline fără clipul în cache.
-- **Setări**: butonul pentru voce din bara de sus activează sau dezactivează redarea; caseta „Voce înregistrată” (Accesibilitate și comenzi) permite alegerea între vocea înregistrată (Lucie sau Jane) și vocea dispozitivului.
-- **Offline**: clipurile ascultate deja rămân în cache (service worker).
+- **Comutare automată de rezervă** pe vocea dispozitivului, frază cu frază: clip absent sau cu eroare, redare refuzată de navigator, clip care nu pornește în 1,5 s sau mod offline fără clip în cache.
+- **Setări**: butonul de voce din bara de sus activează sau dezactivează redarea; caseta „Voce înregistrată” (Accesibilitate și comenzi) permite alegerea între vocea înregistrată și vocea dispozitivului. Aceasta apare doar în limbile în care a fost publicată o voce.
+- **Offline**: clipurile ascultate deja rămân în memoria cache (service worker).
+- **Unde caută jocul clipurile**: în eticheta `<meta name="leapmultix-voice-base">`, goală în depozit. Doar implementarea de producție scrie acolo `/voice/`.
 
-### Clipurile nu se află în acest depozit
-
-Clipurile se află într-un depozit privat și într-un bucket S3 dedicat, distribuit prin CloudFront la `/voice/*`. Prin urmare, un fork sau mediul de dezvoltare locală păstrează vocea dispozitivului: în depozit, eticheta `<meta name="leapmultix-voice-base">` este goală și numai implementarea în producție scrie în ea `/voice/`.
-
-Cu clipurile disponibile pe calculator (depozitul privat clonat lângă joc, în `../leapmultix-voices`), parametrul `?voix=local` permite redarea lor de către serverul de dezvoltare:
+Cu propriile clipuri pe calculator (generate prin fluxul de mai jos, plasate lângă joc în `../leapmultix-voices`), parametrul `?voix=local` le face să fie citite de serverul de dezvoltare:
 
 ```bash
 npm run voice:publish -- local --lang fr --audience all --default-on   # relie voice/ (ignoré par git) aux clips
@@ -656,17 +652,26 @@ npm run serve
 # puis ouvrir http://localhost:8080/index.html?voix=local
 ```
 
+### Pe leapmultix.jls42.org: vocile de pe găzduire
+
+Site-ul pus la dispoziție de autor furnizează voci de sinteză înregistrate:
+
+- în franceză, **Lucie**, creată cu ElevenLabs (modelul Eleven v3);
+- în engleză britanică și spaniolă din Spania, **Sulafat**, creată cu Google Cloud Text-to-Speech (vocea Chirp 3 HD).
+
+Clipurile se află într-un depozit privat și într-un bucket S3 dedicat, deservit prin CloudFront pe `/voice/*`. În setări, fiecare limbă menționează serviciul care i-a creat vocea.
+
 ### Generarea clipurilor
 
-Fluxul este automatizat prin scripturi în `scripts/voice/` și rulează pe calculatorul proprietarului, niciodată în CI-ul public. Cheile furnizorilor (ElevenLabs pentru franceză, Mistral pentru engleză) rămân într-un fișier `.env` din afara depozitului, transmis prin `node --env-file`: nicio cheie nu ajunge în git. Skill-ul Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) descrie procedura pas cu pas (validări, aprobări, reluări); detaliile se află în [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
+Fluxul este scriptat în `scripts/voice/` și rulează pe calculatorul proprietarului, niciodată în CI-ul public. Cheile furnizorilor (ElevenLabs pentru franceză, Google Cloud Text-to-Speech pentru engleză și spaniolă; Mistral rămâne conectat) rămân într-un fișier `.env` în afara depozitului, transmis prin `node --env-file`: nicio cheie nu ajunge în git. Skill-ul Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) parcurge procedura pas cu pas (porți, acorduri, reluări); detaliile se găsesc în [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
 
-1. **Estimarea** frazelor rămase și a caracterelor care trebuie plătite (Eleven v3: aproximativ 0,53 credite per caracter; Voxtral TTS: 16 $ per milion de caractere).
-2. **Generarea**. Rularea din nou a aceleiași comenzi continuă cu elementele lipsă. Când creditele se epuizează, scriptul se oprește în mod controlat (cod 3), fără a lăsa un fișier scris parțial. `--max-total-chars` limitează cheltuiala cumulată a versiunii: fiecare răspuns plătit este înscris într-un registru imediat ce este primit, iar registrul persistă după o oprire bruscă. Pentru Mistral, care nu furnizează un sold disponibil pentru citire, aceasta este singura protecție.
-3. **Verificarea**: fiecare frază are propriul clip și fiecare fișier MP3 este valid. Apoi, Whisper transcrie local fiecare clip, iar verificarea semnalează numerele înțelese greșit și duratele anormale. `voice:review` execută succesiv Whisper, această verificare și pagina de ascultare printr-o singură comandă.
-4. **Ascultarea** pe pagina de ascultare (`voice:listen`) a clipurilor semnalate și a unui eșantion de forme feminine („une fois 7”), pe care Whisper nu le distinge. Fiecare clip are o casetă „de refăcut”, care îl adaugă pe lista clipurilor respinse.
-5. **Refacerea** clipurilor respinse (`--redo`) și rularea din nou a Whisper, apoi compararea fiecărui clip înainte și după pe o a doua pagină. Un clip care continuă să fie pronunțat greșit după două sau trei încercări primește un text impus în `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), de exemplu numărul scris cu litere.
+1. **Estimarea** frazelor rămase și a caracterelor de plătit (Eleven v3: aproximativ 0,53 credite per caracter; Chirp 3 HD: 30 $ per milionul de caractere, primul milion din fiecare lună oferit gratuit; Voxtral TTS: 16 $ per milion).
+2. **Generarea**. Rularea din nou a aceleiași comenzi reia ceea ce lipsește. Când creditele sunt epuizate, scriptul se oprește în mod curat (cod 3) fără a lăsa vreun fișier scris pe jumătate. `--max-total-chars` plafonează cheltuielile cumulate ale versiunii: fiecare răspuns plătit este înregistrat imediat după primire într-un registru care supraviețuiește unei opriri forțate. La Google și Mistral, care nu oferă un sold lizibil, aceasta este singura protecție.
+3. **Verificarea**: fiecare frază are clipul său și fiecare MP3 este valid. Whisper transcrie apoi fiecare clip pe plan local, iar verificarea semnalează numerele înțelese greșit și duratele anormale. `voice:review` execută în lanț Whisper, această verificare și pagina de audiție într-o singură comandă.
+4. **Ascultarea** pe pagina de audiție (`voice:listen`) a clipurilor semnalate și a unui eșantion de forme feminine („une fois 7”), pe care Whisper nu le distinge. Fiecare clip are o casetă „de refăcut”, care îl adaugă pe lista clipurilor eliminate.
+5. **Refacerea** clipurilor eliminate (`--redo`) și relansarea Whisper, apoi compararea fiecărui clip înainte și după pe o a doua pagină. Un clip rostit în continuare incorect după două sau trei încercări primește un text impus în `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), de exemplu numărul scris în litere.
 6. **Publicarea** clipurilor, verificarea disponibilității lor online, apoi publicarea indexului limbii, mai întâi pentru testeri (`?voix=test`).
-7. **Activarea** vocii pentru toți utilizatorii, apoi activarea ei în mod implicit. Mecanismul de oprire de urgență (`voice:publish -- remove`) elimină o limbă din index: jocul revine la vocea dispozitivului.
+7. **Deschiderea** vocii pentru toată lumea, apoi activarea acesteia în mod implicit. Întrerupătorul de siguranță (`voice:publish -- remove`) elimină o limbă din index: jocul revine la vocea dispozitivului.
 
 ```bash
 # 1. Estimer (sans frais)
@@ -689,33 +694,33 @@ npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> -
 npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience all --default-on
 ```
 
-### Regulă: o frază rostită care a fost modificată este reînregistrată înainte de lansarea în producție
+### Regulă: o frază rostită modificată se reînregistrează înainte de lansarea în producție
 
-Fiecare frază rostită provine din traduceri (`assets/translations/{fr,en,es}.json`) și face parte din corpus. Prin urmare, modificarea unei fraze rostite determină eșuarea testului de blocare a corpusului (`scripts/voice/corpus.lock.json`). Pentru o limbă care dispune de voce înregistrată, se generează clipurile frazelor afectate, se verifică și se ascultă, apoi se publică **înainte** de integrare. La final, se actualizează blocarea (`npm run voice:corpus:lock`). Fără aceste clipuri, fraza modificată este redată cu vocea dispozitivului.
+Orice frază rostită provine din traduceri (`assets/translations/{fr,en,es}.json`) și face parte din corpus. Modificarea unei fraze rostite duce, prin urmare, la eșuarea testului de blocare a corpusului (`scripts/voice/corpus.lock.json`). Pentru o limbă care are o voce înregistrată, se generează apoi clipurile pentru frazele afectate, sunt verificate și ascultate, apoi publicate **înainte** de fuziune. În final, se actualizează blocarea (`npm run voice:corpus:lock`). Fără aceste clipuri, fraza modificată este citită cu vocea dispozitivului.
 
 ## 📊 Stocarea datelor
 
 ### Datele utilizatorului
 
 - Profiluri și preferințe
-- Progresul pentru fiecare mod de joc
+- Progres pe fiecare mod de joc
 - Scoruri și statistici pentru jocurile arcade
 - Setări de personalizare
 
-### Funcționalități tehnice
+### Caracteristici tehnice
 
-- Stocare locală (localStorage) cu mecanisme de rezervă
+- Stocare locală (localStorage) cu soluții de rezervă
 - Izolarea datelor pentru fiecare utilizator
-- Salvarea automată a progresului
-- Migrarea automată a datelor vechi
+- Salvare automată a progresului
+- Migrare automată a datelor vechi
 
-## 🐛 Raportarea unei probleme
+## 🐛 Semnalarea unei probleme
 
-Problemele pot fi raportate prin issues GitHub. Vă rugăm să includeți:
+Problemele pot fi raportate prin intermediul issue-urilor GitHub. Vă rugăm să includeți:
 
 - Descrierea detaliată a problemei
 - Pașii pentru reproducerea acesteia
-- Browserul și versiunea
+- Navigatorul și versiunea
 - Capturi de ecran, dacă sunt relevante
 
 ## 💝 Susținerea proiectului
@@ -724,7 +729,7 @@ Problemele pot fi raportate prin issues GitHub. Vă rugăm să includeți:
 
 ## 📄 Licență
 
-Acest proiect este distribuit sub licența AGPL v3. Consultați fișierul `LICENSE` pentru mai multe detalii.
+Acest proiect este licențiat sub AGPL v3. Consultați fișierul `LICENSE` pentru mai multe detalii.
 
 ---
 
