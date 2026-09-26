@@ -269,6 +269,17 @@ modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en françai
      (installation dans l'en-tête du script), puis
      `npm run voice:check -- --lang fr --transcripts transcripts-fr.jsonl --flagged a-reecouter.txt` :
      nombres entendus différents de la phrase, phrase trop différente ou durée anormale.
+   - **Ce qui est signalé** :
+     - un nombre entendu différent, en trop ou en moins ;
+     - une phrase éloignée : en français, sous 0,5 de ressemblance, à cause des homophones de
+       Whisper ; en anglais et en espagnol (voix Mistral), sous 0,85 ou plus d'un mot en trop,
+       réglé sur les 7 437 clips de Jane (attaques de mot ratées, charabia inventé) ;
+     - une durée au-delà du double du débit médian de la voix, ou en deçà du tiers. Une borne
+       fixe (0,2 s par caractère, calée sur Lucie) signalait 404 clips sains de Jane.
+
+     Les écritures de Whisper sans défaut de voix (« watt », « 18-4 », « 8 x 10 ») sont
+     ramenées aux mots de la phrase avant la comparaison.
+
    - **Écoute** : `npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl`
      écrit une page locale (`ecoute/fr-<version>.html` dans le dépôt des voix) : les clips
      signalés, puis un échantillon de formes féminines, que Whisper ne distingue pas (« un »

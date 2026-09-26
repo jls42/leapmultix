@@ -17,7 +17,7 @@ import {
   compareTranscript,
   normalizeForComparison,
 } from '../../scripts/voice/transcript-compare.mjs';
-import { checkClips, isConsistent } from '../../scripts/voice/check.mjs';
+import { checkClips, durationOutliers, isConsistent } from '../../scripts/voice/check.mjs';
 import { loadVoice } from '../../scripts/voice/generate.mjs';
 import { newManifest, sha256, storePaths, writeManifest } from '../../scripts/voice/clip-store.mjs';
 
@@ -95,6 +95,55 @@ describe('Transcription comparée à la phrase', () => {
   });
 });
 
+describe('Contrôle strict en anglais et en espagnol (voix Mistral)', () => {
+  test.each([
+    ['Try again!', 'Cry again.', true],
+    ['Quiz Mode', 'Viva havn. Quiz Mode.', true],
+    ['20 minus 3 equals 18', 'At 20 minus 3 equals 18.', true],
+    ['What is 8 times 10?', 'What is 8 x 10?', false],
+    ['1 plus what equals 2?', '1 plus watt equals 2.', false],
+    ['What is 18 minus 4?', 'What is 18-4?', false],
+    ['Well done!', 'Well done.', false],
+    // Phrase longue : deux mots inventés gardent 0,875 de ressemblance, seuls les mots en trop les trahissent
+    [
+      'The quick brown fox jumps over the lazy dog near the river bank today',
+      'Viva havn. The quick brown fox jumps over the lazy dog near the river bank today.',
+      true,
+    ],
+  ])('en : « %s » entendu « %s » → à réécouter : %s', (expected, heard, flagged) => {
+    expect(compareTranscript(expected, heard, 'en').flagged).toBe(flagged);
+  });
+
+  test.each([
+    ['7 por 8 es igual a 54', '7x8 es igual a 54.', false],
+    ['¡Casi! La respuesta correcta es 56.', 'Casi. La respuesta correcta es 56.', false],
+    ['¿Cuánto es 7 por 8?', 'Conto, Sivan, Inés, Bonad, Juan Osor.', true],
+    ['Modo Quiz', 'Viva havn. Modo Quiz.', true],
+  ])('es : « %s » entendu « %s » → à réécouter : %s', (expected, heard, flagged) => {
+    expect(compareTranscript(expected, heard, 'es').flagged).toBe(flagged);
+  });
+
+  test('le français garde la règle de base : un mot de plus ne suffit pas', () => {
+    expect(compareTranscript('Mode Quiz', 'Mode Quiz lancé', 'fr').flagged).toBe(false);
+    expect(compareTranscript('Quiz Mode', 'Quiz Mode started', 'en').flagged).toBe(true);
+  });
+});
+
+describe('Durées rapportées au débit de la voix', () => {
+  const clip = (key, perChar) => [key, { text: key, said: 'x'.repeat(20), duration: 20 * perChar }];
+
+  test('une voix lente n’est pas signalée ; au double de son débit ou coupé, un clip l’est', () => {
+    // Débit de Jane (0,15 s par caractère) : l'ancienne borne fixe (0,2) était calée sur Lucie
+    const entries = [0.14, 0.15, 0.15, 0.16, 0.19].map((rate, i) => clip(`normal${i}`, rate));
+    entries.push(clip('lent', 0.33), clip('coupe', 0.04));
+    expect(durationOutliers(entries).map(o => o.key)).toEqual(['lent', 'coupe']);
+  });
+
+  test('aucun clip : rien à signaler', () => {
+    expect(durationOutliers([])).toEqual([]);
+  });
+});
+
 describe('Cohérence du rangement', () => {
   const clean = {
     stale: [],
@@ -124,9 +173,14 @@ describe('Contrôle du rangement des clips', () => {
   let outDir;
   let paths;
 
+  // Durée d'une vraie voix : proportionnelle au texte dit (0,1 s par caractère)
   async function addClip(
     p,
-    { said = saidText(p.text, 'fr'), duration = 1.2, data = `mp3 ${p.text}` } = {}
+    {
+      said = saidText(p.text, 'fr'),
+      duration = [...said].length * 0.1,
+      data = `mp3 ${p.text}`,
+    } = {}
   ) {
     await fsp.mkdir(paths.clipDir, { recursive: true });
     await fsp.writeFile(path.join(paths.clipDir, `${p.key}.mp3`), data);

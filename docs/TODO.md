@@ -38,16 +38,15 @@ génération, contrôles, sauvegarde, publication, ouverture, coupe-circuit, nou
 Local seulement : il touche une clé privée et un dépôt privé.
 
 Éprouvé le 26/09/2026 sur toute la génération de l'anglais, de l'estimation à l'ouverture.
-Deux leçons pour les outils de contrôle :
+Deux leçons pour les outils de contrôle, intégrées ensuite à `voice:check` (voir le skill,
+étape « Contrôles ») :
 
-- **La borne de durée de `voice:check` est calée sur Lucie** (`SECONDS_PER_CHAR`, 0,2 s par
-  caractère au plus). Jane parle plus lentement : 404 clips sains la dépassent, et noient les
-  7 vrais défauts (au-delà de 0,25 s). La rendre propre à chaque voix.
-- **La règle de Whisper laisse passer des défauts** : elle ne signale un clip aux bons nombres
-  que sous 0,5 de ressemblance. Un charabia ajouté sans nombre, ou « Try again! » entendu
-  « Cry again », passent. Un tri plus strict (ressemblance sous 0,85, mots en trop, durée
-  anormale) a désigné les 36 clips refaits. L'intégrer à `voice:check`, en neutralisant les
-  écritures de Whisper sans défaut (« watt » pour « what », « 18-4 » pour « 18 minus 4 »).
+- **La borne de durée était calée sur Lucie** (0,2 s par caractère au plus) : 404 clips sains
+  de Jane la dépassaient. Elle se rapporte désormais au débit médian de la voix.
+- **La règle de Whisper laissait passer des défauts** : un clip aux bons nombres n'était
+  signalé que sous 0,5 de ressemblance. En anglais et en espagnol, le seuil passe à 0,85 et
+  un mot en trop de plus signale le clip ; les écritures de Whisper sans défaut (« watt »,
+  « 18-4 », « 8 x 10 ») ne comptent plus.
 
 Reste à faire : s'il se déclenche mal ou saute une étape, lui écrire des évaluations
 (`claude plugin eval`, voir la documentation des plugins).

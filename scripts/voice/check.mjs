@@ -23,10 +23,22 @@ import { compareTranscript } from './transcript-compare.mjs';
 import { clipFile, readManifest, sha256, storePaths } from './clip-store.mjs';
 import { DEFAULT_OUT, loadVoice } from './generate.mjs';
 
-/** Secondes par caractère dit hors desquelles un clip est à réécouter */
-export const SECONDS_PER_CHAR = { min: 0.03, max: 0.2 };
+/**
+ * Durée à réécouter, rapportée au débit de la voix elle-même : la médiane des secondes par
+ * caractère dit de la version. Au-delà du double, des mots en trop ou de longues pauses ; en
+ * deçà du tiers, un clip coupé. Une borne fixe ne vaut que pour une voix : calée sur Lucie
+ * (0,2 s par caractère), elle signalait 404 clips sains de Jane, qui parle plus lentement,
+ * et noyait ses vrais défauts (26/09/2026).
+ */
+export const DURATION_RATIO = { min: 1 / 3, max: 2 };
 
 const charCount = text => [...text].length;
+
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
 
 function missingReport(missing, lang) {
   const byFamily = {};
@@ -50,15 +62,20 @@ async function probeEntries(entries, paths, probe) {
   return { invalid, changed };
 }
 
+/** Clips dont la durée s'écarte du débit de la voix (voir DURATION_RATIO) */
 export function durationOutliers(entries) {
-  return entries
-    .map(([key, entry]) => ({
-      key,
-      text: entry.text,
-      duration: entry.duration,
-      perChar: entry.duration / Math.max(charCount(entry.said), 1),
-    }))
-    .filter(({ perChar }) => perChar < SECONDS_PER_CHAR.min || perChar > SECONDS_PER_CHAR.max);
+  const measured = entries.map(([key, entry]) => ({
+    key,
+    text: entry.text,
+    duration: entry.duration,
+    perChar: entry.duration / Math.max(charCount(entry.said), 1),
+  }));
+  if (measured.length === 0) return [];
+  const typical = median(measured.map(m => m.perChar));
+  return measured.filter(
+    ({ perChar }) =>
+      perChar < typical * DURATION_RATIO.min || perChar > typical * DURATION_RATIO.max
+  );
 }
 
 /**

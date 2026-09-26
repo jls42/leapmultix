@@ -89,37 +89,46 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
      le reste continue. Le propriétaire choisit entre deux sorties :
      - un texte dit de même sens (`SAID_OVERRIDES`, `scripts/voice/said-text.mjs`) ;
      - ou la voix de l'appareil pour cette phrase (`--allow-missing` à la publication).
-5. **Contrôles.**
-   - **`npm run voice:review -- --lang <l>`**, en tâche de fond : plus de 10 minutes pour
-     7 000 clips. La commande :
-     - lance Whisper sur les clips nouveaux ou changés, vers `transcripts-<l>.jsonl` ;
-     - fait le contrôle de `voice:check` ;
-     - écrit `a-reecouter-<l>.txt` et la page d'écoute, dont elle affiche l'adresse.
-
-     Le code 0 est exigé, avec `--allow-missing` seulement sur accord. Pour Whisper,
-     installer une fois
+5. **Contrôles : pages d'écoute, jusqu'à l'accord du propriétaire.**
+   - **`npm run voice:review -- --lang <l>`**, en tâche de fond : Whisper transcrit les clips
+     nouveaux ou changés (environ 200 par minute sur ce poste, 40 minutes pour une langue),
+     puis la commande fait le contrôle de `voice:check`, écrit `a-reecouter-<l>.txt` et la
+     **page d'écoute** des clips signalés, dont elle affiche l'adresse. Le code 0 est exigé,
+     avec `--allow-missing` seulement sur accord. Pour Whisper, installer une fois
      `python3 -m venv .venv-whisper && .venv-whisper/bin/pip install -r scripts/voice/requirements-whisper.txt`,
      ou passer `--python <interpréteur>`.
+   - **Ce qui est signalé** (`transcript-compare.mjs`, `check.mjs`) :
+     - un nombre entendu différent, en trop ou en moins ;
+     - une phrase éloignée. En français, sous 0,5 de ressemblance : Whisper y confond des
+       homophones. En anglais et en espagnol (voix Mistral), sous 0,85, ou plus d'un mot en
+       trop : attaque de mot ratée (« Try » entendu « Cry », « Ten » entendu « hen »),
+       charabia inventé par la synthèse ;
+     - une durée au-delà du double du débit médian de la voix (mots en trop, longues pauses)
+       ou en deçà du tiers (clip coupé).
+
+     Les écritures de Whisper sans défaut de voix ne comptent pas : « watt » pour « what »,
+     « 18-4 » pour « 18 minus 4 », « 8 x 10 » pour « 8 times 10 ».
 
    - `npm run voice:check -- --lang <l> --probe` vérifie que chaque MP3 est valide et
      inchangé (ffprobe, plus lent).
-   - **Écoute.** Le propriétaire ouvre la page et écoute :
-     - les clips signalés ;
-     - en fr et en es, un échantillon des formes féminines (« une fois 7 »), que Whisper ne
-       distingue pas.
-
-     Il coche « à refaire », et la liste se colle dans `ecartes.txt` (racine du jeu, ignoré
-     par git). L'écoute revient au propriétaire : ne jamais cocher à sa place.
-
+   - **Page d'écoute** (`ecoute/<l>-<version>.html`, à ouvrir pour le propriétaire :
+     `xdg-open <page>`). Il écoute les clips signalés et, en fr et en es, un échantillon des
+     formes féminines (« une fois 7 »), que Whisper ne distingue pas. Il coche « à refaire » ;
+     la liste du bandeau se colle dans `ecartes.txt` (racine du jeu, ignoré par git).
+     L'écoute revient au propriétaire : ne jamais cocher à sa place.
    - **Refaits** (payants : accord) :
      `node --env-file=<.env> scripts/voice/generate.mjs --lang <l> --redo ecartes.txt --max-total-chars <plafond>`.
-     - Seuls ces clips sont refaits, et l'ancien de chacun est mis de côté dans
-       `ecoute/avant/`.
-     - Puis `npm run voice:review -- --lang <l> --compare ecartes.txt` : page avant/après,
-       avec le verdict de Whisper sur chaque nouveau clip.
-     - Un clip encore mal dit après deux ou trois essais (un nombre en tête de phrase, par
-       exemple) reçoit un texte dit imposé dans `SAID_OVERRIDES`. Relancer ensuite
-       `generate.mjs` sans `--redo` : le texte dit a changé, donc le clip est refait seul.
+     Seuls ces clips sont refaits, l'ancien de chacun mis de côté dans `ecoute/avant/`.
+   - **Page avant/après** : `npm run voice:review -- --lang <l> --compare <liste>`. Pour
+     chaque clip de la liste, l'ancien et le nouveau, ce que Whisper a entendu, son verdict
+     sur le nouveau, et une case « à refaire ». La liste peut réunir plusieurs tours de
+     refaits (`sort -u ecartes-1.txt ecartes-2.txt > ecartes-toutes.txt`) : le propriétaire
+     valide en une page les versions finales. Ses coches restent d'une ouverture à l'autre,
+     sauf sur un clip refait depuis.
+   - **Boucler** jusqu'à ce que le propriétaire valide. Un clip encore mal dit après deux ou
+     trois essais (un nombre en tête de phrase, par exemple) reçoit un texte dit imposé dans
+     `SAID_OVERRIDES` ; relancer ensuite `generate.mjs` sans `--redo` : le texte dit a changé,
+     donc le clip est refait seul.
 
 6. **Sauvegarde** : proposer au propriétaire le commit du dépôt privé (`clips/`,
    `manifests/`, registre compris), puis le pousser. `raw/` et `ecoute/` restent locaux.
