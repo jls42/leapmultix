@@ -128,7 +128,7 @@ LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans 
 - **Multilingue** : Support français, anglais et espagnol
 - **Personnalisation** : Avatars, thèmes de couleur, arrière-plans
 - **Accessibilité** : Navigation clavier, support tactile, conformité WCAG 2.1 AA
-- **Voix enregistrée** : questions et encouragements lus par une voix de synthèse pré-enregistrée (créée avec ElevenLabs), avec repli automatique sur la voix de l'appareil ; clips hors du dépôt public (voir [Voix enregistrée](#-voix-enregistrée))
+- **Voix enregistrée** : questions et encouragements lus par une voix de synthèse pré-enregistrée (Lucie en français, créée avec ElevenLabs ; Jane en anglais, créée avec Mistral AI), avec repli automatique sur la voix de l'appareil ; clips hors du dépôt public (voir [Voix enregistrée](#-voix-enregistrée))
 - **Mobile responsive** : Interface optimisée pour tablettes et smartphones
 - **Système de progression** : Scores, badges, défis quotidiens
 
@@ -212,8 +212,9 @@ npm run sw:fix         # Corriger les problèmes de service worker
 # Voix enregistrée (poste du propriétaire, clips hors dépôt)
 npm run voice:corpus       # Résumé des phrases dites, par langue
 npm run voice:corpus:lock  # Mettre à jour le verrou du corpus
-npm run voice:generate     # Générer les clips (ElevenLabs)
+npm run voice:generate     # Générer les clips (ElevenLabs ou Mistral)
 npm run voice:check        # Contrôler les clips (fichiers, MP3, Whisper)
+npm run voice:review       # Whisper, contrôle et page d'écoute en une commande
 npm run voice:listen       # Page d'écoute : clips signalés, avant/après
 npm run voice:publish      # Publier les clips et l'index de la langue
 npm run voice:check-online # Vérifier les clips servis en ligne
@@ -632,10 +633,15 @@ Ce script (`scripts/compare-translations.cjs`) assure la synchronisation de tous
 
 ## 🔊 Voix enregistrée
 
-Le jeu lit à voix haute les questions, les encouragements et les explications. En français, c'est **Lucie**, une voix de synthèse créée avec ElevenLabs (modèle Eleven v3). Le jeu ne dit qu'un ensemble fini de phrases, environ 7 400 par langue : toutes sont enregistrées à l'avance, et aucune partie n'appelle ElevenLabs. L'anglais et l'espagnol gardent pour l'instant la voix de l'appareil.
+Le jeu lit à voix haute les questions, les encouragements et les explications, avec une voix de synthèse enregistrée à l'avance :
+
+- en français, **Lucie**, créée avec ElevenLabs (modèle Eleven v3) ;
+- en anglais, **Jane**, créée avec Mistral AI (Voxtral TTS).
+
+Le jeu ne dit qu'un ensemble fini de phrases, environ 7 400 par langue : toutes sont enregistrées à l'avance, et aucune partie n'appelle un service de synthèse. L'espagnol garde pour l'instant la voix de l'appareil.
 
 - **Repli automatique** sur la voix de l'appareil, phrase par phrase : clip absent ou en erreur, lecture refusée par le navigateur, clip qui ne démarre pas en 1,5 s, ou hors ligne sans le clip en cache.
-- **Réglages** : le bouton de voix de la barre du haut active ou coupe la lecture ; la case « Voix enregistrée » (Accessibilité et contrôles) choisit entre Lucie et la voix de l'appareil.
+- **Réglages** : le bouton de voix de la barre du haut active ou coupe la lecture ; la case « Voix enregistrée » (Accessibilité et contrôles) choisit entre la voix enregistrée (Lucie ou Jane) et la voix de l'appareil.
 - **Hors ligne** : les clips déjà entendus restent en cache (service worker).
 
 ### Les clips ne sont pas dans ce dépôt
@@ -652,11 +658,11 @@ npm run serve
 
 ### Générer les clips
 
-La chaîne est scriptée dans `scripts/voice/` et tourne sur le poste du propriétaire, jamais dans la CI publique. La clé ElevenLabs reste dans un fichier `.env` hors dépôt, passé par `node --env-file` : aucune clé n'entre dans git. Le skill Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) déroule la procédure pas à pas (portes, accords, reprises) ; le détail est dans [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
+La chaîne est scriptée dans `scripts/voice/` et tourne sur le poste du propriétaire, jamais dans la CI publique. Les clés des fournisseurs (ElevenLabs pour le français, Mistral pour l'anglais) restent dans un fichier `.env` hors dépôt, passé par `node --env-file` : aucune clé n'entre dans git. Le skill Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) déroule la procédure pas à pas (portes, accords, reprises) ; le détail est dans [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
 
-1. **Estimer** les phrases restantes et les caractères à payer (Eleven v3 : environ 0,53 crédit par caractère).
-2. **Générer**. Relancer la même commande reprend ce qui manque. Quand les crédits sont épuisés, le script s'arrête proprement (code 3) sans laisser de fichier à moitié écrit.
-3. **Contrôler** : chaque phrase a son clip et chaque MP3 est valide. Whisper transcrit ensuite chaque clip en local, et `voice:check` signale les nombres mal entendus et les durées anormales.
+1. **Estimer** les phrases restantes et les caractères à payer (Eleven v3 : environ 0,53 crédit par caractère ; Voxtral TTS : 16 $ le million de caractères).
+2. **Générer**. Relancer la même commande reprend ce qui manque. Quand les crédits sont épuisés, le script s'arrête proprement (code 3) sans laisser de fichier à moitié écrit. `--max-total-chars` plafonne la dépense cumulée de la version : chaque réponse payée est inscrite dès sa réception dans un registre, qui survit à un arrêt brutal. Chez Mistral, qui ne donne aucun solde lisible, c'est la seule protection.
+3. **Contrôler** : chaque phrase a son clip et chaque MP3 est valide. Whisper transcrit ensuite chaque clip en local, et le contrôle signale les nombres mal entendus et les durées anormales. `voice:review` enchaîne Whisper, ce contrôle et la page d'écoute en une commande.
 4. **Écouter** sur la page d'écoute (`voice:listen`) les clips signalés et un échantillon de formes féminines (« une fois 7 »), que Whisper ne distingue pas. Chaque clip a une case « à refaire », qui l'ajoute à la liste des clips écartés.
 5. **Refaire** les clips écartés (`--redo`) et relancer Whisper, puis comparer chaque clip avant et après sur une seconde page. Un clip encore mal dit après deux ou trois essais reçoit un texte imposé dans `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), par exemple le nombre en toutes lettres.
 6. **Publier** les clips, vérifier qu'ils répondent en ligne, puis publier l'index de la langue, d'abord pour les testeurs (`?voix=test`).
@@ -665,17 +671,16 @@ La chaîne est scriptée dans `scripts/voice/` et tourne sur le poste du propri�
 ```bash
 # 1. Estimer (sans frais)
 npm run voice:generate -- --lang fr --dry-run
-# 2. Générer (payant)
-node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --reserve 5000
-# 3. Contrôler (Whisper s'installe une fois : voir l'en-tête de whisper_transcribe.py)
+# 2. Générer (payant), plafond cumulé en caractères ; --reserve protège les crédits ElevenLabs
+node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --reserve 5000 --max-total-chars <plafond>
+node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang en --max-total-chars <plafond>
+# 3. Contrôler : Whisper (installé une fois : voir l'en-tête de whisper_transcribe.py), contrôle, page d'écoute
+npm run voice:review -- --lang fr
 npm run voice:check -- --lang fr --probe
-.venv-whisper/bin/python scripts/voice/whisper_transcribe.py --manifest ../leapmultix-voices/manifests/fr/<version>.json --clips ../leapmultix-voices/clips/fr/<version> --lang fr --out transcripts-fr.jsonl
-npm run voice:check -- --lang fr --transcripts transcripts-fr.jsonl
-# 4. Écouter (page locale ; la liste « à refaire » va dans ecartes.txt)
-npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl
-# 5. Refaire (payant), relancer Whisper (il ne transcrit que les clips refaits), comparer
-node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --redo ecartes.txt
-npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl --compare ecartes.txt
+# 4. Écouter sur la page indiquée (la liste « à refaire » va dans ecartes.txt)
+# 5. Refaire (payant), puis comparer avant/après (Whisper ne transcrit que les clips refaits)
+node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --redo ecartes.txt --max-total-chars <plafond>
+npm run voice:review -- --lang fr --compare ecartes.txt
 # 6. Publier
 npm run voice:publish -- clips --lang fr --bucket <bucket>
 npm run voice:check-online -- --lang fr

@@ -1,5 +1,5 @@
 <details>
-<summary>このドキュメントは他の言語でもご利用いただけます</summary>
+<summary>このドキュメントは他の言語でも利用できます</summary>
 
 - [英語](./README.en.md)
 - [スペイン語](./README.es.md)
@@ -25,7 +25,7 @@
 
 [![CodeFactor](https://www.codefactor.io/repository/github/jls42/leapmultix/badge)](https://www.codefactor.io/repository/github/jls42/leapmultix)
 [![Codacy バッジ](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![品質ゲートの状態](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Quality Gate ステータス](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 [![信頼性評価](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 [![セキュリティ評価](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
@@ -34,14 +34,14 @@
 
 [![バグ](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 [![脆弱性](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![コードスメル](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![コードの問題点](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 [![重複行（%）](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 [![コード行数](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 ## 目次
 
 - [概要](#概要)
-- [プレビュー](#-プレビュー)
+- [スクリーンショット](#-スクリーンショット)
 - [機能](#-機能)
 - [クイックスタート](#-クイックスタート)
 - [アーキテクチャ](#-アーキテクチャ)
@@ -49,68 +49,68 @@
 - [開発](#-開発)
 - [互換性](#-互換性)
 - [ローカライズ](#-ローカライズ)
-- [録音音声](#-録音済み音声)
+- [収録済み音声](#-収録音声)
 - [データストレージ](#-データストレージ)
-- [問題の報告](#-問題を報告する)
+- [問題を報告する](#-問題を報告する)
 - [ライセンス](#-ライセンス)
 
 ## 概要
 
-LeapMultix は、6歳から12歳までの子どもが、乗算（×）、加算（+）、減算（−）、除算（÷）という4つの算術演算を習得するための、インタラクティブな教育用ウェブアプリケーションです。直感的でアクセシブルな多言語インターフェース上で、**5つのゲームモード**と**4つのアーケードミニゲーム**を提供します。
+LeapMultixは、6歳から12歳までの子どもが、掛け算（×）、足し算（+）、引き算（−）、割り算（÷）という4つの算術演算を習得するためのインタラクティブな教育用Webアプリケーションです。直感的でアクセシブルな多言語インターフェースに、**5つのゲームモード**と**4つのアーケードミニゲーム**を備えています。
 
-**複数演算への対応：** 5つのモードすべてで4種類の演算を利用できます。演算はホーム画面で選択し、その後のすべての進行に適用されます。
+**複数演算への対応：** 5つのモードすべてで4つの演算を利用できます。演算はホーム画面で選択し、その後の全行程に適用されます。
 
 **開発者：** Julien LS（contact@jls42.org）
 
 **オンラインURL：** https://leapmultix.jls42.org/
 
-## 📸 プレビュー
+## 📸 スクリーンショット
 
-### 画面
+### 各画面
 
-|                                                                                                         |                                                                                                  |
-| :-----------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------: |
-|                  ![「誰が遊ぶ？」画面：プロフィールの選択](docs/media/01-accueil.webp)                  |               ![メインメニュー：演算と5つのモードの選択](docs/media/02-menu.webp)                |
-|             **誰が遊ぶ？** — 子どもごとに、アバターと進捗を持つプロフィールを用意できます。             |                 **メニュー** — ここで演算を選択してから、5つのモードを開きます。                 |
-|                      ![発見モード：点で表した4の段](docs/media/03-decouverte.webp)                      |               ![クイズモード：不正解は赤、正解は緑で表示](docs/media/04-quiz.webp)               |
-|            **発見** — 各等式を点、ジャンプ、または数え上げで示し、その段のコツも表示します。            |   **クイズ** — 子どもが選んだ答えを正解の横に表示したままにし、解説で計算を詳しく説明します。    |
-|             ![チャレンジモード：カウントダウンと現在の連続正解数](docs/media/05-defi.webp)              | ![アドベンチャーモード：全10レベルのマップとロックされた次のレベル](docs/media/06-aventure.webp) |
-| **チャレンジ** — 時間との勝負です。間違えると、正解を読む時間を確保するためにタイマーが一時停止します。 |           **アドベンチャー** — 星を獲得しながら、10のレベルを順番に開放していきます。            |
-|                    ![アーケードメニュー：4つのミニゲーム](docs/media/07-arcade.webp)                    |             ![ダッシュボード：段ごとの星と統計](docs/media/08-tableau-de-bord.webp)              |
-|                **アーケード** — 難易度の設定と宇宙船の選択ができる4つのミニゲームです。                 |         **ダッシュボード** — 段ごとの星、復習が必要な段、モード別のスコアを表示します。          |
-|        ![カスタマイズ：アバター、テーマ、アクセシビリティ](docs/media/09-personnalisation.webp)         |                                                                                                  |
-|  **カスタマイズ** — アバター、配色テーマ、文字サイズ、ハイコントラスト、保護者用コードを設定できます。  |                                                                                                  |
+|                                                                                                       |                                                                                                    |
+| :---------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
+|              ![「誰がプレイする？」画面：プロフィールの選択](docs/media/01-accueil.webp)              |                ![メインメニュー：演算と5つのモードの選択](docs/media/02-menu.webp)                 |
+|         **誰がプレイする？** — 子どもごとに、アバターと進捗を持つプロフィールを作成できます。         |                 **メニュー** — ここで演算を選択してから、5つのモードを開始します。                 |
+|                     ![発見モード：4の段を点で表示](docs/media/03-decouverte.webp)                     |                ![クイズモード：不正解を赤、正解を緑で表示](docs/media/04-quiz.webp)                |
+|          **発見** — それぞれの等式を点、ジャンプ、数え上げで示し、その段のコツも紹介します。          |    **クイズ** — 子どもが選んだ答えを正解の横に表示したまま、解説で計算方法を詳しく説明します。     |
+|            ![チャレンジモード：カウントダウンと現在の連続正解数](docs/media/05-defi.webp)             | ![アドベンチャーモード：次のステージがロックされた10ステージのマップ](docs/media/06-aventure.webp) |
+|          **チャレンジ** — 時間との勝負です。間違えると、正解を読む間はタイマーが停止します。          |           **アドベンチャー** — 星を獲得しながら、10のステージを順番に解放していきます。            |
+|                   ![アーケードメニュー：4つのミニゲーム](docs/media/07-arcade.webp)                   |              ![ダッシュボード：段ごとの星と統計](docs/media/08-tableau-de-bord.webp)               |
+|                **アーケード** — 難易度設定と宇宙船の選択ができる4つのミニゲームです。                 |         **ダッシュボード** — 段ごとの星、復習すべき段、モードごとのスコアを確認できます。          |
+|       ![カスタマイズ：アバター、テーマ、アクセシビリティ](docs/media/09-personnalisation.webp)        |                                                                                                    |
+| **カスタマイズ** — アバター、配色テーマ、文字サイズ、ハイコントラスト、保護者用コードを設定できます。 |                                                                                                    |
 
 ### アーケードミニゲーム
 
-4つのゲームでは、プレイエリアの上に残り時間とライフとともに表示される同じ問題に答えますが、ゲームごとに異なる操作が必要です。
+4つのゲームでは、プレイ領域の上に残り時間やライフとともに表示される同じ問題に答えますが、ゲームごとに異なる操作が求められます。
 
-|                                                                                                                |                                                                                    |
-| :------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------: |
-|       ![MultiInvaders：数字を身につけたモンスターと、画面下部の宇宙船](docs/media/10-multiinvaders.webp)       | ![MultiMiam：選択可能な答えが付いたドットのある迷路](docs/media/11-multimiam.webp) |
-| **MultiInvaders** — 間違った答えを撃ち、正解は撃たずに残します。正解の後ろには、救出すべき仲間が隠れています。 |     **MultiMiam** — モンスターを避けながら迷路を進み、正しい答えを捕まえます。     |
-|  ![MultiMemory：カードのグリッドと、計算式と数字を表示した2枚の表向きカード](docs/media/12-multimemory.webp)   |   ![MultiSnake：草原にいるヘビと番号付きのリンゴ](docs/media/13-multisnake.webp)   |
-|              **MultiMemory** — 裏返された計算カードの答えが書かれたカードを記憶から探し出します。              |    **MultiSnake** — 正しい数字を食べて成長し、それ以外の数字をすべて避けます。     |
+|                                                                                                            |                                                                                      |
+| :--------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: |
+|     ![MultiInvaders：数字を身につけたモンスターと、画面下部の宇宙船](docs/media/10-multiinvaders.webp)     | ![MultiMiam：選択肢となる答えが付いたドットのある迷路](docs/media/11-multimiam.webp) |
+| **MultiInvaders** — 間違った答えを撃ち、正解は撃たずに残します。正解の中には、救出する仲間が隠れています。 |      **MultiMiam** — モンスターを避けながら迷路を進み、正しい答えを捕まえます。      |
+|  ![MultiMemory：計算式と数字を示す2枚のカードがめくられたカードグリッド](docs/media/12-multimemory.webp)   |    ![MultiSnake：草原にいるヘビと数字付きのリンゴ](docs/media/13-multisnake.webp)    |
+|              **MultiMemory** — めくられた計算式の答えが書かれたカードを記憶から探し出します。              |     **MultiSnake** — 正しい数字を食べて成長し、それ以外の数字をすべて避けます。      |
 
 ## ✨ 機能
 
 ### 🎮 ゲームモード
 
-- **発見モード**：各演算に適した視覚的でインタラクティブな学習
-- **クイズモード**：4種類の演算（×、+、−、÷）に対応した選択問題と適応型の進捗
-- **チャレンジモード**：4種類の演算（×、+、−、÷）と複数の難易度を備えたタイムアタック
-- **アドベンチャーモード**：4種類の演算に対応した、レベルごとに進むストーリー形式の進行
+- **発見モード**：各演算に合わせた視覚的でインタラクティブな学習
+- **クイズモード**：4つの演算（×、+、−、÷）に対応した選択式問題と適応型の進行
+- **チャレンジモード**：4つの演算（×、+、−、÷）と複数の難易度に対応した時間制チャレンジ
+- **アドベンチャーモード**：4つの演算に対応した、物語形式のステージ進行
 
 ### 🕹️ アーケードミニゲーム
 
-- **MultiInvaders**：教育版 Space Invaders - 間違った答えを破壊
-- **MultiMiam**：算数版 Pac-Man - 正しい答えを収集
-- **MultiMemory**：記憶ゲーム - 演算と答えを組み合わせる
-- **MultiSnake**：教育版 Snake - 正しい数字を食べて成長
+- **MultiInvaders**：教育版Space Invaders - 間違った答えを破壊します
+- **MultiMiam**：算数版Pac-Man - 正しい答えを集めます
+- **MultiMemory**：記憶ゲーム - 演算と答えを組み合わせます
+- **MultiSnake**：教育版Snake - 正しい数字を食べて成長します
 
 ### ➕ 複数演算への対応
 
-LeapMultix では、**すべてのモード**で4種類の算術演算を総合的に練習できます。
+LeapMultixでは、**すべてのモード**で4つの算術演算を総合的に練習できます。
 
 | モード         | ×   | +   | −   | ÷   |
 | -------------- | --- | --- | --- | --- |
@@ -122,12 +122,12 @@ LeapMultix では、**すべてのモード**で4種類の算術演算を総合�
 
 ### 🌍 共通機能
 
-- **マルチユーザー**：保存された進捗を持つ個別プロフィールの管理
-- **多言語対応**：フランス語、英語、スペイン語に対応
+- **複数ユーザー**：保存される進捗を備えた個別プロフィールの管理
+- **多言語対応**：フランス語、英語、スペイン語をサポート
 - **カスタマイズ**：アバター、配色テーマ、背景
 - **アクセシビリティ**：キーボード操作、タッチ操作、WCAG 2.1 AA準拠
-- **録音音声**：合成音声で事前録音された問題と励ましの言葉（ElevenLabs で作成）を再生し、利用できない場合は端末の音声へ自動的に切り替えます。音声クリップは公開リポジトリには含まれません（[録音音声](#-録音済み音声)を参照）
-- **モバイル対応**：タブレットとスマートフォンに最適化されたインターフェース
+- **収録済み音声**：事前収録された合成音声（フランス語はElevenLabsで作成したLucie、英語はMistral AIで作成したJane）による問題と励ましの読み上げに対応し、端末の音声へ自動的にフォールバックします。音声クリップは公開リポジトリには含まれていません（[収録済み音声](#-収録音声)を参照）
+- **モバイル対応**：タブレットとスマートフォン向けに最適化されたインターフェース
 - **進捗システム**：スコア、バッジ、デイリーチャレンジ
 
 ## 🚀 クイックスタート
@@ -135,7 +135,7 @@ LeapMultix では、**すべてのモード**で4種類の算術演算を総合�
 ### 前提条件
 
 - Node.js（バージョン16以降）
-- 最新のウェブブラウザ
+- 最新のWebブラウザ
 
 ### インストール
 
@@ -210,8 +210,9 @@ npm run sw:fix         # Corriger les problèmes de service worker
 # Voix enregistrée (poste du propriétaire, clips hors dépôt)
 npm run voice:corpus       # Résumé des phrases dites, par langue
 npm run voice:corpus:lock  # Mettre à jour le verrou du corpus
-npm run voice:generate     # Générer les clips (ElevenLabs)
+npm run voice:generate     # Générer les clips (ElevenLabs ou Mistral)
 npm run voice:check        # Contrôler les clips (fichiers, MP3, Whisper)
+npm run voice:review       # Whisper, contrôle et page d'écoute en une commande
 npm run voice:listen       # Page d'écoute : clips signalés, avant/après
 npm run voice:publish      # Publier les clips et l'index de la langue
 npm run voice:check-online # Vérifier les clips servis en ligne
@@ -221,7 +222,7 @@ npm run voice:check-online # Vérifier les clips servis en ligne
 
 ### ファイル構成
 
-JavaScript モジュールは、`core/`、`components/`、`modes/` の3つのフォルダーを除き、**`js/` の直下に配置されています**。そのため、ファイル名によってグループ分けが示されます（`arcade-*`、`multimiam-*`、`i18n*`…）。
+JavaScriptモジュールは、`core/`、`components/`、`modes/`の3つのフォルダーを除き、**`js/`直下にフラットに配置**されています。そのため、ファイル名がグループ分けを表します（`arcade-*`、`multimiam-*`、`i18n*`…）。
 
 ```
 leapmultix/
@@ -279,36 +280,36 @@ leapmultix/
 
 ### 技術アーキテクチャ
 
-**最新の ES6 モジュール**：プロジェクトでは、ES6 クラスとネイティブの import/export を使用したモジュール式アーキテクチャを採用しています。
+**最新のES6モジュール**：このプロジェクトでは、ES6クラスとネイティブなimport/exportを使用するモジュール式アーキテクチャを採用しています。
 
-**再利用可能なコンポーネント**：一元管理された UI コンポーネント（TopBar、InfoBar、Dashboard、Customization）で構築されたインターフェースです。
+**再利用可能なコンポーネント**：一元管理されたUIコンポーネント（TopBar、InfoBar、Dashboard、Customization）でインターフェースを構築しています。
 
-**Lazy Loading**：初期パフォーマンスを最適化するため、`lazy-loader.js` を通じて必要に応じてモジュールを効率的に読み込みます。
+**Lazy Loading**：初期パフォーマンスを最適化するため、`lazy-loader.js`を介して必要に応じてモジュールを効率的に読み込みます。
 
-**統合ストレージシステム**：フォールバックを備えた LocalStorage により、ユーザーデータを永続化するための一元化された API を提供します。
+**統合ストレージシステム**：フォールバックを備えたLocalStorageを介し、一元化されたAPIでユーザーデータを永続化します。
 
-**一元化された音声管理**：多言語対応とユーザーごとの設定を備えたサウンド制御です。
+**一元化された音声管理**：多言語対応とユーザーごとの設定を備えたサウンド制御を行います。
 
-**Event Bus**：保守しやすいアーキテクチャを実現するため、コンポーネント間で疎結合なイベント通信を行います。
+**Event Bus**：保守しやすいアーキテクチャのため、コンポーネント間で疎結合なイベント通信を行います。
 
-**スライドによるナビゲーション**：`goToSlide()` を使用した、番号付きスライド（slide0、slide1 など）に基づくナビゲーションシステムです。
+**スライド式ナビゲーション**：`goToSlide()`を使用した、番号付きスライド（slide0、slide1など）に基づくナビゲーションシステムです。
 
-**セキュリティ**：すべての DOM 操作に対して、`security-utils.js` による XSS 対策とサニタイズを行います。
+**セキュリティ**：すべてのDOM操作で`security-utils.js`によるXSS対策とサニタイズを実施します。
 
 ## 🎯 ゲームモードの詳細
 
 ### 発見モード
 
-次の機能を備えた、九九を視覚的に学習するためのインターフェースです。
+次の機能を備えた、掛け算の九九を視覚的に学ぶためのインターフェースです。
 
-- 乗算のインタラクティブな視覚化
-- アニメーションと覚え方のヒント
+- 掛け算のインタラクティブな視覚化
+- アニメーションと記憶を助けるヒント
 - 教育的なドラッグ＆ドロップ
 - 段ごとに自由に進められる学習
 
 ### クイズモード
 
-次の機能を備えた選択問題です。
+次の機能を備えた選択式問題です。
 
 - 1セッションにつき10問
 - 正答状況に応じた適応型の進行
@@ -317,44 +318,44 @@ leapmultix/
 
 ### チャレンジモード
 
-次の機能を備えたタイムアタックです。
+次の機能を備えた時間制チャレンジです。
 
 - 3段階の難易度（初級、中級、上級）
-- 正解時の時間ボーナス
+- 正解時の制限時間ボーナス
 - ライフシステム
 - ハイスコアランキング
 
 ### アドベンチャーモード
 
-次の機能を備えたストーリー形式の進行です。
+次の機能を備えた物語形式の進行です。
 
-- 開放可能な10のテーマ別レベル
-- 進捗を視覚化するインタラクティブマップ
-- キャラクターとともに楽しめる没入感のある物語
+- 解放可能なテーマ別の10ステージ
+- 進捗を視覚的に示すインタラクティブマップ
+- キャラクターが登場する没入感のある物語
 - 星と報酬のシステム
 
 ### アーケードミニゲーム
 
-各ミニゲームには、次の機能があります。
+各ミニゲームには次の機能があります。
 
 - 難易度の選択とカスタマイズ
 - ライフとスコアのシステム
-- キーボードとタッチ操作
+- キーボードとタッチによる操作
 - ユーザーごとの個別ランキング
 
 ## 🔧 開発
 
 ### 開発ワークフロー
 
-**main に直接コミットしないでください。** このプロジェクトでは、機能ブランチを使用して作業します。
+**mainへ直接コミットしないでください。** このプロジェクトでは機能ブランチを使用します。
 
-**1. ブランチを作成します。** 機能開発には `feat/`、修正には `fix/` を使用します。
+**1. ブランチを作成します。** 機能開発には`feat/`、バグ修正には`fix/`を使用します。
 
 ```bash
 git checkout -b feat/nom-de-la-fonctionnalite
 ```
 
-**2. 開発して検証します。** 最初にフォーマットを行ってください。CI はテストを実行する前に、フォーマット違反を理由に処理を拒否します。
+**2. 開発して検証します。** 最初にフォーマットを確認してください。CIはテストを実行する前にフォーマット違反を検出して失敗します。
 
 ```bash
 npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
@@ -372,11 +373,11 @@ git commit -m "feat: description de la fonctionnalité"
 git push -u origin feat/nom-de-la-fonctionnalite
 ```
 
-**4. pull request を開き**、verify、Codacy、CodeFactor、SonarCloud の解析が完了するまで待ちます。すべて成功するまで修正してからマージします。
+**4. pull requestを作成**し、verify、Codacy、CodeFactor、SonarCloudの解析を待ちます。すべて成功するまで修正してからマージします。
 
-**コミットのスタイル**：簡潔な命令形のメッセージ（例："Fix arcade init errors"、"Refactor cache updater"）
+**コミット形式**：簡潔な命令形のメッセージ（例："Fix arcade init errors"、"Refactor cache updater"）
 
-**品質ゲート**：各コミットの前に、`npm run lint`、`npm test`、`npm run test:coverage` が成功することを確認してください
+**Quality gate**：各コミットの前に`npm run lint`、`npm test`、`npm run test:coverage`が成功することを確認してください
 
 ### コンポーネントアーキテクチャ
 
@@ -384,17 +385,17 @@ git push -u origin feat/nom-de-la-fonctionnalite
 
 **GameModeManager**：モードの起動と管理を一元的に統括します。
 
-**UI コンポーネント**：TopBar、InfoBar、Dashboard、Customization が一貫したインターフェースを提供します。
+**UIコンポーネント**：TopBar、InfoBar、Dashboard、Customizationによって一貫性のあるインターフェースを提供します。
 
 **Lazy Loading**：初期パフォーマンスを最適化するため、必要に応じてモジュールを読み込みます。
 
-**Event Bus**：イベントシステムを通じて、コンポーネント間の通信を疎結合にします。
+**Event Bus**：イベントシステムを介した、コンポーネント間の疎結合な通信を行います。
 
 ### テスト
 
-プロジェクトには、包括的なテストスイートが含まれています。
+このプロジェクトには包括的なテストスイートが含まれています。
 
-- core モジュールの単体テスト
+- coreモジュールの単体テスト
 - コンポーネントの統合テスト
 - ゲームモードのテスト
 - 自動コードカバレッジ
@@ -407,12 +408,12 @@ npm test:coverage     # Rapport de couverture
 npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 ```
 
-### 本番用ビルド
+### 本番ビルド
 
-- **Rollup**：`js/main-es6.js` を、コード分割とソースマップを備えた ESM としてバンドル
-- **Terser**：最適化のための自動ミニファイ
-- **ビルド後処理**：`css/` と `assets/`、favicon（`favicon.ico`、`favicon.png`、`favicon.svg`）、`sw.js` をコピーし、`dist/index.html` をハッシュ付きエントリーファイル（例：`main-es6-*.js`）へ書き換え
-- **最終フォルダー**：静的配信の準備が整った `dist/`
+- **Rollup**：`js/main-es6.js`を、code-splittingとsourcemapを備えたESMとしてbundle化
+- **Terser**：最適化のための自動minify
+- **Post-build**：`css/`と`assets/`、favicon（`favicon.ico`、`favicon.png`、`favicon.svg`）、`sw.js`をコピーし、`dist/index.html`をハッシュ付きエントリーファイル（例：`main-es6-*.js`）へ書き換え
+- **最終フォルダー**：静的配信の準備が整った`dist/`
 
 ```bash
 npm run build      # génère dist/
@@ -421,53 +422,53 @@ npm run serve:dist # sert dist/ (port 5000)
 
 ### 継続的インテグレーション
 
-**GitHub Actions**：`.github/workflows/ci.yml` は、`main` への push および各 pull request で実行されます。
+**GitHub Actions**：`.github/workflows/ci.yml`は、`main`へのpushおよび各pull requestで実行されます。
 
-**`verify`** — 処理をブロックする品質ゲート：
+**`verify`** — ブロッキング方式のQuality gateです。
 
-- `npm ci`、続いて `npm run verify`（ESLint、Jest テスト、カバレッジ）
+- `npm ci`、続いて`npm run verify`（ESLint、Jestテスト、カバレッジ）
 - `npm run format:check`（Prettier）
 
-**`seo-report`** — `verify` の後に、公開中のサイトを Lighthouse で監査し、SEO 指標を継続的に追跡します。
+**`seo-report`** — `verify`の後にオンラインサイトのLighthouse監査を実行し、SEO指標を長期的に追跡します。
 
-**pull request に連携された外部解析**：Codacy、CodeFactor、SonarCloud。SonarCloud の品質ゲートでは、新しいコードの信頼性、セキュリティ、保守性について、すべて A 評価が求められます。
+pull requestにはCodacy、CodeFactor、SonarCloudの**外部解析**が組み込まれています。SonarCloudのQuality gateでは、新規コードの信頼性、セキュリティ、保守性について評価Aが求められます。
 
-**デプロイ**：`./deploy.sh` はサイトを S3 に同期し、CloudFront のキャッシュを無効化します。必要に応じて、git に含まれていないレスポンシブ画像をスクリプトが再生成します。
+**デプロイ**：`./deploy.sh`はサイトをS3に同期し、CloudFrontのキャッシュを無効化します。このスクリプトは、gitに含まれていないレスポンシブ画像を必要に応じて再生成します。
 
 ### PWA（Progressive Web App）
 
-LeapMultix は、オフライン対応とインストール機能を備えた完全な PWA です。
+LeapMultixは、オフライン対応とインストール機能を備えた完全なPWAです。
 
 **Service Worker**（`sw.js`）：
 
-- ナビゲーション：Network-first を使用し、オフライン時は `offline.html` にフォールバック
-- 画像：パフォーマンスを最適化するための Cache-first
-- 翻訳：バックグラウンドで更新するための Stale-while-revalidate
-- JS/CSS：常に最新バージョンを配信するための Network-first
-- `cache-updater.js` による自動バージョン管理
+- ナビゲーション：Network-firstを使用し、オフライン時は`offline.html`へフォールバック
+- 画像：パフォーマンスを最適化するCache-first
+- 翻訳：バックグラウンド更新を行うStale-while-revalidate
+- JS/CSS：常に最新バージョンを配信するNetwork-first
+- `cache-updater.js`による自動バージョン管理
 
 **Manifest**（`manifest.json`）：
 
-- すべてのデバイス向けの SVG および PNG アイコン
-- モバイル端末にインストール可能（ホーム画面に追加）
-- アプリのような操作感を実現する standalone 構成
-- テーマと配色に対応
+- あらゆる端末向けのSVGおよびPNGアイコン
+- モバイル端末へのインストールに対応（Add to Home Screen）
+- アプリのような操作感を実現するstandalone設定
+- テーマと配色をサポート
 
-**オフラインモードをローカルでテストします。** サーバーを起動し、`http://localhost:8080`（または表示されたポート）を開きます。
+**ローカルでオフラインモードをテストします。** サーバーを起動してから、`http://localhost:8080`（または表示されたポート）を開きます。
 
 ```bash
 npm run serve
 ```
 
-手動の場合：開発者ツール（ネットワークタブ、オフラインモード）でネットワークを切断し、ページを再読み込みします。`offline.html` が表示される必要があります。
+手動の場合：開発者ツールのネットワークタブでネットワークを切断してオフラインモードにし、ページを再読み込みします。`offline.html`が表示される必要があります。
 
-Puppeteer を使用して自動的に行う場合：
+Puppeteerを使用して自動的に行う場合：
 
 ```bash
 npm run test:pwa-offline
 ```
 
-**Service Worker 管理スクリプト**：
+**Service Worker管理スクリプト**：
 
 ```bash
 npm run sw:disable  # Désactiver le service worker
@@ -478,7 +479,7 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 **コード品質ツール**：
 
-- **ESLint**：flat config（`eslint.config.js`）を使用した最新の設定、ES2022 対応
+- **ESLint**：flat config（`eslint.config.js`）を使用したモダンな設定、ES2022 対応
 - **Prettier**：コードの自動フォーマット（`.prettierrc`）
 - **Stylelint**：CSS の検証（`.stylelintrc.json`）
 - **JSDoc**：カバレッジ分析を伴う関数ドキュメントの自動生成
@@ -486,7 +487,7 @@ npm run sw:fix      # Corriger les problèmes de cache
 **重要なコーディング規則**：
 
 - 未使用の変数とパラメーターを削除する（`no-unused-vars`）
-- 具体的なエラー処理を使用する（空の catch を使用しない）
+- 具体的なエラー処理を使用する（空の catch は使用しない）
 - `innerHTML` を避け、`security-utils.js` 関数を使用する
 - 関数の認知的複雑度を 15 未満に保つ
 - 複雑な関数を、より小さなヘルパーに分割する
@@ -494,9 +495,9 @@ npm run sw:fix      # Corriger les problèmes de cache
 **セキュリティ**：
 
 - **XSS 対策**：`security-utils.js` の関数を使用する：
-  - `innerHTML` の代わりに `appendSanitizedHTML()` を使用する
-  - 安全な要素の作成には `createSafeElement()` を使用する
-  - テキストコンテンツには `setSafeMessage()` を使用する
+  - `innerHTML` の代わりに `appendSanitizedHTML()`
+  - 安全な要素の作成には `createSafeElement()`
+  - テキストコンテンツには `setSafeMessage()`
 - **外部スクリプト**：`crossorigin="anonymous"` 属性を必須とする
 - **入力検証**：外部データを必ずサニタイズする
 - **Content Security Policy**：スクリプトの取得元を制限する CSP ヘッダー
@@ -504,14 +505,14 @@ npm run sw:fix      # Corriger les problèmes de cache
 **アクセシビリティ**：
 
 - WCAG 2.1 AA 準拠
-- 完全なキーボード操作
+- 完全なキーボードナビゲーション
 - 適切な ARIA ロールとラベル
 - 基準に準拠した色のコントラスト
 
 **パフォーマンス**：
 
 - `lazy-loader.js` によるモジュールの遅延読み込み
-- CSS の最適化とレスポンシブ対応アセット
+- CSS の最適化とレスポンシブアセット
 - インテリジェントなキャッシュのための Service Worker
 - 本番環境でのコード分割と圧縮
 
@@ -519,7 +520,7 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 ### 対応ブラウザー
 
-インターフェースでは、色に `oklch()`、コンテキストに応じた状態に `:has()` を使用しているため、最低要件は次のとおりです：
+インターフェースでは、色に `oklch()`、コンテキストに応じた状態に `:has()` を使用しているため、最低対応バージョンは次のとおりです：
 
 - Chrome / Chromium 111+
 - Edge 111+
@@ -530,11 +531,11 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 - **デスクトップ**：キーボードとマウスによる操作
 - **タブレット**：タッチ操作に最適化されたインターフェース
-- **スマートフォン**：画面に適応するレスポンシブデザイン
+- **スマートフォン**：適応型レスポンシブデザイン
 
 ### アクセシビリティ
 
-- 完全なキーボード操作（Tab、矢印キー、Esc）
+- 完全なキーボードナビゲーション（Tab、矢印キー、Esc）
 - スクリーンリーダー向けの ARIA ロールとラベル
 - 基準に準拠した色のコントラスト
 - 支援技術への対応
@@ -543,7 +544,7 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 完全な多言語対応：
 
-- **フランス語**（デフォルト言語）
+- **フランス語**（既定の言語）
 - **英語**
 - **スペイン語**
 
@@ -567,7 +568,7 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 **`npm run i18n:unused`** - 未使用の翻訳キーを一覧表示する
 
-**`npm run i18n:compare`** - 翻訳ファイルを fr.json（基準）と比較する
+**`npm run i18n:compare`** - 翻訳ファイルを fr.json（基準ファイル）と比較する
 
 このスクリプト（`scripts/compare-translations.cjs`）は、すべての言語ファイルの同期を保証します：
 
@@ -575,9 +576,9 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 - 不足しているキーの検出（fr.json には存在するが、ほかの言語には存在しないキー）
 - 余分なキーの検出（ほかの言語には存在するが、fr.json には存在しないキー）
-- 空の値の特定（`""`、`null`、`undefined`、`[]`）
+- 空の値（`""`、`null`、`undefined`、`[]`）の特定
 - 型の整合性確認（string と array）
-- ネストされた JSON 構造をドット記法へ平坦化（例：`arcade.multiMemory.title`）
+- ネストされた JSON 構造をドット記法で平坦化（例：`arcade.multiMemory.title`）
 - 詳細なコンソールレポートの生成
 - JSON レポートを `docs/translations-comparison-report.json` に保存
 
@@ -606,28 +607,33 @@ npm run sw:fix      # Corriger les problèmes de cache
 ✅ Tous les fichiers de traduction sont parfaitement synchronisés !
 ```
 
-**翻訳対象：**
+**翻訳範囲：**
 
 - ユーザーインターフェース全体
 - ゲームの説明
-- エラーおよびフィードバックメッセージ
+- エラーとフィードバックのメッセージ
 - 説明文とコンテキストヘルプ
 - アドベンチャーモードの物語コンテンツ
-- アクセシビリティおよび ARIA ラベル
+- アクセシビリティ用ラベルと ARIA ラベル
 
-## 🔊 録音済み音声
+## 🔊 収録音声
 
-ゲームは、問題、励ましの言葉、解説を音声で読み上げます。フランス語では、ElevenLabs（Eleven v3 モデル）で作成された合成音声の **Lucie** を使用します。ゲームが読み上げるフレーズは言語ごとに約 7,400 件の有限のセットに限られており、すべて事前に録音されているため、ElevenLabs を呼び出す箇所はありません。英語とスペイン語では、現時点ではデバイスの音声を使用します。
+ゲームでは、事前に合成・収録された音声で、問題、励ましの言葉、説明を読み上げます：
 
-- フレーズごとのデバイス音声への**自動フォールバック**：クリップが存在しないかエラーになった場合、ブラウザーに再生を拒否された場合、クリップが 1.5 秒以内に再生を開始しない場合、またはオフライン時にクリップがキャッシュされていない場合。
-- **設定**：上部バーの音声ボタンで読み上げのオンとオフを切り替えます。「録音済み音声」チェックボックス（アクセシビリティと操作）で、Lucie とデバイスの音声を切り替えます。
+- フランス語では、ElevenLabs（Eleven v3 モデル）で作成された **Lucie**；
+- 英語では、Mistral AI（Voxtral TTS）で作成された **Jane**。
+
+ゲームが読み上げるのは、言語ごとに約 7,400 個の有限のフレーズだけです。すべて事前に収録されており、音声合成サービスを呼び出すことはありません。スペイン語では、現時点ではデバイスの音声を使用します。
+
+- フレーズごとの**デバイス音声への自動フォールバック**：クリップが存在しないかエラーになった場合、ブラウザーが再生を拒否した場合、クリップが 1.5 秒以内に開始されない場合、またはオフライン時にクリップがキャッシュされていない場合。
+- **設定**：上部バーの音声ボタンで読み上げを有効または無効にします。「収録音声」チェックボックス（アクセシビリティと操作）で、収録音声（Lucie または Jane）とデバイスの音声を切り替えます。
 - **オフライン**：一度再生されたクリップはキャッシュに保持されます（service worker）。
 
 ### クリップはこのリポジトリに含まれていません
 
-クリップは非公開リポジトリと専用の S3 bucket に保存され、`/voice/*` の CloudFront から配信されます。そのため、フォークやローカル開発ではデバイスの音声が使用されます。リポジトリ内では `<meta name="leapmultix-voice-base">` タグが空であり、本番デプロイ時にのみ `/voice/` が書き込まれます。
+クリップは非公開リポジトリと専用の S3 バケットに保存され、`/voice/*` 上の CloudFront を通じて配信されます。そのため、フォークやローカル開発ではデバイスの音声が使用されます。リポジトリ内では `<meta name="leapmultix-voice-base">` タグは空で、本番デプロイ時にのみ `/voice/` が書き込まれます。
 
-クリップがローカル環境にある場合（ゲームの隣の `../leapmultix-voices` に非公開リポジトリをクローン）、`?voix=local` パラメーターを指定すると、開発サーバーからクリップが読み込まれます：
+ローカル環境にクリップがある場合（ゲームの隣に `../leapmultix-voices` として非公開リポジトリをクローン）、`?voix=local` パラメーターにより開発サーバーからクリップを再生できます：
 
 ```bash
 npm run voice:publish -- local --lang fr --audience all --default-on   # relie voice/ (ignoré par git) aux clips
@@ -637,30 +643,29 @@ npm run serve
 
 ### クリップを生成する
 
-処理手順は `scripts/voice/` にスクリプト化されており、公開 CI では決して実行せず、所有者のローカル環境で実行します。ElevenLabs のキーはリポジトリ外の `.env` ファイルに保持し、`node --env-file` を介して渡します。キーが git に含まれることはありません。Claude Code の skill [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) では、手順（確認事項、承認、再実行）を段階的に案内しています。詳細は [`docs/voix-enregistree.md`](docs/voix-enregistree.md) にあります。
+処理フローは `scripts/voice/` にスクリプト化されており、所有者のローカル環境で実行されます。公開 CI では決して実行されません。プロバイダーのキー（フランス語には ElevenLabs、英語には Mistral）は、リポジトリ外の `.env` ファイルに保存され、`node --env-file` を介して渡されます。キーが git に入ることはありません。Claude Code スキルの [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) には、手順（確認段階、承認、再開）が段階的に記載されています。詳細は [`docs/voix-enregistree.md`](docs/voix-enregistree.md) にあります。
 
-1. **見積もる**：残りのフレーズ数と課金対象の文字数を見積もります（Eleven v3：約 0.53 クレジット／文字）。
-2. **生成する**：同じコマンドを再実行すると、不足分から再開されます。クレジットを使い切ると、書きかけのファイルを残さず、スクリプトが正常に停止します（コード 3）。
-3. **検証する**：各フレーズにクリップがあり、各 MP3 が有効であることを確認します。その後、Whisper が各クリップをローカルで文字起こしし、`voice:check` が聞き間違えられた数字や異常な長さを検出します。
-4. **試聴する**：試聴ページ（`voice:listen`）で、検出されたクリップと、Whisper では区別できない女性形のサンプル（「une fois 7」）を確認します。各クリップには「再作成」チェックボックスがあり、選択すると除外クリップの一覧に追加されます。
-5. **再作成する**：除外したクリップを再作成し（`--redo`）、Whisper を再実行したうえで、2 番目のページで各クリップの変更前と変更後を比較します。2～3 回試しても発音が正しくならないクリップには、`SAID_OVERRIDES`（`scripts/voice/said-text.mjs`）で、たとえば数字をすべて文字で表記するなど、指定のテキストを設定します。
-6. **公開する**：クリップを公開してオンラインで応答することを確認し、まずテスター向けに言語インデックスを公開します（`?voix=test`）。
-7. **全員に音声を公開する**：その後、デフォルトで有効にします。緊急停止機能（`voice:publish -- remove`）によって言語をインデックスから削除すると、ゲームはデバイスの音声へ戻ります。
+1. **見積もる**：残りのフレーズ数と課金対象の文字数を見積もります（Eleven v3：1 文字あたり約 0.53 クレジット、Voxtral TTS：100 万文字あたり 16 ドル）。
+2. **生成する**：同じコマンドを再実行すると、不足分から再開します。クレジットを使い切ると、スクリプトは書きかけのファイルを残さず正常に停止します（終了コード 3）。`--max-total-chars` はバージョンごとの累積支出に上限を設定します。課金された各レスポンスは受信直後に台帳へ記録されるため、突然停止しても記録は保持されます。参照可能な残高を提供していない Mistral では、これが唯一の保護手段です。
+3. **検証する**：各フレーズにクリップがあり、各 MP3 が有効であることを確認します。その後、Whisper が各クリップをローカルで文字起こしし、検証処理が聞き間違えられた数字や異常な長さを検出します。`voice:review` は、Whisper、この検証、試聴ページを 1 つのコマンドで順に実行します。
+4. **試聴する**：試聴ページ（`voice:listen`）で、検出されたクリップと、Whisper では区別できない女性形（「une fois 7」）のサンプルを試聴します。各クリップには「再作成」チェックボックスがあり、選択すると除外クリップの一覧に追加されます。
+5. **再作成する**：除外されたクリップ（`--redo`）を再作成して Whisper を再実行し、2 つ目のページで各クリップの変更前と変更後を比較します。2、3 回試しても発音が不正確なクリップには、`SAID_OVERRIDES`（`scripts/voice/said-text.mjs`）で指定テキストを設定します。たとえば、数字をすべて文字で表記します。
+6. **公開する**：クリップを公開し、オンラインで応答することを確認してから、まずテスター向けに言語インデックスを公開します（`?voix=test`）。
+7. **全体公開する**：音声を全ユーザーに公開し、既定で有効にします。緊急停止機能（`voice:publish -- remove`）は対象言語をインデックスから削除し、ゲームをデバイスの音声へ戻します。
 
 ```bash
 # 1. Estimer (sans frais)
 npm run voice:generate -- --lang fr --dry-run
-# 2. Générer (payant)
-node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --reserve 5000
-# 3. Contrôler (Whisper s'installe une fois : voir l'en-tête de whisper_transcribe.py)
+# 2. Générer (payant), plafond cumulé en caractères ; --reserve protège les crédits ElevenLabs
+node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --reserve 5000 --max-total-chars <plafond>
+node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang en --max-total-chars <plafond>
+# 3. Contrôler : Whisper (installé une fois : voir l'en-tête de whisper_transcribe.py), contrôle, page d'écoute
+npm run voice:review -- --lang fr
 npm run voice:check -- --lang fr --probe
-.venv-whisper/bin/python scripts/voice/whisper_transcribe.py --manifest ../leapmultix-voices/manifests/fr/<version>.json --clips ../leapmultix-voices/clips/fr/<version> --lang fr --out transcripts-fr.jsonl
-npm run voice:check -- --lang fr --transcripts transcripts-fr.jsonl
-# 4. Écouter (page locale ; la liste « à refaire » va dans ecartes.txt)
-npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl
-# 5. Refaire (payant), relancer Whisper (il ne transcrit que les clips refaits), comparer
-node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --redo ecartes.txt
-npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl --compare ecartes.txt
+# 4. Écouter sur la page indiquée (la liste « à refaire » va dans ecartes.txt)
+# 5. Refaire (payant), puis comparer avant/après (Whisper ne transcrit que les clips refaits)
+node --env-file=<fichier .env hors dépôt> scripts/voice/generate.mjs --lang fr --redo ecartes.txt --max-total-chars <plafond>
+npm run voice:review -- --lang fr --compare ecartes.txt
 # 6. Publier
 npm run voice:publish -- clips --lang fr --bucket <bucket>
 npm run voice:check-online -- --lang fr
@@ -669,16 +674,16 @@ npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> -
 npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience all --default-on
 ```
 
-### 規則：読み上げるフレーズを変更した場合は、本番環境への反映前に再録音する
+### 規則：読み上げるフレーズを変更した場合、本番投入前に再収録する
 
-読み上げるすべてのフレーズは翻訳（`assets/translations/{fr,en,es}.json`）に由来し、コーパスの一部です。そのため、読み上げフレーズを変更すると、コーパスロックのテスト（`scripts/voice/corpus.lock.json`）が失敗します。録音済み音声がある言語では、変更されたフレーズのクリップを生成し、検証と試聴を行ってから、マージする**前に**公開します。最後にロックを更新します（`npm run voice:corpus:lock`）。これらのクリップがない場合、変更されたフレーズはデバイスの音声で読み上げられます。
+読み上げるすべてのフレーズは翻訳ファイル（`assets/translations/{fr,en,es}.json`）に由来し、コーパスの一部です。そのため、読み上げフレーズを変更すると、コーパスロックのテスト（`scripts/voice/corpus.lock.json`）が失敗します。収録音声がある言語では、変更対象フレーズのクリップを生成し、検証・試聴してから、マージする**前に**公開します。最後にロックを更新します（`npm run voice:corpus:lock`）。これらのクリップがない場合、変更されたフレーズはデバイスの音声で読み上げられます。
 
 ## 📊 データストレージ
 
 ### ユーザーデータ
 
 - プロフィールと設定
-- ゲームモードごとの進捗
+- ゲームモードごとの進行状況
 - アーケードゲームのスコアと統計
 - カスタマイズ設定
 
@@ -686,14 +691,14 @@ npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> -
 
 - フォールバックを備えたローカルストレージ（localStorage）
 - ユーザーごとのデータ分離
-- 進捗の自動保存
+- 進行状況の自動保存
 - 古いデータの自動移行
 
 ## 🐛 問題を報告する
 
-問題は GitHub の issue から報告できます。次の情報を含めてください：
+問題は GitHub の issue で報告できます。次の情報を含めてください：
 
-- 問題の詳細な説明
+- 問題の詳しい説明
 - 再現手順
 - ブラウザーとバージョン
 - 必要に応じてスクリーンショット
@@ -704,7 +709,7 @@ npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> -
 
 ## 📄 ライセンス
 
-このプロジェクトは AGPL v3 の下でライセンスされています。詳細については `LICENSE` ファイルを参照してください。
+このプロジェクトは AGPL v3 の下でライセンスされています。詳細は `LICENSE` ファイルをご覧ください。
 
 ---
 
