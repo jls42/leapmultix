@@ -16,7 +16,22 @@ place et ce qui vient ensuite.
     - Voix de bibliothèque `YxrwjAKoUKULGd0g8K9Y`, avec un préavis de retrait de 730 jours ;
       modèle Eleven v3.
     - Retenue après un banc d'écoute ; un essai sur la table de 7 a été validé sur téléphone.
-  - **Anglais : « Jane - Neutral »**, Mistral Voxtral TTS (`voxtral-mini-tts-2603`).
+  - **Anglais et espagnol : « Sulafat »**, Google Cloud Text-to-Speech, voix Chirp 3 HD
+    (`en-GB-Chirp3-HD-Sulafat`, `es-ES-Chirp3-HD-Sulafat`), depuis le 26/09/2026.
+    - Espagnol : Jane (ci-dessous), générée puis écartée à l'écoute pour son accent anglais.
+      Bancs de remplacement sur 13 phrases du corpus, dont trois avec 11 : 9 voix castillanes
+      de la bibliothèque Gemini (Gemini 3.8 Flash-Lite et Flash) et les 14 voix féminines
+      Chirp 3 HD en es-ES. Whisper : 129/130, 128/130 et 180/182, les seuls doutes de Chirp
+      portant sur « Modo Quiz ». Le propriétaire retient Sulafat en Chirp 3 HD.
+    - Anglais : banc de 11 phrases, Jane face à des voix « chaleureuses » de Google (Chirp 3
+      HD britannique et américain, 8 voix Gemini Flash). Le propriétaire retient Sulafat en
+      anglais britannique, comme Jane. Les clips de Jane restent en ligne.
+    - Coût : 30 $ le million de caractères, mais le premier million de chaque mois est offert.
+      L'espagnol et l'anglais, refaits compris, tiennent dans ce million : 0 $.
+    - Le texte dit espagnol garde **tous les nombres en lettres** : Sulafat les dit justes,
+      et l'écriture ne laisse aucune lecture au hasard.
+  - **Anglais jusqu'au 26/09/2026 : « Jane - Neutral »**, Mistral Voxtral TTS
+    (`voxtral-mini-tts-2603`).
     - Voix prête `82c99ee6-f932-423f-a4a3-d403c8914b8d`, femme, anglais britannique, avec
       un préavis de retrait (`retention_notice`) de 30.
     - Retenue le 25/09/2026 après un banc de 3 variantes × 24 phrases du corpus :
@@ -24,7 +39,7 @@ place et ce qui vient ensuite.
       - la plus nette et la plus régulière ;
       - 0,126 s par caractère sur les questions, contre 0,079 pour Lucie.
     - Mistral a été choisi pour son coût : environ 3,40 $ pour tout l'anglais.
-  - **Espagnol : Jane - Neutral aussi**, décidé le 26/09/2026. Mistral n'a aucune voix
+  - **Espagnol, essai écarté : Jane - Neutral**, le 26/09/2026. Mistral n'a aucune voix
     espagnole.
     - Banc des 30 voix prêtes : le propriétaire retient Jane, les autres ne convainquent pas.
     - En chiffres, Jane dit les nombres en anglais (« 7 por 8 » : charabia pour Whisper,
@@ -33,6 +48,7 @@ place et ce qui vient ensuite.
       l'accord devant un nom (« veintiún caramelos », « veintiuna manzanas »).
     - Coût : 323 098 caractères, environ 5,17 $ (3,58 $ en chiffres).
     - Jane reste une voix britannique qui parle espagnol : un hispanophone entend l'accent.
+      Les 7 437 clips (374 895 caractères payés, environ 6 $) n'ont pas été publiés.
 - **Corpus fini** : le jeu ne dit qu'environ 7 400 phrases par langue. Elles sont
   toutes enregistrées à l'avance ; aucun appel à un fournisseur pendant une partie.
 - **Format** : MP3 mono. Safari et iOS ne lisent l'Opus en WebM qu'à partir de 17.4
@@ -155,7 +171,7 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
 - **Réglage** : case « Voix enregistrée » dans Accessibilité et contrôles, visible là où la
   voix est disponible.
 - **Mention « voix de synthèse »**, dans la langue du jeu (`recorded_voice_hint`) : créée
-  avec ElevenLabs en français, avec Mistral AI en anglais et en espagnol.
+  avec ElevenLabs en français, avec Google Cloud Text-to-Speech en anglais et en espagnol.
   - Elle doit être en ligne **avant** l'entrée de la langue dans l'index, puisque la case
     s'affiche dès que la langue y entre.
   - La page parents et le README présentent aussi les voix.
@@ -199,16 +215,21 @@ CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sort
 
 **Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
 modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en français,
-`jane-v1-1` en anglais).
+`sulafat-v1-1` en anglais et en espagnol ; `jane-v1-1` pour Jane, l'ancienne voix anglaise).
 
 - Changer un réglage impose une nouvelle version : le générateur refuse de mélanger deux
   réglages sous une même version.
-- **Fournisseurs** (`scripts/voice/providers/`) : `elevenlabs.mjs` et `mistral.mjs`.
+- **Fournisseurs** (`scripts/voice/providers/`) : `elevenlabs.mjs`, `google.mjs` et
+  `mistral.mjs`.
   - Ils ont la même interface et partagent `common.mjs` : erreurs classées, lecture des
-    corps d'erreur, contrôle du MP3.
+    corps d'erreur, contrôle du MP3 ou du WAV.
+  - Google livre un WAV sans perte (LINEAR16) : son MP3 n'est qu'à 32 kb/s. Le brut garde
+    l'extension de son format (`.wav`).
   - Un autre moteur s'ajoute sans toucher au corpus, au texte dit ni au traitement.
-  - Chaque fournisseur a sa clé : `ELEVENLABS_API_KEY` ou `MISTRAL_API_KEY`, lue dans un
-    fichier `.env` hors dépôt.
+  - Chaque fournisseur a sa clé : `ELEVENLABS_API_KEY`, `GOOGLE_TTS_API_KEY` ou
+    `MISTRAL_API_KEY`, lue dans un fichier `.env` hors dépôt. Chez Google, une clé classique
+    (`AIza…`) restreinte à Cloud Text-to-Speech : ce service refuse les clés liées à un
+    compte de service (`AQ.…`).
 
 1. **Portes** : crédits ou solde suffisants, licence confirmée, et un plafond de caractères
    accordé par le propriétaire.
@@ -216,6 +237,8 @@ modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en françai
    restantes, leurs caractères et ce qui a déjà été payé pour la version (`billedChars`).
    - **ElevenLabs** : Eleven v3 décompte environ 0,53 crédit par caractère. Le coût vient de
      l'en-tête `character-cost` de chaque réponse et il est noté au manifeste.
+   - **Google** : 30 $ le million de caractères, le premier million de chaque mois offert.
+     L'API ne dit ni le coût d'un appel ni la consommation du mois.
    - **Mistral** : 16 $ le million de caractères. L'API ne dit ni le coût d'un appel ni le
      solde.
 3. **Génération** :
@@ -224,7 +247,7 @@ modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en françai
    - **Plafond cumulé** (`--max-total-chars`) :
      - il vaut pour toute la version, relances et refaits compris ;
      - il se compte sur le registre `billed.jsonl`, qui résiste à un arrêt brutal ;
-     - avec Mistral, sans solde lisible, il est obligatoire ;
+     - avec Google et Mistral, sans solde lisible, il est obligatoire ;
      - atteint, il arrête l'exécution dès son départ.
    - **Modération de Mistral** : un texte refusé (403) ne fait échouer que sa phrase, et la
      génération continue. Le propriétaire choisit alors un texte dit de même sens
@@ -241,7 +264,7 @@ modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en françai
      la même commande, au besoin avec la clé d'un autre compte.
      - ElevenLabs : une voix de bibliothèque garde son identifiant. Si l'outil la dit
        inaccessible, l'ajouter à ce compte depuis la bibliothèque de voix.
-     - Mistral : une voix prête est commune à tous les comptes.
+     - Google et Mistral : une voix prête est commune à tous les comptes.
    - **Texte dit** (`said-text.mjs`) : les nombres en 1 s'accordent avec le nom qui suit
      (« Combien font une fois 7 ? », « vingt et une pommes », en espagnol « una caja »,
      « veintiún niños ») ; la phrase de `speak()` reste la clé du clip. Une phrase mal dite
@@ -272,7 +295,7 @@ modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en françai
    - **Ce qui est signalé** :
      - un nombre entendu différent, en trop ou en moins ;
      - une phrase éloignée : en français, sous 0,5 de ressemblance, à cause des homophones de
-       Whisper ; en anglais et en espagnol (voix Mistral), sous 0,85 ou plus d'un mot en trop,
+       Whisper ; en anglais et en espagnol, sous 0,85 ou plus d'un mot en trop,
        réglé sur les 7 437 clips de Jane (attaques de mot ratées, charabia inventé) ;
      - une durée au-delà du double du débit médian de la voix, ou en deçà du tiers. Une borne
        fixe (0,2 s par caractère, calée sur Lucie) signalait 404 clips sains de Jane.
@@ -324,6 +347,13 @@ racine : viser `index.html`).
 
 - **Chaque fournisseur a ses conditions**, à confirmer avant toute génération payante :
   - **ElevenLabs** : voix de bibliothèque Lucie, avec un préavis de retrait de 730 jours ;
+  - **Google**, conditions de Google Cloud :
+    - la sortie appartient au client : « Generated Output is Customer Data. As between
+      Customer and Google, Google does not assert any ownership rights in any new
+      intellectual property created in the Generated Output » ;
+    - les services d'IA générative ne doivent pas servir « as part of » un site destiné aux
+      moins de 18 ans. Le jeu n'appelle jamais Google : il sert des fichiers générés une fois.
+      Le propriétaire a jugé l'usage permis, en connaissance de cause (26/09/2026) ;
   - **Mistral**, conditions commerciales :
     - §3.1 : la sortie appartient au client ;
     - §3.2 : ne pas présenter la voix comme humaine, d'où la mention « voix de synthèse » ;

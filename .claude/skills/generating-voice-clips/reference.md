@@ -16,7 +16,8 @@ L'empreinte est `voiceKey(phrase)` (`js/core/spoken-text.js`) : la phrase exacte
 
 ## Fournisseurs
 
-`scripts/voice/providers/` : un module par fournisseur (`elevenlabs.mjs`, `mistral.mjs`),
+`scripts/voice/providers/` : un module par fournisseur (`elevenlabs.mjs`, `google.mjs`,
+`mistral.mjs`),
 avec la même interface :
 
 - `credits()` : `{ used, limit }`, ou `null` si le solde n'est pas lisible ;
@@ -31,14 +32,15 @@ Les erreurs sont des `ProviderError` (`providers/common.mjs`), classées par kin
 
 Le classement est propre à chaque fournisseur :
 
-|             | ElevenLabs (fr)                                      | Mistral (en)                                                               |
-| ----------- | ---------------------------------------------------- | -------------------------------------------------------------------------- |
-| Clé         | `ELEVENLABS_API_KEY`, en-tête `xi-api-key`           | `MISTRAL_API_KEY`, en-tête `Authorization: Bearer`                         |
-| Coût        | en-tête `character-cost` (≈ 0,53 crédit/caractère)   | inconnu de l'API ; 16 $ le million de caractères                           |
-| Solde       | `credits()` lisible, `--reserve`                     | aucun : `--max-total-chars` obligatoire                                    |
-| 401 / 403   | clé refusée (`auth`)                                 | 401 clé refusée ; **403 : modération**, la phrase seule échoue (`request`) |
-| Voix        | bibliothèque (préavis de 730 jours), `publicOwnerId` | voix prête (`retention_notice` : 30), ou clonage avec consentement         |
-| Identifiant | en-tête `request-id`                                 | en-tête `mistral-correlation-id`                                           |
+|             | ElevenLabs (fr)                                      | Google (en, es)                                                                                | Mistral (Jane, en jusqu'au 26/09)                                          |
+| ----------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Clé         | `ELEVENLABS_API_KEY`, en-tête `xi-api-key`           | `GOOGLE_TTS_API_KEY` (classique, `AIza…`), en-tête `x-goog-api-key`                            | `MISTRAL_API_KEY`, en-tête `Authorization: Bearer`                         |
+| Coût        | en-tête `character-cost` (≈ 0,53 crédit/caractère)   | inconnu de l'API ; 30 $ le million de caractères, le premier million du mois offert            | inconnu de l'API ; 16 $ le million de caractères                           |
+| Solde       | `credits()` lisible, `--reserve`                     | aucun : `--max-total-chars` obligatoire                                                        | aucun : `--max-total-chars` obligatoire                                    |
+| 401 / 403   | clé refusée (`auth`)                                 | clé refusée (`auth`), sauf 403 `BILLING_DISABLED` (`quota`) ; 400 `API_KEY_INVALID` : `auth`   | 401 clé refusée ; **403 : modération**, la phrase seule échoue (`request`) |
+| Voix        | bibliothèque (préavis de 730 jours), `publicOwnerId` | Chirp 3 HD, une voix par langue (`es-ES-Chirp3-HD-Sulafat`) ; 400 « does not exist » : `voice` | voix prête (`retention_notice` : 30), ou clonage avec consentement         |
+| Brut        | MP3 128 kb/s                                         | WAV sans perte (LINEAR16, `sourceFormat: "wav"`)                                               | MP3                                                                        |
+| Identifiant | en-tête `request-id`                                 | aucun                                                                                          | en-tête `mistral-correlation-id`                                           |
 
 ## Page d'écoute (`npm run voice:listen`)
 
@@ -89,15 +91,23 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
 
 ## Dépannage
 
-- **« ELEVENLABS_API_KEY manquante » ou « MISTRAL_API_KEY manquante »**, ou « mal formée » :
+- **« ELEVENLABS_API_KEY manquante », « GOOGLE_TTS_API_KEY manquante » ou « MISTRAL_API_KEY
+  manquante »**, ou « mal formée » :
   `--env-file` oublié, variable mal nommée ou valeur sur plusieurs lignes ; vérifier avec
   `grep -c`, jamais en l'affichant. La variable lue est celle du fournisseur de la voix.
 - **« Crédits illisibles avec cette clé »** : donner `--max-total-chars` (ou `--max-chars`).
 - **Mistral 403 (modération)** : la phrase est refusée à chaque essai. Texte dit de même
   sens dans `SAID_OVERRIDES`, ou voix de l'appareil pour elle (`--allow-missing` à la
   publication), au choix du propriétaire.
-- **Mistral 429** : débit dépassé, réessayé tout seul ; s'il revient souvent, baisser
-  `--concurrency`.
+- **Mistral 429, Google 429** : débit dépassé, réessayé tout seul ; s'il revient souvent,
+  baisser `--concurrency`.
+- **Google 401 « API keys are not supported by this API »** (`CREDENTIALS_MISSING`) : clé liée
+  à un compte de service (`AQ.…`, créée par AI Studio ou avec la case « Authentifier les appels
+  d'API via un compte de service »). Créer une clé classique (`AIza…`), case décochée, restreinte
+  à Cloud Text-to-Speech.
+- **Google 403 `API_KEY_SERVICE_BLOCKED`** : la clé est restreinte à une autre API ; y ajouter
+  Cloud Text-to-Speech. **403 `SERVICE_DISABLED`** : activer l'API dans le projet de la clé.
+  **403 `BILLING_DISABLED`** : rattacher un compte de facturation, même pour le quota gratuit.
 - **« Traitement impossible, brut gardé »** (code 1) : ffmpeg ou ffprobe en panne ou absent ;
   le brut payé reste, la relance le retraite sans nouvel appel.
 - **« Une génération tourne déjà »** : une autre exécution tient le verrou
@@ -109,6 +119,8 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
 - **« n'est pas utilisable avec cette clé »** (ElevenLabs) : la voix de bibliothèque n'est
   pas dans ce compte ; l'ajouter depuis la bibliothèque de voix (propriétaire public : champ
   `publicOwnerId` de `voices.json`). Son identifiant reste le même.
+- **« n'existe pas pour <langue> »** (Google) : nom de voix ou code de langue faux ; lister
+  les voix par `GET /v1/voices?languageCode=<xx-XX>`.
 - **« n'existe plus ou n'est pas accessible »** (Mistral) : la voix prête a été retirée
   (préavis `retention_notice`) ou l'identifiant est faux ; lister les voix par
   `GET /v1/audio/voices`. Les clips déjà générés restent.
@@ -128,6 +140,11 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
      traitées comme les clips du jeu, et passées dans Whisper.
    - Voix disponibles :
      - ElevenLabs : `GET /v1/voices/<voice_id>` ;
+     - Google : `GET /v1/voices?languageCode=<xx-XX>` (Cloud Text-to-Speech). Au 26/09/2026,
+       30 voix Chirp 3 HD par langue, dont 14 féminines (Achernar, Aoede, Autonoe, Callirrhoe,
+       Despina, Erinome, Gacrux, Kore, Laomedeia, Leda, Pulcherrima, Sulafat, Vindemiatrix,
+       Zephyr), natives de la langue demandée. Gemini TTS (API Gemini) a aussi une bibliothèque
+       de voix régionales, mais facture la durée de l'audio, sans quota gratuit ;
      - Mistral : `GET /v1/audio/voices`. Au 26/09/2026, les voix prêtes étaient Jane (femme)
        et Oliver en anglais britannique, Paul en anglais américain, et Marie (femme) en
        français, **aucune en espagnol**. Le modèle parle pourtant 9 langues : une voix d'une
@@ -148,7 +165,7 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
      `common.mjs` ;
    - son entrée dans `PROVIDERS` de `generate.mjs` : fabrique, variable de la clé, adresse
      de test, conseil quand la voix est inaccessible ;
-   - des tests sur le modèle de `tests-esm/voice/mistral.esm.test.mjs`, sur les réponses
+   - des tests sur le modèle de `tests-esm/voice/google.esm.test.mjs` ou `mistral.esm.test.mjs`, sur les réponses
      réelles de l'API.
 
 ## Infra (dépôt `leapmultix-infra`, `voices.tf`)
