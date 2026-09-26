@@ -25,14 +25,13 @@
     }
   },
   "en": {
-    "provider": "mistral",
-    "voice": "jane",
-    "version": "jane-v1-1",
-    "voiceId": "82c99ee6-f932-423f-a4a3-d403c8914b8d",
-    "voiceName": "Jane - Neutral",
-    "model": "voxtral-mini-tts-2603",
-    "languageCode": "en",
-    "sourceFormat": "mp3",
+    "provider": "google",
+    "voice": "sulafat",
+    "version": "sulafat-v1-1",
+    "voiceId": "en-GB-Chirp3-HD-Sulafat",
+    "voiceName": "Sulafat (Chirp 3 HD)",
+    "languageCode": "en-GB",
+    "sourceFormat": "wav",
     "settings": {},
     "encoding": {
       "bitrateKbps": 64,
@@ -44,14 +43,13 @@
     }
   },
   "es": {
-    "provider": "mistral",
-    "voice": "jane",
-    "version": "jane-v1-1",
-    "voiceId": "82c99ee6-f932-423f-a4a3-d403c8914b8d",
-    "voiceName": "Jane - Neutral",
-    "model": "voxtral-mini-tts-2603",
-    "languageCode": "es",
-    "sourceFormat": "mp3",
+    "provider": "google",
+    "voice": "sulafat",
+    "version": "sulafat-v1-1",
+    "voiceId": "es-ES-Chirp3-HD-Sulafat",
+    "voiceName": "Sulafat (Chirp 3 HD)",
+    "languageCode": "es-ES",
+    "sourceFormat": "wav",
     "settings": {},
     "encoding": {
       "bitrateKbps": 64,

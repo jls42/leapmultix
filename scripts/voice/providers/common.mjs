@@ -1,8 +1,8 @@
 // Ce que les fournisseurs de synthèse partagent : la classe de leurs erreurs (generate.mjs
 // décide de la suite d'après son kind), le contrôle d'une clé, l'appel HTTP, la lecture d'un
-// corps d'erreur et la vérification qu'une réponse est bien un MP3. Le classement des erreurs
-// HTTP reste propre à chaque fournisseur : un même statut n'y veut pas dire la même chose (un
-// 403 est une clé refusée chez ElevenLabs, un texte refusé par la modération chez Mistral).
+// corps d'erreur et la vérification qu'une réponse est bien un MP3 ou un WAV. Le classement des
+// erreurs HTTP reste propre à chaque fournisseur : un même statut n'y veut pas dire la même chose
+// (un 403 est une clé refusée chez ElevenLabs, un texte refusé par la modération chez Mistral).
 
 /** Erreur d'un fournisseur, classée pour décider de la suite (réessayer, arrêter…) */
 export class ProviderError extends Error {
@@ -112,4 +112,10 @@ export function looksLikeMp3(buffer) {
   if (buffer.length < 4) return false;
   if (buffer.toString('latin1', 0, 3) === 'ID3') return true;
   return buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0;
+}
+
+/** En-tête d'un WAV : « RIFF », taille, puis « WAVE » */
+export function looksLikeWav(buffer) {
+  if (buffer.length < 12) return false;
+  return buffer.toString('latin1', 0, 4) === 'RIFF' && buffer.toString('latin1', 8, 12) === 'WAVE';
 }

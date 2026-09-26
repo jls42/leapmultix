@@ -7,8 +7,8 @@
 //   « Combien font 1 fois 7 ? » se dit « une fois 7 » (fois est féminin), « 21 pommes » se
 //   dit « vingt et une pommes » ; en espagnol « 1 caja » se dit « una caja » et « 21 niños »
 //   « veintiún niños ». Un nombre seul garde sa lecture par défaut ;
-// - en espagnol, tous les autres nombres en lettres (« 7 por 8 » : « siete por ocho ») : la
-//   voix anglaise qui lit l'espagnol dirait les chiffres en anglais ;
+// - en espagnol, tous les autres nombres en lettres (« 7 por 8 » : « siete por ocho ») : écrit
+//   ainsi, un nombre ne se lit que d'une façon ;
 // - un texte imposé (SAID_OVERRIDES) pour une phrase que la voix prononce mal essai après
 //   essai : la liste se relit, chaque entrée dit pourquoi.
 
@@ -173,8 +173,9 @@ function spanishNumber(n, one = 'uno') {
 
 /**
  * Règles de chaque langue. spelled : chaque nombre qui reste en chiffres s'écrit en lettres.
- * L'espagnol en a besoin : Jane, voix anglaise, lit « 7 por 8 » en anglais (« seven ») ;
- * « siete por ocho » se dit en espagnol (banc du 26/09/2026).
+ * La règle est née avec Jane, voix anglaise qui lisait « 7 por 8 » en anglais (« seven »).
+ * Sulafat, voix espagnole native, dit juste tous les nombres ainsi écrits, 11 compris (banc du
+ * 26/09/2026) : les lettres restent, elles ne laissent aucune lecture au hasard.
  */
 const RULES = {
   fr: {

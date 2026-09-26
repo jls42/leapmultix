@@ -1,6 +1,6 @@
 ---
 name: generating-voice-clips
-description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix, Lucie en français (ElevenLabs) et Jane en anglais (Mistral Voxtral TTS), rangés dans le dépôt privé leapmultix-voices et servis par CloudFront sur /voice/ depuis un bucket S3. À utiliser pour estimer le coût, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), contrôler les clips en une commande (npm run voice:review, Whisper local, page d'écoute), refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue, une voix ou un fournisseur, ou préparer un essai local (?voix=local). (project)
+description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix, Lucie en français (ElevenLabs) et Sulafat en anglais et en espagnol (Google Cloud Text-to-Speech, Chirp 3 HD ; Jane de Mistral Voxtral TTS avant elle en anglais), rangés dans le dépôt privé leapmultix-voices et servis par CloudFront sur /voice/ depuis un bucket S3. À utiliser pour estimer le coût, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), contrôler les clips en une commande (npm run voice:review, Whisper local, page d'écoute), refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue, une voix ou un fournisseur, ou préparer un essai local (?voix=local). (project)
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -11,14 +11,22 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
 
 ## Voix et fournisseurs
 
-| Langue | Voix (version)               | Fournisseur                                    | Clé                  | Coût                                                         | Solde lisible             |
-| ------ | ---------------------------- | ---------------------------------------------- | -------------------- | ------------------------------------------------------------ | ------------------------- |
-| fr     | Lucie (`lucie-v3-2`)         | ElevenLabs, Eleven v3                          | `ELEVENLABS_API_KEY` | environ 0,53 crédit par caractère (en-tête `character-cost`) | oui : `--reserve` protège |
-| en     | Jane - Neutral (`jane-v1-1`) | Mistral, Voxtral TTS (`voxtral-mini-tts-2603`) | `MISTRAL_API_KEY`    | 16 $ le million de caractères, que l'API ne dit pas          | non                       |
-| es     | Jane - Neutral (`jane-v1-1`) | Mistral, Voxtral TTS (`voxtral-mini-tts-2603`) | `MISTRAL_API_KEY`    | 16 $ le million de caractères ; nombres dits en lettres      | non                       |
+| Langue | Voix (version)           | Fournisseur                                            | Clé                  | Coût                                                             | Solde lisible             |
+| ------ | ------------------------ | ------------------------------------------------------ | -------------------- | ---------------------------------------------------------------- | ------------------------- |
+| fr     | Lucie (`lucie-v3-2`)     | ElevenLabs, Eleven v3                                  | `ELEVENLABS_API_KEY` | environ 0,53 crédit par caractère (en-tête `character-cost`)     | oui : `--reserve` protège |
+| en     | Sulafat (`sulafat-v1-1`) | Google Cloud Text-to-Speech, `en-GB-Chirp3-HD-Sulafat` | `GOOGLE_TTS_API_KEY` | 30 $ le million de caractères, le premier million du mois offert | non                       |
+| es     | Sulafat (`sulafat-v1-1`) | Google Cloud Text-to-Speech, `es-ES-Chirp3-HD-Sulafat` | `GOOGLE_TTS_API_KEY` | idem ; nombres dits en lettres                                   | non                       |
 
 `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix et la version.
 `generate.mjs` lit la clé du fournisseur de la voix.
+
+Mistral (Voxtral TTS, `MISTRAL_API_KEY`, 16 $ le million de caractères) reste branché : Jane
+(`jane-v1-1`) a été la voix anglaise jusqu'au passage à Sulafat, et ses clips restent en ligne.
+
+**Clé Google** : une clé API classique (`AIza…`), restreinte à Cloud Text-to-Speech, dans un
+projet avec facturation, rangée dans le même fichier `.env` hors dépôt que les autres clés. Les clés liées à un compte de service (`AQ.…`, celles d'AI Studio)
+sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en WAV sans perte
+(`sourceFormat: "wav"`, LINEAR16) : le MP3 de Cloud TTS n'est qu'à 32 kb/s.
 
 ## Règles, toujours
 
@@ -27,8 +35,8 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
   `node --env-file=<fichier>`.
   - **Ne jamais lire ni afficher ce fichier**, ni par Read ni par `cat` : n'en passer que le
     chemin.
-  - Pour vérifier la variable : `grep -c '^MISTRAL_API_KEY=' <fichier>` (ou
-    `ELEVENLABS_API_KEY`).
+  - Pour vérifier la variable : `grep -c '^GOOGLE_TTS_API_KEY=' <fichier>` (ou
+    `MISTRAL_API_KEY`, `ELEVENLABS_API_KEY`).
 - **Aucun appel payant, aucune publication sans l'accord explicite du propriétaire** dans la
   conversation.
   - C'est le cas de la génération, et de `publish clips|index|remove`, qui écrivent en ligne.
@@ -38,7 +46,7 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
   - Le registre `manifests/<l>/<version>.billed.jsonl` inscrit chaque réponse payée dès sa
     réception : le total survit à un arrêt brutal.
   - `--max-chars` seul repart de zéro à chaque relance.
-  - Chez Mistral, sans solde lisible, c'est la seule protection.
+  - Chez Google et Mistral, sans solde lisible, c'est la seule protection.
 - **Un clip publié n'est jamais réécrit.**
   - Corriger un clip déjà en ligne (réglage, voix, règle de `said-text.mjs`, `--redo`)
     impose une nouvelle `version` dans `scripts/voice/voices.json`, donc toute la langue à
@@ -70,6 +78,9 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
    - **ElevenLabs** : environ 0,53 crédit par caractère (mesuré).
      `node --env-file=<.env> scripts/voice/generate.mjs --lang fr --limit 0` vérifie, sans
      frais, la clé, la voix et les crédits restants.
+   - **Google** : 30 $ le million de caractères, le premier million de chaque mois offert.
+     `--limit 0 --max-total-chars <n>` vérifie la clé et la voix (liste des voix, gratuite).
+     La consommation du mois se lit dans la console Google Cloud.
    - **Mistral** : 16 $ le million de caractères. `--limit 0 --max-total-chars <n>` vérifie
      la clé et la voix. Le solde, lui, se lit dans la console Mistral.
 3. **Portes** : solde suffisant, licence confirmée, accord écrit du propriétaire avec un
@@ -78,9 +89,10 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
    - Commande :
      `node --env-file=<.env> scripts/voice/generate.mjs --lang <l> --concurrency <n> --max-total-chars <plafond>`,
      plus `--reserve 5000` chez ElevenLabs.
-   - **Mistral : d'abord un essai de 25 phrases** (`--limit 25`) : annonces, bravos et
-     phrases fixes, dont « Oops! Don't shoot the right answer. ». La modération s'y voit tôt,
-     comme le débit. Garder `--concurrency 3`, sauf si l'essai ne montre aucun 429.
+   - **Google et Mistral : d'abord un essai de 25 phrases** (`--limit 25`) : annonces, bravos
+     et phrases fixes, dont « Oops! Don't shoot the right answer. ». La modération de Mistral
+     s'y voit tôt, comme le débit. Garder `--concurrency 3`, sauf si l'essai ne montre aucun
+     429 ; Google tient 175 à 200 clips par minute à ce réglage.
    - Relancer la même commande reprend ce qui manque.
    - Code 3 : quota ou solde épuisé. Reprendre plus tard, éventuellement avec un autre
      compte.
@@ -100,7 +112,7 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
    - **Ce qui est signalé** (`transcript-compare.mjs`, `check.mjs`) :
      - un nombre entendu différent, en trop ou en moins ;
      - une phrase éloignée. En français, sous 0,5 de ressemblance : Whisper y confond des
-       homophones. En anglais et en espagnol (voix Mistral), sous 0,85, ou plus d'un mot en
+       homophones. En anglais et en espagnol, sous 0,85, ou plus d'un mot en
        trop : attaque de mot ratée (« Try » entendu « Cry », « Ten » entendu « hen »),
        charabia inventé par la synthèse ;
      - une durée au-delà du double du débit médian de la voix (mots en trop, longues pauses)
@@ -109,6 +121,11 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
      Les écritures de Whisper sans défaut de voix ne comptent pas : « watt » pour « what »,
      « 18-4 » pour « 18 minus 4 », « 8 x 10 » pour « 8 times 10 ».
 
+     Restent signalées, mais saines à l'écoute (Sulafat en espagnol, 26/09/2026) : « es tres »
+     entendu « estrés », « cuánto es » entendu « cuántos », et les intitulés courts (« Suma,
+     Fácil ») longs seulement en proportion, à cause des silences fixes. Les refaire ne change
+     rien : les laisser à l'écoute du propriétaire.
+
    - `npm run voice:check -- --lang <l> --probe` vérifie que chaque MP3 est valide et
      inchangé (ffprobe, plus lent).
    - **Page d'écoute** (`ecoute/<l>-<version>.html`, à ouvrir pour le propriétaire :
@@ -116,6 +133,9 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
      formes féminines (« une fois 7 »), que Whisper ne distingue pas. Il coche « à refaire » ;
      la liste du bandeau se colle dans `ecartes.txt` (racine du jeu, ignoré par git).
      L'écoute revient au propriétaire : ne jamais cocher à sa place.
+   - **Propriétaire loin du poste** : publier la page de contrôle en artifact, les clips
+     joints en fichiers, avec des cases « à refaire » gardées dans le stockage de l'artifact.
+     Les relire ensuite pour écrire `ecartes.txt`.
    - **Refaits** (payants : accord) :
      `node --env-file=<.env> scripts/voice/generate.mjs --lang <l> --redo ecartes.txt --max-total-chars <plafond>`.
      Seuls ces clips sont refaits, l'ancien de chacun mis de côté dans `ecoute/avant/`.

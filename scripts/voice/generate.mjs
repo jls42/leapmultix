@@ -46,6 +46,7 @@ import {
 } from './audio-process.mjs';
 import { ProviderError } from './providers/common.mjs';
 import { createElevenLabs } from './providers/elevenlabs.mjs';
+import { createGoogle } from './providers/google.mjs';
 import { createMistral } from './providers/mistral.mjs';
 import {
   assertLangCode,
@@ -65,6 +66,7 @@ import {
   synthesisHash,
   clipFile,
   keepReplaced,
+  rawExtension,
   rawFile,
   readManifest,
   reconcile,
@@ -101,7 +103,19 @@ const PROVIDERS = {
       'accessible avec cette clé : voir GET /v1/audio/voices (une voix prête a un préavis de ' +
       'retrait, retention_notice).',
   },
+  google: {
+    create: createGoogle,
+    keyVariable: 'GOOGLE_TTS_API_KEY',
+    baseUrlVariable: 'GOOGLE_TTS_BASE_URL',
+    voiceHelp: voice =>
+      `La voix ${voice.voiceId} n'existe pas pour ${voice.languageCode} : voir GET ` +
+      `/v1/voices?languageCode=${voice.languageCode} (Cloud Text-to-Speech).`,
+  },
 };
+
+/** Chemins d'une voix : bruts rangés sous l'empreinte des réglages, dans leur format */
+const voicePaths = (outDir, lang, voice) =>
+  storePaths(outDir, lang, voice.version, synthesisHash(voice), rawExtension(voice.sourceFormat));
 
 /** Ordre de génération : ce qu'on entend le plus d'abord, les longs énoncés en dernier */
 export const FAMILY_ORDER = [
@@ -477,7 +491,7 @@ export async function runGeneration(options) {
     ...options,
   };
   const { lang, voice, outDir, dryRun } = opts;
-  const paths = storePaths(outDir, lang, voice.version, synthesisHash(voice));
+  const paths = voicePaths(outDir, lang, voice);
   // Le verrou d'abord : le nettoyage ci-dessous effacerait les fichiers d'une autre exécution
   const lock = dryRun ? null : await acquireLock(paths, opts.lockOptions);
   try {
@@ -613,7 +627,7 @@ export async function reprocessClips(options) {
     ...options,
   };
   const { lang, voice, outDir } = opts;
-  const paths = storePaths(outDir, lang, voice.version, synthesisHash(voice));
+  const paths = voicePaths(outDir, lang, voice);
   const lock = await acquireLock(paths, opts.lockOptions);
   try {
     const manifest = readManifest(paths, lang, voice);
@@ -748,7 +762,8 @@ async function mainDryRun(base) {
 
 /**
  * Fournisseur de la voix, après avoir vérifié que la voix est utilisable avec cette clé. La
- * clé est lue dans la variable propre au fournisseur (ELEVENLABS_API_KEY, MISTRAL_API_KEY).
+ * clé est lue dans la variable propre au fournisseur (ELEVENLABS_API_KEY, MISTRAL_API_KEY,
+ * GOOGLE_TTS_API_KEY).
  * @param {Object} voice - Entrée de voices.json
  * @param {Object} [env] - Variables d'environnement
  */

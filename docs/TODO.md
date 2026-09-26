@@ -51,7 +51,7 @@ Deux leçons pour les outils de contrôle, intégrées ensuite à `voice:check` 
 Reste à faire : s'il se déclenche mal ou saute une étape, lui écrire des évaluations
 (`claude plugin eval`, voir la documentation des plugins).
 
-## Voix enregistrée : Mistral pour l'anglais (fait le 26/09)
+## Voix enregistrée : Mistral pour l'anglais (26/09, remplacée par Sulafat)
 
 Le TTS de Mistral (Voxtral, `voxtral-mini-tts-2603`) a été retenu pour l'anglais.
 
@@ -66,17 +66,41 @@ Le TTS de Mistral (Voxtral, `voxtral-mini-tts-2603`) a été retenu pour l'angla
   attaques de mot trop faibles (« Ten » entendu « hen », « Table » entendu « Pable »), un
   charabia inventé, quelques débits très lents.
 
-## Voix enregistrée : l'espagnol (décidé le 26/09, génération à faire)
+## Voix enregistrée : Sulafat (Google Chirp 3 HD) en espagnol et en anglais (26/09)
 
-Mistral n'a aucune voix espagnole prête : ses 30 voix sont anglaises ou françaises. Au banc
-des 30 voix, le propriétaire retient **Jane - Neutral**, la voix de l'anglais.
+Jane, voix anglaise, a d'abord été générée en espagnol (374 895 caractères, environ 6 $), puis
+écartée à l'écoute : l'accent anglais s'entend trop. Ses clips espagnols ne sont pas publiés.
 
-- **Nombres en lettres** : en chiffres, Jane les dit en anglais. Le texte dit espagnol les
-  écrit donc tous en lettres (`scripts/voice/said-text.mjs`) : 5 phrases sur 5 justes à
-  Whisper, contre 6 sur 8 en chiffres.
-- **Coût** : 323 098 caractères, environ 5,17 $. Vérifier le solde Mistral avant.
-- **Mention** : `es.json` nomme Mistral AI (v27), avant toute entrée `es` dans l'index.
-- **Accent** : Jane est britannique ; un hispanophone l'entend. Ouvrir à tous, avec ou sans
-  `--default-on`, reste au choix du propriétaire.
-- **Mieux, plus tard** : cloner une voix native avec Voxtral, à partir de 2 à 3 s
-  d'enregistrement d'une locutrice qui donne son accord explicite (règle d'usage de Mistral).
+- **Bancs du 26/09** (pages d'écoute du propriétaire, mêmes phrases du corpus, dont des 11) :
+  Gemini 3.8 Flash-Lite et Flash (9 voix natives castillanes de la bibliothèque Gemini, plus
+  Sulafat) et Chirp 3 HD (14 voix féminines es-ES). Whisper : 129/130, 128/130 et 180/182 ; les
+  seuls doutes de Chirp portent sur « Modo Quiz ». Le propriétaire retient **Sulafat en Chirp 3
+  HD**, puis, après un banc anglais face à Jane, **Sulafat en anglais britannique**.
+- **Prix** : 30 $ le million de caractères, mais le premier million de chaque mois est offert.
+  L'espagnol (323 098 caractères) et l'anglais (211 923), refaits compris, tiennent dans un mois.
+- **Clé** : une clé API classique (`AIza…`) restreinte à Cloud Text-to-Speech. Les clés liées à
+  un compte de service (`AQ.…`, celles d'AI Studio) sont refusées par ce service.
+- **Brut en WAV** (LINEAR16, sans perte) : le MP3 de Cloud TTS n'est qu'à 32 kb/s.
+- **Mentions** : `es.json` et `en.json` nomment Google Cloud Text-to-Speech (v28).
+- **Clause d'âge** : les conditions de Google interdisent d'utiliser leurs services d'IA
+  générative « as part of » un site destiné aux moins de 18 ans. Le jeu n'appelle jamais Google,
+  il sert des fichiers générés une fois : le propriétaire a jugé l'usage permis, en connaissance
+  de cause.
+- **Reste à trancher** : garder hors git ou supprimer les clips espagnols de Jane
+  (`clips/es/jane-v1-1` du dépôt des voix, non commités).
+- **README et ses 14 traductions** : ils présentent encore Jane (Mistral) en anglais. À mettre
+  à jour (Sulafat, Google, anglais et espagnol) avec l'outil de traduction, reporté faute de
+  quota.
+
+## Voix enregistrée : choisir sa voix dans les paramètres (à faire)
+
+Le propriétaire veut un menu « Voix » dans les paramètres, par exemple Sulafat (Google) ou Jane
+(Mistral) en anglais.
+
+- L'index des voix ne décrit aujourd'hui qu'une voix par langue : il faudra plusieurs versions
+  par langue, puis toucher le menu, le moteur de clips, le cache hors ligne et `publish.mjs`.
+- Les clips `jane-v1-1` restent donc en ligne après le passage de l'anglais à Sulafat : ne pas
+  les retirer du bucket.
+- Diffuser les clips (dépôt ouvert, par exemple) : la sortie appartient au client chez Mistral
+  (conditions commerciales, §3.1) comme chez Google (« Generated Output is Customer Data »).
+  Relire les conditions propres à chaque voix avant de publier.
