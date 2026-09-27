@@ -81,7 +81,7 @@ cette page : c'est la commande habituelle. `voice:listen` refait seulement la pa
 - **Sans `--compare`** (`<l>-<version>.html`) : clips signalés, par les règles de
   `voice:check` (voir l'étape « Contrôles » du skill : nombres, ressemblance et mots en trop,
   durée rapportée au débit de la voix), puis un échantillon
-  (`--sample`, 24 par défaut) des phrases dont le texte dit diffère : textes imposés
+  (`--sample`, 12 par défaut) des phrases dont le texte dit diffère : textes imposés
   (`SAID_OVERRIDES`) d'abord, puis les phrases où un nombre s'accorde en genre (« une fois 7 »,
   « una caja »), régulièrement espacées. En espagnol, où les nombres se disent en lettres,
   presque tous les textes dits diffèrent : seuls les accords s'écoutent. Sans
@@ -159,8 +159,9 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
   `saidOverrides` mal recopiée ; elle doit être la phrase exacte de `speak()`.
 - **« Les réglages de la voix … ont changé »** : `voices.json` a changé sous une version
   existante ; remettre les réglages, ou créer une nouvelle version (nouvelle génération).
-- **Clip signalé par Whisper** : Whisper n'entend pas « un » / « une » et se trompe parfois
-  sur les phrases courtes ; faire écouter avant de refaire.
+- **Clip signalé par Whisper** : le refaire d'abord, deux ou trois tours ; ne faire écouter
+  que ce qui reste signalé. Whisper n'entend pas « un » / « une » (échantillon d'accords à
+  l'écoute) et se trompe parfois sur les phrases courtes.
 - **`curl` sur `/voice/` répond 403** : la fonction CloudFront `voice_guard` ne sert que les
   requêtes du jeu (`Sec-Fetch-Site: same-origin`) ; `check-online.mjs` envoie cet en-tête.
 - **Clip absent en ligne** : 403 (pas de listage du bucket) ; le jeu passe à la voix de
@@ -169,8 +170,9 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
 ## Nouvelle langue ou nouvelle voix
 
 1. **Choisir la voix.**
-   - Faire un banc d'écoute : quelques phrases du vrai corpus, dans les voix candidates,
-     traitées comme les clips du jeu, et passées dans Whisper.
+   - Faire un banc d'écoute avec le skill `comparing-voices` (`npm run voice:bench`) : 22
+     phrases du vrai corpus dans les voix candidates, traitées comme les clips du jeu,
+     passées dans Whisper, sur une page où le propriétaire choisit.
    - Voix disponibles :
      - ElevenLabs : `GET /v1/voices/<voice_id>` ;
      - Google : `GET /v1/voices?languageCode=<xx-XX>` (Cloud Text-to-Speech). Au 26/09/2026,

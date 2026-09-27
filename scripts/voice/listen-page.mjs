@@ -20,7 +20,7 @@
 //     [--version <version>]
 //   --version     : une autre voix de la langue (alternatives.json)
 //   --transcripts : sortie de whisper_transcribe.py (sans elle, seules les durées signalent)
-//   --sample      : taille de l'échantillon des textes dits différents (défaut : 24)
+//   --sample      : taille de l'échantillon des textes dits différents (défaut : 12)
 //   --compare     : empreintes des clips refaits, une par ligne
 // Écrit <dépôt des voix>/ecoute/<langue>-<version>.html, ou <langue>-<version>-refaits.html
 // avec --compare, et en affiche l'adresse.
@@ -47,8 +47,11 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STYLE_FILE = path.join(HERE, 'listen-page.css');
 const SCRIPT_FILE = path.join(HERE, 'listen-page.client.js');
 
-/** Taille par défaut de l'échantillon des textes dits différents */
-export const DEFAULT_SAMPLE = 24;
+/**
+ * Taille par défaut de l'échantillon des textes dits différents : une dizaine d'accords, la
+ * seule écoute demandée au propriétaire en plus des clips que Whisper n'a pas validés
+ */
+export const DEFAULT_SAMPLE = 12;
 
 const HTML_ESCAPES = new Map([
   ['&', '&amp;'],

@@ -1,0 +1,318 @@
+/* Page d'un banc d'écoute (bench-page.mjs) : écoute sur téléphone, thème clair et sombre */
+:root {
+  --bg: #f5f6f3;
+  --fg: #1b1e1c;
+  --muted: #5b605b;
+  --card: #fff;
+  --line: #d9ddd6;
+  --accent: #1d5c9e;
+  --accent-fg: #fff;
+  --ok: #2e7a3c;
+  --warn: #a3391f;
+  --playing: #e3edf8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --bg: #141614;
+    --fg: #e8ebe7;
+    --muted: #a3a9a2;
+    --card: #1e211e;
+    --line: #373c37;
+    --accent: #83b3ea;
+    --accent-fg: #0f1410;
+    --ok: #7fcf8c;
+    --warn: #f08a70;
+    --playing: #1f2d3c;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #141614;
+  --fg: #e8ebe7;
+  --muted: #a3a9a2;
+  --card: #1e211e;
+  --line: #373c37;
+  --accent: #83b3ea;
+  --accent-fg: #0f1410;
+  --ok: #7fcf8c;
+  --warn: #f08a70;
+  --playing: #1f2d3c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding-block: 20px 80px;
+  padding-inline: 16px;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    16px/1.5 'Atkinson Hyperlegible',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  display: grid;
+  gap: 20px;
+}
+
+header {
+  display: grid;
+  gap: 8px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h3 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+  max-width: 65ch;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.card {
+  display: grid;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.decide {
+  border-color: var(--accent);
+}
+
+.voices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.voice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 3px solid var(--line);
+}
+
+/* Boutons alignés en bas de chaque fiche, quelle que soit la longueur de la note */
+.voice .all {
+  margin-top: auto;
+}
+
+.voice.candidate {
+  border-top-color: var(--accent);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.item {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+
+.badge {
+  font-size: 0.8rem;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  padding: 0 8px;
+  color: var(--muted);
+}
+
+.heard {
+  color: var(--warn);
+  font-size: 0.92rem;
+}
+
+.missing {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+button {
+  font: inherit;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--card);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.all {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+button.play {
+  font-size: 0.92rem;
+}
+
+button.play.doubt {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+button.playing {
+  background: var(--playing);
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+legend {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.pick {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+}
+
+.pick input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+}
+
+textarea {
+  font: inherit;
+  width: 100%;
+  min-height: 80px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.status {
+  font-size: 0.9rem;
+  color: var(--muted);
+  min-height: 1.4em;
+}
+
+#player-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px));
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+
+/* Hors artifact, rien ne masque [hidden] à la place de la page */
+#player-bar[hidden] {
+  display: none;
+}
+
+#now {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

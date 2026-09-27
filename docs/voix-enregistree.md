@@ -243,6 +243,8 @@ CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sort
   payer ;
 - `ecoute/` (hors git) : pages d'écoute, et dans `avant/` le dernier clip remplacé de chaque
   empreinte (`--redo`, texte dit changé), pour la comparaison avant/après.
+- `bancs/<id>/` (hors git) : les bancs d'écoute (ci-dessous), avec leurs bruts payés et
+  leur registre.
 
 **Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
 modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en français,
@@ -268,6 +270,39 @@ français).
     `MISTRAL_API_KEY`, lue dans un fichier `.env` hors dépôt. Chez Google, une clé classique
     (`AIza…`) restreinte à Cloud Text-to-Speech : ce service refuse les clés liées à un
     compte de service (`AQ.…`).
+
+**Choisir une voix : le banc d'écoute** (`npm run voice:bench`, skill `comparing-voices`).
+Avant de générer toute une langue avec une nouvelle voix, quelques voix candidates disent
+22 phrases du vrai corpus, à côté des voix déjà dans le jeu, sur une page que le propriétaire
+écoute sur son téléphone.
+
+- **Le banc** se décrit dans `scripts/voice/benches/<id>.json`, versionné :
+  - `id`, `lang`, `name` (titre de la page), `title`, et en option `intro`, `question`,
+    `none`, `note`, `size` (22 par défaut), `include` (phrases imposées) ;
+  - `voices`, dans l'ordre de la page. Une voix avec `provider` est **candidate** : ses
+    réglages s'écrivent comme dans `voices.json` (`voiceId`, `model`, `languageCode`,
+    `sourceFormat`, `settings`), et l'encodage est celui de la langue. Une voix avec
+    `version` est une **référence** : ses clips publiés sont lus dans le dépôt privé ;
+  - `questions` : d'autres choix à poser, par exemple la place de la voix dans le jeu.
+- **Phrases** : les pièges de la langue d'abord (deux accords « une fois 7 », un « 11 » en
+  question, un nombre à trois chiffres, le plus long énoncé), puis chaque famille du corpus
+  à tour de rôle, et dans chaque famille ×, ÷, + et −. Le tirage prend le milieu de tranches
+  égales : il ne dépend que du corpus et ne revient pas sans cesse à « 1 fois 1 ».
+- **Commande** : `npm run voice:bench -- --config <banc.json> --dry-run` montre les phrases et
+  les caractères à payer. Ensuite, avec l'accord du propriétaire :
+  `node --env-file=<fichier .env hors dépôt> scripts/voice/bench.mjs --config <banc.json> --max-total-chars <plafond>`.
+  - Le plafond vaut pour tout le banc, relances comprises (registre `billed.jsonl`) ; s'il
+    ne couvre pas tout ce qui reste à payer, rien n'est appelé (code 3).
+  - Un brut payé n'est jamais racheté ; un clip perdu se refait depuis son brut, et des
+    réglages changés rachètent les phrases.
+  - Whisper transcrit toutes les voix en un passage.
+  - `--list-voices google --language-code fr-FR` donne les voix Google d'une langue (appel
+    gratuit).
+- **Sortie** : `<dépôt des voix>/bancs/<id>/`, avec `index.html` (page à publier en artifact),
+  `files.json` (clips à joindre, 250 au plus par envoi) et `clips/<voix>/`. La page donne,
+  pour chaque voix, son débit en secondes par caractère dit et les doutes de Whisper.
+  Le choix du propriétaire va dans le stockage partagé de l'artifact (document
+  `choix/<id>`), que Claude relit ; hors artifact, il reste dans le navigateur.
 
 1. **Portes** : crédits ou solde suffisants, licence confirmée, et un plafond de caractères
    accordé par le propriétaire.
@@ -345,9 +380,13 @@ français).
 
    - **Écoute** : `npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl`
      écrit une page locale (`ecoute/fr-<version>.html` dans le dépôt des voix) : les clips
-     signalés, puis un échantillon de formes féminines, que Whisper ne distingue pas (« un »
-     et « une » s'écrivent « 1 »). Une case « à refaire » par clip ; les cases cochées
-     forment la liste à copier dans `ecartes.txt`.
+     signalés, puis un échantillon de 12 formes féminines, que Whisper ne distingue pas
+     (« un » et « une » s'écrivent « 1 »). Une case « à refaire » par clip ; les cases
+     cochées forment la liste à copier dans `ecartes.txt`.
+   - **Qui écoute quoi** (décision du propriétaire, 27/09/2026) : un clip que Whisper juge
+     juste n'est pas réécouté. Les clips signalés sont d'abord refaits en boucle, sans
+     écoute, tant que Whisper doute (deux ou trois tours). Le propriétaire n'écoute ensuite
+     que ceux qu'il n'a toujours pas validés, et l'échantillon des accords.
    - **Refaire** : `generate.mjs --lang fr --redo ecartes.txt` (seulement les clips écartés
      à l'écoute ; l'ancien de chacun est mis de côté dans `ecoute/avant/`). Whisper
      retranscrit ensuite les clips refaits (leur sha256 a changé), puis

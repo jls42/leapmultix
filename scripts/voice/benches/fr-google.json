@@ -1,0 +1,42 @@
+{
+  "id": "fr-google",
+  "lang": "fr",
+  "name": "Sulafat en français",
+  "title": "Sulafat pour le français ?",
+  "intro": "Sulafat (Google, Chirp 3 HD) dit déjà l'anglais et l'espagnol du jeu : en français aussi, le joueur garderait la même voix dans les trois langues. Trois autres voix féminines de la même famille servent de comparaison, Lucie et Marie, déjà dans le jeu, de repère.",
+  "question": "Quelle voix générer pour tout le français ?",
+  "none": "Aucune : garder Lucie et Marie seulement",
+  "note": "Génération gratuite ce mois-ci, dans le million de caractères que Google offre chaque mois pour Chirp 3 HD.",
+  "questions": [
+    {
+      "id": "place",
+      "legend": "Sa place dans le jeu",
+      "options": [
+        {
+          "value": "menu",
+          "label": "Au choix dans le menu « Voix » (Lucie reste la voix par défaut)"
+        },
+        { "value": "defaut", "label": "Voix par défaut du français (Lucie passe au choix)" }
+      ]
+    }
+  ],
+  "voices": [
+    {
+      "slug": "sulafat",
+      "name": "Sulafat",
+      "note": "celle de l'anglais et de l'espagnol",
+      "provider": "google",
+      "voiceId": "fr-FR-Chirp3-HD-Sulafat"
+    },
+    { "slug": "leda", "name": "Leda", "provider": "google", "voiceId": "fr-FR-Chirp3-HD-Leda" },
+    { "slug": "aoede", "name": "Aoede", "provider": "google", "voiceId": "fr-FR-Chirp3-HD-Aoede" },
+    {
+      "slug": "achernar",
+      "name": "Achernar",
+      "provider": "google",
+      "voiceId": "fr-FR-Chirp3-HD-Achernar"
+    },
+    { "slug": "lucie", "name": "Lucie", "note": "voix par défaut", "version": "lucie-v3-2" },
+    { "slug": "marie", "name": "Marie", "note": "au choix", "version": "marie-v1-1" }
+  ]
+}
