@@ -38,6 +38,7 @@ const DESCRIPTIVE_FIELDS = new Set([
   'lang',
   // Texte dit propre à la voix : suivi clip par clip (champ said du manifeste)
   'saidOverrides',
+  'saidWords',
 ]);
 
 function canonicalJson(value) {

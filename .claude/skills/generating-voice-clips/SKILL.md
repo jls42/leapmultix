@@ -34,7 +34,7 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
 Mistral (Voxtral TTS, `MISTRAL_API_KEY`, 16 $ le million de caractères) reste branché : Jane
 (`jane-v1-1`), la voix anglaise jusqu'au passage à Sulafat, est une **autre voix** de
 l'anglais, au choix du joueur ; Marie (`marie-v1-1`, « Marie - Curious ») est une autre voix du
-français. Sulafat en français (`sulafat-v1-1`, `fr-FR-Chirp3-HD-Sulafat`) en est une autre, pour
+français. Sulafat en français (`sulafat-v1-2`, `fr-FR-Chirp3-HD-Sulafat`) en est une autre, pour
 garder la même voix dans les trois langues.
 
 **Autres voix** : `scripts/voice/alternatives.json` déclare, par langue, les voix proposées en
@@ -175,7 +175,7 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
      (`sort -u ecartes-1.txt ecartes-2.txt > ecartes-toutes.txt`).
    - **Clip qui résiste**, encore signalé ou mal dit après deux ou trois essais (un nombre en
      tête de phrase, par exemple) : il reçoit un texte dit imposé. Relancer ensuite
-     `generate.mjs` sans `--redo` : le texte dit a changé, donc le clip est refait seul. Deux
+     `generate.mjs` sans `--redo` : le texte dit a changé, donc le clip est refait seul. Trois
      endroits :
      - `SAID_OVERRIDES` (`said-text.mjs`) change le texte dit de **toute la langue**, donc de
        chacune de ses voix : à réserver à une langue dont aucun clip de la phrase n'est publié,
@@ -184,7 +184,12 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
        change que cette voix : `{ "<phrase de speak()>": "<texte dit>" }`. Il reste hors des
        empreintes des réglages, et une phrase absente du corpus est refusée. Exemple : Marie
        disait « Combien font 41 ? » pour « Combien font 49 moins 41 ? » ; avec les nombres en
-       lettres, elle le dit juste.
+       lettres, elle le dit juste ;
+     - `saidWords` dans l'entrée de la voix, pour un mot qu'elle dit mal partout :
+       `{ "<mot>": "<graphie>" }`, appliqué au mot entier, casse comprise, après son texte
+       propre. Exemple : Sulafat en français, `{ "plus": "plusse" }` (elle disait « plu »). Un
+       mot absent du corpus est refusé. Whisper n'entend pas ce genre de défaut : le vérifier
+       sur un échantillon des phrases qui contiennent le mot.
 
 6. **Sauvegarde** : proposer au propriétaire le commit du dépôt privé (`clips/`,
    `manifests/`, registre compris), puis le pousser. `raw/` et `ecoute/` restent locaux.
