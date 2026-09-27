@@ -276,10 +276,12 @@ CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sort
   leur registre.
 
 **Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
-modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en français,
+modèle, les réglages et l'encodage, sous une version (`lucie-v3-3` en français,
 `sulafat-v1-1` en anglais et en espagnol). `scripts/voice/alternatives.json` fait de même
-pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais ; `marie-v1-1`, Marie, et
-`sulafat-v1-2`, Sulafat, en français).
+pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais ; `marie-v1-2`, Marie, et
+`sulafat-v1-3`, Sulafat, en français). Les versions du français ont changé le 27/09/2026 pour
+l'élision de « de » (`lucie-v3-2` → `v3-3`, `marie-v1-1` → `v1-2`, `sulafat-v1-2` → `v1-3`) : un
+clip publié ne se réécrit pas.
 
 - Changer un réglage impose une nouvelle version : le générateur refuse de mélanger deux
   réglages sous une même version.
@@ -374,7 +376,10 @@ Avant de générer toute une langue avec une nouvelle voix, quelques voix candid
      9 » se dit « Cent huit divisé par douze égale neuf » (trois essais en chiffres, trois
      débuts mal dits). En anglais, le texte dit est la phrase elle-même. Ce texte imposé vaut
      pour toutes les voix de la langue ; une voix peut en avoir un pour elle seule
-     (`saidOverrides` dans son entrée), sans toucher aux clips des autres voix. Un mot qu'une
+     (`saidOverrides` dans son entrée), sans toucher aux clips des autres voix. En français,
+     « de » s'élide devant « une » et devant le « 1 » d'un nom masculin : « 9 boîtes d'une
+     pomme », « 10 groupes d'un enfant » (30 phrases, corrigées le 27/09/2026 dans les trois
+     voix, qui disaient « de une pomme »). Un mot qu'une
      voix dit mal partout s'écrit autrement pour elle seule (`saidWords`, mot entier, casse
      comprise) : Sulafat dit « pluss » quand on lui écrit « plusse ».
    - **Traitement** (`audio-process.mjs`) : silences de début et de fin coupés, −20 LUFS,

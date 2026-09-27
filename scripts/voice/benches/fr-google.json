@@ -36,7 +36,7 @@
       "provider": "google",
       "voiceId": "fr-FR-Chirp3-HD-Achernar"
     },
-    { "slug": "lucie", "name": "Lucie", "note": "voix par défaut", "version": "lucie-v3-2" },
-    { "slug": "marie", "name": "Marie", "note": "au choix", "version": "marie-v1-1" }
+    { "slug": "lucie", "name": "Lucie", "note": "voix par défaut", "version": "lucie-v3-3" },
+    { "slug": "marie", "name": "Marie", "note": "au choix", "version": "marie-v1-2" }
   ]
 }

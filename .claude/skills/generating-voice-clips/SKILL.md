@@ -24,7 +24,7 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
 
 | Langue | Voix (version)           | Fournisseur                                            | Clé                  | Coût                                                             | Solde lisible             |
 | ------ | ------------------------ | ------------------------------------------------------ | -------------------- | ---------------------------------------------------------------- | ------------------------- |
-| fr     | Lucie (`lucie-v3-2`)     | ElevenLabs, Eleven v3                                  | `ELEVENLABS_API_KEY` | environ 0,53 crédit par caractère (en-tête `character-cost`)     | oui : `--reserve` protège |
+| fr     | Lucie (`lucie-v3-3`)     | ElevenLabs, Eleven v3                                  | `ELEVENLABS_API_KEY` | environ 0,53 crédit par caractère (en-tête `character-cost`)     | oui : `--reserve` protège |
 | en     | Sulafat (`sulafat-v1-1`) | Google Cloud Text-to-Speech, `en-GB-Chirp3-HD-Sulafat` | `GOOGLE_TTS_API_KEY` | 30 $ le million de caractères, le premier million du mois offert | non                       |
 | es     | Sulafat (`sulafat-v1-1`) | Google Cloud Text-to-Speech, `es-ES-Chirp3-HD-Sulafat` | `GOOGLE_TTS_API_KEY` | idem ; nombres dits en lettres                                   | non                       |
 
@@ -33,8 +33,8 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
 
 Mistral (Voxtral TTS, `MISTRAL_API_KEY`, 16 $ le million de caractères) reste branché : Jane
 (`jane-v1-1`), la voix anglaise jusqu'au passage à Sulafat, est une **autre voix** de
-l'anglais, au choix du joueur ; Marie (`marie-v1-1`, « Marie - Curious ») est une autre voix du
-français. Sulafat en français (`sulafat-v1-2`, `fr-FR-Chirp3-HD-Sulafat`) en est une autre, pour
+l'anglais, au choix du joueur ; Marie (`marie-v1-2`, « Marie - Curious ») est une autre voix du
+français. Sulafat en français (`sulafat-v1-3`, `fr-FR-Chirp3-HD-Sulafat`) en est une autre, pour
 garder la même voix dans les trois langues.
 
 **Autres voix** : `scripts/voice/alternatives.json` déclare, par langue, les voix proposées en
