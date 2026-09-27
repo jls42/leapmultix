@@ -170,7 +170,7 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
   des phrases du même type, puis se corrige pour toutes (texte dit propre à la voix).
 - **Sulafat en français** : un « 1 » final écrit en chiffre est avalé (« moins 1 » entendu
   « moins ») ; « un » en lettres passe. « plus » est lu comme l'adverbe (« plu ») dans toutes
-  les questions et la moitié des égalités ; « plusse » se dit « pluss ». `sulafat-v1-2` porte
+  les questions et la moitié des égalités ; « plusse » se dit « pluss ». `sulafat-v1-3` porte
   `saidWords: { "plus": "plusse" }` et 19 textes propres (`alternatives.json`).
 - **`curl` sur `/voice/` répond 403** : la fonction CloudFront `voice_guard` ne sert que les
   requêtes du jeu (`Sec-Fetch-Site: same-origin`) ; `check-online.mjs` envoie cet en-tête.

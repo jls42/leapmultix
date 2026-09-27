@@ -3,7 +3,7 @@
     {
       "provider": "mistral",
       "voice": "marie",
-      "version": "marie-v1-1",
+      "version": "marie-v1-2",
       "voiceId": "e0580ce5-e63c-4cbe-88c8-a983b80c5f1f",
       "voiceName": "Marie - Curious",
       "model": "voxtral-mini-tts-2603",
@@ -26,7 +26,7 @@
     {
       "provider": "google",
       "voice": "sulafat",
-      "version": "sulafat-v1-2",
+      "version": "sulafat-v1-3",
       "voiceId": "fr-FR-Chirp3-HD-Sulafat",
       "voiceName": "Sulafat (Chirp 3 HD)",
       "languageCode": "fr-FR",

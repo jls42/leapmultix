@@ -39,6 +39,8 @@ import {
 
 const SCRIPT = path.resolve('scripts/voice/bench.mjs');
 const FR = buildCorpus('fr');
+/** Version publiée de Lucie, voix de référence des bancs d'essai : celle de voices.json */
+const LUCIE = loadVoice('fr').version;
 
 /** Banc d'essai : deux candidates Google, puis Lucie en référence */
 function benchConfig(overrides = {}) {
@@ -50,7 +52,7 @@ function benchConfig(overrides = {}) {
     voices: [
       { slug: 'sulafat', name: 'Sulafat', provider: 'google', voiceId: 'fr-FR-Chirp3-HD-Sulafat' },
       { slug: 'leda', name: 'Leda', provider: 'google', voiceId: 'fr-FR-Chirp3-HD-Leda' },
-      { slug: 'lucie', name: 'Lucie', note: 'voix par défaut', version: 'lucie-v3-2' },
+      { slug: 'lucie', name: 'Lucie', note: 'voix par défaut', version: LUCIE },
     ],
     questions: [
       {
@@ -86,13 +88,13 @@ describe('fichier du banc', () => {
       lang: 'fr',
       encoding: loadVoice('fr').encoding,
     });
-    expect(setup.voices[2].voice.version).toBe('lucie-v3-2');
+    expect(setup.voices[2].voice.version).toBe(LUCIE);
     expect(setup.size).toBe(DEFAULT_SIZE);
     expect(setup.texts).toMatchObject({ name: 'Banc essai', question: 'Quelle voix retenir ?' });
     expect(setup.questions[0].options.map(option => option.value)).toEqual(['menu', 'defaut']);
   });
 
-  const lucie = { slug: 'lucie', name: 'Lucie', version: 'lucie-v3-2' };
+  const lucie = { slug: 'lucie', name: 'Lucie', version: LUCIE };
   test.each([
     ['aucune candidate', { voices: [lucie] }, 'aucune voix candidate'],
     [
@@ -104,7 +106,7 @@ describe('fichier du banc', () => {
     ['voix en double', { voices: [google('a', 'v1'), google('a', 'v2')] }, 'en double'],
     [
       'fournisseur et version à la fois',
-      { voices: [{ ...google('a', 'v'), version: 'lucie-v3-2' }] },
+      { voices: [{ ...google('a', 'v'), version: LUCIE }] },
       "l'un ou l'autre",
     ],
     [
@@ -304,12 +306,12 @@ async function fakeVoicesRepo() {
   const repo = path.join(work, 'voices');
   const clips = {};
   for (const phrase of phrases.slice(0, 2)) {
-    const file = path.join(repo, 'clips', 'fr', 'lucie-v3-2', `${phrase.key}.mp3`);
+    const file = path.join(repo, 'clips', 'fr', LUCIE, `${phrase.key}.mp3`);
     await fsp.mkdir(path.dirname(file), { recursive: true });
     await fsp.writeFile(file, `mp3 lucie ${phrase.text}`);
     clips[phrase.key] = { text: phrase.text, said: phrase.said, duration: 2 };
   }
-  const manifest = path.join(repo, 'manifests', 'fr', 'lucie-v3-2.json');
+  const manifest = path.join(repo, 'manifests', 'fr', `${LUCIE}.json`);
   await fsp.mkdir(path.dirname(manifest), { recursive: true });
   await fsp.writeFile(manifest, JSON.stringify({ clips }));
   return repo;

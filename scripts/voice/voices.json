@@ -2,7 +2,7 @@
   "fr": {
     "provider": "elevenlabs",
     "voice": "lucie",
-    "version": "lucie-v3-2",
+    "version": "lucie-v3-3",
     "voiceId": "YxrwjAKoUKULGd0g8K9Y",
     "publicOwnerId": "53d56d1e766535d6232a30f650da70c99c78955695b21e29a29241b73aed2723",
     "model": "eleven_v3",

@@ -152,7 +152,8 @@ l'espagnol, devient une autre voix du français. Lucie (ElevenLabs) reste la voi
   30 000, les autres phrases reprises des bruts.
 - **Outil corrigé** : `voice:check` écartait de la liste à réécouter un clip revenu à un
   contenu déjà transcrit (même son renvoyé par Google), le croyant périmé.
-- **Point ouvert, à l'arbitrage du propriétaire** : le texte dit fait dire « 9 boîtes de une
-  pomme » au lieu de « d'une pomme » (accord de `said-text.mjs`, commun à toutes les voix du
-  français). Le corriger change le texte dit de ces phrases, donc demande d'en refaire les clips
-  pour Lucie (payant), Marie et Sulafat.
+- **Élision de « de » (27/09, décision du propriétaire)** : le texte dit faisait dire « 9 boîtes
+  de une pomme » ; `said-text.mjs` élide désormais « de » devant « une » et devant le « 1 » d'un
+  nom masculin (« d'un enfant »). 30 phrases, refaites dans les trois voix du français, chacune en
+  nouvelle version (`lucie-v3-3`, `marie-v1-2`, `sulafat-v1-3`) : les 7 407 autres clips viennent
+  des bruts, identiques à l'octet près. 1 722 caractères par voix.

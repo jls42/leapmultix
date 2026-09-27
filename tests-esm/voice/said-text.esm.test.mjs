@@ -130,6 +130,36 @@ describe('Texte dit : textes imposés', () => {
     expect(saidText('108 divisé par 12 égale 9', 'en')).toBe('108 divisé par 12 égale 9');
   });
 
+  test('français : « de » élidé devant « une » et devant le « 1 » d’un nom masculin', () => {
+    expect(saidText("Si j'ai 9 boîtes de 1 pomme, combien de pommes ai-je ?", 'fr')).toBe(
+      "Si j'ai 9 boîtes d'une pomme, combien de pommes ai-je ?"
+    );
+    expect(saidText('Une fusée fait 10 sauts de 1 case. Quelle distance totale ?', 'fr')).toBe(
+      "Une fusée fait 10 sauts d'une case. Quelle distance totale ?"
+    );
+    expect(saidText("Il y a 10 groupes de 1 enfant. Combien d'enfants au total ?", 'fr')).toBe(
+      "Il y a 10 groupes d'un enfant. Combien d'enfants au total ?"
+    );
+    // Rien d'autre ne bouge : « de 21 », « 1 groupe » en tête, « de » devant un autre mot
+    expect(saidText("Si j'ai 9 boîtes de 21 pommes, combien de pommes ai-je ?", 'fr')).toBe(
+      "Si j'ai 9 boîtes de vingt et une pommes, combien de pommes ai-je ?"
+    );
+    expect(saidText("Il y a 1 groupe de 10 enfants. Combien d'enfants au total ?", 'fr')).toBe(
+      "Il y a 1 groupe de 10 enfants. Combien d'enfants au total ?"
+    );
+    expect(saidText('10 moins 9 égale 1', 'fr')).toBe('10 moins 9 égale 1');
+    expect(saidText('Il y a 2 paquets de 1 égale', 'fr')).toBe('Il y a 2 paquets de 1 égale');
+  });
+
+  test('français : aucun « de une », « de un » ni « de 1 » devant un nom dans le corpus dit', () => {
+    const left = buildCorpus('fr')
+      .map(phrase => saidText(phrase.text, 'fr'))
+      .filter(
+        said => /(?<![\p{L}\p{N}])de (une?|1)\s+\p{L}/u.test(said) && !/de 1 égale/.test(said)
+      );
+    expect(left).toEqual([]);
+  });
+
   test('texte dit propre à une voix : lui pour sa phrase, celui de la langue pour les autres', () => {
     const marie = {
       saidOverrides: {

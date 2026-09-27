@@ -2,11 +2,13 @@
 // synthèse risque de mal la prononcer. Le clip reste rangé sous l'empreinte de la phrase
 // de speak() ; la voix de l'appareil, en repli, lit toujours cette phrase-là.
 //
-// Trois réécritures :
+// Quatre réécritures :
 // - l'accord en genre des nombres qui finissent par 1, que les chiffres ne portent pas.
 //   « Combien font 1 fois 7 ? » se dit « une fois 7 » (fois est féminin), « 21 pommes » se
 //   dit « vingt et une pommes » ; en espagnol « 1 caja » se dit « una caja » et « 21 niños »
 //   « veintiún niños ». Un nombre seul garde sa lecture par défaut ;
+// - en français, « de » élidé devant « un » et « une » : « 9 boîtes d'une pomme », « 10 groupes
+//   d'un enfant » (et non « de une pomme ») ;
 // - en espagnol, tous les autres nombres en lettres (« 7 por 8 » : « siete por ocho ») : écrit
 //   ainsi, un nombre ne se lit que d'une façon ;
 // - un texte imposé (SAID_OVERRIDES) pour une phrase que la voix prononce mal essai après
@@ -177,11 +179,26 @@ function spanishNumber(n, one = 'uno') {
  * Sulafat, voix espagnole native, dit juste tous les nombres ainsi écrits, 11 compris (banc du
  * 26/09/2026) : les lettres restent, elles ne laissent aucune lecture au hasard.
  */
+/** « de » suivi de « une », ou de « 1 » devant un nom masculin : le mot visé est capturé */
+const DE_BEFORE_ONE = /(?<![\p{L}\p{N}])de (1|une)(?=\s+(\p{L}+))/gu;
+
+/**
+ * Français, après l'accord : « de » s'élide devant « une » (« d'une pomme ») et devant le « 1 »
+ * d'un nom masculin (« d'un enfant »). Un « 1 » devant un autre mot garde sa lecture.
+ */
+function frenchElided(text, words) {
+  return text.replace(DE_BEFORE_ONE, (match, one, word) => {
+    if (one === 'une') return "d'une";
+    return words.masculine.includes(word.toLowerCase()) ? "d'un" : match;
+  });
+}
+
 const RULES = {
   fr: {
     invariable: n => [11, 71, 91].includes(n % 100),
     feminine: frenchFeminine,
     masculine: null,
+    elided: frenchElided,
     spelled: null,
   },
   es: {
@@ -246,8 +263,9 @@ export function saidText(text, lang) {
   const words = WORDS_AFTER_NUMBERS[lang];
   if (!rules || !words) return text;
   const withAgreement = agreed(text, rules, words);
-  if (!rules.spelled) return withAgreement;
-  return withAgreement.replace(LONE_NUMBER, digits => rules.spelled(Number(digits)) ?? digits);
+  const elided = rules.elided ? rules.elided(withAgreement, words) : withAgreement;
+  if (!rules.spelled) return elided;
+  return elided.replace(LONE_NUMBER, digits => rules.spelled(Number(digits)) ?? digits);
 }
 
 /**
