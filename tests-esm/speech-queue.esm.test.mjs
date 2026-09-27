@@ -31,6 +31,7 @@ const {
   holdSpeechDecision,
   isSpeechDecisionPending,
   preloadSpeech,
+  whenSpeechEnds,
 } = speech;
 
 /** Moteur factice : chaque phrase reçue garde ses rappels et sa poignée */
@@ -234,6 +235,74 @@ describe('Fin bornée', () => {
     expect(estimateSpeechDurationMs('Combien font 7 fois 8 ?')).toBeGreaterThan(
       estimateSpeechDurationMs('Bravo !')
     );
+  });
+});
+
+describe('Fin de la parole (whenSpeechEnds)', () => {
+  /** Promesse et son état, lisible après chaque étape */
+  function watch(promise) {
+    const state = { settled: false };
+    promise.then(() => {
+      state.settled = true;
+    });
+    return state;
+  }
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+
+  test('tenue tout de suite quand rien ne parle', async () => {
+    const silence = watch(whenSpeechEnds());
+    await flush();
+    expect(silence.settled).toBe(true);
+  });
+
+  test('tenue à la fin de la phrase en cours, pas avant', async () => {
+    speak('Presque ! La bonne réponse est 56.');
+    const explanation = engine.last();
+    const silence = watch(whenSpeechEnds());
+    explanation.ctx.onStarted();
+    await flush();
+    expect(silence.settled).toBe(false);
+
+    explanation.ctx.onEnded();
+    await flush();
+    expect(silence.settled).toBe(true);
+  });
+
+  test('une phrase en attente est dite avant : la parole ne se tait qu’après elle', async () => {
+    speak('Bravo !');
+    const bravo = engine.last();
+    speak('Combien font 7 fois 8 ?', { queue: true });
+    const silence = watch(whenSpeechEnds());
+
+    bravo.ctx.onEnded();
+    await flush();
+    expect(silence.settled).toBe(false);
+    expect(engine.texts()).toEqual(['Bravo !', 'Combien font 7 fois 8 ?']);
+
+    engine.last().ctx.onEnded();
+    await flush();
+    expect(silence.settled).toBe(true);
+  });
+
+  test('tenue quand la parole est coupée', async () => {
+    speak('Presque ! La bonne réponse est 56.');
+    const silence = watch(whenSpeechEnds());
+    cancelSpeech();
+    await flush();
+    expect(silence.settled).toBe(true);
+  });
+
+  test('tenue à l’échéance d’une phrase dont la fin n’est jamais signalée', async () => {
+    jest.useFakeTimers();
+    speak('Presque ! La bonne réponse est 56.');
+    const silence = watch(whenSpeechEnds());
+    engine.last().ctx.onStarted();
+    await jest.advanceTimersByTimeAsync(
+      estimateSpeechDurationMs('Presque ! La bonne réponse est 56.') - 10
+    );
+    expect(silence.settled).toBe(false);
+    await jest.advanceTimersByTimeAsync(20);
+    expect(silence.settled).toBe(true);
   });
 });
 

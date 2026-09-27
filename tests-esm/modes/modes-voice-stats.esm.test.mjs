@@ -17,6 +17,8 @@ jest.unstable_mockModule('../../js/speech.js', () => ({
   updateSpeechVoice: () => {},
   cancelSpeech: () => {},
   preloadSpeech: () => {},
+  // Rien n'est dit ici : la parole est toujours déjà tue
+  whenSpeechEnds: () => Promise.resolve(),
 }));
 const recordOperationResult = jest.fn();
 jest.unstable_mockModule('../../js/core/operation-stats.js', () => ({ recordOperationResult }));

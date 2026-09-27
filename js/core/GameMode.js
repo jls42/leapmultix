@@ -23,7 +23,7 @@ import {
 import { recordOperationResult } from './operation-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
-import { cancelSpeech, preloadSpeech } from '../speech.js';
+import { cancelSpeech, preloadSpeech, whenSpeechEnds } from '../speech.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
 import { generateQuestion } from '../questionGenerator.js';
@@ -467,6 +467,13 @@ export function buildAnswerOptions(question, count = 4) {
  * lui, jamais par-dessus, sans attendre la fin du fichier.
  */
 export const GOOD_SOUND_MS = 200;
+
+/**
+ * Après la pause d'une erreur, attente au plus de la fin de l'explication avant la question
+ * suivante : filet de sécurité si la fin n'était jamais signalée (la file borne déjà chaque
+ * phrase d'après son texte)
+ */
+export const EXPLANATION_WAIT_MAX_MS = 6000;
 
 export class GameMode {
   /**
@@ -1112,27 +1119,61 @@ export class GameMode {
   scheduleNextQuestion(isCorrect = true) {
     const delay = isCorrect ? this.config.nextQuestionDelay : this.config.wrongAnswerDelay;
 
-    // Après une bonne réponse, la question suivante attend la fin du « Bravo » au lieu de
-    // le couper ; après une erreur, elle coupe la fin de l'explication (Défi)
-    this._queueNextQuestionSpeech = isCorrect;
+    // La question suivante attend la fin de la phrase en cours (« Bravo », explication)
+    // au lieu de la couper
+    this._queueNextQuestionSpeech = true;
 
-    // Les modes chronométrés suspendent leur décompte pendant cette lecture
-    if (!isCorrect) this.onWrongAnswerPause(delay);
+    // Les modes chronométrés suspendent leur décompte pendant la lecture de l'explication
+    if (!isCorrect) this.onWrongAnswerPause();
 
     this.addTimer(() => {
-      if (this.shouldContinue()) {
-        this.generateQuestion();
-      } else {
-        this.finish();
+      if (isCorrect) {
+        this.nextQuestionOrFinish();
+        return;
       }
+      // Après une erreur, la bonne réponse se dit en entier : la question suivante attend
+      // la fin de la phrase, puis le décompte repart
+      this.afterExplanation(() => {
+        this.onWrongAnswerResume();
+        this.nextQuestionOrFinish();
+      });
     }, delay);
+  }
+
+  /** Question suivante, ou fin de partie */
+  nextQuestionOrFinish() {
+    if (this.shouldContinue()) {
+      this.generateQuestion();
+    } else {
+      this.finish();
+    }
+  }
+
+  /**
+   * Appelle next quand la parole s'est tue (whenSpeechEnds), au plus tard après
+   * EXPLANATION_WAIT_MAX_MS, une seule fois, et seulement si la partie continue : une
+   * sortie de mode entre-temps coupe la parole, ce qui tiendrait l'attente.
+   * @param {() => void} next
+   */
+  afterExplanation(next) {
+    let done = false;
+    const go = () => {
+      if (done || !this.state.isActive) return;
+      done = true;
+      next();
+    };
+    whenSpeechEnds().then(go);
+    this.addTimer(go, EXPLANATION_WAIT_MAX_MS);
   }
 
   /**
    * Pause de lecture après une erreur : un mode chronométré y arrête son décompte
-   * (voir ChallengeMode). La durée de la pause est passée aux redéfinitions.
+   * (voir ChallengeMode), jusqu'à onWrongAnswerResume.
    */
   onWrongAnswerPause() {}
+
+  /** Fin de la pause d'une erreur, juste avant la question suivante : le décompte repart */
+  onWrongAnswerResume() {}
 
   /**
    * Vérifier si le jeu doit continuer
@@ -1406,8 +1447,8 @@ export class GameMode {
   }
 
   /**
-   * Lit la question à voix haute. Après une bonne réponse, elle attend la fin du
-   * « Bravo » (voir scheduleNextQuestion) ; sinon elle coupe la phrase en cours.
+   * Lit la question à voix haute. Après une réponse, elle attend la fin du « Bravo » ou
+   * de l'explication (voir scheduleNextQuestion) ; sinon elle coupe la phrase en cours.
    * @param {string} [displayed] - Question telle qu'elle est affichée
    */
   speakQuestion(displayed) {
