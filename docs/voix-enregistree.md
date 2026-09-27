@@ -48,7 +48,13 @@ place et ce qui vient ensuite.
       11, 108, énoncés), Marie - Neutral et Marie - Curious face à Lucie. 0 doute de Whisper
       pour les deux ; 0,072 et 0,081 s par caractère, contre 0,071 pour Lucie. Le propriétaire
       retient Curious.
-    - Coût : 221 837 caractères, environ 3,55 $.
+    - Génération du 27/09/2026 : 7 437 clips, aucun refus de la modération. Whisper en
+      signalait 133 à la première prise, presque tous pour une syllabe avalée par le modèle
+      (« rente » pour « trente », « roi » pour « trois ») : 164 nouvelles prises en 5 tours les
+      ont rendus justes, sauf « Combien font 48 moins 41 ? » et « 49 moins 41 », dits justes
+      seulement avec les nombres en lettres (texte dit propre à Marie, `saidOverrides`).
+    - Coût : 225 455 caractères pour la voix, et 1 690 pour le banc et les essais, soit
+      environ 3,63 $.
   - **Espagnol, essai écarté : Jane - Neutral**, le 26/09/2026. Mistral n'a aucune voix
     espagnole.
     - Banc des 30 voix prêtes : le propriétaire retient Jane, les autres ne convainquent pas.
@@ -302,7 +308,9 @@ français).
      « veintiún niños ») ; la phrase de `speak()` reste la clé du clip. Une phrase mal dite
      essai après essai reçoit un texte imposé (`SAID_OVERRIDES`) : « 108 divisé par 12 égale
      9 » se dit « Cent huit divisé par douze égale neuf » (trois essais en chiffres, trois
-     débuts mal dits). En anglais, le texte dit est la phrase elle-même.
+     débuts mal dits). En anglais, le texte dit est la phrase elle-même. Ce texte imposé vaut
+     pour toutes les voix de la langue ; une voix peut en avoir un pour elle seule
+     (`saidOverrides` dans son entrée), sans toucher aux clips des autres voix.
    - **Traitement** (`audio-process.mjs`) : silences de début et de fin coupés, −20 LUFS,
      pic −1 dBFS, 0,15 s de silence gardé avant la phrase, MP3 mono 64 kb/s ; un clip muet est
      refusé. Un clic isolé par un long silence part avec lui. Changer l'encodage demande une

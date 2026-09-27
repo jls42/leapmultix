@@ -17,6 +17,10 @@
         "silenceDb": -50,
         "leadSeconds": 0.15,
         "trailSeconds": 0.08
+      },
+      "saidOverrides": {
+        "Combien font 48 moins 41 ?": "Combien font quarante-huit moins quarante et un ?",
+        "Combien font 49 moins 41 ?": "Combien font quarante-neuf moins quarante et un ?"
       }
     }
   ],
