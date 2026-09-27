@@ -151,6 +151,12 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
 - **« n'existe plus ou n'est pas accessible »** (Mistral) : la voix prête a été retirée
   (préavis `retention_notice`) ou l'identifiant est faux ; lister les voix par
   `GET /v1/audio/voices`. Les clips déjà générés restent.
+- **Une voix avale un mot ou une syllabe** (« rente » pour « trente », « Combien font 41 ? »
+  pour « Combien font 49 moins 41 ? ») : Whisper sur le brut (`raw/<l>/s-<réglages>/`) dit si
+  le défaut vient du modèle ou du traitement. Du modèle : une nouvelle prise suffit le plus
+  souvent (`--redo`) ; s'il résiste, un texte dit propre à la voix (`saidOverrides`).
+- **« Texte dit propre à la voix pour une phrase absente du corpus »** : clé de
+  `saidOverrides` mal recopiée ; elle doit être la phrase exacte de `speak()`.
 - **« Les réglages de la voix … ont changé »** : `voices.json` a changé sous une version
   existante ; remettre les réglages, ou créer une nouvelle version (nouvelle génération).
 - **Clip signalé par Whisper** : Whisper n'entend pas « un » / « une » et se trompe parfois

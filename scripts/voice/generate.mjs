@@ -38,7 +38,7 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCorpus } from './corpus.mjs';
-import { saidText } from './said-text.mjs';
+import { unknownOwnSaidTexts, voiceSaidText } from './said-text.mjs';
 import {
   ClipContentError,
   checkAudioTools,
@@ -420,7 +420,7 @@ async function finishClip({ phrase, said, raw, requestId, cost }, ctx) {
  * (budget atteint).
  */
 async function produceClip(phrase, ctx) {
-  const said = saidText(phrase.text, ctx.lang);
+  const said = voiceSaidText(ctx.voice, phrase.text, ctx.lang);
   const raw = rawFile(ctx.paths, phrase.key, said);
   const fresh = !fs.existsSync(raw);
   // Un brut déjà payé est retraité sans nouvel appel
@@ -561,7 +561,10 @@ function plannedSummary({ lang, voice, phrases }, queue, leftovers, reconciled) 
     phrases: phrases.length,
     alreadyDone: phrases.length - queue.length,
     toDo: queue.length,
-    toDoChars: queue.reduce((sum, phrase) => sum + charCount(saidText(phrase.text, lang)), 0),
+    toDoChars: queue.reduce(
+      (sum, phrase) => sum + charCount(voiceSaidText(voice, phrase.text, lang)),
+      0
+    ),
     leftovers: leftovers.length,
     ...reconciled,
   };
@@ -595,13 +598,19 @@ function finalSummary(summary, { state, manifest, options }) {
 
 async function generateLocked(opts, paths) {
   const { lang, voice, phrases } = opts;
+  const unknown = unknownOwnSaidTexts(voice, phrases);
+  if (unknown.length) {
+    throw new Error(
+      `Texte dit propre à la voix pour une phrase absente du corpus : ${unknown.join(' | ')}`
+    );
+  }
   const manifest = readManifest(paths, lang, voice);
   const leftovers = await prepareStore(opts, paths, manifest);
   const reconciled = await reconcile({
     paths,
     manifest,
     phrasesByKey: new Map(phrases.map(phrase => [phrase.key, phrase])),
-    said: text => saidText(text, lang),
+    said: text => voiceSaidText(voice, text, lang),
     inspect: file => inspectWith(opts.probeAudio, file),
     dryRun: opts.dryRun,
   });

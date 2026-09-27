@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { buildCorpus } from './corpus.mjs';
-import { saidText } from './said-text.mjs';
+import { voiceSaidText } from './said-text.mjs';
 import { clipProblem, probeClip } from './audio-process.mjs';
 import { flagOption, parseOptions, pathOption, valueOption } from './cli-options.mjs';
 import { compareTranscript } from './transcript-compare.mjs';
@@ -42,12 +42,15 @@ function median(values) {
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
-function missingReport(missing, lang) {
+function missingReport(missing, lang, voice) {
   const byFamily = {};
   for (const phrase of missing) byFamily[phrase.family] = (byFamily[phrase.family] ?? 0) + 1;
   return {
     count: missing.length,
-    chars: missing.reduce((sum, phrase) => sum + charCount(saidText(phrase.text, lang)), 0),
+    chars: missing.reduce(
+      (sum, phrase) => sum + charCount(voiceSaidText(voice, phrase.text, lang)),
+      0
+    ),
     byFamily,
   };
 }
@@ -130,10 +133,13 @@ export async function checkClips({ lang, phrases, voice, outDir, probe, transcri
     clips: entries.filter(([key]) => inCorpus.has(key) && fileKeys.has(key)).length,
     missing: missingReport(
       phrases.filter(phrase => !manifest.clips[phrase.key]),
-      lang
+      lang,
+      voice
     ),
     stale: entries
-      .filter(([key, entry]) => inCorpus.has(key) && entry.said !== saidText(entry.text, lang))
+      .filter(
+        ([key, entry]) => inCorpus.has(key) && entry.said !== voiceSaidText(voice, entry.text, lang)
+      )
       .map(([key, entry]) => ({ key, text: entry.text })),
     entriesWithoutFile: entries.filter(([key]) => !fileKeys.has(key)).map(([key]) => key),
     filesWithoutEntry: [...fileKeys].filter(key => !manifest.clips[key]),

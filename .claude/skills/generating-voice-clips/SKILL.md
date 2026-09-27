@@ -156,9 +156,17 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
      valide en une page les versions finales. Ses coches restent d'une ouverture à l'autre,
      sauf sur un clip refait depuis.
    - **Boucler** jusqu'à ce que le propriétaire valide. Un clip encore mal dit après deux ou
-     trois essais (un nombre en tête de phrase, par exemple) reçoit un texte dit imposé dans
-     `SAID_OVERRIDES` ; relancer ensuite `generate.mjs` sans `--redo` : le texte dit a changé,
-     donc le clip est refait seul.
+     trois essais (un nombre en tête de phrase, par exemple) reçoit un texte dit imposé ;
+     relancer ensuite `generate.mjs` sans `--redo` : le texte dit a changé, donc le clip est
+     refait seul. Deux endroits :
+     - `SAID_OVERRIDES` (`said-text.mjs`) change le texte dit de **toute la langue**, donc de
+       chacune de ses voix : à réserver à une langue dont aucun clip de la phrase n'est publié,
+       puisqu'un clip publié ne se réécrit pas ;
+     - `saidOverrides` dans l'entrée de la voix (`voices.json` ou `alternatives.json`) ne
+       change que cette voix : `{ "<phrase de speak()>": "<texte dit>" }`. Il reste hors des
+       empreintes des réglages, et une phrase absente du corpus est refusée. Exemple : Marie
+       disait « Combien font 41 ? » pour « Combien font 49 moins 41 ? » ; avec les nombres en
+       lettres, elle le dit juste.
 
 6. **Sauvegarde** : proposer au propriétaire le commit du dépôt privé (`clips/`,
    `manifests/`, registre compris), puis le pousser. `raw/` et `ecoute/` restent locaux.

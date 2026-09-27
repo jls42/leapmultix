@@ -513,6 +513,40 @@ describe('Génération des clips', () => {
     expect(fs.readFileSync(replacedFile(paths(), PHRASES[0].key))).toEqual(before);
   });
 
+  test('texte dit propre à la voix : lui seul change, sans toucher aux réglages ni aux bruts', async () => {
+    server = await startServer(ok);
+    const own = 'Combien font neuf moins quatre ?';
+    const voice = { ...VOICE, saidOverrides: { [PHRASES[3].text]: own } };
+    await run({ voice, phrases: [PHRASES[0], PHRASES[3]] });
+    expect(server.tts().map(r => r.body.text)).toEqual(['Combien font une fois 7 ?', own]);
+    expect(manifest().clips[PHRASES[3].key].said).toBe(own);
+    expect(synthesisHash(voice)).toBe(synthesisHash(VOICE));
+    const again = await run({ voice, phrases: [PHRASES[0], PHRASES[3]] });
+    expect(again.generated).toBe(0);
+    expect(server.tts()).toHaveLength(2);
+  });
+
+  test('texte dit propre ajouté après coup : seul son clip est refait', async () => {
+    server = await startServer(ok);
+    await run({ phrases: [PHRASES[0], PHRASES[3]] });
+    const own = 'Combien font neuf moins quatre ?';
+    const voice = { ...VOICE, saidOverrides: { [PHRASES[3].text]: own } };
+    const summary = await run({ voice, phrases: [PHRASES[0], PHRASES[3]] });
+    expect(summary.generated).toBe(1);
+    expect(server.tts().map(r => r.body.text)).toEqual([
+      'Combien font une fois 7 ?',
+      'Combien font 9 moins 4 ?',
+      own,
+    ]);
+  });
+
+  test('texte dit propre pour une phrase absente du corpus : refus, sans appel', async () => {
+    server = await startServer(ok);
+    const voice = { ...VOICE, saidOverrides: { 'Combien font 99 moins 1 ?': 'x' } };
+    await expect(run({ voice })).rejects.toThrow(/absente du corpus/);
+    expect(server.tts()).toHaveLength(0);
+  });
+
   test('nouvelle version qui ne change que l’encodage : clips refaits depuis les bruts, sans appel', async () => {
     server = await startServer(ok);
     await run();

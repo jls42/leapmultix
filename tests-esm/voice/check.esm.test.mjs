@@ -237,6 +237,16 @@ describe('Contrôle du rangement des clips', () => {
     expect(isConsistent(report)).toBe(false);
   });
 
+  test('texte dit propre à la voix : pas périmé pour elle, périmé pour une voix sans lui', async () => {
+    const own = 'Combien font une fois sept ?';
+    const entries = await Promise.all(phrases.map(p => addClip(p)));
+    entries[1][1].said = own;
+    await saveManifest(entries);
+    const withOwn = { ...voice, saidOverrides: { [phrases[1].text]: own } };
+    expect((await check({ voice: withOwn })).stale).toEqual([]);
+    expect((await check()).stale.map(s => s.key)).toEqual([phrases[1].key]);
+  });
+
   test('--probe : clip invalide et clip modifié depuis sa génération', async () => {
     const entries = await Promise.all(phrases.map(p => addClip(p)));
     await saveManifest(entries);

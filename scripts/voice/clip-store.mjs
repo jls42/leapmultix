@@ -30,7 +30,15 @@ import { ClipContentError } from './audio-process.mjs';
 export const PART = '.part';
 
 /** Champs d'une voix qui ne changent pas le son : les modifier ne demande pas de version */
-const DESCRIPTIVE_FIELDS = new Set(['version', 'voice', 'voiceName', 'publicOwnerId', 'lang']);
+const DESCRIPTIVE_FIELDS = new Set([
+  'version',
+  'voice',
+  'voiceName',
+  'publicOwnerId',
+  'lang',
+  // Texte dit propre à la voix : suivi clip par clip (champ said du manifeste)
+  'saidOverrides',
+]);
 
 function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;

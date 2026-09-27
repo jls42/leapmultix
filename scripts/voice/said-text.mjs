@@ -249,3 +249,30 @@ export function saidText(text, lang) {
   if (!rules.spelled) return withAgreement;
   return withAgreement.replace(LONE_NUMBER, digits => rules.spelled(Number(digits)) ?? digits);
 }
+
+/**
+ * Texte dit par une voix : le sien pour une phrase qu'elle seule dit mal (saidOverrides de son
+ * entrée dans voices.json ou alternatives.json), sinon celui de la langue. Les clips des autres
+ * voix ne bougent pas : une voix déjà publiée garderait sinon un texte dit périmé.
+ * @param {{saidOverrides?: Object<string, string>}|null} voice
+ * @param {string} text - Phrase telle que speak() la reçoit
+ * @param {string} lang
+ * @returns {string}
+ */
+export function voiceSaidText(voice, text, lang) {
+  const own = voice?.saidOverrides;
+  const said = own && Object.hasOwn(own, text) ? own[text] : null;
+  return typeof said === 'string' && said.trim() ? said : saidText(text, lang);
+}
+
+/**
+ * Phrases des textes dits propres à une voix qui ne sont pas dans le corpus : une faute de
+ * frappe ne changerait rien sans prévenir
+ * @param {{saidOverrides?: Object<string, string>}} voice
+ * @param {Array<{text: string}>} phrases - Corpus de la langue
+ * @returns {string[]}
+ */
+export function unknownOwnSaidTexts(voice, phrases) {
+  const texts = new Set(phrases.map(phrase => phrase.text));
+  return Object.keys(voice?.saidOverrides ?? {}).filter(text => !texts.has(text));
+}
