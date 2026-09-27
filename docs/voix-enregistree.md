@@ -40,6 +40,15 @@ place et ce qui vient ensuite.
       - la plus nette et la plus régulière ;
       - 0,126 s par caractère sur les questions, contre 0,079 pour Lucie.
     - Mistral a été choisi pour son coût : environ 3,40 $ pour tout l'anglais.
+  - **Français, autre voix au choix du joueur : « Marie - Curious »**, Mistral Voxtral TTS
+    (`voxtral-mini-tts-2603`). Lucie reste la voix par défaut.
+    - Voix prête `e0580ce5-e63c-4cbe-88c8-a983b80c5f1f`, femme, français, avec un préavis de
+      retrait de 30.
+    - Banc du 27/09/2026 : 22 phrases du corpus (annonces, bravos, erreurs, « une fois 7 »,
+      11, 108, énoncés), Marie - Neutral et Marie - Curious face à Lucie. 0 doute de Whisper
+      pour les deux ; 0,072 et 0,081 s par caractère, contre 0,071 pour Lucie. Le propriétaire
+      retient Curious.
+    - Coût : 221 837 caractères, environ 3,55 $.
   - **Espagnol, essai écarté : Jane - Neutral**, le 26/09/2026. Mistral n'a aucune voix
     espagnole.
     - Banc des 30 voix prêtes : le propriétaire retient Jane, les autres ne convainquent pas.
@@ -232,7 +241,8 @@ CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sort
 **Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
 modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en français,
 `sulafat-v1-1` en anglais et en espagnol). `scripts/voice/alternatives.json` fait de même
-pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais).
+pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais ; `marie-v1-1`, Marie, en
+français).
 
 - Changer un réglage impose une nouvelle version : le générateur refuse de mélanger deux
   réglages sous une même version.

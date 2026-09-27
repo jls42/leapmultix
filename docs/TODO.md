@@ -111,3 +111,16 @@ langue propose plusieurs voix : en anglais, Sulafat (Google) ou Jane (Mistral AI
 - Diffuser les clips (dépôt ouvert, par exemple) : la sortie appartient au client chez Mistral
   (conditions commerciales, §3.1) comme chez Google (« Generated Output is Customer Data »).
   Relire les conditions propres à chaque voix avant de publier.
+
+## Voix enregistrée : Marie (Mistral) en français, au choix du joueur (27/09)
+
+Le propriétaire veut aussi le français chez Mistral, en autre voix : Lucie (ElevenLabs) reste la
+voix par défaut.
+
+- **Banc** : Marie - Neutral et Marie - Curious sur 22 phrases du corpus, face à Lucie. 0 doute
+  de Whisper pour les deux ; le propriétaire retient **Curious** (`marie-v1-1`).
+- **Génération** : 7 437 clips, 221 837 caractères (environ 3,55 $), plafond accordé de
+  240 000 caractères refaits compris.
+- **Ensuite** : écoute du propriétaire (page avant/après des clips signalés par Whisper), puis
+  publication (`clips --version marie-v1-1`, `alternative` pour les testeurs puis pour tous),
+  et mention de Marie dans la FAQ, À propos, la page parents et le README.

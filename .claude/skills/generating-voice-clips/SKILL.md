@@ -1,6 +1,6 @@
 ---
 name: generating-voice-clips
-description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix, Lucie en français (ElevenLabs) et Sulafat en anglais et en espagnol (Google Cloud Text-to-Speech, Chirp 3 HD ; Jane de Mistral Voxtral TTS avant elle en anglais), rangés dans le dépôt privé leapmultix-voices et servis par CloudFront sur /voice/ depuis un bucket S3. À utiliser pour estimer le coût, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), contrôler les clips en une commande (npm run voice:review, Whisper local, page d'écoute), refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue, une voix ou un fournisseur, proposer une autre voix au choix du joueur (menu « Voix », alternatives.json, --version), ou préparer un essai local (?voix=local). (project)
+description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix, Lucie en français (ElevenLabs) et Sulafat en anglais et en espagnol (Google Cloud Text-to-Speech, Chirp 3 HD), plus Jane en anglais et Marie en français au choix du joueur (Mistral Voxtral TTS), rangés dans le dépôt privé leapmultix-voices et servis par CloudFront sur /voice/ depuis un bucket S3. À utiliser pour estimer le coût, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), contrôler les clips en une commande (npm run voice:review, Whisper local, page d'écoute), refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue, une voix ou un fournisseur, proposer une autre voix au choix du joueur (menu « Voix », alternatives.json, --version), ou préparer un essai local (?voix=local). (project)
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -22,7 +22,8 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
 
 Mistral (Voxtral TTS, `MISTRAL_API_KEY`, 16 $ le million de caractères) reste branché : Jane
 (`jane-v1-1`), la voix anglaise jusqu'au passage à Sulafat, est une **autre voix** de
-l'anglais, au choix du joueur.
+l'anglais, au choix du joueur ; Marie (`marie-v1-1`, « Marie - Curious ») est l'autre voix du
+français.
 
 **Autres voix** : `scripts/voice/alternatives.json` déclare, par langue, les voix proposées en
 plus de la voix par défaut (mêmes champs que `voices.json`). Le jeu les montre dans le menu

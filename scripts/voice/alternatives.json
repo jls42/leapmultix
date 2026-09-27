@@ -1,4 +1,25 @@
 {
+  "fr": [
+    {
+      "provider": "mistral",
+      "voice": "marie",
+      "version": "marie-v1-1",
+      "voiceId": "e0580ce5-e63c-4cbe-88c8-a983b80c5f1f",
+      "voiceName": "Marie - Curious",
+      "model": "voxtral-mini-tts-2603",
+      "languageCode": "fr",
+      "sourceFormat": "mp3",
+      "settings": {},
+      "encoding": {
+        "bitrateKbps": 64,
+        "loudnessLufs": -20,
+        "truePeakDb": -1,
+        "silenceDb": -50,
+        "leadSeconds": 0.15,
+        "trailSeconds": 0.08
+      }
+    }
+  ],
   "en": [
     {
       "provider": "mistral",
