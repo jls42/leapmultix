@@ -49,7 +49,7 @@
 - [Ontwikkeling](#-ontwikkeling)
 - [Compatibiliteit](#-compatibiliteit)
 - [Lokalisatie](#-lokalisatie)
-- [Ingesproken stem](#-opgenomen-stem)
+- [Opgenomen stem](#-opgenomen-stem)
 - [Gegevensopslag](#-gegevensopslag)
 - [Een probleem melden](#-een-probleem-melden)
 - [Licentie](#-licentie)
@@ -68,31 +68,29 @@ LeapMultix is een interactieve educatieve webapplicatie bedoeld voor kinderen va
 
 ### De schermen
 
-|                                                                                                                  |                                                                                                                    |
-| :--------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------: |
-|                       ![Scherm "Wie speelt er?": profielkeuze](docs/media/01-accueil.webp)                       |                      ![Hoofdmenu: keuze van bewerking en vijf modi](docs/media/02-menu.webp)                       |
-|                       **Wie speelt er?** — een profiel per kind, met avatar en voortgang.                        |                    **Het menu** — de bewerking wordt hier gekozen, waarna de vijf modi openen.                     |
-|            ![Ontdekkingsmodus: de tafel van 4 weergegeven in stippen](docs/media/03-decouverte.webp)             |               ![Quizmodus: fout antwoord in rood, juist antwoord in groen](docs/media/04-quiz.webp)                |
-|  **Ontdekking** — elke vergelijking wordt getoond in stippen, sprongen of tellen, met het trucje van de tafel.   | **Quiz** — de keuze van het kind blijft zichtbaar naast het juiste antwoord, en de uitleg licht de berekening toe. |
-|                     ![Uitdagingsmodus: aftelklok en lopende reeks](docs/media/05-defi.webp)                      |         ![Avonturenmodus: kaart van de tien niveaus, de volgende vergrendeld](docs/media/06-aventure.webp)         |
-| **Uitdaging** — race tegen de klok. Bij een fout pauzeert de timer zodat het juiste antwoord kan worden gelezen. |                **Avontuur** — tien niveaus die na elkaar worden ontgrendeld, in ruil voor sterren.                 |
-|                           ![Arcademenu: de vier minigames](docs/media/07-arcade.webp)                            |                ![Dashboard: sterren per tafel en statistieken](docs/media/08-tableau-de-bord.webp)                 |
-|             **Arcade** — vier minigames, met instelbare moeilijkheidsgraad en keuze van ruimteschip.             |                      **Dashboard** — sterren per tafel, te herhalen tafels, scores per modus.                      |
-|              ![Aanpassing: avatars, thema's, toegankelijkheid](docs/media/09-personnalisation.webp)              |                                                                                                                    |
-|            **Aanpassing** — avatar, kleurthema, tekstgrootte, hoog contrast, ouderlijk toezichtcode.             |                                                                                                                    |
+|                                                                                                                         |                                                                                                                    |
+| :---------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------: |
+|                          ![Scherm "Wie speelt er?": profielkeuze](docs/media/01-accueil.webp)                           |                     ![Hoofdmenu: keuze van bewerking en de vijf modi](docs/media/02-menu.webp)                     |
+|                           **Wie speelt er?** — één profiel per kind, met avatar en voortgang.                           |                   **Het menu** — de bewerking wordt hier gekozen, waarna de vijf modi opengaan.                    |
+|                ![Ontdekkingsmodus: de tafel van 4 weergegeven in stippen](docs/media/03-decouverte.webp)                |               ![Quizmodus: fout antwoord in rood, juist antwoord in groen](docs/media/04-quiz.webp)                |
+|      **Ontdekking** — elke vergelijking wordt getoond in stippen, sprongen of tellen, met het trucje van de tafel.      | **Quiz** — de keuze van het kind blijft zichtbaar naast het juiste antwoord, en de uitleg licht de berekening toe. |
+|                         ![Uitdagingsmodus: aftelklok en lopende reeks](docs/media/05-defi.webp)                         |         ![Avonturenmodus: kaart met de tien niveaus, de volgende vergrendeld](docs/media/06-aventure.webp)         |
+| **Uitdaging** — race tegen de klok. Bij een fout pauzeert de timer zolang als nodig is om het juiste antwoord te lezen. |                    **Avontuur** — tien niveaus die één voor één worden ontgrendeld met sterren.                    |
+|                               ![Arcademenu: de vier minigames](docs/media/07-arcade.webp)                               |                ![Dashboard: sterren per tafel en statistieken](docs/media/08-tableau-de-bord.webp)                 |
+|           **Arcade** — vier minigames, met instelling van de moeilijkheidsgraad en keuze van het ruimteschip.           |                      **Dashboard** — sterren per tafel, te herhalen tafels, scores per modus.                      |
+|                 ![Aanpassing: avatars, thema's, toegankelijkheid](docs/media/09-personnalisation.webp)                  |                                                                                                                    |
+|                   **Aanpassing** — avatar, kleurthema, tekstgrootte, hoog contrast, ouderlijke code.                    |                                                                                                                    |
 
 ### De arcade-minigames
 
-Vier spellen die dezelfde vraag stellen — weergegeven boven het speelveld, samen
-met de resterende tijd en levens — maar telkens om een andere actie
-vragen.
+Vier spellen die dezelfde vraag stellen — die boven het speelveld wordt weergegeven, met de resterende tijd en levens — maar telkens een andere handeling vereisen.
 
-|                                                                                                                               |                                                                                                       |
-| :---------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------: |
-|        ![MultiInvaders: monsters met getallen, een ruimteschip onderaan het scherm](docs/media/10-multiinvaders.webp)         | ![MultiMiam: een doolhof waarin stippen de mogelijke antwoorden dragen](docs/media/11-multimiam.webp) |
-|  **MultiInvaders** — schiet op de verkeerde antwoorden, spaar het juiste: daar zit een vriend in verborgen om te bevrijden.   |    **MultiMiam** — doorkruis het doolhof om het juiste resultaat te pakken en ontwijk de monsters.    |
-| ![MultiMemory: een raster met kaarten, twee omgedraaid die een berekening en een getal tonen](docs/media/12-multimemory.webp) |      ![MultiSnake: een slang en genummerde appels in een weiland](docs/media/13-multisnake.webp)      |
-|            **MultiMemory** — vind uit het geheugen welke kaart het resultaat van de omgedraaide berekening toont.             |            **MultiSnake** — groei door de juiste getallen op te eten, vermijd alle andere.            |
+|                                                                                                                                               |                                                                                                            |
+| :-------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------: |
+|                ![MultiInvaders: monsters met getallen, een ruimteschip onderaan het scherm](docs/media/10-multiinvaders.webp)                 |    ![MultiMiam: een doolhof waarin stippen de mogelijke antwoorden tonen](docs/media/11-multimiam.webp)    |
+|        **MultiInvaders** — schiet op de verkeerde antwoorden, spaar het juiste: daarachter zit een vriendje verstopt om te bevrijden.         | **MultiMiam** — navigeer door het doolhof om het juiste resultaat te pakken, terwijl je monsters ontwijkt. |
+| ![MultiMemory: een raster van kaarten, waarvan er twee zijn omgedraaid die een berekening en een getal tonen](docs/media/12-multimemory.webp) |        ![MultiSnake: een slang en genummerde appels in een weiland](docs/media/13-multisnake.webp)         |
+|                    **MultiMemory** — vind uit het geheugen welke kaart het resultaat van de omgedraaide berekening toont.                     |              **MultiSnake** — groei door de juiste getallen op te eten, ontwijk alle andere.               |
 
 ## ✨ Functies
 
@@ -107,7 +105,7 @@ vragen.
 
 - **MultiInvaders**: Educatieve Space Invaders - Vernietig de verkeerde antwoorden
 - **MultiMiam**: Wiskundige Pac-Man - Verzamel de juiste antwoorden
-- **MultiMemory**: Geheugenspel - Koppel bewerkingen aan uitkomsten
+- **MultiMemory**: Geheugenspel - Koppel bewerkingen en uitkomsten
 - **MultiSnake**: Educatieve Snake - Groei door de juiste getallen te eten
 
 ### ➕ Ondersteuning voor meerdere bewerkingen
@@ -124,12 +122,12 @@ LeapMultix biedt een complete training voor de 4 rekenkundige bewerkingen in **a
 
 ### 🌍 Algemene functies
 
-- **Meerdere gebruikers**: Beheer van individuele profielen met opgeslagen voortgang
+- **Multi-gebruikers**: Beheer van individuele profielen met opgeslagen voortgang
 - **Meertalig**: Ondersteuning voor Frans, Engels en Spaans
 - **Personalisatie**: Avatars, kleurthema's, achtergronden
-- **Toegankelijkheid**: Toetsenbordnavigatie, touch-ondersteuning, naleving van WCAG 2.1 AA
-- **Ingesproken stem**: het spel kan vragen en aanmoedigingen voorlezen met een vooraf opgenomen synthetische stem, met automatische terugval op de stem van het apparaat. De stemmen bevinden zich niet in deze repository: de site leapmultix.jls42.org levert Lucie in het Frans, Sulafat in het Engels en Spaans, en naar keuze Marie in het Frans en Jane in het Engels (zie [Ingesproken stem](#-opgenomen-stem))
-- **Mobiel responsief**: Interface geoptimaliseerd voor tablets en smartphones
+- **Toegankelijkheid**: Toetsenbordnavigatie, touch-ondersteuning, WCAG 2.1 AA-naleving
+- **Opgenomen stem**: het spel kan vragen en aanmoedigingen voorlezen met een vooraf opgenomen synthetische stem, met automatische terugval op de stem van het apparaat. De stemmen bevinden zich niet in deze repository: de website leapmultix.jls42.org levert Lucie in het Frans, Sulafat in het Engels en Spaans, en naar keuze Sulafat en Marie in het Frans, Jane in het Engels (zie [Opgenomen stem](#-opgenomen-stem))
+- **Mobiel responsive**: Interface geoptimaliseerd voor tablets en smartphones
 - **Voortgangssysteem**: Scores, badges, dagelijkse uitdagingen
 
 ## 🚀 Snelle start
@@ -224,9 +222,7 @@ npm run voice:check-online # Vérifier les clips servis en ligne
 
 ### Bestandsstructuur
 
-De JavaScript-modules staan **plat in `js/`**, op drie mappen na:
-`core/`, `components/` en `modes/`. Het is dus de bestandsnaam die voor de
-groepering zorgt (`arcade-*`, `multimiam-*`, `i18n*`…).
+De JavaScript-modules staan **plat in `js/`**, op drie mappen na: `core/`, `components/` en `modes/`. Het is dus de bestandsnaam die de groepering bepaalt (`arcade-*`, `multimiam-*`, `i18n*`…).
 
 ```
 leapmultix/
@@ -284,27 +280,27 @@ leapmultix/
 
 ### Technische architectuur
 
-**Moderne ES6-modules**: Het project maakt gebruik van een modulaire architectuur met ES6-classes en native imports/exports.
+**Moderne ES6-modules**: Het project maakt gebruik van een modulaire architectuur met ES6-klassen en native imports/exports.
 
 **Herbruikbare componenten**: Interface opgebouwd met gecentraliseerde UI-componenten (TopBar, InfoBar, Dashboard, Customization).
 
-**Lazy Loading**: Intelligent laden van modules op aanvraag via `lazy-loader.js` om de initiële prestaties te optimaliseren.
+**Lazy Loading**: Slim laden van modules op aanvraag via `lazy-loader.js` om de initiële prestaties te optimaliseren.
 
-**Uniform opslagsysteem**: Gecentraliseerde API voor gebruikersgegevenspersistentie via LocalStorage met fallbacks.
+**Geünificeerd opslagsysteem**: Gecentraliseerde API voor het persistent opslaan van gebruikersgegevens via LocalStorage met fallbacks.
 
 **Gecentraliseerd audiobeheer**: Geluidsregeling met meertalige ondersteuning en voorkeuren per gebruiker.
 
-**Event Bus**: Ontkoppelde communicatie via events tussen componenten voor een onderhoudbare architectuur.
+**Event Bus**: Ontkoppelde communicatie via gebeurtenissen tussen componenten voor een onderhoudbare architectuur.
 
 **Navigatie via slides**: Navigatiesysteem gebaseerd op genummerde slides (slide0, slide1, enz.) met `goToSlide()`.
 
-**Beveiliging**: XSS-bescherming en opschoning via `security-utils.js` voor alle DOM-manipulaties.
+**Beveiliging**: XSS-beveiliging en opschoning via `security-utils.js` voor alle DOM-manipulaties.
 
 ## 🎯 Gedetailleerde spelmodi
 
 ### Ontdekkingsmodus
 
-Visuele verkenningsinterface voor de tafels van vermenigvuldiging met:
+Interface voor visuele verkenning van de tafels van vermenigvuldiging met:
 
 - Interactieve visualisatie van vermenigvuldigingen
 - Animaties en geheugensteuntjes
@@ -318,7 +314,7 @@ Meerkeuzevragen met:
 - 10 vragen per sessie
 - Adaptieve voortgang op basis van prestaties
 - Virtueel numeriek toetsenblok
-- Streak-systeem (reeks goede antwoorden)
+- Streak-systeem (reeks van goede antwoorden)
 
 ### Uitdagingsmodus
 
@@ -327,7 +323,7 @@ Race tegen de klok met:
 - 3 moeilijkheidsgraden (Beginner, Gemiddeld, Moeilijk)
 - Tijdbonus voor goede antwoorden
 - Levenssysteem
-- Ranglijst met topscores
+- Scorebord met topscores
 
 ### Avonturenmodus
 
@@ -342,25 +338,24 @@ Verhalende voortgang met:
 
 Elke minigame biedt:
 
-- Keuze uit moeilijkheidsgraad en personalisatie
-- Levenssysteem en score
+- Keuze van moeilijkheidsgraad en personalisatie
+- Levens- en scoresysteem
 - Toetsenbord- en touch-bediening
-- Individuele ranglijsten per gebruiker
+- Individuele klassementen per gebruiker
 
 ## 🔧 Ontwikkeling
 
 ### Ontwikkelingsworkflow
 
-**Commit nooit rechtstreeks op main.** Het project werkt met feature branches.
+**Commit nooit rechtstreeks op main.** Het project werkt met feature-branches.
 
-**1. Maak een branch aan**, `feat/` voor een functie, `fix/` voor een bugfix:
+**1. Maak een branch**, `feat/` voor een functie, `fix/` voor een bugfix:
 
 ```bash
 git checkout -b feat/nom-de-la-fonctionnalite
 ```
 
-**2. Ontwikkel en controleer.** Formattering komt op de eerste plaats: de CI wijst het
-al af vóór de tests worden uitgevoerd.
+**2. Ontwikkel en controleer.** Formattering komt op de eerste plaats: de CI weigert het nog voordat de tests worden uitgevoerd.
 
 ```bash
 npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
@@ -370,7 +365,7 @@ npm run test          # Tests
 npm run test:coverage # Couverture
 ```
 
-**3. Commit op de branch**, en push deze vervolgens:
+**3. Commit op de branch** en push deze vervolgens:
 
 ```bash
 git add .
@@ -378,20 +373,19 @@ git commit -m "feat: description de la fonctionnalité"
 git push -u origin feat/nom-de-la-fonctionnalite
 ```
 
-**4. Open een pull request** en wacht op de analyses: verify, Codacy,
-CodeFactor en SonarCloud. Er wordt gecorrigeerd tot alles op groen staat alvorens te mergen.
+**4. Open een pull request** en wacht op de analyses: verify, Codacy, CodeFactor en SonarCloud. Er wordt gecorrigeerd totdat alles groen is voordat er gemerged wordt.
 
-**Commitstijl**: Beknopte berichten, gebiedende wijs (bijv.: "Fix arcade init errors", "Refactor cache updater")
+**Commit-stijl**: Beknopte berichten, gebiedende wijs (bijv.: "Fix arcade init errors", "Refactor cache updater")
 
 **Quality gate**: Zorg ervoor dat `npm run lint`, `npm test` en `npm run test:coverage` slagen vóór elke commit
 
-### Componentarchitectuur
+### Architectuur van de componenten
 
-**GameMode (basisklasse)**: Alle modi erven over van een gemeenschappelijke klasse met gestandaardiseerde methoden.
+**GameMode (basisklasse)**: Alle modi erven van een gemeenschappelijke klasse met gestandaardiseerde methoden.
 
-**GameModeManager**: Gecentraliseerde orkestratie voor het starten en beheren van de modi.
+**GameModeManager**: Gecentraliseerde orkestratie voor het starten en beheren van modi.
 
-**UI-componenten**: TopBar, InfoBar, Dashboard en Customization zorgen voor een consistente interface.
+**UI-componenten**: TopBar, InfoBar, Dashboard en Customization bieden een consistente interface.
 
 **Lazy Loading**: Modules worden op aanvraag geladen om de initiële prestaties te optimaliseren.
 
@@ -401,9 +395,9 @@ CodeFactor en SonarCloud. Er wordt gecorrigeerd tot alles op groen staat alvoren
 
 Het project bevat een complete testsuite:
 
-- Unittests voor core modules
-- Integratietests voor componenten
-- Tests voor spelmodi
+- Unit-tests van de core-modules
+- Integratietests van de componenten
+- Tests van de spelmodi
 - Geautomatiseerde codedekking
 
 ```bash
@@ -418,8 +412,8 @@ npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 
 - **Rollup**: Bundelt `js/main-es6.js` in ESM met code-splitting en sourcemaps
 - **Terser**: Automatische minificatie voor optimalisatie
-- **Post-build**: Kopieert `css/` en `assets/`, de favicons (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, en herschrijft `dist/index.html` naar het gehashte startbestand (bijv.: `main-es6-*.js`)
-- **Eindmap**: `dist/` klaar om statisch te worden geserveerd
+- **Post-build**: Kopieert `css/` en `assets/`, de favicons (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, en herschrijft `dist/index.html` naar het gehashte invoerbestand (bijv.: `main-es6-*.js`)
+- **Eindmap**: `dist/` klaar om statisch geserveerd te worden
 
 ```bash
 npm run build      # génère dist/
@@ -428,52 +422,45 @@ npm run serve:dist # sert dist/ (port 5000)
 
 ### Continue integratie
 
-**GitHub Actions**: `.github/workflows/ci.yml`, geactiveerd bij elke push naar
-`main` en bij elke pull request.
+**GitHub Actions**: `.github/workflows/ci.yml`, geactiveerd bij elke push naar `main` en bij elke pull request.
 
-**`verify`** — de kwaliteitscontrole, blokkerend:
+**`verify`** — de quality gate, blokkerend:
 
 - `npm ci` vervolgens `npm run verify` (ESLint, Jest-tests, dekking)
 - `npm run format:check` (Prettier)
 
-**`seo-report`** — na `verify`: Lighthouse-audit van de live site, om
-de SEO-statistieken op de lange termijn te volgen.
+**`seo-report`** — na `verify`: Lighthouse-audit van de live website om SEO-statistieken in de loop van de tijd te volgen.
 
-**Externe analyses** gekoppeld aan pull requests: Codacy, CodeFactor en
-SonarCloud. De SonarCloud-gate vereist A-beoordelingen voor betrouwbaarheid, beveiliging en
-onderhoudbaarheid op nieuwe code.
+**Externe analyses** gekoppeld aan pull requests: Codacy, CodeFactor en SonarCloud. De SonarCloud-gate vereist A-beoordelingen voor betrouwbaarheid, beveiliging en onderhoudbaarheid van nieuwe code.
 
-**Implementatie**: `./deploy.sh` synchroniseert de site naar S3 en invalideert de CloudFront-cache.
-Het script regenereert indien nodig de responsieve afbeeldingen, die niet in git zijn opgenomen.
+**Implementatie**: `./deploy.sh` synchroniseert de website naar S3 en inactiveert de CloudFront-cache. Het script genereert waar nodig de responsieve afbeeldingen opnieuw, die niet in git zijn opgenomen.
 
 ### PWA (Progressive Web App)
 
-LeapMultix is een volledige PWA met offline ondersteuning en de mogelijkheid tot installatie.
+LeapMultix is een volledige PWA met offline-ondersteuning en installatiemogelijkheid.
 
 **Service Worker** (`sw.js`):
 
-- Navigatie: Network-first met offline terugval naar `offline.html`
-- Afbeeldingen: Cache-first om prestaties te optimaliseren
+- Navigatie: Network-first met offline-fallback naar `offline.html`
+- Afbeeldingen: Cache-first om de prestaties te optimaliseren
 - Vertalingen: Stale-while-revalidate voor updates op de achtergrond
-- JS/CSS: Network-first om altijd de nieuwste versie aan te bieden
+- JS/CSS: Network-first om altijd de nieuwste versie te serveren
 - Automatisch versiebeheer via `cache-updater.js`
 
 **Manifest** (`manifest.json`):
 
 - SVG- en PNG-pictogrammen voor alle apparaten
-- Installatie mogelijk op mobiel (Add to Home Screen)
-- Standalone configuratie voor een app-achtige ervaring
+- Installatie mogelijk op mobiel (Aan startscherm toevoegen)
+- Standalone-configuratie voor een app-achtige ervaring
 - Ondersteuning voor thema's en kleuren
 
-**De offline modus lokaal testen.** Start de server en open vervolgens
-`http://localhost:8080` (of de weergegeven poort):
+**De offline-modus lokaal testen.** Start de server en open vervolgens `http://localhost:8080` (of de weergegeven poort):
 
 ```bash
 npm run serve
 ```
 
-Handmatig: schakel het netwerk uit in de ontwikkelhulpprogramma's (tabblad Netwerk,
-offlinemodus) en vernieuw de pagina. `offline.html` moet worden weergegeven.
+Handmatig: schakel het netwerk uit in de ontwikkelaarstools (tabblad Netwerk, offline-modus) en vernieuw vervolgens de pagina. `offline.html` moet worden weergegeven.
 
 Automatisch, met Puppeteer:
 
@@ -492,32 +479,32 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 **Hulpmiddelen voor codekwaliteit**:
 
-- **ESLint**: Moderne configuratie met flat config (`eslint.config.js`), ES2022-ondersteuning
+- **ESLint**: Moderne configuratie met flat config (`eslint.config.js`), ondersteuning voor ES2022
 - **Prettier**: Automatische codeformattering (`.prettierrc`)
 - **Stylelint**: CSS-validatie (`.stylelintrc.json`)
 - **JSDoc**: Automatische functiedocumentatie met dekkingsanalyse
 
-**Belangrijke coderegels**:
+**Belangrijke coderichtlijnen**:
 
-- Ongebruikte variabelen en parameters verwijderen (`no-unused-vars`)
-- Specifieke foutafhandeling gebruiken (geen lege catch-blokken)
-- `innerHTML` vermijden ten gunste van `security-utils.js`-functies
-- Een cognitieve complexiteit van < 15 voor functies handhaven
-- Complexe functies opsplitsen in kleinere helpers
+- Verwijder ongebruikte variabelen en parameters (`no-unused-vars`)
+- Gebruik specifieke foutafhandeling (geen lege catch-blokken)
+- Vermijd `innerHTML` ten gunste van `security-utils.js`-functies
+- Behoud een cognitieve complexiteit < 15 voor functies
+- Splits complexe functies op in kleinere helpers
 
 **Beveiliging**:
 
-- **XSS-bescherming**: De functies van `security-utils.js` gebruiken:
+- **XSS-beveiliging**: Gebruik de functies van `security-utils.js`:
   - `appendSanitizedHTML()` in plaats van `innerHTML`
   - `createSafeElement()` om veilige elementen te maken
   - `setSafeMessage()` voor tekstinhoud
-- **Externe scripts**: Attribuut `crossorigin="anonymous"` verplicht
-- **Validatie van invoer**: Externe gegevens altijd opschonen (sanitizen)
+- **Externe scripts**: Verplicht attribuut `crossorigin="anonymous"`
+- **Invoervalidatie**: Externe gegevens altijd opschonen (sanitizen)
 - **Content Security Policy**: CSP-headers om scriptbronnen te beperken
 
 **Toegankelijkheid**:
 
-- WCAG 2.1 AA-naleving
+- Conform WCAG 2.1 AA
 - Volledige toetsenbordnavigatie
 - Passende ARIA-rollen en labels
 - Conforme kleurcontrasten
@@ -533,7 +520,7 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 ### Ondersteunde browsers
 
-De interface is gebaseerd op `oklch()` voor kleuren en op `:has()` voor
+De interface vertrouwt op `oklch()` voor kleuren en op `:has()` voor
 contextuele toestanden, wat de ondergrens bepaalt:
 
 - Chrome / Chromium 111+
@@ -544,7 +531,7 @@ contextuele toestanden, wat de ondergrens bepaalt:
 ### Apparaten
 
 - **Desktop**: Toetsenbord- en muisbediening
-- **Tablets**: Geoptimaliseerde aanraakinterface
+- **Tablets**: Geoptimaliseerde touch-interface
 - **Smartphones**: Adaptief responsief ontwerp
 
 ### Toegankelijkheid
@@ -552,7 +539,7 @@ contextuele toestanden, wat de ondergrens bepaalt:
 - Volledige toetsenbordnavigatie (Tab, pijltjestoetsen, Esc)
 - ARIA-rollen en labels voor schermlezers
 - Conforme kleurcontrasten
-- Ondersteuning voor ondersteunende technologieën
+- Ondersteuning van ondersteunende technologieën
 
 ## 🌍 Lokalisatie
 
@@ -576,9 +563,9 @@ Volledige meertalige ondersteuning:
 }
 ```
 
-### Scripts voor i18n-beheer
+### i18n-beheerscripts
 
-**`npm run i18n:verify`** - Consistentie van vertaalsleutels controleren
+**`npm run i18n:verify`** - De consistentie van vertaalsleutels controleren
 
 **`npm run i18n:unused`** - Ongebruikte vertaalsleutels tonen
 
@@ -591,12 +578,12 @@ Dit script (`scripts/compare-translations.cjs`) zorgt voor de synchronisatie van
 - Detectie van ontbrekende sleutels (aanwezig in fr.json maar afwezig in andere talen)
 - Detectie van overtollige sleutels (aanwezig in andere talen maar niet in fr.json)
 - Identificatie van lege waarden (`""`, `null`, `undefined`, `[]`)
-- Consistentiecontrole van typen (string vs array)
-- Afvlakken van geneste JSON-structuren naar puntnotatie (bijv.: `arcade.multiMemory.title`)
-- Generatie van een gedetailleerd consolerepport
-- Opslag van het JSON-rapport in `docs/translations-comparison-report.json`
+- Controle van typeconsistentie (string vs. array)
+- Afvlakking van geneste JSON-structuren naar puntnotatie (bijv. `arcade.multiMemory.title`)
+- Generatie van een gedetailleerd consolereport
+- Opslaan van het JSON-rapport in `docs/translations-comparison-report.json`
 
-**Voorbeeld van uitvoer:**
+**Voorbeelduitvoer:**
 
 ```
 🔍 Analyse comparative des fichiers de traduction
@@ -621,7 +608,7 @@ Dit script (`scripts/compare-translations.cjs`) zorgt voor de synchronisatie van
 ✅ Tous les fichiers de traduction sont parfaitement synchronisés !
 ```
 
-**Dekkingsgraad van vertalingen:**
+**Vertaaldekking:**
 
 - Volledige gebruikersinterface
 - Spelinstructies
@@ -632,18 +619,18 @@ Dit script (`scripts/compare-translations.cjs`) zorgt voor de synchronisatie van
 
 ## 🔊 Opgenomen stem
 
-Het spel leest vragen, aanmoedigingen en uitleg hardop voor. Het spreekt slechts een eindige set zinnen uit, ongeveer 7.400 per taal: ze kunnen dus eens en voor altijd worden opgenomen, waardoor geen enkel spel een spraaksynthesedienst aanroept. Zonder audiofragmenten leest het spel voor met de stem van het apparaat.
+Het spel leest de vragen, aanmoedigingen en uitleg hardop voor. Het spreekt slechts een eindige set zinnen uit, ongeveer 7.400 per taal: deze kunnen dus voor eens en altijd worden opgenomen, waardoor er tijdens het spelen geen spraaksynthesedienst wordt aangeroepen. Zonder clips leest het spel voor met de stem van het apparaat.
 
 ### In deze repository: de applicatie, zonder de stemmen
 
-De code kan vooraf opgenomen fragmenten afspelen en bevat de pipeline die ze produceert. De audiofragmenten zitten er niet in, net zomin als de API-sleutels van de providers: een fork of een lokale installatie leest voor met de stem van het apparaat.
+De code kan vooraf opgenomen clips afspelen en bevat de pipeline die ze genereert. De clips zelf zitten er niet in, net zomin als de API-sleutels van de providers: een fork of een lokale installatie leest voor met de stem van het apparaat.
 
-- **Automatische terugval** op de stem van het apparaat, zin voor zin: ontbrekend of foutief fragment, weergave geweigerd door de browser, fragment dat niet binnen 1,5 s start, of offline zonder het fragment in de cache.
-- **Instellingen**: de stemknop in de bovenste balk schakelt het voorlezen in of uit; het selectievakje "Opgenomen stem" (Toegankelijkheid en bediening) kiest tussen de opgenomen stem en de stem van het apparaat. Deze verschijnt alleen in talen waarin een stem is gepubliceerd.
-- **Offline**: reeds beluisterde fragmenten blijven in de cache (service worker).
-- **Waar het spel zoekt naar fragmenten**: in de tag `<meta name="leapmultix-voice-base">`, die leeg is in de repository. Alleen de productie-implementatie schrijft daar `/voice/`.
+- **Automatische terugval** op de stem van het apparaat, zin voor zin: ontbrekende of defecte clip, afspelen geweigerd door de browser, clip die niet binnen 1,5 s start, of offline zonder gecachte clip.
+- **Instellingen**: de stemknop in de bovenste balk schakelt het voorlezen in of uit; het selectievakje "Opgenomen stem" (Toegankelijkheid en besturing) kiest tussen de opgenomen stem en de stem van het apparaat. Dit verschijnt alleen in talen waarin een stem is gepubliceerd.
+- **Offline**: reeds beluisterde clips blijven in de cache (service worker).
+- **Waar het spel de clips zoekt**: in de tag `<meta name="leapmultix-voice-base">`, die leeg is in de repository. Alleen de productie-deployment schrijft hier `/voice/` in.
 
-Met eigen fragmenten op het systeem (gemaakt via de onderstaande pipeline, geplaatst naast het spel in `../leapmultix-voices`), zorgt de parameter `?voix=local` ervoor dat de ontwikkelserver ze afspeelt:
+Met uw eigen clips op het werkstation (aangemaakt via de onderstaande pipeline, geplaatst naast het spel in `../leapmultix-voices`), zorgt de parameter `?voix=local` ervoor dat ze worden gelezen door de ontwikkelserver:
 
 ```bash
 npm run voice:publish -- local --lang fr --audience all --default-on   # relie voice/ (ignoré par git) aux clips
@@ -653,27 +640,28 @@ npm run serve
 # puis ouvrir http://localhost:8080/index.html?voix=local
 ```
 
-### Op leapmultix.jls42.org: de stemmen van de hosting
+### Op leapmultix.jls42.org: de gehoste stemmen
 
-De door de auteur aangeboden website levert opgenomen synthetische stemmen:
+De door de auteur aangeboden website serveert opgenomen synthetische stemmen:
 
-- in het Frans: **Lucie**, gemaakt met ElevenLabs (model Eleven v3);
-- in het Brits-Engels en Europees Spaans: **Sulafat**, gemaakt met Google Cloud Text-to-Speech (stem Chirp 3 HD);
-- naar keuze van de speler: **Marie** in het Frans en **Jane** in het Engels, gemaakt met Mistral AI (Voxtral TTS).
+- in het Frans: **Lucie**, gemaakt met ElevenLabs (Eleven v3-model);
+- in het Brits-Engels en Europees Spaans: **Sulafat**, gemaakt met Google Cloud Text-to-Speech (Chirp 3 HD-stem);
+- naar keuze van de speler: **Sulafat** in het Frans, om dezelfde stem in alle drie de talen te behouden;
+- eveneens naar keuze van de speler: **Marie** in het Frans en **Jane** in het Engels, gemaakt met Mistral AI (Voxtral TTS).
 
-De fragmenten bevinden zich in een privé-repository en in een speciale S3-bucket, geserveerd via CloudFront op `/voice/*`. In de instellingen toont het menu "Stem" de stemmen van de taal wanneer er meerdere zijn, en de vermelding noemt de service van de gehoorde stem.
+De clips staan in een privé-repository en in een speciale S3-bucket, geserveerd door CloudFront op `/voice/*`. Ze worden eenmalig gegenereerd: tijdens het spelen wordt er niets naar deze diensten verzonden. In de instellingen biedt het menu "Stem" de stemmen van de taal aan wanneer er meerdere beschikbaar zijn, en de vermelding noemt de dienst van de gehoorde stem.
 
-### Fragmenten genereren
+### De clips genereren
 
-De pipeline is gescript in `scripts/voice/` en draait op het apparaat van de eigenaar, nooit in openbare CI. De sleutels van de providers (ElevenLabs voor het Frans, Google Cloud Text-to-Speech voor het Engels en Spaans, Mistral voor Marie en Jane) blijven in een bestand `.env` buiten de repository, doorgegeven via `node --env-file`: er komt geen enkele sleutel in git terecht. De Claude Code-skill [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) doorloopt de procedure stap voor stap (checks, goedkeuringen, hervattingen); details staan in [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
+De pipeline is gescript in `scripts/voice/` en draait op het werkstation van de beheerder, nooit in de openbare CI. De sleutels van de providers (ElevenLabs voor Lucie, Google Cloud Text-to-Speech voor Sulafat, Mistral voor Marie en Jane) blijven in een bestand `.env` buiten de repository, doorgegeven via `node --env-file`: er komt geen enkele sleutel in git terecht. De Claude Code-skill [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) doorloopt de procedure stap voor stap (gates, goedkeuringen, hervattingen); details zijn te vinden in [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
 
-1. **Schatten** van de resterende zinnen en de te betalen tekens (Eleven v3: ongeveer 0,53 credit per teken; Chirp 3 HD: $ 30 per miljoen tekens, het eerste miljoen van elke maand is gratis; Voxtral TTS: $ 16 per miljoen).
-2. **Genereren**. Het opnieuw uitvoeren van hetzelfde commando gaat verder met wat ontbreekt. Wanneer de credits op zijn, stopt het script netjes (code 3) zonder een halfgeschreven bestand achter te laten. `--max-total-chars` maximeert de gecumuleerde uitgaven van de versie: elk betaald antwoord wordt direct na ontvangst geregistreerd in een logboek, dat een abrupte stop overleeft. Bij Google en Mistral, die geen inzichtelijk saldo tonen, is dit de enige bescherming.
-3. **Controleren**: elke zin heeft zijn fragment en elk MP3-bestand is geldig. Whisper transcribeert vervolgens elk fragment lokaal, en de controle signaleert verkeerd verstane getallen en abnormale speelduur. `voice:review` koppelt Whisper, deze controle en de luisterpagina aaneen in één commando.
-4. **Luisteren** op de luisterpagina (`voice:listen`) naar gesignaleerde fragmenten en een steekproef van vrouwelijke vormen ("une fois 7"), die Whisper niet onderscheidt. Elk fragment heeft een selectievakje "opnieuw doen", waarmee het wordt toegevoegd aan de lijst met afgekeurde fragmenten.
-5. **Opnieuw doen** van de afgekeurde fragmenten (`--redo`) en Whisper opnieuw uitvoeren, en vervolgens elk fragment vóór en na vergelijken op een tweede pagina. Een fragment dat na twee of drie pogingen nog steeds niet goed wordt uitgesproken, krijgt een afgedwongen tekst in `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), bijvoorbeeld het getal voluit geschreven.
-6. **Publiceren** van de fragmenten, verifiëren dat ze online reageren, en vervolgens de index van de taal publiceren, eerst voor testers (`?voix=test`).
-7. **Openstellen** van de stem voor iedereen, en deze vervolgens standaard activeren. De noodschakelaar (`voice:publish -- remove`) verwijdert een taal uit de index: het spel valt terug op de stem van het apparaat.
+1. **Schatten** van de resterende zinnen en te betalen tekens (Eleven v3: ongeveer 0,53 credit per teken; Chirp 3 HD: $ 30 per miljoen tekens, het eerste miljoen per maand is gratis; Voxtral TTS: $ 16 per miljoen).
+2. **Genereren**. Het opnieuw uitvoeren van hetzelfde commando gaat verder met wat nog ontbreekt. Wanneer de credits op zijn, stopt het script netjes (code 3) zonder een half geschreven bestand achter te laten. `--max-total-chars` stelt een limiet aan de cumulatieve uitgaven van de release: elk betaald antwoord wordt direct na ontvangst geregistreerd in een logboek, dat een abrupte stop overleeft. Bij Google en Mistral, die geen direct inzichtelijk saldo bieden, is dit de enige bescherming.
+3. **Controleren**: elke zin heeft een eigen clip en elk MP3-bestand is geldig. Whisper transcribeert vervolgens elke clip lokaal, en de controle meldt verkeerd verstane getallen en afwijkende speelduren. `voice:review` combineert Whisper, deze controle en de luisterpagina in één commando.
+4. **Beluisteren** op de luisterpagina (`voice:listen`) van de gemelde clips en een steekproef van vrouwelijke vormen ("une fois 7"), die Whisper niet onderscheidt. Elke clip heeft een selectievakje "opnieuw doen", dat deze toevoegt aan de lijst met afgekeurde clips.
+5. **Opnieuw genereren** van de afgekeurde clips (`--redo`) en Whisper opnieuw uitvoeren, en vervolgens elke clip voor en na vergelijken op een tweede pagina. Een clip die na twee of drie pogingen nog steeds verkeerd wordt uitgesproken, krijgt een afgedwongen tekst in `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), bijvoorbeeld het getal voluit geschreven.
+6. **Publiceren** van de clips, controleren of ze online bereikbaar zijn, en vervolgens de taalindex publiceren, eerst voor testers (`?voix=test`).
+7. **Openstellen** van de stem voor iedereen, en deze vervolgens standaard inschakelen. De veiligheidsschakelaar (`voice:publish -- remove`) verwijdert een taal uit de index: het spel valt terug op de stem van het apparaat.
 
 ```bash
 # 1. Estimer (sans frais)
@@ -696,9 +684,9 @@ npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> -
 npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience all --default-on
 ```
 
-### Regel: een gewijzigde gesproken zin wordt vóór ingebruikname opnieuw opgenomen
+### Regel: een gewijzigde gesproken zin wordt opnieuw opgenomen vóór release naar productie
 
-Elke gesproken zin is afkomstig uit de vertalingen (`assets/translations/{fr,en,es}.json`) en maakt deel uit van het corpus. Het wijzigen van een gesproken zin zorgt er daarom voor dat de test van de corpusvergrendeling (`scripts/voice/corpus.lock.json`) mislukt. Voor een taal met een opgenomen stem worden vervolgens de fragmenten van de gewijzigde zinnen gegenereerd, gecontroleerd en beluisterd, en daarna gepubliceerd **vóór** het samenvoegen (mergen). Ten slotte wordt de vergrendeling bijgewerkt (`npm run voice:corpus:lock`). Zonder deze fragmenten wordt de gewijzigde zin voorgelezen met de stem van het apparaat.
+Elke gesproken zin is afkomstig uit de vertalingen (`assets/translations/{fr,en,es}.json`) en maakt deel uit van het corpus. Het wijzigen van een gesproken zin zorgt er dus voor dat de corpus-locktest mislukt (`scripts/voice/corpus.lock.json`). Voor een taal met een opgenomen stem worden vervolgens de clips van de gewijzigde zinnen gegenereerd, gecontroleerd en beluisterd, en daarna gepubliceerd **vóór** het mergen. Ten slotte wordt het lock-bestand bijgewerkt (`npm run voice:corpus:lock`). Zonder deze clips wordt de gewijzigde zin voorgelezen met de stem van het apparaat.
 
 ## 📊 Gegevensopslag
 
@@ -706,19 +694,19 @@ Elke gesproken zin is afkomstig uit de vertalingen (`assets/translations/{fr,en,
 
 - Profielen en voorkeuren
 - Voortgang per spelmodus
-- Scores en statistieken van arcadespellen
-- Aanpassingsinstellingen
+- Scores en statistieken van de arcadespellen
+- Personalisatie-instellingen
 
-### Technische kenmerken
+### Technische functionaliteiten
 
 - Lokale opslag (localStorage) met fallbacks
 - Gegevensisolatie per gebruiker
-- Automatische opslag van voortgang
+- Automatische opslag van de voortgang
 - Automatische migratie van oude gegevens
 
 ## 🐛 Een probleem melden
 
-Problemen kunnen worden gemeld via GitHub Issues. Gelieve het volgende toe te voegen:
+Problemen kunnen worden gemeld via GitHub Issues. Gelieve het volgende te vermelden:
 
 - Gedetailleerde beschrijving van het probleem
 - Stappen om het te reproduceren
@@ -731,8 +719,8 @@ Problemen kunnen worden gemeld via GitHub Issues. Gelieve het volgende toe te vo
 
 ## 📄 Licentie
 
-Dit project is gelicentieerd onder de AGPL v3-licentie. Zie het bestand `LICENSE` voor meer informatie.
+Dit project is gelicentieerd onder de AGPL v3. Zie het bestand `LICENSE` voor meer details.
 
 ---
 
-_LeapMultix — open source educatieve applicatie om de vier basisbewerkingen te leren_
+_LeapMultix — open-source educatieve applicatie om de vier basisbewerkingen te leren_
