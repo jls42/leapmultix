@@ -104,8 +104,9 @@ langue propose plusieurs voix : en anglais, Sulafat (Google) ou Jane (Mistral AI
   ligne qui garde les clips de chaque voix annoncée, événement Plausible qui nomme la voix.
 - **Outils** : `scripts/voice/alternatives.json`, `--version` sur chaque outil de la voix, et
   `voice:publish -- alternative` pour ajouter ou retirer une autre voix.
-- **Après la fusion** : publier Jane comme autre voix de l'anglais (testeurs, puis tous), et
-  republier les index fr, en et es, qui gagnent leur `provider`.
+- **En ligne le 27/09/2026** : Jane ouverte à tous comme autre voix de l'anglais, après un
+  essai en prod avec `?voix=test` ; Sulafat reste la voix par défaut. Les index fr, en et es
+  portent leur `provider`. FAQ, À propos, page parents et README la présentent.
 - Les clips `jane-v1-1` restent en ligne : ne pas les retirer du bucket.
 - Diffuser les clips (dépôt ouvert, par exemple) : la sortie appartient au client chez Mistral
   (conditions commerciales, §3.1) comme chez Google (« Generated Output is Customer Data »).
