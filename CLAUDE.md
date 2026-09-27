@@ -376,16 +376,18 @@ Les paramètres d'un message doivent être les mêmes dans les trois langues
 #### Phrases parlées : corpus et verrou
 
 **Règle, sans exception : une phrase dite modifiée se réenregistre avant sa mise en prod.**
-Chaque phrase que le jeu lit à voix haute a son clip MP3 (voix enregistrée : Lucie en
-français, Jane en anglais), retrouvé par l'empreinte du texte exact. Toucher ce texte
+Chaque phrase que le jeu lit à voix haute a son clip MP3 dans chaque voix de sa langue
+(voix par défaut : Lucie en français, Sulafat en anglais et en espagnol ; d'autres au choix du
+joueur), retrouvé par l'empreinte du texte exact. Toucher ce texte
 (traduction fr/en/es, gabarit, forme d'une question, plage d'opérandes, nouvelle phrase) le
 prive de clip : le jeu la lit alors avec la voix de l'appareil, sans erreur ni alerte. Donc,
 dans la même PR que le changement de texte :
 
 1. le test du verrou échoue exprès : c'est le rappel ;
 2. générer les clips manquants avec le skill `generating-voice-clips` (payant : estimation
-   `--dry-run` d'abord, accord du propriétaire), contrôler (Whisper, `voice:check`), faire
-   écouter (page d'écoute : `npm run voice:listen`) ;
+   `--dry-run` d'abord, accord du propriétaire), contrôler (Whisper, `voice:check`, refaits
+   tant que Whisper doute), faire écouter ce qu'il n'a pas validé et un échantillon
+   d'accords (page d'écoute : `npm run voice:listen`) ;
 3. publier les nouveaux clips (`voice:publish clips`, puis `voice:check-online`) **avant**
    de fusionner, puis `npm run voice:corpus:lock`.
 

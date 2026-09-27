@@ -117,6 +117,20 @@ export function createGoogle({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl = f
     errorFrom,
   });
 
+  /**
+   * Voix d'une langue (appel gratuit), triées par nom
+   * @param {string} languageCode - fr-FR, en-GB…
+   * @returns {Promise<Array<{name: string, gender: string}>>}
+   */
+  async function listVoices(languageCode) {
+    const res = await call(`/v1/voices?languageCode=${encodeURIComponent(languageCode)}`);
+    const body = await res.json().catch(() => null);
+    return (body?.voices ?? [])
+      .filter(item => typeof item?.name === 'string')
+      .map(item => ({ name: item.name, gender: String(item.ssmlGender ?? '') }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   return {
     name: 'google',
 
@@ -125,12 +139,12 @@ export function createGoogle({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl = f
       return null;
     },
 
+    listVoices,
+
     /** Échoue si la voix n'existe pas pour sa langue, ou si son format est inconnu */
     async checkVoice(voice) {
       formatOf(voice);
-      const res = await call(`/v1/voices?languageCode=${encodeURIComponent(voice.languageCode)}`);
-      const body = await res.json().catch(() => null);
-      const names = (body?.voices ?? []).map(item => item?.name);
+      const names = (await listVoices(voice.languageCode)).map(item => item.name);
       if (!names.includes(voice.voiceId)) {
         throw new ProviderError(
           'voice',

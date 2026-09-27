@@ -1,6 +1,17 @@
 ---
 name: generating-voice-clips
-description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix, Lucie en français (ElevenLabs) et Sulafat en anglais et en espagnol (Google Cloud Text-to-Speech, Chirp 3 HD), plus Jane en anglais et Marie en français au choix du joueur (Mistral Voxtral TTS), rangés dans le dépôt privé leapmultix-voices et servis par CloudFront sur /voice/ depuis un bucket S3. À utiliser pour estimer le coût, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), contrôler les clips en une commande (npm run voice:review, Whisper local, page d'écoute), refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue, une voix ou un fournisseur, proposer une autre voix au choix du joueur (menu « Voix », alternatives.json, --version), ou préparer un essai local (?voix=local). (project)
+description: >-
+  Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix : Lucie
+  (ElevenLabs) et Marie (Mistral) en français, Sulafat (Google Cloud Text-to-Speech, Chirp 3 HD)
+  et Jane (Mistral) en anglais, Sulafat en espagnol, rangés dans le dépôt privé
+  leapmultix-voices et servis par CloudFront sur /voice/. À utiliser pour estimer le coût,
+  générer ou compléter les clips d'une langue ou d'une autre voix au choix du joueur (menu
+  « Voix », alternatives.json, --version), reprendre une génération interrompue ou à court de
+  crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec),
+  contrôler (npm run voice:review, Whisper local, refaits en boucle, page d'écoute), publier,
+  ouvrir la voix aux testeurs ou à tous, couper une langue, ajouter une langue ou un
+  fournisseur, ou préparer un essai local (?voix=local). Pas pour comparer des voix candidates
+  avant d'en choisir une : c'est le skill comparing-voices.
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -138,27 +149,33 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
 
    - `npm run voice:check -- --lang <l> --probe` vérifie que chaque MP3 est valide et
      inchangé (ffprobe, plus lent).
-   - **Page d'écoute** (`ecoute/<l>-<version>.html`, à ouvrir pour le propriétaire :
-     `xdg-open <page>`). Il écoute les clips signalés et, en fr et en es, un échantillon des
-     formes féminines (« une fois 7 »), que Whisper ne distingue pas. Il coche « à refaire » ;
-     la liste du bandeau se colle dans `ecartes.txt` (racine du jeu, ignoré par git).
-     L'écoute revient au propriétaire : ne jamais cocher à sa place.
-   - **Propriétaire loin du poste** : publier la page de contrôle en artifact, les clips
-     joints en fichiers, avec des cases « à refaire » gardées dans le stockage de l'artifact.
-     Les relire ensuite pour écrire `ecartes.txt`.
-   - **Refaits** (payants : accord) :
-     `node --env-file=<.env> scripts/voice/generate.mjs --lang <l> --redo ecartes.txt --max-total-chars <plafond>`.
-     Seuls ces clips sont refaits, l'ancien de chacun mis de côté dans `ecoute/avant/`.
-   - **Page avant/après** : `npm run voice:review -- --lang <l> --compare <liste>`. Pour
-     chaque clip de la liste, l'ancien et le nouveau, ce que Whisper a entendu, son verdict
-     sur le nouveau, et une case « à refaire ». La liste peut réunir plusieurs tours de
-     refaits (`sort -u ecartes-1.txt ecartes-2.txt > ecartes-toutes.txt`) : le propriétaire
-     valide en une page les versions finales. Ses coches restent d'une ouverture à l'autre,
-     sauf sur un clip refait depuis.
-   - **Boucler** jusqu'à ce que le propriétaire valide. Un clip encore mal dit après deux ou
-     trois essais (un nombre en tête de phrase, par exemple) reçoit un texte dit imposé ;
-     relancer ensuite `generate.mjs` sans `--redo` : le texte dit a changé, donc le clip est
-     refait seul. Deux endroits :
+   - **Qui écoute quoi** (décision du propriétaire, 27/09/2026) : un clip que Whisper juge
+     juste n'est **pas réécouté**. La boucle des refaits tourne d'abord sans lui, deux ou
+     trois tours au plus, tant que Whisper doute :
+     1. copier la liste des signalés : `cp a-reecouter-<tag>.txt ecartes-<tag>-<n>.txt`
+        (`<tag>` : `<l>` ou `<l>-<version>`). Jamais `a-reecouter-…` lui-même :
+        `voice:review` le réécrit avant de lire la liste ;
+     2. refaits (payants : dans l'accord et le plafond de la langue) :
+        `node --env-file=<.env> scripts/voice/generate.mjs --lang <l> --redo ecartes-<tag>-<n>.txt --max-total-chars <plafond>`.
+        Seuls ces clips sont refaits, l'ancien de chacun mis de côté dans `ecoute/avant/` ;
+     3. `npm run voice:review -- --lang <l>` : Whisper retranscrit les clips refaits, et
+        `a-reecouter-<tag>.txt` ne garde que ceux qui doutent encore.
+   - **Écoute du propriétaire**, la boucle finie : la page d'écoute
+     (`ecoute/<l>-<version>.html`, `xdg-open <page>`) ne montre que les clips que Whisper n'a
+     pas validés, puis un échantillon de 12 formes féminines (« une fois 7 », en fr et en es),
+     que Whisper ne distingue pas. Il coche « à refaire » ; la liste du bandeau se colle dans
+     `ecartes.txt` (racine du jeu, ignoré par git). Ne jamais cocher à sa place.
+   - **Propriétaire loin du poste** : publier cette page en artifact, les clips joints en
+     fichiers, avec des cases « à refaire » gardées dans le stockage de l'artifact. Les relire
+     ensuite pour écrire `ecartes.txt`.
+   - **Page avant/après**, au besoin : `npm run voice:review -- --lang <l> --compare <liste>`.
+     Pour chaque clip de la liste, l'ancien et le nouveau, ce que Whisper a entendu, son
+     verdict sur le nouveau, et une case « à refaire ». La liste peut réunir plusieurs tours
+     (`sort -u ecartes-1.txt ecartes-2.txt > ecartes-toutes.txt`).
+   - **Clip qui résiste**, encore signalé ou mal dit après deux ou trois essais (un nombre en
+     tête de phrase, par exemple) : il reçoit un texte dit imposé. Relancer ensuite
+     `generate.mjs` sans `--redo` : le texte dit a changé, donc le clip est refait seul. Deux
+     endroits :
      - `SAID_OVERRIDES` (`said-text.mjs`) change le texte dit de **toute la langue**, donc de
        chacune de ses voix : à réserver à une langue dont aucun clip de la phrase n'est publié,
        puisqu'un clip publié ne se réécrit pas ;

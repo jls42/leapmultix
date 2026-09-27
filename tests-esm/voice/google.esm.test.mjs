@@ -111,6 +111,26 @@ describe('Fournisseur Google : requête et réponse', () => {
     expect(await found.provider.credits()).toBeNull();
   });
 
+  test('liste des voix d’une langue (banc d’écoute) : nom et genre, triés, entrées sans nom écartées', async () => {
+    const { provider, calls } = providerWith(() =>
+      json(200, {
+        voices: [
+          { name: 'fr-FR-Chirp3-HD-Sulafat', ssmlGender: 'FEMALE' },
+          { ssmlGender: 'MALE' },
+          { name: 'fr-FR-Chirp3-HD-Achird', ssmlGender: 'MALE' },
+          { name: 'fr-FR-Standard-A' },
+        ],
+      })
+    );
+    expect(await provider.listVoices('fr-FR')).toEqual([
+      { name: 'fr-FR-Chirp3-HD-Achird', gender: 'MALE' },
+      { name: 'fr-FR-Chirp3-HD-Sulafat', gender: 'FEMALE' },
+      { name: 'fr-FR-Standard-A', gender: '' },
+    ]);
+    expect(calls[0].url).toBe('https://tts.test/v1/voices?languageCode=fr-FR');
+    expect(calls[0].init?.method ?? 'GET').toBe('GET');
+  });
+
   test.each([
     ['sans audioContent', () => json(200, {})],
     ['audio qui n’est pas un WAV', () => audioReply(Buffer.from('<html>'))],

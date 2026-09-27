@@ -117,6 +117,9 @@ const PROVIDERS = {
   },
 };
 
+/** Fournisseurs que les outils savent appeler (voix déclarées, voix d'un banc d'écoute) */
+export const PROVIDER_NAMES = Object.keys(PROVIDERS);
+
 /** Chemins d'une voix : bruts rangés sous l'empreinte des réglages, dans leur format */
 const voicePaths = (outDir, lang, voice) =>
   storePaths(outDir, lang, voice.version, synthesisHash(voice), rawExtension(voice.sourceFormat));
@@ -238,7 +241,12 @@ function retryDelay(error, attempt, { delays, signal }) {
   return Math.max(error.retryAfterMs ?? 0, delays[attempt]);
 }
 
-async function withRetries(task, options) {
+/**
+ * Tâche relancée après une erreur passagère du fournisseur (débit, serveur, réseau)
+ * @param {() => Promise<any>} task
+ * @param {{delays: number[], signal?: AbortSignal, sleep: (ms: number) => Promise<void>}} options
+ */
+export async function withRetries(task, options) {
   for (let attempt = 0; ; attempt++) {
     try {
       return await task();
