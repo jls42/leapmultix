@@ -540,6 +540,28 @@ describe('Génération des clips', () => {
     ]);
   });
 
+  test('mot écrit autrement pour la voix : ses phrases seules sont refaites, réglages inchangés', async () => {
+    server = await startServer(ok);
+    await run({ phrases: [PHRASES[0], PHRASES[3]] });
+    const voice = { ...VOICE, saidWords: { moins: 'moinsse' } };
+    expect(synthesisHash(voice)).toBe(synthesisHash(VOICE));
+    const summary = await run({ voice, phrases: [PHRASES[0], PHRASES[3]] });
+    expect(summary.generated).toBe(1);
+    expect(server.tts().map(r => r.body.text)).toEqual([
+      'Combien font une fois 7 ?',
+      'Combien font 9 moins 4 ?',
+      'Combien font 9 moinsse 4 ?',
+    ]);
+    expect(manifest().clips[PHRASES[3].key].said).toBe('Combien font 9 moinsse 4 ?');
+  });
+
+  test('mot écrit autrement absent du corpus : refus, sans appel', async () => {
+    server = await startServer(ok);
+    const voice = { ...VOICE, saidWords: { pluss: 'plusse' } };
+    await expect(run({ voice })).rejects.toThrow(/absent du corpus/);
+    expect(server.tts()).toHaveLength(0);
+  });
+
   test('texte dit propre pour une phrase absente du corpus : refus, sans appel', async () => {
     server = await startServer(ok);
     const voice = { ...VOICE, saidOverrides: { 'Combien font 99 moins 1 ?': 'x' } };

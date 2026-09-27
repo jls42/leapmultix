@@ -139,13 +139,17 @@ l'espagnol, devient une autre voix du français. Lucie (ElevenLabs) reste la voi
   (choix relu dans le stockage de la page).
 - **Écoute réduite** (décision du propriétaire) : un clip que Whisper juge juste après les refaits
   n'est plus réécouté ; le propriétaire n'écoute que ce que Whisper n'a pas validé et 12 accords.
-- **Génération du 27/09** : 7 437 clips, aucun échec ; trois tours de refaits (112, 53, 31
-  clips), puis l'écoute du propriétaire sur 11 clips et 12 accords. Deux défauts de Sulafat,
-  corrigés par 99 textes dits propres à elle : « 1 » final écrit « un », et « 2 plus » écrit
-  « plusse » (elle disait « plu », ce que Whisper n'entend pas). 228 239 caractères, plus 673
-  d'essais et 2 552 de banc, sous le plafond accordé de 240 000 : 0 $ (quota Google du mois).
+- **Génération du 27/09** (`sulafat-v1-1`) : 7 437 clips, aucun échec ; trois tours de refaits
+  (112, 53, 31 clips), puis l'écoute du propriétaire sur 11 clips et 12 accords. « 1 » final
+  écrit « un », et « 2 plus » écrit « plusse » (elle disait « plu », ce que Whisper n'entend
+  pas). 228 239 caractères, plus 673 d'essais et 2 552 de banc, sous le plafond accordé de
+  240 000 : 0 $ (quota Google du mois).
 - **Publiée** le 27/09 : testeurs, essai en prod (menu « Voix », clips lus depuis `/voice/`,
   aucune requête vers Google), puis tous.
+- **`sulafat-v1-2`** : à l'essai en prod, le propriétaire entend encore « plu » dans
+  « Combien font 7 plus 10 ? ». « plus » s'écrit désormais « plusse » dans les 1 210 phrases
+  (`saidWords`, nouvelle règle par mot d'une voix) ; 25 110 caractères sous un plafond accordé de
+  30 000, les autres phrases reprises des bruts.
 - **Outil corrigé** : `voice:check` écartait de la liste à réécouter un clip revenu à un
   contenu déjà transcrit (même son renvoyé par Google), le croyant périmé.
 - **Point ouvert, à l'arbitrage du propriétaire** : le texte dit fait dire « 9 boîtes de une

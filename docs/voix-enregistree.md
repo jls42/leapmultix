@@ -69,15 +69,21 @@ place et ce qui vient ensuite.
       - Sulafat avale un « 1 » écrit en chiffre en fin de phrase (« Combien font 38 moins 1 ? »
         entendu « 38 moins ») : écrit « un », il passe. Un nombre en tête de phrase se dit mieux
         en lettres (« Dix moins combien… »).
-      - Elle lit « 2 plus » comme l'adverbe « de plus » et dit « plu » : Whisper ne l'entend
-        pas, l'oreille du propriétaire si. Écrit « plusse », il se dit « pluss » (validé sur 5
-        phrases, puis sur un échantillon de 7). Les 80 phrases en « 2 plus » le reçoivent.
-      - En tout, 99 textes dits propres à Sulafat (`saidOverrides`), sans toucher aux clips de
-        Lucie ni de Marie.
+      - Elle lit « plus » comme l'adverbe (« de plus ») et dit « plu » : Whisper ne l'entend
+        pas, l'oreille du propriétaire si. Relevé d'abord sur les phrases en « 2 plus », puis,
+        à l'essai en prod de `sulafat-v1-1`, sur « Combien font 7 plus 10 ? » : toutes les
+        questions en « plus » le disaient ainsi, et la moitié des égalités. Écrit « plusse », il
+        se dit « pluss » (validé à l'oreille sur 12 phrases).
+      - `sulafat-v1-2` écrit donc « plusse » pour Sulafat seule, dans les 1 210 phrases en
+        « plus » (`saidWords` de son entrée : un mot écrit autrement, partout où il apparaît),
+        et garde 19 textes propres (`saidOverrides`) pour le « 1 » final et le premier nombre.
+        Les clips de Lucie et de Marie ne bougent pas. Les 6 307 autres phrases viennent des
+        bruts de `sulafat-v1-1`, sans nouvel appel.
       - Google redonne parfois, pour la même phrase, le même son à l'octet près : une nouvelle
         prise n'y change rien, seul un autre texte dit aide.
-    - Coût : 228 239 caractères pour la voix, 673 pour les essais de textes dits et 2 552 pour le
-      banc, dans le million offert du mois : 0 $.
+    - Coût : 228 239 caractères pour `sulafat-v1-1`, 25 110 pour les phrases en « plus » de
+      `sulafat-v1-2`, 673 pour les essais de textes dits et 2 552 pour le banc, dans le million
+      offert du mois : 0 $.
   - **Espagnol, essai écarté : Jane - Neutral**, le 26/09/2026. Mistral n'a aucune voix
     espagnole.
     - Banc des 30 voix prêtes : le propriétaire retient Jane, les autres ne convainquent pas.
@@ -273,7 +279,7 @@ CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sort
 modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en français,
 `sulafat-v1-1` en anglais et en espagnol). `scripts/voice/alternatives.json` fait de même
 pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais ; `marie-v1-1`, Marie, et
-`sulafat-v1-1`, Sulafat, en français).
+`sulafat-v1-2`, Sulafat, en français).
 
 - Changer un réglage impose une nouvelle version : le générateur refuse de mélanger deux
   réglages sous une même version.
@@ -368,7 +374,9 @@ Avant de générer toute une langue avec une nouvelle voix, quelques voix candid
      9 » se dit « Cent huit divisé par douze égale neuf » (trois essais en chiffres, trois
      débuts mal dits). En anglais, le texte dit est la phrase elle-même. Ce texte imposé vaut
      pour toutes les voix de la langue ; une voix peut en avoir un pour elle seule
-     (`saidOverrides` dans son entrée), sans toucher aux clips des autres voix.
+     (`saidOverrides` dans son entrée), sans toucher aux clips des autres voix. Un mot qu'une
+     voix dit mal partout s'écrit autrement pour elle seule (`saidWords`, mot entier, casse
+     comprise) : Sulafat dit « pluss » quand on lui écrit « plusse ».
    - **Traitement** (`audio-process.mjs`) : silences de début et de fin coupés, −20 LUFS,
      pic −1 dBFS, 0,15 s de silence gardé avant la phrase, MP3 mono 64 kb/s ; un clip muet est
      refusé. Un clic isolé par un long silence part avec lui. Changer l'encodage demande une

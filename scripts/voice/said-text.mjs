@@ -251,18 +251,50 @@ export function saidText(text, lang) {
 }
 
 /**
+ * Mots qu'une voix dit mal, écrits autrement pour elle seule (saidWords de son entrée) : mot
+ * entier, casse comprise. Sulafat en français lit « plus » comme l'adverbe (« plu ») ; écrit
+ * « plusse », il se dit « pluss ».
+ * @param {string} said
+ * @param {Object<string, string>} [words]
+ * @returns {string}
+ */
+function respelled(said, words) {
+  if (!words) return said;
+  const spelled = new Map(Object.entries(words));
+  return said
+    .split(/(\p{L}+)/u)
+    .map(part => spelled.get(part) ?? part)
+    .join('');
+}
+
+/**
  * Texte dit par une voix : le sien pour une phrase qu'elle seule dit mal (saidOverrides de son
- * entrée dans voices.json ou alternatives.json), sinon celui de la langue. Les clips des autres
- * voix ne bougent pas : une voix déjà publiée garderait sinon un texte dit périmé.
- * @param {{saidOverrides?: Object<string, string>}|null} voice
+ * entrée dans voices.json ou alternatives.json), sinon celui de la langue ; puis ses mots écrits
+ * autrement (saidWords). Les clips des autres voix ne bougent pas : une voix déjà publiée
+ * garderait sinon un texte dit périmé.
+ * @param {{saidOverrides?: Object<string, string>, saidWords?: Object<string, string>}|null} voice
  * @param {string} text - Phrase telle que speak() la reçoit
  * @param {string} lang
  * @returns {string}
  */
 export function voiceSaidText(voice, text, lang) {
-  const own = voice?.saidOverrides;
-  const said = own && Object.hasOwn(own, text) ? own[text] : null;
-  return typeof said === 'string' && said.trim() ? said : saidText(text, lang);
+  const said = new Map(Object.entries(voice?.saidOverrides ?? {})).get(text);
+  const base = typeof said === 'string' && said.trim() ? said : saidText(text, lang);
+  return respelled(base, voice?.saidWords);
+}
+
+/**
+ * Mots écrits autrement pour une voix (saidWords) qu'aucune phrase du corpus ne contient, ou
+ * sans graphie : une faute de frappe ne changerait rien sans prévenir
+ * @param {{saidWords?: Object<string, string>}} voice
+ * @param {Array<{text: string}>} phrases - Corpus de la langue
+ * @returns {string[]}
+ */
+export function unknownSaidWords(voice, phrases) {
+  const words = new Set(phrases.flatMap(phrase => phrase.text.match(/\p{L}+/gu) ?? []));
+  return Object.entries(voice?.saidWords ?? {})
+    .filter(([word, spelled]) => !words.has(word) || typeof spelled !== 'string' || !spelled.trim())
+    .map(([word]) => word);
 }
 
 /**

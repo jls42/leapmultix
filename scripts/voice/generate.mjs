@@ -38,7 +38,7 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCorpus } from './corpus.mjs';
-import { unknownOwnSaidTexts, voiceSaidText } from './said-text.mjs';
+import { unknownOwnSaidTexts, unknownSaidWords, voiceSaidText } from './said-text.mjs';
 import {
   ClipContentError,
   checkAudioTools,
@@ -604,14 +604,25 @@ function finalSummary(summary, { state, manifest, options }) {
   };
 }
 
-async function generateLocked(opts, paths) {
-  const { lang, voice, phrases } = opts;
+/** Textes dits propres à la voix : chaque phrase et chaque mot visés existent dans le corpus */
+function assertOwnSaidTexts(voice, phrases) {
   const unknown = unknownOwnSaidTexts(voice, phrases);
   if (unknown.length) {
     throw new Error(
       `Texte dit propre à la voix pour une phrase absente du corpus : ${unknown.join(' | ')}`
     );
   }
+  const words = unknownSaidWords(voice, phrases);
+  if (words.length) {
+    throw new Error(
+      `Mot écrit autrement pour la voix, absent du corpus ou sans graphie : ${words.join(' | ')}`
+    );
+  }
+}
+
+async function generateLocked(opts, paths) {
+  const { lang, voice, phrases } = opts;
+  assertOwnSaidTexts(voice, phrases);
   const manifest = readManifest(paths, lang, voice);
   const leftovers = await prepareStore(opts, paths, manifest);
   const reconciled = await reconcile({

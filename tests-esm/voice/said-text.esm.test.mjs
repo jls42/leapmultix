@@ -8,6 +8,7 @@
  * des mots qui suivent un nombre correspond exactement au corpus, et chaque texte imposé vise
  * une phrase du corpus.
  */
+import fs from 'node:fs';
 import { describe, test, expect } from '@jest/globals';
 import {
   SAID_OVERRIDES,
@@ -15,6 +16,7 @@ import {
   hasAgreement,
   saidText,
   unknownOwnSaidTexts,
+  unknownSaidWords,
   voiceSaidText,
   wordsAfterNumbers,
 } from '../../scripts/voice/said-text.mjs';
@@ -147,6 +149,57 @@ describe('Texte dit : textes imposés', () => {
       'Mode Quiz'
     );
     expect(voiceSaidText({ saidOverrides: {} }, 'constructor', 'fr')).toBe('constructor');
+  });
+
+  test('mots écrits autrement pour une voix : mot entier, casse comprise, après son texte propre', () => {
+    const sulafat = {
+      saidWords: { plus: 'plusse' },
+      saidOverrides: { 'Combien font 38 moins 1 ?': 'Combien font 38 moins un ?' },
+    };
+    expect(voiceSaidText(sulafat, 'Combien font 7 plus 10 ?', 'fr')).toBe(
+      'Combien font 7 plusse 10 ?'
+    );
+    expect(voiceSaidText(sulafat, '2 plus combien égale 5 ?', 'fr')).toBe(
+      '2 plusse combien égale 5 ?'
+    );
+    expect(voiceSaidText(sulafat, 'Combien font 38 moins 1 ?', 'fr')).toBe(
+      'Combien font 38 moins un ?'
+    );
+    // Mot entier et casse exacte : « plusieurs » et « Plus » restent tels quels
+    expect(voiceSaidText(sulafat, 'Plus plusieurs plus', 'fr')).toBe('Plus plusieurs plusse');
+    // Le texte propre d'une phrase passe lui aussi par les mots écrits autrement
+    const withOwn = {
+      ...sulafat,
+      saidOverrides: { 'Combien font 2 plus 12 ?': 'Combien font deux plus douze ?' },
+    };
+    expect(voiceSaidText(withOwn, 'Combien font 2 plus 12 ?', 'fr')).toBe(
+      'Combien font deux plusse douze ?'
+    );
+    expect(voiceSaidText({ saidWords: {} }, 'constructor', 'fr')).toBe('constructor');
+    expect(voiceSaidText({ saidWords: { plus: 'plusse' } }, 'Combien font 1 fois 7 ?', 'fr')).toBe(
+      'Combien font une fois 7 ?'
+    );
+  });
+
+  test('mot écrit autrement absent du corpus, ou sans graphie : relevé', () => {
+    const phrases = [{ text: 'Combien font 7 plus 10 ?' }, { text: '2 fois 3 égale 6' }];
+    const voice = { saidWords: { plus: 'plusse', pluss: 'x', fois: ' ', égale: 3 } };
+    expect(unknownSaidWords(voice, phrases)).toEqual(['pluss', 'fois', 'égale']);
+    expect(unknownSaidWords({}, phrases)).toEqual([]);
+  });
+
+  test('voix déclarées : leurs textes propres et leurs mots écrits autrement visent le corpus', () => {
+    const declared = [
+      ...Object.entries(JSON.parse(fs.readFileSync('scripts/voice/voices.json', 'utf8'))),
+      ...Object.entries(
+        JSON.parse(fs.readFileSync('scripts/voice/alternatives.json', 'utf8'))
+      ).flatMap(([lang, voices]) => voices.map(voice => [lang, voice])),
+    ];
+    for (const [lang, voice] of declared) {
+      const corpus = buildCorpus(lang);
+      expect([voice.version, unknownOwnSaidTexts(voice, corpus)]).toEqual([voice.version, []]);
+      expect([voice.version, unknownSaidWords(voice, corpus)]).toEqual([voice.version, []]);
+    }
   });
 
   test('texte dit propre pour une phrase absente du corpus : relevé', () => {
