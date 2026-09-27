@@ -78,7 +78,11 @@ export const DEFAULT_SIZE = 22;
 export const FILES_PER_PUBLISH = 250;
 
 /** Format du brut par fournisseur, quand le banc ne le donne pas */
-const DEFAULT_SOURCE_FORMAT = { google: 'wav', mistral: 'mp3', elevenlabs: 'mp3_44100_128' };
+const DEFAULT_SOURCE_FORMAT = new Map([
+  ['google', 'wav'],
+  ['mistral', 'mp3'],
+  ['elevenlabs', 'mp3_44100_128'],
+]);
 
 /** Identifiant d'un banc, d'une voix, d'une question : il nomme des dossiers et des champs */
 const SLUG = /^[a-z0-9][a-z0-9-]{0,39}$/;
@@ -104,6 +108,36 @@ export class CapError extends Error {
 
 const charCount = text => [...text].length;
 
+// Accès disque du banc. Chaque chemin est construit par l'outil, sous le dossier du banc ou
+// le dépôt des voix que donne la ligne de commande du propriétaire, ou c'est le fichier du
+// banc qu'il désigne : aucun ne vient d'un tiers. La règle detect-non-literal-fs-filename,
+// pensée pour un serveur qui recevrait un chemin d'un visiteur, est levée pour ces lignes.
+
+function exists(file) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- chemin de l'outil (ci-dessus)
+  return fs.existsSync(file);
+}
+
+/** JSON d'un fichier ; fallback s'il n'existe pas, sinon l'absence est une erreur */
+function readJson(file, fallback) {
+  if (fallback !== undefined && !exists(file)) return fallback;
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- chemin de l'outil (ci-dessus)
+  return JSON.parse(fs.readFileSync(file, 'utf8'));
+}
+
+async function makeDir(dir) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- chemin de l'outil (ci-dessus)
+  await fsp.mkdir(dir, { recursive: true });
+}
+
+/** Crée le dossier d'un fichier à écrire */
+const makeParent = file => makeDir(path.dirname(file));
+
+async function fileSha(file) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- chemin de l'outil (ci-dessus)
+  return sha256(await fsp.readFile(file));
+}
+
 function requireText(value, field) {
   if (typeof value !== 'string' || !value.trim()) throw new Error(`Banc : « ${field} » manquant`);
   return value;
@@ -124,7 +158,7 @@ function candidateVoice(entry, lang, encoding) {
   }
   requireText(voiceId, `${slug}.voiceId`);
   const voice = {
-    sourceFormat: DEFAULT_SOURCE_FORMAT[provider],
+    sourceFormat: DEFAULT_SOURCE_FORMAT.get(provider),
     settings: {},
     ...rest,
     provider,
@@ -199,19 +233,17 @@ function benchInclude(include = []) {
   return include;
 }
 
-/** Textes facultatifs de la page, et leur valeur sans le fichier du banc */
-const TEXT_DEFAULTS = { intro: '', question: 'Quelle voix retenir ?', none: 'Aucune', note: '' };
+const textOr = (value, fallback) => (typeof value === 'string' ? value : fallback);
 
 /** Textes de la page ; seuls le nom et le titre sont obligatoires */
-function pageTexts(config) {
-  const optional = Object.entries(TEXT_DEFAULTS).map(([field, fallback]) => {
-    const text = Object.hasOwn(config, field) ? config[field] : fallback;
-    return [field, typeof text === 'string' ? text : fallback];
-  });
+function pageTexts({ name, title, intro, question, none, note }) {
   return {
-    ...Object.fromEntries(optional),
-    name: requireText(config.name, 'name'),
-    title: requireText(config.title, 'title'),
+    name: requireText(name, 'name'),
+    title: requireText(title, 'title'),
+    intro: textOr(intro, ''),
+    question: textOr(question, 'Quelle voix retenir ?'),
+    none: textOr(none, 'Aucune'),
+    note: textOr(note, ''),
   };
 }
 
@@ -252,18 +284,18 @@ function trapPhrases(corpus, lang, trap, taken) {
 }
 
 /** Part de chaque liste dans la place qui reste : une chacune, tour à tour */
-function shares(lists, room) {
-  const counts = lists.map(() => 0);
+function allot(lists, room) {
+  const shares = lists.map(list => ({ list, count: 0 }));
   let left = room;
-  while (left > 0 && counts.some((count, index) => count < lists[index].length)) {
-    lists.forEach((list, index) => {
-      if (left > 0 && counts[index] < list.length) {
-        counts[index]++;
+  while (left > 0 && shares.some(share => share.count < share.list.length)) {
+    for (const share of shares) {
+      if (left > 0 && share.count < share.list.length) {
+        share.count++;
         left--;
       }
-    });
+    }
   }
-  return counts;
+  return shares;
 }
 
 /** Phrases d'une famille par opération, multiplication d'abord : les calculs varient */
@@ -279,14 +311,11 @@ function fillFamilies(corpus, taken, size) {
   const families = FAMILY_ORDER.map(family =>
     corpus.filter(phrase => phrase.family === family && !taken.has(phrase.key))
   ).filter(list => list.length);
-  const quotas = shares(families, size - taken.size);
-  families.forEach((list, index) => {
-    const groups = byOperation(list);
-    const counts = shares(groups, quotas[index]);
-    groups.forEach((group, rank) => {
-      for (const phrase of centered(group, counts[rank])) taken.set(phrase.key, phrase);
-    });
-  });
+  for (const family of allot(families, size - taken.size)) {
+    for (const group of allot(byOperation(family.list), family.count)) {
+      for (const phrase of centered(group.list, group.count)) taken.set(phrase.key, phrase);
+    }
+  }
 }
 
 /**
@@ -348,8 +377,7 @@ const clipStamp = (paths, raw, encoding) =>
 
 /** Manifeste d'une voix du banc : ses clips, avec texte dit, durée et sha256 */
 export function readBenchManifest(paths, slug) {
-  const file = manifestFile(paths, slug);
-  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : { clips: {} };
+  return readJson(manifestFile(paths, slug), { clips: {} });
 }
 
 /**
@@ -369,8 +397,8 @@ export function planBench({ voices, phrases, lang, paths }) {
         const stamp = clipStamp(paths, raw, bench.voice.encoding);
         const fresh =
           manifest.clips[phrase.key]?.stamp === stamp &&
-          fs.existsSync(path.join(paths.outDir, clipPath(bench.slug, phrase.key)));
-        if (!fresh) todo.push({ phrase, said, raw, stamp, paid: fs.existsSync(raw) });
+          exists(path.join(paths.outDir, clipPath(bench.slug, phrase.key)));
+        if (!fresh) todo.push({ phrase, said, raw, stamp, paid: exists(raw) });
       }
       const chars = todo
         .filter(item => !item.paid)
@@ -424,14 +452,14 @@ async function buyRaw(item, { bench, provider, paths, retry }) {
     throw error;
   }
   await recordBilled(paths, line);
-  await fsp.mkdir(path.dirname(item.raw), { recursive: true });
+  await makeParent(item.raw);
   await writeFileAtomic(item.raw, audio);
 }
 
 /** Clip traité comme ceux du jeu, puis inscrit au manifeste de la voix */
 async function finishClip(item, { bench, paths, manifest, audio }) {
   const out = path.join(paths.outDir, clipPath(bench.slug, item.phrase.key));
-  await fsp.mkdir(path.dirname(out), { recursive: true });
+  await makeParent(out);
   await audio.process(item.raw, out, bench.voice.encoding);
   const info = await audio.probe(out);
   manifest.clips[item.phrase.key] = {
@@ -439,7 +467,7 @@ async function finishClip(item, { bench, paths, manifest, audio }) {
     said: item.said,
     stamp: item.stamp,
     duration: Math.round(info.duration * 1000) / 1000,
-    sha256: sha256(await fsp.readFile(out)),
+    sha256: await fileSha(out),
   };
   await writeFileAtomic(manifestFile(paths, bench.slug), JSON.stringify(manifest, null, 2));
 }
@@ -453,6 +481,7 @@ async function finishClip(item, { bench, paths, manifest, audio }) {
  * @param {{process: Function, probe: Function}} [options.audio]
  * @param {Object} [options.retry] - Relances (withRetries)
  * @param {(message: string) => void} [options.log]
+ * @returns {Promise<number>} clips faits
  */
 export async function synthesizeBench(plan, options) {
   const {
@@ -460,17 +489,29 @@ export async function synthesizeBench(plan, options) {
     open,
     audio = { process: processClip, probe: probeClip },
     retry = { delays: RETRY_DELAYS_MS, sleep: ms => new Promise(done => setTimeout(done, ms)) },
-    log = () => {},
+    log,
   } = options;
+  let made = 0;
   for (const { bench, todo } of plan.filter(step => step.todo.length)) {
-    const manifest = readBenchManifest(paths, bench.slug);
-    const provider = todo.some(item => !item.paid) ? await open(bench.voice) : null;
-    for (const item of todo) {
-      if (!item.paid) await buyRaw(item, { bench, provider, paths, retry });
-      await finishClip(item, { bench, paths, manifest, audio });
+    try {
+      made += await synthesizeVoice(bench, todo, { paths, open, audio, retry });
+    } catch (error) {
+      throw new Error(`${bench.name} : ${error.message}`, { cause: error });
     }
-    log(`${bench.name} : ${todo.length} clips`);
+    log?.(`${bench.name} : ${todo.length} clips`);
   }
+  return made;
+}
+
+/** Phrases d'une voix candidate : achat de ce qui manque, puis traitement */
+async function synthesizeVoice(bench, todo, { paths, open, audio, retry }) {
+  const manifest = readBenchManifest(paths, bench.slug);
+  const provider = todo.some(item => !item.paid) ? await open(bench.voice) : null;
+  for (const item of todo) {
+    if (!item.paid) await buyRaw(item, { bench, provider, paths, retry });
+    await finishClip(item, { bench, paths, manifest, audio });
+  }
+  return todo.length;
 }
 
 /**
@@ -479,25 +520,39 @@ export async function synthesizeBench(plan, options) {
  * @param {Object[]} voices
  * @param {Object[]} phrases
  * @param {{paths: Object, voicesRepo: string, lang: string}} options
+ * @returns {Promise<number>} clips copiés
  */
 export async function copyReferences(voices, phrases, { paths, voicesRepo, lang }) {
+  let copied = 0;
   for (const bench of voices.filter(voice => voice.kind === 'reference')) {
-    const { version } = bench.voice;
-    const source = path.join(voicesRepo, 'manifests', lang, `${version}.json`);
-    const published = fs.existsSync(source) ? JSON.parse(fs.readFileSync(source, 'utf8')) : {};
-    const manifest = { clips: {} };
-    for (const phrase of phrases) {
-      const from = path.join(voicesRepo, 'clips', lang, version, `${phrase.key}.mp3`);
-      const entry = published.clips?.[phrase.key];
-      if (!entry || !fs.existsSync(from)) continue;
-      const to = path.join(paths.outDir, clipPath(bench.slug, phrase.key));
-      await fsp.mkdir(path.dirname(to), { recursive: true });
-      await fsp.copyFile(from, to);
-      manifest.clips[phrase.key] = { ...entry, sha256: sha256(await fsp.readFile(to)) };
+    try {
+      copied += await copyReference(bench, phrases, { paths, voicesRepo, lang });
+    } catch (error) {
+      throw new Error(`Référence ${bench.name} (${bench.voice.version}) : ${error.message}`, {
+        cause: error,
+      });
     }
-    await fsp.mkdir(paths.manifestDir, { recursive: true });
-    await writeFileAtomic(manifestFile(paths, bench.slug), JSON.stringify(manifest, null, 2));
   }
+  return copied;
+}
+
+async function copyReference(bench, phrases, { paths, voicesRepo, lang }) {
+  const { version } = bench.voice;
+  const published = readJson(path.join(voicesRepo, 'manifests', lang, `${version}.json`), {});
+  const manifest = { clips: {} };
+  for (const phrase of phrases) {
+    const from = path.join(voicesRepo, 'clips', lang, version, `${phrase.key}.mp3`);
+    const entry = published.clips?.[phrase.key];
+    if (!entry || !exists(from)) continue;
+    const to = path.join(paths.outDir, clipPath(bench.slug, phrase.key));
+    await makeParent(to);
+    await fsp.copyFile(from, to);
+    manifest.clips[phrase.key] = { ...entry, sha256: await fileSha(to) };
+  }
+  const file = manifestFile(paths, bench.slug);
+  await makeParent(file);
+  await writeFileAtomic(file, JSON.stringify(manifest, null, 2));
+  return Object.keys(manifest.clips).length;
 }
 
 /**
@@ -505,14 +560,15 @@ export async function copyReferences(voices, phrases, { paths, voicesRepo, lang 
  * « <voix>/<phrase> », son chemin sous clips/. Les clips déjà transcrits dans leur état
  * actuel sont sautés.
  */
-export function transcribeBench(voices, paths, { python, lang }, run = runWhisper) {
+export async function transcribeBench(voices, paths, { python, lang }, run = runWhisper) {
   const clips = {};
   for (const bench of voices) {
     for (const [key, entry] of Object.entries(readBenchManifest(paths, bench.slug).clips)) {
       clips[`${bench.slug}/${key}`] = { sha256: entry.sha256, text: entry.text };
     }
   }
-  fs.writeFileSync(paths.whisperManifest, JSON.stringify({ clips }));
+  await makeParent(paths.whisperManifest);
+  await writeFileAtomic(paths.whisperManifest, JSON.stringify({ clips }));
   const clipDir = path.join(paths.outDir, 'clips');
   run({
     python,
@@ -564,8 +620,12 @@ export function voiceResults(bench, phrases, { paths, lang, transcripts }) {
  * @returns {Promise<{files: string[], batches: number}>}
  */
 export async function writeBenchPage({ setup, phrases, results, paths, corpus }) {
-  const { html, files } = buildBenchPage({ setup, phrases, voices: results, corpus });
-  await writeFileAtomic(paths.page, html);
+  const page = buildBenchPage({ setup, phrases, voices: results, corpus });
+  // Codacy (xss/no-mixed-html) prend l'écriture de la page sur disque pour une insertion de
+  // HTML. Cette règle n'existe pas dans l'ESLint du dépôt : la levée ne peut pas la nommer.
+  // eslint-disable-next-line -- page écrite sur disque ; ses textes sont échappés (escapeHtml)
+  await writeFileAtomic(paths.page, page.html);
+  const { files } = page;
   await writeFileAtomic(paths.filesList, JSON.stringify(files.map(file => ({ path: file }))));
   return { files, batches: Math.ceil(files.length / FILES_PER_PUBLISH) };
 }
@@ -636,7 +696,7 @@ function printPlan({ plan, phrases, billed }) {
 
 /** Banc, dossier, phrases et travail restant, sans rien écrire */
 function prepareBench(args) {
-  const setup = benchSetup(JSON.parse(fs.readFileSync(args.config, 'utf8')));
+  const setup = benchSetup(readJson(args.config));
   const paths = benchPaths(args.out ?? path.join(args.voicesRepo, 'bancs', setup.id));
   const corpus = buildCorpus(setup.lang);
   const phrases = benchPhrases(corpus, setup.lang, setup);
@@ -656,10 +716,10 @@ async function runBench(args, bench) {
   const { setup, paths, phrases, plan } = bench;
   const { lang, voices } = setup;
   await checkAudioTools();
-  await fsp.mkdir(paths.manifestDir, { recursive: true });
+  await makeDir(paths.manifestDir);
   await synthesizeBench(plan, { paths, open: voice => openProvider(voice), log: console.log });
   await copyReferences(voices, phrases, { paths, voicesRepo: args.voicesRepo, lang });
-  if (!args.skipWhisper) transcribeBench(voices, paths, { python: args.python, lang });
+  if (!args.skipWhisper) await transcribeBench(voices, paths, { python: args.python, lang });
   const transcripts = readTranscripts(paths.transcripts) ?? [];
   const results = voices.map(voice => voiceResults(voice, phrases, { paths, lang, transcripts }));
   return { results, ...(await writeBenchPage({ ...bench, results })) };

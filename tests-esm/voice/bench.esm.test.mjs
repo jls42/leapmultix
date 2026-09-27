@@ -250,7 +250,7 @@ describe('synthèse du banc', () => {
   test('chaque phrase payée une fois : registre, brut, clip et manifeste', async () => {
     const steps = plan();
     const calls = [];
-    await run(steps, fakeOpen(calls));
+    expect(await run(steps, fakeOpen(calls))).toBe(2 * phrases.length);
     expect(calls).toHaveLength(2 * phrases.length);
     expect(calls.map(call => call.text)).toContain(phrases[2].said);
     expect(billedChars({ billedFile: paths.billedFile })).toBe(neededChars(steps));
@@ -292,7 +292,9 @@ describe('synthèse du banc', () => {
 
   test('réponse payée mais inutilisable : inscrite au registre, puis arrêt', async () => {
     const failure = new ProviderError('response', 'Google TTS : réponse sans WAV exploitable');
-    await expect(run(plan(), fakeOpen([], failure))).rejects.toThrow('réponse sans WAV');
+    await expect(run(plan(), fakeOpen([], failure))).rejects.toThrow(
+      'Sulafat : Google TTS : réponse sans WAV'
+    );
     expect(billedChars({ billedFile: paths.billedFile })).toBe(charsOf([phrases[0].said]));
   });
 });
@@ -334,7 +336,7 @@ async function benchResults() {
     lang: 'fr',
   });
   const received = [];
-  transcribeBench(
+  await transcribeBench(
     setup.voices,
     paths,
     { python: 'python-factice', lang: 'fr' },
@@ -353,11 +355,12 @@ async function benchResults() {
 
 describe('références, Whisper et résultats', () => {
   test('références : clips publiés copiés ; une phrase sans clip reste absente', async () => {
-    await copyReferences(setup.voices, phrases, {
+    const copied = await copyReferences(setup.voices, phrases, {
       paths,
       voicesRepo: await fakeVoicesRepo(),
       lang: 'fr',
     });
+    expect(copied).toBe(2);
     expect(fs.readFileSync(clipOf('lucie', phrases[0].key), 'utf8')).toBe(
       `mp3 lucie ${phrases[0].text}`
     );

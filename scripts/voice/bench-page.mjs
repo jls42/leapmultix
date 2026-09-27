@@ -17,15 +17,23 @@ const STYLE_FILE = path.join(HERE, 'bench-page.css');
 const SCRIPT_FILE = path.join(HERE, 'bench-page.client.js');
 
 /** Police lisible pour les enfants comme pour l'écoute sur téléphone, avec ses replis */
-const FONT_LINK =
+const FONT_LINK_HTML =
   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">';
 
 /** Triangle de lecture en caractère texte (U+FE0E) : sans lui, certains systèmes dessinent un émoji */
 const PLAY = '▶\uFE0E';
 
-const PROVIDER_LABELS = { google: 'Google', mistral: 'Mistral', elevenlabs: 'ElevenLabs' };
+const PROVIDER_LABELS = new Map([
+  ['google', 'Google'],
+  ['mistral', 'Mistral'],
+  ['elevenlabs', 'ElevenLabs'],
+]);
 
-const WHOLE_LANGUAGE = { fr: 'Tout le français', en: "Tout l'anglais", es: "Tout l'espagnol" };
+const WHOLE_LANGUAGE = new Map([
+  ['fr', 'Tout le français'],
+  ['en', "Tout l'anglais"],
+  ['es', "Tout l'espagnol"],
+]);
 
 /** Réponse « aucune voix » du choix principal */
 export const NONE = 'aucune';
@@ -49,7 +57,7 @@ function whisperText(voice) {
 }
 
 function voiceCard(voice, phraseCount) {
-  const origin = PROVIDER_LABELS[voice.voice.provider] ?? voice.voice.provider;
+  const origin = PROVIDER_LABELS.get(voice.voice.provider) ?? voice.voice.provider;
   const kind = voice.kind === 'reference' ? 'déjà dans le jeu' : 'candidate';
   const clips = Object.keys(voice.clips).length;
   const missing = phraseCount - clips;
@@ -119,7 +127,7 @@ ${question.options.map(option => radio(`q-${question.id}`, option.value, option.
 /** Taille de la langue entière, pour mesurer ce qu'engage le choix */
 function corpusLine(corpus, lang) {
   const chars = corpus.reduce((sum, phrase) => sum + [...saidText(phrase.text, lang)].length, 0);
-  const whole = WHOLE_LANGUAGE[lang] ?? `Toute la langue ${lang}`;
+  const whole = WHOLE_LANGUAGE.get(lang) ?? `Toute la langue ${lang}`;
   return `${whole} : ${plural(corpus.length, 'phrase', 'phrases')}, ${plural(chars, 'caractère dit', 'caractères dits')}.`;
 }
 
@@ -136,9 +144,9 @@ export function buildBenchPage({ setup, phrases, voices, corpus }) {
   const { id, lang, texts } = setup;
   const files = voices.flatMap(voice => Object.values(voice.clips).map(clip => clip.src));
   const intro = texts.intro ? `<p>${escapeHtml(texts.intro)}</p>` : '';
-  const note = [texts.note, corpusLine(corpus, lang)].filter(Boolean).map(escapeHtml).join(' ');
+  const note = [texts.note, corpusLine(corpus, lang)].filter(Boolean).join(' ');
   const html = `<title>${escapeHtml(texts.name)}</title>
-${FONT_LINK}
+${FONT_LINK_HTML}
 <style>
 ${fs.readFileSync(STYLE_FILE, 'utf8')}</style>
 <main>
@@ -167,7 +175,7 @@ ${choiceFieldsets({ voices, questions: setup.questions, texts })}
 <label for="remarque">Remarque (facultatif)</label>
 <textarea id="remarque" placeholder="Une phrase mal dite, un ton qui ne va pas…"></textarea>
 <p class="status" id="status" aria-live="polite"></p>
-<p class="muted">${note}</p>
+<p class="muted">${escapeHtml(note)}</p>
 </form>
 </section>
 </main>

@@ -87,7 +87,8 @@
   function apply(data) {
     if (!data || typeof data !== 'object') return;
     tick('pick', data.voice);
-    for (const id of questions) tick(`q-${id}`, data.answers?.[id]);
+    const answers = new Map(Object.entries(data.answers ?? {}));
+    for (const id of questions) tick(`q-${id}`, answers.get(id));
     if (typeof data.comment === 'string') note.value = data.comment;
   }
 
