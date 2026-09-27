@@ -277,6 +277,24 @@ describe('Contrôle du rangement des clips', () => {
     expect(report.transcripts.flagged).toEqual([]);
   });
 
+  test('clip revenu à un contenu déjà transcrit : cette transcription fait foi, rien de périmé', async () => {
+    // Google redonne parfois le même son à l'octet près : Whisper ne retranscrit pas ce contenu
+    const entries = await Promise.all(phrases.map(p => addClip(p)));
+    await saveManifest(entries);
+    const [, second] = entries;
+    const report = await check({
+      transcripts: [
+        { key: second[0], sha256: second[1].sha256, heard: 'Combien font une fois six ?' },
+        { key: second[0], sha256: 'prise-intermediaire', heard: second[1].text },
+      ],
+    });
+    expect(report.transcripts.stale).toBe(0);
+    expect(report.transcripts.checked).toBe(1);
+    expect(report.transcripts.flagged.map(f => [f.key, f.heard])).toEqual([
+      [second[0], 'Combien font une fois six ?'],
+    ]);
+  });
+
   test('durées anormales et transcriptions douteuses : signalées, sans rendre incohérent', async () => {
     await saveManifest([
       await addClip(phrases[0], { duration: 6 }),

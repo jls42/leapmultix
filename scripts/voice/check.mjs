@@ -84,26 +84,28 @@ export function durationOutliers(entries) {
 }
 
 /**
- * Transcriptions comparées aux phrases. La dernière ligne d'un clip fait foi ; une ligne
- * écrite pour un autre contenu du clip (refait depuis) est périmée et ignorée.
+ * Transcriptions comparées aux phrases. Pour chaque clip, la dernière transcription de son
+ * contenu actuel fait foi ; une ligne sans sha256, d'avant leur ajout, vaut pour tout contenu.
+ * Un clip refait peut revenir à un contenu déjà transcrit : Google redonne parfois, pour la
+ * même phrase, le même son à l'octet près, et Whisper ne le retranscrit pas. Seul un clip dont
+ * aucune transcription ne porte le contenu actuel est périmé.
  */
 export function transcriptReport(transcripts, manifest, lang) {
-  const latest = new Map(transcripts.map(line => [line.key, line]));
-  const flagged = [];
-  let checked = 0;
-  let stale = 0;
-  for (const { key, heard, sha256: heardSha } of latest.values()) {
-    const entry = manifest.clips[key];
+  const current = new Map();
+  const seen = new Set();
+  for (const line of transcripts) {
+    const entry = manifest.clips[line.key];
     if (!entry) continue;
-    if (heardSha && heardSha !== entry.sha256) {
-      stale++;
-      continue;
-    }
-    checked++;
+    seen.add(line.key);
+    if (!line.sha256 || line.sha256 === entry.sha256) current.set(line.key, line);
+  }
+  const flagged = [];
+  for (const [key, { heard }] of current) {
+    const entry = manifest.clips[key];
     const result = compareTranscript(entry.text, heard, lang);
     if (result.flagged) flagged.push({ key, text: entry.text, said: entry.said, heard, ...result });
   }
-  return { checked, stale, flagged };
+  return { checked: current.size, stale: seen.size - current.size, flagged };
 }
 
 /**
