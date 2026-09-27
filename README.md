@@ -128,7 +128,7 @@ LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans 
 - **Multilingue** : Support français, anglais et espagnol
 - **Personnalisation** : Avatars, thèmes de couleur, arrière-plans
 - **Accessibilité** : Navigation clavier, support tactile, conformité WCAG 2.1 AA
-- **Voix enregistrée** : le jeu sait lire questions et encouragements avec une voix de synthèse pré-enregistrée, avec repli automatique sur la voix de l'appareil. Les voix ne sont pas dans ce dépôt : le site leapmultix.jls42.org sert Lucie en français, Sulafat en anglais et en espagnol, et au choix Marie en français et Jane en anglais (voir [Voix enregistrée](#-voix-enregistrée))
+- **Voix enregistrée** : le jeu sait lire questions et encouragements avec une voix de synthèse pré-enregistrée, avec repli automatique sur la voix de l'appareil. Les voix ne sont pas dans ce dépôt : le site leapmultix.jls42.org sert Lucie en français, Sulafat en anglais et en espagnol, et au choix Sulafat et Marie en français, Jane en anglais (voir [Voix enregistrée](#-voix-enregistrée))
 - **Mobile responsive** : Interface optimisée pour tablettes et smartphones
 - **Système de progression** : Scores, badges, défis quotidiens
 
@@ -660,13 +660,14 @@ Le site proposé par l'auteur sert des voix de synthèse enregistrées :
 
 - en français, **Lucie**, créée avec ElevenLabs (modèle Eleven v3) ;
 - en anglais britannique et en espagnol d'Espagne, **Sulafat**, créée avec Google Cloud Text-to-Speech (voix Chirp 3 HD) ;
-- au choix du joueur, **Marie** en français et **Jane** en anglais, créées avec Mistral AI (Voxtral TTS).
+- au choix du joueur, **Sulafat** en français, pour garder la même voix dans les trois langues ;
+- au choix du joueur aussi, **Marie** en français et **Jane** en anglais, créées avec Mistral AI (Voxtral TTS).
 
-Les clips vivent dans un dépôt privé et dans un bucket S3 dédié, servi par CloudFront sur `/voice/*`. Dans les réglages, le menu « Voix » propose les voix de la langue quand elle en a plusieurs, et la mention nomme le service de la voix entendue.
+Les clips vivent dans un dépôt privé et dans un bucket S3 dédié, servi par CloudFront sur `/voice/*`. Ils sont générés une fois : pendant le jeu, rien n'est envoyé à ces services. Dans les réglages, le menu « Voix » propose les voix de la langue quand elle en a plusieurs, et la mention nomme le service de la voix entendue.
 
 ### Générer les clips
 
-La chaîne est scriptée dans `scripts/voice/` et tourne sur le poste du propriétaire, jamais dans la CI publique. Les clés des fournisseurs (ElevenLabs pour le français, Google Cloud Text-to-Speech pour l'anglais et l'espagnol, Mistral pour Marie et Jane) restent dans un fichier `.env` hors dépôt, passé par `node --env-file` : aucune clé n'entre dans git. Le skill Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) déroule la procédure pas à pas (portes, accords, reprises) ; le détail est dans [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
+La chaîne est scriptée dans `scripts/voice/` et tourne sur le poste du propriétaire, jamais dans la CI publique. Les clés des fournisseurs (ElevenLabs pour Lucie, Google Cloud Text-to-Speech pour Sulafat, Mistral pour Marie et Jane) restent dans un fichier `.env` hors dépôt, passé par `node --env-file` : aucune clé n'entre dans git. Le skill Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) déroule la procédure pas à pas (portes, accords, reprises) ; le détail est dans [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
 
 1. **Estimer** les phrases restantes et les caractères à payer (Eleven v3 : environ 0,53 crédit par caractère ; Chirp 3 HD : 30 $ le million de caractères, le premier million de chaque mois offert ; Voxtral TTS : 16 $ le million).
 2. **Générer**. Relancer la même commande reprend ce qui manque. Quand les crédits sont épuisés, le script s'arrête proprement (code 3) sans laisser de fichier à moitié écrit. `--max-total-chars` plafonne la dépense cumulée de la version : chaque réponse payée est inscrite dès sa réception dans un registre, qui survit à un arrêt brutal. Chez Google et Mistral, qui ne donnent aucun solde lisible, c'est la seule protection.

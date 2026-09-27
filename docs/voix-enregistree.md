@@ -55,6 +55,29 @@ place et ce qui vient ensuite.
       seulement avec les nombres en lettres (texte dit propre à Marie, `saidOverrides`).
     - Coût : 225 455 caractères pour la voix, et 1 690 pour le banc et les essais, soit
       environ 3,63 $.
+  - **Français, autre voix au choix du joueur : « Sulafat »**, Google Cloud Text-to-Speech
+    (`fr-FR-Chirp3-HD-Sulafat`). C'est la voix de l'anglais et de l'espagnol : le joueur qui la
+    choisit garde la même voix dans les trois langues. Lucie reste la voix par défaut.
+    - Banc du 27/09/2026 (`npm run voice:bench`, `scripts/voice/benches/fr-google.json`) :
+      22 phrases du corpus, Sulafat, Leda, Aoede et Achernar (Chirp 3 HD fr-FR) face à Lucie
+      et Marie. Whisper : 0 doute pour Sulafat et Leda ; Aoede et Achernar avalent le « 1 »
+      final de « Combien font 5 fois 1 ? ». Débit : 0,086 s par caractère pour Sulafat, 0,077
+      pour Lucie, 0,090 pour Marie. Le propriétaire retient Sulafat, au choix du joueur.
+    - Génération du 27/09/2026 : 7 437 clips, aucun échec. À la première prise, Whisper en
+      signalait 112 (98 nombres entendus autrement, 14 durées) ; trois tours de refaits en ont
+      laissé 11, écoutés par le propriétaire, qui en a écarté 3.
+      - Sulafat avale un « 1 » écrit en chiffre en fin de phrase (« Combien font 38 moins 1 ? »
+        entendu « 38 moins ») : écrit « un », il passe. Un nombre en tête de phrase se dit mieux
+        en lettres (« Dix moins combien… »).
+      - Elle lit « 2 plus » comme l'adverbe « de plus » et dit « plu » : Whisper ne l'entend
+        pas, l'oreille du propriétaire si. Écrit « plusse », il se dit « pluss » (validé sur 5
+        phrases, puis sur un échantillon de 7). Les 80 phrases en « 2 plus » le reçoivent.
+      - En tout, 99 textes dits propres à Sulafat (`saidOverrides`), sans toucher aux clips de
+        Lucie ni de Marie.
+      - Google redonne parfois, pour la même phrase, le même son à l'octet près : une nouvelle
+        prise n'y change rien, seul un autre texte dit aide.
+    - Coût : 228 239 caractères pour la voix, 673 pour les essais de textes dits et 2 552 pour le
+      banc, dans le million offert du mois : 0 $.
   - **Espagnol, essai écarté : Jane - Neutral**, le 26/09/2026. Mistral n'a aucune voix
     espagnole.
     - Banc des 30 voix prêtes : le propriétaire retient Jane, les autres ne convainquent pas.
@@ -249,8 +272,8 @@ CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sort
 **Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
 modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en français,
 `sulafat-v1-1` en anglais et en espagnol). `scripts/voice/alternatives.json` fait de même
-pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais ; `marie-v1-1`, Marie, en
-français).
+pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais ; `marie-v1-1`, Marie, et
+`sulafat-v1-1`, Sulafat, en français).
 
 - Changer un réglage impose une nouvelle version : le générateur refuse de mélanger deux
   réglages sous une même version.

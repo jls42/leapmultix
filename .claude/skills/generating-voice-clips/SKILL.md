@@ -2,8 +2,8 @@
 name: generating-voice-clips
 description: >-
   Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix : Lucie
-  (ElevenLabs) et Marie (Mistral) en français, Sulafat (Google Cloud Text-to-Speech, Chirp 3 HD)
-  et Jane (Mistral) en anglais, Sulafat en espagnol, rangés dans le dépôt privé
+  (ElevenLabs), Marie (Mistral) et Sulafat (Google Cloud Text-to-Speech, Chirp 3 HD) en
+  français, Sulafat et Jane (Mistral) en anglais, Sulafat en espagnol, rangés dans le dépôt privé
   leapmultix-voices et servis par CloudFront sur /voice/. À utiliser pour estimer le coût,
   générer ou compléter les clips d'une langue ou d'une autre voix au choix du joueur (menu
   « Voix », alternatives.json, --version), reprendre une génération interrompue ou à court de
@@ -33,8 +33,9 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
 
 Mistral (Voxtral TTS, `MISTRAL_API_KEY`, 16 $ le million de caractères) reste branché : Jane
 (`jane-v1-1`), la voix anglaise jusqu'au passage à Sulafat, est une **autre voix** de
-l'anglais, au choix du joueur ; Marie (`marie-v1-1`, « Marie - Curious ») est l'autre voix du
-français.
+l'anglais, au choix du joueur ; Marie (`marie-v1-1`, « Marie - Curious ») est une autre voix du
+français. Sulafat en français (`sulafat-v1-1`, `fr-FR-Chirp3-HD-Sulafat`) en est une autre, pour
+garder la même voix dans les trois langues.
 
 **Autres voix** : `scripts/voice/alternatives.json` déclare, par langue, les voix proposées en
 plus de la voix par défaut (mêmes champs que `voices.json`). Le jeu les montre dans le menu

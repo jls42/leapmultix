@@ -56,78 +56,78 @@
 
 ## Beskrivning
 
-LeapMultix är en interaktiv pedagogisk webbapplikation för barn mellan 6 och 12 år för att bemästra de 4 räknesätten: multiplikation (×), addition (+), subtraktion (−) och division (÷). Den erbjuder **5 spellägen** och **4 arkadminispel** i ett intuitivt, tillgängligt och flerspråkigt gränssnitt.
+LeapMultix är en interaktiv pedagogisk webbapplikation för barn i åldrarna 6 till 12 år för att bemästra de fyra räknesätten: multiplikation (×), addition (+), subtraktion (−) och division (÷). Den erbjuder **5 spellägen** och **4 arkadminispel** i ett intuitivt, tillgängligt och flerspråkigt gränssnitt.
 
-**Stöd för flera räknesätt:** de fem lägena stöder alla fyra räknesätt. Valet görs på startskärmen och gäller under hela sessionen.
+**Stöd för flera räknesätt:** de fem lägena hanterar alla fyra räknesätten. Valet görs på startskärmen och gäller för hela sessionen.
 
 **Utvecklad av:** Julien LS (contact@jls42.org)
 
-**Online-URL:** https://leapmultix.jls42.org/
+**Webbadress:** https://leapmultix.jls42.org/
 
 ## 📸 Översikt
 
 ### Skärmarna
 
-|                                                                                                     |                                                                                                                     |
-| :-------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------: |
-|                   ![Skärmen "Vem spelar?": profilval](docs/media/01-accueil.webp)                   |                      ![Huvudmeny: val av räknesätt och de fem lägena](docs/media/02-menu.webp)                      |
-|                 **Vem spelar?** — en profil per barn, med egen avatar och framsteg.                 |                           **Menyn** — räknesättet väljs här, sedan öppnas de fem lägena.                            |
-|           ![Upptäcktsläge: 4:ans tabell visad med prickar](docs/media/03-decouverte.webp)           |                   ![Quizläge: felaktigt svar i rött, rätt svar i grönt](docs/media/04-quiz.webp)                    |
-|   **Upptäck** — varje tal visas med prickar, hopp eller räkning, tillsammans med tabellens tips.    | **Quiz** — barnets val förblir synligt bredvid det rätta svaret, och förklaringen redogör för beräkningen i detalj. |
-|               ![Utmaningsläge: nedräkning och pågående svit](docs/media/05-defi.webp)               |            ![Äventyrsläge: karta över de tio nivåerna, efterföljande låsta](docs/media/06-aventure.webp)            |
-| **Utmaning** — kamp mot klockan. Vid fel pausar tidtagaren så att man hinner läsa det rätta svaret. |                         **Äventyr** — tio nivåer som låses upp efter varandra mot stjärnor.                         |
-|                     ![Arkadmeny: de fyra minispelen](docs/media/07-arcade.webp)                     |              ![Översiktspanel: stjärnor per tabell och statistik](docs/media/08-tableau-de-bord.webp)               |
-|             **Arkad** — fyra minispel, med svårighetsinställning och val av rymdskepp.              |                  **Översiktspanel** — stjärnor per tabell, tabeller att repetera, poäng per läge.                   |
-|         ![Anpassning: avatarer, teman, tillgänglighet](docs/media/09-personnalisation.webp)         |                                                                                                                     |
-|             **Anpassning** — avatar, färgtema, textstorlek, hög kontrast, föräldrakod.              |                                                                                                                     |
+|                                                                                                       |                                                                                                                 |
+| :---------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------: |
+|                  ![Skärmen "Vem spelar?": val av profil](docs/media/01-accueil.webp)                  |                    ![Huvudmeny: val av räknesätt och de fem lägena](docs/media/02-menu.webp)                    |
+|                    **Vem spelar?** — en profil per barn, med avatar och framsteg.                     |                      **Menyn** — räknesättet väljs här, och därefter öppnas de fem lägena.                      |
+|             ![Upptäcktsläge: 4:ans tabell visad i prickar](docs/media/03-decouverte.webp)             |              ![Frågesportsläge: felaktigt svar i rött, rätt svar i grönt](docs/media/04-quiz.webp)              |
+|    **Upptäck** — varje likhet visas i prickar, hopp eller räkning, tillsammans med tabellens knep.    | **Frågesport** — barnets val förblir synligt bredvid det rätta svaret, och förklaringen detaljerar beräkningen. |
+|                ![Utmaningsläge: nedräkning och pågående svit](docs/media/05-defi.webp)                |          ![Äventyrsläge: karta över de tio nivåerna, efterföljande låsta](docs/media/06-aventure.webp)          |
+| **Utmaning** — kamp mot klockan. Vid fel fryses tidtagningen så att man hinner läsa det rätta svaret. |                       **Äventyr** — tio nivåer som låses upp efter varandra mot stjärnor.                       |
+|                      ![Arkadmeny: de fyra minispelen](docs/media/07-arcade.webp)                      |            ![Översiktspanel: stjärnor per tabell och statistik](docs/media/08-tableau-de-bord.webp)             |
+|               **Arkad** — fyra minispel med svårighetsinställning och val av rymdskepp.               |                **Översiktspanel** — stjärnor per tabell, tabeller att repetera, poäng per läge.                 |
+|          ![Anpassning: avatarer, teman, tillgänglighet](docs/media/09-personnalisation.webp)          |                                                                                                                 |
+|              **Anpassning** — avatar, färgtema, textstorlek, hög kontrast, föräldrakod.               |                                                                                                                 |
 
 ### Arkadminispelen
 
-Fyra spel som ställer samma fråga — den som visas ovanför spelytan, tillsammans med återstående tid och liv — men som varje gång kräver en ny handling.
+Fyra spel som ställer samma fråga — den som visas ovanför spelytan, med återstående tid och liv — men som varje gång kräver en annorlunda handling.
 
-|                                                                                                                   |                                                                                             |
-| :---------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------: |
-|   ![MultiInvaders: monster med siffror, ett rymdskepp längst ner på skärmen](docs/media/10-multiinvaders.webp)    |   ![MultiMiam: en labyrint där prickar visar möjliga svar](docs/media/11-multimiam.webp)    |
-|         **MultiInvaders** — skjut på felaktiga svar, skona det rätta: det gömmer en vän som ska befrias.          | **MultiMiam** — navigera genom labyrinten för att samla rätt resultat och undvika monstren. |
-| ![MultiMemory: ett kortrutnät, två vända kort som visar en beräkning och ett tal](docs/media/12-multimemory.webp) |     ![MultiSnake: en orm och numrerade äpplen på en äng](docs/media/13-multisnake.webp)     |
-|         **MultiMemory** — hitta ur minnet vilket kort som har resultatet av den beräkning som vänts upp.          |               **MultiSnake** — väx genom att äta rätt tal, undvik alla andra.               |
+|                                                                                                              |                                                                                                |
+| :----------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: |
+| ![MultiInvaders: monster med siffror, ett rymdskepp längst ner på skärmen](docs/media/10-multiinvaders.webp) |   ![MultiMiam: en labyrint där prickar bär de möjliga svaren](docs/media/11-multimiam.webp)    |
+|       **MultiInvaders** — skjut på felaktiga svar, skona det rätta: det gömmer en vän som ska befrias.       | **MultiMiam** — navigera genom labyrinten för att ta det rätta resultatet och undvik monstren. |
+| ![MultiMemory: ett kortrutnät, två vända som visar en beräkning och ett tal](docs/media/12-multimemory.webp) |      ![MultiSnake: en orm och numrerade äpplen på en äng](docs/media/13-multisnake.webp)       |
+|             **MultiMemory** — minnas vilket kort som visar resultatet för den vända beräkningen.             |                **MultiSnake** — väx genom att äta rätt tal, undvik alla andra.                 |
 
 ## ✨ Funktioner
 
 ### 🎮 Spellägen
 
 - **Upptäcktsläge**: Visuell och interaktiv utforskning anpassad för varje räknesätt
-- **Quizläge**: Flervalsfrågor med stöd för de 4 räknesätten (×, +, −, ÷) och adaptiv progression
+- **Frågesportsläge**: Flervalsfrågor med stöd för de 4 räknesätten (×, +, −, ÷) och adaptiv progression
 - **Utmaningsläge**: Kamp mot klockan med de 4 räknesätten (×, +, −, ÷) och olika svårighetsgrader
-- **Äventyrsläge**: Berättelsedriven progression nivå för nivå med stöd för de 4 räknesätten
+- **Äventyrsläge**: Berättelsedriven nivåprogression med stöd för de 4 räknesätten
 
 ### 🕹️ Arkadminispel
 
 - **MultiInvaders**: Pedagogiskt Space Invaders – Förstör felaktiga svar
-- **MultiMiam**: Matematiskt Pac-Man – Samla de rätta svaren
-- **MultiMemory**: Memoryspel – Para ihop beräkningar och resultat
+- **MultiMiam**: Matematisk Pac-Man – Samla rätt svar
+- **MultiMemory**: Minnesspel – Matcha beräkningar och resultat
 - **MultiSnake**: Pedagogiskt Snake – Väx genom att äta rätt tal
 
 ### ➕ Stöd för flera räknesätt
 
-LeapMultix erbjuder en komplett träning i de 4 räknesätten i **alla lägen**:
+LeapMultix erbjuder komplett träning i de 4 räknesätten i **alla lägen**:
 
-| Läge     | ×   | +   | −   | ÷   |
-| -------- | --- | --- | --- | --- |
-| Quiz     | ✅  | ✅  | ✅  | ✅  |
-| Utmaning | ✅  | ✅  | ✅  | ✅  |
-| Upptäck  | ✅  | ✅  | ✅  | ✅  |
-| Äventyr  | ✅  | ✅  | ✅  | ✅  |
-| Arkad    | ✅  | ✅  | ✅  | ✅  |
+| Läge       | ×   | +   | −   | ÷   |
+| ---------- | --- | --- | --- | --- |
+| Frågesport | ✅  | ✅  | ✅  | ✅  |
+| Utmaning   | ✅  | ✅  | ✅  | ✅  |
+| Upptäck    | ✅  | ✅  | ✅  | ✅  |
+| Äventyr    | ✅  | ✅  | ✅  | ✅  |
+| Arkad      | ✅  | ✅  | ✅  | ✅  |
 
 ### 🌍 Övergripande funktioner
 
-- **Flera användare**: Hantering av individuella profiler med sparade framsteg
-- **Flerspråkigt**: Stöd för franska, engelska och spanska
+- **Fleranvändarstöd**: Hantering av individuella profiler med sparade framsteg
+- **Flerspråkig**: Stöd för franska, engelska och spanska
 - **Anpassning**: Avatarer, färgteman, bakgrunder
-- **Tillgänglighet**: Tangentbordsnavigering, pekskärmsstöd, uppfyller WCAG 2.1 AA
-- **Inspelad röst**: spelet kan läsa upp frågor och uppmuntran med en förinspelad syntetisk röst, med automatisk återgång till enhetens röst. Rösterna finns inte i detta arkiv: webbplatsen leapmultix.jls42.org tillhandahåller Lucie på franska, Sulafat på engelska och spanska, samt som alternativ Marie på franska och Jane på engelska (se [Inspelad röst](#-inspelad-röst))
-- **Mobilanpassad (responsiv)**: Gränssnitt optimerat för surfplattor och smarttelefoner
+- **Tillgänglighet**: Tangentbordsnavigering, pekskärmsstöd, WCAG 2.1 AA-efterlevnad
+- **Inspelad röst**: spelet kan läsa upp frågor och uppmuntran med en förinspelad talsyntesröst, med automatisk reserv till enhetens röst. Rösterna finns inte i detta förråd: webbplatsen leapmultix.jls42.org levererar Lucie på franska, Sulafat på engelska och spanska, samt valfritt Sulafat och Marie på franska, Jane på engelska (se [Inspelad röst](#-inspelad-röst))
+- **Mobilanpassad**: Gränssnitt optimerat för surfplattor och smarttelefoner
 - **Progressionssystem**: Poäng, märken, dagliga utmaningar
 
 ## 🚀 Snabbstart
@@ -222,7 +222,7 @@ npm run voice:check-online # Vérifier les clips servis en ligne
 
 ### Filstruktur
 
-JavaScript-modulerna ligger **platt i `js/`**, förutom tre mappar:
+JavaScript-modulerna ligger **på en nivå i `js/`**, med undantag för tre mappar:
 `core/`, `components/` och `modes/`. Det är alltså filnamnet som anger
 grupperingen (`arcade-*`, `multimiam-*`, `i18n*`…).
 
@@ -284,39 +284,39 @@ leapmultix/
 
 **Moderna ES6-moduler**: Projektet använder en modulär arkitektur med ES6-klasser och inbyggda imports/exports.
 
-**Återanvändbara komponenter**: Gränssnittet är uppbyggt med centraliserade UI-komponenter (TopBar, InfoBar, Dashboard, Customization).
+**Återanvändbara komponenter**: Gränssnitt uppbyggt med centraliserade UI-komponenter (TopBar, InfoBar, Dashboard, Customization).
 
-**Lazy loading**: Smart inläsning av moduler vid behov via `lazy-loader.js` för att optimera den initiala prestandan.
+**Lazy Loading**: Intelligent inläsning av moduler vid behov via `lazy-loader.js` för att optimera den initiala prestandan.
 
-**Enhetligt lagringssystem**: Centraliserat API för persistens av användardata via LocalStorage med fallbacks.
+**Enhetligt lagringssystem**: Centraliserat API för persistens av användardata via LocalStorage med reservlösningar (fallbacks).
 
-**Centraliserad ljudhantering**: Ljudkontroll med flerspråksstöd och inställningar per användare.
+**Centraliserad ljudhantering**: Ljudkontroll med stöd för flera språk och inställningar per användare.
 
-**Händelsebuss (Event Bus)**: Frånkopplad händelsestyrd kommunikation mellan komponenter för en underhållbar arkitektur.
+**Event Bus**: Frikopplad händelsebaserad kommunikation mellan komponenter för en underhållbar arkitektur.
 
-**Slidenavigering**: Navigeringssystem baserat på numrerade slides (slide0, slide1 osv.) med `goToSlide()`.
+**Slide-baserad navigering**: Navigeringssystem baserat på numrerade slides (slide0, slide1, osv.) med `goToSlide()`.
 
-**Säkerhet**: XSS-skydd och sanering via `security-utils.js` för all DOM-manipulering.
+**Säkerhet**: XSS-skydd och sanering via `security-utils.js` för alla DOM-manipulationer.
 
 ## 🎯 Detaljerade spellägen
 
 ### Upptäcktsläge
 
-Gränssnitt för visuell utforskning av multiplikationstabellerna med:
+Visuellt gränssnitt för att utforska multiplikationstabellerna med:
 
 - Interaktiv visualisering av multiplikationer
-- Animeringar och minnesstöd
-- Pedagogisk dra-och-släpp
+- Animationer och minnesstöd
+- Pedagogisk drag-och-släpp
 - Fri progression per tabell
 
-### Quizläge
+### Frågesportsläge
 
 Flervalsfrågor med:
 
 - 10 frågor per session
-- Adaptiv progression baserad på framgångar
-- Virtuell sifferknappsats
-- Streak-system (svit av rätta svar i rad)
+- Adaptiv progression utifrån framgångar
+- Virtuellt numeriskt tangentbord
+- Svit-system (streak av rätta svar)
 
 ### Utmaningsläge
 
@@ -341,7 +341,7 @@ Berättelsedriven progression med:
 Varje minispel erbjuder:
 
 - Val av svårighetsgrad och anpassning
-- Livsystem och poäng
+- Liv- och poängsystem
 - Tangentbords- och pekkontroller
 - Individuella topplistor per användare
 
@@ -351,7 +351,7 @@ Varje minispel erbjuder:
 
 **Gör aldrig commits direkt på main.** Projektet arbetar med funktionsgrenar.
 
-**1. Skapa en gren**, `feat/` för en funktion, `fix/` för en buggfix:
+**1. Skapa en gren**, `feat/` för en funktion, `fix/` för en felrättning:
 
 ```bash
 git checkout -b feat/nom-de-la-fonctionnalite
@@ -376,30 +376,30 @@ git commit -m "feat: description de la fonctionnalité"
 git push -u origin feat/nom-de-la-fonctionnalite
 ```
 
-**4. Öppna en pull request** och invänta analyserna: verify, Codacy,
-CodeFactor och SonarCloud. Åtgärda tills allt är grönt innan sammanslagning.
+**4. Öppna en pull request** och vänta på analyserna: verify, Codacy,
+CodeFactor och SonarCloud. Åtgärda tills det lyser grönt innan sammanslagning.
 
 **Commit-stil**: Korta meddelanden, imperativ form (t.ex. "Fix arcade init errors", "Refactor cache updater")
 
-**Quality gate**: Se till att `npm run lint`, `npm test` och `npm run test:coverage` passerar före varje commit
+**Quality gate**: Säkerställ att `npm run lint`, `npm test` och `npm run test:coverage` passerar före varje commit
 
 ### Komponentarkitektur
 
 **GameMode (basklass)**: Alla lägen ärver från en gemensam klass med standardiserade metoder.
 
-**GameModeManager**: Centraliserad orkestrering av start och hantering av lägena.
+**GameModeManager**: Centraliserad orkestrering för start och hantering av lägen.
 
 **UI-komponenter**: TopBar, InfoBar, Dashboard och Customization ger ett enhetligt gränssnitt.
 
-**Lazy loading**: Moduler läses in vid behov för att optimera den initiala prestandan.
+**Lazy Loading**: Moduler läses in vid behov för att optimera den initiala prestandan.
 
-**Händelsebuss (Event Bus)**: Frånkopplad kommunikation mellan komponenter via händelsesystemet.
+**Event Bus**: Frikopplad kommunikation mellan komponenter via händelsesystemet.
 
 ### Tester
 
 Projektet innehåller en komplett testsvit:
 
-- Enhetstester av core-moduler
+- Enhetstester av kärnmoduler
 - Integrationstester av komponenter
 - Tester av spellägen
 - Automatiserad kodtäckning
@@ -414,10 +414,10 @@ npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 
 ### Produktionsbygge
 
-- **Rollup**: Paketerar `js/main-es6.js` i ESM med koduppdelning och sourcemaps
+- **Rollup**: Paketerar `js/main-es6.js` till ESM med koddelning (code-splitting) och sourcemaps
 - **Terser**: Automatisk minifiering för optimering
-- **Post-build**: Kopierar `css/` och `assets/`, favikoner (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, samt omskrivning av `dist/index.html` till den hashade startfilen (t.ex. `main-es6-*.js`)
-- **Slutlig mapp**: `dist/` redo att servas statiskt
+- **Post-build**: Kopierar `css/` och `assets/`, webbikonerna (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, och skriver om `dist/index.html` till den hashade startfilen (t.ex. `main-es6-*.js`)
+- **Slutlig mapp**: `dist/` redo att serveras statiskt
 
 ```bash
 npm run build      # génère dist/
@@ -431,17 +431,17 @@ npm run serve:dist # sert dist/ (port 5000)
 
 **`verify`** — kvalitetsgrinden, blockerande:
 
-- `npm ci` och sedan `npm run verify` (ESLint, Jest-tester, kodtäckning)
+- `npm ci` därefter `npm run verify` (ESLint, Jest-tester, kodtäckning)
 - `npm run format:check` (Prettier)
 
-**`seo-report`** — efter `verify`: Lighthouse-granskning av live-webbplatsen för
-att följa SEO-mått över tid.
+**`seo-report`** — efter `verify`: Lighthouse-granskning av live-webbplatsen för att
+följa SEO-mått över tid.
 
 **Externa analyser** kopplade till pull requests: Codacy, CodeFactor och
 SonarCloud. SonarCloud-grinden kräver A-betyg i tillförlitlighet, säkerhet och
 underhållbarhet för ny kod.
 
-**Driftsättning**: `./deploy.sh` synkroniserar webbplatsen till S3 och ogiltigförklarar CloudFront-cachen.
+**Driftsättning**: `./deploy.sh` synkroniserar webbplatsen till S3 och invaliderar CloudFront-cachen.
 Skriptet återskapar vid behov responsiva bilder som inte finns i git.
 
 ### PWA (Progressive Web App)
@@ -454,13 +454,13 @@ LeapMultix är en komplett PWA med offlinestöd och möjlighet till installation
 - Bilder: Cache-first för att optimera prestanda
 - Översättningar: Stale-while-revalidate för uppdatering i bakgrunden
 - JS/CSS: Network-first för att alltid leverera den senaste versionen
-- Automatisk versionshantering via `cache-updater.js`
+- Automatisk versionshantering via `cache-updater.js`"
 
 **Manifest** (`manifest.json`):
 
 - SVG- och PNG-ikoner för alla enheter
-- Möjlighet att installera på mobil (Lägg till på hemskärmen)
-- Fristående konfiguration (standalone) för en appliknande upplevelse
+- Kan installeras på mobil (Lägg till på hemskärmen / Add to Home Screen)
+- Fristående konfiguration för en applikationsliknande upplevelse
 - Stöd för teman och färger
 
 **Testa offlineläget lokalt.** Starta servern och öppna sedan
@@ -470,8 +470,8 @@ LeapMultix är en komplett PWA med offlinestöd och möjlighet till installation
 npm run serve
 ```
 
-Manuellt: koppla bort nätverket i utvecklarverktygen (fliken Nätverk,
-offlineläge) och uppdatera sedan sidan. `offline.html` ska visas.
+Manuellt: stäng av nätverket i utvecklarverktygen (fliken Nätverk,
+offlineläge) och uppdatera sedan sidan. `offline.html` ska då visas.
 
 Automatiskt med Puppeteer:
 
@@ -479,7 +479,7 @@ Automatiskt med Puppeteer:
 npm run test:pwa-offline
 ```
 
-**Hanteringsskript för Service Worker**:
+**Skript för hantering av Service Worker**:
 
 ```bash
 npm run sw:disable  # Désactiver le service worker
@@ -500,8 +500,8 @@ npm run sw:fix      # Corriger les problèmes de cache
 - Ta bort oanvända variabler och parametrar (`no-unused-vars`)
 - Använd specifik felhantering (inga tomma catch-block)
 - Undvik `innerHTML` till förmån för `security-utils.js`-funktioner
-- Håll funktionernas kognitiva komplexitet < 15
-- Bryt ut komplexa funktioner i mindre hjälpfunktioner (helpers)
+- Håll kognitiv komplexitet < 15 för funktioner
+- Dela upp komplexa funktioner i mindre hjälparfunktioner
 
 **Säkerhet**:
 
@@ -509,23 +509,23 @@ npm run sw:fix      # Corriger les problèmes de cache
   - `appendSanitizedHTML()` istället för `innerHTML`
   - `createSafeElement()` för att skapa säkra element
   - `setSafeMessage()` för textinnehåll
-- **Externa skript**: Attributet `crossorigin="anonymous"` är obligatoriskt
-- **Indatavalidering**: Sanera alltid externa data
+- **Externa skript**: Obligatoriskt `crossorigin="anonymous"`-attribut
+- **Validering av indata**: Sanera alltid externa data
 - **Content Security Policy**: CSP-headers för att begränsa skriptkällor
 
 **Tillgänglighet**:
 
-- Efterlevnad av WCAG 2.1 AA
+- Uppfyller WCAG 2.1 AA
 - Fullständig tangentbordsnavigering
 - Lämpliga ARIA-roller och etiketter
-- Färgkontraster som uppfyller kraven
+- Godkända färgkontraster
 
 **Prestanda**:
 
 - Lazy loading av moduler via `lazy-loader.js`
 - CSS-optimeringar och responsiva resurser
 - Service Worker för intelligent cachning
-- Koddelning (code splitting) och minifiering i produktion
+- Code splitting och minifiering i produktion
 
 ## 📱 Kompatibilitet
 
@@ -543,13 +543,13 @@ kontextuella tillstånd, vilket sätter minimikraven:
 
 - **Stationär/bärbar dator**: Tangentbords- och musstyrning
 - **Surfplattor**: Optimerat pekgränssnitt
-- **Smarttelefoner**: Adaptiv responsiv design
+- **Smartphones**: Adaptiv responsiv design
 
 ### Tillgänglighet
 
-- Fullständig tangentbordsnavigering (Tabb, piltangenter, Esc)
+- Fullständig tangentbordsnavigering (Tabb, piltangenter, Escape)
 - ARIA-roller och etiketter för skärmläsare
-- Färgkontraster som uppfyller kraven
+- Godkända färgkontraster
 - Stöd för hjälpmedelsteknik
 
 ## 🌍 Lokalisering
@@ -582,17 +582,17 @@ Fullständigt flerspråksstöd:
 
 **`npm run i18n:compare`** – Jämför översättningsfilerna med fr.json (referens)
 
-Detta skript (`scripts/compare-translations.cjs`) säkerställer synkroniseringen av alla språkfiler:
+Detta skript (`scripts/compare-translations.cjs`) säkerställer synkronisering av alla språkfiler:
 
 **Funktioner:**
 
 - Identifiering av saknade nycklar (finns i fr.json men saknas i andra språk)
-- Identifiering av överflödiga nycklar (finns i andra språk men inte i fr.json)
+- Identifiering av extra nycklar (finns i andra språk men inte i fr.json)
 - Identifiering av tomma värden (`""`, `null`, `undefined`, `[]`)
-- Typkontroll för enhetlighet (sträng vs array)
-- Utplattning av kapslade JSON-strukturer till punktnotation (t.ex. `arcade.multiMemory.title`)
+- Typkontroll (sträng mot array)
+- Utplattning av nästlade JSON-strukturer till punktnotation (t.ex. `arcade.multiMemory.title`)
 - Generering av en detaljerad konsolrapport
-- Sparar JSON-rapporten i `docs/translations-comparison-report.json`
+- Spara JSON-rapporten i `docs/translations-comparison-report.json`
 
 **Exempel på utdata:**
 
@@ -623,25 +623,25 @@ Detta skript (`scripts/compare-translations.cjs`) säkerställer synkroniseringe
 
 - Komplett användargränssnitt
 - Spelinstruktioner
-- Felmeddelanden och feedback
-- Beskrivningar och kontextuell hjälp
+- Fel- och återkopplingsmeddelanden
+- Beskrivningar och kontexthjälp
 - Berättande innehåll i äventyrsläget
 - Tillgänglighets- och ARIA-etiketter
 
 ## 🔊 Inspelad röst
 
-Spelet läser upp frågor, uppmuntran och förklaringar. Det säger endast en begränsad uppsättning fraser, cirka 7 400 per språk: de kan därför spelas in en gång för alla, och inget spelanrop görs då till en talsyntestjänst. Utan ljudklipp läser spelet med enhetens röst.
+Spelet läser upp frågor, uppmuntran och förklaringar högt. Det uttalar endast en begränsad uppsättning fraser, cirka 7 400 per språk: de kan därför spelas in en gång för alla, och inga spelomgångar behöver anropa någon talsyntestjänst. Utan ljudklipp läser spelet med enhetens röst.
 
-### I detta arkiv: applikationen, utan rösterna
+### I detta arkiv: applikationen, utan röster
 
-Koden kan spela upp förinspelade klipp och innehåller kedjan som skapar dem. Klippen finns inte här, och inte heller leverantörernas nycklar: en fork eller lokal installation läser med enhetens röst.
+Koden kan spela upp förinspelade klipp och innehåller verktygskedjan som skapar dem. Ljudklippen finns inte här, och inte heller leverantörernas nycklar: en fork eller en lokal installation läser med enhetens röst.
 
-- **Automatisk återgång (fallback)** till enhetens röst, fras för fras: klipp saknas eller felar, uppspelning nekas av webbläsaren, klipp som inte startar inom 1,5 s, eller offline utan cachat klipp.
-- **Inställningar**: röstknappen i det övre fältet aktiverar eller stänger av uppspelningen; kryssrutan "Inspelad röst" (Tillgänglighet och kontroller) väljer mellan inspelad röst och enhetens röst. Den visas endast för språk där en röst har publicerats.
-- **Offline**: klipp som redan har spelats upp ligger kvar i cachen (service worker).
+- **Automatisk återgång (fallback)** till enhetens röst, fras för fras: klipp saknas eller ger fel, uppspelning nekas av webbläsaren, klipp startar inte inom 1,5 s, eller offlineläge utan cachat klipp.
+- **Inställningar**: röstknappen i det övre fältet aktiverar eller stänger av uppläsningen; kryssrutan ”Inspelad röst” (Tillgänglighet och kontroller) väljer mellan inspelad röst och enhetens röst. Den visas endast för språk där en röst har publicerats.
+- **Offline**: redan lyssnade klipp sparas i cacheminnet (service worker).
 - **Var spelet letar efter klippen**: i taggen `<meta name="leapmultix-voice-base">`, som är tom i arkivet. Endast produktionsdriftsättningen skriver `/voice/` där.
 
-Med dina egna klipp på datorn (skapade med kedjan nedan, placerade intill spelet i `../leapmultix-voices`) gör parametern `?voix=local` att utvecklingsservern spelar upp dem:
+Med egna klipp på datorn (skapade med kedjan nedan och placerade intill spelet i `../leapmultix-voices`) gör parametern `?voix=local` att utvecklingsservern spelar upp dem:
 
 ```bash
 npm run voice:publish -- local --lang fr --audience all --default-on   # relie voice/ (ignoré par git) aux clips
@@ -653,25 +653,26 @@ npm run serve
 
 ### På leapmultix.jls42.org: värdmiljöns röster
 
-Webbplatsen som tillhandahålls av skaparen levererar inspelade syntetiska röster:
+Webbplatsen som tillhandahålls av skaparen erbjuder inspelade syntetiska röster:
 
 - på franska, **Lucie**, skapad med ElevenLabs (modellen Eleven v3);
 - på brittisk engelska och spansk spanska, **Sulafat**, skapad med Google Cloud Text-to-Speech (rösten Chirp 3 HD);
-- efter spelarens val, **Marie** på franska och **Jane** på engelska, skapade med Mistral AI (Voxtral TTS).
+- efter spelarens eget val, **Sulafat** på franska, för att behålla samma röst på alla tre språken;
+- även efter spelarens val, **Marie** på franska och **Jane** på engelska, skapade med Mistral AI (Voxtral TTS).
 
-Klippen finns i ett privat arkiv och i en dedikerad S3-bucket, som levereras via CloudFront på `/voice/*`. I inställningarna erbjuder menyn "Röst" de olika rösterna för språket när det finns flera, och texten anger tjänsten bakom den röst som hörs.
+Ljudklippen finns i ett privat arkiv och i en dedikerad S3-bucket, som levereras via CloudFront på `/voice/*`. De genereras en gång: under spelet skickas ingenting till dessa tjänster. I inställningarna visar menyn ”Röst” de tillgängliga rösterna för språket om det finns flera, och texten anger vilken tjänst den aktuella rösten kommer från.
 
 ### Generera klippen
 
-Kedjan är skriptad i `scripts/voice/` och körs på ägarens dator, aldrig i den offentliga CI:n. Leverantörernas nycklar (ElevenLabs för franska, Google Cloud Text-to-Speech för engelska och spanska, Mistral för Marie och Jane) stannar i en `.env`-fil utanför arkivet, skickad via `node --env-file`: ingen nyckel hamnar i git. Claude Code-skillen [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) går igenom proceduren steg för steg (grindar, överenskommelser, omtagningar); detaljerna finns i [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
+Processen är skriptad i `scripts/voice/` och körs på ägarens dator, aldrig i offentlig CI. Leverantörernas nycklar (ElevenLabs för Lucie, Google Cloud Text-to-Speech för Sulafat, Mistral för Marie och Jane) ligger i en fil `.env` utanför arkivet, som anges via `node --env-file`: inga nycklar hamnar i git. Claude Code-färdigheten [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) går igenom proceduren steg för steg (grindar, godkännanden, återupptaganden); detaljerna finns i [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
 
-1. **Uppskatta** återstående fraser och tecken att betala för (Eleven v3: ca 0,53 krediter per tecken; Chirp 3 HD: 30 $ per miljon tecken, den första miljonen varje månad gratis; Voxtral TTS: 16 $ per miljon).
-2. **Generera**. Att köra samma kommando igen återupptar det som saknas. När krediterna tar slut avslutas skriptet kontrollerat (kod 3) utan att lämna några halvskrivna filer. `--max-total-chars` sätter ett tak för versionens ackumulerade kostnad: varje betalt svar registreras direkt vid mottagandet i en logg, som överlever ett plötsligt avbrott. Hos Google och Mistral, som inte tillhandahåller något läsbart saldo, är detta det enda skyddet.
-3. **Kontrollera**: varje fras har sitt klipp och varje MP3-fil är giltig. Whisper transkriberar sedan varje klipp lokalt, och kontrollen flaggar felaktigt uppfattade siffror och onormala tidslängder. `voice:review` kedjar samman Whisper, denna kontroll och lyssningssidan i ett enda kommando.
-4. **Lyssna** på lyssningssidan (`voice:listen`) på de flaggade klippen och ett urval av feminina former ("une fois 7"), som Whisper inte skiljer på. Varje klipp har en kryssruta "gör om", som lägger till det i listan över förkastade klipp.
+1. **Uppskatta** återstående fraser och tecken att betala för (Eleven v3: cirka 0,53 krediter per tecken; Chirp 3 HD: 30 $ per miljon tecken, den första miljonen varje månad är gratis; Voxtral TTS: 16 $ per miljon).
+2. **Generera**. Att köra samma kommando igen återupptar det som saknas. När krediterna tar slut avslutas skriptet rent (kod 3) utan att lämna några halvskrivna filer. `--max-total-chars` sätter ett tak för versionens sammanlagda utgifter: varje betalt svar registreras så snart det tas emot i ett register som överlever ett plötsligt avbrott. Hos Google och Mistral, som inte tillhandahåller något läsbart saldo, är detta det enda skyddet.
+3. **Kontrollera**: varje fras har sitt klipp och varje MP3-fil är giltig. Whisper transkriberar sedan varje klipp lokalt, och kontrollen flaggar felaktigt uppfattade tal och onormala varaktigheter. `voice:review` kedjar samman Whisper, denna kontroll och provlyssningssidan i ett enda kommando.
+4. **Lyssna** på provlyssningssidan (`voice:listen`) på de flaggade klippen och ett urval av feminina former (”une fois 7”), som Whisper inte kan skilja på. Varje klipp har en kryssruta för ”gör om”, vilket lägger till det i listan över förkastade klipp.
 5. **Gör om** de förkastade klippen (`--redo`) och kör Whisper igen, jämför sedan varje klipp före och efter på en andra sida. Ett klipp som fortfarande uttalas fel efter två eller tre försök får en tvingande text i `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), till exempel talet utskrivet med bokstäver.
-6. **Publicera** klippen, verifiera att de svarar online, och publicera sedan språkindexet, först för testare (`?voix=test`).
-7. **Öppna** rösten för alla och aktivera den sedan som standard. Nödstoppet/brytaren (`voice:publish -- remove`) tar bort ett språk från indexet: spelet återgår till enhetens röst.
+6. **Publicera** klippen, verifiera att de svarar online och publicera sedan språkets index, först för testare (`?voix=test`).
+7. **Öppna** rösten för alla och aktivera den sedan som standard. Nödbrytaren (`voice:publish -- remove`) tar bort ett språk från indexet: spelet återgår till enhetens röst.
 
 ```bash
 # 1. Estimer (sans frais)
@@ -694,17 +695,17 @@ npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> -
 npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience all --default-on
 ```
 
-### Regel: en ändrad uppläst fras spelas in på nytt före produktionssättning
+### Regel: en ändrad talad fras spelas in på nytt före produktionsdriftsättning
 
-Varje uppläst fras kommer från översättningarna (`assets/translations/{fr,en,es}.json`) och är en del av textkorpusen. Att ändra en talad fras gör därför att testet för korpuslåset (`scripts/voice/corpus.lock.json`) misslyckas. För ett språk som har en inspelad röst genererar man då klippen för de berörda fraserna, kontrollerar och lyssnar på dem, och publicerar dem sedan **innan** sammanslagning (merge). Slutligen uppdateras låset (`npm run voice:corpus:lock`). Utan dessa klipp läses den ändrade frasen upp med enhetens röst.
+Alla talade fraser kommer från översättningarna (`assets/translations/{fr,en,es}.json`) och ingår i korpusen. Att ändra en talad fras gör därför att testet för korpuslåset (`scripts/voice/corpus.lock.json`) misslyckas. För ett språk som har en inspelad röst genererar man då klippen för de berörda fraserna, kontrollerar och provlyssnar på dem, och publicerar dem sedan **före** sammanslagning. Slutligen uppdateras låset (`npm run voice:corpus:lock`). Utan dessa klipp läses den ändrade frasen med enhetens röst.
 
 ## 📊 Datalagring
 
 ### Användardata
 
-- Profiler och inställningar
+- Profiler och preferenser
 - Framsteg per spelläge
-- Poäng och statistik för arkadspelen
+- Poäng och statistik för arkadspel
 - Anpassningsinställningar
 
 ### Tekniska funktioner
@@ -721,11 +722,11 @@ Problem kan rapporteras via GitHub Issues. Vänligen inkludera:
 - Detaljerad beskrivning av problemet
 - Steg för att återskapa det
 - Webbläsare och version
-- Skärmdumpar om det är relevant
+- Skärmbilder om det är relevant
 
 ## 💝 Stöd projektet
 
-**[☕ Gör en donation via PayPal](https://paypal.me/jls)**
+**[☕ Donera via PayPal](https://paypal.me/jls)**
 
 ## 📄 Licens
 
@@ -733,4 +734,4 @@ Detta projekt är licensierat under AGPL v3. Se filen `LICENSE` för mer informa
 
 ---
 
-_LeapMultix – öppen och fri pedagogisk applikation för att lära sig de fyra räknesätten_
+_LeapMultix – en öppen pedagogisk applikation för att lära sig de fyra räknesätten_

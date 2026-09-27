@@ -162,6 +162,15 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
 - **Clip signalé par Whisper** : le refaire d'abord, deux ou trois tours ; ne faire écouter
   que ce qui reste signalé. Whisper n'entend pas « un » / « une » (échantillon d'accords à
   l'écoute) et se trompe parfois sur les phrases courtes.
+- **Nouvelle prise identique** : Google redonne parfois, pour la même phrase, le même son à
+  l'octet près. `--redo` n'y change rien ; essayer un texte dit propre à la voix. `voice:check`
+  garde alors la transcription de ce contenu (il ne la croit pas périmée).
+- **Défaut que Whisper n'entend pas** : il écrit « plus » que la voix dise « plu » ou « pluss ».
+  Seule l'écoute le trouve ; un motif relevé sur quelques clips se vérifie sur un échantillon
+  des phrases du même type, puis se corrige pour toutes (texte dit propre à la voix).
+- **Sulafat en français** : un « 1 » final écrit en chiffre est avalé (« moins 1 » entendu
+  « moins ») ; « un » en lettres passe. « 2 plus » est lu comme l'adverbe « de plus » (« plu ») ;
+  « plusse » se dit « pluss ». Ses 99 textes dits propres sont dans `alternatives.json`.
 - **`curl` sur `/voice/` répond 403** : la fonction CloudFront `voice_guard` ne sert que les
   requêtes du jeu (`Sec-Fetch-Site: same-origin`) ; `check-online.mjs` envoie cet en-tête.
 - **Clip absent en ligne** : 403 (pas de listage du bucket) ; le jeu passe à la voix de
