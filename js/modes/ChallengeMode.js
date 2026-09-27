@@ -638,18 +638,20 @@ export class ChallengeMode extends GameMode {
   }
 
   /**
-   * Lire la bonne réponse ne coûte pas de temps : le décompte s'arrête pendant
-   * la pause qui suit une erreur, puis repart avec la question suivante.
-   * @param {number} delay - Durée de la pause en millisecondes
+   * Lire la bonne réponse ne coûte pas de temps : le décompte s'arrête après une erreur,
+   * le temps que l'explication soit dite en entier, puis repart avec la question suivante
+   * (onWrongAnswerResume).
    */
-  onWrongAnswerPause(delay) {
+  onWrongAnswerPause() {
     if (!this.timerInterval) return;
     clearInterval(this.timerInterval);
     this.intervals.delete(this.timerInterval);
     this.timerInterval = null;
-    this.addTimer(() => {
-      if (this.state.isActive && this.state.timeLeft > 0) this.startTimer();
-    }, delay);
+  }
+
+  /** Question suivante après une erreur : le décompte repart */
+  onWrongAnswerResume() {
+    if (this.state.isActive && this.state.timeLeft > 0 && !this.timerInterval) this.startTimer();
   }
 
   /**

@@ -4,7 +4,7 @@
  */
 
 // Version globale de l'application - doit correspondre à sw.js
-export const APP_VERSION = 'v33';
+export const APP_VERSION = 'v34';
 export const VERSION_PARAM = `v=${APP_VERSION}`;
 
 const runtime = globalThis;

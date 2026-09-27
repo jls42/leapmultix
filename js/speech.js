@@ -18,6 +18,9 @@
 // - fin bornée, quel que soit le moteur : au-delà d'une durée estimée d'après le texte,
 //   la phrase est tenue pour finie et la file avance. Un son bloqué ne retient rien.
 // Chaque phrase part seule vers le moteur : plus aucun texte recollé.
+// whenSpeechEnds() rend une promesse tenue quand la parole se tait : phrase active finie
+// (ou coupée) et aucune en attente. Le Défi s'en sert pour laisser finir l'explication d'une
+// erreur avant la question suivante.
 //
 // Contrat d'un moteur (setSpeechEngine), pour la voix enregistrée :
 //   engine.start(text, { lang, token, volume, onStarted, onEnded, onFailed, setDeadline })
@@ -499,6 +502,29 @@ let nextToken = 0;
 let active = null;
 /** @type {{token: number, text: string, priority: string}|null} */
 let pending = null;
+/** Attentes de whenSpeechEnds, tenues quand plus rien n'est dit ni en attente */
+let silenceWaiters = [];
+
+/** Tient les attentes de silence si la file est vide */
+function settleSilence() {
+  if (active || pending) return;
+  const waiters = silenceWaiters;
+  silenceWaiters = [];
+  for (const resolve of waiters) resolve();
+}
+
+/**
+ * Promesse tenue quand la parole se tait : la phrase active finie ou coupée, et aucune en
+ * attente. Tout de suite si rien n'est dit. Une phrase dont la fin n'est jamais signalée est
+ * tenue pour finie à son échéance (fin bornée) : l'attente ne dure pas davantage.
+ * @returns {Promise<void>}
+ */
+export function whenSpeechEnds() {
+  if (!active && !pending) return Promise.resolve();
+  return new Promise(resolve => {
+    silenceWaiters.push(resolve);
+  });
+}
 
 function effectiveVolume() {
   if (isMuted) return 0;
@@ -538,6 +564,7 @@ function finishActive(phrase) {
   active = null;
   clearDeadline(phrase);
   playPending();
+  settleSilence();
 }
 
 function setDeadlineFor(phrase, ms) {
@@ -548,6 +575,7 @@ function setDeadlineFor(phrase, ms) {
     // Son bloqué ou fin jamais signalée : la phrase est tenue pour finie
     stopActive();
     playPending();
+    settleSilence();
   }, ms);
 }
 
@@ -583,6 +611,7 @@ function startPhrase(phrase) {
 function cancelQueue() {
   pending = null;
   stopActive();
+  settleSilence();
 }
 
 /**

@@ -217,22 +217,56 @@ describe('Quiz : bip, « Bravo », question suivante', () => {
   });
 });
 
-describe('Défi : la question suivante coupe la fin de l’explication', () => {
-  test('après une erreur, la question suivante part sans attendre', async () => {
+describe('Défi : l’explication d’une erreur est dite en entier', () => {
+  async function wrongAnswer() {
     const challenge = new ChallengeMode();
     await challenge.start();
     document.querySelector('.difficulty-btn[data-difficulty="easy"]').click();
     await wait(20);
     showKnownQuestion(challenge);
     challenge.speakQuestion();
-
     option('challenge', true).click();
+    return challenge;
+  }
+
+  test('la question suivante attend la fin de la phrase, chrono arrêté jusque-là', async () => {
+    const challenge = await wrongAnswer();
     const explanation = engine.last();
     expect(explanation.text).toBe('Presque ! La bonne réponse est 8.');
+    explanation.ctx.onStarted();
+    const timeLeft = challenge.state.timeLeft;
 
+    // La pause est passée, mais la phrase n'est pas finie : rien ne la coupe
     await wait(challenge.config.wrongAnswerDelay + 50);
-    expect(explanation.handle.stop).toHaveBeenCalledTimes(1);
+    expect(explanation.handle.stop).not.toHaveBeenCalled();
+    expect(engine.last()).toBe(explanation);
+    expect(challenge.timerInterval).toBeNull();
+    expect(challenge.state.timeLeft).toBe(timeLeft);
+
+    // La phrase finie, la question suivante part et le décompte reprend
+    explanation.ctx.onEnded();
+    await wait(20);
     expect(engine.last().text).toBe(challenge.spokenQuestionText());
+    expect(challenge.timerInterval).not.toBeNull();
     challenge.stop();
+  }, 10000);
+
+  test('sans voix, la question suivante part après la pause, comme avant', async () => {
+    localStorage.setItem('voiceEnabled', 'false');
+    const challenge = await wrongAnswer();
+    const next = jest.spyOn(challenge, 'generateQuestion');
+    await wait(challenge.config.wrongAnswerDelay + 50);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(challenge.timerInterval).not.toBeNull();
+    challenge.stop();
+  }, 10000);
+
+  test('quitter le Défi pendant l’explication : aucune question ne repart', async () => {
+    const challenge = await wrongAnswer();
+    const next = jest.spyOn(challenge, 'generateQuestion');
+    challenge.stop();
+    await wait(challenge.config.wrongAnswerDelay + 50);
+    expect(next).not.toHaveBeenCalled();
+    expect(challenge.timerInterval).toBeNull();
   }, 10000);
 });
