@@ -7,6 +7,8 @@
 // Usage :
 //   node scripts/voice/check.mjs --lang fr [--out <dépôt des voix>] [--probe]
 //     [--transcripts <fichier.jsonl>] [--flagged <fichier>] [--allow-missing] [--json]
+//     [--version <version>]
+//   --version     : une autre voix de la langue (alternatives.json)
 //   --transcripts : sortie de whisper_transcribe.py ({ key, heard } par ligne)
 //   --flagged     : écrit les empreintes à réécouter, une par ligne (pour generate --redo)
 // Code de sortie 1 si une phrase manque (sauf --allow-missing) ou si le rangement est
@@ -21,7 +23,7 @@ import { clipProblem, probeClip } from './audio-process.mjs';
 import { flagOption, parseOptions, pathOption, valueOption } from './cli-options.mjs';
 import { compareTranscript } from './transcript-compare.mjs';
 import { clipFile, readManifest, sha256, storePaths } from './clip-store.mjs';
-import { DEFAULT_OUT, loadVoice } from './generate.mjs';
+import { DEFAULT_OUT, loadVoiceVersion } from './generate.mjs';
 
 /**
  * Durée à réécouter, rapportée au débit de la voix elle-même : la médiane des secondes par
@@ -163,6 +165,7 @@ export function isConsistent(report) {
 
 const CLI_OPTIONS = {
   '--lang': valueOption('lang'),
+  '--version': valueOption('version'),
   '--out': pathOption('out'),
   '--probe': flagOption('probe'),
   '--allow-missing': flagOption('allowMissing'),
@@ -234,7 +237,7 @@ async function main(argv) {
   const report = await checkClips({
     lang: args.lang,
     phrases: buildCorpus(args.lang),
-    voice: loadVoice(args.lang),
+    voice: loadVoiceVersion(args.lang, args.version),
     outDir: args.out,
     probe: args.probe ? probeClip : undefined,
     transcripts,

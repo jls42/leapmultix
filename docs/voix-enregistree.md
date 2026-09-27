@@ -11,7 +11,8 @@ place et ce qui vient ensuite.
 
 ## Choix
 
-- **Voix, une par langue et par fournisseur** :
+- **Voix, une par défaut dans chaque langue** ; d'autres au choix du joueur (menu « Voix »,
+  plus bas) :
   - **Français : « Lucie »**, ElevenLabs.
     - Voix de bibliothèque `YxrwjAKoUKULGd0g8K9Y`, avec un préavis de retrait de 730 jours ;
       modèle Eleven v3.
@@ -25,13 +26,13 @@ place et ce qui vient ensuite.
       portant sur « Modo Quiz ». Le propriétaire retient Sulafat en Chirp 3 HD.
     - Anglais : banc de 11 phrases, Jane face à des voix « chaleureuses » de Google (Chirp 3
       HD britannique et américain, 8 voix Gemini Flash). Le propriétaire retient Sulafat en
-      anglais britannique, comme Jane. Les clips de Jane restent en ligne.
+      anglais britannique, comme Jane. Jane reste au choix du joueur (menu « Voix »).
     - Coût : 30 $ le million de caractères, mais le premier million de chaque mois est offert.
       L'espagnol et l'anglais, refaits compris, tiennent dans ce million : 0 $.
     - Le texte dit espagnol garde **tous les nombres en lettres** : Sulafat les dit justes,
       et l'écriture ne laisse aucune lecture au hasard.
-  - **Anglais jusqu'au 26/09/2026 : « Jane - Neutral »**, Mistral Voxtral TTS
-    (`voxtral-mini-tts-2603`).
+  - **Anglais jusqu'au 26/09/2026, puis autre voix au choix du joueur : « Jane - Neutral »**,
+    Mistral Voxtral TTS (`voxtral-mini-tts-2603`).
     - Voix prête `82c99ee6-f932-423f-a4a3-d403c8914b8d`, femme, anglais britannique, avec
       un préavis de retrait (`retention_notice`) de 30.
     - Retenue le 25/09/2026 après un banc de 3 variantes × 24 phrases du corpus :
@@ -139,13 +140,23 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
   déploiement), seule valeur acceptée. Sans elle (forks, développement), aucune requête.
   En local, `?voix=local` lit `/voice/` du serveur de développement.
 - **Index** `/voice/index.json` (`js/core/voice-index.js`) : langue, voix, version,
-  audience (`test` ou `all`), `defaultOn`. Lu sans cache, sa dernière copie sert hors ligne.
-  `?voix=test` marque le navigateur comme testeur, `?voix=off` retire les marques.
+  audience (`test` ou `all`), `defaultOn`. Deux champs facultatifs :
+  - `provider`, le service qui a créé la voix, que nomme la mention des réglages ;
+  - `alternatives`, les autres voix de la langue (au plus 4), chacune avec sa voix, sa
+    version, son audience et son service.
+
+  Un jeu d'avant la v30 ignore ces champs et lit la voix par défaut, toujours en tête de
+  l'entrée. Lu sans cache, l'index garde sa dernière copie pour le hors ligne. `?voix=test`
+  marque le navigateur comme testeur, `?voix=off` retire les marques.
+
 - **Activation** (`js/core/voice-activation.js`) : la voix est disponible si la langue est
   dans l'index, ouverte à ce navigateur et que le MP3 est lisible ; la parole est active
   selon le choix du joueur (bouton de la barre du haut), sinon selon `defaultOn` ; le moteur
   est la voix enregistrée sauf si la case « Voix enregistrée » est décochée (la parole
   continue alors avec la voix de l'appareil).
+- **Voix entendue** : celle que le joueur a choisie dans le menu « Voix », parmi celles de la
+  langue ouvertes à ce navigateur ; sinon la voix par défaut. Un choix retiré de l'index
+  revient à la voix par défaut. Chaque voix garde le `defaultOn` de sa langue.
 - **Lecture** : un seul `<audio>`, partagé et déverrouillé au premier geste par un silence
   MP3 inclus dans le code (la CSP refuse `data:`) ; clip téléchargé par `fetch()` puis joué
   depuis une URL `blob:`, libérée à la fin. Fin bornée à la durée du clip plus 1 s.
@@ -167,16 +178,21 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
 - **Service worker** (`sw.js`) : clips en cache d'abord dans `leapmultix-voice` (épargné
   par les changements de version), gardés seulement s'ils sont un vrai MP3 du site ; index
   en réseau d'abord ; chaque nouvel index purge les clips des versions qu'il n'annonce plus,
-  plafond d'environ 2 000 clips.
+  ni comme voix par défaut ni parmi les autres voix ; plafond d'environ 2 000 clips.
 - **Réglage** : case « Voix enregistrée » dans Accessibilité et contrôles, visible là où la
   voix est disponible.
-- **Mention « voix de synthèse »**, dans la langue du jeu (`recorded_voice_hint`) : créée
-  avec ElevenLabs en français, avec Google Cloud Text-to-Speech en anglais et en espagnol.
+- **Menu « Voix »**, sous la case, là où la langue propose plusieurs voix : chaque voix y porte
+  son service (« Sulafat (Google) », « Jane (Mistral AI) »). Le choix est gardé par langue
+  (`recordedVoiceChoice`) ; le menu est grisé quand la case est décochée.
+- **Mention « voix de synthèse »**, dans la langue du jeu : elle nomme le service de la voix
+  entendue (`recorded_voice_hint_<provider>` : ElevenLabs, Google Cloud Text-to-Speech ou
+  Mistral AI), d'après le `provider` de l'index. Sans lui (index d'avant la v30),
+  `recorded_voice_hint` nomme le service de la voix par défaut de la langue.
   - Elle doit être en ligne **avant** l'entrée de la langue dans l'index, puisque la case
     s'affiche dès que la langue y entre.
   - La page parents et le README présentent aussi les voix.
 - **Plausible** : l'événement `Voice fallback` compte chaque cause de repli, une fois par
-  session et par langue (`{ cause, lang }`).
+  session, par langue et par voix (`{ cause, lang, voice }`).
 
 ## En place : l'infra
 
@@ -215,10 +231,16 @@ CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sort
 
 **Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
 modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en français,
-`sulafat-v1-1` en anglais et en espagnol ; `jane-v1-1` pour Jane, l'ancienne voix anglaise).
+`sulafat-v1-1` en anglais et en espagnol). `scripts/voice/alternatives.json` fait de même
+pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais).
 
 - Changer un réglage impose une nouvelle version : le générateur refuse de mélanger deux
   réglages sous une même version.
+- **Autres voix** : une phrase changée demande un clip à chaque voix de la langue.
+  `voice:generate`, `voice:review`, `voice:check`, `voice:listen`, `voice:check-online` et
+  `voice:publish -- clips|local` visent l'une d'elles avec `--version <version>`.
+  `voice:review` range alors ses fichiers de travail sous la version
+  (`transcripts-en-jane-v1-1.jsonl`) : une transcription ne vaut que pour les clips d'une voix.
 - **Fournisseurs** (`scripts/voice/providers/`) : `elevenlabs.mjs`, `google.mjs` et
   `mistral.mjs`.
   - Ils ont la même interface et partagent `common.mjs` : erreurs classées, lecture des
@@ -326,14 +348,22 @@ modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en françai
      la langue entre dans l'index (sans cache), puis invalidation CloudFront. Seulement si
      chaque clip du manifeste est en ligne et identique, et si chaque phrase du corpus a son
      clip : `--allow-missing` accepte des phrases sans clip (voix de l'appareil pour
-     elles), jamais un clip en conflit.
+     elles), jamais un clip en conflit. L'entrée porte le service de la voix (`provider`),
+     et garde les autres voix de la langue, sauf celle qui deviendrait la voix par défaut.
+   - **Autre voix** : `npm run voice:publish -- clips --lang en --version jane-v1-1 --bucket <bucket>`,
+     puis `npm run voice:check-online -- --lang en --version jane-v1-1 --allow-other-version`,
+     puis `npm run voice:publish -- alternative --lang en --version jane-v1-1 --bucket <bucket> --distribution <id> --audience test`.
+     La voix rejoint le menu de la langue aux conditions de `index` (clips en ligne et
+     identiques, corpus couvert) ; la voix par défaut et les autres langues ne bougent pas.
+     `--remove` la retire.
    - L'index distant n'est réécrit qu'après une lecture sûre : une erreur de lecture, un
      JSON illisible ou un index invalide arrêtent `index` et `remove`. `--force` repart
      alors d'un index vide, **les autres langues sont perdues** : dernier recours.
 6. **Ouverture par étapes** : testeurs (`?voix=test`), puis la commande `index` avec
    `--audience all` (les joueurs qui avaient allumé la voix), puis avec
-   `--audience all --default-on`. Chaque `index` réécrit toute l'entrée de la langue : sans
-   `--audience all`, l'audience revient à `test`.
+   `--audience all --default-on`. Chaque `index` réécrit la voix par défaut de la langue (ses
+   autres voix restent) : sans `--audience all`, l'audience revient à `test`. Une autre voix
+   s'ouvre de même : `alternative` avec `--audience all`.
 
 **Coupe-circuit** : `npm run voice:publish -- remove --lang fr --bucket <bucket> --distribution <id>` ;
 le jeu revient à la voix de l'appareil au prochain chargement en ligne.
@@ -341,7 +371,8 @@ le jeu revient à la voix de l'appareil au prochain chargement en ligne.
 **Essai local** : `npm run voice:publish -- local --lang fr --audience all --default-on`
 relie le dossier `voice/` du site (ignoré par git) aux clips du dépôt privé ; `npm run serve`,
 puis ouvrir `http://localhost:8080/index.html?voix=local` (`serve-lite` liste les fichiers à la
-racine : viser `index.html`).
+racine : viser `index.html`). Pour le menu « Voix », ajouter ensuite une autre voix à l'index
+local : `npm run voice:publish -- local --lang en --version jane-v1-1 --audience all`.
 
 ## Licence et mentions
 

@@ -5,10 +5,12 @@
  */
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import {
+  availableVoices,
   isSpeechActive,
   recordedVoiceEntry,
   speechEngineFor,
 } from '../../js/core/voice-activation.js';
+import { MAX_ALTERNATIVES, parseLanguage, parseVoiceIndex } from '../../js/core/voice-index.js';
 import { voiceKey } from '../../js/core/spoken-text.js';
 import {
   VOICE_STORAGE_KEYS,
@@ -93,6 +95,108 @@ describe('Activation : table de vérité', () => {
     const speechActive = isSpeechActive({ voicePreference: null, entry });
     expect(speechActive).toBe(true);
     expect(speechEngineFor({ speechActive, entry, recordedPreference: false })).toBe('synthesis');
+  });
+});
+
+describe('Autres voix d’une langue (index)', () => {
+  const SULAFAT = {
+    voice: 'sulafat',
+    version: 'sulafat-v1-1',
+    format: 'mp3',
+    audience: 'all',
+    defaultOn: true,
+  };
+  const JANE = { voice: 'jane', version: 'jane-v1-1', format: 'mp3', audience: 'all' };
+
+  test('une entrée sans champ facultatif ressort telle quelle, sans clé ajoutée', () => {
+    expect(parseLanguage(SULAFAT)).toEqual(SULAFAT);
+  });
+
+  test('service connu gardé, inconnu écarté sans perdre la voix', () => {
+    expect(parseLanguage({ ...SULAFAT, provider: 'google' })).toEqual({
+      ...SULAFAT,
+      provider: 'google',
+    });
+    expect(parseLanguage({ ...SULAFAT, provider: 'autre' })).toEqual(SULAFAT);
+  });
+
+  test('autres voix : les invalides et les doublons (nom ou version) sont écartés', () => {
+    const parsed = parseLanguage({
+      ...SULAFAT,
+      alternatives: [
+        { ...JANE, provider: 'mistral' },
+        { ...JANE, version: 'jane-v2' },
+        { ...JANE, voice: 'autre', version: 'sulafat-v1-1' },
+        { ...JANE, voice: 'Nom Invalide', version: 'x-1' },
+        { voice: 'lea', version: 'lea-v1', format: 'ogg', audience: 'all' },
+        'pas un objet',
+      ],
+    });
+    expect(parsed.alternatives).toEqual([{ ...JANE, provider: 'mistral' }]);
+  });
+
+  test(`au plus ${MAX_ALTERNATIVES} autres voix ; une liste qui n’en est pas une est ignorée`, () => {
+    const many = Array.from({ length: MAX_ALTERNATIVES + 2 }, (_, i) => ({
+      ...JANE,
+      voice: `v${i}`,
+      version: `v${i}-1`,
+    }));
+    expect(parseLanguage({ ...SULAFAT, alternatives: many }).alternatives).toHaveLength(
+      MAX_ALTERNATIVES
+    );
+    expect(parseLanguage({ ...SULAFAT, alternatives: 'jane' })).toEqual(SULAFAT);
+  });
+
+  test('un index avec d’autres voix reste lisible ; la voix par défaut reste en tête', () => {
+    const index = parseVoiceIndex({
+      schema: 'cyrb53-nfc-1',
+      languages: { en: { ...SULAFAT, alternatives: [JANE] } },
+    });
+    expect(index.languages.en.version).toBe('sulafat-v1-1');
+    expect(index.languages.en.alternatives).toEqual([JANE]);
+  });
+
+  describe('voix disponibles et choix du joueur', () => {
+    const index = {
+      languages: {
+        en: {
+          ...SULAFAT,
+          alternatives: [JANE, { ...JANE, voice: 'test', version: 't-1', audience: 'test' }],
+        },
+      },
+    };
+    const browser = { canPlayMp3: true };
+
+    test('la voix par défaut d’abord, chacune avec le « par défaut » de la langue', () => {
+      expect(availableVoices(index, 'en', browser).map(v => [v.voice, v.defaultOn])).toEqual([
+        ['sulafat', true],
+        ['jane', true],
+      ]);
+      expect(availableVoices(index, 'en', { ...browser, tester: true }).map(v => v.voice)).toEqual([
+        'sulafat',
+        'jane',
+        'test',
+      ]);
+      expect(availableVoices(index, 'en', { canPlayMp3: false })).toEqual([]);
+    });
+
+    test('la voix choisie si elle est disponible, sinon la voix par défaut', () => {
+      expect(recordedVoiceEntry(index, 'en', browser, 'jane').version).toBe('jane-v1-1');
+      expect(recordedVoiceEntry(index, 'en', browser, 'test').version).toBe('sulafat-v1-1');
+      expect(recordedVoiceEntry(index, 'en', browser, 'inconnue').version).toBe('sulafat-v1-1');
+      expect(recordedVoiceEntry(index, 'en', browser).version).toBe('sulafat-v1-1');
+      expect(recordedVoiceEntry(index, 'fr', browser, 'jane')).toBeNull();
+    });
+
+    test('voix par défaut réservée aux testeurs : les autres restent ouvertes à tous', () => {
+      const testOnly = {
+        languages: { en: { ...SULAFAT, audience: 'test', alternatives: [JANE] } },
+      };
+      expect(recordedVoiceEntry(testOnly, 'en', browser).voice).toBe('jane');
+      expect(recordedVoiceEntry(testOnly, 'en', { ...browser, tester: true }).voice).toBe(
+        'sulafat'
+      );
+    });
   });
 });
 

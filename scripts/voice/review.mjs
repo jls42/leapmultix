@@ -8,14 +8,18 @@
 // Usage :
 //   node scripts/voice/review.mjs --lang en [--out <dépôt des voix>] [--compare <liste>]
 //     [--skip-whisper] [--python <interpréteur>] [--transcripts <fichier.jsonl>]
-//     [--sample <n>] [--allow-missing]
+//     [--sample <n>] [--allow-missing] [--version <version>]
+//   --version      : une autre voix de la langue (alternatives.json) ; ses fichiers de
+//                    travail portent la version, pour ne pas se mêler à ceux de la voix par
+//                    défaut
 //   --python       : interpréteur de Whisper (défaut : .venv-whisper/bin/python du dossier
 //                    courant)
 //   --transcripts  : transcriptions lues et complétées (défaut : transcripts-<langue>.jsonl)
 //   --skip-whisper : aucune transcription de plus, celles du fichier servent telles quelles
 //   --compare      : page avant/après des clips refaits de la liste, au lieu de la page d'écoute
 // Fichiers du dossier courant (ignorés par git) : transcripts-<langue>.jsonl et
-// a-reecouter-<langue>.txt. Page : <dépôt des voix>/ecoute/.
+// a-reecouter-<langue>.txt, ou transcripts-<langue>-<version>.jsonl et
+// a-reecouter-<langue>-<version>.txt avec --version. Page : <dépôt des voix>/ecoute/.
 // Code de sortie : 0 ; 1 si Whisper échoue, si le rangement est incohérent ou si une phrase
 // manque (sauf --allow-missing).
 
@@ -26,7 +30,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildCorpus } from './corpus.mjs';
 import { checkClips, exitCode, printSummary, readTranscripts, writeFlagged } from './check.mjs';
 import { readManifest, storePaths } from './clip-store.mjs';
-import { DEFAULT_OUT, loadVoice } from './generate.mjs';
+import { DEFAULT_OUT, loadVoiceVersion } from './generate.mjs';
 import { DEFAULT_SAMPLE, buildComparePage, buildListenPage, writePage } from './listen-page.mjs';
 import {
   assertLangCode,
@@ -45,6 +49,7 @@ const WHISPER_SCRIPT = path.join(
 
 const CLI_OPTIONS = {
   '--lang': valueOption('lang'),
+  '--version': valueOption('version'),
   '--out': pathOption('out'),
   '--compare': pathOption('compare'),
   '--python': pathOption('python'),
@@ -67,9 +72,11 @@ export function parseArgs(argv, cwd = process.cwd()) {
     allowMissing: false,
   });
   assertLangCode(args.lang);
+  // Une autre voix a ses propres fichiers : une transcription vaut pour un clip d'une voix
+  const tag = args.version ? `${args.lang}-${args.version}` : args.lang;
   args.python ??= path.join(cwd, '.venv-whisper', 'bin', 'python');
-  args.transcripts ??= path.join(cwd, `transcripts-${args.lang}.jsonl`);
-  args.flagged = path.join(cwd, `a-reecouter-${args.lang}.txt`);
+  args.transcripts ??= path.join(cwd, `transcripts-${tag}.jsonl`);
+  args.flagged = path.join(cwd, `a-reecouter-${tag}.txt`);
   return args;
 }
 
@@ -105,7 +112,7 @@ async function writeReviewPage(args, context) {
 
 async function main(argv) {
   const args = parseArgs(argv);
-  const voice = loadVoice(args.lang);
+  const voice = loadVoiceVersion(args.lang, args.version);
   const paths = storePaths(args.out, args.lang, voice.version);
   if (!fs.existsSync(paths.manifestFile)) {
     throw new Error(`Manifeste introuvable : ${paths.manifestFile} (dépôt des voix : --out)`);

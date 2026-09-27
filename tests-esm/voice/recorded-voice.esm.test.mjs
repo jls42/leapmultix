@@ -9,9 +9,12 @@ import {
   FIRST_DECISION_TIMEOUT_MS,
   VOICE_STORAGE_KEYS,
   attachRecordedVoiceSetting,
+  getRecordedVoiceChoice,
+  getRecordedVoiceChoices,
   initRecordedVoice,
   isRecordedVoiceAvailable,
   resetRecordedVoiceForTests,
+  setRecordedVoiceChoice,
   setRecordedVoicePreference,
 } from '../../js/voice-clips.js';
 import {
@@ -278,7 +281,7 @@ describe('Voix enregistrée dans le jeu', () => {
     ]);
   });
 
-  test('repli : Plausible reçoit la cause et la langue, une fois par cause et par langue', async () => {
+  test('repli : Plausible reçoit la cause, la langue et la voix, une fois par cause, langue et voix', async () => {
     const JANE = {
       voice: 'jane',
       version: 'jane-v1-1',
@@ -303,9 +306,9 @@ describe('Voix enregistrée dans le jeu', () => {
       english.options.onFallback('absent');
       english.options.onFallback('slow');
       expect(globalThis.plausible.mock.calls).toEqual([
-        ['Voice fallback', { props: { cause: 'absent', lang: 'fr' } }],
-        ['Voice fallback', { props: { cause: 'absent', lang: 'en' } }],
-        ['Voice fallback', { props: { cause: 'slow', lang: 'en' } }],
+        ['Voice fallback', { props: { cause: 'absent', lang: 'fr', voice: 'lucie' } }],
+        ['Voice fallback', { props: { cause: 'absent', lang: 'en', voice: 'jane' } }],
+        ['Voice fallback', { props: { cause: 'slow', lang: 'en', voice: 'jane' } }],
       ]);
     } finally {
       delete globalThis.plausible;
@@ -342,6 +345,106 @@ describe('Voix enregistrée dans le jeu', () => {
     ctx.lang = 'en';
     ctx.bus.emit('languageChanged', { lang: 'en' });
     expect(option.hidden).toBe(true);
+  });
+
+  describe('autres voix d’une langue : choix du joueur', () => {
+    const SULAFAT = {
+      voice: 'sulafat',
+      version: 'sulafat-v1-1',
+      format: 'mp3',
+      audience: 'all',
+      defaultOn: true,
+      provider: 'google',
+    };
+    const JANE = {
+      voice: 'jane',
+      version: 'jane-v1-1',
+      format: 'mp3',
+      audience: 'all',
+      provider: 'mistral',
+    };
+    const HINTS = {
+      recorded_voice_hint_google: 'Voix créée avec Google',
+      recorded_voice_hint_mistral: 'Voix créée avec Mistral AI',
+    };
+    const twoVoices = () => indexWith({ fr: ENTRY, en: { ...SULAFAT, alternatives: [JANE] } });
+    const engineVersion = ctx => ctx.engines.at(-1).options.entry.version;
+
+    function mountSetting() {
+      document.body.innerHTML = `
+        <label id="recorded-voice-option" hidden>
+          <input type="checkbox" id="recorded-voice-toggle" checked />
+          <small id="recorded-voice-hint" data-translate="recorded_voice_hint">Mention</small>
+        </label>
+        <div id="recorded-voice-choice-row" hidden>
+          <select id="recorded-voice-choice"></select>
+        </div>`;
+      attachRecordedVoiceSetting(document);
+      return {
+        row: document.getElementById('recorded-voice-choice-row'),
+        select: document.getElementById('recorded-voice-choice'),
+        toggle: document.getElementById('recorded-voice-toggle'),
+        hint: document.getElementById('recorded-voice-hint'),
+      };
+    }
+
+    test('Jane choisie : le moteur prend sa version ; le choix ne vaut que pour sa langue', async () => {
+      const ctx = setup({ index: twoVoices(), lang: 'en' });
+      await initRecordedVoice(ctx.deps);
+      expect(engineVersion(ctx)).toBe('sulafat-v1-1');
+      setRecordedVoiceChoice('jane');
+      expect(ctx.storage.get(VOICE_STORAGE_KEYS.choice)).toEqual({ en: 'jane' });
+      expect(engineVersion(ctx)).toBe('jane-v1-1');
+      expect(saidByClips(ctx, 'Quiz Mode')).toBe(true);
+      expect(getRecordedVoiceChoice()).toEqual({ voice: 'jane', provider: 'mistral' });
+      ctx.lang = 'fr';
+      ctx.bus.emit('languageChanged', { lang: 'fr' });
+      expect(getRecordedVoiceChoice().voice).toBe('lucie');
+      expect(getRecordedVoiceChoices()).toHaveLength(1);
+    });
+
+    test('voix choisie retirée de l’index : retour à la voix par défaut', async () => {
+      const ctx = setup({
+        index: indexWith({ en: SULAFAT }),
+        stored: { [VOICE_STORAGE_KEYS.choice]: { en: 'jane' } },
+        lang: 'en',
+      });
+      await initRecordedVoice(ctx.deps);
+      expect(engineVersion(ctx)).toBe('sulafat-v1-1');
+    });
+
+    test('menu : visible dès deux voix, nom et service ; la mention suit la voix choisie', async () => {
+      const ctx = setup({ index: twoVoices(), lang: 'en', translations: HINTS });
+      await initRecordedVoice(ctx.deps);
+      const { row, select, hint } = mountSetting();
+      expect(row.hidden).toBe(false);
+      expect([...select.options].map(o => [o.value, o.textContent, o.selected])).toEqual([
+        ['sulafat', 'Sulafat (Google)', true],
+        ['jane', 'Jane (Mistral AI)', false],
+      ]);
+      expect(hint.dataset.translate).toBe('recorded_voice_hint_google');
+      expect(hint.textContent).toBe(HINTS.recorded_voice_hint_google);
+      select.value = 'jane';
+      select.dispatchEvent(new Event('change'));
+      expect(ctx.storage.get(VOICE_STORAGE_KEYS.choice)).toEqual({ en: 'jane' });
+      expect(select.value).toBe('jane');
+      expect(hint.dataset.translate).toBe('recorded_voice_hint_mistral');
+      expect(hint.textContent).toBe(HINTS.recorded_voice_hint_mistral);
+    });
+
+    test('menu : désactivé case décochée ; caché là où la langue n’a qu’une voix', async () => {
+      const ctx = setup({ index: twoVoices(), lang: 'en', translations: HINTS });
+      await initRecordedVoice(ctx.deps);
+      const { row, select, toggle, hint } = mountSetting();
+      toggle.checked = false;
+      toggle.dispatchEvent(new Event('change'));
+      expect(select.disabled).toBe(true);
+      ctx.lang = 'fr';
+      ctx.bus.emit('languageChanged', { lang: 'fr' });
+      expect(row.hidden).toBe(true);
+      // Sans service dans l'index, la mention de la langue revient
+      expect(hint.dataset.translate).toBe('recorded_voice_hint');
+    });
   });
 });
 

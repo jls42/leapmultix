@@ -1,6 +1,38 @@
 // Module navigation clavier pour améliorer l'accessibilité
 // Ajoute le support clavier pour tous les éléments interactifs
 
+/** Touches qu'un menu déroulant, un curseur ou un champ de texte gardent pour eux */
+const CONTROL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End']);
+
+/** Champs dont les flèches changent la valeur ou déplacent le curseur de texte */
+const TEXT_LIKE_INPUTS = new Set([
+  'text',
+  'search',
+  'email',
+  'number',
+  'tel',
+  'url',
+  'password',
+  'range',
+]);
+
+/** Le contrôle se sert-il lui-même des flèches (et de Début, Fin) ? */
+function usesControlKeys(element) {
+  if (!element) return false;
+  if (element.tagName === 'SELECT' || element.tagName === 'TEXTAREA') return true;
+  if (element.isContentEditable) return true;
+  return element.tagName === 'INPUT' && TEXT_LIKE_INPUTS.has(element.type);
+}
+
+/** L'élément actif garde-t-il cette touche pour lui ? */
+function activeElementOwnsKey(key) {
+  const active = document.activeElement;
+  // Sur l'écran d'un jeu, flèches et espace pilotent le jeu : ne pas lui prendre le focus
+  if (active?.tagName === 'CANVAS') return true;
+  // Menu déroulant, curseur, champ de texte : ces touches règlent le contrôle lui-même
+  return CONTROL_KEYS.has(key) && usesControlKeys(active);
+}
+
 class KeyboardNavigation {
   constructor() {
     this.isKeyboardMode = false;
@@ -116,9 +148,7 @@ class KeyboardNavigation {
   }
 
   handleGlobalKeydown(event) {
-    if (!this.isKeyboardMode) return;
-    // Sur l'écran d'un jeu, flèches et espace pilotent le jeu : ne pas lui prendre le focus
-    if (document.activeElement?.tagName === 'CANVAS') return;
+    if (!this.isKeyboardMode || activeElementOwnsKey(event.key)) return;
 
     switch (event.key) {
       case 'Enter':

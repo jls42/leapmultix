@@ -18,7 +18,12 @@ import Storage from './core/storage.js';
 import { eventBus } from './core/eventBus.js';
 import { ANNOUNCED_MODES, voiceKey } from './core/spoken-text.js';
 import { clipPath, parseVoiceIndex } from './core/voice-index.js';
-import { isSpeechActive, recordedVoiceEntry, speechEngineFor } from './core/voice-activation.js';
+import {
+  availableVoices,
+  isSpeechActive,
+  recordedVoiceEntry,
+  speechEngineFor,
+} from './core/voice-activation.js';
 import { getCurrentLanguage, getTranslations } from './i18n-store.js';
 import {
   cancelSpeech,
@@ -40,7 +45,12 @@ export const VOICE_STORAGE_KEYS = {
   tester: 'voiceTester',
   local: 'voiceLocal',
   recorded: 'recordedVoiceEnabled',
+  /** Voix choisie par le joueur, par langue : { en: 'jane' } */
+  choice: 'recordedVoiceChoice',
 };
+
+/** Services qui créent les voix, tels que le menu des réglages les nomme */
+const PROVIDER_LABELS = { elevenlabs: 'ElevenLabs', google: 'Google', mistral: 'Mistral AI' };
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
@@ -363,17 +373,17 @@ const state = {
 };
 
 /**
- * Une cause de repli n'est comptée qu'une fois par session et par langue (Plausible) : les
- * replis de la voix française et de la voix anglaise se distinguent
+ * Une cause de repli n'est comptée qu'une fois par session, par langue et par voix
+ * (Plausible) : les replis de deux voix d'une même langue se distinguent
  */
 const reportedFallbacks = new Set();
 
-function reportFallback(cause, lang) {
-  const id = `${lang}:${cause}`;
+function reportFallback(cause, lang, voice) {
+  const id = `${lang}:${voice}:${cause}`;
   if (reportedFallbacks.has(id)) return;
   reportedFallbacks.add(id);
   try {
-    globalThis.plausible?.('Voice fallback', { props: { cause, lang } });
+    globalThis.plausible?.('Voice fallback', { props: { cause, lang, voice } });
   } catch {
     // Mesure d'audience indisponible : rien à faire
   }
@@ -394,11 +404,54 @@ function browserState(deps) {
   };
 }
 
-/** Entrée de l'index pour la langue du jeu, si la voix enregistrée y est disponible */
+/** Voix choisie par le joueur pour une langue, ou null */
+function choiceFor(lang) {
+  const choices = state.deps?.storage.get(VOICE_STORAGE_KEYS.choice, null);
+  const voice = choices && typeof choices === 'object' ? choices[lang] : null;
+  return typeof voice === 'string' ? voice : null;
+}
+
+/** Voix de l'index pour la langue du jeu, si la voix enregistrée y est disponible */
 function currentEntry() {
   const { deps } = state;
   if (!deps || !state.index) return null;
-  return recordedVoiceEntry(state.index, deps.lang(), browserState(deps));
+  const lang = deps.lang();
+  return recordedVoiceEntry(state.index, lang, browserState(deps), choiceFor(lang));
+}
+
+/**
+ * Voix que le joueur peut choisir pour la langue du jeu, dans l'ordre de l'index
+ * @returns {{voice: string, provider?: string}[]}
+ */
+export function getRecordedVoiceChoices() {
+  const { deps } = state;
+  if (!deps || !state.index) return [];
+  return availableVoices(state.index, deps.lang(), browserState(deps)).map(
+    ({ voice, provider }) => ({ voice, provider })
+  );
+}
+
+/**
+ * Voix que le joueur entendra pour la langue du jeu, ou null
+ * @returns {{voice: string, provider?: string}|null}
+ */
+export function getRecordedVoiceChoice() {
+  const entry = currentEntry();
+  return entry ? { voice: entry.voice, provider: entry.provider } : null;
+}
+
+/**
+ * Choisit la voix de la langue du jeu
+ * @param {string} voice - Nom de la voix (entrée de l'index)
+ */
+export function setRecordedVoiceChoice(voice) {
+  const { deps } = state;
+  if (!deps) return;
+  const stored = deps.storage.get(VOICE_STORAGE_KEYS.choice, null);
+  const choices = stored && typeof stored === 'object' ? { ...stored } : {};
+  choices[deps.lang()] = voice;
+  deps.storage.set(VOICE_STORAGE_KEYS.choice, choices);
+  refreshVoiceEngine();
 }
 
 /** Choix du joueur pour la parole : true, false, ou null s'il n'en a fait aucun */
@@ -471,7 +524,7 @@ function engineFor(engineId, lang, entry) {
       entry,
       audio: state.audio,
       synthesis: getSynthesisEngine(),
-      onFallback: cause => reportFallback(cause, lang),
+      onFallback: cause => reportFallback(cause, lang, entry.voice),
     });
     state.engines.set(engineId, engine);
     preloadCommonPhrases(engine);
@@ -611,10 +664,50 @@ export function resetRecordedVoiceForTests() {
   reportedFallbacks.clear();
 }
 
+/** Nom d'une voix dans le menu : son nom dans l'index, avec une majuscule, et son service */
+export function voiceLabel({ voice, provider }) {
+  const name = voice.charAt(0).toUpperCase() + voice.slice(1);
+  return provider ? `${name} (${PROVIDER_LABELS[provider]})` : name;
+}
+
+/**
+ * Mention sous la case : le service de la voix entendue, ou la mention de la langue si
+ * l'index ne le dit pas. La clé reste sur l'élément : un changement de langue la retraduit.
+ */
+function syncHint(hint, entry) {
+  if (!hint) return;
+  const key = entry?.provider ? `recorded_voice_hint_${entry.provider}` : 'recorded_voice_hint';
+  if (hint.dataset.translate === key) return;
+  hint.dataset.translate = key;
+  const text = state.deps?.translations()?.[key];
+  if (typeof text === 'string') hint.textContent = text;
+}
+
+/** Menu « Voix » : les voix de la langue, visible dès qu'il y en a deux */
+function syncChoice(row, select, toggle) {
+  if (!row || !select) return;
+  const voices = getRecordedVoiceChoices();
+  row.hidden = voices.length < 2;
+  if (row.hidden) return;
+  const current = getRecordedVoiceChoice()?.voice;
+  select.replaceChildren(
+    ...voices.map(voice => {
+      const option = select.ownerDocument.createElement('option');
+      option.value = voice.voice;
+      option.textContent = voiceLabel(voice);
+      option.selected = voice.voice === current;
+      return option;
+    })
+  );
+  // Case décochée : la voix de l'appareil lit, le choix ne compte pas
+  select.disabled = !toggle.checked;
+}
+
 /**
  * Case « Voix enregistrée » (Accessibilité & Contrôles) : visible là où la voix
  * enregistrée est disponible, cochée tant que le joueur ne l'a pas décochée. Décochée,
- * la parole continue avec la voix de l'appareil.
+ * la parole continue avec la voix de l'appareil. Menu « Voix » dessous, là où la langue
+ * en propose plusieurs ; la mention nomme le service de la voix choisie.
  * @param {Document} [doc]
  */
 export function attachRecordedVoiceSetting(doc = globalThis.document) {
@@ -622,11 +715,17 @@ export function attachRecordedVoiceSetting(doc = globalThis.document) {
   const toggle = doc?.getElementById('recorded-voice-toggle');
   if (!option || !toggle || toggle.dataset.recordedVoiceBound) return;
   toggle.dataset.recordedVoiceBound = 'true';
+  const hint = doc.getElementById('recorded-voice-hint');
+  const row = doc.getElementById('recorded-voice-choice-row');
+  const select = doc.getElementById('recorded-voice-choice');
   const sync = () => {
     option.hidden = !isRecordedVoiceAvailable();
     toggle.checked = getRecordedVoicePreference();
+    syncHint(hint, currentEntry());
+    syncChoice(row, select, toggle);
   };
   toggle.addEventListener('change', () => setRecordedVoicePreference(toggle.checked));
+  select?.addEventListener('change', () => setRecordedVoiceChoice(select.value));
   (state.deps?.eventBus ?? eventBus).on('voice:changed', sync);
   sync();
 }

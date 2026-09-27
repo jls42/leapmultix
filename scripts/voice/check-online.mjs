@@ -6,6 +6,9 @@
 // Usage :
 //   node scripts/voice/check-online.mjs --lang fr [--base https://leapmultix.jls42.org/voice/]
 //     [--out <dépôt des voix>] [--sample <n>] [--concurrency <n>] [--allow-other-version]
+//     [--version <version d'une autre voix>]
+// --version vérifie une autre voix de la langue (alternatives.json) : l'index doit alors
+// l'annoncer parmi les autres voix, ou pas du tout.
 // Code de sortie 1 : un clip en échec ou non vérifié, un manifeste vide, un index
 // illisible, ou un index qui annonce une autre version (--allow-other-version l'accepte :
 // clips d'une nouvelle version envoyés, index pas encore publié). Un index absent (403,
@@ -25,7 +28,7 @@ import {
   wholeNumber,
 } from './cli-options.mjs';
 import { readManifest, storePaths } from './clip-store.mjs';
-import { DEFAULT_OUT, loadVoice } from './generate.mjs';
+import { DEFAULT_OUT, loadVoiceVersion } from './generate.mjs';
 
 export const DEFAULT_BASE = 'https://leapmultix.jls42.org/voice/';
 
@@ -154,8 +157,18 @@ export async function checkOnline({
     checked,
     failures,
     indexError: online.error ?? null,
-    index: listed ? { ...listed, matchesVersion: listed.version === voice.version } : null,
+    index: listed
+      ? { ...listed, matchesVersion: announcedVersions(listed).includes(voice.version) }
+      : null,
   };
+}
+
+/**
+ * Versions qu'annonce l'entrée d'une langue : sa voix par défaut et ses autres voix. La
+ * version vérifiée doit être l'une d'elles.
+ */
+function announcedVersions(entry) {
+  return [entry.version, ...(entry.alternatives ?? []).map(voice => voice.version)];
 }
 
 /**
@@ -184,6 +197,7 @@ const CLI_OPTIONS = {
   '--sample': integerOption('sample', 1),
   '--concurrency': integerOption('concurrency', 1),
   '--allow-other-version': flagOption('allowOtherVersion'),
+  '--version': valueOption('version'),
 };
 
 /**
@@ -210,7 +224,7 @@ async function main(argv) {
   const args = parseCheckOnlineArgs(argv);
   const report = await checkOnline({
     lang: args.lang,
-    voice: loadVoice(args.lang),
+    voice: loadVoiceVersion(args.lang, args.version),
     outDir: args.out,
     base: args.base,
     sample: args.sample,

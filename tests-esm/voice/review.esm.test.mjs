@@ -14,7 +14,7 @@ import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { voiceKey } from '../../js/core/spoken-text.js';
-import { loadVoice } from '../../scripts/voice/generate.mjs';
+import { loadVoice, loadVoiceVersion } from '../../scripts/voice/generate.mjs';
 import { newManifest, sha256, storePaths, writeManifest } from '../../scripts/voice/clip-store.mjs';
 
 const SCRIPT = path.resolve('scripts/voice/review.mjs');
@@ -46,9 +46,9 @@ let outDir;
 let paths;
 let fake;
 
-async function addClip(text) {
+async function addClip(text, clipDir = paths.clipDir) {
   const data = `mp3 ${text}`;
-  await fsp.writeFile(path.join(paths.clipDir, `${voiceKey(text)}.mp3`), data);
+  await fsp.writeFile(path.join(clipDir, `${voiceKey(text)}.mp3`), data);
   return [
     voiceKey(text),
     { text, said: text, duration: 1.2, bytes: data.length, sha256: sha256(data) },
@@ -152,6 +152,41 @@ describe('voice:review', () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('Whisper : 2 transcrits, 0 à réécouter');
     expect(fs.existsSync(path.join(work, 'args.json'))).toBe(false);
+  });
+
+  test('--version : une autre voix de la langue, avec ses propres fichiers de travail', async () => {
+    const jane = loadVoiceVersion('en', 'jane-v1-1');
+    const janePaths = storePaths(outDir, 'en', jane.version);
+    await fsp.mkdir(janePaths.clipDir, { recursive: true });
+    const manifest = newManifest('en', jane);
+    manifest.clips = Object.fromEntries([
+      await addClip(RIGHT, janePaths.clipDir),
+      await addClip(WRONG, janePaths.clipDir),
+    ]);
+    await writeManifest(janePaths, manifest);
+    // Les transcriptions de la voix par défaut ne sont ni lues ni complétées
+    const defaultTranscripts = path.join(work, 'transcripts-en.jsonl');
+    fs.writeFileSync(defaultTranscripts, '');
+    const result = run(['--python', fake, '--allow-missing', '--version', jane.version]);
+    expect(result.stderr).toBe('');
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('Whisper : 2 transcrits, 1 à réécouter');
+    const args = JSON.parse(fs.readFileSync(path.join(work, 'args.json'), 'utf8'));
+    expect(args.slice(1)).toEqual([
+      '--manifest',
+      janePaths.manifestFile,
+      '--clips',
+      janePaths.clipDir,
+      '--lang',
+      'en',
+      '--out',
+      path.join(work, `transcripts-en-${jane.version}.jsonl`),
+    ]);
+    const flagged = fs.readFileSync(path.join(work, `a-reecouter-en-${jane.version}.txt`), 'utf8');
+    expect(flagged.trim()).toBe(voiceKey(WRONG));
+    expect(fs.readFileSync(defaultTranscripts, 'utf8')).toBe('');
+    expect(fs.existsSync(path.join(work, 'a-reecouter-en.txt'))).toBe(false);
+    expect(fs.existsSync(pageFile(`en-${jane.version}.html`))).toBe(true);
   });
 
   test('--compare : page avant/après des clips de la liste', () => {

@@ -27,3 +27,6 @@ arcade.controls.*
 level_*_name
 # Challenge feedback texts
 challenge_feedback_*
+
+# Mention de la voix enregistrée, selon le service de la voix choisie (js/voice-clips.js)
+recorded_voice_hint_*
