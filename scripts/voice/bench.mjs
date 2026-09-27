@@ -621,9 +621,7 @@ export function voiceResults(bench, phrases, { paths, lang, transcripts }) {
  */
 export async function writeBenchPage({ setup, phrases, results, paths, corpus }) {
   const page = buildBenchPage({ setup, phrases, voices: results, corpus });
-  // Codacy (xss/no-mixed-html) prend l'écriture de la page sur disque pour une insertion de
-  // HTML. Cette règle n'existe pas dans l'ESLint du dépôt : la levée ne peut pas la nommer.
-  // eslint-disable-next-line -- page écrite sur disque ; ses textes sont échappés (escapeHtml)
+  // eslint-disable-next-line xss/no-mixed-html -- page écrite sur disque, jamais insérée dans un document ; ses textes sont échappés (escapeHtml)
   await writeFileAtomic(paths.page, page.html);
   const { files } = page;
   await writeFileAtomic(paths.filesList, JSON.stringify(files.map(file => ({ path: file }))));

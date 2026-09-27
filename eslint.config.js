@@ -4,6 +4,17 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import globals from 'globals';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
+/**
+ * Règles que seul Codacy applique : il passe ESLint 8 avec des greffons que l'ESLint du dépôt
+ * ne sait pas charger (eslint-plugin-xss). Déclarées ici, éteintes, pour qu'une levée
+ * justifiée qui les nomme reste valide : SonarCloud exige qu'une levée nomme sa règle.
+ */
+const codacyOnlyXss = {
+  rules: {
+    'no-mixed-html': { meta: { type: 'problem', schema: false }, create: () => ({}) },
+  },
+};
+
 export default [
   js.configs.recommended,
   {
@@ -82,6 +93,8 @@ export default [
       ],
     },
   },
+  // Règles de Codacy, connues ici pour leurs levées (voir codacyOnlyXss)
+  { plugins: { xss: codacyOnlyXss } },
   // Overrides pour les tests (Jest + Node globals)
   {
     files: ['tests/**/*.js', 'tests-esm/**/*.mjs'],
