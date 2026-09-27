@@ -40,6 +40,21 @@ place et ce qui vient ensuite.
       - la plus nette et la plus régulière ;
       - 0,126 s par caractère sur les questions, contre 0,079 pour Lucie.
     - Mistral a été choisi pour son coût : environ 3,40 $ pour tout l'anglais.
+  - **Français, autre voix au choix du joueur : « Marie - Curious »**, Mistral Voxtral TTS
+    (`voxtral-mini-tts-2603`). Lucie reste la voix par défaut.
+    - Voix prête `e0580ce5-e63c-4cbe-88c8-a983b80c5f1f`, femme, français, avec un préavis de
+      retrait de 30.
+    - Banc du 27/09/2026 : 22 phrases du corpus (annonces, bravos, erreurs, « une fois 7 »,
+      11, 108, énoncés), Marie - Neutral et Marie - Curious face à Lucie. 0 doute de Whisper
+      pour les deux ; 0,072 et 0,081 s par caractère, contre 0,071 pour Lucie. Le propriétaire
+      retient Curious.
+    - Génération du 27/09/2026 : 7 437 clips, aucun refus de la modération. Whisper en
+      signalait 133 à la première prise, presque tous pour une syllabe avalée par le modèle
+      (« rente » pour « trente », « roi » pour « trois ») : 164 nouvelles prises en 5 tours les
+      ont rendus justes, sauf « Combien font 48 moins 41 ? » et « 49 moins 41 », dits justes
+      seulement avec les nombres en lettres (texte dit propre à Marie, `saidOverrides`).
+    - Coût : 225 455 caractères pour la voix, et 1 690 pour le banc et les essais, soit
+      environ 3,63 $.
   - **Espagnol, essai écarté : Jane - Neutral**, le 26/09/2026. Mistral n'a aucune voix
     espagnole.
     - Banc des 30 voix prêtes : le propriétaire retient Jane, les autres ne convainquent pas.
@@ -232,7 +247,8 @@ CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sort
 **Voix** : `scripts/voice/voices.json` fixe, par langue, le fournisseur, la voix, le
 modèle, les réglages et l'encodage, sous une version (`lucie-v3-2` en français,
 `sulafat-v1-1` en anglais et en espagnol). `scripts/voice/alternatives.json` fait de même
-pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais).
+pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais ; `marie-v1-1`, Marie, en
+français).
 
 - Changer un réglage impose une nouvelle version : le générateur refuse de mélanger deux
   réglages sous une même version.
@@ -292,7 +308,9 @@ pour les autres voix de chaque langue (`jane-v1-1`, Jane, en anglais).
      « veintiún niños ») ; la phrase de `speak()` reste la clé du clip. Une phrase mal dite
      essai après essai reçoit un texte imposé (`SAID_OVERRIDES`) : « 108 divisé par 12 égale
      9 » se dit « Cent huit divisé par douze égale neuf » (trois essais en chiffres, trois
-     débuts mal dits). En anglais, le texte dit est la phrase elle-même.
+     débuts mal dits). En anglais, le texte dit est la phrase elle-même. Ce texte imposé vaut
+     pour toutes les voix de la langue ; une voix peut en avoir un pour elle seule
+     (`saidOverrides` dans son entrée), sans toucher aux clips des autres voix.
    - **Traitement** (`audio-process.mjs`) : silences de début et de fin coupés, −20 LUFS,
      pic −1 dBFS, 0,15 s de silence gardé avant la phrase, MP3 mono 64 kb/s ; un clip muet est
      refusé. Un clic isolé par un long silence part avec lui. Changer l'encodage demande une

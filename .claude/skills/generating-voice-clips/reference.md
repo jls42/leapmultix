@@ -32,7 +32,7 @@ Les erreurs sont des `ProviderError` (`providers/common.mjs`), classées par kin
 
 Le classement est propre à chaque fournisseur :
 
-|             | ElevenLabs (fr)                                      | Google (en, es)                                                                                | Mistral (Jane, autre voix de l'anglais)                                    |
+|             | ElevenLabs (fr)                                      | Google (en, es)                                                                                | Mistral (Jane en anglais, Marie en français)                               |
 | ----------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | Clé         | `ELEVENLABS_API_KEY`, en-tête `xi-api-key`           | `GOOGLE_TTS_API_KEY` (classique, `AIza…`), en-tête `x-goog-api-key`                            | `MISTRAL_API_KEY`, en-tête `Authorization: Bearer`                         |
 | Coût        | en-tête `character-cost` (≈ 0,53 crédit/caractère)   | inconnu de l'API ; 30 $ le million de caractères, le premier million du mois offert            | inconnu de l'API ; 16 $ le million de caractères                           |
@@ -151,6 +151,12 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
 - **« n'existe plus ou n'est pas accessible »** (Mistral) : la voix prête a été retirée
   (préavis `retention_notice`) ou l'identifiant est faux ; lister les voix par
   `GET /v1/audio/voices`. Les clips déjà générés restent.
+- **Une voix avale un mot ou une syllabe** (« rente » pour « trente », « Combien font 41 ? »
+  pour « Combien font 49 moins 41 ? ») : Whisper sur le brut (`raw/<l>/s-<réglages>/`) dit si
+  le défaut vient du modèle ou du traitement. Du modèle : une nouvelle prise suffit le plus
+  souvent (`--redo`) ; s'il résiste, un texte dit propre à la voix (`saidOverrides`).
+- **« Texte dit propre à la voix pour une phrase absente du corpus »** : clé de
+  `saidOverrides` mal recopiée ; elle doit être la phrase exacte de `speak()`.
 - **« Les réglages de la voix … ont changé »** : `voices.json` a changé sous une version
   existante ; remettre les réglages, ou créer une nouvelle version (nouvelle génération).
 - **Clip signalé par Whisper** : Whisper n'entend pas « un » / « une » et se trompe parfois
@@ -175,7 +181,10 @@ retraité sans nouvel appel ; un clip de plus de 30 s (hallucination du modèle)
      - Mistral : `GET /v1/audio/voices`. Au 26/09/2026, les voix prêtes étaient Jane (femme)
        et Oliver en anglais britannique, Paul en anglais américain, et Marie (femme) en
        français, **aucune en espagnol**. Le modèle parle pourtant 9 langues : une voix d'une
-       autre langue garde son accent, ou dit les nombres dans sa langue.
+       autre langue garde son accent, ou dit les nombres dans sa langue. Marie existe en six
+       variantes (Neutral, Curious, Happy, Excited, Sad, Angry) : Curious a été retenue le
+       27/09/2026 après un banc de 22 phrases face à Neutral (0 doute de Whisper pour les
+       deux).
 2. **Ajouter l'entrée de la langue** dans `scripts/voice/voices.json` : `provider`, `voice`
    (nom de l'index : `^[a-z0-9][a-z0-9-]{0,31}$`), `version`, `voiceId`, `model`,
    `languageCode`, `sourceFormat`, `settings`, `encoding`.

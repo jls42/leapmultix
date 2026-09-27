@@ -14,6 +14,8 @@ import {
   WORDS_AFTER_NUMBERS,
   hasAgreement,
   saidText,
+  unknownOwnSaidTexts,
+  voiceSaidText,
   wordsAfterNumbers,
 } from '../../scripts/voice/said-text.mjs';
 import { buildCorpus } from '../../scripts/voice/corpus.mjs';
@@ -124,6 +126,36 @@ describe('Texte dit : textes imposés', () => {
     );
     expect(saidText('96 divisé par 12 égale 8', 'fr')).toBe('96 divisé par 12 égale 8');
     expect(saidText('108 divisé par 12 égale 9', 'en')).toBe('108 divisé par 12 égale 9');
+  });
+
+  test('texte dit propre à une voix : lui pour sa phrase, celui de la langue pour les autres', () => {
+    const marie = {
+      saidOverrides: {
+        'Combien font 49 moins 41 ?': 'Combien font quarante-neuf moins quarante et un ?',
+      },
+    };
+    expect(voiceSaidText(marie, 'Combien font 49 moins 41 ?', 'fr')).toBe(
+      'Combien font quarante-neuf moins quarante et un ?'
+    );
+    expect(voiceSaidText(marie, 'Combien font 1 fois 7 ?', 'fr')).toBe('Combien font une fois 7 ?');
+    // Sans texte propre (ou vide, ou hérité d'Object), celui de la langue
+    expect(voiceSaidText({}, 'Combien font 1 fois 7 ?', 'fr')).toBe('Combien font une fois 7 ?');
+    expect(voiceSaidText(null, '108 divisé par 12 égale 9', 'fr')).toBe(
+      'Cent huit divisé par douze égale neuf'
+    );
+    expect(voiceSaidText({ saidOverrides: { 'Mode Quiz': ' ' } }, 'Mode Quiz', 'fr')).toBe(
+      'Mode Quiz'
+    );
+    expect(voiceSaidText({ saidOverrides: {} }, 'constructor', 'fr')).toBe('constructor');
+  });
+
+  test('texte dit propre pour une phrase absente du corpus : relevé', () => {
+    const phrases = [{ text: 'Combien font 49 moins 41 ?' }];
+    const voice = {
+      saidOverrides: { 'Combien font 49 moins 41 ?': 'a', 'Combien font 99 moins 1 ?': 'b' },
+    };
+    expect(unknownOwnSaidTexts(voice, phrases)).toEqual(['Combien font 99 moins 1 ?']);
+    expect(unknownOwnSaidTexts({}, phrases)).toEqual([]);
   });
 
   test('un texte qui ressemble à une propriété d’objet n’est jamais remplacé', () => {

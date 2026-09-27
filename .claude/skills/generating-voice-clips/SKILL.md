@@ -1,6 +1,6 @@
 ---
 name: generating-voice-clips
-description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix, Lucie en français (ElevenLabs) et Sulafat en anglais et en espagnol (Google Cloud Text-to-Speech, Chirp 3 HD ; Jane de Mistral Voxtral TTS avant elle en anglais), rangés dans le dépôt privé leapmultix-voices et servis par CloudFront sur /voice/ depuis un bucket S3. À utiliser pour estimer le coût, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), contrôler les clips en une commande (npm run voice:review, Whisper local, page d'écoute), refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue, une voix ou un fournisseur, proposer une autre voix au choix du joueur (menu « Voix », alternatives.json, --version), ou préparer un essai local (?voix=local). (project)
+description: Génère, contrôle et publie les clips de la voix enregistrée de LeapMultix, Lucie en français (ElevenLabs) et Sulafat en anglais et en espagnol (Google Cloud Text-to-Speech, Chirp 3 HD), plus Jane en anglais et Marie en français au choix du joueur (Mistral Voxtral TTS), rangés dans le dépôt privé leapmultix-voices et servis par CloudFront sur /voice/ depuis un bucket S3. À utiliser pour estimer le coût, générer ou compléter les clips d'une langue, reprendre une génération interrompue ou à court de crédits, régénérer après un changement de phrase parlée (verrou du corpus en échec), contrôler les clips en une commande (npm run voice:review, Whisper local, page d'écoute), refaire ceux mal prononcés avec comparaison avant/après, les publier, ouvrir la voix aux testeurs ou à tous, couper une langue (coupe-circuit), ajouter une langue, une voix ou un fournisseur, proposer une autre voix au choix du joueur (menu « Voix », alternatives.json, --version), ou préparer un essai local (?voix=local). (project)
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -22,7 +22,8 @@ racine du dépôt du jeu. Détails, codes de sortie et dépannage : [reference.m
 
 Mistral (Voxtral TTS, `MISTRAL_API_KEY`, 16 $ le million de caractères) reste branché : Jane
 (`jane-v1-1`), la voix anglaise jusqu'au passage à Sulafat, est une **autre voix** de
-l'anglais, au choix du joueur.
+l'anglais, au choix du joueur ; Marie (`marie-v1-1`, « Marie - Curious ») est l'autre voix du
+français.
 
 **Autres voix** : `scripts/voice/alternatives.json` déclare, par langue, les voix proposées en
 plus de la voix par défaut (mêmes champs que `voices.json`). Le jeu les montre dans le menu
@@ -155,9 +156,17 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
      valide en une page les versions finales. Ses coches restent d'une ouverture à l'autre,
      sauf sur un clip refait depuis.
    - **Boucler** jusqu'à ce que le propriétaire valide. Un clip encore mal dit après deux ou
-     trois essais (un nombre en tête de phrase, par exemple) reçoit un texte dit imposé dans
-     `SAID_OVERRIDES` ; relancer ensuite `generate.mjs` sans `--redo` : le texte dit a changé,
-     donc le clip est refait seul.
+     trois essais (un nombre en tête de phrase, par exemple) reçoit un texte dit imposé ;
+     relancer ensuite `generate.mjs` sans `--redo` : le texte dit a changé, donc le clip est
+     refait seul. Deux endroits :
+     - `SAID_OVERRIDES` (`said-text.mjs`) change le texte dit de **toute la langue**, donc de
+       chacune de ses voix : à réserver à une langue dont aucun clip de la phrase n'est publié,
+       puisqu'un clip publié ne se réécrit pas ;
+     - `saidOverrides` dans l'entrée de la voix (`voices.json` ou `alternatives.json`) ne
+       change que cette voix : `{ "<phrase de speak()>": "<texte dit>" }`. Il reste hors des
+       empreintes des réglages, et une phrase absente du corpus est refusée. Exemple : Marie
+       disait « Combien font 41 ? » pour « Combien font 49 moins 41 ? » ; avec les nombres en
+       lettres, elle le dit juste.
 
 6. **Sauvegarde** : proposer au propriétaire le commit du dépôt privé (`clips/`,
    `manifests/`, registre compris), puis le pousser. `raw/` et `ecoute/` restent locaux.
