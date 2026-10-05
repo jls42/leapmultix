@@ -122,43 +122,11 @@ function wireDataAttributes(root = document) {
   });
 }
 
-function wireGeneratedImageFallbacks(root = document) {
-  const images = [...root.querySelectorAll('img[data-fallback-src]')];
-  images.forEach(img => {
-    if (img._fallbackWired) return;
-    img._fallbackWired = true;
-    img.removeAttribute('srcset');
-    img.src = img.dataset.fallbackSrc;
-    img.addEventListener(
-      'error',
-      () => {
-        img.removeAttribute('srcset');
-        img.src = img.dataset.fallbackSrc;
-      },
-      { once: true }
-    );
-  });
-  const probeUrl = images.map(img => img.dataset.webpSrcset?.trim().split(/\s+/)[0]).find(Boolean);
-  if (!probeUrl) return;
-  const probe = new Image();
-  probe.onload = () => {
-    images.forEach(img => {
-      const srcset = img.dataset.webpSrcset;
-      if (srcset) img.setAttribute('srcset', srcset);
-    });
-  };
-  probe.onerror = () => {
-    /* PNG already shown */
-  };
-  probe.src = probeUrl;
-}
-
 // Run after DOM ready to ensure elements exist and globals are defined
 document.addEventListener('DOMContentLoaded', () => {
   try {
     // Preferred: wire data-attributes
     wireDataAttributes(document);
-    wireGeneratedImageFallbacks(document);
     // Back-compat: rewire legacy inline handlers, and convert them to data-*
     rewireSetGameModeButtons(document);
     // Observe future DOM (optional) if content is dynamically injected
@@ -191,10 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
           () => TopBar.updateTableSettingsButtonVisibility?.(),
         ],
       ];
-      await steps.reduce(
-        (chain, [label, step]) => chain.then(() => runSafely(label, step)),
-        Promise.resolve()
-      );
+      for (const [label, step] of steps) await runSafely(label, step);
     };
     // Un seul abonnement : i18n.js émet aussi l'événement sur window (écouté par
     // i18n-store.js) ; s'y abonner en plus redessinait chaque écran deux fois.

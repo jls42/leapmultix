@@ -167,7 +167,7 @@
 
 /* ========== SLIDE 1 : ACCUEIL ========== */
 
-/* Plus large que les autres écrans : les cinq modes tiennent sur une ligne */
+/* Plus large que les autres écrans : trois grandes tuiles de mode par rangée */
 #slide1 .content-card {
   width: 100%;
   max-width: 1080px;
@@ -232,7 +232,9 @@
   font-size: var(--text-xl);
 }
 
-/* Grille régulière : mobile 2 colonnes, tablette 3, bureau 6. */
+/* Grille régulière, sans tuile orpheline : les six modes font 3 rangées de 2 sur
+   téléphone, puis 2 rangées de 3 dès 600 px. Toutes les rangées ont la hauteur
+   de la plus haute tuile. */
 .mode-buttons {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -282,7 +284,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  grid-column: span 2;
   min-width: 0;
   margin: 0;
   padding: var(--space-4) var(--space-3);
@@ -321,6 +322,26 @@
   box-shadow: none;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Mode indisponible pour l'opération choisie : l'illustration s'efface, la raison
+   s'affiche à la place de la description (le bouton désactivé ne prend pas le focus,
+   une infobulle ne serait vue ni au toucher ni au clavier) */
+.mode-btn.mode-unavailable .mode-icon {
+  opacity: 0.5;
+}
+
+.mode-btn.mode-unavailable .mode-desc {
+  display: none;
+}
+
+.mode-unavailable-note {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--color-ink);
+  text-wrap: balance;
 }
 
 .mode-icon {
@@ -370,7 +391,6 @@
 
 @media (min-width: 1024px) {
   .mode-buttons {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: var(--space-4);
   }
 

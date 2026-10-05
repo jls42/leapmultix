@@ -1,6 +1,6 @@
 /**
  * Gère la disponibilité des modes de jeu selon l'opération sélectionnée
- * Tous les modes supportent les 4 opérations (×, +, −, ÷)
+ * Tous les modes supportent les 4 opérations (×, +, −, ÷), sauf Chrono (multiplication)
  * R1: Quiz/Challenge, R2: Discovery/Adventure, R3: Division, R4: Arcade
  */
 
@@ -46,8 +46,28 @@ export function getUnavailableMessage(mode) {
 }
 
 /**
+ * Raison écrite dans une tuile indisponible, à la place de sa description : le bouton
+ * désactivé ne prend pas le focus, une infobulle ne serait vue ni au toucher ni au clavier
+ * @param {HTMLElement} btn - Tuile du mode
+ * @param {string|null} message - Raison, ou null pour retirer la note
+ */
+function setUnavailableNote(btn, message) {
+  let note = btn.querySelector('.mode-unavailable-note');
+  if (!message) {
+    note?.remove();
+    return;
+  }
+  if (!note) {
+    note = document.createElement('span');
+    note.className = 'mode-unavailable-note';
+    btn.appendChild(note);
+  }
+  note.textContent = message;
+}
+
+/**
  * Met à jour l'état visuel des boutons de mode selon l'opération
- * Désactive et ajoute un tooltip pour les modes indisponibles
+ * Désactive les modes indisponibles et y écrit la raison
  */
 export function updateModeButtonsAvailability() {
   const operator = UserState.getCurrentUserData().preferredOperator || '×';
@@ -65,14 +85,16 @@ export function updateModeButtonsAvailability() {
       btn.classList.remove('mode-unavailable');
       btn.removeAttribute('title');
       btn.style.cursor = 'pointer';
-      btn.style.opacity = '1';
+      setUnavailableNote(btn, null);
     } else {
       // Mode indisponible : désactiver visuellement
+      // Seule l'illustration s'efface (CSS) : la raison reste lisible
+      const message = getUnavailableMessage(mode);
       btn.disabled = true;
       btn.classList.add('mode-unavailable');
-      btn.setAttribute('title', getUnavailableMessage(mode));
+      btn.setAttribute('title', message);
       btn.style.cursor = 'not-allowed';
-      btn.style.opacity = '0.5';
+      setUnavailableNote(btn, message);
     }
   });
 
