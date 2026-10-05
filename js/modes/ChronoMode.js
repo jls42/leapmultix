@@ -212,7 +212,7 @@ export class ChronoMode extends GameMode {
     if (!root?.confirm?.(chronoText('confirm_abandon_chrono', 'Quitter Chrono ?'))) return;
     this._abandoned = true;
     this.stop();
-    goToSlide(1);
+    void goToSlide(1);
   }
 
   buildSetupPanel() {
@@ -412,7 +412,7 @@ export class ChronoMode extends GameMode {
     const { userData, store } = loadChronoStore();
     if (!addManualBasketFact(store, a, b)) return;
     persistChronoStore(userData);
-    this.rebuildSetup();
+    void this.rebuildSetup();
   }
 
   bindSetupPanel() {
@@ -424,7 +424,7 @@ export class ChronoMode extends GameMode {
         const { userData, store } = loadChronoStore();
         removeFromBasket(store, { a: Number(btn.dataset.removeA), b: Number(btn.dataset.removeB) });
         persistChronoStore(userData);
-        this.rebuildSetup();
+        void this.rebuildSetup();
       });
     });
     document.getElementById('chrono-basket-add')?.addEventListener('click', () => {
@@ -442,18 +442,22 @@ export class ChronoMode extends GameMode {
       const { userData, store } = loadChronoStore();
       emptyBasket(store);
       persistChronoStore(userData);
-      this.rebuildSetup();
+      void this.rebuildSetup();
     });
     document.getElementById('chrono-start')?.addEventListener(
       'click',
-      singleActivation(() => this.beginSession(false))
+      singleActivation(() => {
+        void this.beginSession(false);
+      })
     );
     document.getElementById('chrono-start-revision')?.addEventListener(
       'click',
-      singleActivation(() => this.beginSession(true))
+      singleActivation(() => {
+        void this.beginSession(true);
+      })
     );
     document.getElementById('chrono-open-stats')?.addEventListener('click', () => {
-      this.openStatsPick();
+      void this.openStatsPick();
     });
   }
 
@@ -564,10 +568,10 @@ export class ChronoMode extends GameMode {
 
   bindStatsPickPanel() {
     this.gameScreen?.querySelectorAll('[data-bucket-key]').forEach(btn => {
-      btn.addEventListener('click', () => this.openStatsDetail(btn.dataset.bucketKey));
+      btn.addEventListener('click', () => void this.openStatsDetail(btn.dataset.bucketKey));
     });
     document.getElementById('chrono-stats-back-setup')?.addEventListener('click', () => {
-      this.rebuildSetup();
+      void this.rebuildSetup();
     });
   }
 
@@ -615,7 +619,7 @@ export class ChronoMode extends GameMode {
 
   bindStatsDetailPanel() {
     document.getElementById('chrono-stats-back-pick')?.addEventListener('click', () => {
-      this.openStatsPick();
+      void this.openStatsPick();
     });
   }
 
@@ -862,8 +866,7 @@ export class ChronoMode extends GameMode {
     this.typedValue += key;
     this.refreshTyped();
     const kind = classifyTypedAnswer(this.typedValue, this.state.currentQuestion.answer);
-    if (kind === 'correct') this.handleAnswer(Number(this.typedValue));
-    else if (kind === 'wrong') this.handleAnswer(Number(this.typedValue));
+    if (kind === 'correct' || kind === 'wrong') this.handleAnswer(Number(this.typedValue));
   }
 
   refreshTyped() {
@@ -1047,7 +1050,7 @@ export class ChronoMode extends GameMode {
     buttons.push({
       label: getTranslation('back_to_home'),
       action: 'back-to-home',
-      onActivate: () => goToSlide(1),
+      onActivate: () => void goToSlide(1),
     });
     return createResultsActions(buttons);
   }
@@ -1073,7 +1076,7 @@ export class ChronoMode extends GameMode {
         {
           label: getTranslation('back_to_home'),
           action: 'back-to-home',
-          onActivate: () => goToSlide(1),
+          onActivate: () => void goToSlide(1),
         },
       ])
     );
@@ -1265,7 +1268,7 @@ let _chronoModeInstance = null;
 export function startChronoMode() {
   if (_chronoModeInstance) _chronoModeInstance.stop();
   _chronoModeInstance = new ChronoMode();
-  _chronoModeInstance.start();
+  void _chronoModeInstance.start();
 }
 
 export function stopChronoMode() {

@@ -245,7 +245,7 @@ export const UserManager = {
     const avatar = userData.avatar || 'fox';
     // Un monde illustré fixe par avatar (plus de rotation du fond)
     updateBackgroundByAvatar(avatar);
-    updateWelcomeMessageUI();
+    void updateWelcomeMessageUI();
     updateCoinDisplay();
 
     const heroMascotImg = document.getElementById('hero-mascot-img');
@@ -331,7 +331,7 @@ export const UserManager = {
     }
 
     this._cleanupDefaultScores();
-    goToSlide(1);
+    void goToSlide(1);
     this.emitUserChanged(userData);
 
     return userData;

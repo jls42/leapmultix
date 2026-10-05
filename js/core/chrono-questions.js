@@ -5,18 +5,18 @@
 
 import { randomFloat, shuffleInPlace } from './random.js';
 
-const FACTOR_HARDNESS = {
-  1: 1,
-  2: 3,
-  3: 8,
-  4: 9,
-  5: 4,
-  6: 16,
-  7: 18,
-  8: 16,
-  9: 12,
-  10: 1,
-};
+const FACTOR_HARDNESS = new Map([
+  [1, 1],
+  [2, 3],
+  [3, 8],
+  [4, 9],
+  [5, 4],
+  [6, 16],
+  [7, 18],
+  [8, 16],
+  [9, 12],
+  [10, 1],
+]);
 
 const ALL_TABLES_COUNT = 10;
 const EASY_TABLE_PENALTY = 0.06;
@@ -47,7 +47,7 @@ function uniqueTables(tables) {
 }
 
 function hardness(n) {
-  return FACTOR_HARDNESS[n] ?? 1;
+  return FACTOR_HARDNESS.get(Number(n)) ?? 1;
 }
 
 /**
@@ -158,13 +158,15 @@ export function refillRevisionQueue(queue, basket) {
 export function separateRevisionRepeats(round) {
   const items = [...round];
   for (let i = 1; i < items.length; i += 1) {
-    if (!sameFact(items[i], items[i - 1])) continue;
-    const swap = items.findIndex((item, index) => index > i && !sameFact(item, items[i]));
-    if (swap >= 0) {
-      const held = items[i];
-      items[i] = items[swap];
-      items[swap] = held;
-    }
+    const current = items.at(i);
+    const previous = items.at(i - 1);
+    if (!sameFact(current, previous)) continue;
+    const swap = items.findIndex((item, index) => index > i && !sameFact(item, current));
+    if (swap < 0) continue;
+    const held = items.at(i);
+    const other = items.at(swap);
+    items.splice(i, 1, other);
+    items.splice(swap, 1, held);
   }
   return items;
 }

@@ -9,7 +9,7 @@ export const CHRONO_GOAL = 10;
 
 export function tablesKey(tables) {
   const list = Array.isArray(tables) ? tables : [];
-  const unique = [...new Set(list.map(n => Number(n)).filter(n => n >= 1 && n <= 10))];
+  const unique = [...new Set(list.map(Number).filter(n => n >= 1 && n <= 10))];
   unique.sort((a, b) => a - b);
   return unique.join(',');
 }
@@ -18,8 +18,10 @@ export function factKey(a, b) {
   return `${Number(a)}×${Number(b)}`;
 }
 
+const FACT_KEY_PATTERN = /^(\d+)×(\d+)$/;
+
 export function parseFactKey(key) {
-  const match = String(key).match(/^(\d+)×(\d+)$/);
+  const match = FACT_KEY_PATTERN.exec(String(key));
   if (!match) return null;
   return { a: Number(match[1]), b: Number(match[2]) };
 }
@@ -38,7 +40,8 @@ export function parseBucketKey(key) {
   const sep = text.lastIndexOf('|');
   if (sep <= 0) return null;
   const modePart = text.slice(sep + 1);
-  const inputMode = modePart === 'keypad' ? 'keypad' : modePart === 'mcq' ? 'mcq' : null;
+  let inputMode = null;
+  if (modePart === 'keypad' || modePart === 'mcq') inputMode = modePart;
   if (!inputMode) return null;
   const tables = text
     .slice(0, sep)
@@ -117,10 +120,12 @@ function normalizeBasketItem(item) {
 }
 
 function ensureBucket(store, key) {
-  if (!Object.hasOwn(store.buckets, key)) {
-    store.buckets[key] = { sessions: [], factTimes: [] };
+  const buckets = store.buckets;
+  if (!Object.hasOwn(buckets, key)) {
+    Object.assign(buckets, { [key]: { sessions: [], factTimes: [] } });
   }
-  const bucket = store.buckets[key];
+  const entry = Object.entries(buckets).find(([name]) => name === key);
+  const bucket = entry ? entry[1] : { sessions: [], factTimes: [] };
   if (!Array.isArray(bucket.sessions)) bucket.sessions = [];
   if (!Array.isArray(bucket.factTimes)) bucket.factTimes = [];
   return bucket;

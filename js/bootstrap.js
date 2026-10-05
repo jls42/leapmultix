@@ -53,7 +53,7 @@ function rewireSetGameModeButtons(root = document) {
         'click',
         e => {
           e.preventDefault();
-          _setGameMode(mode);
+          void _setGameMode(mode);
         },
         { once: false }
       );
@@ -70,7 +70,7 @@ function rewireSetGameModeButtons(root = document) {
         'click',
         e => {
           e.preventDefault();
-          _goToSlide(slide);
+          void _goToSlide(slide);
         },
         { once: false }
       );
@@ -88,7 +88,7 @@ function wireDataAttributes(root = document) {
       const mode = el.dataset.mode;
       if (!mode) return;
       e.preventDefault();
-      _setGameMode(mode);
+      void _setGameMode(mode);
     });
     el._modeWired = true;
   });
@@ -100,7 +100,7 @@ function wireDataAttributes(root = document) {
       const slide = Number.parseInt(el.dataset.slide || '', 10);
       if (Number.isNaN(slide)) return;
       e.preventDefault();
-      _goToSlide(slide);
+      void _goToSlide(slide);
     });
     el._slideWired = true;
   });
@@ -116,7 +116,7 @@ function wireDataAttributes(root = document) {
       } catch (err) {
         console.warn('saveCustomization failed', err);
       }
-      _goToSlide(1);
+      void _goToSlide(1);
     });
     el._actionWired = true;
   });
@@ -138,14 +138,12 @@ function wireGeneratedImageFallbacks(root = document) {
       { once: true }
     );
   });
-  const probeUrl = images
-    .map(img => img.getAttribute('data-webp-srcset')?.trim().split(/\s+/)[0])
-    .find(Boolean);
+  const probeUrl = images.map(img => img.dataset.webpSrcset?.trim().split(/\s+/)[0]).find(Boolean);
   if (!probeUrl) return;
   const probe = new Image();
   probe.onload = () => {
     images.forEach(img => {
-      const srcset = img.getAttribute('data-webp-srcset');
+      const srcset = img.dataset.webpSrcset;
       if (srcset) img.setAttribute('srcset', srcset);
     });
   };
@@ -193,7 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
           () => TopBar.updateTableSettingsButtonVisibility?.(),
         ],
       ];
-      for (const [label, step] of steps) await runSafely(label, step);
+      await steps.reduce(
+        (chain, [label, step]) => chain.then(() => runSafely(label, step)),
+        Promise.resolve()
+      );
     };
     // Un seul abonnement : i18n.js émet aussi l'événement sur window (écouté par
     // i18n-store.js) ; s'y abonner en plus redessinait chaque écran deux fois.

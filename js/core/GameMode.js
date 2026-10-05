@@ -1165,7 +1165,7 @@ export class GameMode {
       done = true;
       next();
     };
-    whenSpeechEnds().then(go);
+    void whenSpeechEnds().then(go, go);
     this.addTimer(go, EXPLANATION_WAIT_MAX_MS);
   }
 
@@ -1280,7 +1280,7 @@ export class GameMode {
 
     // Retour au menu après une erreur
     setTimeout(() => {
-      goToSlide(1);
+      void goToSlide(1);
     }, 2000);
   }
 
@@ -1492,7 +1492,7 @@ export class GameMode {
    * Afficher les résultats (à surcharger)
    */
   showResults() {
-    goToSlide(5); // Slide de résultats par défaut
+    void goToSlide(5); // Slide de résultats par défaut
   }
 
   /**
