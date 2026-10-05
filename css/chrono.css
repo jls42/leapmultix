@@ -1,8 +1,9 @@
 /* Mode Chrono : sélection des tables, pavé, résultats */
 
-.chrono-setup .question,
-.chrono-setup .options,
-.chrono-setup .feedback {
+/* Écrans sans partie (départ, temps) : la question et les réponses, vides, sont masquées
+   par la règle commune (game.css) ; la zone de retour garde sa hauteur pendant la partie,
+   elle se retire ici. Rien n'est posé sur #game, commun à tous les modes. */
+.chrono-container:has(.chrono-setup-panel) > .feedback {
   display: none;
 }
 

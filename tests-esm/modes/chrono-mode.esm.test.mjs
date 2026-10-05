@@ -212,6 +212,21 @@ describe('Chrono : une partie', () => {
     expect(chronoStats().buckets).toEqual([]);
     expect(chronoStats().basket).toEqual([]);
   });
+
+  test('Chrono ne laisse rien sur #game, la zone de jeu commune à tous les modes', async () => {
+    // Une classe laissée sur #game cachait la question et les réponses du mode suivant
+    const game = document.getElementById('game');
+    const before = game.className;
+    userStore.chronoStats = { buckets: [], basket: [{ a: 7, b: 8, due: 1 }] };
+    await orchestrator.setGameMode('chrono');
+    await flush();
+    expect(game.className).toBe(before);
+    document.querySelector('#chrono-open-stats').click();
+    await flush();
+    expect(game.className).toBe(before);
+    await goToSlide(1);
+    expect(game.className).toBe(before);
+  });
 });
 
 describe('Chrono : résultats', () => {

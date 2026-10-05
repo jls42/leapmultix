@@ -203,7 +203,6 @@ export class ChronoMode extends GameMode {
 
   async initializeUI() {
     await super.initializeUI();
-    this.gameScreen?.classList.toggle('chrono-setup', this.phase !== 'playing');
     if (this.phase === 'setup') {
       this.bindSetupPanel();
       return;
