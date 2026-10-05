@@ -1,7 +1,8 @@
 /* eslint-env jest, node */
 /**
  * Mode Chrono, joué de bout en bout :
- * - une erreur affiche le calcul en entier, et son inverse ne suit pas ;
+ * - une erreur est marquée sans la réponse, l'écran de fin donne chaque calcul complet ;
+ *   rien ne reste sous la question suivante, et l'inverse ne suit pas ;
  * - le chrono s'arrête à la 10e bonne réponse, la partie s'enregistre une fois ;
  * - un abandon n'ajoute rien au classement ni à la liste ;
  * - l'écran de départ : la course et la liste ont chacune leur bouton, le focus clavier
@@ -158,18 +159,16 @@ describe('Chrono : une partie', () => {
     expect(speak.mock.calls.map(call => call[0])).toEqual([FR.chrono_mode]);
   });
 
-  test('une erreur affiche le calcul en entier, et son inverse ne suit pas', async () => {
+  test('une erreur est marquée sans la réponse, et la question suivante arrive sur un écran propre', async () => {
     const chrono = await startChrono();
     showQuestion(chrono, 8, 6);
     await answer(chrono, false, 0);
-    expect(feedbackText()).toBe('8 × 6 = 48');
+    expect(feedbackText()).toBe(FR.incorrect);
     await flush(800);
     const next = chrono.state.currentQuestion;
+    // L’inverse ne suit pas : 6 × 8 après 8 × 6, c’est le même calcul
     expect([`${next.a}×${next.b}`]).not.toContain('8×6');
     expect([`${next.a}×${next.b}`]).not.toContain('6×8');
-    // Encore affichée sous la nouvelle question, puis effacée
-    expect(feedbackText()).toBe('8 × 6 = 48');
-    await flush(2000);
     expect(feedbackText()).toBe('');
   });
 
@@ -409,6 +408,15 @@ describe('Chrono : résultats', () => {
     expect(instances.every(chrono => chrono.timerInterval === null)).toBe(true);
   });
 
+  test('l’écran de fin donne le résultat de chaque calcul, erreurs comprises', async () => {
+    await playGame({ error: true });
+    const rows = [...document.querySelectorAll('#results .chrono-fact')];
+    const equations = rows.map(row => row.querySelector('.chrono-fact-eq').textContent);
+    expect(rows[0].classList.contains('is-wrong')).toBe(true);
+    expect(equations[0]).toBe('7 × 8 = 56');
+    expect(equations.every(text => /^\d+ × \d+ = \d+$/.test(text))).toBe(true);
+  });
+
   test('un meilleur temps s’annonce comme record, puis le rang s’affiche', async () => {
     const first = await startChrono();
     for (let i = 0; i < 10; i += 1) await answer(first, true, 1500);
@@ -431,6 +439,16 @@ describe('Chrono : révision', () => {
   function seedBasket(basket) {
     userStore.chronoStats = { buckets: [], basket, lastInputMode: 'keypad' };
   }
+
+  test('après une erreur, l’inverse arrive sans correction affichée : rien à recopier', async () => {
+    seedBasket([{ a: 6, b: 7, due: 1 }]);
+    const chrono = await startChrono({ revision: true });
+    const first = { ...chrono.state.currentQuestion };
+    await answer(chrono, false);
+    const next = chrono.state.currentQuestion;
+    expect([next.a, next.b]).toEqual([first.b, first.a]);
+    expect(feedbackText()).toBe('');
+  });
 
   test('toujours 10 questions ; réussi, le calcul sort de la liste et rapporte 1 pièce', async () => {
     seedBasket([{ a: 7, b: 8, due: 1 }]);

@@ -69,7 +69,6 @@ import {
 
 const BASE_QUESTIONS = 10;
 const FEEDBACK_MS = 800;
-const ERROR_HOLD_MS = 2800;
 const BAD_SOUND_VOLUME = 0.35;
 const ALL_TABLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 // Case de réponse vide en « Je tape » : le « ? » de la question (« 8 × 6 = ? »)
@@ -185,9 +184,6 @@ export class ChronoMode extends GameMode {
     this.elapsedMs = 0;
     this.timerInterval = null;
     this._abandoned = false;
-    this._holdErrorFeedback = false;
-    this._errorHoldGen = 0;
-    this._heldErrorFact = null;
     this.lastSnapshot = null;
     this.resultsPane = 'session';
     this.statsFocus = null;
@@ -207,9 +203,6 @@ export class ChronoMode extends GameMode {
     this.revisionOutcome = null;
     this.sessionOutcome = null;
     this._abandoned = false;
-    this._holdErrorFeedback = false;
-    this._errorHoldGen = 0;
-    this._heldErrorFact = null;
   }
 
   async onStart() {
@@ -768,8 +761,7 @@ export class ChronoMode extends GameMode {
   }
 
   getQuestionOptions() {
-    // Ni un calcul déjà posé, ni son inverse : 6 × 8 ne suit pas 8 × 6, dont la correction
-    // est encore affichée
+    // Ni un calcul déjà posé, ni son inverse : 6 × 8 après 8 × 6, c’est le même calcul
     const avoid = this.sessionFacts.flatMap(fact => factKeys(fact.a, fact.b));
     const last = this.sessionFacts.at(-1);
     const recent = last ? factKeys(last.a, last.b) : [];
@@ -836,7 +828,6 @@ export class ChronoMode extends GameMode {
     super.displayQuestion();
     // La base n’efface que le texte : la classe d’erreur partirait avec la question
     this.clearFeedback();
-    if (this._holdErrorFeedback) this.paintFeedback(false, this._heldErrorFact);
   }
 
   clearFeedback() {
@@ -846,31 +837,20 @@ export class ChronoMode extends GameMode {
   }
 
   /**
-   * Retour d’une réponse. Après une erreur, il reste affiché sous la question suivante :
-   * il écrit donc le calcul en entier (« 8 × 6 = 48 »), jamais la seule réponse, qu’on
-   * prendrait pour celle de la nouvelle question.
+   * Retour d’une réponse, le temps de la question seulement : « Juste » ou « Presque ! »,
+   * sans le résultat. La correction attend l’écran de fin : affichée sous la question
+   * suivante, elle en donnait la réponse quand c’était l’inverse (6 × 8 après 8 × 6).
    * @param {boolean} isCorrect
-   * @param {{a: number, b: number, answer: number}} [fact] - Calcul raté
    */
-  paintFeedback(isCorrect, fact) {
+  paintFeedback(isCorrect) {
     if (!this.feedbackElement) return;
     this.feedbackElement.textContent = '';
     const mark = isCorrect ? createCheckIcon() : createCrossIcon();
     this.feedbackElement.appendChild(mark);
     const text = document.createElement('span');
-    text.textContent = isCorrect
-      ? getTranslation('chrono_feedback_correct')
-      : `${fact.a} × ${fact.b} = ${fact.answer}`;
+    text.textContent = getTranslation(isCorrect ? 'chrono_feedback_correct' : 'incorrect');
     this.feedbackElement.appendChild(text);
     this.feedbackElement.className = `feedback chrono-feedback ${isCorrect ? 'feedback-success' : 'feedback-error'}`;
-  }
-
-  releaseErrorHold(generation) {
-    if (generation !== this._errorHoldGen) return;
-    this._holdErrorFeedback = false;
-    this._heldErrorFact = null;
-    if (!this.feedbackElement?.classList.contains('feedback-error')) return;
-    this.clearFeedback();
   }
 
   onQuestionGenerated() {
@@ -1025,25 +1005,12 @@ export class ChronoMode extends GameMode {
       markAnswerOptions(this.optionsElement, correctAnswer, userAnswer);
     }
     this.optionsElement?.classList.add('is-answered');
+    this.paintFeedback(isCorrect);
     if (isCorrect) {
-      this._holdErrorFeedback = false;
-      this._heldErrorFact = null;
-      this.paintFeedback(true);
       playSound('good');
       return;
     }
-    const fact = {
-      a: question.a ?? question.table,
-      b: question.b ?? question.num,
-      answer: correctAnswer,
-    };
-    this.paintFeedback(false, fact);
     playSound('bad', { volume: BAD_SOUND_VOLUME });
-    this._holdErrorFeedback = true;
-    this._heldErrorFact = fact;
-    this._errorHoldGen += 1;
-    const generation = this._errorHoldGen;
-    this.addTimer(() => this.releaseErrorHold(generation), ERROR_HOLD_MS);
   }
 
   scheduleNextQuestion() {
@@ -1263,7 +1230,8 @@ export class ChronoMode extends GameMode {
       li.className = fact.correct ? 'chrono-fact is-correct' : 'chrono-fact is-wrong';
       const equation = document.createElement('span');
       equation.className = 'chrono-fact-eq';
-      equation.textContent = `${fact.a} × ${fact.b}`;
+      // La correction des erreurs : le calcul complet, ici plutôt qu’en jeu
+      equation.textContent = `${fact.a} × ${fact.b} = ${fact.a * fact.b}`;
       const time = document.createElement('span');
       time.className = 'chrono-fact-time';
       time.textContent = formatDuration(fact.ms, lang);

@@ -71,8 +71,8 @@ function pairKey(t, n) {
 }
 
 /**
- * Les deux sens d’un calcul (`8×6` et `6×8`) : après une erreur sur 8 × 6, sa correction
- * reste affichée sous la question suivante, qui ne doit donc pas être 6 × 8.
+ * Les deux sens d’un calcul (`8×6` et `6×8`) : c’est le même calcul, qu’une course ne pose
+ * pas deux fois.
  * @param {number} a
  * @param {number} b
  * @returns {string[]}
