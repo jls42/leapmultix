@@ -148,6 +148,7 @@ const CROSS_PATH = 'M7 7l10 10M17 7L7 17';
 const STAR_PATH = 'M12 2.8l2.8 5.9 6.4.8-4.7 4.5 1.2 6.4L12 17.3l-5.7 3.1 1.2-6.4-4.7-4.5 6.4-.8z';
 const LOCK_PATH =
   'M7 10.5V8a5 5 0 0 1 10 0v2.5M6 10.5h12a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8.5a1 1 0 0 1 1-1z';
+const TRASH_PATH = 'M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10.5 11v5.5M13.5 11v5.5';
 
 /** Coche de la bonne réponse. */
 export function createCheckIcon() {
@@ -171,6 +172,14 @@ export function createStarIcon(earned = true) {
 /** Cadenas des niveaux verrouillés. */
 export function createLockIcon() {
   return createIcon('level-lock', LOCK_PATH);
+}
+
+/**
+ * Poubelle d'un bouton « retirer » : dans un jeu de calcul, une croix se lirait comme le
+ * signe × de la multiplication.
+ */
+export function createTrashIcon() {
+  return createIcon('trash-icon', TRASH_PATH);
 }
 
 /**

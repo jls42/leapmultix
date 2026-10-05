@@ -299,10 +299,13 @@ export function startRevisionTally(basket) {
   return new Map((basket || []).map(entry => [factKey(entry.a, entry.b), entry.due]));
 }
 
-/** Révision : une réussite enlève 1 (jamais sous 0), une erreur ajoute 1 */
+/**
+ * Révision : une réussite enlève 1 (jamais sous 0), une erreur ajoute 1. La question peut
+ * être l’inverse du calcul de la liste (7 × 6 pour 6 × 7) : elle compte pour lui.
+ */
 export function tallyRevisionAnswer(tally, fact, isCorrect) {
-  const key = factKey(fact?.a, fact?.b);
-  if (!tally.has(key)) return;
+  const key = [factKey(fact?.a, fact?.b), factKey(fact?.b, fact?.a)].find(k => tally.has(k));
+  if (!key) return;
   const due = tally.get(key);
   tally.set(key, isCorrect ? Math.max(0, due - 1) : due + 1);
 }

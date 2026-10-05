@@ -21,6 +21,7 @@ import {
   mountResults,
   createCheckIcon,
   createCrossIcon,
+  createTrashIcon,
   singleActivation,
 } from '../ui-feedback.js';
 import { goToSlide } from '../slides.js';
@@ -71,6 +72,8 @@ const FEEDBACK_MS = 800;
 const ERROR_HOLD_MS = 2800;
 const BAD_SOUND_VOLUME = 0.35;
 const ALL_TABLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+// Case de réponse vide en « Je tape » : le « ? » de la question (« 8 × 6 = ? »)
+const TYPED_PLACEHOLDER = '?';
 
 function loadChronoStore() {
   const userData = UserState.getCurrentUserData();
@@ -89,22 +92,62 @@ function formatClock(ms) {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+/** Texte sans paramètre : sa clé reste posée, la passe de traduction globale le relit */
+function translatedElement(tag, key, className = '') {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  element.dataset.translate = key;
+  element.textContent = getTranslation(key);
+  return element;
+}
+
+function translatedButton(id, key, className) {
+  const button = translatedElement('button', key, className);
+  button.type = 'button';
+  button.id = id;
+  return button;
+}
+
+/** Un bloc de l’écran de départ, nommé par son titre (`chrono-race` → `#chrono-race-title`) */
+function createSetupBlock(name, titleKey) {
+  const section = document.createElement('section');
+  section.className = `chrono-block ${name}`;
+  section.setAttribute('aria-labelledby', `${name}-title`);
+  const title = translatedElement('h3', titleKey);
+  title.id = `${name}-title`;
+  section.appendChild(title);
+  return section;
+}
+
+function createBlockActions(buttons) {
+  const actions = document.createElement('div');
+  actions.className = 'chrono-block-actions';
+  buttons.forEach(button => actions.appendChild(button));
+  return actions;
+}
+
+/** Après un ajout ou « Tout effacer », le clavier reprend sur la ligne d’ajout */
+function focusAddRow(screen) {
+  return screen.querySelector('#chrono-add-a');
+}
+
 /**
  * Relance depuis les résultats, par l’orchestrateur comme le Quiz : le mode est marqué
  * « en démarrage », et la navigation vers l’écran de jeu ne l’arrête pas aussitôt. Sans
  * cela, la partie relancée tournait en arrière-plan, hors de portée de l’arrêt.
- * @param {{revision: boolean}} launch
+ * @param {{autoStart?: boolean}} [options] - autoStart : une course repart aussitôt ; sans
+ *   lui, retour au menu de Chrono, où la liste à revoir est à jour
  */
-function relaunchChrono({ revision }) {
-  setGameMode('chrono', { autoStart: true, revision }).catch(err => {
+function relaunchChrono(options = {}) {
+  setGameMode('chrono', options).catch(err => {
     console.warn('setGameMode failed', err);
   });
 }
 
 export class ChronoMode extends GameMode {
   /**
-   * @param {{autoStart?: boolean, revision?: boolean}} [options] - Relance depuis les
-   *   résultats : la partie (ou la révision) démarre sans repasser par l’écran de départ
+   * @param {{autoStart?: boolean}} [options] - « Rejouer » : la course démarre sans
+   *   repasser par le menu
    */
   constructor(options = {}) {
     super('chrono', {
@@ -117,11 +160,13 @@ export class ChronoMode extends GameMode {
       nextQuestionDelay: FEEDBACK_MS,
       wrongAnswerDelay: FEEDBACK_MS,
       showScore: false,
-      announceOnStart: false,
+      // « Mode Chrono » à l’arrivée au menu, comme les autres modes ; pas sur « Rejouer » :
+      // la course repart aussitôt et la première question passerait après l’annonce
+      announceOnStart: options?.autoStart !== true,
       initialTime: 0,
     });
     // Hors de resetState : start() réinitialise l’état avant d’appeler onStart()
-    this.launch = { autoStart: options?.autoStart === true, revision: options?.revision === true };
+    this.launch = { autoStart: options?.autoStart === true };
     this.phase = 'setup';
     this.selectedTables = [...ALL_TABLES];
     this.inputMode = lastChronoInputMode(loadChronoStore().store);
@@ -172,7 +217,7 @@ export class ChronoMode extends GameMode {
     this.isRevision = false;
     const launch = this.launch;
     this.launch = null;
-    if (launch?.autoStart) await this.beginSession(launch.revision);
+    if (launch?.autoStart) await this.beginSession(false);
   }
 
   getInfoBarData() {
@@ -257,51 +302,33 @@ export class ChronoMode extends GameMode {
     void goToSlide(1);
   }
 
+  /**
+   * Écran de départ : deux blocs, chacun avec son bouton. La course se joue sur les tables
+   * des Paramètres, la révision sur la liste des calculs à revoir ; « Je choisis / Je tape »
+   * vaut pour les deux.
+   */
   buildSetupPanel() {
     const { store } = loadChronoStore();
     const panel = document.createElement('div');
     panel.className = 'chrono-setup-panel';
-
-    const intro = document.createElement('p');
-    intro.dataset.translate = 'chrono_intro';
-    intro.textContent = getTranslation('chrono_intro');
-    panel.appendChild(intro);
-
-    const tablesHint = document.createElement('p');
-    tablesHint.className = 'chrono-tables-hint';
-    tablesHint.dataset.translate = 'chrono_tables_hint';
-    tablesHint.textContent = getTranslation('chrono_tables_hint');
-    panel.appendChild(tablesHint);
-
     panel.appendChild(this.buildInputPicker());
+    panel.appendChild(this.buildRacePanel());
     panel.appendChild(this.buildBasketPanel(store));
-
-    const actions = document.createElement('div');
-    actions.className = 'chrono-setup-actions';
-    const start = document.createElement('button');
-    start.type = 'button';
-    start.id = 'chrono-start';
-    start.className = 'btn btn-primary';
-    start.dataset.translate = 'chrono_start';
-    start.textContent = getTranslation('chrono_start');
-    actions.appendChild(start);
-    const revise = document.createElement('button');
-    revise.type = 'button';
-    revise.id = 'chrono-start-revision';
-    revise.className = 'btn btn-secondary';
-    revise.dataset.translate = 'chrono_start_revision';
-    revise.textContent = getTranslation('chrono_start_revision');
-    revise.disabled = store.basket.length === 0;
-    actions.appendChild(revise);
-    const stats = document.createElement('button');
-    stats.type = 'button';
-    stats.id = 'chrono-open-stats';
-    stats.className = 'btn btn-secondary chrono-setup-stats';
-    stats.dataset.translate = 'chrono_stats_button';
-    stats.textContent = getTranslation('chrono_stats_button');
-    actions.appendChild(stats);
-    panel.appendChild(actions);
     return panel;
+  }
+
+  /** La course : 10 bonnes réponses contre le chrono, puis ses temps */
+  buildRacePanel() {
+    const section = createSetupBlock('chrono-race', 'chrono_race_title');
+    section.appendChild(translatedElement('p', 'chrono_race_hint'));
+    section.appendChild(translatedElement('p', 'chrono_tables_hint', 'chrono-tables-hint'));
+    section.appendChild(
+      createBlockActions([
+        translatedButton('chrono-start', 'chrono_start', 'btn btn-primary'),
+        translatedButton('chrono-open-stats', 'chrono_stats_button', 'btn btn-secondary'),
+      ])
+    );
+    return section;
   }
 
   buildInputPicker() {
@@ -330,92 +357,98 @@ export class ChronoMode extends GameMode {
     return btn;
   }
 
+  /**
+   * Les calculs à revoir et leur révision. Liste vide : on dit d’où viennent les calculs,
+   * sans bouton qui ne mènerait nulle part.
+   */
   buildBasketPanel(store) {
-    const section = document.createElement('section');
-    section.className = 'chrono-basket';
-    section.setAttribute('aria-labelledby', 'chrono-basket-title');
-    const title = document.createElement('h3');
-    title.id = 'chrono-basket-title';
-    title.dataset.translate = 'chrono_basket_title';
-    title.textContent = getTranslation('chrono_basket_title');
-    section.appendChild(title);
-
+    const section = createSetupBlock('chrono-basket', 'chrono_basket_title');
     if (store.basket.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'chrono-tables-hint';
-      empty.dataset.translate = 'chrono_basket_empty';
-      empty.textContent = getTranslation('chrono_basket_empty');
-      section.appendChild(empty);
+      section.appendChild(translatedElement('p', 'chrono_basket_empty', 'chrono-tables-hint'));
+      section.appendChild(this.buildBasketAddRow());
+      return section;
     }
+    section.appendChild(translatedElement('p', 'chrono_revision_hint'));
+    section.appendChild(this.buildBasketList(store.basket));
+    section.appendChild(this.buildBasketAddRow());
+    section.appendChild(
+      createBlockActions([
+        translatedButton('chrono-start-revision', 'chrono_start_revision', 'btn btn-secondary'),
+        translatedButton('chrono-basket-clear', 'chrono_basket_clear', 'btn btn-quiet btn-danger'),
+      ])
+    );
+    return section;
+  }
 
+  buildBasketList(basket) {
     const list = document.createElement('ul');
     list.className = 'chrono-basket-list';
-    const items = [...store.basket].sort((left, right) => {
+    const items = [...basket].sort((left, right) => {
       const byDue = right.due - left.due;
       if (byDue !== 0) return byDue;
       if (left.a !== right.a) return left.a - right.a;
       return left.b - right.b;
     });
     items.forEach(item => list.appendChild(this.buildBasketItem(item)));
-    list.appendChild(this.buildBasketAddChip());
-    section.appendChild(list);
-
-    if (store.basket.length > 0) {
-      const clear = document.createElement('button');
-      clear.type = 'button';
-      clear.id = 'chrono-basket-clear';
-      clear.className = 'btn btn-quiet btn-danger chrono-basket-clear';
-      clear.dataset.translate = 'chrono_basket_clear';
-      clear.textContent = getTranslation('chrono_basket_clear');
-      section.appendChild(clear);
-    }
-    return section;
+    return list;
   }
 
-  /** Un calcul de la liste, son badge « à revoir n fois » et sa croix pour l’enlever */
+  /**
+   * Un calcul de la liste : le calcul, « 2 fois » (encore à revoir) et une poubelle pour
+   * l’enlever. Aucun signe de calcul ne sert d’icône : un enfant lirait « ×2 » ou « × »
+   * comme une multiplication.
+   */
   buildBasketItem(item) {
+    const fact = `${item.a} × ${item.b}`;
     const li = document.createElement('li');
     li.className = 'chrono-basket-item';
     const label = document.createElement('span');
     label.className = 'chrono-basket-eq';
-    label.textContent = `${item.a} × ${item.b}`;
+    label.textContent = fact;
     const due = document.createElement('span');
     const tone = basketDueClass(item.due);
     due.className = tone ? `chrono-basket-errors ${tone}` : 'chrono-basket-errors';
-    due.textContent = `×${item.due}`;
+    due.textContent = getTranslation('chrono_basket_due', { n: item.due });
     due.setAttribute('aria-label', getTranslation('chrono_basket_errors', { n: item.due }));
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'chrono-basket-remove';
     remove.dataset.removeA = String(item.a);
     remove.dataset.removeB = String(item.b);
-    remove.setAttribute('aria-label', getTranslation('chrono_basket_remove'));
-    remove.textContent = '×';
+    const removeLabel = `${getTranslation('chrono_basket_remove')} ${fact}`;
+    remove.setAttribute('aria-label', removeLabel);
+    remove.title = removeLabel;
+    remove.appendChild(createTrashIcon());
     li.appendChild(label);
     li.appendChild(due);
     li.appendChild(remove);
     return li;
   }
 
-  buildBasketAddChip() {
-    const li = document.createElement('li');
-    li.className = 'chrono-basket-item chrono-basket-add';
+  /** Ajout à la main : « Ajouter un calcul : [ ? ] × [ ? ] [Ajouter] » */
+  buildBasketAddRow() {
+    const row = document.createElement('div');
+    row.className = 'chrono-basket-add';
+    const label = document.createElement('span');
+    label.className = 'chrono-basket-add-label';
+    label.textContent = getTranslation('chrono_basket_add_label');
     const a = this.buildFactorSelect('chrono-add-a', getTranslation('chrono_basket_add_a'));
     const times = document.createElement('span');
+    times.className = 'chrono-basket-times';
     times.textContent = '×';
     times.setAttribute('aria-hidden', 'true');
     const b = this.buildFactorSelect('chrono-add-b', getTranslation('chrono_basket_add_b'));
     const add = document.createElement('button');
     add.type = 'button';
     add.id = 'chrono-basket-add';
-    add.className = 'chrono-basket-remove';
-    add.setAttribute('aria-label', getTranslation('chrono_basket_add'));
-    add.textContent = '+';
-    li.appendChild(a);
-    li.appendChild(times);
-    li.appendChild(b);
-    li.appendChild(add);
-    return li;
+    add.className = 'btn btn-secondary chrono-basket-add-btn';
+    add.textContent = getTranslation('chrono_basket_add');
+    row.appendChild(label);
+    row.appendChild(a);
+    row.appendChild(times);
+    row.appendChild(b);
+    row.appendChild(add);
+    return row;
   }
 
   buildFactorSelect(id, label) {
@@ -425,7 +458,7 @@ export class ChronoMode extends GameMode {
     select.setAttribute('aria-label', label);
     const blank = document.createElement('option');
     blank.value = '';
-    blank.textContent = '·';
+    blank.textContent = '?';
     select.appendChild(blank);
     ALL_TABLES.forEach(n => {
       const option = document.createElement('option');
@@ -442,38 +475,25 @@ export class ChronoMode extends GameMode {
     const { userData, store } = loadChronoStore();
     if (!addManualBasketFact(store, a, b)) return;
     persistChronoStore(userData);
-    void this.rebuildSetup();
+    void this.rebuildSetup(focusAddRow);
+  }
+
+  removeBasketFact(btn, index) {
+    const { userData, store } = loadChronoStore();
+    removeFromBasket(store, { a: Number(btn.dataset.removeA), b: Number(btn.dataset.removeB) });
+    persistChronoStore(userData);
+    // Le calcul suivant prend la place du retiré ; s’il n’en reste aucun, la ligne d’ajout
+    void this.rebuildSetup(screen => {
+      const left = screen.querySelectorAll('.chrono-basket-remove');
+      return left[Math.min(index, left.length - 1)] ?? focusAddRow(screen);
+    });
   }
 
   bindSetupPanel() {
     this.gameScreen?.querySelectorAll('.chrono-input-btn').forEach(btn => {
       btn.addEventListener('click', () => this.setInputMode(btn.dataset.inputMode));
     });
-    this.gameScreen?.querySelectorAll('[data-remove-a]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const { userData, store } = loadChronoStore();
-        removeFromBasket(store, { a: Number(btn.dataset.removeA), b: Number(btn.dataset.removeB) });
-        persistChronoStore(userData);
-        void this.rebuildSetup();
-      });
-    });
-    document.getElementById('chrono-basket-add')?.addEventListener('click', () => {
-      this.addManualBasketFactFromForm();
-    });
-    this.gameScreen?.querySelectorAll('.chrono-basket-factor').forEach(select => {
-      select.addEventListener('keydown', event => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          this.addManualBasketFactFromForm();
-        }
-      });
-    });
-    document.getElementById('chrono-basket-clear')?.addEventListener('click', () => {
-      const { userData, store } = loadChronoStore();
-      emptyBasket(store);
-      persistChronoStore(userData);
-      void this.rebuildSetup();
-    });
+    this.bindBasketControls();
     document.getElementById('chrono-start')?.addEventListener(
       'click',
       singleActivation(() => {
@@ -491,10 +511,35 @@ export class ChronoMode extends GameMode {
     });
   }
 
+  /** Liste à revoir : retirer un calcul, en ajouter un, tout effacer */
+  bindBasketControls() {
+    this.gameScreen?.querySelectorAll('[data-remove-a]').forEach((btn, index) => {
+      btn.addEventListener('click', () => this.removeBasketFact(btn, index));
+    });
+    document.getElementById('chrono-basket-add')?.addEventListener('click', () => {
+      this.addManualBasketFactFromForm();
+    });
+    this.gameScreen?.querySelectorAll('.chrono-basket-factor').forEach(select => {
+      select.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          this.addManualBasketFactFromForm();
+        }
+      });
+    });
+    document.getElementById('chrono-basket-clear')?.addEventListener('click', () => {
+      const { userData, store } = loadChronoStore();
+      emptyBasket(store);
+      persistChronoStore(userData);
+      void this.rebuildSetup(focusAddRow);
+    });
+  }
+
   async openStatsPick() {
     this.phase = 'stats-pick';
     this.statsFocus = null;
     await this.initializeUI();
+    this.focusPanelTitle();
   }
 
   async openStatsDetail(key) {
@@ -503,6 +548,15 @@ export class ChronoMode extends GameMode {
     this.statsFocus = parsed;
     this.phase = 'stats-detail';
     await this.initializeUI();
+    this.focusPanelTitle();
+  }
+
+  /** Panneau des temps : le focus va sur son titre, Tab mène ensuite à ses boutons */
+  focusPanelTitle() {
+    const title = this.gameScreen?.querySelector('.chrono-setup-panel h2');
+    if (!title) return;
+    title.setAttribute('tabindex', '-1');
+    title.focus({ preventScroll: true });
   }
 
   bucketTablesText(tables) {
@@ -589,7 +643,7 @@ export class ChronoMode extends GameMode {
       btn.addEventListener('click', () => void this.openStatsDetail(btn.dataset.bucketKey));
     });
     document.getElementById('chrono-stats-back-setup')?.addEventListener('click', () => {
-      void this.rebuildSetup();
+      void this.rebuildSetup(screen => screen.querySelector('#chrono-open-stats'));
     });
   }
 
@@ -638,9 +692,15 @@ export class ChronoMode extends GameMode {
     });
   }
 
-  async rebuildSetup() {
+  /**
+   * Revient à l’écran de départ, reconstruit. `pickFocus` y choisit où remettre le focus :
+   * sans lui, le clavier repartirait du haut de la page.
+   * @param {(screen: HTMLElement) => HTMLElement|null|undefined} [pickFocus]
+   */
+  async rebuildSetup(pickFocus) {
     this.phase = 'setup';
     await this.initializeUI();
+    if (this.gameScreen && pickFocus) pickFocus(this.gameScreen)?.focus();
   }
 
   setInputMode(mode) {
@@ -849,7 +909,7 @@ export class ChronoMode extends GameMode {
     typed.id = 'chrono-typed';
     typed.setAttribute('aria-live', 'polite');
     typed.setAttribute('aria-label', getTranslation('chrono_typed_label'));
-    typed.textContent = this.typedValue || '·';
+    typed.textContent = this.typedValue || TYPED_PLACEHOLDER;
     pad.appendChild(typed);
     const grid = document.createElement('div');
     grid.className = 'chrono-keys';
@@ -912,7 +972,7 @@ export class ChronoMode extends GameMode {
 
   refreshTyped() {
     const typed = document.getElementById('chrono-typed');
-    if (typed) typed.textContent = this.typedValue || '·';
+    if (typed) typed.textContent = this.typedValue || TYPED_PLACEHOLDER;
   }
 
   disableOptions() {
@@ -1127,35 +1187,38 @@ export class ChronoMode extends GameMode {
     return { message: average, details: [] };
   }
 
+  /**
+   * Après une course : la rejouer, ou revenir au menu de Chrono, où l’on voit sa liste à
+   * jour et d’où part la révision. Après une révision : le menu, sans « Rejouer », qui
+   * lancerait une course.
+   */
   buildSessionActions(result) {
+    const race = !result.isRevision;
     const buttons = [
-      {
+      race && {
         label: getTranslation('chrono_play_again'),
         action: 'play-again',
         primary: true,
-        onActivate: () => relaunchChrono({ revision: false }),
+        onActivate: () => relaunchChrono({ autoStart: true }),
       },
-    ];
-    if (result.basketSize > 0) {
-      buttons.push({
-        label: getTranslation('chrono_start_revision'),
-        action: 'revise',
-        onActivate: () => relaunchChrono({ revision: true }),
-      });
-    }
-    if (!result.isRevision) {
-      buttons.push({
+      {
+        label: getTranslation('chrono_back_to_menu'),
+        action: 'chrono-menu',
+        primary: !race,
+        onActivate: () => relaunchChrono(),
+      },
+      race && {
         label: getTranslation('chrono_stats_button'),
         action: 'stats',
         onActivate: () => this.openResultsPane('stats'),
-      });
-    }
-    buttons.push({
-      label: getTranslation('back_to_home'),
-      action: 'back-to-home',
-      onActivate: () => void goToSlide(1),
-    });
-    return createResultsActions(buttons);
+      },
+      {
+        label: getTranslation('back_to_home'),
+        action: 'back-to-home',
+        onActivate: () => void goToSlide(1),
+      },
+    ];
+    return createResultsActions(buttons.filter(Boolean));
   }
 
   renderStats(result) {

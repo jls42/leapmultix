@@ -135,7 +135,8 @@ function revisionCopies(due) {
 
 /**
  * Remplit la file de révision : chaque calcul au moins une fois, davantage s’il est plus
- * souvent à revoir.
+ * souvent à revoir. Les copies alternent les deux sens (6 × 7, puis 7 × 6) : c’est le même
+ * fait, vu des deux côtés.
  * @param {Array<{a: number, b: number}>} queue
  * @param {Array<{a: number, b: number, due?: number}>} basket
  * @returns {Array<{a: number, b: number}>}
@@ -145,7 +146,8 @@ export function refillRevisionQueue(queue, basket) {
   for (const item of basket || []) {
     const copies = revisionCopies(item.due);
     for (let i = 0; i < copies; i += 1) {
-      round.push({ a: item.a, b: item.b });
+      const swapped = i % 2 === 1 && item.a !== item.b;
+      round.push(swapped ? { a: item.b, b: item.a } : { a: item.a, b: item.b });
     }
   }
   shuffleInPlace(round);

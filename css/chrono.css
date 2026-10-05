@@ -25,19 +25,45 @@
 }
 
 .chrono-input-options,
-.chrono-setup-actions,
 .chrono-keys {
   display: grid;
   gap: var(--space-2);
 }
 
-.chrono-input-options,
-.chrono-setup-actions {
+.chrono-input-options {
   grid-template-columns: 1fr 1fr;
 }
 
-.chrono-setup-stats {
-  grid-column: 1 / -1;
+/* Écran de départ : deux blocs à plat dans la carte (surface creusée), la course puis les
+   calculs à revoir, chacun avec son bouton */
+.chrono-block {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+/* Contraste élevé : la surface creusée y est noire comme la carte, un filet garde les blocs */
+body.high-contrast .chrono-block {
+  border: 1px solid var(--color-border);
+}
+
+.chrono-block h3 {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.chrono-block p {
+  margin: 0;
+}
+
+.chrono-block-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-3);
 }
 
 .chrono-stats-list {
@@ -119,26 +145,23 @@
   border-color: var(--color-action-edge);
 }
 
-.chrono-basket h3 {
-  margin: 0 0 var(--space-1);
-  font-size: var(--text-md);
-}
-
 .chrono-basket-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  justify-content: center;
+  gap: var(--space-2);
   padding: 0;
-  margin: 0 0 var(--space-2);
+  margin: 0;
   list-style: none;
 }
 
+/* Un calcul de la liste : « 7 × 8 », « 1 fois », une poubelle */
 .chrono-basket-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.1rem 0.15rem 0.1rem 0.45rem;
-  font-size: var(--text-sm);
+  gap: var(--space-2);
+  padding: 0.2rem 0.25rem 0.2rem 0.75rem;
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--color-ink);
   background: var(--color-surface);
@@ -150,10 +173,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.35rem;
-  height: 1.2rem;
-  padding: 0 0.3rem;
-  font-size: 0.75rem;
+  padding: 0.05rem 0.5rem;
+  font-size: var(--text-sm);
+  white-space: nowrap;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-danger-ink);
@@ -187,36 +209,75 @@ body.high-contrast .chrono-basket-errors.is-err-2 {
   border-color: #f80;
 }
 
+/* Ajout à la main : « Ajouter un calcul : [ ? ] × [ ? ] [Ajouter] » */
 .chrono-basket-add {
-  padding-left: 0.3rem;
-  border-style: dashed;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.chrono-basket-add-label {
+  font-weight: 700;
+  color: var(--color-ink-muted);
 }
 
 .chrono-basket-factor {
-  width: 2.4rem;
-  height: 1.4rem;
-  padding: 0;
+  min-width: 3.25rem;
+  height: 2.5rem;
+  padding: 0 var(--space-2);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   font-weight: 700;
   text-align: center;
   color: var(--color-ink);
-  background: transparent;
-  border: 0;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
 }
 
+.chrono-basket-times {
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.chrono-basket-add-btn {
+  min-height: 2.5rem;
+}
+
+/* Retirer un calcul : une poubelle, pas une croix qu'on lirait comme le signe × */
 .chrono-basket-remove {
-  width: 1.4rem;
-  height: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
-  font: inherit;
-  font-size: 1rem;
-  line-height: 1;
   color: var(--color-ink-muted);
   background: transparent;
   border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
+}
+
+.chrono-basket-remove:hover,
+.chrono-basket-remove:focus-visible {
+  color: var(--color-danger-ink);
+  background: var(--color-danger-tint);
+}
+
+.trash-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.trash-icon path {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .chrono-container .options:has(.chrono-keypad) {

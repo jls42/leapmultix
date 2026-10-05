@@ -40,6 +40,12 @@ import {
 
 const NBSP = ' ';
 
+/** Dernier calcul posé, à partir de sa clé « 6×7 » */
+function lastFact(keys) {
+  const [a, b] = keys.at(-1).split('×').map(Number);
+  return { a, b };
+}
+
 /** Une partie terminée, réduite à ce qui compte pour le classement */
 function save(store, durationMs, date, { tables = [7], inputMode = 'keypad', facts = [] } = {}) {
   return saveChronoSession(store, { tables, inputMode, durationMs, date, facts });
@@ -329,6 +335,12 @@ describe('chrono-stats : révision', () => {
     expect(store.basket).toEqual([{ a: 7, b: 8, due: 1 }]);
   });
 
+  test('une réussite sur l’inverse compte pour le calcul de la liste', () => {
+    const { store, outcome } = revise([{ a: 6, b: 7, due: 1 }], [[7, 6, true]]);
+    expect(outcome.mastered).toEqual([{ a: 6, b: 7 }]);
+    expect(store.basket).toEqual([]);
+  });
+
   test('un calcul pas posé pendant la révision garde son compteur', () => {
     const { store } = revise(
       [
@@ -455,10 +467,25 @@ describe('chrono-questions', () => {
     ];
     const queue = [];
     refillRevisionQueue(queue, basket);
-    const count = key => queue.filter(fact => `${fact.a}×${fact.b}` === key).length;
-    expect(count('6×7')).toBe(1);
-    expect(count('4×4')).toBe(2);
-    expect(count('8×9')).toBe(3);
+    // Un calcul et son inverse comptent ensemble : 8 × 9 et 9 × 8 sont le même fait
+    const count = (a, b) =>
+      queue.filter(fact => (fact.a === a && fact.b === b) || (fact.a === b && fact.b === a)).length;
+    expect(count(6, 7)).toBe(1);
+    expect(count(4, 4)).toBe(2);
+    expect(count(8, 9)).toBe(3);
+    expect(queue.some(fact => fact.a === 9 && fact.b === 8)).toBe(true);
+  });
+
+  test('la révision pose aussi l’inverse : 6 × 7 puis 7 × 6, jamais deux fois d’affilée', () => {
+    const basket = [{ a: 6, b: 7, due: 1 }];
+    const queue = [];
+    const keys = [];
+    for (let i = 0; i < 10; i += 1) {
+      const fact = takeNextRevisionFact(queue, basket, keys.length ? lastFact(keys) : undefined);
+      keys.push(`${fact.a}×${fact.b}`);
+    }
+    expect(new Set(keys)).toEqual(new Set(['6×7', '7×6']));
+    expect(keys.some((key, i) => i > 0 && key === keys[i - 1])).toBe(false);
   });
 
   test('les questions en plus recommencent une passe complète, pas un seul calcul', () => {
@@ -473,7 +500,7 @@ describe('chrono-questions', () => {
       keys.push(`${fact.a}×${fact.b}`);
     }
     expect(keys.filter(key => key === '3×3')).toHaveLength(2);
-    expect(keys.filter(key => key === '7×8')).toHaveLength(2);
+    expect(keys.filter(key => key === '7×8' || key === '8×7')).toHaveLength(2);
   });
 
   test('la révision ne sort jamais de la liste, elle reboucle', () => {
@@ -481,7 +508,7 @@ describe('chrono-questions', () => {
       { a: 3, b: 4, due: 1 },
       { a: 7, b: 8, due: 2 },
     ];
-    const allowed = new Set(basket.map(item => `${item.a}×${item.b}`));
+    const allowed = new Set(basket.flatMap(item => [`${item.a}×${item.b}`, `${item.b}×${item.a}`]));
     const queue = [];
     for (let i = 0; i < 20; i += 1) {
       const fact = takeNextRevisionFact(queue, basket);
