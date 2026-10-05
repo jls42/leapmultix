@@ -111,13 +111,18 @@ function normalizeBuckets(raw) {
   return buckets;
 }
 
+/** Compteur « à revoir » : un entier positif, 1 par défaut (`errors` : nom de la première version) */
+function normalizeDue(item) {
+  const due = Math.floor(Number(item.due ?? item.errors));
+  return Number.isFinite(due) && due > 0 ? due : 1;
+}
+
 function normalizeBasketItem(item) {
   if (!item || typeof item !== 'object') return null;
   const a = Number(item.a);
   const b = Number(item.b);
   if (!isFactor(a) || !isFactor(b)) return null;
-  const due = Math.floor(Number(item.due ?? item.errors));
-  return { a, b, due: Number.isFinite(due) && due > 0 ? due : 1 };
+  return { a, b, due: normalizeDue(item) };
 }
 
 function normalizeBasket(raw) {
@@ -184,7 +189,7 @@ export function listPlayedChronoBuckets(store) {
   const rows = [];
   for (const bucket of store?.buckets || []) {
     const parsed = parseBucketKey(bucket.key);
-    if (!parsed || !(bucket.count > 0)) continue;
+    if (!parsed || bucket.count <= 0) continue;
     rows.push({
       key: bucket.key,
       tables: parsed.tables,

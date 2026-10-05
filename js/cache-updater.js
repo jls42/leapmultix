@@ -126,19 +126,21 @@ export function forceDevCacheClear() {
   const navigatorRef = runtime.navigator;
   // Unregister service worker
   if (navigatorRef?.serviceWorker) {
-    navigatorRef.serviceWorker.getRegistrations().then(registrations => {
-      for (const registration of registrations) {
-        registration.unregister();
-      }
-    });
+    navigatorRef.serviceWorker
+      .getRegistrations()
+      .then(registrations =>
+        Promise.all(registrations.map(registration => registration.unregister()))
+      )
+      .catch(error => console.warn('Service worker : désinscription impossible', error));
   }
 
   // Clear all caches
   const cachesApi = runtime.caches;
   if (cachesApi) {
-    cachesApi.keys().then(cacheNames => {
-      return Promise.all(cacheNames.map(cacheName => cachesApi.delete(cacheName)));
-    });
+    cachesApi
+      .keys()
+      .then(cacheNames => Promise.all(cacheNames.map(cacheName => cachesApi.delete(cacheName))))
+      .catch(error => console.warn('Caches : nettoyage impossible', error));
   }
 
   // Clear localStorage/sessionStorage cache-related data
@@ -226,10 +228,13 @@ export function clearCacheAndReload() {
   };
 
   if (cachesApi) {
+    // Caches vidés ou non, la page se recharge : le nettoyage n’est qu’une aide
     cachesApi
       .keys()
       .then(cacheNames => Promise.all(cacheNames.map(cacheName => cachesApi.delete(cacheName))))
-      .then(redirectToVersion);
+      .catch(error => console.warn('Caches : nettoyage impossible', error))
+      .then(redirectToVersion)
+      .catch(error => console.warn('Rechargement impossible', error));
     return;
   }
 

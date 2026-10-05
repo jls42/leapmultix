@@ -186,7 +186,7 @@ self.addEventListener('fetch', event => {
         const hit = await cache.match(request);
         if (hit) return hit;
         const net = await fetch(request);
-        if (net.ok) cache.put(request, net.clone());
+        if (net.ok) event.waitUntil(cache.put(request, net.clone()));
         return net;
       })()
     );
@@ -202,10 +202,13 @@ self.addEventListener('fetch', event => {
         const cached = await cache.match(request);
         const fetchPromise = fetch(request)
           .then(net => {
-            if (net.ok) cache.put(request, net.clone());
+            if (net.ok) event.waitUntil(cache.put(request, net.clone()));
             return net;
           })
           .catch(() => null);
+        // La copie en cache part tout de suite : la mise à jour se poursuit après la réponse,
+        // et le service worker reste actif jusqu'à sa fin
+        event.waitUntil(fetchPromise);
         // eslint-disable-next-line no-undef -- Browser API, Response is globally available in service workers
         return cached || (await fetchPromise) || Response.error();
       })()
@@ -220,7 +223,7 @@ self.addEventListener('fetch', event => {
         const cache = await caches.open(RUNTIME_CACHE);
         try {
           const net = await fetch(request, { cache: 'no-store' });
-          if (net.ok) cache.put(request, net.clone());
+          if (net.ok) event.waitUntil(cache.put(request, net.clone()));
           return net;
         } catch {
           const cached = await cache.match(request);

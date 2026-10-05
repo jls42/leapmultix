@@ -159,7 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
           () => TopBar.updateTableSettingsButtonVisibility?.(),
         ],
       ];
-      for (const [label, step] of steps) await runSafely(label, step);
+      // Dans l’ordre, chaque étape après la précédente : la disponibilité des modes suit le
+      // sélecteur d’opération
+      for (const [label, step] of steps) await runSafely(label, step); // NOSONAR - ordre voulu
     };
     // Un seul abonnement : i18n.js émet aussi l'événement sur window (écouté par
     // i18n-store.js) ; s'y abonner en plus redessinait chaque écran deux fois.
