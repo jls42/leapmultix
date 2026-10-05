@@ -241,13 +241,21 @@ body.high-contrast .chrono-basket-errors.is-err-2 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.chrono-feedback {
+/* Le retour tient sur une ligne : la marque à côté du calcul, pas au bord de la carte
+   (même spécificité que la règle commune de game.css, chargée avant) */
+.chrono-container > .chrono-feedback {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
   min-height: 2.5rem;
   font-weight: 700;
+}
+
+.chrono-feedback .option-mark {
+  position: static;
+  flex: none;
+  translate: none;
 }
 
 .chrono-facts {

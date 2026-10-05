@@ -703,7 +703,6 @@
   "chrono_fact_ok": "Juste",
   "chrono_facts_title": "Temps par calcul",
   "chrono_feedback_correct": "Juste",
-  "chrono_feedback_incorrect": "La bonne réponse est {answer}.",
   "chrono_info_bar_label": "Chrono",
   "chrono_input_keypad": "Saisie",
   "chrono_input_legend": "Comment répondre",

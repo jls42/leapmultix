@@ -1,5 +1,7 @@
 /**
- * Mode Chrono : tables choisies, QCM ou saisie, temps écoulé, panier de révision.
+ * Mode Chrono : dix bonnes réponses contre un chrono qui ne s’arrête pas, sur les tables
+ * choisies, en choisissant ou en tapant la réponse. Les calculs ratés vont dans « Mes
+ * calculs à revoir », qu’une révision de dix questions fait travailler.
  */
 
 import { GameMode } from '../core/GameMode.js';
@@ -22,11 +24,12 @@ import {
   singleActivation,
 } from '../ui-feedback.js';
 import { goToSlide } from '../slides.js';
-import { formatMessage } from '../core/message-format.js';
+import { setGameMode } from '../mode-orchestrator.js';
 import { UserState } from '../core/userState.js';
-import { gameState } from '../game.js';
+import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { classifyTypedAnswer } from '../core/chrono-input.js';
 import {
+  factKeys,
   pickChronoPair,
   takeNextRevisionFact,
   includedTablesFromExclusions,
@@ -37,7 +40,7 @@ import { UserManager } from '../userManager.js';
 import { getCurrentLanguage } from '../i18n-store.js';
 import {
   normalizeChronoStats,
-  getBucket,
+  findBucket,
   sessionAverageMs,
   saveChronoSession,
   chronoShouldContinue,
@@ -45,7 +48,7 @@ import {
   removeFromBasket,
   emptyBasket,
   addManualBasketFact,
-  basketErrorClass,
+  basketDueClass,
   grantChronoCoins,
   listPlayedChronoBuckets,
   parseBucketKey,
@@ -53,6 +56,7 @@ import {
   rankedSessions,
   recentSessions,
   formatDuration,
+  formatSessionDate,
   niceDurationMaxMs,
   formatAxisSeconds,
   lastChronoInputMode,
@@ -75,13 +79,6 @@ function persistChronoStore(userData) {
   UserState.updateUserData(userData);
 }
 
-function chronoText(key, fallback, params = {}) {
-  const value = getTranslation(key, params);
-  const missing =
-    typeof value !== 'string' || value === '' || value === key || value === `[${key}]`;
-  return formatMessage(missing ? fallback : value, params, getCurrentLanguage());
-}
-
 function formatClock(ms) {
   const totalSeconds = Math.floor(Math.max(0, Number(ms) || 0) / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -89,8 +86,24 @@ function formatClock(ms) {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+/**
+ * Relance depuis les résultats, par l’orchestrateur comme le Quiz : le mode est marqué
+ * « en démarrage », et la navigation vers l’écran de jeu ne l’arrête pas aussitôt. Sans
+ * cela, la partie relancée tournait en arrière-plan, hors de portée de l’arrêt.
+ * @param {{revision: boolean}} launch
+ */
+function relaunchChrono({ revision }) {
+  setGameMode('chrono', { autoStart: true, revision }).catch(err => {
+    console.warn('setGameMode failed', err);
+  });
+}
+
 export class ChronoMode extends GameMode {
-  constructor() {
+  /**
+   * @param {{autoStart?: boolean, revision?: boolean}} [options] - Relance depuis les
+   *   résultats : la partie (ou la révision) démarre sans repasser par l’écran de départ
+   */
+  constructor(options = {}) {
     super('chrono', {
       maxQuestions: 200,
       hasTimer: true,
@@ -104,15 +117,19 @@ export class ChronoMode extends GameMode {
       announceOnStart: false,
       initialTime: 0,
     });
+    // Hors de resetState : start() réinitialise l’état avant d’appeler onStart()
+    this.launch = { autoStart: options?.autoStart === true, revision: options?.revision === true };
     this.phase = 'setup';
     this.selectedTables = [...ALL_TABLES];
-    this.inputMode = 'keypad';
+    this.inputMode = lastChronoInputMode(loadChronoStore().store);
     this.isRevision = false;
     this.revisionQueue = [];
     this.revisionBasket = [];
+    this.sessionOutcome = null;
     this.targetCount = BASE_QUESTIONS;
     this.sessionFacts = [];
     this.sessionStartedAt = 0;
+    this.endedAt = null;
     this.questionStartedAt = 0;
     this.typedValue = '';
     this.elapsedMs = 0;
@@ -120,7 +137,7 @@ export class ChronoMode extends GameMode {
     this._abandoned = false;
     this._holdErrorFeedback = false;
     this._errorHoldGen = 0;
-    this._heldErrorAnswer = null;
+    this._heldErrorFact = null;
     this.lastSnapshot = null;
     this.resultsPane = 'session';
     this.statsFocus = null;
@@ -132,18 +149,23 @@ export class ChronoMode extends GameMode {
     this.sessionFacts = [];
     this.typedValue = '';
     this.elapsedMs = 0;
+    this.endedAt = null;
     this.targetCount = BASE_QUESTIONS;
     this.revisionQueue = [];
     this.revisionBasket = [];
+    this.sessionOutcome = null;
     this._abandoned = false;
     this._holdErrorFeedback = false;
     this._errorHoldGen = 0;
-    this._heldErrorAnswer = null;
+    this._heldErrorFact = null;
   }
 
   async onStart() {
     this.phase = 'setup';
     this.isRevision = false;
+    const launch = this.launch;
+    this.launch = null;
+    if (launch?.autoStart) await this.beginSession(launch.revision);
   }
 
   getInfoBarData() {
@@ -167,7 +189,7 @@ export class ChronoMode extends GameMode {
     abandon.type = 'button';
     abandon.className = 'btn btn-quiet btn-danger';
     abandon.dataset.translate = 'chrono_abandon';
-    abandon.textContent = chronoText('chrono_abandon', 'Abandonner');
+    abandon.textContent = getTranslation('chrono_abandon');
     wrap.appendChild(abandon);
     return wrap;
   }
@@ -191,6 +213,20 @@ export class ChronoMode extends GameMode {
     this.setupGameControls();
   }
 
+  /**
+   * Changement de langue : les écrans de départ et de statistiques se reconstruisent (leurs
+   * textes ont des paramètres) ; la partie suit GameMode ; les résultats se retraduisent
+   * seuls (mountResults).
+   */
+  async refreshTexts() {
+    if (!this.gameScreen?.isConnected) return;
+    if (this.phase === 'playing') {
+      await super.refreshTexts();
+      return;
+    }
+    await this.initializeUI();
+  }
+
   placeActionsAfterAnswers() {
     const container = this.feedbackElement?.parentElement;
     const controls = container?.querySelector('.chrono-controls');
@@ -209,7 +245,7 @@ export class ChronoMode extends GameMode {
 
   confirmAbandon() {
     const root = globalThis;
-    if (!root?.confirm?.(chronoText('confirm_abandon_chrono', 'Quitter Chrono ?'))) return;
+    if (!root?.confirm?.(getTranslation('confirm_abandon_chrono'))) return;
     this._abandoned = true;
     this.stop();
     void goToSlide(1);
@@ -217,22 +253,18 @@ export class ChronoMode extends GameMode {
 
   buildSetupPanel() {
     const { store } = loadChronoStore();
-    this.inputMode = lastChronoInputMode(store);
     const panel = document.createElement('div');
     panel.className = 'chrono-setup-panel';
 
     const intro = document.createElement('p');
     intro.dataset.translate = 'chrono_intro';
-    intro.textContent = chronoText('chrono_intro', 'Choisis QCM ou saisie, puis commence.');
+    intro.textContent = getTranslation('chrono_intro');
     panel.appendChild(intro);
 
     const tablesHint = document.createElement('p');
     tablesHint.className = 'chrono-tables-hint';
     tablesHint.dataset.translate = 'chrono_tables_hint';
-    tablesHint.textContent = chronoText(
-      'chrono_tables_hint',
-      'Tes tables se règlent avec l’engrenage en haut — le même choix que pour les autres jeux.'
-    );
+    tablesHint.textContent = getTranslation('chrono_tables_hint');
     panel.appendChild(tablesHint);
 
     panel.appendChild(this.buildInputPicker());
@@ -245,14 +277,14 @@ export class ChronoMode extends GameMode {
     start.id = 'chrono-start';
     start.className = 'btn btn-primary';
     start.dataset.translate = 'chrono_start';
-    start.textContent = chronoText('chrono_start', 'Commencer');
+    start.textContent = getTranslation('chrono_start');
     actions.appendChild(start);
     const revise = document.createElement('button');
     revise.type = 'button';
     revise.id = 'chrono-start-revision';
     revise.className = 'btn btn-secondary';
     revise.dataset.translate = 'chrono_start_revision';
-    revise.textContent = chronoText('chrono_start_revision', 'Réviser le panier');
+    revise.textContent = getTranslation('chrono_start_revision');
     revise.disabled = store.basket.length === 0;
     actions.appendChild(revise);
     const stats = document.createElement('button');
@@ -260,7 +292,7 @@ export class ChronoMode extends GameMode {
     stats.id = 'chrono-open-stats';
     stats.className = 'btn btn-secondary chrono-setup-stats';
     stats.dataset.translate = 'chrono_stats_button';
-    stats.textContent = chronoText('chrono_stats_button', 'Statistiques');
+    stats.textContent = getTranslation('chrono_stats_button');
     actions.appendChild(stats);
     panel.appendChild(actions);
     return panel;
@@ -271,7 +303,7 @@ export class ChronoMode extends GameMode {
     fieldset.className = 'chrono-input-mode';
     const legend = document.createElement('legend');
     legend.dataset.translate = 'chrono_input_legend';
-    legend.textContent = chronoText('chrono_input_legend', 'Comment répondre');
+    legend.textContent = getTranslation('chrono_input_legend');
     fieldset.appendChild(legend);
     const row = document.createElement('div');
     row.className = 'chrono-input-options';
@@ -288,7 +320,7 @@ export class ChronoMode extends GameMode {
     btn.dataset.inputMode = mode;
     btn.setAttribute('aria-pressed', this.inputMode === mode ? 'true' : 'false');
     btn.dataset.translate = key;
-    btn.textContent = chronoText(key, key === 'chrono_input_mcq' ? 'QCM' : 'Saisie');
+    btn.textContent = getTranslation(key);
     return btn;
   }
 
@@ -299,53 +331,26 @@ export class ChronoMode extends GameMode {
     const title = document.createElement('h3');
     title.id = 'chrono-basket-title';
     title.dataset.translate = 'chrono_basket_title';
-    title.textContent = chronoText('chrono_basket_title', 'Panier de révision');
+    title.textContent = getTranslation('chrono_basket_title');
     section.appendChild(title);
 
     if (store.basket.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'chrono-tables-hint';
       empty.dataset.translate = 'chrono_basket_empty';
-      empty.textContent = chronoText('chrono_basket_empty', 'Le panier de révision est vide.');
+      empty.textContent = getTranslation('chrono_basket_empty');
       section.appendChild(empty);
     }
 
     const list = document.createElement('ul');
     list.className = 'chrono-basket-list';
     const items = [...store.basket].sort((left, right) => {
-      const byErrors = (Number(right.errors) || 0) - (Number(left.errors) || 0);
-      if (byErrors !== 0) return byErrors;
+      const byDue = right.due - left.due;
+      if (byDue !== 0) return byDue;
       if (left.a !== right.a) return left.a - right.a;
       return left.b - right.b;
     });
-    items.forEach(item => {
-      const li = document.createElement('li');
-      li.className = 'chrono-basket-item';
-      const label = document.createElement('span');
-      label.className = 'chrono-basket-eq';
-      label.textContent = `${item.a} × ${item.b}`;
-      const errorCount = Number(item.errors) || 0;
-      const errors = document.createElement('span');
-      const tone = basketErrorClass(errorCount);
-      errors.className = tone ? `chrono-basket-errors ${tone}` : 'chrono-basket-errors';
-      errors.hidden = errorCount <= 0;
-      errors.textContent = `×${errorCount}`;
-      errors.setAttribute(
-        'aria-label',
-        chronoText('chrono_basket_errors', `${errorCount} erreur(s)`, { n: errorCount })
-      );
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'chrono-basket-remove';
-      remove.dataset.removeA = String(item.a);
-      remove.dataset.removeB = String(item.b);
-      remove.setAttribute('aria-label', chronoText('chrono_basket_remove', 'Retirer'));
-      remove.textContent = '×';
-      li.appendChild(label);
-      li.appendChild(errors);
-      li.appendChild(remove);
-      list.appendChild(li);
-    });
+    items.forEach(item => list.appendChild(this.buildBasketItem(item)));
     list.appendChild(this.buildBasketAddChip());
     section.appendChild(list);
 
@@ -355,31 +360,50 @@ export class ChronoMode extends GameMode {
       clear.id = 'chrono-basket-clear';
       clear.className = 'btn btn-quiet btn-danger chrono-basket-clear';
       clear.dataset.translate = 'chrono_basket_clear';
-      clear.textContent = chronoText('chrono_basket_clear', 'Vider le panier');
+      clear.textContent = getTranslation('chrono_basket_clear');
       section.appendChild(clear);
     }
     return section;
   }
 
+  /** Un calcul de la liste, son badge « à revoir n fois » et sa croix pour l’enlever */
+  buildBasketItem(item) {
+    const li = document.createElement('li');
+    li.className = 'chrono-basket-item';
+    const label = document.createElement('span');
+    label.className = 'chrono-basket-eq';
+    label.textContent = `${item.a} × ${item.b}`;
+    const due = document.createElement('span');
+    const tone = basketDueClass(item.due);
+    due.className = tone ? `chrono-basket-errors ${tone}` : 'chrono-basket-errors';
+    due.textContent = `×${item.due}`;
+    due.setAttribute('aria-label', getTranslation('chrono_basket_errors', { n: item.due }));
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'chrono-basket-remove';
+    remove.dataset.removeA = String(item.a);
+    remove.dataset.removeB = String(item.b);
+    remove.setAttribute('aria-label', getTranslation('chrono_basket_remove'));
+    remove.textContent = '×';
+    li.appendChild(label);
+    li.appendChild(due);
+    li.appendChild(remove);
+    return li;
+  }
+
   buildBasketAddChip() {
     const li = document.createElement('li');
     li.className = 'chrono-basket-item chrono-basket-add';
-    const a = this.buildFactorSelect(
-      'chrono-add-a',
-      chronoText('chrono_basket_add_a', 'Premier nombre')
-    );
+    const a = this.buildFactorSelect('chrono-add-a', getTranslation('chrono_basket_add_a'));
     const times = document.createElement('span');
     times.textContent = '×';
     times.setAttribute('aria-hidden', 'true');
-    const b = this.buildFactorSelect(
-      'chrono-add-b',
-      chronoText('chrono_basket_add_b', 'Deuxième nombre')
-    );
+    const b = this.buildFactorSelect('chrono-add-b', getTranslation('chrono_basket_add_b'));
     const add = document.createElement('button');
     add.type = 'button';
     add.id = 'chrono-basket-add';
     add.className = 'chrono-basket-remove';
-    add.setAttribute('aria-label', chronoText('chrono_basket_add', 'Ajouter'));
+    add.setAttribute('aria-label', getTranslation('chrono_basket_add'));
     add.textContent = '+';
     li.appendChild(a);
     li.appendChild(times);
@@ -476,17 +500,12 @@ export class ChronoMode extends GameMode {
   }
 
   bucketTablesText(tables) {
-    if (isFullTableSet(tables)) {
-      return chronoText('chrono_stats_tables_all', 'Toutes les tables');
-    }
-    const list = tablesListLabel(tables);
-    return chronoText('chrono_stats_tables', `Tables ${list}`, { list });
+    if (isFullTableSet(tables)) return getTranslation('chrono_stats_tables_all');
+    return getTranslation('chrono_stats_tables', { list: tablesListLabel(tables) });
   }
 
   bucketModeText(inputMode) {
-    return inputMode === 'keypad'
-      ? chronoText('chrono_input_keypad', 'Saisie')
-      : chronoText('chrono_input_mcq', 'QCM');
+    return getTranslation(inputMode === 'keypad' ? 'chrono_input_keypad' : 'chrono_input_mcq');
   }
 
   buildStatsPickPanel() {
@@ -496,63 +515,25 @@ export class ChronoMode extends GameMode {
     panel.className = 'chrono-setup-panel';
     const title = document.createElement('h2');
     title.dataset.translate = 'chrono_stats_pick_title';
-    title.textContent = chronoText('chrono_stats_pick_title', 'Tes classements');
+    title.textContent = getTranslation('chrono_stats_pick_title');
     panel.appendChild(title);
 
     if (rows.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'chrono-tables-hint';
       empty.dataset.translate = 'chrono_stats_empty';
-      empty.textContent = chronoText(
-        'chrono_stats_empty',
-        'Aucune partie enregistrée pour l’instant.'
-      );
+      empty.textContent = getTranslation('chrono_stats_empty');
       panel.appendChild(empty);
     } else {
       const hint = document.createElement('p');
       hint.className = 'chrono-tables-hint';
       hint.dataset.translate = 'chrono_stats_pick_hint';
-      hint.textContent = chronoText(
-        'chrono_stats_pick_hint',
-        'Choisis un classement pour voir tes temps.'
-      );
+      hint.textContent = getTranslation('chrono_stats_pick_hint');
       panel.appendChild(hint);
       const list = document.createElement('ul');
       list.className = 'chrono-stats-list';
-      const openLabel = chronoText('chrono_stats_open', 'Voir tes temps');
-      rows.forEach(row => {
-        const item = document.createElement('li');
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'chrono-stats-row';
-        btn.dataset.bucketKey = row.key;
-        const copy = document.createElement('span');
-        copy.className = 'chrono-stats-copy';
-        const label = document.createElement('span');
-        label.className = 'chrono-stats-label';
-        label.textContent = chronoText('chrono_stats_row', '{tables} · {mode}', {
-          tables: this.bucketTablesText(row.tables),
-          mode: this.bucketModeText(row.inputMode),
-        });
-        const count = document.createElement('span');
-        count.className = 'chrono-stats-count';
-        count.textContent = chronoText(
-          'chrono_stats_games',
-          '{n, plural, one {# partie} other {# parties}}',
-          { n: row.games }
-        );
-        copy.appendChild(label);
-        copy.appendChild(count);
-        const open = document.createElement('span');
-        open.className = 'chrono-stats-open';
-        open.dataset.translate = 'chrono_stats_open';
-        open.textContent = openLabel;
-        btn.setAttribute('aria-label', `${label.textContent}. ${count.textContent}. ${openLabel}`);
-        btn.appendChild(copy);
-        btn.appendChild(open);
-        item.appendChild(btn);
-        list.appendChild(item);
-      });
+      const openLabel = getTranslation('chrono_stats_open');
+      rows.forEach(row => list.appendChild(this.buildStatsRow(row, openLabel)));
       panel.appendChild(list);
     }
 
@@ -561,9 +542,40 @@ export class ChronoMode extends GameMode {
     back.id = 'chrono-stats-back-setup';
     back.className = 'btn btn-quiet';
     back.dataset.translate = 'chrono_back_to_setup';
-    back.textContent = chronoText('chrono_back_to_setup', 'Retour');
+    back.textContent = getTranslation('chrono_back_to_setup');
     panel.appendChild(back);
     return panel;
+  }
+
+  /** Une ligne de la liste des classements : tables, façon de répondre, nombre de parties */
+  buildStatsRow(row, openLabel) {
+    const item = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chrono-stats-row';
+    btn.dataset.bucketKey = row.key;
+    const copy = document.createElement('span');
+    copy.className = 'chrono-stats-copy';
+    const label = document.createElement('span');
+    label.className = 'chrono-stats-label';
+    label.textContent = getTranslation('chrono_stats_row', {
+      tables: this.bucketTablesText(row.tables),
+      mode: this.bucketModeText(row.inputMode),
+    });
+    const count = document.createElement('span');
+    count.className = 'chrono-stats-count';
+    count.textContent = getTranslation('chrono_stats_games', { n: row.games });
+    copy.appendChild(label);
+    copy.appendChild(count);
+    const open = document.createElement('span');
+    open.className = 'chrono-stats-open';
+    open.dataset.translate = 'chrono_stats_open';
+    open.textContent = openLabel;
+    btn.setAttribute('aria-label', `${label.textContent}. ${count.textContent}. ${openLabel}`);
+    btn.appendChild(copy);
+    btn.appendChild(open);
+    item.appendChild(btn);
+    return item;
   }
 
   bindStatsPickPanel() {
@@ -579,16 +591,16 @@ export class ChronoMode extends GameMode {
     const focus = this.statsFocus;
     if (!focus) return this.buildStatsPickPanel();
     const { store } = loadChronoStore();
-    const { bucket } = getBucket(store, focus.tables, focus.inputMode);
+    const bucket = findBucket(store, focus.tables, focus.inputMode);
     const panel = document.createElement('div');
     panel.className = 'chrono-setup-panel';
     const title = document.createElement('h2');
     title.dataset.translate = 'chrono_stats_title';
-    title.textContent = chronoText('chrono_stats_title', 'Statistiques Chrono');
+    title.textContent = getTranslation('chrono_stats_title');
     panel.appendChild(title);
     const subtitle = document.createElement('p');
     subtitle.className = 'chrono-tables-hint';
-    subtitle.textContent = chronoText('chrono_stats_row', '{tables} · {mode}', {
+    subtitle.textContent = getTranslation('chrono_stats_row', {
       tables: this.bucketTablesText(focus.tables),
       mode: this.bucketModeText(focus.inputMode),
     });
@@ -597,22 +609,19 @@ export class ChronoMode extends GameMode {
     const average = document.createElement('p');
     average.textContent =
       averageMs == null
-        ? chronoText(
-            'chrono_session_average_none',
-            'Première partie : la moyenne s’affichera ensuite.'
-          )
-        : chronoText('chrono_session_average', 'Moyenne de toutes tes parties : {time}', {
-            time: formatDuration(averageMs),
+        ? getTranslation('chrono_session_average_none')
+        : getTranslation('chrono_session_average', {
+            time: formatDuration(averageMs, getCurrentLanguage()),
           });
     panel.appendChild(average);
     panel.appendChild(this.buildRanking(rankedSessions(bucket)));
-    panel.appendChild(this.buildCurve(recentSessions(bucket, 20), averageMs));
+    panel.appendChild(this.buildCurve(recentSessions(bucket), averageMs));
     const back = document.createElement('button');
     back.type = 'button';
     back.id = 'chrono-stats-back-pick';
     back.className = 'btn btn-quiet';
     back.dataset.translate = 'chrono_back_to_setup';
-    back.textContent = chronoText('chrono_back_to_setup', 'Retour');
+    back.textContent = getTranslation('chrono_back_to_setup');
     panel.appendChild(back);
     return panel;
   }
@@ -651,27 +660,29 @@ export class ChronoMode extends GameMode {
     if (revision) {
       if (store.basket.length === 0) return;
       this.isRevision = true;
-      this.targetCount = BASE_QUESTIONS;
-      this.revisionBasket = store.basket.map(item => ({
-        a: Number(item.a),
-        b: Number(item.b),
-        errors: Number(item.errors) || 1,
-      }));
+      this.revisionBasket = store.basket.map(item => ({ ...item }));
     } else {
       this.selectedTables = this.tablesFromPreferences();
       this.isRevision = false;
-      this.targetCount = BASE_QUESTIONS;
       this.revisionBasket = [];
     }
+    this.targetCount = BASE_QUESTIONS;
     this.phase = 'playing';
     this.sessionFacts = [];
     this.revisionQueue = [];
     this.sessionStartedAt = Date.now();
+    this.endedAt = null;
     this.elapsedMs = 0;
     this._abandoned = false;
+    this.sessionOutcome = null;
     await this.initializeUI();
     this.startElapsedTimer();
     this.generateQuestion();
+  }
+
+  /** Temps de la partie : il s’arrête à la dernière réponse, pas à l’écran des résultats */
+  sessionDurationMs() {
+    return (this.endedAt ?? Date.now()) - this.sessionStartedAt;
   }
 
   startElapsedTimer() {
@@ -681,15 +692,19 @@ export class ChronoMode extends GameMode {
     }
     this.updateInfoBar();
     this.timerInterval = setInterval(() => {
-      this.elapsedMs = Date.now() - this.sessionStartedAt;
+      this.elapsedMs = this.sessionDurationMs();
       this.updateInfoBar();
     }, 250);
     this.intervals.add(this.timerInterval);
   }
 
   getQuestionOptions() {
-    const avoid = this.sessionFacts.map(fact => `${fact.a}×${fact.b}`);
-    const { t, n } = pickChronoPair(this.selectedTables, avoid);
+    // Ni un calcul déjà posé, ni son inverse : 6 × 8 ne suit pas 8 × 6, dont la correction
+    // est encore affichée
+    const avoid = this.sessionFacts.flatMap(fact => factKeys(fact.a, fact.b));
+    const last = this.sessionFacts.at(-1);
+    const recent = last ? factKeys(last.a, last.b) : [];
+    const { t, n } = pickChronoPair(this.selectedTables, avoid, recent);
     return {
       operator: '×',
       type: this.inputMode === 'mcq' ? 'mcq' : 'classic',
@@ -750,7 +765,9 @@ export class ChronoMode extends GameMode {
     this.typedValue = '';
     this.optionsElement?.classList.remove('is-answered');
     super.displayQuestion();
-    if (this._holdErrorFeedback) this.paintFeedback(false, this._heldErrorAnswer);
+    // La base n’efface que le texte : la classe d’erreur partirait avec la question
+    this.clearFeedback();
+    if (this._holdErrorFeedback) this.paintFeedback(false, this._heldErrorFact);
   }
 
   clearFeedback() {
@@ -759,7 +776,14 @@ export class ChronoMode extends GameMode {
     this.feedbackElement.className = 'feedback chrono-feedback';
   }
 
-  paintFeedback(isCorrect, correctAnswer) {
+  /**
+   * Retour d’une réponse. Après une erreur, il reste affiché sous la question suivante :
+   * il écrit donc le calcul en entier (« 8 × 6 = 48 »), jamais la seule réponse, qu’on
+   * prendrait pour celle de la nouvelle question.
+   * @param {boolean} isCorrect
+   * @param {{a: number, b: number, answer: number}} [fact] - Calcul raté
+   */
+  paintFeedback(isCorrect, fact) {
     if (!this.feedbackElement) return;
     this.feedbackElement.textContent = '';
     const mark = isCorrect ? createCheckIcon() : createCrossIcon();
@@ -767,7 +791,7 @@ export class ChronoMode extends GameMode {
     const text = document.createElement('span');
     text.textContent = isCorrect
       ? getTranslation('chrono_feedback_correct')
-      : getTranslation('chrono_feedback_incorrect', { answer: correctAnswer });
+      : `${fact.a} × ${fact.b} = ${fact.answer}`;
     this.feedbackElement.appendChild(text);
     this.feedbackElement.className = `feedback chrono-feedback ${isCorrect ? 'feedback-success' : 'feedback-error'}`;
   }
@@ -775,7 +799,7 @@ export class ChronoMode extends GameMode {
   releaseErrorHold(generation) {
     if (generation !== this._errorHoldGen) return;
     this._holdErrorFeedback = false;
-    this._heldErrorAnswer = null;
+    this._heldErrorFact = null;
     if (!this.feedbackElement?.classList.contains('feedback-error')) return;
     this.clearFeedback();
   }
@@ -807,7 +831,7 @@ export class ChronoMode extends GameMode {
     typed.className = 'chrono-typed';
     typed.id = 'chrono-typed';
     typed.setAttribute('aria-live', 'polite');
-    typed.setAttribute('aria-label', chronoText('chrono_typed_label', 'Ta réponse'));
+    typed.setAttribute('aria-label', getTranslation('chrono_typed_label'));
     typed.textContent = this.typedValue || '·';
     pad.appendChild(typed);
     const grid = document.createElement('div');
@@ -819,7 +843,7 @@ export class ChronoMode extends GameMode {
       btn.className = 'chrono-key';
       if (key === 'back') {
         btn.dataset.translate = 'chrono_backspace';
-        btn.textContent = chronoText('chrono_backspace', 'Effacer');
+        btn.textContent = getTranslation('chrono_backspace');
         btn.dataset.key = 'back';
       } else {
         btn.textContent = String(key);
@@ -883,46 +907,59 @@ export class ChronoMode extends GameMode {
 
   handleAnswer(userAnswer) {
     if (!this.state.isActive || !this.state.currentQuestion) return;
-    const ms = Date.now() - this.questionStartedAt;
-    const isCorrect = userAnswer === this.state.currentQuestion.answer;
+    const now = Date.now();
     const question = this.state.currentQuestion;
+    const isCorrect = userAnswer === question.answer;
     this.sessionFacts.push({
       a: question.a ?? question.table,
       b: question.b ?? question.num,
       correct: isCorrect,
-      ms,
+      ms: now - this.questionStartedAt,
     });
     this.detachKeyboard();
     super.handleAnswer(userAnswer);
+    // La dernière réponse arrête le chrono : l’affichage qui la suit ne compte pas
+    if (!this.shouldContinue()) this.endedAt = now;
   }
 
   onAnswerSubmitted(isCorrect) {
     if (!isCorrect) return;
+    const question = this.state.currentQuestion;
     const { userData } = loadChronoStore();
     grantChronoCoins(userData);
     persistChronoStore(userData);
     updateCoinDisplay();
     const coinIcon = document.querySelector('.coin-count');
     if (coinIcon) showCoinGainAnimation(coinIcon);
+    // Partie normale seulement : une révision répète les mêmes calculs. Après
+    // l’enregistrement : le profil, réécrit en entier, effacerait sa récompense
+    if (!this.isRevision) updateDailyChallengeProgress(question.table, question.num);
   }
 
   showAnswerFeedback(isCorrect, userAnswer) {
     if (!this.feedbackElement) return;
-    const correctAnswer = this.state.currentQuestion.answer;
+    const question = this.state.currentQuestion;
+    const correctAnswer = question.answer;
     if (this.inputMode === 'mcq') {
       markAnswerOptions(this.optionsElement, correctAnswer, userAnswer);
     }
     this.optionsElement?.classList.add('is-answered');
-    this.paintFeedback(isCorrect, correctAnswer);
     if (isCorrect) {
       this._holdErrorFeedback = false;
-      this._heldErrorAnswer = null;
+      this._heldErrorFact = null;
+      this.paintFeedback(true);
       playSound('good');
       return;
     }
+    const fact = {
+      a: question.a ?? question.table,
+      b: question.b ?? question.num,
+      answer: correctAnswer,
+    };
+    this.paintFeedback(false, fact);
     playSound('bad', { volume: BAD_SOUND_VOLUME });
     this._holdErrorFeedback = true;
-    this._heldErrorAnswer = correctAnswer;
+    this._heldErrorFact = fact;
     this._errorHoldGen += 1;
     const generation = this._errorHoldGen;
     this.addTimer(() => this.releaseErrorHold(generation), ERROR_HOLD_MS);
@@ -937,7 +974,6 @@ export class ChronoMode extends GameMode {
       isRevision: this.isRevision,
       correctAnswers: this.state.correctAnswers,
       questionCount: this.state.questionCount,
-      targetCount: this.targetCount,
     });
   }
 
@@ -954,10 +990,10 @@ export class ChronoMode extends GameMode {
     if (this._abandoned || this.isRevision) return;
     if (this.sessionFacts.length === 0) return;
     const { userData, store } = loadChronoStore();
-    saveChronoSession(store, {
+    this.sessionOutcome = saveChronoSession(store, {
       tables: this.selectedTables,
       inputMode: this.inputMode,
-      durationMs: Date.now() - this.sessionStartedAt,
+      durationMs: this.sessionDurationMs(),
       date: Date.now(),
       facts: this.sessionFacts,
     });
@@ -968,17 +1004,18 @@ export class ChronoMode extends GameMode {
     const shown = goToSlide(5);
     const resultsScreen = document.getElementById('results');
     if (!resultsScreen) return;
-    const durationMs = Date.now() - this.sessionStartedAt;
     const { store } = loadChronoStore();
-    const { bucket } = getBucket(store, this.selectedTables, this.inputMode);
+    const bucket = this.isRevision ? null : findBucket(store, this.selectedTables, this.inputMode);
     this.resultsPane = 'session';
     this.lastSnapshot = {
-      durationMs,
+      durationMs: this.sessionDurationMs(),
       facts: [...this.sessionFacts],
+      isRevision: this.isRevision,
+      outcome: this.sessionOutcome,
       averageMs: sessionAverageMs(bucket),
       ranking: rankedSessions(bucket),
-      curve: recentSessions(bucket, 20),
-      isRevision: this.isRevision,
+      curve: recentSessions(bucket),
+      basketSize: store.basket.length,
       avatar: gameState?.avatar,
     };
     this.mountResultsPane({ ready: shown });
@@ -1002,28 +1039,41 @@ export class ChronoMode extends GameMode {
   }
 
   renderResults(result) {
+    const lang = getCurrentLanguage();
     const container = document.createElement('section');
     container.className = 'results-container content-card game-results chrono-results';
     container.setAttribute('aria-label', getTranslation('chrono_results'));
     const avatar = createAvatarPortrait(result.avatar);
     if (avatar) container.appendChild(avatar);
-
-    const averageText =
-      result.isRevision || result.averageMs == null
-        ? getTranslation('chrono_session_average_none')
-        : getTranslation('chrono_session_average', { time: formatDuration(result.averageMs) });
-
     container.appendChild(
       createResultsSummary({
-        lead: getTranslation('chrono_session_time', { time: formatDuration(result.durationMs) }),
-        message: averageText,
-        details: [],
+        lead: getTranslation('chrono_session_time', {
+          time: formatDuration(result.durationMs, lang),
+        }),
+        ...this.resultsMessages(result, lang),
       })
     );
-
     container.appendChild(this.buildFactsTable(result.facts));
     container.appendChild(this.buildSessionActions(result));
     return container;
+  }
+
+  /**
+   * Phrase sous le temps : le temps moyen, une fois la première partie passée. Une révision
+   * n’a pas de classement, donc pas de moyenne.
+   * @returns {{message: string, details: string[]}}
+   */
+  resultsMessages(result, lang) {
+    if (result.isRevision) return { message: '', details: [] };
+    if (!result.outcome || result.outcome.first) {
+      return { message: getTranslation('chrono_session_average_none'), details: [] };
+    }
+    return {
+      message: getTranslation('chrono_session_average', {
+        time: formatDuration(result.averageMs, lang),
+      }),
+      details: [],
+    };
   }
 
   buildSessionActions(result) {
@@ -1032,14 +1082,16 @@ export class ChronoMode extends GameMode {
         label: getTranslation('chrono_play_again'),
         action: 'play-again',
         primary: true,
-        onActivate: () => startChronoMode(),
-      },
-      {
-        label: getTranslation('chrono_start_revision'),
-        action: 'revise',
-        onActivate: () => this.restartFromResults(),
+        onActivate: () => relaunchChrono({ revision: false }),
       },
     ];
+    if (result.basketSize > 0) {
+      buttons.push({
+        label: getTranslation('chrono_start_revision'),
+        action: 'revise',
+        onActivate: () => relaunchChrono({ revision: true }),
+      });
+    }
     if (!result.isRevision) {
       buttons.push({
         label: getTranslation('chrono_stats_button'),
@@ -1083,11 +1135,8 @@ export class ChronoMode extends GameMode {
     return container;
   }
 
-  restartFromResults() {
-    startChronoMode();
-  }
-
   buildFactsTable(facts) {
+    const lang = getCurrentLanguage();
     const wrap = document.createElement('section');
     const title = document.createElement('h3');
     title.dataset.translate = 'chrono_facts_title';
@@ -1103,7 +1152,7 @@ export class ChronoMode extends GameMode {
       equation.textContent = `${fact.a} × ${fact.b}`;
       const time = document.createElement('span');
       time.className = 'chrono-fact-time';
-      time.textContent = formatDuration(fact.ms);
+      time.textContent = formatDuration(fact.ms, lang);
       const mark = fact.correct ? createCheckIcon() : createCrossIcon();
       mark.classList.add('chrono-fact-mark');
       mark.setAttribute(
@@ -1119,7 +1168,9 @@ export class ChronoMode extends GameMode {
     return wrap;
   }
 
+  /** Les 10 meilleurs temps, avec leur date, dans la langue du jeu */
   buildRanking(sessions) {
+    const lang = getCurrentLanguage();
     const wrap = document.createElement('section');
     const title = document.createElement('h3');
     title.dataset.translate = 'chrono_ranking_title';
@@ -1129,8 +1180,8 @@ export class ChronoMode extends GameMode {
     list.className = 'chrono-ranking';
     sessions.forEach(session => {
       const li = document.createElement('li');
-      const when = new Date(session.date).toLocaleString();
-      li.textContent = `${formatDuration(session.durationMs)} — ${when}`;
+      const when = formatSessionDate(session.date, lang);
+      li.textContent = `${formatDuration(session.durationMs, lang)} — ${when}`;
       list.appendChild(li);
     });
     wrap.appendChild(list);
@@ -1237,6 +1288,12 @@ export class ChronoMode extends GameMode {
       points: times.map((ms, index) => `${xOf(index)},${yOf(ms)}`).join(' '),
     });
     svg.appendChild(polyline);
+    // Un point par partie : une seule partie se voit aussi (une ligne d’un point ne se trace pas)
+    times.forEach((ms, index) => {
+      svg.appendChild(
+        this.svgEl('circle', { cx: xOf(index), cy: yOf(ms), r: 3, fill: 'currentColor' })
+      );
+    });
 
     if (averageMs != null) {
       const y = yOf(averageMs);
@@ -1265,9 +1322,12 @@ export class ChronoMode extends GameMode {
 
 let _chronoModeInstance = null;
 
-export function startChronoMode() {
+/**
+ * @param {{autoStart?: boolean, revision?: boolean}} [options] - Voir le constructeur
+ */
+export function startChronoMode(options = {}) {
   if (_chronoModeInstance) _chronoModeInstance.stop();
-  _chronoModeInstance = new ChronoMode();
+  _chronoModeInstance = new ChronoMode(options);
   void _chronoModeInstance.start();
 }
 
@@ -1279,7 +1339,7 @@ export function stopChronoMode() {
 }
 
 export function refreshChronoTexts() {
-  _chronoModeInstance?.refreshTexts?.();
+  return _chronoModeInstance?.refreshTexts?.();
 }
 
 export default ChronoMode;

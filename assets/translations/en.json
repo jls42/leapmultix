@@ -693,7 +693,6 @@
   "chrono_fact_ok": "Correct",
   "chrono_facts_title": "Time per fact",
   "chrono_feedback_correct": "Correct",
-  "chrono_feedback_incorrect": "The correct answer is {answer}.",
   "chrono_info_bar_label": "Timer",
   "chrono_input_keypad": "Keypad",
   "chrono_input_legend": "How to answer",

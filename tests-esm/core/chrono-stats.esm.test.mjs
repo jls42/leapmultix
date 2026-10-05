@@ -2,6 +2,7 @@ import { describe, expect, test } from '@jest/globals';
 import { classifyTypedAnswer } from '../../js/core/chrono-input.js';
 import {
   chronoPairWeight,
+  factKeys,
   pickChronoPair,
   takeNextRevisionFact,
   includedTablesFromExclusions,
@@ -16,22 +17,30 @@ import {
   normalizeChronoStats,
   sessionAverageMs,
   setLastChronoInputMode,
-  shouldAutoAddFact,
   listPlayedChronoBuckets,
   parseBucketKey,
   tablesListLabel,
   saveChronoSession,
   rankedSessions,
+  recentSessions,
   formatDuration,
+  formatSessionDate,
   niceDurationMaxMs,
   formatAxisSeconds,
   addToBasket,
   addManualBasketFact,
-  basketErrorClass,
+  basketDueClass,
   grantChronoCoins,
   chronoShouldContinue,
-  getBucket,
+  findBucket,
 } from '../../js/core/chrono-stats.js';
+
+const NBSP = ' ';
+
+/** Une partie terminée, réduite à ce qui compte pour le classement */
+function save(store, durationMs, date, { tables = [7], inputMode = 'keypad', facts = [] } = {}) {
+  return saveChronoSession(store, { tables, inputMode, durationMs, date, facts });
+}
 
 describe('chrono-input', () => {
   test('accepte la valeur dès qu’elle est complète', () => {
@@ -44,7 +53,7 @@ describe('chrono-input', () => {
   });
 });
 
-describe('chrono-stats', () => {
+describe('chrono-stats : classements', () => {
   test('sépare les classements par tables et par saisie', () => {
     expect(tablesKey([7, 3, 3])).toBe('3,7');
     expect(bucketKey([3, 7], 'mcq')).not.toBe(bucketKey([3, 7], 'keypad'));
@@ -54,28 +63,9 @@ describe('chrono-stats', () => {
 
   test('la liste des stats compte les parties par tables et par saisie', () => {
     const store = emptyChronoStats();
-    const fact = { a: 3, b: 3, ms: 400, correct: true };
-    saveChronoSession(store, {
-      tables: [3],
-      inputMode: 'mcq',
-      durationMs: 10000,
-      date: 1,
-      facts: [fact],
-    });
-    saveChronoSession(store, {
-      tables: [3],
-      inputMode: 'mcq',
-      durationMs: 9000,
-      date: 2,
-      facts: [fact],
-    });
-    saveChronoSession(store, {
-      tables: [2, 3],
-      inputMode: 'keypad',
-      durationMs: 11000,
-      date: 3,
-      facts: [fact],
-    });
+    save(store, 10000, 1, { tables: [3], inputMode: 'mcq' });
+    save(store, 9000, 2, { tables: [3], inputMode: 'mcq' });
+    save(store, 11000, 3, { tables: [2, 3], inputMode: 'keypad' });
     const rows = listPlayedChronoBuckets(store);
     expect(rows).toHaveLength(2);
     expect(rows[0]).toMatchObject({ tables: [3], inputMode: 'mcq', games: 2 });
@@ -83,107 +73,64 @@ describe('chrono-stats', () => {
   });
 
   test('une partie avec des erreurs compte dès 10 justes', () => {
-    expect(
-      chronoShouldContinue({
-        isRevision: false,
-        correctAnswers: 9,
-        questionCount: 11,
-        targetCount: 11,
-      })
-    ).toBe(true);
-    expect(
-      chronoShouldContinue({
-        isRevision: false,
-        correctAnswers: 10,
-        questionCount: 12,
-        targetCount: 12,
-      })
-    ).toBe(false);
+    expect(chronoShouldContinue({ isRevision: false, correctAnswers: 9, questionCount: 11 })).toBe(
+      true
+    );
+    expect(chronoShouldContinue({ isRevision: false, correctAnswers: 10, questionCount: 12 })).toBe(
+      false
+    );
   });
 
   test('une révision s’arrête à 10 questions, même avec des erreurs', () => {
-    expect(
-      chronoShouldContinue({
-        isRevision: true,
-        correctAnswers: 6,
-        questionCount: 9,
-        targetCount: 40,
-      })
-    ).toBe(true);
-    expect(
-      chronoShouldContinue({
-        isRevision: true,
-        correctAnswers: 6,
-        questionCount: 10,
-        targetCount: 40,
-      })
-    ).toBe(false);
+    expect(chronoShouldContinue({ isRevision: true, correctAnswers: 6, questionCount: 9 })).toBe(
+      true
+    );
+    expect(chronoShouldContinue({ isRevision: true, correctAnswers: 6, questionCount: 10 })).toBe(
+      false
+    );
   });
 
   test('une partie avec erreurs entre au classement', () => {
     const store = emptyChronoStats();
-    saveChronoSession(store, {
+    save(store, 18000, 1, {
       tables: [3],
       inputMode: 'mcq',
-      durationMs: 18000,
-      date: 1,
       facts: [
         { a: 3, b: 3, ms: 800, correct: false },
         { a: 3, b: 7, ms: 400, correct: true },
       ],
     });
-    const { bucket } = getBucket(store, [3], 'mcq');
-    expect(rankedSessions(bucket)).toHaveLength(1);
-    expect(rankedSessions(bucket)[0].durationMs).toBe(18000);
+    const bucket = findBucket(store, [3], 'mcq');
+    expect(rankedSessions(bucket)).toEqual([{ durationMs: 18000, date: 1 }]);
   });
 
   test('la moyenne affichée est celle de toutes les parties', () => {
     const store = emptyChronoStats();
-    saveChronoSession(store, {
-      tables: [2],
-      inputMode: 'keypad',
-      durationMs: 10000,
-      date: 1,
-      facts: [{ a: 2, b: 2, ms: 400, correct: true }],
-    });
-    saveChronoSession(store, {
-      tables: [2],
-      inputMode: 'keypad',
-      durationMs: 20000,
-      date: 2,
-      facts: [{ a: 2, b: 3, ms: 500, correct: true }],
-    });
-    const { bucket } = { bucket: store.buckets['2|keypad'] };
-    expect(sessionAverageMs(bucket)).toBe(15000);
+    save(store, 10000, 1, { tables: [2] });
+    save(store, 20000, 2, { tables: [2] });
+    expect(sessionAverageMs(findBucket(store, [2], 'keypad'))).toBe(15000);
   });
 
-  test('seul un calcul faux entre automatiquement au panier', () => {
-    expect(shouldAutoAddFact({ correct: false, ms: 100 })).toBe(true);
-    expect(shouldAutoAddFact({ correct: true, ms: 800 })).toBe(false);
-    expect(shouldAutoAddFact({ correct: true, ms: 100 })).toBe(false);
-    expect(shouldAutoAddFact(null)).toBe(false);
-  });
-
-  test('une partie ne met au panier que les erreurs, pas les justes lents', () => {
+  test('le profil ne grossit plus : 10 meilleurs temps, 20 derniers, moyenne exacte', () => {
     const store = emptyChronoStats();
-    saveChronoSession(store, {
-      tables: [7],
-      inputMode: 'keypad',
-      durationMs: 4000,
-      date: 1,
-      facts: [{ a: 7, b: 8, ms: 200, correct: true }],
-    });
-    saveChronoSession(store, {
-      tables: [7],
-      inputMode: 'keypad',
-      durationMs: 9000,
-      date: 2,
-      facts: [
-        { a: 7, b: 8, ms: 900, correct: true },
-        { a: 6, b: 6, ms: 400, correct: false },
-      ],
-    });
-    expect(store.basket).toEqual([{ a: 6, b: 6, errors: 1 }]);
+    for (let i = 1; i <= 25; i += 1) save(store, 1000 * i, i);
+    const bucket = findBucket(store, [7], 'keypad');
+    expect(bucket.count).toBe(25);
+    expect(sessionAverageMs(bucket)).toBe(13000);
+    expect(rankedSessions(bucket).map(session => session.durationMs)).toEqual(
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => n * 1000)
+    );
+    const recent = recentSessions(bucket).map(session => session.date);
+    expect(recent).toHaveLength(20);
+    expect(recent[0]).toBe(6);
+    expect(recent.at(-1)).toBe(25);
+    expect(JSON.stringify(store).length).toBeLessThan(2500);
+  });
+
+  test('lire un classement ne le crée pas', () => {
+    const store = emptyChronoStats();
+    expect(findBucket(store, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'mcq')).toBeNull();
+    expect(store.buckets).toEqual([]);
   });
 
   test('le mode de saisie du profil se souvient du dernier choix', () => {
@@ -193,63 +140,154 @@ describe('chrono-stats', () => {
     setLastChronoInputMode(store, 'mcq');
     expect(lastChronoInputMode(store)).toBe('mcq');
   });
+});
 
-  test('le classement ordonne du plus rapide au plus lent', () => {
-    const ranked = rankedSessions({
-      sessions: [
-        { durationMs: 9000, date: 2 },
-        { durationMs: 4000, date: 1 },
+describe('chrono-stats : normalisation', () => {
+  const raw = {
+    buckets: [
+      {
+        key: '7,3|keypad',
+        count: 12,
+        totalMs: 240000,
+        best: Array.from({ length: 14 }, (_, i) => ({ durationMs: 30000 - i * 1000, date: i })),
+        recent: Array.from({ length: 30 }, (_, i) => ({ durationMs: 20000, date: 100 + i })),
+        factTimes: [{ a: 7, b: 8, ms: 900 }],
+      },
+      { key: 'pas-un-classement', count: 3 },
+      { key: '3,7|keypad', count: 1, totalMs: 1 },
+    ],
+    basket: [
+      { a: 7, b: 8, due: 2 },
+      { a: '6', b: '9', errors: 3 },
+      { a: 7, b: 8, due: 9 },
+      { a: 12, b: 3, due: 1 },
+      { a: 0, b: 5, due: 1 },
+      { a: 4, b: 4, due: 0 },
+    ],
+    lastInputMode: 'mcq',
+    inconnu: true,
+  };
+
+  test('ne garde que les champs connus, plafonnés, triés et dédoublonnés', () => {
+    const store = normalizeChronoStats(raw);
+    expect(Object.keys(store).sort()).toEqual(['basket', 'buckets', 'lastInputMode']);
+    expect(store.buckets).toHaveLength(1);
+    const [bucket] = store.buckets;
+    expect(bucket.key).toBe('3,7|keypad');
+    expect(Object.keys(bucket).sort()).toEqual(['best', 'count', 'key', 'recent', 'totalMs']);
+    expect(bucket.best).toHaveLength(10);
+    expect(bucket.best[0].durationMs).toBe(17000);
+    expect(bucket.recent).toHaveLength(20);
+    expect(bucket.recent[0].date).toBe(110);
+    expect(bucket.count).toBe(20);
+  });
+
+  test('le panier ne garde que des calculs 1–10 × 1–10, une fois chacun', () => {
+    expect(normalizeChronoStats(raw).basket).toEqual([
+      { a: 7, b: 8, due: 2 },
+      { a: 6, b: 9, due: 3 },
+      { a: 4, b: 4, due: 1 },
+    ]);
+  });
+
+  test('est idempotente : elle tourne à chaque lecture du profil', () => {
+    const once = normalizeChronoStats(raw);
+    expect(normalizeChronoStats(once)).toEqual(once);
+    expect(normalizeChronoStats(normalizeChronoStats(once))).toEqual(once);
+  });
+
+  test('un profil sans données Chrono part de zéro', () => {
+    expect(normalizeChronoStats(undefined)).toEqual(emptyChronoStats());
+    expect(normalizeChronoStats({ buckets: { '7|keypad': { sessions: [] } } })).toEqual(
+      emptyChronoStats()
+    );
+  });
+});
+
+describe('chrono-stats : calculs à revoir', () => {
+  test('seuls les calculs ratés entrent dans la liste', () => {
+    const store = emptyChronoStats();
+    save(store, 4000, 1, { facts: [{ a: 7, b: 8, ms: 200, correct: true }] });
+    save(store, 9000, 2, {
+      facts: [
+        { a: 7, b: 8, ms: 900, correct: true },
+        { a: 6, b: 6, ms: 400, correct: false },
       ],
     });
-    expect(ranked[0].durationMs).toBe(4000);
+    expect(store.basket).toEqual([{ a: 6, b: 6, due: 1 }]);
   });
 
-  test('formatte les durées', () => {
-    expect(formatDuration(1500)).toBe('1.5 s');
-  });
-
-  test('l’échelle du graphique arrondit le maximum', () => {
-    expect(niceDurationMaxMs(12000)).toBe(20000);
-    expect(formatAxisSeconds(20000)).toBe('20 s');
-  });
-
-  test('le panier n’a pas de doublon et compte les erreurs', () => {
+  test('un calcul raté deux fois est à revoir deux fois, sans doublon', () => {
     const store = emptyChronoStats();
     addToBasket(store, { a: 7, b: 8, correct: false });
     addToBasket(store, { a: 7, b: 8, correct: false });
-    addToBasket(store, { a: 7, b: 8, correct: true });
-    expect(store.basket).toHaveLength(1);
-    expect(store.basket[0].errors).toBe(2);
+    expect(store.basket).toEqual([{ a: 7, b: 8, due: 2 }]);
   });
 
-  test('un calcul qui entre au panier part de 1 erreur', () => {
+  test('un calcul hors de 1–10 × 1–10 n’entre jamais : sa question ne serait pas enregistrée', () => {
     const store = emptyChronoStats();
-    addToBasket(store, { a: 4, b: 5, correct: true });
-    expect(store.basket).toEqual([{ a: 4, b: 5, errors: 1 }]);
+    addToBasket(store, { a: 11, b: 8, correct: false });
+    expect(addManualBasketFact(store, 0, 5)).toBe(false);
+    expect(store.basket).toEqual([]);
   });
 
   test('on peut ajouter un calcul à la main, sans doublon', () => {
     const store = emptyChronoStats();
     expect(addManualBasketFact(store, 6, 7)).toBe(true);
     expect(addManualBasketFact(store, 6, 7)).toBe(true);
-    expect(addManualBasketFact(store, 0, 5)).toBe(false);
-    expect(store.basket).toEqual([{ a: 6, b: 7, errors: 1 }]);
+    expect(store.basket).toEqual([{ a: 6, b: 7, due: 1 }]);
   });
 
-  test('une partie abandonnée ne met pas les calculs non répondus dans le panier', () => {
+  test('une partie abandonnée ne met pas les calculs non répondus dans la liste', () => {
     const store = emptyChronoStats();
-    saveChronoSession(store, {
-      tables: [7],
-      inputMode: 'keypad',
-      durationMs: 5000,
-      date: 1,
+    save(store, 5000, 1, {
       facts: [
         { a: 7, b: 8, ms: 900, correct: false },
         { a: 6, b: 6, answered: false },
       ],
     });
-    expect(store.basket.some(item => item.a === 6 && item.b === 6)).toBe(false);
-    expect(store.basket).toEqual([{ a: 7, b: 8, errors: 1 }]);
+    expect(store.basket).toEqual([{ a: 7, b: 8, due: 1 }]);
+  });
+
+  test('le badge « à revoir » est jaune, orange, puis rouge', () => {
+    expect(basketDueClass(1)).toBe('is-err-1');
+    expect(basketDueClass(2)).toBe('is-err-2');
+    expect(basketDueClass(3)).toBe('is-err-3');
+    expect(basketDueClass(9)).toBe('is-err-3');
+  });
+});
+
+describe('chrono-stats : pièces', () => {
+  test('une bonne réponse Chrono donne une pièce', () => {
+    const userData = { coins: 4 };
+    expect(grantChronoCoins(userData)).toBe(5);
+    expect(userData.coins).toBe(5);
+  });
+});
+
+describe('chrono-stats : formats dans la langue du jeu', () => {
+  test('les durées suivent la langue : virgule en français et en espagnol', () => {
+    expect(formatDuration(1500, 'fr')).toBe(`1,5${NBSP}s`);
+    expect(formatDuration(1500, 'es')).toBe(`1,5${NBSP}s`);
+    expect(formatDuration(1500, 'en')).toBe(`1.5${NBSP}s`);
+    expect(formatDuration(65600, 'fr')).toBe(`1${NBSP}min${NBSP}05,6${NBSP}s`);
+  });
+
+  test('les dixièmes s’arrondissent une fois : jamais « 60,0 s »', () => {
+    expect(formatDuration(59960, 'fr')).toBe(`1${NBSP}min${NBSP}00,0${NBSP}s`);
+    expect(formatDuration(59940, 'fr')).toBe(`59,9${NBSP}s`);
+  });
+
+  test('l’échelle du graphique arrondit le maximum', () => {
+    expect(niceDurationMaxMs(12000)).toBe(20000);
+    expect(formatAxisSeconds(20000)).toBe(`20${NBSP}s`);
+    expect(formatAxisSeconds(100000)).toBe(`1${NBSP}min${NBSP}40`);
+  });
+
+  test('la date d’une partie suit la langue du jeu, pas celle du navigateur', () => {
+    const date = new Date(2026, 9, 5, 12, 30).getTime();
+    expect(formatSessionDate(date, 'fr')).toContain('05/10/2026');
+    expect(formatSessionDate(date, 'fr')).not.toBe(formatSessionDate(date, 'en'));
   });
 });
 
@@ -294,6 +332,25 @@ describe('chrono-questions', () => {
     expect(extra.t).toBe(2);
   });
 
+  test('après 8 × 6, ni 8 × 6 ni 6 × 8 : la correction affichée donnerait la réponse', () => {
+    expect(factKeys(8, 6)).toEqual(['8×6', '6×8']);
+    const tables = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    for (let i = 0; i < 300; i += 1) {
+      const { t, n } = pickChronoPair(tables, factKeys(8, 6));
+      expect([`${t}×${n}`]).not.toContain('8×6');
+      expect([`${t}×${n}`]).not.toContain('6×8');
+    }
+  });
+
+  test('une seule table et tout déjà posé : le dernier calcul n’est pas reposé', () => {
+    const asked = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].flatMap(n => factKeys(7, n));
+    for (let i = 0; i < 300; i += 1) {
+      const { t, n } = pickChronoPair([7], asked, factKeys(7, 6));
+      expect(t).toBe(7);
+      expect(n).not.toBe(6);
+    }
+  });
+
   test('la file de révision écarte les doublons d’affilée', () => {
     const spread = separateRevisionRepeats([
       { a: 7, b: 8 },
@@ -303,44 +360,39 @@ describe('chrono-questions', () => {
     expect(spread[0].a === spread[1].a && spread[0].b === spread[1].b).toBe(false);
   });
 
-  test('une passe de révision contient chaque calcul, plus souvent s’il a plus d’erreurs', () => {
+  test('une passe de révision contient chaque calcul, plus souvent s’il est plus à revoir', () => {
     const basket = [
-      { a: 6, b: 7, errors: 0 },
-      { a: 8, b: 9, errors: 2 },
-      { a: 4, b: 4, errors: 1 },
+      { a: 6, b: 7, due: 0 },
+      { a: 8, b: 9, due: 2 },
+      { a: 4, b: 4, due: 1 },
     ];
     const queue = [];
     refillRevisionQueue(queue, basket);
-    const counts = Object.create(null);
-    for (const fact of queue) {
-      const key = `${fact.a}×${fact.b}`;
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    expect(counts['6×7']).toBe(1);
-    expect(counts['4×4']).toBe(2);
-    expect(counts['8×9']).toBe(3);
+    const count = key => queue.filter(fact => `${fact.a}×${fact.b}` === key).length;
+    expect(count('6×7')).toBe(1);
+    expect(count('4×4')).toBe(2);
+    expect(count('8×9')).toBe(3);
   });
 
   test('les questions en plus recommencent une passe complète, pas un seul calcul', () => {
     const basket = [
-      { a: 3, b: 3, errors: 1 },
-      { a: 7, b: 8, errors: 1 },
+      { a: 3, b: 3, due: 1 },
+      { a: 7, b: 8, due: 1 },
     ];
     const queue = [];
-    const counts = Object.create(null);
+    const keys = [];
     for (let i = 0; i < 4; i += 1) {
       const fact = takeNextRevisionFact(queue, basket);
-      const key = `${fact.a}×${fact.b}`;
-      counts[key] = (counts[key] || 0) + 1;
+      keys.push(`${fact.a}×${fact.b}`);
     }
-    expect(counts['3×3']).toBe(2);
-    expect(counts['7×8']).toBe(2);
+    expect(keys.filter(key => key === '3×3')).toHaveLength(2);
+    expect(keys.filter(key => key === '7×8')).toHaveLength(2);
   });
 
-  test('la révision ne sort jamais du panier, elle reboucle', () => {
+  test('la révision ne sort jamais de la liste, elle reboucle', () => {
     const basket = [
-      { a: 3, b: 4, errors: 1 },
-      { a: 7, b: 8, errors: 2 },
+      { a: 3, b: 4, due: 1 },
+      { a: 7, b: 8, due: 2 },
     ];
     const allowed = new Set(basket.map(item => `${item.a}×${item.b}`));
     const queue = [];
@@ -348,20 +400,5 @@ describe('chrono-questions', () => {
       const fact = takeNextRevisionFact(queue, basket);
       expect(allowed.has(`${fact.a}×${fact.b}`)).toBe(true);
     }
-  });
-});
-
-describe('chrono panier et pièces', () => {
-  test('le badge d’erreurs est jaune, orange, puis rouge', () => {
-    expect(basketErrorClass(1)).toBe('is-err-1');
-    expect(basketErrorClass(2)).toBe('is-err-2');
-    expect(basketErrorClass(3)).toBe('is-err-3');
-    expect(basketErrorClass(9)).toBe('is-err-3');
-  });
-
-  test('une bonne réponse Chrono donne une pièce', () => {
-    const userData = { coins: 4 };
-    expect(grantChronoCoins(userData)).toBe(5);
-    expect(userData.coins).toBe(5);
   });
 });

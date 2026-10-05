@@ -699,7 +699,6 @@
   "chrono_fact_ok": "Correcto",
   "chrono_facts_title": "Tiempo por cálculo",
   "chrono_feedback_correct": "Correcto",
-  "chrono_feedback_incorrect": "La respuesta correcta es {answer}.",
   "chrono_info_bar_label": "Cronómetro",
   "chrono_input_keypad": "Teclado",
   "chrono_input_legend": "Cómo responder",

@@ -70,6 +70,17 @@ function pairKey(t, n) {
   return `${t}×${n}`;
 }
 
+/**
+ * Les deux sens d’un calcul (`8×6` et `6×8`) : après une erreur sur 8 × 6, sa correction
+ * reste affichée sous la question suivante, qui ne doit donc pas être 6 × 8.
+ * @param {number} a
+ * @param {number} b
+ * @returns {string[]}
+ */
+export function factKeys(a, b) {
+  return [pairKey(Number(a), Number(b)), pairKey(Number(b), Number(a))];
+}
+
 function pickWeightedPair(pairs) {
   const total = pairs.reduce((sum, pair) => sum + pair.weight, 0);
   let cursor = randomFloat() * total;
@@ -81,24 +92,24 @@ function pickWeightedPair(pairs) {
 }
 
 /**
+ * Tire un calcul pas encore posé dans la série. Quand il n’en reste plus (une seule table
+ * et des erreurs), on reprend tous les calculs sauf les plus récents.
  * @param {number[]} tables
  * @param {Iterable<string>} [avoidKeys] clés `7×8` déjà posées dans la série
+ * @param {Iterable<string>} [recentKeys] clés à écarter même quand tout a été posé
  * @returns {{ t: number, n: number }}
  */
-export function pickChronoPair(tables, avoidKeys = []) {
+export function pickChronoPair(tables, avoidKeys = [], recentKeys = []) {
   const eligible = uniqueTables(tables);
   const source = eligible.length > 0 ? eligible : [2, 3, 4, 5, 6, 7, 8, 9];
   const allTables = isFullTableSet(source);
   const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const all = buildAllPairs(source, nums, allTables);
   const avoid = new Set(avoidKeys);
-  const pairs = [];
-  for (const t of source) {
-    for (const n of nums) {
-      if (avoid.has(pairKey(t, n))) continue;
-      pairs.push({ t, n, weight: chronoPairWeight(t, n, allTables) });
-    }
-  }
-  const pool = pairs.length > 0 ? pairs : buildAllPairs(source, nums, allTables);
+  const recent = new Set(recentKeys);
+  const fresh = all.filter(pair => !avoid.has(pairKey(pair.t, pair.n)));
+  const notRecent = all.filter(pair => !recent.has(pairKey(pair.t, pair.n)));
+  const pool = [fresh, notRecent, all].find(list => list.length > 0);
   const picked = pickWeightedPair(pool);
   return { t: picked.t, n: picked.n };
 }
@@ -114,33 +125,25 @@ function buildAllPairs(source, nums, allTables) {
 }
 
 /**
- * Copies dans une passe de révision : une fois le calcul, plus une fois par erreur.
- * @param {number} errors
+ * Copies dans une passe de révision : une fois le calcul, plus une fois par « à revoir ».
+ * @param {number} due
  * @returns {number}
  */
-export function revisionCopies(errors) {
-  return 1 + Math.max(0, Math.floor(Number(errors) || 0));
+function revisionCopies(due) {
+  return 1 + Math.max(0, Math.floor(Number(due) || 0));
 }
 
 /**
- * Longueur d’une passe pondérée (tous les calculs, plus d’occurrences si plus d’erreurs).
- * @param {Array<{errors?: number}>} basket
- * @returns {number}
- */
-export function revisionRoundLength(basket) {
-  return (basket || []).reduce((sum, item) => sum + revisionCopies(item.errors), 0);
-}
-
-/**
- * Remplit la file de révision : chaque calcul au moins une fois, davantage s’il a plus d’erreurs.
+ * Remplit la file de révision : chaque calcul au moins une fois, davantage s’il est plus
+ * souvent à revoir.
  * @param {Array<{a: number, b: number}>} queue
- * @param {Array<{a: number, b: number, errors?: number}>} basket
+ * @param {Array<{a: number, b: number, due?: number}>} basket
  * @returns {Array<{a: number, b: number}>}
  */
 export function refillRevisionQueue(queue, basket) {
   const round = [];
   for (const item of basket || []) {
-    const copies = revisionCopies(item.errors);
+    const copies = revisionCopies(item.due);
     for (let i = 0; i < copies; i += 1) {
       round.push({ a: item.a, b: item.b });
     }

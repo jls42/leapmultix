@@ -31,7 +31,7 @@ export const gameState = {
   questionStartTime: null,
   wrongAnswers: {},
   streak: 0, // Compteur de bonnes réponses consécutives
-  gameMode: 'adventure', // Mode de jeu: 'adventure', 'discovery', 'quiz', 'challenge'
+  gameMode: 'adventure', // Mode de jeu: 'adventure', 'discovery', 'quiz', 'challenge', 'arcade', 'chrono'
   avatar: 'fox', // Avatar du joueur: 'fox', 'unicorn', 'dragon', 'panda', 'astronaut'
   nickname: '', // Surnom du joueur
   unlockedAvatars: ['fox'], // Avatars débloqués
