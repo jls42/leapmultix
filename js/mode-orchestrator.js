@@ -13,6 +13,7 @@ const MODE_IMPORTS = new Map([
   ['adventure', () => import('./modes/AdventureMode.js')],
   ['discovery', () => import('./modes/DiscoveryMode.js')],
   ['arcade', () => import('./modes/ArcadeMode.js')],
+  ['chrono', () => import('./modes/ChronoMode.js')],
 ]);
 
 // Named starter call-backs by mode (when available)
@@ -32,6 +33,7 @@ const STARTERS = new Map([
     mod => (typeof mod.startDiscoveryMode === 'function' ? mod.startDiscoveryMode() : null),
   ],
   ['arcade', mod => (typeof mod.startArcadeMode === 'function' ? mod.startArcadeMode() : null)],
+  ['chrono', mod => (typeof mod.startChronoMode === 'function' ? mod.startChronoMode() : null)],
 ]);
 
 async function startModuleForMode(mod, mode) {

@@ -32,6 +32,7 @@ async function refreshActiveModeTexts(mode) {
     adventure: async () => (await import('./modes/AdventureMode.js')).refreshAdventureTexts?.(),
     discovery: async () => (await import('./modes/DiscoveryMode.js')).refreshDiscoveryTexts?.(),
     arcade: async () => (await import('./modes/ArcadeMode.js')).refreshArcadeTexts?.(),
+    chrono: async () => (await import('./modes/ChronoMode.js')).refreshChronoTexts?.(),
   };
   await chargeurs[mode]?.();
 }
@@ -121,11 +122,45 @@ function wireDataAttributes(root = document) {
   });
 }
 
+function wireGeneratedImageFallbacks(root = document) {
+  const images = [...root.querySelectorAll('img[data-fallback-src]')];
+  images.forEach(img => {
+    if (img._fallbackWired) return;
+    img._fallbackWired = true;
+    img.removeAttribute('srcset');
+    img.src = img.dataset.fallbackSrc;
+    img.addEventListener(
+      'error',
+      () => {
+        img.removeAttribute('srcset');
+        img.src = img.dataset.fallbackSrc;
+      },
+      { once: true }
+    );
+  });
+  const probeUrl = images
+    .map(img => img.getAttribute('data-webp-srcset')?.trim().split(/\s+/)[0])
+    .find(Boolean);
+  if (!probeUrl) return;
+  const probe = new Image();
+  probe.onload = () => {
+    images.forEach(img => {
+      const srcset = img.getAttribute('data-webp-srcset');
+      if (srcset) img.setAttribute('srcset', srcset);
+    });
+  };
+  probe.onerror = () => {
+    /* PNG already shown */
+  };
+  probe.src = probeUrl;
+}
+
 // Run after DOM ready to ensure elements exist and globals are defined
 document.addEventListener('DOMContentLoaded', () => {
   try {
     // Preferred: wire data-attributes
     wireDataAttributes(document);
+    wireGeneratedImageFallbacks(document);
     // Back-compat: rewire legacy inline handlers, and convert them to data-*
     rewireSetGameModeButtons(document);
     // Observe future DOM (optional) if content is dynamically injected

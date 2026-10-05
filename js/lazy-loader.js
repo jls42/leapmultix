@@ -215,6 +215,7 @@ export class LazyLoader {
       case 'challenge':
       case 'adventure':
       case 'discovery':
+      case 'chrono':
         return this.loadModule('games');
 
       case 'arcade':

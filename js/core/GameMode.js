@@ -496,6 +496,7 @@ export class GameMode {
       nextQuestionDelay: 1200,
       wrongAnswerDelay: 2400,
       showScore: true,
+      announceOnStart: true,
       ...config,
     };
 
@@ -540,10 +541,12 @@ export class GameMode {
       // Réinitialiser l'état
       this.resetState();
 
-      // Annonce vocale
-      const translationKey = this.modeName + '_mode';
-      const translatedText = getTranslation(translationKey);
-      speak(translatedText, { priority: 'high' });
+      // Annonce vocale (désactivable : un mode chrono ne doit pas attendre la voix)
+      if (this.config.announceOnStart !== false) {
+        const translationKey = this.modeName + '_mode';
+        const translatedText = getTranslation(translationKey);
+        speak(translatedText, { priority: 'high' });
+      }
 
       // Initialiser l'interface
       await this.initializeUI();

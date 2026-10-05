@@ -167,7 +167,7 @@ function main() {
   const { used, dynPrefixes } = collectUsedKeys();
 
   // Hardcode dynamic mode-derived keys used via concatenation
-  const modes = ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'];
+  const modes = ['discovery', 'quiz', 'challenge', 'adventure', 'arcade', 'chrono'];
   for (const m of modes) {
     used.add(`${m}_info_bar_label`);
     used.add(`${m}_mode`);

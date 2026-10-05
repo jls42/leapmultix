@@ -262,7 +262,7 @@ body {
 }
 
 /* === RETOUR DE RÉPONSE : une ligne réservée, pas de saut de mise en page === */
-:is(.quiz-container, .challenge-container, .adventure-container) > .feedback {
+:is(.quiz-container, .challenge-container, .adventure-container, .chrono-container) > .feedback {
   display: block;
   max-width: 36rem;
   min-height: 2.25rem;
@@ -518,6 +518,12 @@ body:has(.arcade-container) {
   --accent: var(--mode-arcade);
   --accent-edge: var(--mode-arcade-edge);
   --accent-tint: var(--mode-arcade-tint);
+}
+
+body:has(.chrono-container) {
+  --accent: var(--mode-chrono);
+  --accent-edge: var(--mode-chrono-edge);
+  --accent-tint: var(--mode-chrono-tint);
 }
 
 /* Titre du mode et valeurs de la barre d'infos */

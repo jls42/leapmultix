@@ -9,10 +9,10 @@ import { getTranslation } from '../utils-es6.js';
 
 // Modes disponibles par opération
 const MODE_AVAILABILITY = {
-  '×': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'],
-  '+': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'], // R2/R4: Tous modes multi-ops
-  '−': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'], // R2/R4: Tous modes multi-ops
-  '÷': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'], // R3/R4: Tous modes multi-ops
+  '×': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade', 'chrono'],
+  '+': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'],
+  '−': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'],
+  '÷': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'],
 };
 
 // Messages d'indisponibilité
@@ -20,6 +20,7 @@ const UNAVAILABLE_MESSAGES = {
   discovery: 'discovery_multiplication_only',
   adventure: 'adventure_multiplication_only',
   arcade: 'arcade_multiplication_only',
+  chrono: 'chrono_multiplication_only',
 };
 
 /**

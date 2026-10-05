@@ -186,6 +186,7 @@ export const InfoBar = {
     adventure: ['score', 'lives', 'progress', 'streak'],
     discovery: [],
     arcade: ['score', 'lives', 'time'],
+    chrono: ['time', 'progress'],
     multisnake: ['score', 'lives'],
     multimiam: ['score', 'lives'],
     multimemory: ['score', 'lives'],

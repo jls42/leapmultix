@@ -37,6 +37,7 @@ async function stopActiveModes(targetSlideId = null) {
     ['challenge', () => import('./modes/ChallengeMode.js').then(m => m.stopChallengeMode?.())],
     ['adventure', () => import('./modes/AdventureMode.js').then(m => m.stopAdventureMode?.())],
     ['discovery', () => import('./modes/DiscoveryMode.js').then(m => m.stopDiscoveryMode?.())],
+    ['chrono', () => import('./modes/ChronoMode.js').then(m => m.stopChronoMode?.())],
   ]);
 
   const stopper = typeof mode === 'string' ? STOPPERS.get(mode) : undefined;
