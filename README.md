@@ -56,9 +56,9 @@
 
 ## Description
 
-LeapMultix est une application web éducative interactive destinée aux enfants de 6 à 12 ans pour maîtriser les 4 opérations arithmétiques : multiplication (×), addition (+), soustraction (−) et division (÷). Elle propose **5 modes de jeu** et **4 mini-jeux d'arcade** dans une interface intuitive, accessible et multilingue.
+LeapMultix est une application web éducative interactive destinée aux enfants de 6 à 12 ans pour maîtriser les 4 opérations arithmétiques : multiplication (×), addition (+), soustraction (−) et division (÷). Elle propose **6 modes de jeu** et **4 mini-jeux d'arcade** dans une interface intuitive, accessible et multilingue.
 
-**Support multi-opérations :** les cinq modes acceptent les quatre opérations. Le choix se fait sur l'écran d'accueil et vaut pour tout le parcours.
+**Support multi-opérations :** tous les modes acceptent les quatre opérations, sauf Chrono, réservé aux tables de multiplication. Le choix se fait sur l'écran d'accueil et vaut pour tout le parcours.
 
 **Développé par :** Julien LS (contact@jls42.org)
 
@@ -70,8 +70,8 @@ LeapMultix est une application web éducative interactive destinée aux enfants 
 
 |                                                                                                               |                                                                                                                |
 | :-----------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------: |
-|                     ![Écran « Qui joue ? » : choix du profil](docs/media/01-accueil.webp)                     |              ![Menu principal : choix de l'opération et des cinq modes](docs/media/02-menu.webp)               |
-|                   **Qui joue ?** — un profil par enfant, avec son avatar et sa progression.                   |                    **Le menu** — l'opération se choisit ici, puis les cinq modes s'ouvrent.                    |
+|                     ![Écran « Qui joue ? » : choix du profil](docs/media/01-accueil.webp)                     |              ![Menu principal : choix de l'opération et du mode de jeu](docs/media/02-menu.webp)               |
+|                   **Qui joue ?** — un profil par enfant, avec son avatar et sa progression.                   |                         **Le menu** — l'opération se choisit ici, puis le mode de jeu.                         |
 |              ![Mode Découverte : la table de 4 montrée en points](docs/media/03-decouverte.webp)              |             ![Mode Quiz : réponse fausse en rouge, bonne réponse en vert](docs/media/04-quiz.webp)             |
 |   **Découverte** — chaque égalité se montre en points, en bonds ou en comptage, avec l'astuce de la table.    | **Quiz** — le choix de l'enfant reste affiché à côté de la bonne réponse, et l'explication détaille le calcul. |
 |                  ![Mode Défi : compte à rebours et série en cours](docs/media/05-defi.webp)                   |        ![Mode Aventure : carte des dix niveaux, les suivants verrouillés](docs/media/06-aventure.webp)         |
@@ -102,6 +102,7 @@ différent.
 - **Mode Quiz** : Questions à choix multiples avec support des 4 opérations (×, +, −, ÷) et progression adaptative
 - **Mode Défi** : Course contre la montre avec les 4 opérations (×, +, −, ÷) et différents niveaux de difficulté
 - **Mode Aventure** : Progression narrative par niveaux avec support des 4 opérations
+- **Mode Chrono** : 10 bonnes réponses sur les tables de multiplication, contre un chrono qui ne s'arrête pas, pour battre son meilleur temps
 
 ### 🕹️ Mini-jeux Arcade
 
@@ -112,7 +113,7 @@ différent.
 
 ### ➕ Support Multi-Opérations
 
-LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans **tous les modes** :
+LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans **tous les modes**, sauf Chrono, réservé aux tables de multiplication :
 
 | Mode       | ×   | +   | −   | ÷   |
 | ---------- | --- | --- | --- | --- |
@@ -120,6 +121,7 @@ LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans 
 | Défi       | ✅  | ✅  | ✅  | ✅  |
 | Découverte | ✅  | ✅  | ✅  | ✅  |
 | Aventure   | ✅  | ✅  | ✅  | ✅  |
+| Chrono     | ✅  | ❌  | ❌  | ❌  |
 | Arcade     | ✅  | ✅  | ✅  | ✅  |
 
 ### 🌍 Fonctionnalités Transversales
@@ -245,6 +247,7 @@ leapmultix/
 │   │   ├── eventBus.js, mainInit.js          # Événements, amorçage DOM
 │   │   ├── adventure-data.js                 # Niveaux du mode Aventure
 │   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
+│   │   ├── chrono-stats.js, chrono-questions.js, chrono-input.js   # Mode Chrono
 │   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
 │   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
 │   │   └── operations/                       # Une classe par opération
@@ -254,9 +257,9 @@ leapmultix/
 │   │   ├── topBar.js, infoBar.js, dashboard.js, customization.js
 │   │   ├── operationSelector.js, operationModeAvailability.js
 │   │   └── icons.js, tableSettingsModal.js
-│   ├── modes/              # Les cinq modes de jeu
+│   ├── modes/              # Les six modes de jeu
 │   │   ├── DiscoveryMode.js, QuizMode.js, ChallengeMode.js
-│   │   └── AdventureMode.js, ArcadeMode.js
+│   │   └── AdventureMode.js, ChronoMode.js, ArcadeMode.js
 │   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
