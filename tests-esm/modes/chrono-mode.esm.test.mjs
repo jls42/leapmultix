@@ -5,7 +5,7 @@
  * - le chrono s'arrête à la 10e bonne réponse, la partie s'enregistre une fois ;
  * - un abandon n'ajoute rien au classement ni à la liste ;
  * - les résultats relancent par l'orchestrateur : aucune partie ne tourne en arrière-plan ;
- * - l'écran de départ suit la langue.
+ * - record, révision (le compteur baisse, une pièce par calcul sorti), langue, voix.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 import { readFileSync } from 'node:fs';
@@ -171,6 +171,17 @@ describe('Chrono : une partie', () => {
     expect(feedbackText()).toBe('');
   });
 
+  test('la question est lue, une erreur ne l’est pas et rien ne se précharge pour elle', async () => {
+    const chrono = await startChrono();
+    showQuestion(chrono, 7, 8);
+    // Espace insécable avant « ? », comme dans le corpus de la voix
+    expect(speak).toHaveBeenLastCalledWith('Combien font 7 fois 8\u00a0?');
+    speak.mockClear();
+    await answer(chrono, false, 0);
+    expect(speak).not.toHaveBeenCalled();
+    expect(preloadSpeech).not.toHaveBeenCalled();
+  });
+
   test('le chrono s’arrête à la 10e bonne réponse, et la partie s’enregistre une fois', async () => {
     const chrono = await startChrono();
     for (let i = 0; i < 9; i += 1) await answer(chrono);
@@ -241,6 +252,62 @@ describe('Chrono : résultats', () => {
     await goToSlide(1);
     expect(instances.every(chrono => chrono.state.isActive === false)).toBe(true);
     expect(instances.every(chrono => chrono.timerInterval === null)).toBe(true);
+  });
+
+  test('un meilleur temps s’annonce comme record, puis le rang s’affiche', async () => {
+    const first = await startChrono();
+    for (let i = 0; i < 10; i += 1) await answer(first, true, 1500);
+    await flush(1000);
+    expect(document.querySelector('#results .results-message').textContent).toBe(
+      FR.chrono_session_average_none
+    );
+    resultButton('play-again').click();
+    await flush(10);
+    const second = instances.at(-1);
+    for (let i = 0; i < 10; i += 1) await answer(second);
+    await flush(1000);
+    expect(document.querySelector('#results .results-message').textContent).toBe(
+      FR.chrono_new_record
+    );
+  });
+});
+
+describe('Chrono : révision', () => {
+  function seedBasket(basket) {
+    userStore.chronoStats = { buckets: [], basket, lastInputMode: 'keypad' };
+  }
+
+  test('toujours 10 questions ; réussi, le calcul sort de la liste et rapporte 1 pièce', async () => {
+    seedBasket([{ a: 7, b: 8, due: 1 }]);
+    const chrono = await startChrono({ revision: true });
+    for (let i = 0; i < 10; i += 1) await answer(chrono);
+    await flush(1000);
+    expect(chrono.state.questionCount).toBe(10);
+    expect(chronoStats().basket).toEqual([]);
+    expect(userStore.coins).toBe(1);
+    expect(updateDailyChallengeProgress).not.toHaveBeenCalled();
+    expect(document.querySelector('#results .results-message').textContent).toContain('1');
+  });
+
+  test('raté à la fin, le calcul reste à revoir, sans pièce', async () => {
+    seedBasket([{ a: 7, b: 8, due: 1 }]);
+    const chrono = await startChrono({ revision: true });
+    for (let i = 0; i < 9; i += 1) await answer(chrono);
+    await answer(chrono, false);
+    await flush(1000);
+    expect(chronoStats().basket).toEqual([{ a: 7, b: 8, due: 1 }]);
+    expect(userStore.coins).toBe(0);
+  });
+
+  test('une révision abandonnée ne change pas la liste', async () => {
+    seedBasket([{ a: 7, b: 8, due: 2 }]);
+    const chrono = await startChrono({ revision: true });
+    for (let i = 0; i < 4; i += 1) await answer(chrono);
+    globalThis.confirm = () => true;
+    chrono.confirmAbandon();
+    await flush(5000);
+    expect(chronoStats().basket).toEqual([{ a: 7, b: 8, due: 2 }]);
+    expect(userStore.coins).toBe(0);
   });
 });
 

@@ -61,6 +61,9 @@ import {
   formatAxisSeconds,
   lastChronoInputMode,
   setLastChronoInputMode,
+  startRevisionTally,
+  tallyRevisionAnswer,
+  applyRevisionTally,
 } from '../core/chrono-stats.js';
 
 const BASE_QUESTIONS = 10;
@@ -125,6 +128,8 @@ export class ChronoMode extends GameMode {
     this.isRevision = false;
     this.revisionQueue = [];
     this.revisionBasket = [];
+    this.revisionTally = new Map();
+    this.revisionOutcome = null;
     this.sessionOutcome = null;
     this.targetCount = BASE_QUESTIONS;
     this.sessionFacts = [];
@@ -153,6 +158,8 @@ export class ChronoMode extends GameMode {
     this.targetCount = BASE_QUESTIONS;
     this.revisionQueue = [];
     this.revisionBasket = [];
+    this.revisionTally = new Map();
+    this.revisionOutcome = null;
     this.sessionOutcome = null;
     this._abandoned = false;
     this._holdErrorFeedback = false;
@@ -661,10 +668,12 @@ export class ChronoMode extends GameMode {
       if (store.basket.length === 0) return;
       this.isRevision = true;
       this.revisionBasket = store.basket.map(item => ({ ...item }));
+      this.revisionTally = startRevisionTally(store.basket);
     } else {
       this.selectedTables = this.tablesFromPreferences();
       this.isRevision = false;
       this.revisionBasket = [];
+      this.revisionTally = new Map();
     }
     this.targetCount = BASE_QUESTIONS;
     this.phase = 'playing';
@@ -675,6 +684,7 @@ export class ChronoMode extends GameMode {
     this.elapsedMs = 0;
     this._abandoned = false;
     this.sessionOutcome = null;
+    this.revisionOutcome = null;
     await this.initializeUI();
     this.startElapsedTimer();
     this.generateQuestion();
@@ -809,6 +819,14 @@ export class ChronoMode extends GameMode {
     this.typedValue = '';
     markQuestionKind(this.questionElement, this.state.currentQuestion);
     if (this.inputMode === 'mcq') tagAnswerOptions(this.optionsElement);
+    // Voix activée : la question est lue (« Combien font 8 fois 6 ? »), et une réponse la
+    // coupe (GameMode.handleAnswer) : le chrono n’attend jamais la voix
+    this.speakQuestion();
+  }
+
+  /** Chrono ne dit pas les erreurs : aucune phrase à précharger (GameMode.speakQuestion) */
+  spokenErrorText() {
+    return null;
   }
 
   displayOptions() {
@@ -923,17 +941,21 @@ export class ChronoMode extends GameMode {
   }
 
   onAnswerSubmitted(isCorrect) {
-    if (!isCorrect) return;
     const question = this.state.currentQuestion;
+    if (this.isRevision) {
+      // Révision : les compteurs vivent en mémoire jusqu’à la fin, aucune pièce par réponse
+      tallyRevisionAnswer(this.revisionTally, question, isCorrect);
+      return;
+    }
+    if (!isCorrect) return;
     const { userData } = loadChronoStore();
     grantChronoCoins(userData);
     persistChronoStore(userData);
     updateCoinDisplay();
     const coinIcon = document.querySelector('.coin-count');
     if (coinIcon) showCoinGainAnimation(coinIcon);
-    // Partie normale seulement : une révision répète les mêmes calculs. Après
-    // l’enregistrement : le profil, réécrit en entier, effacerait sa récompense
-    if (!this.isRevision) updateDailyChallengeProgress(question.table, question.num);
+    // Après l’enregistrement : le profil, réécrit en entier, effacerait sa récompense
+    updateDailyChallengeProgress(question.table, question.num);
   }
 
   showAnswerFeedback(isCorrect, userAnswer) {
@@ -987,7 +1009,11 @@ export class ChronoMode extends GameMode {
   }
 
   saveResults() {
-    if (this._abandoned || this.isRevision) return;
+    if (this._abandoned) return;
+    if (this.isRevision) {
+      this.saveRevision();
+      return;
+    }
     if (this.sessionFacts.length === 0) return;
     const { userData, store } = loadChronoStore();
     this.sessionOutcome = saveChronoSession(store, {
@@ -998,6 +1024,15 @@ export class ChronoMode extends GameMode {
       facts: this.sessionFacts,
     });
     persistChronoStore(userData);
+  }
+
+  /** Fin d’une révision terminée : la liste évolue, une pièce par calcul qui en sort */
+  saveRevision() {
+    const { userData, store } = loadChronoStore();
+    this.revisionOutcome = applyRevisionTally(store, this.revisionTally);
+    grantChronoCoins(userData, this.revisionOutcome.mastered.length);
+    persistChronoStore(userData);
+    if (this.revisionOutcome.mastered.length > 0) updateCoinDisplay();
   }
 
   showResults() {
@@ -1012,6 +1047,7 @@ export class ChronoMode extends GameMode {
       facts: [...this.sessionFacts],
       isRevision: this.isRevision,
       outcome: this.sessionOutcome,
+      revision: this.revisionOutcome,
       averageMs: sessionAverageMs(bucket),
       ranking: rankedSessions(bucket),
       curve: recentSessions(bucket),
@@ -1059,21 +1095,37 @@ export class ChronoMode extends GameMode {
   }
 
   /**
-   * Phrase sous le temps : le temps moyen, une fois la première partie passée. Une révision
-   * n’a pas de classement, donc pas de moyenne.
+   * Phrases sous le temps : bilan d’une révision, ou record, rang et temps moyen
    * @returns {{message: string, details: string[]}}
    */
   resultsMessages(result, lang) {
-    if (result.isRevision) return { message: '', details: [] };
-    if (!result.outcome || result.outcome.first) {
+    if (result.isRevision) {
+      return {
+        message: getTranslation('chrono_revision_mastered', {
+          n: result.revision?.mastered.length ?? 0,
+        }),
+        details: [
+          getTranslation('chrono_revision_left', {
+            n: result.revision?.remaining ?? result.basketSize,
+          }),
+        ],
+      };
+    }
+    const outcome = result.outcome;
+    if (!outcome || outcome.first) {
       return { message: getTranslation('chrono_session_average_none'), details: [] };
     }
-    return {
-      message: getTranslation('chrono_session_average', {
-        time: formatDuration(result.averageMs, lang),
-      }),
-      details: [],
-    };
+    const average = getTranslation('chrono_session_average', {
+      time: formatDuration(result.averageMs, lang),
+    });
+    if (outcome.record) return { message: getTranslation('chrono_new_record'), details: [average] };
+    if (outcome.rank) {
+      return {
+        message: getTranslation('chrono_rank', { rank: outcome.rank, count: outcome.count }),
+        details: [average],
+      };
+    }
+    return { message: average, details: [] };
   }
 
   buildSessionActions(result) {

@@ -216,8 +216,9 @@ function isMissedFact(fact) {
 
 /**
  * Enregistre une partie terminée : moyenne, meilleurs temps, courbe, calculs ratés au
- * panier.
- * @returns {{ first: boolean, count: number, averageMs: number, added: Array }}
+ * panier. Record et rang se calculent avant l’ajout : la partie n’est pas comparée à
+ * elle-même.
+ * @returns {{ first: boolean, record: boolean, rank: number|null, count: number, averageMs: number, added: Array }}
  */
 export function saveChronoSession(store, { tables, inputMode, durationMs, date, facts }) {
   const bucket = ensureBucket(store, tables, inputMode);
@@ -226,14 +227,18 @@ export function saveChronoSession(store, { tables, inputMode, durationMs, date, 
     date: Number(date) || Date.now(),
   };
   const first = bucket.count === 0;
+  const previousBest = bucket.best[0]?.durationMs;
   bucket.count += 1;
   bucket.totalMs += session.durationMs;
   bucket.best = [...bucket.best, session].sort(byTimeThenDate).slice(0, BEST_LIMIT);
   bucket.recent = [...bucket.recent, session].sort(byDate).slice(-RECENT_LIMIT);
+  const index = bucket.best.indexOf(session);
   const added = (Array.isArray(facts) ? facts : []).filter(isMissedFact);
   added.forEach(fact => addToBasket(store, fact));
   return {
     first,
+    record: !first && session.durationMs < previousBest,
+    rank: index >= 0 ? index + 1 : null,
     count: bucket.count,
     averageMs: sessionAverageMs(bucket),
     added,
@@ -284,10 +289,47 @@ export function basketDueClass(due) {
   return '';
 }
 
-/** +1 pièce par bonne réponse (comme l’Aventure) */
-export function grantChronoCoins(userData) {
+/**
+ * Compteurs d’une révision, en mémoire : le panier enregistré ne change qu’à la fin
+ * d’une révision terminée (un abandon n’enregistre rien).
+ * @param {Array<{a: number, b: number, due: number}>} basket
+ * @returns {Map<string, number>}
+ */
+export function startRevisionTally(basket) {
+  return new Map((basket || []).map(entry => [factKey(entry.a, entry.b), entry.due]));
+}
+
+/** Révision : une réussite enlève 1 (jamais sous 0), une erreur ajoute 1 */
+export function tallyRevisionAnswer(tally, fact, isCorrect) {
+  const key = factKey(fact?.a, fact?.b);
+  if (!tally.has(key)) return;
+  const due = tally.get(key);
+  tally.set(key, isCorrect ? Math.max(0, due - 1) : due + 1);
+}
+
+/**
+ * Fin d’une révision terminée : les calculs à 0 sortent du panier, les autres gardent
+ * leur nouveau compteur.
+ * @returns {{ mastered: Array<{a: number, b: number}>, remaining: number }}
+ */
+export function applyRevisionTally(store, tally) {
+  const mastered = [];
+  const kept = [];
+  for (const entry of store.basket) {
+    const key = factKey(entry.a, entry.b);
+    const due = tally.has(key) ? tally.get(key) : entry.due;
+    if (due <= 0) mastered.push({ a: entry.a, b: entry.b });
+    else kept.push({ ...entry, due });
+  }
+  store.basket = kept;
+  return { mastered, remaining: kept.length };
+}
+
+/** Pièces : une par bonne réponse en partie, une par calcul sorti du panier en révision */
+export function grantChronoCoins(userData, count = 1) {
   if (!userData || typeof userData !== 'object') return 0;
-  userData.coins = (Number(userData.coins) || 0) + 1;
+  const gained = Math.max(0, Math.floor(Number(count) || 0));
+  userData.coins = (Number(userData.coins) || 0) + gained;
   return userData.coins;
 }
 

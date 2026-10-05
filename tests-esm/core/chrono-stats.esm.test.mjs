@@ -33,6 +33,9 @@ import {
   grantChronoCoins,
   chronoShouldContinue,
   findBucket,
+  startRevisionTally,
+  tallyRevisionAnswer,
+  applyRevisionTally,
 } from '../../js/core/chrono-stats.js';
 
 const NBSP = ' ';
@@ -125,6 +128,20 @@ describe('chrono-stats : classements', () => {
     expect(recent[0]).toBe(6);
     expect(recent.at(-1)).toBe(25);
     expect(JSON.stringify(store).length).toBeLessThan(2500);
+  });
+
+  test('record et rang se comparent aux parties d’avant, pas à elle-même', () => {
+    const store = emptyChronoStats();
+    expect(save(store, 30000, 1)).toMatchObject({ first: true, record: false, count: 1 });
+    expect(save(store, 25000, 2)).toMatchObject({ first: false, record: true, rank: 1 });
+    expect(save(store, 28000, 3)).toMatchObject({ record: false, rank: 2, count: 3 });
+    expect(save(store, 25000, 4)).toMatchObject({ record: false, rank: 2 });
+  });
+
+  test('au-delà des 10 meilleurs temps, pas de rang', () => {
+    const store = emptyChronoStats();
+    for (let i = 1; i <= 10; i += 1) save(store, 1000 * i, i);
+    expect(save(store, 99000, 11)).toMatchObject({ record: false, rank: null, count: 11 });
   });
 
   test('lire un classement ne le crée pas', () => {
@@ -257,11 +274,81 @@ describe('chrono-stats : calculs à revoir', () => {
   });
 });
 
-describe('chrono-stats : pièces', () => {
-  test('une bonne réponse Chrono donne une pièce', () => {
+describe('chrono-stats : révision', () => {
+  function revise(basket, answers) {
+    const store = { ...emptyChronoStats(), basket: basket.map(entry => ({ ...entry })) };
+    const tally = startRevisionTally(store.basket);
+    answers.forEach(([a, b, ok]) => tallyRevisionAnswer(tally, { a, b }, ok));
+    return { store, outcome: applyRevisionTally(store, tally) };
+  }
+
+  test('une réussite enlève 1, et le calcul à 0 sort de la liste', () => {
+    const { store, outcome } = revise(
+      [
+        { a: 7, b: 8, due: 2 },
+        { a: 6, b: 9, due: 1 },
+      ],
+      [
+        [7, 8, true],
+        [6, 9, true],
+        [7, 8, true],
+      ]
+    );
+    expect(outcome).toEqual({
+      mastered: [
+        { a: 7, b: 8 },
+        { a: 6, b: 9 },
+      ],
+      remaining: 0,
+    });
+    expect(store.basket).toEqual([]);
+  });
+
+  test('une erreur ajoute 1 : rattrapée par des réussites après elle, le calcul sort', () => {
+    const { outcome } = revise(
+      [{ a: 7, b: 8, due: 1 }],
+      [
+        [7, 8, false],
+        [7, 8, true],
+        [7, 8, true],
+      ]
+    );
+    expect(outcome.mastered).toEqual([{ a: 7, b: 8 }]);
+  });
+
+  test('réussi au début puis raté à la fin, le calcul reste à revoir', () => {
+    const { store, outcome } = revise(
+      [{ a: 7, b: 8, due: 1 }],
+      [
+        [7, 8, true],
+        [7, 8, true],
+        [7, 8, false],
+      ]
+    );
+    expect(outcome).toEqual({ mastered: [], remaining: 1 });
+    expect(store.basket).toEqual([{ a: 7, b: 8, due: 1 }]);
+  });
+
+  test('un calcul pas posé pendant la révision garde son compteur', () => {
+    const { store } = revise(
+      [
+        { a: 7, b: 8, due: 1 },
+        { a: 3, b: 4, due: 2 },
+      ],
+      [[7, 8, false]]
+    );
+    expect(store.basket).toEqual([
+      { a: 7, b: 8, due: 2 },
+      { a: 3, b: 4, due: 2 },
+    ]);
+  });
+
+  test('pièces : une par bonne réponse en partie, une par calcul sorti en révision', () => {
     const userData = { coins: 4 };
     expect(grantChronoCoins(userData)).toBe(5);
-    expect(userData.coins).toBe(5);
+    expect(grantChronoCoins(userData, 3)).toBe(8);
+    expect(grantChronoCoins(userData, 0)).toBe(8);
+    expect(userData.coins).toBe(8);
   });
 });
 
