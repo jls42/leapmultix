@@ -22,8 +22,7 @@ import {
   spokenOperatorWord,
   spokenQuestion,
 } from './core/spoken-text.js';
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
+import { createPathIcon } from './components/icons.js';
 
 /** Durée d'affichage d'un message, puis de sa disparition (ms) */
 const MESSAGE_DURATION = 3000;
@@ -125,24 +124,6 @@ export function showFeedback(target, message, type = 'success', speakIt = false)
   }
 }
 
-/**
- * Crée une icône SVG décorative (masquée aux technologies d'assistance).
- * @param {string} className
- * @param {string} pathData
- * @returns {SVGSVGElement}
- */
-function createIcon(className, pathData) {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('class', className);
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', pathData);
-  svg.appendChild(path);
-  return svg;
-}
-
 const CHECK_PATH = 'M5 12.5l4.5 4.5L19 7';
 const CROSS_PATH = 'M7 7l10 10M17 7L7 17';
 const STAR_PATH = 'M12 2.8l2.8 5.9 6.4.8-4.7 4.5 1.2 6.4L12 17.3l-5.7 3.1 1.2-6.4-4.7-4.5 6.4-.8z';
@@ -152,12 +133,12 @@ const TRASH_PATH = 'M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10.5 11v5.5M13.5 1
 
 /** Coche de la bonne réponse. */
 export function createCheckIcon() {
-  return createIcon('option-mark', CHECK_PATH);
+  return createPathIcon(CHECK_PATH, 'option-mark');
 }
 
 /** Croix du choix erroné : l'enfant retrouve la tuile qu'il a touchée. */
 export function createCrossIcon() {
-  return createIcon('option-mark option-mark-wrong', CROSS_PATH);
+  return createPathIcon(CROSS_PATH, 'option-mark option-mark-wrong');
 }
 
 /**
@@ -166,12 +147,12 @@ export function createCrossIcon() {
  * @returns {SVGSVGElement}
  */
 export function createStarIcon(earned = true) {
-  return createIcon(earned ? 'reward-star is-earned' : 'reward-star', STAR_PATH);
+  return createPathIcon(STAR_PATH, earned ? 'reward-star is-earned' : 'reward-star');
 }
 
 /** Cadenas des niveaux verrouillés. */
 export function createLockIcon() {
-  return createIcon('level-lock', LOCK_PATH);
+  return createPathIcon(LOCK_PATH, 'level-lock');
 }
 
 /**
@@ -179,7 +160,7 @@ export function createLockIcon() {
  * signe × de la multiplication.
  */
 export function createTrashIcon() {
-  return createIcon('trash-icon', TRASH_PATH);
+  return createPathIcon(TRASH_PATH, 'trash-icon');
 }
 
 /**

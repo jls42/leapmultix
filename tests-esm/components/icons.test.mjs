@@ -1,5 +1,5 @@
 import { describe, test, expect } from '@jest/globals';
-import { createIcon, setIcon, ICON_NAMES } from '../../js/components/icons.js';
+import { createIcon, createPathIcon, setIcon, ICON_NAMES } from '../../js/components/icons.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -30,6 +30,21 @@ describe('icons (SVG en ligne, style Lucide)', () => {
       expect(icon?.childElementCount).toBeGreaterThan(0);
       for (const child of icon.children) expect(child.namespaceURI).toBe(SVG_NS);
     }
+  });
+
+  test("icône d'un seul tracé : masquée, sans trait imposé, classe seulement si donnée", () => {
+    const heart = createPathIcon('M1 1h2', 'info-heart is-empty');
+    expect(heart.namespaceURI).toBe(SVG_NS);
+    expect(heart.getAttribute('class')).toBe('info-heart is-empty');
+    expect(heart.getAttribute('viewBox')).toBe('0 0 24 24');
+    expect(heart.getAttribute('aria-hidden')).toBe('true');
+    expect(heart.getAttribute('focusable')).toBe('false');
+    expect(heart.hasAttribute('stroke')).toBe(false);
+    expect(heart.children).toHaveLength(1);
+    expect(heart.firstElementChild.namespaceURI).toBe(SVG_NS);
+    expect(heart.firstElementChild.getAttribute('d')).toBe('M1 1h2');
+
+    expect(createPathIcon('M6 6l12 12').hasAttribute('class')).toBe(false);
   });
 
   test('accepte une taille et des classes supplémentaires', () => {

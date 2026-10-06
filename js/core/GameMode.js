@@ -788,6 +788,23 @@ export class GameMode {
   }
 
   /**
+   * Ordre de lecture : question, réponses, retour, « Continuer », puis les actions de la
+   * partie (« Abandonner »), discrètes. L'enveloppe du contenu personnalisé, vidée, disparaît.
+   * @param {string} selector - Bloc d'actions, cherché dans la zone de jeu
+   */
+  placeActionsAfterAnswers(selector) {
+    const container = this.feedbackElement?.parentElement;
+    const actions = container?.querySelector(selector);
+    if (!container || !actions) return;
+
+    const customWrap = actions.parentElement;
+    container.appendChild(actions);
+    if (customWrap && customWrap !== container && customWrap.children.length === 0) {
+      customWrap.remove();
+    }
+  }
+
+  /**
    * Finalise l'interface utilisateur
    */
   _finalizeUI(containerData) {

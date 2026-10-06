@@ -172,6 +172,14 @@ describe('Chrono : une partie', () => {
     expect(feedbackText()).toBe('');
   });
 
+  test('« Abandonner » suit la zone de réponse, comme dans les autres modes', async () => {
+    await startChrono();
+    const children = [...document.querySelector('.chrono-container').children];
+    const at = cls => children.findIndex(el => el.classList.contains(cls));
+    expect(at('chrono-options')).toBeLessThan(at('chrono-feedback'));
+    expect(at('chrono-feedback')).toBeLessThan(at('chrono-controls'));
+  });
+
   test('la question est lue, une erreur ne l’est pas et rien ne se précharge pour elle', async () => {
     const chrono = await startChrono();
     showQuestion(chrono, 7, 8);

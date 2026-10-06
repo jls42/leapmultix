@@ -239,19 +239,9 @@ export class AdventureMode extends GameMode {
     } else {
       // Phase de jeu - utiliser l'interface parent
       await super.initializeUI();
-      this.placeActionsAfterAnswers();
+      this.placeActionsAfterAnswers('.adventure-controls');
       this.setupGameControls();
     }
-  }
-
-  /**
-   * « Abandonner » passe après la zone de réponse (et après « Continuer »), discret.
-   */
-  placeActionsAfterAnswers() {
-    const container = this.feedbackElement?.parentElement;
-    const controls = container?.querySelector('.adventure-controls');
-    if (!container || !controls) return;
-    container.appendChild(controls);
   }
 
   /**

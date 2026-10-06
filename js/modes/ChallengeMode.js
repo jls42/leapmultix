@@ -127,23 +127,8 @@ export class ChallengeMode extends GameMode {
     if (this.phase === 'selection') {
       this.setupDifficultySelection();
     } else {
-      this.placeActionsAfterAnswers();
+      this.placeActionsAfterAnswers('.challenge-controls');
       this.setupGameControls();
-    }
-  }
-
-  /**
-   * « Abandonner » passe après la zone de réponse, discret.
-   */
-  placeActionsAfterAnswers() {
-    const container = this.feedbackElement?.parentElement;
-    const controls = container?.querySelector('.challenge-controls');
-    if (!container || !controls) return;
-
-    const customWrap = controls.parentElement;
-    container.appendChild(controls);
-    if (customWrap && customWrap !== container && customWrap.children.length === 0) {
-      customWrap.remove();
     }
   }
 

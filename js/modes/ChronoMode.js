@@ -253,7 +253,7 @@ export class ChronoMode extends GameMode {
       this.bindStatsDetailPanel();
       return;
     }
-    this.placeActionsAfterAnswers();
+    this.placeActionsAfterAnswers('.chrono-controls');
     this.setupGameControls();
   }
 
@@ -269,17 +269,6 @@ export class ChronoMode extends GameMode {
       return;
     }
     await this.initializeUI();
-  }
-
-  placeActionsAfterAnswers() {
-    const container = this.feedbackElement?.parentElement;
-    const controls = container?.querySelector('.chrono-controls');
-    if (!container || !controls) return;
-    const customWrap = controls.parentElement;
-    container.appendChild(controls);
-    if (customWrap && customWrap !== container && customWrap.children.length === 0) {
-      customWrap.remove();
-    }
   }
 
   setupGameControls() {

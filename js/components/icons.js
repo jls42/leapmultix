@@ -210,6 +210,26 @@ export function createIcon(name, { size = 24, className = '' } = {}) {
 }
 
 /**
+ * Icône d'un seul tracé, sans les attributs de trait des icônes ci-dessus : sa feuille de
+ * style la dessine (coche et croix des réponses, étoile, cadenas, cœur des vies, croix
+ * « fermer »). Masquée aux technologies d'assistance, comme elles.
+ * @param {string} pathData - Tracé (attribut d), sur la grille de 24 px
+ * @param {string} [className] - Classe de l'icône ; aucune si vide
+ * @returns {SVGSVGElement}
+ */
+export function createPathIcon(pathData, className = '') {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  if (className) svg.setAttribute('class', className);
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', pathData);
+  svg.appendChild(path);
+  return svg;
+}
+
+/**
  * Place (ou remplace) l'icône d'un élément, en première position.
  * Ne touche pas au DOM si l'icône affichée est déjà la bonne.
  * @param {Element} element - Bouton ou conteneur

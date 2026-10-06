@@ -121,6 +121,14 @@ function broadcastAppVersion() {
 
 broadcastAppVersion();
 
+// Vide tous les caches ; un échec est signalé sans arrêter la suite
+function deleteAllCaches(cachesApi) {
+  return cachesApi
+    .keys()
+    .then(cacheNames => Promise.all(cacheNames.map(cacheName => cachesApi.delete(cacheName))))
+    .catch(error => console.warn('Caches : nettoyage impossible', error));
+}
+
 // Fonction de développement pour forcer le nettoyage complet
 export function forceDevCacheClear() {
   const navigatorRef = runtime.navigator;
@@ -136,12 +144,7 @@ export function forceDevCacheClear() {
 
   // Clear all caches
   const cachesApi = runtime.caches;
-  if (cachesApi) {
-    cachesApi
-      .keys()
-      .then(cacheNames => Promise.all(cacheNames.map(cacheName => cachesApi.delete(cacheName))))
-      .catch(error => console.warn('Caches : nettoyage impossible', error));
-  }
+  if (cachesApi) void deleteAllCaches(cachesApi);
 
   // Clear localStorage/sessionStorage cache-related data
   for (const key of Object.keys(localStorage)) {
@@ -229,10 +232,7 @@ export function clearCacheAndReload() {
 
   if (cachesApi) {
     // Caches vidés ou non, la page se recharge : le nettoyage n’est qu’une aide
-    cachesApi
-      .keys()
-      .then(cacheNames => Promise.all(cacheNames.map(cacheName => cachesApi.delete(cacheName))))
-      .catch(error => console.warn('Caches : nettoyage impossible', error))
+    deleteAllCaches(cachesApi)
       .then(redirectToVersion)
       .catch(error => console.warn('Rechargement impossible', error));
     return;
