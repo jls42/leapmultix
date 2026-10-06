@@ -453,7 +453,8 @@ let _quizModeInstance = null;
 export function startQuizMode() {
   if (_quizModeInstance) _quizModeInstance.stop();
   _quizModeInstance = new QuizMode();
-  _quizModeInstance.start();
+  // start() rattrape et signale ses propres erreurs
+  void _quizModeInstance.start();
 }
 export function stopQuizMode() {
   if (_quizModeInstance) {

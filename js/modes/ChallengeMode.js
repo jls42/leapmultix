@@ -605,7 +605,7 @@ export class ChallengeMode extends GameMode {
           onActivate: async () => {
             try {
               const mod = await import('../mode-orchestrator.js');
-              mod.setGameMode?.('challenge');
+              await mod.setGameMode?.('challenge');
             } catch (err) {
               console.error('Unable to restart Challenge via orchestrator:', err);
             }
@@ -688,7 +688,8 @@ let _challengeModeInstance = null;
 export function startChallengeMode() {
   if (_challengeModeInstance) _challengeModeInstance.stop();
   _challengeModeInstance = new ChallengeMode();
-  _challengeModeInstance.start();
+  // start() rattrape et signale ses propres erreurs
+  void _challengeModeInstance.start();
 }
 export function stopChallengeMode() {
   if (_challengeModeInstance) {

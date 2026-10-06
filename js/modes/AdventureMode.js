@@ -292,7 +292,7 @@ export class AdventureMode extends GameMode {
           if (reason) {
             showMessage(this.getLockMessage(levelData, reason));
           } else {
-            this.startLevel(levelId);
+            this.startLevel(levelId).catch(error => this.handleError(error));
           }
         })
       );
@@ -362,7 +362,7 @@ export class AdventureMode extends GameMode {
           ? window
           : undefined;
     if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_adventure'))) {
-      this.returnToLevelSelection();
+      this.returnToLevelSelection().catch(error => this.handleError(error));
     }
   }
 
@@ -1198,7 +1198,8 @@ let _adventureModeInstance = null;
 export function startAdventureMode() {
   if (_adventureModeInstance) _adventureModeInstance.stop();
   _adventureModeInstance = new AdventureMode();
-  _adventureModeInstance.start();
+  // start() rattrape et signale ses propres erreurs
+  void _adventureModeInstance.start();
 }
 export function stopAdventureMode() {
   if (_adventureModeInstance) {
