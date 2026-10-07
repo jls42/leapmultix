@@ -128,8 +128,10 @@ function svgElement(name, attrs) {
   return element;
 }
 
+const THIN_LINE = Object.freeze({ 'stroke-width': '1' });
+
 /** Un trait du graphique à l’encre du texte : grille, axes ou moyenne, selon son opacité */
-function curveLine(x1, y1, x2, y2, opacity, style = { 'stroke-width': '1' }) {
+function curveLine(x1, y1, x2, y2, opacity, style = THIN_LINE) {
   return svgElement('line', { x1, x2, y1, y2, stroke: 'currentColor', ...style, opacity });
 }
 
@@ -146,6 +148,9 @@ function curveLabel(x, y, text, placement) {
   return label;
 }
 
+// Code d'une touche de chiffre, rangée du haut ou pavé numérique : « Digit2 », « Numpad2 »
+const DIGIT_KEY_CODE = /^(?:Digit|Numpad)(\d)$/;
+
 /**
  * Chiffre d’une touche, quelle que soit la disposition du clavier : en AZERTY, la rangée du
  * haut donne « é » pour 2 sans Maj, mais son code reste Digit2. Un raccourci (Ctrl, Alt,
@@ -156,7 +161,8 @@ function curveLabel(x, y, text, placement) {
 function typedDigit(event) {
   if (event.ctrlKey || event.metaKey || event.altKey) return null;
   if (/^\d$/.test(event.key)) return event.key;
-  return /^(?:Digit|Numpad)(\d)$/.exec(event.code ?? '')?.[1] ?? null;
+  const match = DIGIT_KEY_CODE.exec(String(event.code));
+  return match ? match[1] : null;
 }
 
 function formatClock(ms) {
