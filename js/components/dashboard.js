@@ -21,6 +21,8 @@ import {
 } from '../utils-es6.js';
 import { setSafeContentWithImage, createSafeElement } from '../security-utils.js';
 import { ADVENTURE_LEVELS } from '../core/adventure-data.js';
+import { normalizeChronoStats, formatDuration } from '../core/chrono-stats.js';
+import { getCurrentLanguage } from '../i18n-store.js';
 import { createIcon } from './icons.js';
 
 const MAX_STARS = 3;
@@ -104,6 +106,34 @@ function adventureTotals(userData) {
     adventure.stars += progress.stars || 0;
   }
   return adventure;
+}
+
+/**
+ * Cumul de Chrono, tous classements confondus (tables, façon de répondre), comme le
+ * meilleur score du Défi toutes difficultés confondues : parties, meilleur temps,
+ * calculs à revoir.
+ */
+function chronoTotals(userData) {
+  const store = normalizeChronoStats(userData.chronoStats);
+  let sessions = 0;
+  let bestMs = null;
+  for (const bucket of store.buckets) {
+    sessions += bucket.count;
+    const best = bucket.best[0]?.durationMs;
+    if (best !== undefined && (bestMs === null || best < bestMs)) bestMs = best;
+  }
+  return { sessions, bestMs, toReview: store.basket.length };
+}
+
+/** Faits de la rangée Chrono, ou null s'il n'a jamais servi (« Aucun score ») */
+function chronoFacts({ sessions, bestMs, toReview }) {
+  if (!sessions && !toReview) return null;
+  const best = bestMs === null ? '—' : formatDuration(bestMs, getCurrentLanguage());
+  return [
+    { label: tr('sessions_count_label', 'Nombre de parties'), value: sessions },
+    { label: tr('best_time_label', 'Meilleur temps'), value: best },
+    { label: tr('facts_to_review_label', 'Calculs à revoir'), value: toReview },
+  ];
 }
 
 /** Étoiles enregistrées par table, en table de correspondance. */
@@ -456,11 +486,12 @@ export const Dashboard = {
       quiz: quizTotals(userData),
       challenge: challengeTotals(userData),
       adventure: adventureTotals(userData),
+      chrono: chronoTotals(userData),
     };
   },
 
   _buildClassicRows(userData) {
-    const { quiz, challenge, adventure } = this._classicModeStats(userData);
+    const { quiz, challenge, adventure, chrono } = this._classicModeStats(userData);
     return [
       this._buildScoreRow({
         className: 'classic-game-stats',
@@ -498,6 +529,12 @@ export const Dashboard = {
                 { label: tr('stars_label', 'Étoiles'), value: adventure.stars },
               ]
             : null,
+      }),
+      this._buildScoreRow({
+        className: 'classic-game-stats',
+        logo: 'assets/images/arcade/logo_mode_chrono.png',
+        name: tr('chrono_mode_title', 'Chrono'),
+        facts: chronoFacts(chrono),
       }),
     ];
   },

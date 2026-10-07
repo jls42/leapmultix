@@ -18,6 +18,7 @@ import { createVirtualKeyboard } from './virtual-keyboard.js';
 import { goToSlide } from './slides.js';
 import { gameState, displayDailyChallenge } from './game.js';
 import { eventBus } from './core/eventBus.js';
+import { normalizeChronoStats, emptyChronoStats } from './core/chrono-stats.js';
 
 /**
  * Traduction avec texte de secours tant que la clé n'existe pas dans les fichiers de langue.
@@ -71,6 +72,7 @@ const createDefaultUserData = (nickname = '') => ({
   tablePreferences: { ...DEFAULT_TABLE_PREFERENCES, globalExclusions: [] },
   preferredOperator: '×',
   nickname,
+  chronoStats: emptyChronoStats(),
 });
 
 const normalizeUserData = (rawData, currentUser) => {
@@ -96,6 +98,7 @@ const normalizeUserData = (rawData, currentUser) => {
     starsByTable: ensureObject(raw.starsByTable),
     coins: ensureNumber(raw.coins, 0),
     preferredOperator: raw.preferredOperator || '×',
+    chronoStats: normalizeChronoStats(raw.chronoStats),
     tablePreferences: {
       ...DEFAULT_TABLE_PREFERENCES,
       ...tablePreferences,
@@ -242,7 +245,7 @@ export const UserManager = {
     const avatar = userData.avatar || 'fox';
     // Un monde illustré fixe par avatar (plus de rotation du fond)
     updateBackgroundByAvatar(avatar);
-    updateWelcomeMessageUI();
+    void updateWelcomeMessageUI();
     updateCoinDisplay();
 
     const heroMascotImg = document.getElementById('hero-mascot-img');
@@ -328,7 +331,7 @@ export const UserManager = {
     }
 
     this._cleanupDefaultScores();
-    goToSlide(1);
+    void goToSlide(1);
     this.emitUserChanged(userData);
 
     return userData;

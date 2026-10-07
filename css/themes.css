@@ -126,8 +126,11 @@
   --mode-arcade: oklch(45% 0.16 350deg);
   --mode-arcade-edge: oklch(36% 0.13 350deg);
   --mode-arcade-tint: oklch(96% 0.035 350deg);
+  --mode-chrono: oklch(42% 0.12 185deg);
+  --mode-chrono-edge: oklch(34% 0.1 185deg);
+  --mode-chrono-tint: oklch(96% 0.03 185deg);
 
-  /* Défi du jour : ambre, distinct des cinq modes */
+  /* Défi du jour : ambre, distinct des six modes */
   --color-daily-tint: oklch(96% 0.04 85deg);
   --color-daily-edge: oklch(70% 0.12 85deg);
 }
@@ -213,6 +216,9 @@
   --mode-arcade: oklch(83% 0.11 350deg);
   --mode-arcade-edge: oklch(56% 0.12 350deg);
   --mode-arcade-tint: oklch(31% 0.05 350deg);
+  --mode-chrono: oklch(82% 0.1 185deg);
+  --mode-chrono-edge: oklch(55% 0.1 185deg);
+  --mode-chrono-tint: oklch(31% 0.05 185deg);
   --color-daily-tint: oklch(32% 0.05 85deg);
   --color-daily-edge: oklch(62% 0.12 85deg);
   --shadow-sm: 0 1px 2px oklch(0% 0 0deg / 0.4);
@@ -313,6 +319,9 @@ body.high-contrast {
   --mode-arcade: #ff0;
   --mode-arcade-edge: #fff;
   --mode-arcade-tint: #000;
+  --mode-chrono: #ff0;
+  --mode-chrono-edge: #fff;
+  --mode-chrono-tint: #000;
   --color-daily-tint: #000;
   --color-daily-edge: #fff;
 

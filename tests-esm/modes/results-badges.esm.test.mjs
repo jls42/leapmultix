@@ -4,7 +4,8 @@
  * (UserManager renvoie une copie normalisée à chaque lecture) :
  * - un badge gagné est enregistré et ne s'annonce qu'une fois ;
  * - l'écran de fin reçoit le focus sur sa phrase principale ;
- * - il se retraduit si la langue change pendant qu'il est affiché.
+ * - il se retraduit si la langue change pendant qu'il est affiché ;
+ * - un « Rejouer » du Défi qui échoue se signale dans la console.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 
@@ -36,6 +37,7 @@ const { eventBus } = await import('../../js/core/eventBus.js');
 const { AudioManager } = await import('../../js/core/audio.js');
 const { QuizMode } = await import('../../js/modes/QuizMode.js');
 const { ChallengeMode } = await import('../../js/modes/ChallengeMode.js');
+const orchestrator = await import('../../js/mode-orchestrator.js');
 
 const FR = {
   badge_quiz_starter_name: 'Apprenti du Quiz',
@@ -153,5 +155,24 @@ describe('Écran de fin du Quiz', () => {
     store.setTranslations(ES);
     eventBus.emit('languageChanged', { lang: 'es' });
     expect(document.querySelector('#results .game-results')).toBeNull();
+  });
+});
+
+describe('Écran de fin du Défi', () => {
+  test('un « Rejouer » qui échoue se signale dans la console', async () => {
+    const challenge = new ChallengeMode();
+    challenge.state.questionCount = 5;
+    challenge.state.correctAnswers = 4;
+    challenge.showResults();
+    await new Promise(r => setTimeout(r, 0));
+
+    const failure = new Error('relance impossible');
+    jest.mocked(orchestrator.setGameMode).mockRejectedValueOnce(failure);
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    document.querySelector('#results [data-action="play-again"]').click();
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(orchestrator.setGameMode).toHaveBeenCalledWith('challenge');
+    expect(error).toHaveBeenCalledWith('Unable to restart Challenge via orchestrator:', failure);
   });
 });

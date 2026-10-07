@@ -1,0 +1,493 @@
+/* Mode Chrono : écran de départ (course, calculs à revoir), pavé, résultats et temps */
+
+/* Écrans sans partie (départ, temps) : la question et les réponses, vides, sont masquées
+   par la règle commune (game.css) ; la zone de retour garde sa hauteur pendant la partie,
+   elle se retire ici. Rien n'est posé sur #game, commun à tous les modes. */
+.chrono-container:has(.chrono-setup-panel) > .feedback {
+  display: none;
+}
+
+/* Écran de départ, aligné sur le Défi et l'Aventure : des sections à plat dans la carte,
+   chacune avec son titre, séparées par un filet (jamais de carte dans la carte) */
+.chrono-setup-panel {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.chrono-tables-hint {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+
+.chrono-input-mode {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+.chrono-input-mode h3 {
+  margin: 0;
+}
+
+/* Deux tuiles de la largeur de celles du Défi */
+.chrono-input-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 28rem;
+}
+
+/* La course, puis les calculs à revoir : chacun son titre et ses boutons. Les sections de
+   « Mes temps » et de l'écran de fin (temps par calcul, classement, courbe) suivent */
+.chrono-block {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Dans l'écran de fin, la section prend la largeur de la carte : le filet la traverse */
+.game-results > .chrono-block {
+  align-self: stretch;
+}
+
+.chrono-block h3 {
+  margin: 0;
+}
+
+.chrono-block p {
+  max-width: 34rem;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.chrono-block-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+/* Les touches de Chrono, comme les tuiles du Défi et de l'Aventure : surface, bordure,
+   tranche ; seule la bordure change au survol, et la touche s'enfonce à l'appui */
+.chrono-input-btn,
+.chrono-stats-row,
+.chrono-key {
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 var(--key-edge) 0 var(--color-border-strong);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .chrono-input-btn:hover,
+  .chrono-stats-row:hover {
+    border-color: var(--color-action);
+  }
+
+  /* Une touche du pavé est une réponse : le trait du mode, comme les tuiles de réponse */
+  .chrono-key:hover {
+    border-color: var(--accent, var(--color-action));
+  }
+}
+
+.chrono-input-btn:active,
+.chrono-stats-row:active,
+.chrono-key:active {
+  transform: translateY(var(--key-edge));
+  box-shadow: 0 0 0 var(--color-border-strong);
+}
+
+/* « Mes temps » : une touche par classement, comme les niveaux de l'Aventure */
+.chrono-stats-list {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.chrono-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 72px;
+  padding: var(--space-3) var(--space-4);
+  font-family: inherit;
+  font-size: inherit;
+  text-align: start;
+}
+
+.chrono-stats-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.chrono-stats-count {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-muted);
+}
+
+/* « Voir tes temps » et sa flèche (icône au trait), à l'encre d'action comme un lien */
+.chrono-stats-open {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-action-ink);
+}
+
+.chrono-stats-open .icon {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+/* Sur un téléphone, la flèche suffit et les tables gardent la place : le nom de la touche
+   (aria-label) dit toujours « Voir tes temps » */
+@media (max-width: 480px) {
+  .chrono-stats-open > span {
+    display: none;
+  }
+}
+
+/* Façon de répondre : le choix actif prend le voile d'action et la coche, comme le
+   prochain niveau de l'Aventure */
+.chrono-input-btn {
+  position: relative;
+  min-height: 56px;
+
+  /* La même place des deux côtés : le libellé reste centré et la coche, à droite, ne le
+     touche jamais (même en texte « grand ») */
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-text);
+  font-size: var(--text-md);
+}
+
+.chrono-input-btn[aria-pressed='true'] {
+  background-color: var(--color-action-tint);
+  border-color: var(--color-action);
+  box-shadow: 0 var(--key-edge) 0 var(--color-action-edge);
+}
+
+.chrono-input-btn[aria-pressed='true']:active {
+  box-shadow: 0 0 0 var(--color-action-edge);
+}
+
+.chrono-input-btn .option-mark {
+  inset-inline-end: var(--space-2);
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-action-ink);
+}
+
+.chrono-input-btn:not([aria-pressed='true']) .option-mark {
+  display: none;
+}
+
+.chrono-basket-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* Un calcul de la liste : « 7 × 8 », « 1 fois », une poubelle ; le trait et le rayon des
+   tuiles (cartes de niveau de l'Aventure), à plat puisqu'on ne l'appuie pas */
+.chrono-basket-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* « 2 fois » : le nombre dit tout. Une seule teinte, celle des mémos, quel que soit le
+   nombre : une erreur de l'enfant n'est jamais rouge */
+.chrono-basket-errors {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.05rem 0.5rem;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-warning-ink);
+  background: var(--color-warning-tint);
+  border: 1px solid var(--color-warning-edge);
+  border-radius: var(--radius-pill);
+}
+
+/* Ajout à la main : « Ajouter un calcul : [ ? ] × [ ? ] [Ajouter] » */
+.chrono-basket-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* « Choisis les deux nombres. » : sous la ligne, à l'encre normale, comme le prénom manquant */
+.chrono-add-message {
+  flex-basis: 100%;
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.chrono-basket-add-label {
+  font-weight: 700;
+  color: var(--color-ink-muted);
+}
+
+.chrono-basket-factor {
+  min-width: 3.25rem;
+  height: 48px;
+  padding: 0 var(--space-2);
+  font: inherit;
+  font-size: var(--text-md);
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+/* Nombre à choisir avant « Ajouter » : une indication, pas une faute (contour d'action,
+   jamais de rouge, comme le prénom manquant) */
+.chrono-basket-factor[aria-invalid='true'] {
+  border-color: var(--color-action);
+}
+
+.chrono-basket-times {
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+/* Retirer un calcul : une poubelle, pas une croix qu'on lirait comme le signe × */
+.chrono-basket-remove {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  color: var(--color-ink-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+/* Cible tactile de 44 px (DESIGN.md) autour de la poubelle, sans grossir la pastille */
+.chrono-basket-remove::before {
+  position: absolute;
+  inset: calc((44px - 2rem) / -2);
+  content: '';
+}
+
+.chrono-basket-remove:hover,
+.chrono-basket-remove:focus-visible {
+  color: var(--color-danger-ink);
+  background: var(--color-danger-tint);
+}
+
+.trash-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.trash-icon path {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Le pavé : la réponse tapée dans un creux, comme la zone de la question, puis des touches
+   de réponse */
+.chrono-container .options:has(.chrono-keypad) {
+  display: flex;
+  justify-content: center;
+}
+
+.chrono-keypad {
+  display: grid;
+  gap: var(--space-4);
+  width: min(20rem, 100%);
+  margin: 0 auto;
+}
+
+.chrono-typed {
+  display: grid;
+  place-items: center;
+  min-height: 64px;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.chrono-keys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+/* Les chiffres en Baloo 2, comme les nombres des tuiles de réponse */
+.chrono-key {
+  min-height: 56px;
+  padding: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+
+/* « Effacer » est un mot : police de lecture, comme les réponses écrites en lettres */
+.chrono-key[data-key='back'] {
+  font-family: var(--font-text);
+  font-size: var(--text-md);
+}
+
+/* Le retour tient sur une ligne : la marque à côté du mot (« Juste », « Presque ! »), pas au
+   bord de la carte (même spécificité que la règle commune de game.css, chargée avant) */
+.chrono-container > .chrono-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  font-weight: 700;
+}
+
+.chrono-feedback .option-mark {
+  position: static;
+  flex: none;
+  translate: none;
+}
+
+/* Temps par calcul : calcul, temps et marque en trois colonnes, alignées d'une ligne à
+   l'autre (chaque ligne reprend les colonnes de la liste) */
+.chrono-facts {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: center;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.chrono-fact {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+}
+
+/* Sans subgrid (Safari 15) : chaque ligne garde ses trois colonnes, sur une ligne */
+@supports not (grid-template-columns: subgrid) {
+  .chrono-fact {
+    grid-template-columns: repeat(3, auto);
+  }
+}
+
+.chrono-fact-eq {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: end;
+}
+
+.chrono-fact-time {
+  text-align: end;
+}
+
+.chrono-fact.is-correct {
+  color: var(--color-success-ink);
+}
+
+/* Une erreur : le calcul affiché est le bon, il reste à l'encre ; la croix rouge dit
+   l'erreur (en rouge, le calcul juste se lirait comme faux) */
+.chrono-fact.is-wrong .chrono-fact-mark {
+  color: var(--color-danger-ink);
+}
+
+/* Calcul et temps sur la même ligne de base (deux polices) ; la marque, centrée */
+.chrono-fact-mark {
+  position: static;
+  align-self: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  translate: none;
+}
+
+/* Mes meilleurs temps : une liste resserrée au centre, chaque rang contre son temps */
+.chrono-ranking {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding-inline-start: 2em;
+  text-align: start;
+  font-variant-numeric: tabular-nums;
+}
+
+.chrono-ranking li::marker {
+  font-weight: 700;
+  color: var(--color-ink-muted);
+}
+
+/* La courbe : axes et graduations à l'encre atténuée, les parties à la couleur du mode */
+.chrono-curve {
+  display: block;
+  width: min(100%, 26rem);
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+  font-family: var(--font-text);
+  color: var(--color-ink-muted);
+}
+
+.chrono-curve polyline {
+  stroke: var(--accent, var(--color-action));
+}
+
+.chrono-curve circle {
+  fill: var(--accent, var(--color-action));
+}

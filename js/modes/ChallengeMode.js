@@ -127,23 +127,8 @@ export class ChallengeMode extends GameMode {
     if (this.phase === 'selection') {
       this.setupDifficultySelection();
     } else {
-      this.placeActionsAfterAnswers();
+      this.placeActionsAfterAnswers('.challenge-controls');
       this.setupGameControls();
-    }
-  }
-
-  /**
-   * « Abandonner » passe après la zone de réponse, discret.
-   */
-  placeActionsAfterAnswers() {
-    const container = this.feedbackElement?.parentElement;
-    const controls = container?.querySelector('.challenge-controls');
-    if (!container || !controls) return;
-
-    const customWrap = controls.parentElement;
-    container.appendChild(controls);
-    if (customWrap && customWrap !== container && customWrap.children.length === 0) {
-      customWrap.remove();
     }
   }
 
@@ -620,7 +605,7 @@ export class ChallengeMode extends GameMode {
           onActivate: async () => {
             try {
               const mod = await import('../mode-orchestrator.js');
-              mod.setGameMode?.('challenge');
+              await mod.setGameMode?.('challenge');
             } catch (err) {
               console.error('Unable to restart Challenge via orchestrator:', err);
             }
@@ -703,7 +688,8 @@ let _challengeModeInstance = null;
 export function startChallengeMode() {
   if (_challengeModeInstance) _challengeModeInstance.stop();
   _challengeModeInstance = new ChallengeMode();
-  _challengeModeInstance.start();
+  // start() rattrape et signale ses propres erreurs
+  void _challengeModeInstance.start();
 }
 export function stopChallengeMode() {
   if (_challengeModeInstance) {

@@ -92,28 +92,10 @@ export class QuizMode extends GameMode {
   async initializeUI() {
     await super.initializeUI();
 
-    this.placeActionsAfterAnswers();
+    this.placeActionsAfterAnswers('#quiz-actions');
 
     // Bouton d'abandon
     this.setupGameControls();
-  }
-
-  /**
-   * Ordre de lecture : question, réponses, retour, « Continuer », puis « Abandonner ».
-   * « Abandonner » n'est plus le premier élément visible de la partie.
-   */
-  placeActionsAfterAnswers() {
-    const container = this.feedbackElement?.parentElement;
-    const actions = document.getElementById('quiz-actions');
-    if (!container || !actions) return;
-
-    const customWrap = actions.parentElement;
-    container.appendChild(actions);
-
-    // L'enveloppe du contenu personnalisé, désormais vide, disparaît
-    if (customWrap && customWrap !== container && customWrap.children.length === 0) {
-      customWrap.remove();
-    }
   }
 
   /**
@@ -471,7 +453,8 @@ let _quizModeInstance = null;
 export function startQuizMode() {
   if (_quizModeInstance) _quizModeInstance.stop();
   _quizModeInstance = new QuizMode();
-  _quizModeInstance.start();
+  // start() rattrape et signale ses propres erreurs
+  void _quizModeInstance.start();
 }
 export function stopQuizMode() {
   if (_quizModeInstance) {

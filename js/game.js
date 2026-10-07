@@ -1,6 +1,11 @@
 import { getCurrentDateString } from './core/storage.js';
 import { loadDailyChallengeData, saveDailyChallengeData } from './core/daily-challenge.js';
-import { getDailyChallengeTable, getTranslation, showMessage } from './utils-es6.js';
+import {
+  getDailyChallengeTable,
+  getTranslation,
+  showMessage,
+  updateCoinDisplay,
+} from './utils-es6.js';
 import { UserState } from './core/userState.js';
 import { UserManager } from './userManager.js';
 import { appendSanitizedHTML } from './security-utils.js';
@@ -31,7 +36,9 @@ export const gameState = {
   questionStartTime: null,
   wrongAnswers: {},
   streak: 0, // Compteur de bonnes réponses consécutives
-  gameMode: 'adventure', // Mode de jeu: 'adventure', 'discovery', 'quiz', 'challenge'
+  // Mode en cours : 'adventure', 'discovery', 'quiz', 'challenge', 'chrono', 'arcade', ou un
+  // mini-jeu ('invasion', 'multimiam', 'multimemory', 'multisnake')
+  gameMode: 'adventure',
   avatar: 'fox', // Avatar du joueur: 'fox', 'unicorn', 'dragon', 'panda', 'astronaut'
   nickname: '', // Surnom du joueur
   unlockedAvatars: ['fox'], // Avatars débloqués
@@ -214,6 +221,9 @@ function completeDailyChallenge(challengeData) {
   userData.dailyChallengesCompleted = (userData.dailyChallengesCompleted || 0) + 1;
 
   UserState.updateUserData(userData); // Sauvegarder les pièces et le compteur
+  // Le compteur de la barre du haut suit tout de suite : le mode qui a donné la dernière
+  // bonne réponse l'a rafraîchi avant cette récompense
+  updateCoinDisplay();
 
   // Afficher une notification spéciale
   showMessage(

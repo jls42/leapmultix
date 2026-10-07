@@ -13,10 +13,12 @@ const MODE_IMPORTS = new Map([
   ['adventure', () => import('./modes/AdventureMode.js')],
   ['discovery', () => import('./modes/DiscoveryMode.js')],
   ['arcade', () => import('./modes/ArcadeMode.js')],
+  ['chrono', () => import('./modes/ChronoMode.js')],
 ]);
 
 // Named starter call-backs by mode (when available)
 // Use literal property access to avoid object-injection patterns
+// Chrono reçoit les options de setGameMode (relance depuis ses résultats)
 const STARTERS = new Map([
   ['quiz', mod => (typeof mod.startQuizMode === 'function' ? mod.startQuizMode() : null)],
   [
@@ -32,12 +34,17 @@ const STARTERS = new Map([
     mod => (typeof mod.startDiscoveryMode === 'function' ? mod.startDiscoveryMode() : null),
   ],
   ['arcade', mod => (typeof mod.startArcadeMode === 'function' ? mod.startArcadeMode() : null)],
+  [
+    'chrono',
+    (mod, options) =>
+      typeof mod.startChronoMode === 'function' ? mod.startChronoMode(options) : null,
+  ],
 ]);
 
-async function startModuleForMode(mod, mode) {
+async function startModuleForMode(mod, mode, options) {
   const starter = STARTERS.get(mode);
   if (starter) {
-    starter(mod); // Call the starter function (handles its own instance management)
+    starter(mod, options); // Call the starter function (handles its own instance management)
     return true; // Return success instead of undefined
   }
   // Fallback: default export class with start()
@@ -59,7 +66,13 @@ export function setStartingMode(mode) {
   startingMode = mode;
 }
 
-export async function setGameMode(mode) {
+/**
+ * Démarre un mode. Passer par ici marque le mode « en démarrage » : la navigation vers
+ * l'écran de jeu ne l'arrête pas aussitôt (slides.js).
+ * @param {string} mode
+ * @param {Object} [options] - Transmises au lanceur du mode (Chrono : { autoStart })
+ */
+export async function setGameMode(mode, options = {}) {
   try {
     // Vérifier si le mode est disponible pour l'opération actuelle
     if (!canLaunchMode(mode)) {
@@ -89,7 +102,7 @@ export async function setGameMode(mode) {
     }
 
     const mod = await loader();
-    return await startModuleForMode(mod, mode);
+    return await startModuleForMode(mod, mode, options);
   } catch (err) {
     console.error(`Erreur lors du démarrage du mode ${mode}:`, err);
     showMessage?.(getTranslation('mode_start_error', { modeName: mode }));

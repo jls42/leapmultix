@@ -496,6 +496,7 @@ export class GameMode {
       nextQuestionDelay: 1200,
       wrongAnswerDelay: 2400,
       showScore: true,
+      announceOnStart: true,
       ...config,
     };
 
@@ -540,10 +541,13 @@ export class GameMode {
       // Réinitialiser l'état
       this.resetState();
 
-      // Annonce vocale
-      const translationKey = this.modeName + '_mode';
-      const translatedText = getTranslation(translationKey);
-      speak(translatedText, { priority: 'high' });
+      // Annonce vocale, désactivable : une course relancée aussitôt (« Rejouer » du Chrono)
+      // ne fait pas attendre sa première question derrière l'annonce
+      if (this.config.announceOnStart !== false) {
+        const translationKey = this.modeName + '_mode';
+        const translatedText = getTranslation(translationKey);
+        speak(translatedText, { priority: 'high' });
+      }
 
       // Initialiser l'interface
       await this.initializeUI();
@@ -782,6 +786,23 @@ export class GameMode {
 
     box.appendChild(btn);
     return box;
+  }
+
+  /**
+   * Ordre de lecture : question, réponses, retour, « Continuer », puis les actions de la
+   * partie (« Abandonner »), discrètes. L'enveloppe du contenu personnalisé, vidée, disparaît.
+   * @param {string} selector - Bloc d'actions, cherché dans la zone de jeu
+   */
+  placeActionsAfterAnswers(selector) {
+    const container = this.feedbackElement?.parentElement;
+    const actions = container?.querySelector(selector);
+    if (!container || !actions) return;
+
+    const customWrap = actions.parentElement;
+    container.appendChild(actions);
+    if (customWrap && customWrap !== container && customWrap.children.length === 0) {
+      customWrap.remove();
+    }
   }
 
   /**
@@ -1162,7 +1183,7 @@ export class GameMode {
       done = true;
       next();
     };
-    whenSpeechEnds().then(go);
+    void whenSpeechEnds().then(go, go);
     this.addTimer(go, EXPLANATION_WAIT_MAX_MS);
   }
 
@@ -1277,7 +1298,7 @@ export class GameMode {
 
     // Retour au menu après une erreur
     setTimeout(() => {
-      goToSlide(1);
+      void goToSlide(1);
     }, 2000);
   }
 
@@ -1291,8 +1312,8 @@ export class GameMode {
    * retraduits ; restent l'énoncé, les réponses en toutes lettres, les vies et
    * l'explication affichée.
    *
-   * Asynchrone par contrat : la Découverte reconstruit son écran entier
-   * (DiscoveryMode.refreshTexts), les autres modes rendent une promesse déjà tenue.
+   * Asynchrone par contrat : certains modes reconstruisent leur écran (Découverte, Arcade,
+   * écrans de départ et de temps du Chrono), les autres rendent une promesse déjà tenue.
    * @returns {Promise<void>}
    */
   async refreshTexts() {
@@ -1489,7 +1510,7 @@ export class GameMode {
    * Afficher les résultats (à surcharger)
    */
   showResults() {
-    goToSlide(5); // Slide de résultats par défaut
+    void goToSlide(5); // Slide de résultats par défaut
   }
 
   /**

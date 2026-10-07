@@ -32,6 +32,7 @@ async function refreshActiveModeTexts(mode) {
     adventure: async () => (await import('./modes/AdventureMode.js')).refreshAdventureTexts?.(),
     discovery: async () => (await import('./modes/DiscoveryMode.js')).refreshDiscoveryTexts?.(),
     arcade: async () => (await import('./modes/ArcadeMode.js')).refreshArcadeTexts?.(),
+    chrono: async () => (await import('./modes/ChronoMode.js')).refreshChronoTexts?.(),
   };
   await chargeurs[mode]?.();
 }
@@ -52,7 +53,7 @@ function rewireSetGameModeButtons(root = document) {
         'click',
         e => {
           e.preventDefault();
-          _setGameMode(mode);
+          void _setGameMode(mode);
         },
         { once: false }
       );
@@ -69,7 +70,7 @@ function rewireSetGameModeButtons(root = document) {
         'click',
         e => {
           e.preventDefault();
-          _goToSlide(slide);
+          void _goToSlide(slide);
         },
         { once: false }
       );
@@ -87,7 +88,7 @@ function wireDataAttributes(root = document) {
       const mode = el.dataset.mode;
       if (!mode) return;
       e.preventDefault();
-      _setGameMode(mode);
+      void _setGameMode(mode);
     });
     el._modeWired = true;
   });
@@ -99,7 +100,7 @@ function wireDataAttributes(root = document) {
       const slide = Number.parseInt(el.dataset.slide || '', 10);
       if (Number.isNaN(slide)) return;
       e.preventDefault();
-      _goToSlide(slide);
+      void _goToSlide(slide);
     });
     el._slideWired = true;
   });
@@ -115,7 +116,7 @@ function wireDataAttributes(root = document) {
       } catch (err) {
         console.warn('saveCustomization failed', err);
       }
-      _goToSlide(1);
+      void _goToSlide(1);
     });
     el._actionWired = true;
   });
@@ -158,7 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
           () => TopBar.updateTableSettingsButtonVisibility?.(),
         ],
       ];
-      for (const [label, step] of steps) await runSafely(label, step);
+      // Dans l’ordre, chaque étape après la précédente : la disponibilité des modes suit le
+      // sélecteur d’opération
+      for (const [label, step] of steps) await runSafely(label, step); // NOSONAR - ordre voulu
     };
     // Un seul abonnement : i18n.js émet aussi l'événement sur window (écouté par
     // i18n-store.js) ; s'y abonner en plus redessinait chaque écran deux fois.

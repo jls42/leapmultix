@@ -4,7 +4,7 @@
  */
 
 // Version globale de l'application - doit correspondre à sw.js
-export const APP_VERSION = 'v34';
+export const APP_VERSION = 'v35';
 export const VERSION_PARAM = `v=${APP_VERSION}`;
 
 const runtime = globalThis;
@@ -121,25 +121,30 @@ function broadcastAppVersion() {
 
 broadcastAppVersion();
 
+// Vide tous les caches ; un échec est signalé sans arrêter la suite
+function deleteAllCaches(cachesApi) {
+  return cachesApi
+    .keys()
+    .then(cacheNames => Promise.all(cacheNames.map(cacheName => cachesApi.delete(cacheName))))
+    .catch(error => console.warn('Caches : nettoyage impossible', error));
+}
+
 // Fonction de développement pour forcer le nettoyage complet
 export function forceDevCacheClear() {
   const navigatorRef = runtime.navigator;
   // Unregister service worker
   if (navigatorRef?.serviceWorker) {
-    navigatorRef.serviceWorker.getRegistrations().then(registrations => {
-      for (const registration of registrations) {
-        registration.unregister();
-      }
-    });
+    navigatorRef.serviceWorker
+      .getRegistrations()
+      .then(registrations =>
+        Promise.all(registrations.map(registration => registration.unregister()))
+      )
+      .catch(error => console.warn('Service worker : désinscription impossible', error));
   }
 
   // Clear all caches
   const cachesApi = runtime.caches;
-  if (cachesApi) {
-    cachesApi.keys().then(cacheNames => {
-      return Promise.all(cacheNames.map(cacheName => cachesApi.delete(cacheName)));
-    });
-  }
+  if (cachesApi) void deleteAllCaches(cachesApi);
 
   // Clear localStorage/sessionStorage cache-related data
   for (const key of Object.keys(localStorage)) {
@@ -226,10 +231,10 @@ export function clearCacheAndReload() {
   };
 
   if (cachesApi) {
-    cachesApi
-      .keys()
-      .then(cacheNames => Promise.all(cacheNames.map(cacheName => cachesApi.delete(cacheName))))
-      .then(redirectToVersion);
+    // Caches vidés ou non, la page se recharge : le nettoyage n’est qu’une aide
+    deleteAllCaches(cachesApi)
+      .then(redirectToVersion)
+      .catch(error => console.warn('Rechargement impossible', error));
     return;
   }
 

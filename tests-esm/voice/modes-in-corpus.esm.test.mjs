@@ -39,6 +39,7 @@ const { QuizMode } = await import('../../js/modes/QuizMode.js');
 const { ChallengeMode } = await import('../../js/modes/ChallengeMode.js');
 const { AdventureMode } = await import('../../js/modes/AdventureMode.js');
 const { DiscoveryMode } = await import('../../js/modes/DiscoveryMode.js');
+const { ChronoMode } = await import('../../js/modes/ChronoMode.js');
 const { buildCorpus } = await import('../../scripts/voice/corpus.mjs');
 const { normalizeSpokenText } = await import('../../js/core/spoken-text.js');
 
@@ -213,6 +214,53 @@ describe.each(LANGS)('%s : les phrases des modes sont toutes dans le corpus', la
     await adventure.startLevel(3);
     expect(errorsWithoutPreload(adventure, 12)).toEqual([]);
     adventure.stop();
+  });
+
+  test('Chrono (×) : parties en tapant, en choisissant, puis une révision', async () => {
+    userStore.preferredOperator = '×';
+    userStore.chronoStats = undefined;
+    for (const inputMode of ['keypad', 'mcq']) {
+      const chrono = new ChronoMode();
+      await chrono.start();
+      chrono.setInputMode(inputMode);
+      await chrono.beginSession(false);
+      playQuestions(chrono);
+      chrono.stop();
+    }
+    userStore.chronoStats = {
+      basket: [
+        { a: 7, b: 8, due: 2 },
+        { a: 9, b: 6, due: 1 },
+      ],
+    };
+    const revision = new ChronoMode();
+    await revision.start();
+    await revision.beginSession(true);
+    playQuestions(revision, 10);
+    revision.stop();
+    expectAllInCorpus();
+  });
+
+  // Chrono ne pose que des calculs 1–10 × 1–10 (tirage, révision, liste bornée) : on vérifie
+  // les cent, pas un échantillon tiré au hasard
+  test('Chrono : chacune des 100 questions qu’il peut dire est enregistrée', () => {
+    const chrono = new ChronoMode();
+    const missing = [];
+    for (let a = 1; a <= 10; a++) {
+      for (let b = 1; b <= 10; b++) {
+        chrono.state.currentQuestion = {
+          question: `${a} × ${b} = ?`,
+          answer: a * b,
+          type: 'classic',
+          operator: '×',
+          a,
+          b,
+        };
+        const said = normalizeSpokenText(chrono.spokenQuestionText());
+        if (!corpus.has(said)) missing.push(said);
+      }
+    }
+    expect(missing).toEqual([]);
   });
 
   test.each(OPERATORS)('Découverte, %s : tables, niveaux et égalités dites', async op => {

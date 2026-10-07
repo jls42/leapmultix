@@ -225,6 +225,9 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `adventure-data.js` - Adventure mode data structures
 - `mult-stats.js` - Multiplication statistics tracking
 - `challenge-stats.js` - Challenge mode statistics
+- `chrono-stats.js` - Chrono mode statistics: times per table set and answer mode, review list of missed facts
+- `chrono-questions.js` - Chrono question draw, weighted toward the harder facts, and revision queue (both orders, no repeat in a row)
+- `chrono-input.js` - Chrono typed-answer check (validates as soon as the answer is right or can no longer be)
 - `daily-challenge.js` - Daily challenge management
 - `utils.js` - Core utility functions (canonical source)
 - `random.js` - Single source of randomness (Web Crypto): `randomInt`, `chance`, `pickRandom`, `shuffleInPlace`
@@ -235,6 +238,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `ChallengeMode.js` - Timed challenges with scoring
 - `DiscoveryMode.js` - Learning-focused exploration mode
 - `AdventureMode.js` - Story-driven progression
+- `ChronoMode.js` - Timed series of 10 correct answers (multiplication only), with a review list of missed facts
 - `ArcadeMode.js` - Mini-games collection (Multimiam, Multisnake, etc.)
 
 #### UI Components (`js/components/`)

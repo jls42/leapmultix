@@ -5,7 +5,8 @@
  * d'infos avant le choix de la difficulté.
  * Aventure : niveaux en vrais boutons, écrans de fin en phrase, sans émoji d'interface ;
  * une erreur est expliquée et attend « Continuer », jusqu'à la dernière question ; le
- * niveau se termine toujours sur son propre écran ; badges et verrous justes.
+ * niveau se termine toujours sur son propre écran ; badges et verrous justes ; un niveau ou
+ * un retour à la carte qui échoue est signalé.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 
@@ -373,6 +374,30 @@ describe('Aventure : une erreur est une étape, jusqu’à la dernière question
 });
 
 describe('Aventure : carte des niveaux', () => {
+  test('un niveau qui ne démarre pas est signalé, pas perdu en silence', async () => {
+    const adventure = new AdventureMode();
+    await adventure.start();
+    const failure = new Error('niveau illisible');
+    jest.spyOn(adventure, 'startLevel').mockRejectedValue(failure);
+    const handled = jest.spyOn(adventure, 'handleError').mockImplementation(() => {});
+
+    document.querySelector('.level-card[data-level="1"]').click();
+    await new Promise(r => setTimeout(r, 0));
+    expect(handled).toHaveBeenCalledWith(failure);
+  });
+
+  test('un abandon dont le retour à la carte échoue est signalé', async () => {
+    const adventure = await startFirstLevel();
+    const failure = new Error('carte illisible');
+    jest.spyOn(adventure, 'returnToLevelSelection').mockRejectedValue(failure);
+    const handled = jest.spyOn(adventure, 'handleError').mockImplementation(() => {});
+    jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
+
+    adventure.confirmAbandon();
+    await new Promise(r => setTimeout(r, 0));
+    expect(handled).toHaveBeenCalledWith(failure);
+  });
+
   test('verrou du niveau précédent : message dédié, sans nombre d’étoiles trompeur', async () => {
     store.setTranslations({
       ...BASE_TRANSLATIONS,

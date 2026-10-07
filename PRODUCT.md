@@ -16,7 +16,7 @@ Public secondaire : les parents et les enseignants. Ce sont eux qui choisissent 
 
 ## Product Purpose
 
-LeapMultix fait pratiquer le calcul mental à travers cinq modes de jeu (Découverte, Quiz, Défi, Aventure, Arcade) et quatre mini-jeux d'arcade (MultiInvaders, MultiMiam, MultiMemory, MultiSnake). Chaque enfant a son profil, son avatar et sa progression, enregistrés uniquement dans le navigateur. L'application est gratuite, open source (AGPL-3.0), disponible en français, anglais et espagnol, et fonctionne hors ligne une fois installée.
+LeapMultix fait pratiquer le calcul mental à travers six modes de jeu (Découverte, Quiz, Défi, Aventure, Chrono, Arcade) et quatre mini-jeux d'arcade (MultiInvaders, MultiMiam, MultiMemory, MultiSnake). Chaque enfant a son profil, son avatar et sa progression, enregistrés uniquement dans le navigateur. L'application est gratuite, open source (AGPL-3.0), disponible en français, anglais et espagnol, et fonctionne hors ligne une fois installée.
 
 La réussite se mesure à deux choses : l'enfant **revient jouer de lui-même**, sans qu'on le pousse, et il **comprend** ce que fait chaque opération au lieu de seulement réciter un résultat.
 

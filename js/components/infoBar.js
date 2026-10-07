@@ -10,6 +10,7 @@
  */
 import { getTranslation as _getTranslation } from '../i18n.js';
 import { getCurrentLanguage } from '../i18n-store.js';
+import { createPathIcon } from './icons.js';
 
 /** Libellé traduit, avec un texte de repli si la clé manque */
 function trLabel(key, fallback, params = {}) {
@@ -17,7 +18,6 @@ function trLabel(key, fallback, params = {}) {
   return typeof value === 'string' && value !== '' && !value.startsWith('[') ? value : fallback;
 }
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
 const HEART_PATH =
   'M12 20.3s-7.6-4.5-9.3-9.4C1.5 7.6 3.6 4.5 7 4.5c2.2 0 3.9 1.2 5 3 1.1-1.8 2.8-3 5-3 3.4 0 5.5 3.1 4.3 6.4-1.7 4.9-9.3 9.4-9.3 9.4z';
 const ARCADE_MODES = new Set(['multisnake', 'multimiam', 'multimemory', 'multiinvaders']);
@@ -29,15 +29,7 @@ const MAX_LIVES = 3;
  * @returns {SVGSVGElement}
  */
 function createHeartIcon(filled) {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('class', filled ? 'info-heart' : 'info-heart is-empty');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', HEART_PATH);
-  svg.appendChild(path);
-  return svg;
+  return createPathIcon(HEART_PATH, filled ? 'info-heart' : 'info-heart is-empty');
 }
 
 /**
@@ -186,6 +178,7 @@ export const InfoBar = {
     adventure: ['score', 'lives', 'progress', 'streak'],
     discovery: [],
     arcade: ['score', 'lives', 'time'],
+    chrono: ['time', 'progress'],
     multisnake: ['score', 'lives'],
     multimiam: ['score', 'lives'],
     multimemory: ['score', 'lives'],

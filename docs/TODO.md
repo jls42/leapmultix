@@ -12,7 +12,7 @@ critère.
 
 1. **Cadrer le niveau visé** : WCAG 2.2, niveau AA, et décider ce qu'on retient
    de AAA (contraste 7:1, cible 44 px partout, aide contextuelle).
-2. **Auditer les 4 principes** sur chaque écran (accueil, 5 modes, arcade,
+2. **Auditer les 4 principes** sur chaque écran (accueil, 6 modes, arcade,
    tableau de bord, personnalisation, pages statiques) : perceptible,
    utilisable, compréhensible, robuste.
 3. **Mesurer**, pas supposer : axe-core ou Lighthouse en plus de la revue

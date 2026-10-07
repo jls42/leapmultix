@@ -14,9 +14,9 @@ import { UserManager } from '../userManager.js';
 import { getTranslation } from '../utils-es6.js';
 import { createSafeElement } from '../security-utils.js';
 import { singleActivation } from '../ui-feedback.js';
+import { createPathIcon } from './icons.js';
 import eventBus from '../core/eventBus.js';
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
 const TITLE_ID = 'table-settings-title';
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), input:not([disabled])';
 
@@ -26,14 +26,7 @@ const FOCUSABLE_SELECTOR = 'button:not([disabled]), input:not([disabled])';
  * @returns {SVGSVGElement}
  */
 function createCloseIcon() {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', 'M6 6l12 12M18 6L6 18');
-  svg.appendChild(path);
-  return svg;
+  return createPathIcon('M6 6l12 12M18 6L6 18');
 }
 
 export const TableSettingsModal = {
