@@ -72,6 +72,8 @@
   "back_to_levels": "Volver a los niveles",
   "back_to_tables": "Volver a las tablas",
   "best_score_label": "Mejor puntuación",
+  "best_time_label": "Mejor tiempo",
+  "facts_to_review_label": "Cálculos para repasar",
   "challenge_bonus_info": "Bonus: ¡las rachas de respuestas correctas añaden tiempo!",
   "challenge_desc": "Responde rápido contrarreloj",
   "challenge_easy": "Fácil (90 s)",

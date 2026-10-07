@@ -1,6 +1,7 @@
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import { describe, beforeEach, afterEach, test, expect, jest } from '@jest/globals';
 import { setTranslations } from '../../js/i18n-store.js';
 import { Dashboard } from '../../js/components/dashboard.js';
+import { UserState } from '../../js/core/userState.js';
 
 describe('Dashboard.generateScoresSection (ESM)', () => {
   beforeEach(() => {
@@ -149,5 +150,71 @@ describe('Dashboard : étoiles, parcours et badges', () => {
     expect(list.querySelector('.no-achievements').textContent).toBe(
       'Aucun badge débloqué pour le moment.'
     );
+  });
+});
+
+describe('Dashboard : Chrono parmi les modes classiques', () => {
+  beforeEach(() => {
+    setTranslations({
+      chrono_mode_title: 'Chrono',
+      sessions_count_label: 'Nombre de parties',
+      best_time_label: 'Meilleur temps',
+      facts_to_review_label: 'Calculs à revoir',
+      no_scores_yet: 'Aucun score',
+    });
+    document.body.innerHTML = `
+      <div class="dashboard-container content-card">
+        <div class="achievements-section"><div id="achievements-list"></div></div>
+      </div>
+    `;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    document.body.innerHTML = '';
+  });
+
+  const chronoRow = () => {
+    const rows = [...document.querySelectorAll('.classic-game-stats')];
+    const row = rows.find(item => item.querySelector('.score-row-title').textContent === 'Chrono');
+    return { row, last: rows.at(-1) };
+  };
+
+  test('après l’Aventure : parties, meilleur temps et calculs à revoir, tous classements', () => {
+    const played = (key, durations) => ({
+      key,
+      count: durations.length,
+      totalMs: durations.reduce((sum, ms) => sum + ms, 0),
+      best: durations.map((durationMs, index) => ({ durationMs, date: index + 1 })),
+      recent: durations.map((durationMs, index) => ({ durationMs, date: index + 1 })),
+    });
+    jest.spyOn(UserState, 'getCurrentUserData').mockReturnValue({
+      chronoStats: {
+        buckets: [played('7|keypad', [31000, 25400, 40000]), played('2,3|mcq', [38000, 45000])],
+        basket: [
+          { a: 6, b: 7, due: 2 },
+          { a: 8, b: 9, due: 1 },
+        ],
+      },
+    });
+    Dashboard.generateScoresSection();
+    const { row, last } = chronoRow();
+    expect(row).toBe(last);
+    const facts = [...row.querySelectorAll('.score-facts dt')].map(dt => [
+      dt.textContent,
+      dt.nextElementSibling.textContent,
+    ]);
+    expect(facts).toEqual([
+      ['Nombre de parties', '5'],
+      ['Meilleur temps', '25,4\u00a0s'],
+      ['Calculs à revoir', '2'],
+    ]);
+  });
+
+  test('jamais joué : « Aucun score », comme les autres modes', () => {
+    jest.spyOn(UserState, 'getCurrentUserData').mockReturnValue({});
+    Dashboard.generateScoresSection();
+    const { row } = chronoRow();
+    expect(row.querySelector('.score-empty').textContent).toBe('Aucun score');
   });
 });
