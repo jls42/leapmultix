@@ -452,6 +452,19 @@ describe('Moteur des clips', () => {
     expect(h.onEnded).not.toHaveBeenCalled();
   });
 
+  test('clip reçu mais illisible (adresse du blob refusée) : la synthèse aussitôt, sans attendre le délai', async () => {
+    const engine = makeEngine({
+      createObjectURL: () => {
+        throw new Error('adresse refusée');
+      },
+    });
+    const h = handlers();
+    engine.start('Mode Quiz', h);
+    await flush();
+    expect(fallbacks).toEqual(['error']);
+    expect(synthesis.start).toHaveBeenCalledWith('Mode Quiz', h);
+  });
+
   test('erreur avant le départ : repli ; erreur en cours de lecture : fin de phrase', async () => {
     const engine = makeEngine();
     const first = handlers();

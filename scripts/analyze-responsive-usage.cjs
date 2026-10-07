@@ -300,11 +300,17 @@ imageLoader.preloadImages(monsterImages, 'monster');
 
 if (require.main === module) {
   const analyzer = new ResponsiveUsageAnalyzer();
-  analyzer.analyze().then(() => {
-    if (process.argv.includes('--migration')) {
-      generateMigrationScript();
-    }
-  });
+  analyzer
+    .analyze()
+    .then(() => {
+      if (process.argv.includes('--migration')) {
+        generateMigrationScript();
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      process.exitCode = 1;
+    });
 }
 
 module.exports = ResponsiveUsageAnalyzer;

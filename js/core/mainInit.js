@@ -391,7 +391,7 @@ let initStarted = false;
 const startInitOnce = () => {
   if (initStarted) return;
   initStarted = true;
-  runInit();
+  runInit().catch(error => console.error('[MainInit] Initialisation interrompue', error));
 };
 
 export function initOnDomReady() {

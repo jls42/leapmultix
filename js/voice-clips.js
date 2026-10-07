@@ -254,7 +254,13 @@ export function createClipEngine({
       return;
     }
     // Arrivé trop tard (repli déjà fait) ou phrase coupée : le clip a seulement servi au cache
-    if (!phrase.done) play(phrase, blob);
+    if (phrase.done) return;
+    try {
+      play(phrase, blob);
+    } catch {
+      // Clip reçu mais illisible (adresse du blob refusée) : la voix de l'appareil, sans attendre
+      fallBack(phrase, 'error');
+    }
   }
 
   audio.addEventListener('playing', () => {
@@ -299,7 +305,8 @@ export function createClipEngine({
         startTimeoutMs
       );
       loading.add(phrase);
-      download(phrase, key);
+      // download() ne rejette pas : chaque échec passe par le repli sur la synthèse
+      void download(phrase, key);
       return {
         stop() {
           if (settle(phrase)) {

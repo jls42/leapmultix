@@ -818,7 +818,8 @@ function onUnlockGesture() {
   if (unlockTried) return;
   // Voix coupée : rien à déverrouiller, un geste suivant s'en chargera
   if (isMuted || !isVoiceEnabled()) return;
-  unlockSpeech();
+  // Ne rejette pas : un moteur qui refuse rend false, et le geste suivant réessaie
+  void unlockSpeech();
 }
 
 function initializeSpeechLifecycle() {

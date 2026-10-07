@@ -476,7 +476,7 @@ export const TopBar = {
       // Sans joueur choisi (À propos ouvert depuis « Qui joue ? », joueur supprimé),
       // l'accueil est le choix du joueur : on ne joue jamais sans profil.
       btn.addEventListener('click', () => {
-        goToSlide(hasCurrentPlayer() ? 1 : 0);
+        void goToSlide(hasCurrentPlayer() ? 1 : 0);
       });
       btn.dataset.homeWired = 'true';
     }
@@ -506,7 +506,8 @@ export const TopBar = {
     for (const btn of document.querySelectorAll('.lang-btn')) {
       btn.addEventListener('click', event => {
         const lang = event.currentTarget?.dataset?.lang;
-        if (lang) changeLanguage(lang);
+        // changeLanguage ne rejette pas : un échec garde la langue en place et rend false
+        if (lang) void changeLanguage(lang);
       });
     }
   },
@@ -548,7 +549,7 @@ export const TopBar = {
             this.updateVoiceToggleUI(next);
             if (next) {
               // Ce clic est un geste : il déverrouille le son (iOS) avant la confirmation
-              unlockSpeech();
+              void unlockSpeech();
               try {
                 _speak(getTranslation('voice_enabled'));
               } catch (error) {
