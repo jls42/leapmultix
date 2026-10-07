@@ -449,7 +449,7 @@ export const Customization = {
         cachesApi
           .keys()
           .then(names => Promise.all(names.map(n => cachesApi.delete(n))))
-          .finally(() => globalThis.location && globalThis.location.reload())
+          .finally(() => globalThis.location?.reload())
           // Un cache resté en place n'empêche pas le rechargement, demandé juste avant
           .catch(error => console.warn('Nettoyage du cache incomplet', error));
       } else {
