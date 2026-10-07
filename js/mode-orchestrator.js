@@ -70,7 +70,7 @@ export function setStartingMode(mode) {
  * Démarre un mode. Passer par ici marque le mode « en démarrage » : la navigation vers
  * l'écran de jeu ne l'arrête pas aussitôt (slides.js).
  * @param {string} mode
- * @param {Object} [options] - Transmises au lanceur du mode (Chrono : { autoStart, revision })
+ * @param {Object} [options] - Transmises au lanceur du mode (Chrono : { autoStart })
  */
 export async function setGameMode(mode, options = {}) {
   try {

@@ -541,7 +541,8 @@ export class GameMode {
       // Réinitialiser l'état
       this.resetState();
 
-      // Annonce vocale (désactivable : un mode chrono ne doit pas attendre la voix)
+      // Annonce vocale, désactivable : une course relancée aussitôt (« Rejouer » du Chrono)
+      // ne fait pas attendre sa première question derrière l'annonce
       if (this.config.announceOnStart !== false) {
         const translationKey = this.modeName + '_mode';
         const translatedText = getTranslation(translationKey);
@@ -1311,8 +1312,8 @@ export class GameMode {
    * retraduits ; restent l'énoncé, les réponses en toutes lettres, les vies et
    * l'explication affichée.
    *
-   * Asynchrone par contrat : la Découverte reconstruit son écran entier
-   * (DiscoveryMode.refreshTexts), les autres modes rendent une promesse déjà tenue.
+   * Asynchrone par contrat : certains modes reconstruisent leur écran (Découverte, Arcade,
+   * écrans de départ et de temps du Chrono), les autres rendent une promesse déjà tenue.
    * @returns {Promise<void>}
    */
   async refreshTexts() {

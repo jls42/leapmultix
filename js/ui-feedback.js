@@ -163,17 +163,22 @@ export function createTrashIcon() {
   return createPathIcon(TRASH_PATH, 'trash-icon');
 }
 
+/** Valeur d'une tuile en texte, ou null s'il n'y en a pas */
+function optionText(value) {
+  return value === undefined || value === null ? null : String(value);
+}
+
 /**
  * Après un choix : la tuile juste reçoit une coche, le choix erroné une croix
  * (jamais la couleur seule) et reste enfoncé. Les deux se repèrent d'un coup d'œil.
  * @param {HTMLElement} container - Conteneur des tuiles `.option`
- * @param {*} correctAnswer - Bonne réponse
+ * @param {*} correctAnswer - Bonne réponse ; null : aucune tuile n'est montrée comme juste
  * @param {*} chosenAnswer - Réponse choisie par l'enfant
  */
 export function markAnswerOptions(container, correctAnswer, chosenAnswer) {
   if (!container) return;
-  const correct = String(correctAnswer);
-  const chosen = chosenAnswer === undefined || chosenAnswer === null ? null : String(chosenAnswer);
+  const correct = optionText(correctAnswer);
+  const chosen = optionText(chosenAnswer);
 
   container.classList.add('is-answered');
   for (const option of container.querySelectorAll('.option')) {

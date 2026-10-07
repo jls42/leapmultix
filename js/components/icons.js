@@ -152,6 +152,7 @@ const ICONS = Object.freeze({
     ['circle', { cx: '12', cy: '12', r: '9' }],
     ['circle', { cx: '12', cy: '12', r: '5' }],
   ],
+  'chevron-right': [['path', { d: 'm9 18 6-6-6-6' }]],
 });
 
 /** Noms d'icônes disponibles */
@@ -211,8 +212,8 @@ export function createIcon(name, { size = 24, className = '' } = {}) {
 
 /**
  * Icône d'un seul tracé, sans les attributs de trait des icônes ci-dessus : sa feuille de
- * style la dessine (coche et croix des réponses, étoile, cadenas, cœur des vies, croix
- * « fermer »). Masquée aux technologies d'assistance, comme elles.
+ * style la dessine (coche et croix des réponses, étoile, cadenas, poubelle, cœur des vies,
+ * croix « fermer »). Masquée aux technologies d'assistance, comme elles.
  * @param {string} pathData - Tracé (attribut d), sur la grille de 24 px
  * @param {string} [className] - Classe de l'icône ; aucune si vide
  * @returns {SVGSVGElement}

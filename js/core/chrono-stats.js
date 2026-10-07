@@ -1,8 +1,9 @@
 /**
- * Stats Chrono : classements, panier des calculs à revoir.
+ * Stats Chrono : classements, et la liste « Mes calculs à revoir » (`basket` dans le profil).
  * Un classement = les tables jouées + la façon de répondre (mcq | keypad). Il garde le
  * nombre de parties et leur temps total (moyenne exacte), les 10 meilleurs temps et les
- * 20 derniers (courbe) : le profil ne grossit plus à chaque partie.
+ * 20 derniers (courbe) : la place prise dans le profil reste bornée, quel que soit le
+ * nombre de parties.
  * Une partie compte dès que 10 réponses sont justes, même s’il y a eu des erreurs
  * (chaque erreur ajoute un calcul, le chrono ne s’arrête pas).
  */
@@ -15,7 +16,10 @@ const MAX_FACTOR = 10;
 const DEFAULT_LANG = 'fr';
 const NBSP = ' ';
 
-/** Facteur d’un calcul de Chrono : les questions dites ne sortent jamais de 1–10 × 1–10 */
+/**
+ * Facteur d’un calcul de Chrono, de 1 à 10 : la voix enregistrée n’a de clip que pour ces
+ * 100 questions (tests-esm/voice/modes-in-corpus).
+ */
 function isFactor(n) {
   return Number.isInteger(n) && n >= MIN_FACTOR && n <= MAX_FACTOR;
 }
@@ -24,11 +28,22 @@ function factKey(a, b) {
   return `${Number(a)}×${Number(b)}`;
 }
 
-export function tablesKey(tables) {
+/** 6 × 7 et 7 × 6 : le même calcul, une seule place dans la liste à revoir */
+function sameFactKey(a, b) {
+  const x = Number(a);
+  const y = Number(b);
+  return factKey(Math.min(x, y), Math.max(x, y));
+}
+
+/** Tables valides, sans doublon, dans l'ordre */
+export function uniqueTables(tables) {
   const list = Array.isArray(tables) ? tables : [];
   const unique = [...new Set(list.map(Number).filter(isFactor))];
-  unique.sort((a, b) => a - b);
-  return unique.join(',');
+  return unique.sort((a, b) => a - b);
+}
+
+export function tablesKey(tables) {
+  return uniqueTables(tables).join(',');
 }
 
 export function bucketKey(tables, inputMode) {
@@ -111,7 +126,11 @@ function normalizeBuckets(raw) {
   return buckets;
 }
 
-/** Compteur « à revoir » : un entier positif, 1 par défaut (`errors` : nom de la première version) */
+/**
+ * Compteur « à revoir » : un entier positif, 1 par défaut. `errors` est son nom dans la
+ * première version de la PR, jamais publiée : les profils de ceux qui l’ont essayée gardent
+ * ainsi leur compteur, sans migration à écrire.
+ */
 function normalizeDue(item) {
   const due = Math.floor(Number(item.due ?? item.errors));
   return Number.isFinite(due) && due > 0 ? due : 1;
@@ -125,6 +144,7 @@ function normalizeBasketItem(item) {
   return { a, b, due: normalizeDue(item) };
 }
 
+/** Une ligne par sens au plus : un ajout à la main peut garder 6 × 7 et 7 × 6 */
 function normalizeBasket(raw) {
   const basket = [];
   const seen = new Set();
@@ -220,9 +240,10 @@ function isMissedFact(fact) {
 }
 
 /**
- * Enregistre une partie terminée : moyenne, meilleurs temps, courbe, calculs ratés au
- * panier. Record et rang se calculent avant l’ajout : la partie n’est pas comparée à
- * elle-même.
+ * Enregistre une partie terminée : moyenne, meilleurs temps, courbe, calculs ratés dans la
+ * liste à revoir. Le record se juge contre le meilleur temps d’avant l’ajout (la partie
+ * n’est pas comparée à elle-même) ; le rang est sa place parmi les 10 meilleurs temps,
+ * une fois ajoutée (null au-delà).
  * @returns {{ first: boolean, record: boolean, rank: number|null, count: number, averageMs: number, added: Array }}
  */
 export function saveChronoSession(store, { tables, inputMode, durationMs, date, facts }) {
@@ -250,28 +271,35 @@ export function saveChronoSession(store, { tables, inputMode, durationMs, date, 
   };
 }
 
-/** Un calcul raté entre au panier, ou y est à revoir une fois de plus */
+/** Un calcul raté entre dans la liste à revoir, ou y est à revoir une fois de plus */
 export function addToBasket(store, fact) {
   const a = Number(fact?.a);
   const b = Number(fact?.b);
   if (!isFactor(a) || !isFactor(b)) return store.basket;
-  const existing = store.basket.find(entry => entry.a === a && entry.b === b);
+  // La ligne de ce sens, sinon celle de l’inverse : 6 × 7 et 7 × 6 sont le même calcul
+  const key = sameFactKey(a, b);
+  const existing =
+    store.basket.find(entry => entry.a === a && entry.b === b) ??
+    store.basket.find(entry => sameFactKey(entry.a, entry.b) === key);
   if (existing) existing.due += 1;
   else store.basket.push({ a, b, due: 1 });
   return store.basket;
 }
 
 /**
- * Ajout à la main d’un calcul 1–10 × 1–10, à revoir une fois. Doublon : inchangé.
- * @returns {boolean} Le calcul est valide (ajouté ou déjà présent)
+ * Ajout à la main d’un calcul 1–10 × 1–10 : à revoir une fois de plus à chaque ajout,
+ * comme une erreur (6 × 6 ajouté trois fois : « 3 fois »). L’autre sens a sa propre
+ * ligne : un parent peut vouloir les deux variantes (6 × 7 et 7 × 6), qui reviennent
+ * alors plus souvent en révision.
+ * @returns {boolean} Le calcul est valide
  */
 export function addManualBasketFact(store, a, b) {
   const left = Number(a);
   const right = Number(b);
   if (!isFactor(left) || !isFactor(right)) return false;
-  if (!store.basket.some(entry => entry.a === left && entry.b === right)) {
-    store.basket.push({ a: left, b: right, due: 1 });
-  }
+  const existing = store.basket.find(entry => entry.a === left && entry.b === right);
+  if (existing) existing.due += 1;
+  else store.basket.push({ a: left, b: right, due: 1 });
   return true;
 }
 
@@ -285,17 +313,8 @@ export function emptyBasket(store) {
   return store.basket;
 }
 
-/** Classe du badge d’un calcul de la liste : jaune 1, orange 2, rouge 3 et plus */
-export function basketDueClass(due) {
-  const count = Number(due) || 0;
-  if (count >= 3) return 'is-err-3';
-  if (count === 2) return 'is-err-2';
-  if (count === 1) return 'is-err-1';
-  return '';
-}
-
 /**
- * Compteurs d’une révision, en mémoire : le panier enregistré ne change qu’à la fin
+ * Compteurs d’une révision, en mémoire : la liste enregistrée ne change qu’à la fin
  * d’une révision terminée (un abandon n’enregistre rien).
  * @param {Array<{a: number, b: number, due: number}>} basket
  * @returns {Map<string, number>}
@@ -316,7 +335,7 @@ export function tallyRevisionAnswer(tally, fact, isCorrect) {
 }
 
 /**
- * Fin d’une révision terminée : les calculs à 0 sortent du panier, les autres gardent
+ * Fin d’une révision terminée : les calculs à 0 sortent de la liste, les autres gardent
  * leur nouveau compteur.
  * @returns {{ mastered: Array<{a: number, b: number}>, remaining: number }}
  */
@@ -333,7 +352,7 @@ export function applyRevisionTally(store, tally) {
   return { mastered, remaining: kept.length };
 }
 
-/** Pièces : une par bonne réponse en partie, une par calcul sorti du panier en révision */
+/** Pièces : une par bonne réponse en partie, une par calcul sorti de la liste en révision */
 export function grantChronoCoins(userData, count = 1) {
   if (!userData || typeof userData !== 'object') return 0;
   const gained = Math.max(0, Math.floor(Number(count) || 0));
@@ -355,6 +374,8 @@ function numberFormat(lang, options) {
   try {
     return new Intl.NumberFormat(lang || DEFAULT_LANG, options);
   } catch {
+    // Code de langue refusé par Intl (les options sont fixes) : format français plutôt
+    // qu'une exception au milieu de l'écran de fin
     return new Intl.NumberFormat(DEFAULT_LANG, options);
   }
 }
@@ -376,12 +397,20 @@ export function formatDuration(ms, lang = DEFAULT_LANG) {
   return `${minutes}${NBSP}min${NBSP}${padded}${NBSP}s`;
 }
 
-/** Plafond « rond » pour l’axe vertical du graphique (ms). */
+// Pas de graduation ronds (s) ; au-delà de 150 s, des minutes entières
+const AXIS_STEPS_S = [5, 10, 15, 20, 25, 30, 45, 60, 90, 120, 150];
+/** Nombre de pas de l’axe vertical : le graphique trace autant de graduations, plus le zéro */
+export const CHRONO_AXIS_TICKS = 4;
+
+/**
+ * Plafond de l’axe vertical du graphique (ms) : quatre pas ronds, en secondes entières.
+ * Le plus petit qui contient la partie la plus lente : 52 s donne 1 min (pas de 15 s), et la
+ * courbe occupe le graphique au lieu d’en tasser le bas.
+ */
 export function niceDurationMaxMs(ms) {
-  const seconds = Math.max(Number(ms) / 1000, 1);
-  const magnitude = 10 ** Math.floor(Math.log10(seconds));
-  const unit = [1, 2, 5, 10].map(n => n * magnitude).find(n => n >= seconds) || magnitude * 10;
-  return unit * 1000;
+  const minStep = Math.max(Number(ms) || 0, 1000) / 1000 / CHRONO_AXIS_TICKS;
+  const step = AXIS_STEPS_S.find(seconds => seconds >= minStep) ?? Math.ceil(minStep / 60) * 60;
+  return step * CHRONO_AXIS_TICKS * 1000;
 }
 
 /** Graduation de l’axe, en secondes entières : « 25 s », « 1 min 40 » */
@@ -390,6 +419,8 @@ export function formatAxisSeconds(ms) {
   if (total < 60) return `${total}${NBSP}s`;
   const minutes = Math.floor(total / 60);
   const rest = total - minutes * 60;
+  // « 10 min » plutôt que « 10 min 00 » : la graduation tient dans la marge du graphique
+  if (rest === 0) return `${minutes}${NBSP}min`;
   return `${minutes}${NBSP}min${NBSP}${String(rest).padStart(2, '0')}`;
 }
 
@@ -400,6 +431,7 @@ export function formatSessionDate(date, lang = DEFAULT_LANG) {
   try {
     return value.toLocaleString(lang || DEFAULT_LANG, options);
   } catch {
+    // Même repli que numberFormat : langue inconnue d'Intl, date en français
     return value.toLocaleString(DEFAULT_LANG, options);
   }
 }

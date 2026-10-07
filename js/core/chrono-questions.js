@@ -1,6 +1,9 @@
 /**
- * Tirage Chrono : on favorise les faits difficiles (6, 7, 8, 9).
- * Tables 1 et 10 : rares si toutes les tables sont cochées, normales si l’enfant les a choisies exprès.
+ * Tirage Chrono et file de révision.
+ * Le tirage favorise les calculs difficiles (6, 7, 8, 9). Quand les dix tables sont jouées,
+ * les calculs avec 1 ou 10 deviennent rares ; dès que l’enfant a retiré des tables dans les
+ * Paramètres, ils gardent leur poids normal.
+ * La révision pose chaque calcul de la liste dans les deux sens, jamais deux fois d’affilée.
  */
 
 import { randomFloat, shuffleInPlace } from './random.js';
@@ -93,7 +96,8 @@ function pickWeightedPair(pairs) {
 
 /**
  * Tire un calcul pas encore posé dans la série. Quand il n’en reste plus (une seule table
- * et des erreurs), on reprend tous les calculs sauf les plus récents.
+ * et des erreurs), on reprend tous les calculs sauf le dernier posé, dans un sens comme dans
+ * l’autre.
  * @param {number[]} tables
  * @param {Iterable<string>} [avoidKeys] clés `7×8` déjà posées dans la série
  * @param {Iterable<string>} [recentKeys] clés à écarter même quand tout a été posé
@@ -135,8 +139,8 @@ function revisionCopies(due) {
 
 /**
  * Remplit la file de révision : chaque calcul au moins une fois, davantage s’il est plus
- * souvent à revoir. Les copies alternent les deux sens (6 × 7, puis 7 × 6) : c’est le même
- * fait, vu des deux côtés.
+ * souvent à revoir. Les copies se partagent les deux sens (6 × 7 et 7 × 6), puis la passe
+ * est mélangée : c’est le même fait, vu des deux côtés.
  * @param {Array<{a: number, b: number}>} queue
  * @param {Array<{a: number, b: number, due?: number}>} basket
  * @returns {Array<{a: number, b: number}>}
@@ -168,10 +172,9 @@ export function separateRevisionRepeats(round) {
     if (!sameFact(current, previous)) continue;
     const swap = items.findIndex((item, index) => index > i && !sameFact(item, current));
     if (swap < 0) continue;
-    const held = items.at(i);
     const other = items.at(swap);
     items.splice(i, 1, other);
-    items.splice(swap, 1, held);
+    items.splice(swap, 1, current);
   }
   return items;
 }
@@ -181,9 +184,11 @@ function sameFact(left, right) {
 }
 
 /**
- * Prochain calcul de révision : une passe complète du panier avant de recommencer.
+ * Prochain calcul de révision : une passe complète de la liste avant de recommencer.
  * @param {Array<{a: number, b: number}>} queue
  * @param {Array<{a: number, b: number}>} basket
+ * @param {{a: number, b: number}} [lastFact] - Dernier calcul posé : s’il est en tête de file,
+ *   on prend le premier calcul différent (même sens seulement : l’inverse peut suivre)
  * @returns {{a: number, b: number}|undefined}
  */
 export function takeNextRevisionFact(queue, basket, lastFact) {

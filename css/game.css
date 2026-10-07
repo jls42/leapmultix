@@ -154,7 +154,8 @@ body {
   text-wrap: pretty;
 }
 
-/* Découverte et Arcade n'utilisent pas ces zones : rien ne s'affiche à vide */
+/* Découverte, Arcade et les écrans sans partie du Chrono (départ, temps) n'utilisent pas ces
+   zones : rien ne s'affiche à vide */
 .question:empty,
 .options:empty,
 .feedback:empty {

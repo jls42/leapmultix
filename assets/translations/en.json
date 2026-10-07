@@ -683,6 +683,7 @@
   "chrono_basket_add": "Add",
   "chrono_basket_add_a": "First number",
   "chrono_basket_add_b": "Second number",
+  "chrono_basket_add_missing": "Pick both numbers.",
   "chrono_basket_clear": "Clear all",
   "chrono_basket_empty": "No facts to review. When you get a fact wrong in Chrono, it shows up here.",
   "chrono_basket_remove": "Remove",
@@ -723,7 +724,7 @@
   "chrono_stats_empty": "No games recorded yet.",
   "chrono_stats_games": "{n, plural, one {# game} other {# games}}",
   "chrono_stats_row": "{tables} · {mode}",
-  "chrono_stats_tables": "Tables {list}",
+  "chrono_stats_tables": "{count, plural, one {Table {list}} other {Tables {list}}}",
   "chrono_stats_tables_all": "All tables",
   "chrono_back_to_setup": "Back",
   "chrono_back_to_results": "Back to results",
@@ -731,7 +732,8 @@
   "chrono_basket_errors": "{n, plural, one {To review # time} other {To review # times}}",
   "chrono_basket_due": "{n, plural, one {# time} other {# times}}",
   "chrono_basket_add_label": "Add a fact:",
-  "chrono_tables_hint": "Your tables are set with the gear at the top — the same choice as for the other games.",
+  "chrono_tables_hint": "Your tables are set with the gear, at the top or in the menu — the same choice as for the other games.",
   "chrono_typed_label": "Your answer",
-  "confirm_abandon_chrono": "Do you really want to stop? This game will not be saved."
+  "confirm_abandon_chrono": "Do you really want to stop? This game will not be saved.",
+  "confirm_clear_chrono_basket": "Clear all the facts from your list?"
 }

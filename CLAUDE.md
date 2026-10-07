@@ -226,7 +226,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `mult-stats.js` - Multiplication statistics tracking
 - `challenge-stats.js` - Challenge mode statistics
 - `chrono-stats.js` - Chrono mode statistics: times per table set and answer mode, review list of missed facts
-- `chrono-questions.js` - Chrono question draw, weighted toward the harder facts
+- `chrono-questions.js` - Chrono question draw, weighted toward the harder facts, and revision queue (both orders, no repeat in a row)
 - `chrono-input.js` - Chrono typed-answer check (validates as soon as the answer is right or can no longer be)
 - `daily-challenge.js` - Daily challenge management
 - `utils.js` - Core utility functions (canonical source)

@@ -689,6 +689,7 @@
   "chrono_basket_add": "Añadir",
   "chrono_basket_add_a": "Primer número",
   "chrono_basket_add_b": "Segundo número",
+  "chrono_basket_add_missing": "Elige los dos números.",
   "chrono_basket_clear": "Borrar todo",
   "chrono_basket_empty": "No hay cálculos para repasar. Cuando te equivoques en Crono, el cálculo aparecerá aquí.",
   "chrono_basket_remove": "Quitar",
@@ -729,7 +730,7 @@
   "chrono_stats_empty": "Todavía no hay partidas guardadas.",
   "chrono_stats_games": "{n, plural, one {# partida} other {# partidas}}",
   "chrono_stats_row": "{tables} · {mode}",
-  "chrono_stats_tables": "Tablas {list}",
+  "chrono_stats_tables": "{count, plural, one {Tabla {list}} other {Tablas {list}}}",
   "chrono_stats_tables_all": "Todas las tablas",
   "chrono_back_to_setup": "Volver",
   "chrono_back_to_results": "Volver a los resultados",
@@ -737,7 +738,8 @@
   "chrono_basket_errors": "{n, plural, one {Por repasar # vez} other {Por repasar # veces}}",
   "chrono_basket_due": "{n, plural, one {# vez} other {# veces}}",
   "chrono_basket_add_label": "Añadir un cálculo:",
-  "chrono_tables_hint": "Tus tablas se eligen con el engranaje de arriba: la misma elección que en los demás juegos.",
+  "chrono_tables_hint": "Tus tablas se eligen con el engranaje, arriba o en el menú: la misma elección que en los demás juegos.",
   "chrono_typed_label": "Tu respuesta",
-  "confirm_abandon_chrono": "¿De verdad quieres parar? Esta partida no se guardará."
+  "confirm_abandon_chrono": "¿De verdad quieres parar? Esta partida no se guardará.",
+  "confirm_clear_chrono_basket": "¿Borrar todos los cálculos de tu lista?"
 }

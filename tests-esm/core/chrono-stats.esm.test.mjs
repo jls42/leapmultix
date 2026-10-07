@@ -20,6 +20,7 @@ import {
   listPlayedChronoBuckets,
   parseBucketKey,
   tablesListLabel,
+  uniqueTables,
   saveChronoSession,
   rankedSessions,
   recentSessions,
@@ -27,9 +28,9 @@ import {
   formatSessionDate,
   niceDurationMaxMs,
   formatAxisSeconds,
+  CHRONO_AXIS_TICKS,
   addToBasket,
   addManualBasketFact,
-  basketDueClass,
   grantChronoCoins,
   chronoShouldContinue,
   findBucket,
@@ -68,6 +69,7 @@ describe('chrono-stats : classements', () => {
     expect(bucketKey([3, 7], 'mcq')).not.toBe(bucketKey([3, 7], 'keypad'));
     expect(parseBucketKey('3,7|keypad')).toEqual({ tables: [3, 7], inputMode: 'keypad' });
     expect(tablesListLabel([7, 3])).toBe('3, 7');
+    expect(uniqueTables([7, 3, 3, 11, 'x'])).toEqual([3, 7]);
   });
 
   test('la liste des stats compte les parties par tables et par saisie', () => {
@@ -120,7 +122,7 @@ describe('chrono-stats : classements', () => {
     expect(sessionAverageMs(findBucket(store, [2], 'keypad'))).toBe(15000);
   });
 
-  test('le profil ne grossit plus : 10 meilleurs temps, 20 derniers, moyenne exacte', () => {
+  test('le profil reste borné : 10 meilleurs temps, 20 derniers, moyenne exacte', () => {
     const store = emptyChronoStats();
     for (let i = 1; i <= 25; i += 1) save(store, 1000 * i, i);
     const bucket = findBucket(store, [7], 'keypad');
@@ -205,7 +207,7 @@ describe('chrono-stats : normalisation', () => {
     expect(bucket.count).toBe(20);
   });
 
-  test('le panier ne garde que des calculs 1–10 × 1–10, une fois chacun', () => {
+  test('la liste à revoir ne garde que des calculs 1–10 × 1–10, une fois chacun', () => {
     expect(normalizeChronoStats(raw).basket).toEqual([
       { a: 7, b: 8, due: 2 },
       { a: 6, b: 9, due: 3 },
@@ -247,36 +249,65 @@ describe('chrono-stats : calculs à revoir', () => {
     expect(store.basket).toEqual([{ a: 7, b: 8, due: 2 }]);
   });
 
-  test('un calcul hors de 1–10 × 1–10 n’entre jamais : sa question ne serait pas enregistrée', () => {
+  test('un calcul hors de 1–10 × 1–10 n’entre jamais : sa question n’a pas de clip de voix', () => {
     const store = emptyChronoStats();
     addToBasket(store, { a: 11, b: 8, correct: false });
     expect(addManualBasketFact(store, 0, 5)).toBe(false);
     expect(store.basket).toEqual([]);
   });
 
-  test('on peut ajouter un calcul à la main, sans doublon', () => {
+  test('chaque ajout à la main compte une fois de plus, sans doubler la ligne', () => {
     const store = emptyChronoStats();
-    expect(addManualBasketFact(store, 6, 7)).toBe(true);
-    expect(addManualBasketFact(store, 6, 7)).toBe(true);
-    expect(store.basket).toEqual([{ a: 6, b: 7, due: 1 }]);
+    expect(addManualBasketFact(store, 6, 6)).toBe(true);
+    expect(addManualBasketFact(store, 6, 6)).toBe(true);
+    expect(addManualBasketFact(store, 6, 6)).toBe(true);
+    expect(store.basket).toEqual([{ a: 6, b: 6, due: 3 }]);
+    // Une erreur en course s'ajoute au même compteur
+    addToBasket(store, { a: 6, b: 6, correct: false });
+    expect(store.basket).toEqual([{ a: 6, b: 6, due: 4 }]);
   });
 
-  test('une partie abandonnée ne met pas les calculs non répondus dans la liste', () => {
+  test('une erreur sur l’inverse compte sur la même ligne ; à la main, l’autre sens a la sienne', () => {
+    const store = emptyChronoStats();
+    addToBasket(store, { a: 6, b: 7, correct: false });
+    addToBasket(store, { a: 7, b: 6, correct: false });
+    expect(store.basket).toEqual([{ a: 6, b: 7, due: 2 }]);
+    // Un parent qui veut les deux variantes : 7 × 6 ajouté à la main a sa propre ligne
+    expect(addManualBasketFact(store, 7, 6)).toBe(true);
+    expect(store.basket).toEqual([
+      { a: 6, b: 7, due: 2 },
+      { a: 7, b: 6, due: 1 },
+    ]);
+    // Une erreur va alors sur la ligne de son sens
+    addToBasket(store, { a: 7, b: 6, correct: false });
+    expect(store.basket).toEqual([
+      { a: 6, b: 7, due: 2 },
+      { a: 7, b: 6, due: 2 },
+    ]);
+
+    // Relu, chaque sens garde sa ligne ; seul un vrai doublon (même sens) disparaît
+    const loaded = normalizeChronoStats({
+      basket: [
+        { a: 9, b: 6, due: 2 },
+        { a: 6, b: 9, due: 5 },
+        { a: 9, b: 6, due: 1 },
+      ],
+    });
+    expect(loaded.basket).toEqual([
+      { a: 9, b: 6, due: 2 },
+      { a: 6, b: 9, due: 5 },
+    ]);
+  });
+
+  test('seule une réponse fausse (correct: false) fait entrer un calcul dans la liste', () => {
     const store = emptyChronoStats();
     save(store, 5000, 1, {
       facts: [
         { a: 7, b: 8, ms: 900, correct: false },
-        { a: 6, b: 6, answered: false },
+        { a: 6, b: 6, ms: 400 },
       ],
     });
     expect(store.basket).toEqual([{ a: 7, b: 8, due: 1 }]);
-  });
-
-  test('le badge « à revoir » est jaune, orange, puis rouge', () => {
-    expect(basketDueClass(1)).toBe('is-err-1');
-    expect(basketDueClass(2)).toBe('is-err-2');
-    expect(basketDueClass(3)).toBe('is-err-3');
-    expect(basketDueClass(9)).toBe('is-err-3');
   });
 });
 
@@ -341,6 +372,20 @@ describe('chrono-stats : révision', () => {
     expect(store.basket).toEqual([]);
   });
 
+  test('les deux sens dans la liste : chaque réponse compte pour la ligne de son sens', () => {
+    const { store } = revise(
+      [
+        { a: 6, b: 7, due: 1 },
+        { a: 7, b: 6, due: 2 },
+      ],
+      [[7, 6, true]]
+    );
+    expect(store.basket).toEqual([
+      { a: 6, b: 7, due: 1 },
+      { a: 7, b: 6, due: 1 },
+    ]);
+  });
+
   test('un calcul pas posé pendant la révision garde son compteur', () => {
     const { store } = revise(
       [
@@ -381,6 +426,32 @@ describe('chrono-stats : formats dans la langue du jeu', () => {
     expect(niceDurationMaxMs(12000)).toBe(20000);
     expect(formatAxisSeconds(20000)).toBe(`20${NBSP}s`);
     expect(formatAxisSeconds(100000)).toBe(`1${NBSP}min${NBSP}40`);
+  });
+
+  test('l’axe du graphique monte au plus juste, en pas de secondes entières', () => {
+    // 52,4 s : 1 min (pas de 15 s), plutôt que 1 min 40, qui tassait la courbe en bas
+    expect(niceDurationMaxMs(52400)).toBe(60000);
+    expect(niceDurationMaxMs(61000)).toBe(80000);
+    expect(niceDurationMaxMs(101000)).toBe(120000);
+    expect(niceDurationMaxMs(601000)).toBe(720000);
+    for (const ms of [9000, 52400, 61000, 101000, 121000, 601000]) {
+      const max = niceDurationMaxMs(ms);
+      expect(max).toBeGreaterThanOrEqual(ms);
+      // Chaque graduation tombe sur une seconde entière : « 15 s », jamais « 13 s » arrondi
+      expect((max / CHRONO_AXIS_TICKS) % 1000).toBe(0);
+    }
+  });
+
+  test('les graduations tiennent dans la marge du graphique, même pour une partie oubliée', () => {
+    // Les minutes rondes s'écrivent « 10 min » : « 10 min 00 » débordait du graphique
+    expect(formatAxisSeconds(60000)).toBe(`1${NBSP}min`);
+    expect(formatAxisSeconds(600000)).toBe(`10${NBSP}min`);
+    for (const ms of [9000, 52400, 101000, 121000, 361000, 601000, 3600000]) {
+      const max = niceDurationMaxMs(ms);
+      for (let i = 0; i <= CHRONO_AXIS_TICKS; i += 1) {
+        expect(formatAxisSeconds((max * i) / CHRONO_AXIS_TICKS).length).toBeLessThanOrEqual(8);
+      }
+    }
   });
 
   test('la date d’une partie suit la langue du jeu, pas celle du navigateur', () => {
@@ -431,7 +502,7 @@ describe('chrono-questions', () => {
     expect(extra.t).toBe(2);
   });
 
-  test('après 8 × 6, ni 8 × 6 ni 6 × 8 : la correction affichée donnerait la réponse', () => {
+  test('après 8 × 6, ni 8 × 6 ni 6 × 8 : une course ne pose pas deux fois le même calcul', () => {
     expect(factKeys(8, 6)).toEqual(['8×6', '6×8']);
     const tables = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     for (let i = 0; i < 300; i += 1) {
