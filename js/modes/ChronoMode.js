@@ -148,8 +148,10 @@ function curveLabel(x, y, text, placement) {
   return label;
 }
 
-// Code d'une touche de chiffre, rangée du haut ou pavé numérique : « Digit2 », « Numpad2 »
-const DIGIT_KEY_CODE = /^(?:Digit|Numpad)(\d)$/;
+// Code d'une touche de chiffre de la rangée du haut : « Digit2 ». Le pavé numérique donne son
+// chiffre dans event.key, Verr. Num allumé ; éteint, ses touches déplacent le focus (Fin,
+// flèches) pour la navigation clavier, et ne tapent rien
+const DIGIT_KEY_CODE = /^Digit(\d)$/;
 
 /**
  * Chiffre d’une touche, quelle que soit la disposition du clavier : en AZERTY, la rangée du
@@ -1048,7 +1050,13 @@ export class ChronoMode extends GameMode {
         btn.textContent = String(key);
         btn.dataset.key = String(key);
       }
-      btn.addEventListener('click', () => this.applyKey(btn.dataset.key));
+      btn.addEventListener('click', event => {
+        // Clic à la souris ou au doigt (detail > 0) : la touche rend le focus, pour qu'Entrée
+        // valide ensuite ce qui est tapé au lieu de la retaper. Au clavier (Tab, Entrée),
+        // elle le garde.
+        if (event.detail > 0) btn.blur();
+        this.applyKey(btn.dataset.key);
+      });
       grid.appendChild(btn);
     });
     pad.appendChild(grid);
@@ -1085,12 +1093,13 @@ export class ChronoMode extends GameMode {
 
   /**
    * Entrée valide ce qui est tapé, même incomplet (« 4 » pour 42) ; la réponse se valide
-   * déjà seule dès qu’elle est juste ou ne peut plus l’être. Case vide : rien. Sur un autre
-   * bouton (« Abandonner »), Entrée garde son rôle.
+   * déjà seule dès qu’elle est juste ou ne peut plus l’être. Case vide : rien. Sur un
+   * bouton, Entrée garde son rôle : une touche du pavé tape son chiffre, « Abandonner »
+   * abandonne. La navigation clavier a alors déjà cliqué ce bouton (defaultPrevented).
    */
   onEnterKey(event) {
-    const onOtherButton = event.target?.closest?.('button:not(.chrono-key)');
-    if (!this.typedValue || onOtherButton || !this.canType()) return;
+    if (event.defaultPrevented || event.target?.closest?.('button')) return;
+    if (!this.typedValue || !this.canType()) return;
     event.preventDefault();
     this.handleAnswer(Number(this.typedValue));
   }

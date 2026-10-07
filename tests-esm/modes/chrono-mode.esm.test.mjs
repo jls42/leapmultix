@@ -11,7 +11,16 @@
  * - les résultats relancent par l'orchestrateur : aucune partie ne tourne en arrière-plan ;
  * - record, révision (le compteur baisse, une pièce par calcul sorti), langue, voix.
  */
-import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { readFileSync } from 'node:fs';
 import { createUserStateMock, createSlidesMock } from '../helpers/mode-test-helpers.mjs';
 import {
@@ -484,7 +493,7 @@ describe('Chrono : écran de départ', () => {
     expect(document.querySelector('.message-popup')?.textContent).toBe(FR.game_error);
   });
 
-  test('les calculs les plus souvent ratés viennent en tête de la liste', async () => {
+  test('les calculs les plus à revoir viennent en tête de la liste', async () => {
     await openSetup([
       { a: 3, b: 4, due: 1 },
       { a: 7, b: 8, due: 3 },
@@ -552,6 +561,19 @@ describe('Chrono : écran de départ', () => {
     // « 4 » pourrait encore devenir 42 : sans Entrée, la question attend ; avec, c'est faux
     enter();
     expect(chrono.sessionFacts.at(-1)).toMatchObject({ a: 6, b: 7, correct: false });
+  });
+
+  test('Entrée sur un bouton qui a le focus : Chrono ne valide rien, le bouton agit', async () => {
+    const chrono = await startChrono({ inputMode: 'keypad' });
+    showQuestion(chrono, 6, 7);
+    document.querySelector('.chrono-key[data-key="4"]').click();
+    const two = document.querySelector('.chrono-key[data-key="2"]');
+    two.focus();
+    const event = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true });
+    two.dispatchEvent(event);
+    // Le navigateur clique lui-même le bouton qui a le focus : Chrono n'y touche pas
+    expect(event.defaultPrevented).toBe(false);
+    expect(chrono.sessionFacts).toHaveLength(0);
   });
 
   test('en « Je tape », la case de réponse vide affiche « ? », comme la question', async () => {
@@ -802,4 +824,100 @@ describe('Chrono : langue', () => {
   function seedLanguageTest() {
     userStore.chronoStats = { buckets: [], basket: [{ a: 7, b: 8, due: 2 }] };
   }
+});
+
+describe('Chrono : clavier, avec la navigation clavier de l’application', () => {
+  // Chargée comme au démarrage du jeu (bootstrap-critical.js), donc avant Chrono : sur Entrée,
+  // elle clique le bouton qui a le focus
+  let keyboardNav;
+  beforeAll(async () => {
+    ({ keyboardNav } = await import('../../js/keyboard-navigation.js'));
+  });
+  afterAll(() => keyboardNav.dispose());
+
+  const key = digit => document.querySelector(`.chrono-key[data-key="${digit}"]`);
+  const typed = () => document.querySelector('#chrono-typed').textContent;
+  const keydown = (target, init) =>
+    target.dispatchEvent(
+      new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init })
+    );
+  /** Tab jusqu'au bouton, puis Entrée */
+  const enterOn = button => {
+    button.focus();
+    keydown(button, { key: 'Enter', code: 'Enter' });
+  };
+
+  test('Tab puis Entrée sur les touches : chaque touche tape son chiffre, et 42 passe', async () => {
+    const chrono = await startChrono({ inputMode: 'keypad' });
+    showQuestion(chrono, 6, 7);
+    enterOn(key('4'));
+    expect(typed()).toBe('4');
+    expect(chrono.sessionFacts).toHaveLength(0);
+    enterOn(key('2'));
+    expect(chrono.sessionFacts).toEqual([expect.objectContaining({ a: 6, b: 7, correct: true })]);
+  });
+
+  test('Entrée sur « Abandonner » abandonne, sans valider ce qui est tapé', async () => {
+    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    try {
+      const chrono = await startChrono({ inputMode: 'keypad' });
+      showQuestion(chrono, 6, 7);
+      key('4').click();
+      enterOn(document.getElementById('chrono-abandon'));
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(chrono.sessionFacts).toHaveLength(0);
+      expect(typed()).toBe('4');
+    } finally {
+      confirm.mockRestore();
+    }
+  });
+
+  test('après un clic à la souris, Entrée valide ce qui est tapé : « 10 », pas « 100 »', async () => {
+    const chrono = await startChrono({ inputMode: 'keypad' });
+    showQuestion(chrono, 10, 10);
+    for (const digit of ['1', '0']) {
+      // Comme un vrai clic : le bouton prend le focus au mousedown, puis reçoit le clic
+      document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      key(digit).focus();
+      key(digit).dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    }
+    expect(typed()).toBe('10');
+    expect(document.activeElement).not.toBe(key('0'));
+    keydown(document.activeElement, { key: 'Enter', code: 'Enter' });
+    expect(chrono.sessionFacts).toEqual([
+      expect.objectContaining({ a: 10, b: 10, correct: false }),
+    ]);
+  });
+
+  test('pavé numérique : Verr. Num allumé, il tape ; éteint (Fin, flèches), rien', async () => {
+    const chrono = await startChrono({ inputMode: 'keypad' });
+    showQuestion(chrono, 6, 7);
+    keydown(document.body, { key: '4', code: 'Numpad4' });
+    expect(typed()).toBe('4');
+    keydown(document.body, { key: 'End', code: 'Numpad1' });
+    keydown(document.body, { key: 'ArrowLeft', code: 'Numpad4' });
+    expect(typed()).toBe('4');
+    expect(chrono.sessionFacts).toHaveLength(0);
+  });
+
+  test('Maj donne le chiffre ; Alt et Cmd ne tapent rien', async () => {
+    const chrono = await startChrono({ inputMode: 'keypad' });
+    showQuestion(chrono, 6, 7);
+    keydown(document.body, { key: 'é', code: 'Digit2', altKey: true });
+    keydown(document.body, { key: 'é', code: 'Digit2', metaKey: true });
+    expect(typed()).toBe('?');
+    // AZERTY avec Maj : la touche donne directement « 4 »
+    keydown(document.body, { key: '4', code: 'Digit4', shiftKey: true });
+    expect(typed()).toBe('4');
+  });
+
+  test('Entrée juste après une réponse validée seule : une seule réponse comptée', async () => {
+    const chrono = await startChrono({ inputMode: 'keypad' });
+    showQuestion(chrono, 6, 7);
+    keydown(document.body, { key: "'", code: 'Digit4' });
+    keydown(document.body, { key: 'é', code: 'Digit2' });
+    expect(chrono.sessionFacts).toHaveLength(1);
+    keydown(document.body, { key: 'Enter', code: 'Enter' });
+    expect(chrono.sessionFacts).toHaveLength(1);
+  });
 });

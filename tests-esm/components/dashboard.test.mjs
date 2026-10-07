@@ -1,5 +1,5 @@
 import { describe, beforeEach, afterEach, test, expect, jest } from '@jest/globals';
-import { setTranslations } from '../../js/i18n-store.js';
+import { setTranslations, setCurrentLanguage } from '../../js/i18n-store.js';
 import { Dashboard } from '../../js/components/dashboard.js';
 import { UserState } from '../../js/core/userState.js';
 
@@ -180,17 +180,24 @@ describe('Dashboard : Chrono parmi les modes classiques', () => {
     return { row, last: rows.at(-1) };
   };
 
+  const played = (key, durations) => ({
+    key,
+    count: durations.length,
+    totalMs: durations.reduce((sum, ms) => sum + ms, 0),
+    best: durations.map((durationMs, index) => ({ durationMs, date: index + 1 })),
+    recent: durations.map((durationMs, index) => ({ durationMs, date: index + 1 })),
+  });
+  const facts = row =>
+    [...row.querySelectorAll('.score-facts dt')].map(dt => [
+      dt.textContent,
+      dt.nextElementSibling.textContent,
+    ]);
+
   test('après l’Aventure : parties, meilleur temps et calculs à revoir, tous classements', () => {
-    const played = (key, durations) => ({
-      key,
-      count: durations.length,
-      totalMs: durations.reduce((sum, ms) => sum + ms, 0),
-      best: durations.map((durationMs, index) => ({ durationMs, date: index + 1 })),
-      recent: durations.map((durationMs, index) => ({ durationMs, date: index + 1 })),
-    });
     jest.spyOn(UserState, 'getCurrentUserData').mockReturnValue({
       chronoStats: {
-        buckets: [played('7|keypad', [31000, 25400, 40000]), played('2,3|mcq', [38000, 45000])],
+        // Le record est dans le second classement : le premier seul ne suffit pas
+        buckets: [played('7|keypad', [31000, 40000, 33000]), played('2,3|mcq', [38000, 25400])],
         basket: [
           { a: 6, b: 7, due: 2 },
           { a: 8, b: 9, due: 1 },
@@ -200,15 +207,36 @@ describe('Dashboard : Chrono parmi les modes classiques', () => {
     Dashboard.generateScoresSection();
     const { row, last } = chronoRow();
     expect(row).toBe(last);
-    const facts = [...row.querySelectorAll('.score-facts dt')].map(dt => [
-      dt.textContent,
-      dt.nextElementSibling.textContent,
-    ]);
-    expect(facts).toEqual([
+    expect(facts(row)).toEqual([
       ['Nombre de parties', '5'],
       ['Meilleur temps', '25,4\u00a0s'],
       ['Calculs à revoir', '2'],
     ]);
+  });
+
+  test('jamais joué, mais des calculs ajoutés à la main : aucune partie, aucun temps, la liste', () => {
+    jest.spyOn(UserState, 'getCurrentUserData').mockReturnValue({
+      chronoStats: { buckets: [], basket: [{ a: 6, b: 7, due: 1 }] },
+    });
+    Dashboard.generateScoresSection();
+    expect(facts(chronoRow().row)).toEqual([
+      ['Nombre de parties', '0'],
+      ['Meilleur temps', '—'],
+      ['Calculs à revoir', '1'],
+    ]);
+  });
+
+  test('le meilleur temps s’écrit dans la langue du jeu', () => {
+    setCurrentLanguage('en');
+    try {
+      jest.spyOn(UserState, 'getCurrentUserData').mockReturnValue({
+        chronoStats: { buckets: [played('7|keypad', [25400])], basket: [] },
+      });
+      Dashboard.generateScoresSection();
+      expect(facts(chronoRow().row)[1]).toEqual(['Meilleur temps', '25.4\u00a0s']);
+    } finally {
+      setCurrentLanguage('fr');
+    }
   });
 
   test('jamais joué : « Aucun score », comme les autres modes', () => {

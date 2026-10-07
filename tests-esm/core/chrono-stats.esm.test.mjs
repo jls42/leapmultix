@@ -207,7 +207,7 @@ describe('chrono-stats : normalisation', () => {
     expect(bucket.count).toBe(20);
   });
 
-  test('la liste à revoir ne garde que des calculs 1–10 × 1–10, une fois chacun', () => {
+  test('la liste à revoir ne garde que des calculs 1–10 × 1–10, une fois par sens', () => {
     expect(normalizeChronoStats(raw).basket).toEqual([
       { a: 7, b: 8, due: 2 },
       { a: 6, b: 9, due: 3 },
@@ -383,6 +383,43 @@ describe('chrono-stats : révision', () => {
     expect(store.basket).toEqual([
       { a: 6, b: 7, due: 1 },
       { a: 7, b: 6, due: 1 },
+    ]);
+  });
+
+  test('les deux sens : une réussite sur un sens déjà à 0 compte pour l’autre, encore à revoir', () => {
+    const { store, outcome } = revise(
+      [
+        { a: 6, b: 7, due: 1 },
+        { a: 7, b: 6, due: 2 },
+      ],
+      [
+        [6, 7, true],
+        [6, 7, true],
+        [6, 7, true],
+      ]
+    );
+    // Trois réussites, trois de moins : les deux lignes sortent de la liste
+    expect(outcome).toEqual({
+      mastered: [
+        { a: 6, b: 7 },
+        { a: 7, b: 6 },
+      ],
+      remaining: 0,
+    });
+    expect(store.basket).toEqual([]);
+  });
+
+  test('les deux sens : une erreur compte pour la ligne de son sens', () => {
+    const { store } = revise(
+      [
+        { a: 6, b: 7, due: 1 },
+        { a: 7, b: 6, due: 1 },
+      ],
+      [[7, 6, false]]
+    );
+    expect(store.basket).toEqual([
+      { a: 6, b: 7, due: 1 },
+      { a: 7, b: 6, due: 2 },
     ]);
   });
 
