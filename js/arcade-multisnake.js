@@ -58,7 +58,7 @@ export function startSnakeArcade() {
   // Définir le mode avant le changement de slide pour éviter les auto-stop
   setStartingMode('multisnake');
   gameState.gameMode = 'multisnake';
-  goToSlide(4);
+  void goToSlide(4);
 
   // Récupérer l'opérateur sélectionné (support multi-opérations R4.4)
   const userData = UserState.getCurrentUserData();

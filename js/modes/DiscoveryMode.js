@@ -12,6 +12,7 @@
  */
 
 import { GameMode } from '../core/GameMode.js';
+import { goToSlide } from '../slides.js';
 import { getTranslation, speak } from '../utils-es6.js';
 import { UserState } from '../core/userState.js';
 import { getOperation } from '../core/operations/OperationRegistry.js';
@@ -1124,7 +1125,7 @@ export class DiscoveryMode extends GameMode {
     root.querySelector('#discovery-home-btn')?.addEventListener(
       'click',
       singleActivation(() => {
-        import('../slides.js').then(m => m.goToSlide(1));
+        void goToSlide(1);
       })
     );
 
@@ -1941,7 +1942,8 @@ let _discoveryModeInstance = null;
 export function startDiscoveryMode() {
   if (_discoveryModeInstance) _discoveryModeInstance.stop();
   _discoveryModeInstance = new DiscoveryMode();
-  _discoveryModeInstance.start();
+  // start() rattrape et signale ses propres erreurs
+  void _discoveryModeInstance.start();
 }
 export function stopDiscoveryMode() {
   if (_discoveryModeInstance) {

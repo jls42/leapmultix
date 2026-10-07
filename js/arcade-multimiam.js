@@ -103,7 +103,7 @@ export function startPacmanArcade() {
   // Définir le mode avant le changement de slide pour éviter les auto-stop
   setStartingMode('multimiam');
   gameState.gameMode = 'multimiam';
-  goToSlide(4);
+  void goToSlide(4);
 
   // Nettoyer les anciennes instances de jeux et leurs ressources
   cleanupPacmanGame();

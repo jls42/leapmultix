@@ -64,5 +64,5 @@ export function selectUser(name) {
   localStorage.removeItem('arcadeScores_default');
   localStorage.removeItem('arcadeScores_multisnake_default');
   localStorage.removeItem('arcadeScores_multimiam_default');
-  goToSlide(1);
+  void goToSlide(1);
 }

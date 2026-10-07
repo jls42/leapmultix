@@ -342,7 +342,7 @@ export const Customization = {
             const userData = UserState.getCurrentUserData();
             userData.nickname = nickname;
             UserState.updateUserData(userData);
-            updateWelcomeMessageUI();
+            void updateWelcomeMessageUI();
 
             // Tâche 1.5: Cacher le clavier virtuel après sauvegarde
             const keyboardId = `virtual-keyboard-${nicknameInput.id}`;
@@ -393,7 +393,8 @@ export const Customization = {
     const clearBtn = document.getElementById('clear-cache-btn');
     if (clearBtn && !clearBtn.dataset.listenerAttached) {
       clearBtn.addEventListener('click', () => {
-        this.handleClearCacheClick();
+        // handleClearCacheClick rattrape ses erreurs : son repli vide les caches à la main
+        void this.handleClearCacheClick();
       });
       clearBtn.dataset.listenerAttached = 'true';
     }
@@ -448,7 +449,9 @@ export const Customization = {
         cachesApi
           .keys()
           .then(names => Promise.all(names.map(n => cachesApi.delete(n))))
-          .finally(() => globalThis.location && globalThis.location.reload());
+          .finally(() => globalThis.location && globalThis.location.reload())
+          // Un cache resté en place n'empêche pas le rechargement, demandé juste avant
+          .catch(error => console.warn('Nettoyage du cache incomplet', error));
       } else {
         if (globalThis.location) globalThis.location.reload();
       }

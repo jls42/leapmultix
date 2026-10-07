@@ -228,3 +228,23 @@ describe('Personnalisation : avatar du joueur', () => {
     expect(img.alt).toBe('Fox');
   });
 });
+
+describe('Personnalisation : « Vider le cache », repli à la main', () => {
+  afterEach(() => {
+    delete globalThis.caches;
+    jest.restoreAllMocks();
+  });
+
+  test('un nettoyage qui échoue est signalé : la page se recharge quand même, sans erreur perdue', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    // jsdom ne sait pas recharger une page : il le signale en erreur, sans conséquence ici
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const failure = new Error('caches indisponibles');
+    globalThis.caches = { keys: () => Promise.reject(failure), delete: jest.fn() };
+
+    Customization._fallbackClear();
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(warn).toHaveBeenCalledWith('Nettoyage du cache incomplet', failure);
+  });
+});

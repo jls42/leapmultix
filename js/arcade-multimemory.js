@@ -103,7 +103,7 @@ export function startMemoryArcade() {
   // Définir le mode avant le changement de slide pour éviter les auto-stop
   setStartingMode('multimemory');
   gameState.gameMode = 'multimemory';
-  goToSlide(4);
+  void goToSlide(4);
   // arcadeActive basculé au démarrage du timer (startArcadeTimer)
 
   // Récupérer l'opérateur sélectionné (support multi-opérations R4.3)

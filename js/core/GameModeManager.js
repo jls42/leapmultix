@@ -190,6 +190,8 @@ export class GameModeManager {
    */
   async stopCurrentMode() {
     if (!this.currentMode) return;
+    // Lu tout de suite : cleanup() remet currentMode à null sans attendre l'arrêt
+    const { name } = this.currentMode;
 
     // Annuler toute narration et sons restants
     cancelSpeech();
@@ -259,7 +261,7 @@ export class GameModeManager {
         if (typeof stopper === 'function') await stopper();
       }
     } catch (error) {
-      console.error(`❌ Erreur lors de l'arrêt de ${this.currentMode.name}:`, error);
+      console.error(`❌ Erreur lors de l'arrêt de ${name}:`, error);
     }
 
     this.currentMode = null;
@@ -388,8 +390,8 @@ export class GameModeManager {
    * Nettoyer toutes les ressources
    */
   cleanup() {
-    // Arrêter le mode actuel
-    this.stopCurrentMode();
+    // Arrêter le mode actuel (la page se ferme : stopCurrentMode signale ses propres erreurs)
+    void this.stopCurrentMode();
 
     // Nettoyer le cache des modes
     this.modes.clear();

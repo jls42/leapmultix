@@ -726,7 +726,8 @@ let _arcadeModeInstance = null;
 export function startArcadeMode() {
   if (_arcadeModeInstance) _arcadeModeInstance.stop();
   _arcadeModeInstance = new ArcadeMode();
-  _arcadeModeInstance.start();
+  // start() rattrape et signale ses propres erreurs
+  void _arcadeModeInstance.start();
 }
 export function stopArcadeMode() {
   if (_arcadeModeInstance) {

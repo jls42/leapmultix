@@ -50,7 +50,9 @@ export class AccessibilityManager {
 
       // Échap pour fermer/retour, sauf si une fenêtre ouverte le gère elle-même
       if (e.key === 'Escape' && !this.isDialogOpen()) {
-        import('./slides.js').then(m => m.goToSlide(0));
+        import('./slides.js')
+          .then(m => m.goToSlide(0))
+          .catch(error => console.error('Retour au menu principal impossible', error));
         this.announce('Retour au menu principal');
       }
 
@@ -123,14 +125,16 @@ export class AccessibilityManager {
       // Ctrl/Cmd + M pour volume/mute
       if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
         e.preventDefault();
-        import('./core/audio.js').then(({ AudioManager }) => {
-          try {
-            AudioManager.toggleMute();
-          } catch {
-            /* ignoré volontairement */
-          }
-          this.announce('Son activé/désactivé');
-        });
+        import('./core/audio.js')
+          .then(({ AudioManager }) => {
+            try {
+              AudioManager.toggleMute();
+            } catch {
+              /* ignoré volontairement */
+            }
+            this.announce('Son activé/désactivé');
+          })
+          .catch(error => console.error('Réglage du son impossible', error));
       }
     });
   }

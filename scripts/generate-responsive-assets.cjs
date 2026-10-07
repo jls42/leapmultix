@@ -377,7 +377,11 @@ class ResponsiveAssetGenerator {
 // Exécution si script appelé directement
 if (require.main === module) {
   const generator = new ResponsiveAssetGenerator();
-  generator.generate();
+  // Un échec doit faire échouer le déploiement : code de sortie 1, jamais un succès muet
+  generator.generate().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+  });
 }
 
 module.exports = ResponsiveAssetGenerator;
