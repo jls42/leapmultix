@@ -7,6 +7,16 @@
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { readFileSync } from 'node:fs';
+import { createSlidesMock } from '../helpers/mode-test-helpers.mjs';
+import {
+  createLazyLoaderMock,
+  createGameMock,
+  createSpeechMock,
+  createChronoNavigation,
+  createChronoDriver,
+  trackChronoInstances,
+  quietFakeTime,
+} from '../helpers/chrono-test-helpers.mjs';
 
 let persisted;
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -18,52 +28,35 @@ jest.unstable_mockModule('../../js/core/userState.js', () => ({
     },
   },
 }));
-jest.unstable_mockModule('../../js/lazy-loader.js', () => ({
-  lazyLoader: { loadForGameMode: async () => {} },
-}));
 const updateDailyChallengeProgress = jest.fn();
-const gameState = { gameMode: null, avatar: 'fox', streak: 0 };
-jest.unstable_mockModule('../../js/game.js', () => ({
-  gameState,
-  default: gameState,
-  updateDailyChallengeProgress,
-  displayDailyChallenge: jest.fn(),
-}));
-jest.unstable_mockModule('../../js/speech.js', () => ({
-  speak: jest.fn(),
-  preloadSpeech: jest.fn(),
-  isVoiceEnabled: () => true,
-  updateSpeechVoice: () => {},
-  cancelSpeech: () => {},
-  whenSpeechEnds: () => Promise.resolve(),
-}));
-let orchestrator;
-let chronoModule;
-// Comme slides.js : la navigation arrête Chrono, sauf pendant son propre démarrage
-const goToSlide = jest.fn(async () => {
-  if (orchestrator?.getStartingMode() !== 'chrono') chronoModule?.stopChronoMode();
-});
-jest.unstable_mockModule('../../js/slides.js', () => ({
-  goToSlide,
-  showSlide: jest.fn(),
-  hideAllSlides: jest.fn(),
-  nextSlide: jest.fn(),
-  prevSlide: jest.fn(),
-}));
+const refs = {};
+const goToSlide = createChronoNavigation(jest, refs);
+jest.unstable_mockModule('../../js/lazy-loader.js', createLazyLoaderMock);
+jest.unstable_mockModule('../../js/game.js', () =>
+  createGameMock(jest, updateDailyChallengeProgress)
+);
+jest.unstable_mockModule('../../js/speech.js', () =>
+  createSpeechMock({ speak: jest.fn(), preloadSpeech: jest.fn() })
+);
+jest.unstable_mockModule('../../js/slides.js', () => ({ ...createSlidesMock(jest), goToSlide }));
 
 const store = await import('../../js/i18n-store.js');
 const { AudioManager } = await import('../../js/core/audio.js');
 const { TablePreferences } = await import('../../js/core/tablePreferences.js');
-orchestrator = await import('../../js/mode-orchestrator.js');
-chronoModule = await import('../../js/modes/ChronoMode.js');
-const { ChronoMode, stopChronoMode } = chronoModule;
+refs.orchestrator = await import('../../js/mode-orchestrator.js');
+refs.chronoModule = await import('../../js/modes/ChronoMode.js');
+const { orchestrator } = refs;
+const { ChronoMode, stopChronoMode } = refs.chronoModule;
 const FR = JSON.parse(
   readFileSync(new URL('../../assets/translations/fr.json', import.meta.url), 'utf8')
 );
 
 let instances = [];
-const flush = (ms = 0) => jest.advanceTimersByTimeAsync(ms);
-const feedbackText = () => document.querySelector('.chrono-feedback')?.textContent ?? '';
+const { flush, startChrono, showQuestion, answer, feedbackText } = createChronoDriver(
+  jest,
+  refs,
+  () => instances
+);
 const tapKey = key => document.querySelector(`.chrono-key[data-key="${key}"]`).click();
 const press = key => {
   const event = new KeyboardEvent('keydown', { key, cancelable: true, bubbles: true });
@@ -71,54 +64,16 @@ const press = key => {
   return event;
 };
 
-async function startChrono({ revision = false, inputMode = 'keypad' } = {}) {
-  await orchestrator.setGameMode('chrono');
-  await flush();
-  const chrono = instances.at(-1);
-  chrono.setInputMode(inputMode);
-  await chrono.beginSession(revision);
-  return chrono;
-}
-
-function showQuestion(chrono, a, b) {
-  chrono.state.currentQuestion = {
-    question: `${a} × ${b} = ?`,
-    answer: a * b,
-    type: chrono.inputMode === 'mcq' ? 'mcq' : 'classic',
-    operator: '×',
-    a,
-    b,
-    table: a,
-    num: b,
-  };
-  chrono.displayQuestion();
-  chrono.onQuestionGenerated();
-}
-
-async function answer(chrono, correct = true, waitMs = 800) {
-  const { answer: expected } = chrono.state.currentQuestion;
-  chrono.handleAnswer(correct ? expected : expected + 1);
-  await flush(waitMs);
-}
-
-const realStart = ChronoMode.prototype.start;
-
 beforeEach(() => {
   // Repris à chaque test : afterEach restaure tous les espions
-  jest.spyOn(ChronoMode.prototype, 'start').mockImplementation(function start(...args) {
-    instances.push(this);
-    return realStart.apply(this, args);
-  });
+  trackChronoInstances(jest, ChronoMode, () => instances);
   store.setTranslations(FR);
   store.setCurrentLanguage('fr');
   document.body.innerHTML = '<div id="game"></div><div id="results"></div>';
   persisted = { preferredOperator: '×', coins: 0 };
   instances = [];
   updateDailyChallengeProgress.mockReset();
-  jest.spyOn(AudioManager, 'playSound').mockImplementation(() => {});
-  jest.spyOn(console, 'warn').mockImplementation(() => {});
-  jest.spyOn(console, 'log').mockImplementation(() => {});
-  jest.useFakeTimers();
+  quietFakeTime(jest, AudioManager);
 });
 
 afterEach(() => {
