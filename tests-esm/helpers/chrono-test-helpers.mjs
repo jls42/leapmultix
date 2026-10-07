@@ -56,6 +56,27 @@ export function trackChronoInstances(jestApi, ChronoMode, getInstances) {
   });
 }
 
+/** Question connue, comme le ferait le tirage */
+function showQuestion(chrono, a, b) {
+  chrono.state.currentQuestion = {
+    question: `${a} × ${b} = ?`,
+    answer: a * b,
+    type: chrono.inputMode === 'mcq' ? 'mcq' : 'classic',
+    operator: '×',
+    a,
+    b,
+    table: a,
+    num: b,
+  };
+  chrono.displayQuestion();
+  chrono.onQuestionGenerated();
+}
+
+/** Texte du retour affiché après une réponse */
+function feedbackText() {
+  return document.querySelector('.chrono-feedback')?.textContent ?? '';
+}
+
 /**
  * Pilote d'une partie : démarrer comme un clic sur la tuile, poser une question connue,
  * répondre juste ou faux, lire le retour affiché.
@@ -72,30 +93,12 @@ export function createChronoDriver(jestApi, refs, getInstances) {
     return chrono;
   }
 
-  /** Question connue, comme le ferait le tirage */
-  function showQuestion(chrono, a, b) {
-    chrono.state.currentQuestion = {
-      question: `${a} × ${b} = ?`,
-      answer: a * b,
-      type: chrono.inputMode === 'mcq' ? 'mcq' : 'classic',
-      operator: '×',
-      a,
-      b,
-      table: a,
-      num: b,
-    };
-    chrono.displayQuestion();
-    chrono.onQuestionGenerated();
-  }
-
   /** Répond à la question affichée, juste ou faux, puis laisse passer le retour */
   async function answer(chrono, correct = true, waitMs = 800) {
     const { answer: expected } = chrono.state.currentQuestion;
     chrono.handleAnswer(correct ? expected : expected + 1);
     await flush(waitMs);
   }
-
-  const feedbackText = () => document.querySelector('.chrono-feedback')?.textContent ?? '';
 
   return { flush, startChrono, showQuestion, answer, feedbackText };
 }
