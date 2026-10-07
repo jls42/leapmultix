@@ -61,4 +61,19 @@ describe('MultiMiam : toucher à côté du personnage', () => {
     tap(canvas, besideFox(0, 1), { holdMs: 400, wait });
     expect(game.multimiam.nextDirection).toBe('DOWN');
   });
+
+  test("un mur sur l'axe dominant : il part sur l'autre axe", () => {
+    const { x, y } = game.multimiam;
+    game.canMove = (nx, ny) => !(nx === x - 1 && ny === y);
+    // Loin à gauche, un peu au-dessus : la gauche est murée, il monte
+    const point = besideFox(-1, 0);
+    tap(canvas, { x: point.x, y: point.y - CELL });
+    expect(game.multimiam.nextDirection).toBe('UP');
+  });
+
+  test('aucune des deux directions possible : il tournera à la prochaine intersection', () => {
+    game.canMove = () => false;
+    tap(canvas, besideFox(-1, 0));
+    expect(game.multimiam.nextDirection).toBe('LEFT');
+  });
 });

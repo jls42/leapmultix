@@ -4,6 +4,26 @@
 import { clientToCanvasPoint } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
 
+// Case voisine dans chaque direction
+const CELL_STEPS = {
+  UP: { dx: 0, dy: -1 },
+  DOWN: { dx: 0, dy: 1 },
+  LEFT: { dx: -1, dy: 0 },
+  RIGHT: { dx: 1, dy: 0 },
+};
+
+/**
+ * Directions vers un point, vu depuis le personnage : l'axe dominant, puis l'autre.
+ * @param {number} dx - Écart horizontal au personnage
+ * @param {number} dy - Écart vertical au personnage
+ * @returns {[string, string]} Direction principale, puis direction de repli
+ */
+function directionsToward(dx, dy) {
+  const horizontal = dx > 0 ? 'RIGHT' : 'LEFT';
+  const vertical = dy > 0 ? 'DOWN' : 'UP';
+  return Math.abs(dx) > Math.abs(dy) ? [horizontal, vertical] : [vertical, horizontal];
+}
+
 /**
  * Initialise les contrôles pour une instance de PacmanGame
  * @param {PacmanGame} game Instance du jeu
@@ -72,52 +92,20 @@ export function initPacmanControls(game) {
   // Le personnage part vers le point visé : l'axe dominant d'abord, l'autre s'il est bloqué
   function steerTowards(clientX, clientY) {
     // Coordonnées écran -> jeu (cadre et éventuelle réduction du canevas compris)
-    const { x: gameClickX, y: gameClickY } = clientToCanvasPoint(game.canvas, clientX, clientY);
+    const point = clientToCanvasPoint(game.canvas, clientX, clientY);
+    const { x, y } = game.multimiam;
 
-    // Position actuelle du personnage (pixels au centre de la case)
-    const playerX = game.multimiam.x;
-    const playerY = game.multimiam.y;
-    const playerPX = playerX * game.cellSize + game.cellSize / 2;
-    const playerPY = playerY * game.cellSize + game.cellSize / 2;
-
-    // Calcul direction relative au joueur (pas au centre du canvas)
-    const dx = gameClickX - playerPX;
-    const dy = gameClickY - playerPY;
-
-    // Choix primaire/secondaire selon l'axe dominant
-    let primary, secondary;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      primary = dx > 0 ? 'RIGHT' : 'LEFT';
-      secondary = dy > 0 ? 'DOWN' : 'UP';
-    } else {
-      primary = dy > 0 ? 'DOWN' : 'UP';
-      secondary = dx > 0 ? 'RIGHT' : 'LEFT';
-    }
-
-    // Tenter la direction primaire, sinon la secondaire
-    const candidates = [primary, secondary];
-
-    for (const dir of candidates) {
-      let nx = playerX,
-        ny = playerY;
-      switch (dir) {
-        case 'UP':
-          ny--;
-          break;
-        case 'DOWN':
-          ny++;
-          break;
-        case 'LEFT':
-          nx--;
-          break;
-        case 'RIGHT':
-          nx++;
-          break;
-      }
-      if (game.canMove(nx, ny)) {
-        steer(dir);
-        return;
-      }
+    // Direction vue depuis le centre de la case du personnage (pas du canevas)
+    const [primary, secondary] = directionsToward(
+      point.x - (x + 0.5) * game.cellSize,
+      point.y - (y + 0.5) * game.cellSize
+    );
+    const open = [primary, secondary].find(dir =>
+      game.canMove(x + CELL_STEPS[dir].dx, y + CELL_STEPS[dir].dy)
+    );
+    if (open) {
+      steer(open);
+      return;
     }
 
     // Si aucune n'est possible immédiatement, définir quand même nextDirection
