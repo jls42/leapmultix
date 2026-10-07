@@ -17,7 +17,8 @@ export function touchEvent(type, point, others = []) {
   const event = new Event(type, { bubbles: true, cancelable: true });
   const toTouch = (p, identifier) => ({ identifier, clientX: p.x, clientY: p.y });
   const changed = [toTouch(point, others.length)];
-  const resting = others.map(toTouch);
+  // Chaque doigt resté posé garde son rang pour identifiant
+  const resting = others.map((p, index) => toTouch(p, index));
   const lifted = type === 'touchend' || type === 'touchcancel';
   Object.defineProperty(event, 'touches', { value: lifted ? resting : [...resting, ...changed] });
   Object.defineProperty(event, 'changedTouches', { value: changed });
