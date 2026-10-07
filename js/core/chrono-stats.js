@@ -28,7 +28,10 @@ function factKey(a, b) {
   return `${Number(a)}×${Number(b)}`;
 }
 
-/** 6 × 7 et 7 × 6 : le même calcul, une seule place dans la liste à revoir */
+/**
+ * 6 × 7 et 7 × 6 : même clé, pour qu’une erreur compte sur la ligne de l’inverse quand son
+ * sens n’a pas de ligne
+ */
 function sameFactKey(a, b) {
   const x = Number(a);
   const y = Number(b);
@@ -289,8 +292,8 @@ export function addToBasket(store, fact) {
 /**
  * Ajout à la main d’un calcul 1–10 × 1–10 : à revoir une fois de plus à chaque ajout,
  * comme une erreur (6 × 6 ajouté trois fois : « 3 fois »). L’autre sens a sa propre
- * ligne : un parent peut vouloir les deux variantes (6 × 7 et 7 × 6), qui reviennent
- * alors plus souvent en révision.
+ * ligne : une ligne pose déjà les deux sens en révision, la seconde les fait revenir
+ * plus souvent.
  * @returns {boolean} Le calcul est valide
  */
 export function addManualBasketFact(store, a, b) {
@@ -325,13 +328,19 @@ export function startRevisionTally(basket) {
 
 /**
  * Révision : une réussite enlève 1 (jamais sous 0), une erreur ajoute 1. La question peut
- * être l’inverse du calcul de la liste (7 × 6 pour 6 × 7) : elle compte pour lui.
+ * être l’inverse d’une ligne de la liste (7 × 6 pour 6 × 7). Une erreur compte pour la
+ * ligne de son sens, sinon pour celle de l’inverse. Une réussite aussi, tant que cette
+ * ligne est à revoir ; à 0, elle compte pour l’autre sens, qui peut l’être encore.
  */
 export function tallyRevisionAnswer(tally, fact, isCorrect) {
-  const key = [factKey(fact?.a, fact?.b), factKey(fact?.b, fact?.a)].find(k => tally.has(k));
-  if (!key) return;
-  const due = tally.get(key);
-  tally.set(key, isCorrect ? Math.max(0, due - 1) : due + 1);
+  const lines = [factKey(fact?.a, fact?.b), factKey(fact?.b, fact?.a)].filter(k => tally.has(k));
+  if (lines.length === 0) return;
+  if (!isCorrect) {
+    tally.set(lines[0], tally.get(lines[0]) + 1);
+    return;
+  }
+  const key = lines.find(k => tally.get(k) > 0);
+  if (key) tally.set(key, tally.get(key) - 1);
 }
 
 /**

@@ -1,8 +1,8 @@
 /**
  * Mise en place commune des tests de Chrono : modules simulés autour du mode, pilotage
  * d'une partie et suivi des instances créées. Les appels à jest.unstable_mockModule
- * restent dans chaque fichier de test : le chemin d'un module simulé se lit depuis le
- * fichier qui l'enregistre.
+ * restent dans chaque fichier de test, avant ses imports dynamiques : on y voit ce que le
+ * fichier simule.
  */
 
 /** Chargement paresseux : rien à charger */
