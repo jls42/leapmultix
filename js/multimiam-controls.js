@@ -2,16 +2,26 @@
 // (c) LeapMultix - 2025
 
 import { clientToCanvasPoint } from './arcade-common.js';
+import { attachDirectionalTouch } from './arcade-touch.js';
+
+// Case voisine dans chaque direction
+const CELL_STEPS = {
+  UP: { dx: 0, dy: -1 },
+  DOWN: { dx: 0, dy: 1 },
+  LEFT: { dx: -1, dy: 0 },
+  RIGHT: { dx: 1, dy: 0 },
+};
 
 /**
- * Point touché ou cliqué, dans les coordonnées de la fenêtre (null si absent).
- * @param {TouchEvent|MouseEvent} e
- * @returns {{clientX: number, clientY: number}|null}
+ * Directions vers un point, vu depuis le personnage : l'axe dominant, puis l'autre.
+ * @param {number} dx - Écart horizontal au personnage
+ * @param {number} dy - Écart vertical au personnage
+ * @returns {[string, string]} Direction principale, puis direction de repli
  */
-function readPointer(e) {
-  const source = e.touches && e.touches.length > 0 ? e.touches[0] : e;
-  if (source.clientX === undefined || source.clientY === undefined) return null;
-  return { clientX: source.clientX, clientY: source.clientY };
+function directionsToward(dx, dy) {
+  const horizontal = dx > 0 ? 'RIGHT' : 'LEFT';
+  const vertical = dy > 0 ? 'DOWN' : 'UP';
+  return Math.abs(dx) > Math.abs(dy) ? [horizontal, vertical] : [vertical, horizontal];
 }
 
 /**
@@ -70,147 +80,32 @@ export function initPacmanControls(game) {
 
   document.addEventListener('keydown', handleKeyDown);
 
-  // ================= Gestes tactiles (swipe et tap) =================
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchEndX = 0;
-  let touchEndY = 0;
-  let touchMoved = false;
-  let touchStartTime = 0;
-
-  const handleTouchStart = e => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    touchMoved = false;
-    touchStartTime = Date.now();
-  };
-
-  const handleTouchMove = e => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    touchEndX = e.touches[0].clientX;
-    touchEndY = e.touches[0].clientY;
-    touchMoved = true;
-
-    const dx = touchEndX - touchStartX;
-    const dy = touchEndY - touchStartY;
-    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-
-    let newDirection = '';
-    if (Math.abs(dx) > Math.abs(dy)) {
-      newDirection = dx > 0 ? 'RIGHT' : 'LEFT';
-    } else {
-      newDirection = dy > 0 ? 'DOWN' : 'UP';
-    }
-
-    game.multimiam.nextDirection = newDirection;
+  // Le personnage prend la direction demandée dès qu'il le peut
+  function steer(direction) {
+    game.multimiam.nextDirection = direction;
     if (!game.multimiam.isMoving) {
-      tryToMovePacman(newDirection);
+      tryToMovePacman(direction);
     }
+  }
 
-    touchStartX = touchEndX;
-    touchStartY = touchEndY;
-  };
-
-  const handleTouchEnd = e => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    const touchDuration = Date.now() - touchStartTime;
-
-    // Si c'est un tap rapide (< 200ms) et qu'on n'a pas bougé, traiter comme un clic
-    if (touchDuration < 200 && !touchMoved) {
-      const touch = e.changedTouches[0];
-      const simulatedEvent = {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        preventDefault: () => {},
-        stopPropagation: () => {},
-        stopImmediatePropagation: () => {},
-      };
-      handleCanvasTouch(simulatedEvent);
-    }
-
-    touchMoved = false;
-  };
-
-  game.canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-  game.canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-  game.canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-  // ================= Clic ET Touch intelligent sur labyrinthe =================
-  function handleCanvasTouch(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    // Support touch ET click avec vérification sécurisée
-    const pointer = readPointer(e);
-    if (!pointer) {
-      console.warn('Événement canvas sans coordonnées valides:', e.type);
-      return;
-    }
-
+  // ================= Toucher ou clic sur le labyrinthe =================
+  // Le personnage part vers le point visé : l'axe dominant d'abord, l'autre s'il est bloqué
+  function steerTowards(clientX, clientY) {
     // Coordonnées écran -> jeu (cadre et éventuelle réduction du canevas compris)
-    const { x: gameClickX, y: gameClickY } = clientToCanvasPoint(
-      game.canvas,
-      pointer.clientX,
-      pointer.clientY
+    const point = clientToCanvasPoint(game.canvas, clientX, clientY);
+    const { x, y } = game.multimiam;
+
+    // Direction vue depuis le centre de la case du personnage (pas du canevas)
+    const [primary, secondary] = directionsToward(
+      point.x - (x + 0.5) * game.cellSize,
+      point.y - (y + 0.5) * game.cellSize
     );
-
-    // Position actuelle du personnage (pixels au centre de la case)
-    const playerX = game.multimiam.x;
-    const playerY = game.multimiam.y;
-    const playerPX = playerX * game.cellSize + game.cellSize / 2;
-    const playerPY = playerY * game.cellSize + game.cellSize / 2;
-
-    // Calcul direction relative au joueur (pas au centre du canvas)
-    const dx = gameClickX - playerPX;
-    const dy = gameClickY - playerPY;
-
-    // Choix primaire/secondaire selon l'axe dominant
-    let primary, secondary;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      primary = dx > 0 ? 'RIGHT' : 'LEFT';
-      secondary = dy > 0 ? 'DOWN' : 'UP';
-    } else {
-      primary = dy > 0 ? 'DOWN' : 'UP';
-      secondary = dx > 0 ? 'RIGHT' : 'LEFT';
-    }
-
-    // Tenter la direction primaire, sinon la secondaire
-    const candidates = [primary, secondary];
-
-    for (const dir of candidates) {
-      let nx = playerX,
-        ny = playerY;
-      switch (dir) {
-        case 'UP':
-          ny--;
-          break;
-        case 'DOWN':
-          ny++;
-          break;
-        case 'LEFT':
-          nx--;
-          break;
-        case 'RIGHT':
-          nx++;
-          break;
-      }
-      if (game.canMove(nx, ny)) {
-        game.multimiam.nextDirection = dir;
-        if (!game.multimiam.isMoving) {
-          tryToMovePacman(dir);
-        }
-        return;
-      }
+    const open = [primary, secondary].find(dir =>
+      game.canMove(x + CELL_STEPS[dir].dx, y + CELL_STEPS[dir].dy)
+    );
+    if (open) {
+      steer(open);
+      return;
     }
 
     // Si aucune n'est possible immédiatement, définir quand même nextDirection
@@ -218,8 +113,18 @@ export function initPacmanControls(game) {
     game.multimiam.nextDirection = primary;
   }
 
-  // Écouter clic desktop uniquement (touch géré par handleTouchEnd)
-  game.canvas.addEventListener('click', handleCanvasTouch);
+  // ================= Gestes tactiles (glissement et toucher) =================
+  // Gestes communs avec MultiSnake (js/arcade-touch.js) : un doigt qui tremble un peu ou
+  // reste posé compte comme un toucher
+  attachDirectionalTouch(game.canvas, { onSwipe: steer, onTap: steerTowards });
+
+  // Clic (ordinateur) : même règle que le toucher
+  game.canvas.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    steerTowards(e.clientX, e.clientY);
+  });
 
   // --------------------------------------------------
   // Fonction interne pour tenter un déplacement

@@ -945,6 +945,14 @@ body:has(> .message-popup) > .toast-stack {
 }
 
 /* === TRANSITIONS DE SLIDES === */
+
+/* L'écran qui entre part de 24 px à droite : sans rognage, il élargissait la page le temps
+   de l'animation, et Chrome sur téléphone dézoomait la page pour le montrer en entier.
+   clip et non hidden : pas de cadre de défilement, le bandeau des jeux reste collant. */
+#main-content {
+  overflow-x: clip;
+}
+
 .slide-slide-in {
   animation: slide-in-from-right var(--dur-slow) var(--ease-out) forwards;
 }
