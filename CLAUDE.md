@@ -263,6 +263,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `arcade-multimiam.js` - Multimiam arcade integration
 - `arcade-multisnake.js` - Snake game integration
 - `arcade-common.js`, `arcade-utils.js` - Shared arcade utilities
+- `arcade-touch.js` - Gestes tactiles communs à MultiSnake et MultiMiam (glisser, toucher tolérant)
 - `arcade-message.js`, `arcade-points.js`, `arcade-scores.js` - Arcade UI components
 
 **Multimiam (Decomposed Architecture):**

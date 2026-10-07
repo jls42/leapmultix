@@ -67,6 +67,44 @@ export function resolveMultimemoryTables(baseTables, exclusions) {
   return basePool;
 }
 
+/**
+ * Écart entre un point et une carte (0 dedans), sur l'axe le plus éloigné.
+ * @param {{x: number, y: number, width: number, height: number}} card
+ * @param {number} x
+ * @param {number} y
+ * @returns {number}
+ */
+function distanceToCard(card, x, y) {
+  const dx = Math.max(card.x - x, 0, x - (card.x + card.width));
+  const dy = Math.max(card.y - y, 0, y - (card.y + card.height));
+  return Math.max(dx, dy);
+}
+
+/**
+ * Carte visée par un toucher ou un clic. La carte touchée l'emporte toujours ; dans un
+ * écart ou juste à côté de la grille, la plus proche, si elle est dans la tolérance.
+ * La tolérance dépasse l'écart entre les cartes sur téléphone : prendre la première carte
+ * dont la zone élargie contient le point retournait la voisine de gauche ou du dessus.
+ * @param {Array<{x: number, y: number, width: number, height: number, isMatched?: boolean}>} cards
+ * @param {number} x - Point visé (pixels du plateau)
+ * @param {number} y
+ * @param {number} tolerance - Distance admise autour d'une carte (pixels du plateau)
+ * @returns {object|null} La carte, ou null (rien de proche, ou carte déjà trouvée)
+ */
+export function findCardAt(cards, x, y, tolerance) {
+  let nearest = null;
+  let nearestDistance = Infinity;
+  for (const card of cards) {
+    const distance = distanceToCard(card, x, y);
+    if (distance < nearestDistance) {
+      nearest = card;
+      nearestDistance = distance;
+    }
+  }
+  if (!nearest || nearestDistance > tolerance || nearest.isMatched) return null;
+  return nearest;
+}
+
 // Instance locale du jeu (remplace window.memoryGame)
 let _memoryGameInstance = null;
 
@@ -664,22 +702,7 @@ class MemoryGame {
   getCardAtPosition(x, y) {
     // Ajouter une tolérance pour faciliter la détection sur mobile (en pixels)
     const tolerance = this.isMobile ? 25 : 5; // Tolérance plus grande sur mobile
-
-    // Vérifier d'abord avec une tolérance
-    for (const card of this.cards) {
-      if (
-        x >= card.x - tolerance &&
-        x <= card.x + card.width + tolerance &&
-        y >= card.y - tolerance &&
-        y <= card.y + card.height + tolerance &&
-        !card.isMatched
-      ) {
-        return card;
-      }
-    }
-
-    // Aucune carte trouvée même avec tolérance
-    return null;
+    return findCardAt(this.cards, x, y, tolerance);
   }
 
   // Vérifie si les cartes retournées forment une paire

@@ -9,7 +9,9 @@ import {
   getCanvasFont,
   getArcadeCanvasBox,
   readableCanvasFontSize,
+  canvasToClientPoint,
 } from './arcade-common.js';
+import { attachDirectionalTouch } from './arcade-touch.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { showArcadeGameOver } from './arcade.js';
 import { cleanupGameResources } from './game-cleanup.js';
@@ -18,6 +20,16 @@ import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
 // UserState removed - unused import
+
+// Direction donnée par chaque glissement du doigt
+const SWIPE_VECTORS = {
+  UP: { x: 0, y: -1 },
+  DOWN: { x: 0, y: 1 },
+  LEFT: { x: -1, y: 0 },
+  RIGHT: { x: 1, y: 0 },
+};
+// Rayon (pixels CSS) autour de la tête où un toucher n'indique aucune direction
+const TAP_DEAD_ZONE_PX = 30;
 
 class SnakeGame {
   constructor(canvasId, mode = 'operation', options = {}) {
@@ -242,234 +254,61 @@ class SnakeGame {
     // Les contrôles tactiles intelligents sont gérés dans setupTouchControls()
   }
 
-  // Contrôles tactiles intelligents (inspirés de Multi Miam)
+  // Contrôles tactiles : un glissement oriente le serpent, un toucher le dirige vers le
+  // point touché (gestes communs avec MultiMiam, js/arcade-touch.js)
   setupTouchControls() {
-    let touchStartTime = 0;
-    let touchMoved = false;
-
-    const validateTouch = () => {
-      if (!this.canvas || !document.body.contains(this.canvas) || this.gameOver) {
-        return null;
-      }
-
-      let rect;
-      try {
-        rect = this.canvas.getBoundingClientRect();
-        if (rect.width === 0 || rect.height === 0) return null;
-      } catch (error) {
-        console.error('Snake: Erreur getBoundingClientRect:', error);
-        return null;
-      }
-
-      return rect;
-    };
-
-    const getClickCoordinates = (e, rect) => {
-      let clientX, clientY;
-      if (e.touches && e.touches.length > 0) {
-        clientX = e.touches[0].clientX;
-
-        clientY = e.touches[0].clientY;
-      } else if (e.clientX !== undefined && e.clientY !== undefined) {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      } else {
-        return null;
-      }
-
-      return {
-        clickX: clientX - rect.left,
-        clickY: clientY - rect.top,
-      };
-    };
-
-    const calculateSnakeScreenPosition = (head, rect) => {
-      const scaleX = this.canvas.width / rect.width;
-      const scaleY = this.canvas.height / rect.height;
-      return {
-        snakeScreenX: (head.x * this.cellSize + this.cellSize / 2) / scaleX,
-        snakeScreenY: (head.y * this.cellSize + this.cellSize / 2) / scaleY,
-      };
-    };
-
-    const isInDeadZone = (clickX, clickY, snakeScreenX, snakeScreenY) => {
-      const deadZone = 30;
-      const distanceFromSnake = Math.sqrt(
-        Math.pow(clickX - snakeScreenX, 2) + Math.pow(clickY - snakeScreenY, 2)
-      );
-      return distanceFromSnake < deadZone;
-    };
-
-    const calculateDirections = (deltaX, deltaY) => {
-      let primaryDirection, secondaryDirection;
-
-      if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (deltaX > 0) {
-          primaryDirection = { x: 1, y: 0, name: 'DROITE' };
-          secondaryDirection =
-            deltaY > 0 ? { x: 0, y: 1, name: 'BAS' } : { x: 0, y: -1, name: 'HAUT' };
-        } else {
-          primaryDirection = { x: -1, y: 0, name: 'GAUCHE' };
-          secondaryDirection =
-            deltaY > 0 ? { x: 0, y: 1, name: 'BAS' } : { x: 0, y: -1, name: 'HAUT' };
-        }
-      } else {
-        if (deltaY > 0) {
-          primaryDirection = { x: 0, y: 1, name: 'BAS' };
-          secondaryDirection =
-            deltaX > 0 ? { x: 1, y: 0, name: 'DROITE' } : { x: -1, y: 0, name: 'GAUCHE' };
-        } else {
-          primaryDirection = { x: 0, y: -1, name: 'HAUT' };
-          secondaryDirection =
-            deltaX > 0 ? { x: 1, y: 0, name: 'DROITE' } : { x: -1, y: 0, name: 'GAUCHE' };
-        }
-      }
-
-      return { primaryDirection, secondaryDirection };
-    };
-
-    const canChangeDirection = direction => {
-      return !(direction.x === -this.direction.x && direction.y === -this.direction.y);
-    };
-
-    const selectBestDirection = (primaryDirection, secondaryDirection) => {
-      const canGoPrimary = canChangeDirection(primaryDirection);
-      const canGoSecondary = canChangeDirection(secondaryDirection);
-
-      console.log(`Snake: Direction actuelle: (${this.direction.x}, ${this.direction.y})`);
-      console.log(
-        `Snake: Direction primaire: (${primaryDirection.x}, ${primaryDirection.y}) - Possible: ${canGoPrimary}`
-      );
-      console.log(
-        `Snake: Direction secondaire: (${secondaryDirection.x}, ${secondaryDirection.y}) - Possible: ${canGoSecondary}`
-      );
-
-      if (canGoPrimary) {
-        console.log(
-          `Snake: Direction -> ${primaryDirection.name} (primaire, par rapport au serpent)`
-        );
-        return { x: primaryDirection.x, y: primaryDirection.y };
-      } else if (canGoSecondary) {
-        console.log(
-          `Snake: Direction -> ${secondaryDirection.name} (secondaire, primaire bloquée)`
-        );
-        return { x: secondaryDirection.x, y: secondaryDirection.y };
-      } else {
-        console.log('Snake: Aucune direction possible (toutes bloquées)');
-        return null;
-      }
-    };
-
-    const handleTouch = e => {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-
-      const rect = validateTouch();
-      if (!rect) return;
-
-      const coordinates = getClickCoordinates(e, rect);
-      if (!coordinates) return;
-
-      const { clickX, clickY } = coordinates;
-
-      if (!this.snake || this.snake.length === 0) return;
-
-      const head = this.snake[0];
-
-      const { snakeScreenX, snakeScreenY } = calculateSnakeScreenPosition(head, rect);
-
-      if (isInDeadZone(clickX, clickY, snakeScreenX, snakeScreenY)) {
-        console.log('Snake: Clic trop près du serpent, ignoré');
-        return;
-      }
-
-      const deltaX = clickX - snakeScreenX;
-      const deltaY = clickY - snakeScreenY;
-
-      console.log(
-        `Snake: Serpent à (${snakeScreenX.toFixed(1)}, ${snakeScreenY.toFixed(1)}), clic à (${clickX}, ${clickY}), delta: (${deltaX.toFixed(1)}, ${deltaY.toFixed(1)})`
-      );
-
-      const { primaryDirection, secondaryDirection } = calculateDirections(deltaX, deltaY);
-      const newDirection = selectBestDirection(primaryDirection, secondaryDirection);
-
-      if (newDirection) {
-        this.nextDirection = newDirection;
-        console.log('Snake: Nouvelle direction définie:', newDirection);
-      } else {
-        console.log('Snake: Direction bloquée (opposée à la direction actuelle)');
-      }
-    };
-
-    // Gestion du swipe vs tap
-    this._onTouchStart = e => {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      touchStartTime = Date.now();
-      touchMoved = false;
-    };
-    this._onTouchMove = e => {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      touchMoved = true;
-    };
-    this._onTouchEnd = e => {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-
-      const touchDuration = Date.now() - touchStartTime;
-
-      // Si c'est un tap rapide (< 200ms) et qu'on n'a pas bougé
-      if (touchDuration < 200 && !touchMoved) {
-        const touch = e.changedTouches[0];
-        const simulatedEvent = {
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-          preventDefault: () => {},
-          stopPropagation: () => {},
-          stopImmediatePropagation: () => {},
-        };
-        handleTouch(simulatedEvent);
-      }
-
-      touchMoved = false;
-    };
-
-    this.canvas.addEventListener('touchstart', this._onTouchStart, { passive: false });
-    this.canvas.addEventListener('touchmove', this._onTouchMove, { passive: false });
-    this.canvas.addEventListener('touchend', this._onTouchEnd, { passive: false });
-    this.eventListeners.push({
-      element: this.canvas,
-      type: 'touchstart',
-      callback: this._onTouchStart,
-      options: { passive: false },
-    });
-    this.eventListeners.push({
-      element: this.canvas,
-      type: 'touchmove',
-      callback: this._onTouchMove,
-      options: { passive: false },
-    });
-    this.eventListeners.push({
-      element: this.canvas,
-      type: 'touchend',
-      callback: this._onTouchEnd,
-      options: { passive: false },
+    const touchListeners = attachDirectionalTouch(this.canvas, {
+      onSwipe: direction => this.steer(SWIPE_VECTORS[direction]),
+      onTap: (clientX, clientY) => this.steerTowards(clientX, clientY),
     });
 
-    // Pour desktop
-    this._onClick = handleTouch;
+    // Souris (ordinateur) : même règle que le toucher
+    this._onClick = e => this.steerTowards(e.clientX, e.clientY);
     this.canvas.addEventListener('click', this._onClick);
-    this.eventListeners.push({
+    this.eventListeners.push(...touchListeners, {
       element: this.canvas,
       type: 'click',
       callback: this._onClick,
       options: false,
     });
+  }
+
+  /**
+   * Oriente le serpent, sauf demi-tour sur lui-même.
+   * @param {{x: number, y: number}} direction
+   * @returns {boolean} Vrai si la direction est prise
+   */
+  steer(direction) {
+    if (this.gameOver || (direction.x === 0 && direction.y === 0)) return false;
+    if (direction.x === -this.direction.x && direction.y === -this.direction.y) return false;
+    this.nextDirection = { x: direction.x, y: direction.y };
+    return true;
+  }
+
+  /**
+   * Toucher ou clic : le serpent se dirige vers le point visé, vu depuis sa tête. L'axe
+   * dominant d'abord ; l'autre axe si le premier lui ferait faire demi-tour.
+   * @param {number} clientX
+   * @param {number} clientY
+   */
+  steerTowards(clientX, clientY) {
+    if (!this.canvas?.isConnected || !this.snake?.length) return;
+    const head = this.snake[0];
+    const center = canvasToClientPoint(
+      this.canvas,
+      (head.x + 0.5) * this.cellSize,
+      (head.y + 0.5) * this.cellSize
+    );
+    const dx = clientX - center.x;
+    const dy = clientY - center.y;
+    // Trop près de la tête : aucune direction ne se dégage
+    if (Math.hypot(dx, dy) < TAP_DEAD_ZONE_PX) return;
+
+    const horizontal = { x: Math.sign(dx), y: 0 };
+    const vertical = { x: 0, y: Math.sign(dy) };
+    const [primary, secondary] =
+      Math.abs(dx) > Math.abs(dy) ? [horizontal, vertical] : [vertical, horizontal];
+    if (!this.steer(primary)) this.steer(secondary);
   }
 
   // Gérer les touches du clavier

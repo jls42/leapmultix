@@ -479,6 +479,9 @@
 }
 
 .arcade-mult-display .arcade-question {
+  /* Une ligne réservée même vide : les jeux dimensionnent leur plateau avant d'afficher le
+     premier calcul, et le bandeau qui grandissait ensuite faisait déborder la page */
+  min-height: 1lh;
   color: var(--color-ink-heading);
 }
 
