@@ -202,6 +202,31 @@ describe('Modale vidéo de l’avatar', () => {
     setReducedMotion(false);
   });
 
+  test('hors ligne, aucune source ne se charge : la fenêtre se referme seule et le jeu continue', () => {
+    withListeners();
+    const done = jest.fn();
+    VideoManager.playCharacterIntro('fox', done);
+    const sources = VideoManager._sourceQueue.length;
+    expect(sources).toBeGreaterThan(0);
+    // Une source en échec prévient son élément <source>, jamais la vidéo elle-même
+    const source = document.getElementById('video-source');
+    for (let i = 0; i < sources; i++) source.dispatchEvent(new Event('error'));
+    expect(done).toHaveBeenCalledTimes(1);
+    jest.advanceTimersByTime(200);
+    expect(document.getElementById('character-intro-modal').style.display).toBe('none');
+  });
+
+  test('fenêtre fermée : la source encore vide de la page qui s’ouvre ne déclenche rien', () => {
+    withListeners();
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    document.getElementById('video-source').dispatchEvent(new Event('error'));
+    expect(error).not.toHaveBeenCalled();
+    expect(document.getElementById('character-intro-modal').classList.contains('is-closing')).toBe(
+      false
+    );
+    error.mockRestore();
+  });
+
   test('« Revoir ma vidéo » (demande explicite) démarre tout de suite, même avec moins d’animations', () => {
     withListeners();
     setReducedMotion(true);

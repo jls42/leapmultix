@@ -159,6 +159,48 @@ const getServiceWorkerUrl = () => {
   return `/sw.js${versionSuffix}`;
 };
 
+/**
+ * Version d'un service worker, qu'il donne par message (sw.js) ; null sans réponse à temps
+ * @param {ServiceWorker} worker
+ * @param {number} [timeoutMs=3000]
+ * @returns {Promise<string|null>}
+ */
+export function askWorkerVersion(worker, timeoutMs = 3000) {
+  if (typeof MessageChannel !== 'function') return Promise.resolve(null);
+  return new Promise(resolve => {
+    const channel = new MessageChannel();
+    let timer = null;
+    const finish = version => {
+      clearTimeout(timer);
+      channel.port1.close();
+      resolve(version);
+    };
+    timer = setTimeout(() => finish(null), timeoutMs);
+    channel.port1.onmessage = event => {
+      const version = event.data?.version;
+      finish(typeof version === 'string' ? version : null);
+    };
+    try {
+      worker.postMessage({ type: 'version' }, [channel.port2]);
+    } catch {
+      finish(null);
+    }
+  });
+}
+
+/**
+ * Nouveau service worker installé : la page ne se recharge que si elle n'est pas de sa
+ * version (page gardée hors ligne, plus ancienne). Après un déploiement, la page vient du
+ * réseau, déjà à jour, alors que le préchargement de plusieurs Mo finit parfois bien après son
+ * ouverture : la recharger interromprait la partie en cours.
+ * @param {ServiceWorker} worker
+ * @param {() => void} [reload]
+ */
+export async function reloadIfOutdated(worker, reload = () => runtime.location?.reload?.()) {
+  const version = await askWorkerVersion(worker);
+  if (version !== APP_VERSION) reload();
+}
+
 const handleWorkerStateChange = (newWorker, navigatorRef) => {
   if (newWorker.state !== 'installed') {
     return;
@@ -168,7 +210,7 @@ const handleWorkerStateChange = (newWorker, navigatorRef) => {
     return;
   }
 
-  runtime.location?.reload?.();
+  void reloadIfOutdated(newWorker);
 };
 
 const handleUpdateFound = (registration, navigatorRef) => {

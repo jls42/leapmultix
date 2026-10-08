@@ -48,6 +48,16 @@ if (service === 's3' && command === 'cp') {
         .map(file => path.posix.join(prefix, file))
     : [prefix];
   for (const file of files) note({ command, file, contentType: option('--content-type') });
+  // FAKE_AWS_KEEP : copie de ce qui serait envoyé, pour en lire le contenu
+  if (process.env.FAKE_AWS_KEEP) {
+    const recursive = args.includes('--recursive');
+    for (const file of files) {
+      const from = recursive ? path.join(source, path.posix.relative(prefix, file)) : source;
+      const to = path.join(process.env.FAKE_AWS_KEEP, file);
+      fs.mkdirSync(path.dirname(to), { recursive: true });
+      fs.copyFileSync(from, to);
+    }
+  }
 } else {
   note({ command: `${service} ${command}` });
 }

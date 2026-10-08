@@ -180,7 +180,7 @@ npm run test:integration # Tests d'intégration
 npm run test:storage   # Tests du système de stockage
 npm run test:esm       # Tests ESM (dossiers tests-esm/, Jest vm-modules)
 npm run test:verbose   # Tests avec sortie détaillée
-npm run test:pwa-offline # Test offline PWA (nécessite Puppeteer), après `npm run serve`
+npm run test:pwa-offline # Hors ligne de bout en bout (Puppeteer, serveur intégré)
 
 # Analyse et maintenance
 npm run analyze:jsdoc  # Analyse de la documentation
@@ -477,10 +477,15 @@ LeapMultix is a complete PWA with offline support and installation capabilities.
 
 **Service Worker** (`sw.js`):
 
-- Navigation: Network-first with offline fallback to `offline.html`
-- Images: Cache-first to optimize performance
+- Install: precaches everything the game asks for, from a list produced from the code by
+  `scripts/precache-list.mjs` (`npm run precache:update`, checked by the tests): after a first
+  visit, the 6 modes and the 4 arcade games start offline
+- Navigation: Network-first; offline, the cached game page (`offline.html` only for a page
+  never cached)
+- Images: Cache-first; offline, another size of the same sprite or another background of the same avatar
 - Translations: Stale-while-revalidate for background updates
-- JS/CSS: Network-first to always serve the latest version
+- JS/CSS: Network-first to always serve the latest version, cache when offline
+- Sounds and fonts: Cache-first, byte ranges served (Safari's audio player)
 - Automatic version management via `cache-updater.js`
 
 **Manifest** (`manifest.json`):
@@ -497,8 +502,9 @@ LeapMultix is a complete PWA with offline support and installation capabilities.
 npm run serve
 ```
 
-Manually: disable the network in the development tools (Network tab,
-offline mode), then refresh the page. `offline.html` should be displayed.
+Manually: keep the page open while the service worker saves the game, stop the server (or
+cut the device's network), then refresh the page. The game should be displayed, and every
+mode should start.
 
 Automatically, with Puppeteer:
 

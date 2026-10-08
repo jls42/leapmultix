@@ -143,6 +143,42 @@ describe('Arcade : pause du temps', () => {
     expect(document.querySelector('.arcade-gameover')).toBeNull();
   });
 
+  test('le voile suit le canevas redimensionné sans que la fenêtre change', () => {
+    // La consigne qui part, le plein écran ou le bandeau qui change de hauteur redimensionnent
+    // le canevas sans événement resize de la fenêtre
+    const observers = [];
+    globalThis.ResizeObserver = class {
+      constructor(callback) {
+        Object.assign(this, { callback, targets: [], connected: true });
+        observers.push(this);
+      }
+      observe(target) {
+        this.targets.push(target);
+      }
+      disconnect() {
+        this.connected = false;
+      }
+    };
+    arcade.startArcadeTimer(60);
+    pressKey('p');
+    const size = { offsetLeft: 20, offsetTop: 8, offsetWidth: 480, offsetHeight: 360 };
+    for (const [name, value] of Object.entries(size)) {
+      Object.defineProperty(canvas, name, { configurable: true, value });
+    }
+    observers.forEach(observer => observer.callback([]));
+    const { left, top, width, height } = overlay().style;
+    expect({ left, top, width, height }).toEqual({
+      left: '20px',
+      top: '8px',
+      width: '480px',
+      height: '360px',
+    });
+    expect(observers.flatMap(observer => observer.targets)).toContain(canvas);
+    pressKey('p');
+    expect(observers.every(observer => !observer.connected)).toBe(true);
+    delete globalThis.ResizeObserver;
+  });
+
   test('la partie finie, plus de bouton, de voile ni de touche P', () => {
     arcade.startArcadeTimer(60);
     pressKey('p');

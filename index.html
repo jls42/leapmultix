@@ -33,8 +33,10 @@
     <link rel="canonical" href="https://leapmultix.jls42.org/" />
 
     <!-- Performance Hints -->
+    <!-- plausible:start -->
     <link rel="dns-prefetch" href="https://plausible.io" />
     <link rel="preconnect" href="https://plausible.io" crossorigin />
+    <!-- plausible:end -->
     <link
       rel="preload"
       href="/assets/social/leapmultix-social-card.webp"
@@ -219,7 +221,7 @@
             "name": "Puis-je utiliser LeapMultix hors ligne ?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Oui ! LeapMultix est une Progressive Web App (PWA). Une fois installée sur votre appareil, l'application fonctionne entièrement hors ligne. Votre progression est sauvegardée localement dans votre navigateur."
+              "text": "Oui, après une première visite en ligne : LeapMultix enregistre alors le jeu sur l'appareil (quelques mégaoctets). Ensuite, les 6 modes, les 4 jeux d'arcade et les bruitages fonctionnent sans Internet, dans le navigateur comme dans l'application installée. Hors ligne, la voix enregistrée ne dit que les phrases déjà entendues ; pour les autres, le jeu prend la voix de l'appareil. La vidéo de l'avatar, elle, demande Internet. Votre progression est sauvegardée localement dans votre navigateur."
             }
           },
           {
@@ -332,7 +334,9 @@
     <!-- SEO assets preloader - CSP-compliant external script -->
     <script type="module" src="js/seo-assets-preloader.js"></script>
 
-    <!-- Analytics Plausible (remplacé par le script de déploiement) -->
+    <!-- plausible:start -->
+    <!-- Analytics Plausible (domaine écrit par deploy.sh ; sans domaine, il retire tout le bloc
+         jusqu'à plausible:end) -->
     <!--
     Note: Integrity hash intentionally omitted for Plausible Analytics script.
     Plausible updates their script periodically and using integrity hashes would break analytics
@@ -352,6 +356,7 @@
       src="https://plausible.io/js/script.js"
       crossorigin="anonymous"
     ></script>
+    <!-- plausible:end -->
   </head>
 
   <body>
@@ -1592,9 +1597,13 @@
               </h3>
               <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
                 <p itemprop="text" data-translate="faq_a3">
-                  Oui&nbsp;! LeapMultix est une Progressive Web App (PWA). Une fois installée sur
-                  votre appareil, l'application fonctionne entièrement hors ligne. Votre progression
-                  est sauvegardée localement dans votre navigateur.
+                  Oui, après une première visite en ligne&nbsp;: LeapMultix enregistre alors le jeu
+                  sur l'appareil (quelques mégaoctets). Ensuite, les 6 modes, les 4 jeux d'arcade et
+                  les bruitages fonctionnent sans Internet, dans le navigateur comme dans
+                  l'application installée. Hors ligne, la voix enregistrée ne dit que les phrases
+                  déjà entendues&nbsp;; pour les autres, le jeu prend la voix de l'appareil. La
+                  vidéo de l'avatar, elle, demande Internet. Votre progression est sauvegardée
+                  localement dans votre navigateur.
                 </p>
               </div>
             </div>

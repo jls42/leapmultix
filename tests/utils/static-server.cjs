@@ -68,8 +68,34 @@ async function serveSite(req, res, pathname, rootDir) {
 }
 
 /**
+ * Coupure du réseau pour les tests hors ligne : coupé, le serveur ferme chaque connexion
+ * sans répondre, même celles que le navigateur garde ouvertes, comme un wifi d'école privé
+ * d'Internet. Ni la page ni le service worker n'obtiennent plus rien.
+ * @param {import('node:http').Server} server
+ */
+function createNetworkSwitch(server) {
+  const sockets = new Set();
+  const state = { reachable: true };
+  server.on('connection', socket => {
+    if (!state.reachable) socket.destroy();
+    sockets.add(socket);
+    socket.on('close', () => sockets.delete(socket));
+  });
+  return {
+    state,
+    setReachable(reachable) {
+      state.reachable = reachable;
+      if (!reachable) for (const socket of sockets) socket.destroy();
+    },
+  };
+}
+
+/**
  * @param {string} [networkIdleSetting]
  * @param {{voiceDir?: string}} [options] - voiceDir : dossier servi sous /voice/
+ * @returns {Promise<{url: string, gotoOptions: object, stop: () => Promise<void>,
+ *   setReachable?: (reachable: boolean) => void}>} setReachable : absent pour un site
+ *   extérieur (E2E_BASE_URL)
  */
 async function startStaticServer(networkIdleSetting = 'networkidle2', options = {}) {
   if (process.env.E2E_BASE_URL) {
@@ -83,7 +109,12 @@ async function startStaticServer(networkIdleSetting = 'networkidle2', options = 
   }
 
   const rootDir = path.resolve(__dirname, '../..');
+  let network = null;
   const server = http.createServer(async (req, res) => {
+    if (!network.state.reachable) {
+      req.socket.destroy();
+      return;
+    }
     if (!['GET', 'HEAD'].includes(req.method || '')) {
       res.writeHead(405).end();
       return;
@@ -99,12 +130,14 @@ async function startStaticServer(networkIdleSetting = 'networkidle2', options = 
     }
   });
 
+  network = createNetworkSwitch(server);
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address();
   return {
     url: 'http://127.0.0.1:' + port + '/index.html',
     gotoOptions: { waitUntil: networkIdleSetting, timeout: 20000 },
     stop: () => new Promise(resolve => server.close(resolve)),
+    setReachable: network.setReachable,
   };
 }
 
