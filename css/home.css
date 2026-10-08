@@ -136,6 +136,50 @@
   margin: var(--space-4) auto 0;
 }
 
+/* --- Sauvegarde des joueurs : un geste d'adulte, discret, sous « Nouveau joueur » --- */
+.players-backup {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.players-backup h2 {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-md);
+}
+
+.players-backup-hint {
+  max-width: 480px;
+  margin: 0 auto var(--space-3);
+  color: var(--color-ink);
+}
+
+.players-backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.players-backup-actions .btn {
+  margin: 0;
+}
+
+.players-backup-actions .btn[hidden] {
+  display: none;
+}
+
+.players-backup-message {
+  max-width: 480px;
+  margin: var(--space-3) auto 0;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.players-backup-message:empty {
+  margin: 0;
+}
+
 /* --- Présentation du projet : indexable, placée après l'action de l'enfant --- */
 .seo-intro {
   max-width: 62ch;
@@ -530,7 +574,8 @@
       'accueil presentation' auto
       'outils presentation' auto
       'joueurs presentation' auto
-      'nouveau presentation' 1fr
+      'nouveau presentation' auto
+      'sauvegarde presentation' 1fr
       / minmax(0, 1fr) minmax(0, 0.85fr);
     align-content: start;
     column-gap: clamp(var(--space-5), 4vw, var(--space-7));
@@ -556,6 +601,10 @@
 
   #slide0 .new-player {
     grid-area: nouveau;
+  }
+
+  #slide0 .players-backup {
+    grid-area: sauvegarde;
   }
 
   /* Filet vertical de séparation, et texte aligné à gauche : il se lit,

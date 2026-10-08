@@ -539,6 +539,44 @@
             </button>
           </section>
 
+          <!-- Sauvegarde des joueurs dans un fichier, et reprise (js/components/playerTools.js) -->
+          <section class="players-backup" aria-labelledby="players-backup-title">
+            <h2 id="players-backup-title" data-translate="players_backup_title">
+              Sauvegarde des joueurs
+            </h2>
+            <p class="players-backup-hint" data-translate="players_backup_hint">
+              Les joueurs sont gardés seulement dans ce navigateur. Enregistre-les aussi dans un
+              fichier&nbsp;: tu pourras les reprendre si le navigateur est vidé, ou sur un autre
+              appareil.
+            </p>
+            <div class="players-backup-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="export-players-btn"
+                data-translate="export_players"
+              >
+                Enregistrer les joueurs dans un fichier
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="import-players-btn"
+                data-translate="import_players"
+              >
+                Reprendre des joueurs d’un fichier
+              </button>
+              <input
+                type="file"
+                id="import-players-input"
+                accept=".json,application/json"
+                tabindex="-1"
+                hidden
+              />
+            </div>
+            <p class="players-backup-message" id="players-backup-message" role="status"></p>
+          </section>
+
           <!-- Présentation du projet : contenu indexable, visible sans JavaScript,
                placé après l'action de l'enfant -->
           <div class="seo-intro">

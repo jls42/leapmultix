@@ -1,6 +1,7 @@
 /**
  * « Qui joue ? » sur un poste partagé par une classe (slide 0) : filtre des prénoms dès
- * 10 joueurs, raccourci vers « Nouveau joueur » et corbeille, au-dessus des tuiles.
+ * 10 joueurs, raccourci vers « Nouveau joueur » et corbeille, au-dessus des tuiles ;
+ * sauvegarde des joueurs dans un fichier, et reprise, sous « Nouveau joueur ».
  *
  * Les tuiles sont dessinées par UserManager.refreshUserList, triées par prénom ; chaque rendu
  * est signalé par l'événement « playersChanged », qui remet cette barre à jour.
@@ -8,6 +9,12 @@
 import UserManager from '../userManager.js';
 import { eventBus } from '../core/eventBus.js';
 import { TRASH_DAYS, restorableTrash, trashExpiry } from '../core/players-trash.js';
+import {
+  BACKUP_MAX_BYTES,
+  backupFileName,
+  readPlayersBackup,
+  requestPersistentStorage,
+} from '../core/players-backup.js';
 import { getCurrentLanguage } from '../i18n-store.js';
 import { getTranslation } from '../i18n.js';
 import { getAvatarHeadSrc } from '../main-helpers.js';
@@ -110,11 +117,115 @@ function restoreMessage({ ok, name, problem }) {
   return translateOr('trash_restore_failed', 'Ce joueur n’a pas pu être restauré.');
 }
 
+/**
+ * Télécharge un fichier JSON (lien temporaire vers un Blob)
+ * @param {Object} payload
+ * @param {string} fileName
+ */
+function downloadJson(payload, fileName) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.hidden = true;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
+ * Texte d'un fichier choisi (Blob.text, ou FileReader pour les navigateurs qui ne l'ont pas)
+ * @param {File} file
+ * @returns {Promise<string>}
+ */
+function readFileText(file) {
+  if (typeof file.text === 'function') return file.text();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+}
+
+/**
+ * Pourquoi un fichier n'a rien ajouté
+ * @param {string} error - 'version', 'storage', ou autre (fichier illisible)
+ * @returns {string}
+ */
+function importErrorMessage(error) {
+  if (error === 'version') {
+    const fallback = 'Ce fichier vient d’une version plus récente de LeapMultix.';
+    return translateOr('import_newer_version', fallback);
+  }
+  if (error === 'storage') {
+    const fallback = 'Le navigateur manque de place\u00a0: aucun joueur n’a été ajouté.';
+    return translateOr('import_storage_full', fallback);
+  }
+  return translateOr(
+    'import_bad_file',
+    'Ce fichier n’est pas une sauvegarde de joueurs LeapMultix.'
+  );
+}
+
+/**
+ * Prénoms en liste dans la langue du jeu : « Léa, Tom et Zoé »
+ * @param {string[]} names
+ * @returns {string}
+ */
+function listOfNames(names) {
+  try {
+    return new Intl.ListFormat(getCurrentLanguage(), { type: 'conjunction' }).format(names);
+  } catch {
+    return names.join(', ');
+  }
+}
+
+/** Au-delà, les joueurs laissés tels quels sont comptés, pas nommés */
+const SKIPPED_NAMES_MAX = 5;
+
+/**
+ * Joueurs déjà là, laissés tels quels : nommés s'ils sont peu, comptés sinon
+ * @param {string[]} skipped
+ * @returns {string}
+ */
+function skippedMessage(skipped) {
+  const count = skipped.length;
+  if (count > SKIPPED_NAMES_MAX) {
+    const fallback = `${count} joueurs déjà dans la liste, laissés tels quels.`;
+    return translateOr('import_skipped_many', fallback, { n: count });
+  }
+  const names = listOfNames(skipped);
+  const fallback = `Déjà dans la liste, laissés tels quels\u00a0: ${names}.`;
+  return translateOr('import_skipped', fallback, { names });
+}
+
+/**
+ * Bilan d'une reprise : ajoutés, laissés tels quels, illisibles
+ * @param {{added: string[], skipped: string[]}} result
+ * @param {number} rejected
+ * @returns {string}
+ */
+function importSummary({ added, skipped }, rejected) {
+  const count = added.length;
+  const parts = [translateOr('import_done', `${count} joueurs ajoutés.`, { n: count })];
+  if (skipped.length > 0) parts.push(skippedMessage(skipped));
+  if (rejected > 0) {
+    const fallback = `${rejected} joueurs illisibles écartés.`;
+    parts.push(translateOr('import_rejected', fallback, { n: rejected }));
+  }
+  return parts.join(' ');
+}
+
 /** Boutons de la barre, branchés par délégation : sélecteur, puis action */
 const CLICK_ACTIONS = [
   ['#new-player-shortcut', tools => tools.goToNewPlayer()],
   ['#player-trash-toggle', tools => tools.toggleTrash()],
   ['.trash-restore-btn', (tools, button) => tools.restore(button)],
+  ['#export-players-btn', tools => tools.exportPlayers()],
+  ['#import-players-btn', tools => tools.pickImportFile()],
 ];
 
 export const PlayerTools = {
@@ -133,6 +244,7 @@ export const PlayerTools = {
       // En capture : Entrée s'arrête ici, avant la navigation clavier globale
       document.addEventListener('keydown', event => this._onFilterEnter(event), true);
       document.addEventListener('click', event => this._onClick(event));
+      document.addEventListener('change', event => this._onImportChosen(event));
     }
     this.refresh();
   },
@@ -147,9 +259,11 @@ export const PlayerTools = {
     const count = document.querySelectorAll('#user-list .user-container').length;
     const trash = restorableTrash();
     tools.hidden = count === 0 && trash.length === 0;
-    // Sans joueur, le formulaire « Nouveau joueur » suit déjà
-    const shortcut = document.getElementById('new-player-shortcut');
-    if (shortcut) shortcut.hidden = count === 0;
+    // Sans joueur, le formulaire « Nouveau joueur » suit déjà, et il n'y a rien à enregistrer
+    for (const id of ['new-player-shortcut', 'export-players-btn']) {
+      const button = document.getElementById(id);
+      if (button) button.hidden = count === 0;
+    }
     this.say('');
     this._showFilter(count >= FILTER_THRESHOLD);
     this.applyFilter();
@@ -301,6 +415,70 @@ export const PlayerTools = {
     if (!field) return;
     field.scrollIntoView?.({ block: 'center', behavior: preferredScrollBehavior() });
     field.focus({ preventScroll: true });
+  },
+
+  /**
+   * « Enregistrer les joueurs dans un fichier » : le fichier du jour se télécharge
+   */
+  exportPlayers() {
+    const backup = UserManager.exportPlayers();
+    const count = Object.keys(backup.players).length;
+    const prefix = translateOr('players_file_prefix', 'leapmultix-joueurs');
+    const file = backupFileName(prefix, new Date());
+    downloadJson(backup, file);
+    void requestPersistentStorage();
+    const fallback = `${count} joueurs enregistrés dans «\u00a0${file}\u00a0».`;
+    this._sayBackup(translateOr('export_done', fallback, { n: count, file }));
+  },
+
+  /**
+   * « Reprendre des joueurs d'un fichier » : le choix du fichier s'ouvre
+   */
+  pickImportFile() {
+    const input = document.getElementById('import-players-input');
+    if (!input) return;
+    // Le même fichier choisi deux fois de suite déclenche encore « change »
+    input.value = '';
+    input.click();
+  },
+
+  /**
+   * Relit un fichier de sauvegarde, ajoute ses joueurs sans écraser personne, et dit le bilan
+   * @param {File} file
+   * @returns {Promise<void>}
+   */
+  async importFile(file) {
+    const text = file.size > BACKUP_MAX_BYTES ? '' : await readFileText(file).catch(() => '');
+    const backup = readPlayersBackup(text);
+    if (backup.error) {
+      this._sayBackup(importErrorMessage(backup.error));
+      return;
+    }
+    const result = UserManager.importPlayers(backup.players);
+    if (result.error) {
+      this._sayBackup(importErrorMessage(result.error));
+      return;
+    }
+    if (result.added.length > 0) {
+      UserManager.refreshUserList();
+      void requestPersistentStorage();
+    }
+    this._sayBackup(importSummary(result, backup.rejected));
+  },
+
+  /**
+   * @param {string} text
+   * @private
+   */
+  _sayBackup(text) {
+    const message = document.getElementById('players-backup-message');
+    if (message) message.textContent = text;
+  },
+
+  /** @private */
+  _onImportChosen(event) {
+    const file = event.target?.id === 'import-players-input' ? event.target.files?.[0] : null;
+    if (file) void this.importFile(file);
   },
 
   /** @private */

@@ -28,6 +28,7 @@ import {
 } from './core/chrono-stats.js';
 import { profileOperationStats } from './core/profile-operation-stats.js';
 import { TRASH_DAYS, isTrashExpired, loadTrash, saveTrash } from './core/players-trash.js';
+import { buildPlayersBackup, requestPersistentStorage } from './core/players-backup.js';
 
 /**
  * Traduction avec texte de secours tant que la clé n'existe pas dans les fichiers de langue.
@@ -64,6 +65,8 @@ const DEFAULT_USER_DATA = Object.freeze({
 });
 
 const ensureArray = (value, fallback = []) => (Array.isArray(value) ? [...value] : [...fallback]);
+
+const isPlainObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 const ensureObject = (value, fallback = {}) =>
   value && typeof value === 'object' && !Array.isArray(value) ? { ...value } : { ...fallback };
@@ -103,6 +106,17 @@ const legacyArcadeReader = nickname => game => {
   const scores = Storage.get(legacyArcadeKey(game, nickname), []);
   return Array.isArray(scores) ? scores : [];
 };
+
+/**
+ * Profil à emporter dans une sauvegarde : un profil jamais rouvert depuis l'arrivée des
+ * statistiques par profil emporte sa copie de celles de l'appareil
+ * @param {*} data
+ * @returns {*}
+ */
+const withOwnOperationStats = data =>
+  isPlainObject(data) && !Object.hasOwn(data, 'operationStats')
+    ? { ...data, operationStats: profileOperationStats(data) }
+    : data;
 
 const normalizeUserData = (rawData, currentUser) => {
   // raw.x vaut exactement rawData?.x, quelle que soit la valeur reçue
@@ -173,6 +187,7 @@ export const UserManager = {
   // État interne
   _currentUser: null,
   _players: {},
+  _persistenceRequested: false,
 
   /**
    * Initialiser le gestionnaire d'utilisateurs
@@ -410,10 +425,22 @@ export const UserManager = {
     }
 
     this._cleanupDefaultScores();
+    this._requestPersistenceOnce();
     void goToSlide(1);
     this.emitUserChanged(userData);
 
     return userData;
+  },
+
+  /**
+   * Une fois par séance, au premier joueur choisi : le navigateur est prié de garder les
+   * joueurs (Firefox peut poser la question, Chrome décide seul)
+   * @private
+   */
+  _requestPersistenceOnce() {
+    if (this._persistenceRequested) return;
+    this._persistenceRequested = true;
+    void requestPersistentStorage();
   },
 
   /**
@@ -575,6 +602,46 @@ export const UserManager = {
       ...trash.map(entry => [entry.name, entry.data]),
     ];
     return new Set(profiles.flatMap(([name, data]) => [name, legacyArcadeOwner(data ?? {}, name)]));
+  },
+
+  /**
+   * Sauvegarde de tous les joueurs de la liste (pas la corbeille), pour un fichier
+   * @param {Date} [now]
+   * @returns {{format: string, version: number, exportedAt: string, players: Object}}
+   */
+  exportPlayers(now = new Date()) {
+    const players = Object.fromEntries(
+      Object.entries(this._players).map(([name, data]) => [name, withOwnOperationStats(data)])
+    );
+    return buildPlayersBackup(players, now);
+  },
+
+  /**
+   * Ajoute les joueurs d'une sauvegarde relue (core/players-backup.js). Un joueur déjà dans la
+   * liste n'est jamais écrasé : il est rendu dans « skipped ».
+   * @param {Array<[string, Object]>} entries - Prénom et profil, déjà vérifiés
+   * @returns {{added: string[], skipped: string[], error?: 'storage'}}
+   */
+  importPlayers(entries) {
+    const added = [];
+    const skipped = [];
+    for (const [name, data] of entries) {
+      if (Object.prototype.hasOwnProperty.call(this._players, name)) {
+        skipped.push(name);
+      } else {
+        // Venu d'ailleurs sans ses statistiques par calcul : il ne prend pas celles de l'appareil
+        const profile = Object.hasOwn(data, 'operationStats')
+          ? data
+          : { ...data, operationStats: {} };
+        this._addPlayer(name, profile);
+        added.push(name);
+      }
+    }
+    if (added.length > 0 && !this.savePlayers()) {
+      added.forEach(name => Reflect.deleteProperty(this._players, name));
+      return { added: [], skipped, error: 'storage' };
+    }
+    return { added, skipped };
   },
 
   /**
@@ -892,6 +959,8 @@ export const UserManager = {
 
     input.value = '';
     this._clearCreationMessage();
+    // Un joueur de plus à garder : le navigateur est prié de ne pas vider le stockage
+    void requestPersistentStorage();
 
     // Cacher le clavier virtuel après création
     const keyboardContainer = document.getElementById(`virtual-keyboard-${input.id}`);
