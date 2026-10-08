@@ -21,7 +21,7 @@
     />
     <meta
       name="keywords"
-      content="tables de multiplication, addition, soustraction, division, opérations arithmétiques, calcul mental, mathématiques CE1 CE2 CM1 CM2, apprentissage ludique, jeux éducatifs, PWA, gratuit, open source, RGPD"
+      content="tables de multiplication, addition, soustraction, division, opérations arithmétiques, calcul mental, mathématiques CP CE1 CE2 CM1 CM2, apprentissage ludique, jeux éducatifs, PWA, gratuit, open source, RGPD"
     />
     <meta name="author" content="Julien LS." />
     <!-- Voix enregistrée : deploy.sh y écrit « /voice/ » (variable VOICE_BASE) ; vide, aucune requête -->
@@ -203,7 +203,7 @@
             "name": "À quel âge est destiné LeapMultix ?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "LeapMultix s'adresse principalement aux enfants de 6 à 12 ans (CE1 à 6e), mais convient à tous ceux qui souhaitent apprendre ou réviser les tables de multiplication. Les 6 modes de jeu offrent différents niveaux de difficulté adaptés à chaque âge."
+              "text": "LeapMultix s'adresse principalement aux enfants de 6 à 12 ans (du CP à la 6e), mais convient à tous ceux qui souhaitent apprendre ou réviser les tables de multiplication. Les 6 modes de jeu offrent différents niveaux de difficulté adaptés à chaque âge."
             }
           },
           {
@@ -243,7 +243,7 @@
             "name": "Mes données sont-elles sécurisées ?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Oui, vos données restent à 100 % sur votre appareil. LeapMultix ne collecte aucune donnée personnelle et n'envoie rien à des serveurs tiers. Votre progression est stockée localement dans le navigateur (localStorage)."
+              "text": "Oui. La progression de votre enfant reste sur votre appareil : elle est enregistrée dans le navigateur (localStorage), sans compte ni adresse e-mail, et n'est jamais envoyée. Seule la mesure d'audience quitte l'appareil : Plausible Analytics, hébergé dans l'Union européenne et sans cookie, compte les pages vues et note quand une phrase est lue par la voix de l'appareil faute de clip enregistré. Comme toute requête sur Internet, elle transmet l'adresse IP et le type de navigateur, que Plausible ne conserve pas."
             }
           },
           {
@@ -371,7 +371,47 @@
             <p data-translate="user_selection_desc">Choisis ton joueur ou crée le tien.</p>
           </div>
 
-          <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList) -->
+          <!-- Poste partagé par une classe (js/components/playerTools.js) : filtre des
+               prénoms dès 10 joueurs, raccourci vers « Nouveau joueur », corbeille -->
+          <div class="user-list-tools" id="user-list-tools" hidden>
+            <div class="user-filter" id="user-filter" hidden>
+              <label for="user-filter-input" data-translate="user_filter_label"
+                >Cherche ton prénom</label
+              >
+              <input
+                type="search"
+                id="user-filter-input"
+                autocomplete="off"
+                spellcheck="false"
+                enterkeyhint="go"
+              />
+            </div>
+            <div class="user-list-actions">
+              <button type="button" class="btn btn-secondary" id="new-player-shortcut">
+                <span data-translate="new_player_title">Nouveau joueur</span>
+              </button>
+              <!-- Libellé « Corbeille (n) » et icône posés par playerTools.js -->
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="player-trash-toggle"
+                aria-expanded="false"
+                aria-controls="player-trash-panel"
+                hidden
+              >
+                <span class="player-trash-label">Corbeille</span>
+              </button>
+            </div>
+            <p class="user-filter-empty" id="user-filter-empty" hidden></p>
+            <div class="player-trash-panel" id="player-trash-panel" hidden>
+              <p class="player-trash-rule" id="player-trash-rule"></p>
+              <ul class="player-trash-list" id="player-trash-list"></ul>
+            </div>
+            <output class="user-tools-message" id="user-tools-message"></output>
+          </div>
+
+          <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList),
+               triées par prénom -->
           <div class="user-list" id="user-list"></div>
 
           <section class="new-player" aria-labelledby="new-player-title">
@@ -501,6 +541,45 @@
             <button type="button" class="btn" id="create-user-btn" data-translate="create_user">
               Créer
             </button>
+          </section>
+
+          <!-- Sauvegarde des joueurs dans un fichier, et reprise (js/components/playerTools.js) -->
+          <section class="players-backup" aria-labelledby="players-backup-title">
+            <h2 id="players-backup-title" data-translate="players_backup_title">
+              Sauvegarde des joueurs
+            </h2>
+            <p class="players-backup-hint" data-translate="players_backup_hint">
+              Les joueurs sont gardés seulement dans ce navigateur. Enregistre-les aussi dans un
+              fichier&nbsp;: tu pourras les reprendre si le navigateur est vidé, ou sur un autre
+              appareil.
+            </p>
+            <div class="players-backup-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="export-players-btn"
+                data-translate="export_players"
+              >
+                Enregistrer les joueurs dans un fichier
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="import-players-btn"
+                data-translate="import_players"
+              >
+                Reprendre des joueurs d’un fichier
+              </button>
+              <input
+                type="file"
+                id="import-players-input"
+                aria-labelledby="import-players-btn"
+                accept=".json,application/json"
+                tabindex="-1"
+                hidden
+              />
+            </div>
+            <output class="players-backup-message" id="players-backup-message"></output>
           </section>
 
           <!-- Présentation du projet : contenu indexable, visible sans JavaScript,
@@ -1339,7 +1418,9 @@
                   <li><strong>Partage&nbsp;:</strong> aucun (données non transmises)</li>
                   <li>
                     <strong>Durée&nbsp;:</strong> jusqu'à suppression par l'utilisateur (paramètres
-                    du navigateur)
+                    du navigateur). Un joueur supprimé dans le jeu reste 30&nbsp;jours dans la
+                    corbeille de «&nbsp;Qui joue&nbsp;?&nbsp;», d'où il peut être restauré, puis il
+                    est effacé.
                   </li>
                 </ul>
 
@@ -1347,8 +1428,9 @@
                 <ul>
                   <li>
                     <strong>Usage&nbsp;:</strong> mesures anonymisées de fréquentation (pages vues,
-                    trafic approximatif), sans cookies ni IP stockées (hachage journalier et sel
-                    éphémère)
+                    trafic approximatif) et un événement technique quand une phrase est lue par la
+                    voix de l'appareil faute de clip enregistré (cause, langue, voix choisie), sans
+                    cookies ni IP stockées (hachage journalier et sel éphémère)
                   </li>
                   <li>
                     <strong>Base légale&nbsp;:</strong> intérêt légitime (art. 6-1 f RGPD) pour
@@ -1469,8 +1551,8 @@
               </h3>
               <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
                 <p itemprop="text" data-translate="faq_a1">
-                  LeapMultix s'adresse principalement aux enfants de 6 à 12 ans (CE1 à 6e), mais
-                  convient à tous ceux qui souhaitent apprendre ou réviser les tables de
+                  LeapMultix s'adresse principalement aux enfants de 6 à 12 ans (du CP à la 6e),
+                  mais convient à tous ceux qui souhaitent apprendre ou réviser les tables de
                   multiplication. Les 6 modes de jeu offrent différents niveaux de difficulté
                   adaptés à chaque âge.
                 </p>
@@ -1568,9 +1650,13 @@
               </h3>
               <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
                 <p itemprop="text" data-translate="faq_a6">
-                  Oui, vos données restent à 100&nbsp;% sur votre appareil. LeapMultix ne collecte
-                  aucune donnée personnelle et n'envoie rien à des serveurs tiers. Votre progression
-                  est stockée localement dans le navigateur (localStorage).
+                  Oui. La progression de votre enfant reste sur votre appareil&nbsp;: elle est
+                  enregistrée dans le navigateur (localStorage), sans compte ni adresse e-mail, et
+                  n'est jamais envoyée. Seule la mesure d'audience quitte l'appareil&nbsp;:
+                  Plausible Analytics, hébergé dans l'Union européenne et sans cookie, compte les
+                  pages vues et note quand une phrase est lue par la voix de l'appareil faute de
+                  clip enregistré. Comme toute requête sur Internet, elle transmet l'adresse IP et
+                  le type de navigateur, que Plausible ne conserve pas.
                 </p>
               </div>
             </div>

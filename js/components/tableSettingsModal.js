@@ -6,7 +6,8 @@
  *
  * Ce qui s'affiche est ce qui s'applique : une table n'est barrée que si elle est
  * réellement retirée des jeux (interrupteur allumé). Toucher une table quand
- * l'interrupteur est coupé l'allume et retire cette table.
+ * l'interrupteur est coupé l'allume et retire cette table. La dernière table jouée ne
+ * se retire pas : une phrase sous les tables dit pourquoi.
  */
 
 import { TablePreferences } from '../core/tablePreferences.js';
@@ -18,7 +19,20 @@ import { createPathIcon } from './icons.js';
 import eventBus from '../core/eventBus.js';
 
 const TITLE_ID = 'table-settings-title';
+const MESSAGE_ID = 'table-settings-message';
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), input:not([disabled])';
+const TABLE_COUNT = 10;
+
+/**
+ * Cette table est-elle la dernière encore jouée ? Les jeux ont besoin d'au moins une
+ * table : sans elle, le premier jeu ouvert remettait le réglage à zéro sans rien dire.
+ * @param {Set<number>} exclusions - Tables retirées
+ * @param {number} table - Table touchée
+ * @returns {boolean}
+ */
+function isLastPlayedTable(exclusions, table) {
+  return !exclusions.has(table) && exclusions.size >= TABLE_COUNT - 1;
+}
 
 /**
  * Icône « fermer » dessinée (deux traits), masquée aux lecteurs d'écran :
@@ -65,6 +79,7 @@ export const TableSettingsModal = {
     content.appendChild(this.buildDescriptionSection());
     content.appendChild(this.buildToggleSection());
     content.appendChild(this.buildTablesGrid());
+    content.appendChild(this.buildMessageSection());
     content.appendChild(this.buildStatusSection());
     document.body.appendChild(modal);
 
@@ -209,6 +224,45 @@ export const TableSettingsModal = {
   },
 
   /**
+   * Phrase sous les tables quand l'enfant veut retirer la dernière : calme, à l'encre
+   * normale, comme le prénom manquant
+   * @returns {HTMLElement}
+   */
+  buildMessageSection() {
+    const message = createSafeElement('p', '', {
+      class: 'table-settings-message',
+      id: MESSAGE_ID,
+      role: 'alert',
+    });
+    message.dataset.translate = 'table_settings_keep_one';
+    message.hidden = true;
+    return message;
+  },
+
+  /**
+   * Dit pourquoi la table touchée reste jouée, et relie la phrase à sa touche
+   * @param {number} table
+   */
+  showKeepOneTable(table) {
+    const message = document.getElementById(MESSAGE_ID);
+    if (!message) return;
+    message.textContent = getTranslation('table_settings_keep_one');
+    message.hidden = false;
+    this.modalElement
+      ?.querySelector(`.table-btn[data-table="${table}"]`)
+      ?.setAttribute('aria-describedby', MESSAGE_ID);
+  },
+
+  /** Une table redevient jouable, ou la fenêtre se rouvre : la phrase s'efface */
+  clearKeepOneTable() {
+    const message = document.getElementById(MESSAGE_ID);
+    if (message) message.hidden = true;
+    this.modalElement?.querySelectorAll('.table-btn[aria-describedby]').forEach(btn => {
+      btn.removeAttribute('aria-describedby');
+    });
+  },
+
+  /**
    * Construit le bloc affichant les tables exclues
    * @returns {HTMLElement}
    */
@@ -333,6 +387,7 @@ export const TableSettingsModal = {
     }
 
     // Mettre à jour les boutons de tables et l'indicateur
+    this.clearKeepOneTable();
     this.renderTables();
     this.updateStatusDisplay();
   },
@@ -364,6 +419,7 @@ export const TableSettingsModal = {
     if (!currentUser) return;
 
     TablePreferences.setGlobalEnabled(currentUser, enabled);
+    this.clearKeepOneTable();
     this.renderTables();
     this.updateStatusDisplay();
     eventBus.emit('tablePreferences:changed');
@@ -379,6 +435,12 @@ export const TableSettingsModal = {
 
     const wasEnabled = TablePreferences.isGlobalEnabled(currentUser);
     const exclusions = new Set(wasEnabled ? TablePreferences.getGlobalExclusions(currentUser) : []);
+
+    if (isLastPlayedTable(exclusions, table)) {
+      this.showKeepOneTable(table);
+      return;
+    }
+    this.clearKeepOneTable();
 
     if (exclusions.has(table)) {
       exclusions.delete(table);

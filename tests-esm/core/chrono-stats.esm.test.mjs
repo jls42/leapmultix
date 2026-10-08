@@ -8,6 +8,7 @@ import {
   includedTablesFromExclusions,
   refillRevisionQueue,
   separateRevisionRepeats,
+  uniqueTables,
 } from '../../js/core/chrono-questions.js';
 import {
   tablesKey,
@@ -20,7 +21,6 @@ import {
   listPlayedChronoBuckets,
   parseBucketKey,
   tablesListLabel,
-  uniqueTables,
   saveChronoSession,
   rankedSessions,
   recentSessions,

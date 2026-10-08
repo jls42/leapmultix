@@ -190,7 +190,7 @@ describe('UserManager : profils des joueurs', () => {
       expect(UserManager.deleteUser('Personne')).toBe(false);
     });
 
-    test('ses anciens scores d’Arcade, rangés sous son surnom, partent avec lui', () => {
+    test('ses anciens scores d’Arcade, rangés sous son surnom, partent avec lui à la purge', () => {
       UserManager.createUser('Zoé', 'panda');
       UserManager.createUser('Léo', 'fox');
       UserManager._players['Zoé'].nickname = 'Zozo';
@@ -203,6 +203,9 @@ describe('UserManager : profils des joueurs', () => {
       ];
       for (const key of [...hers, 'arcadeScores_Léo']) localStorage.setItem(key, '[100]');
       UserManager.deleteUser('Zoé');
+      // Corbeille : rien n'est effacé avant la purge, 30 jours plus tard
+      for (const key of hers) expect([key, localStorage.getItem(key)]).toEqual([key, '[100]']);
+      UserManager.purgeExpiredTrash(Date.now() + 31 * 24 * 60 * 60 * 1000);
       for (const key of hers) expect([key, localStorage.getItem(key)]).toEqual([key, null]);
       expect(localStorage.getItem('arcadeScores_Léo')).toBe('[100]');
       localStorage.clear();
@@ -255,7 +258,7 @@ describe('UserManager : surnom partagé', () => {
     jest.restoreAllMocks();
   });
 
-  test('supprimer un profil garde les anciens scores d’un autre profil au même surnom', () => {
+  test('effacer un profil garde les anciens scores d’un autre profil au même surnom', () => {
     jest.spyOn(VideoManager, 'playCharacterIntro').mockImplementation(() => {});
     UserManager._players = {};
     UserManager.createUser('Zoé', 'panda');
@@ -263,6 +266,8 @@ describe('UserManager : surnom partagé', () => {
     UserManager._players['Zoé2'].nickname = 'Zoé';
     localStorage.setItem('arcadeScores_Zoé', '[300]');
     UserManager.deleteUser('Zoé');
+    UserManager.purgeExpiredTrash(Date.now() + 31 * 24 * 60 * 60 * 1000);
+    expect(localStorage.getItem('playersTrash')).toBe('[]');
     expect(localStorage.getItem('arcadeScores_Zoé')).toBe('[300]');
     localStorage.clear();
   });

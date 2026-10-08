@@ -42,6 +42,7 @@ import {
   takeNextRevisionFact,
   includedTablesFromExclusions,
   isFullTableSet,
+  uniqueTables,
 } from '../core/chrono-questions.js';
 import { getOperation } from '../core/operations/OperationRegistry.js';
 import { TablePreferences } from '../core/tablePreferences.js';
@@ -62,7 +63,6 @@ import {
   listPlayedChronoBuckets,
   parseBucketKey,
   tablesListLabel,
-  uniqueTables,
   rankedSessions,
   recentSessions,
   formatDuration,
@@ -264,7 +264,7 @@ function createBlockActions(buttons) {
  * Cible du focus (rendue, pas focalisée) après un ajout, « Tout effacer » ou le retrait du
  * dernier calcul : la ligne d’ajout
  */
-function focusAddRow(screen) {
+function addRowFocusTarget(screen) {
   return screen.querySelector('#chrono-add-a');
 }
 
@@ -318,11 +318,10 @@ export class ChronoMode extends GameMode {
     this.questionStartedAt = 0;
     this.typedValue = '';
     this.elapsedMs = 0;
-    this.timerInterval = null;
-    this._abandoned = false;
     this.lastSnapshot = null;
     this.resultsPane = 'session';
-    this.statsFocus = null;
+    // Classement ouvert dans « Mes temps » : ses tables, sa façon de répondre et sa clé
+    this.openBucket = null;
     this._onKeyDown = event => this.onPhysicalKey(event);
   }
 
@@ -337,7 +336,6 @@ export class ChronoMode extends GameMode {
     this.revisionTally = new Map();
     this.revisionOutcome = null;
     this.sessionOutcome = null;
-    this._abandoned = false;
   }
 
   async onStart() {
@@ -406,7 +404,8 @@ export class ChronoMode extends GameMode {
 
   confirmAbandon() {
     if (!globalThis.confirm?.(this.abandonQuestion())) return;
-    this.recordAbandon();
+    // stop() annule la question suivante et la fin : l'abandon n'enregistre rien (une course
+    // finie l'est déjà, dès sa dernière réponse)
     this.stop();
     void goToSlide(1);
   }
@@ -418,11 +417,6 @@ export class ChronoMode extends GameMode {
 
   abandonQuestion() {
     return getTranslation('confirm_abandon_chrono');
-  }
-
-  /** Une partie abandonnée n'enregistre ni temps ni liste à revoir */
-  recordAbandon() {
-    this._abandoned = true;
   }
 
   /**
@@ -631,7 +625,7 @@ export class ChronoMode extends GameMode {
     const { userData, store } = loadChronoStore(this.operator);
     if (!addManualBasketFact(store, a, b, this.operator)) return;
     persistChronoStore(userData);
-    this.screenTask(this.rebuildSetup(focusAddRow));
+    this.screenTask(this.rebuildSetup(addRowFocusTarget));
   }
 
   /** « Choisis les deux nombres. » sous la ligne d’ajout, relié aux listes à choisir */
@@ -666,7 +660,7 @@ export class ChronoMode extends GameMode {
     this.screenTask(
       this.rebuildSetup(screen => {
         const left = screen.querySelectorAll('.chrono-basket-remove');
-        return left[Math.min(index, left.length - 1)] ?? focusAddRow(screen);
+        return left[Math.min(index, left.length - 1)] ?? addRowFocusTarget(screen);
       })
     );
   }
@@ -716,7 +710,7 @@ export class ChronoMode extends GameMode {
       const { userData, store } = loadChronoStore(this.operator);
       emptyBasket(store);
       persistChronoStore(userData);
-      this.screenTask(this.rebuildSetup(focusAddRow));
+      this.screenTask(this.rebuildSetup(addRowFocusTarget));
     });
   }
 
@@ -727,7 +721,7 @@ export class ChronoMode extends GameMode {
    */
   async openStatsPick(returnKey = null) {
     this.phase = 'stats-pick';
-    this.statsFocus = null;
+    this.openBucket = null;
     await this.initializeUI();
     const rows = this.gameScreen?.querySelectorAll('[data-bucket-key]') ?? [];
     const row = [...rows].find(btn => btn.dataset.bucketKey === returnKey);
@@ -738,7 +732,7 @@ export class ChronoMode extends GameMode {
   async openStatsDetail(key) {
     const parsed = parseBucketKey(key, this.operator);
     if (!parsed) return;
-    this.statsFocus = { ...parsed, key };
+    this.openBucket = { ...parsed, key };
     this.phase = 'stats-detail';
     await this.initializeUI();
     this.focusPanelTitle();
@@ -866,14 +860,14 @@ export class ChronoMode extends GameMode {
     });
   }
 
+  /** Détail du classement ouvert (openStatsDetail le choisit avant de passer à cet écran) */
   buildStatsDetailPanel() {
-    const focus = this.statsFocus;
-    if (!focus) return this.buildStatsPickPanel();
+    const { tables, inputMode } = this.openBucket;
     const { store } = loadChronoStore(this.operator);
-    const bucket = findBucket(store, focus.tables, focus.inputMode, this.operator);
+    const bucket = findBucket(store, tables, inputMode, this.operator);
     const panel = createStatsPanel('chrono_stats_title');
     const averageMs = sessionAverageMs(bucket);
-    this.appendBucketSummary(panel, { ...focus, averageMs });
+    this.appendBucketSummary(panel, { tables, inputMode, averageMs });
     panel.appendChild(this.buildRanking(rankedSessions(bucket)));
     panel.appendChild(this.buildCurve(recentSessions(bucket), averageMs));
     panel.appendChild(
@@ -884,7 +878,7 @@ export class ChronoMode extends GameMode {
 
   bindStatsDetailPanel() {
     document.getElementById('chrono-stats-back-pick')?.addEventListener('click', () => {
-      this.screenTask(this.openStatsPick(this.statsFocus?.key));
+      this.screenTask(this.openStatsPick(this.openBucket?.key));
     });
   }
 
@@ -918,6 +912,11 @@ export class ChronoMode extends GameMode {
     return includedTablesFromExclusions(exclusions, enabled);
   }
 
+  /**
+   * Lance la course ou la révision. Une partie par instance (« Rejouer » en crée une autre) :
+   * start() vient de tout remettre à zéro (resetState), il reste à fixer ce qui sera joué.
+   * @param {boolean} revision
+   */
   async beginSession(revision) {
     if (this.phase !== 'setup') return;
     const { store } = loadChronoStore(this.operator);
@@ -928,22 +927,9 @@ export class ChronoMode extends GameMode {
       this.revisionTally = startRevisionTally(store.basket, this.operator);
     } else {
       this.selectedTables = this.tablesFromPreferences();
-      this.isRevision = false;
-      this.revisionBasket = [];
-      this.revisionTally = new Map();
     }
     this.phase = 'playing';
-    this.sessionFacts = [];
-    this.revisionQueue = [];
-    // Nouvelle partie : comptée à sa première réponse, enregistrée une fois
-    this._statsGameCounted = false;
-    this._resultsSaved = false;
     this.sessionStartedAt = clockNow();
-    this.endedAt = null;
-    this.elapsedMs = 0;
-    this._abandoned = false;
-    this.sessionOutcome = null;
-    this.revisionOutcome = null;
     await this.initializeUI();
     this.startElapsedTimer();
     this.generateQuestion();
@@ -954,17 +940,15 @@ export class ChronoMode extends GameMode {
     return (this.endedAt ?? clockNow()) - this.sessionStartedAt;
   }
 
+  /** Horloge de la barre d'information ; cleanup() l'arrête avec la partie (fin ou abandon) */
   startElapsedTimer() {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.intervals.delete(this.timerInterval);
-    }
     this.updateInfoBar();
-    this.timerInterval = setInterval(() => {
-      this.elapsedMs = this.sessionDurationMs();
-      this.updateInfoBar();
-    }, 250);
-    this.intervals.add(this.timerInterval);
+    this.intervals.add(
+      setInterval(() => {
+        this.elapsedMs = this.sessionDurationMs();
+        this.updateInfoBar();
+      }, 250)
+    );
   }
 
   /**
@@ -1215,8 +1199,8 @@ export class ChronoMode extends GameMode {
     const question = this.state.currentQuestion;
     const isCorrect = userAnswer === question.answer;
     this.sessionFacts.push({
-      a: question.a ?? question.table,
-      b: question.b ?? question.num,
+      a: question.a,
+      b: question.b,
       correct: isCorrect,
       ms: now - this.questionStartedAt,
     });
@@ -1293,15 +1277,9 @@ export class ChronoMode extends GameMode {
 
   onStop() {
     this.detachKeyboard();
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.intervals.delete(this.timerInterval);
-      this.timerInterval = null;
-    }
   }
 
   saveResults() {
-    if (this._abandoned) return;
     if (this.isRevision) {
       this.saveRevision();
       return;
@@ -1348,7 +1326,6 @@ export class ChronoMode extends GameMode {
       curve: recentSessions(bucket),
       tables: [...this.selectedTables],
       inputMode: this.inputMode,
-      basketSize: store.basket.length,
       avatar: gameState?.avatar,
     };
     this.mountResultsPane({ ready: shown });
@@ -1399,13 +1376,9 @@ export class ChronoMode extends GameMode {
     if (result.isRevision) {
       return {
         message: getTranslation('chrono_revision_mastered', {
-          n: result.revision?.mastered.length ?? 0,
+          n: result.revision.mastered.length,
         }),
-        details: [
-          getTranslation('chrono_revision_left', {
-            n: result.revision?.remaining ?? result.basketSize,
-          }),
-        ],
+        details: [getTranslation('chrono_revision_left', { n: result.revision.remaining })],
       };
     }
     const outcome = result.outcome;

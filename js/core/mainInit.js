@@ -8,6 +8,7 @@ import Dashboard from '../components/dashboard.js';
 import { Customization } from '../components/customization.js';
 import { InfoBar } from '../components/infoBar.js';
 import UserManager from '../userManager.js';
+import { PlayerTools } from '../components/playerTools.js';
 import { initThemes, applyHighContrastMode, applyFontSize } from './theme.js';
 import { refreshUserList } from './userUi.js';
 import {
@@ -179,6 +180,13 @@ function initUserSystems() {
   } catch (error) {
     logInitWarning('Initialisation UserManager impossible', error);
     refreshUserList();
+  }
+
+  // Filtre, raccourci « Nouveau joueur » de « Qui joue ? » (poste de classe)
+  try {
+    PlayerTools.init();
+  } catch (error) {
+    logInitWarning('Outils de « Qui joue ? » indisponibles', error);
   }
 }
 
