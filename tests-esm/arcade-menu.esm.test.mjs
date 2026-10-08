@@ -119,8 +119,16 @@ describe('Menu Arcade', () => {
       expect(icon.getAttribute('aria-hidden')).toBe('true');
     });
     expect(items[0].textContent.trim()).toBe('Texte keyboard');
-    const snake = [...screen.querySelectorAll('#multisnake-arcade-card .arcade-control')];
-    expect(snake.map(li => li.dataset.input)).toEqual(['keyboard', 'touch']);
+  });
+
+  test('MultiSnake et MultiMiam : le clic de la souris dirige aussi, et l’aide le dit', () => {
+    for (const card of ['#multisnake-arcade-card', '#multimiam-arcade-card']) {
+      const lines = [...screen.querySelectorAll(`${card} .arcade-control`)];
+      expect([card, lines.map(li => li.dataset.input)]).toEqual([
+        card,
+        ['keyboard', 'mouse', 'touch'],
+      ]);
+    }
   });
 
   test('un clic dans les réglages ne referme pas la tuile, un clic sur le titre oui', () => {

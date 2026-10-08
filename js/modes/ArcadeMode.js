@@ -43,6 +43,7 @@ const CONTROL_LINES = new Map([
     'multimiam',
     [
       ['keyboard', 'arcade.controls.multimiam.keyboard'],
+      ['mouse', 'arcade.controls.multimiam.mouse'],
       ['touch', 'arcade.controls.multimiam.touch'],
     ],
   ],
@@ -57,6 +58,7 @@ const CONTROL_LINES = new Map([
     'multisnake',
     [
       ['keyboard', 'arcade.controls.multisnake.keyboard'],
+      ['mouse', 'arcade.controls.multisnake.mouse'],
       ['touch', 'arcade.controls.multisnake.touch'],
     ],
   ],
