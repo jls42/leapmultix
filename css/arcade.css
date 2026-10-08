@@ -436,6 +436,10 @@
    pendant la partie, pas de vide entre le bandeau et le plateau. */
 
 .arcade-game-ui {
+  /* Sens de la zone, lu par js/arcade-common.js : la consigne et « Abandonner » sous le
+     plateau (column), ou à côté sur un téléphone tourné (row, plus bas) */
+  --arcade-stage-flow: column;
+
   /* Repère des pastilles de points posées sur le plateau */
   position: relative;
   display: flex;
@@ -453,6 +457,13 @@
 .arcade-game-ui > .btn {
   flex: none;
   margin: 0;
+}
+
+/* Téléphone : la marge de l'écran suffit, le plateau prend toute la largeur restante */
+@media (max-width: 480px) {
+  .arcade-game-ui {
+    padding-inline: 0;
+  }
 }
 
 /* Bandeau de partie : score, calcul, temps et vies, toujours visible */
@@ -585,6 +596,59 @@
     max-width: 280px;
     padding: var(--space-3);
     font-size: var(--text-md);
+  }
+}
+
+/* Téléphone tourné (écran bas et large) : le bandeau tient sur une ligne, le plateau
+   prend la largeur et toute la hauteur dessous, la consigne et « Abandonner » passent
+   dans une colonne à côté. js/arcade-common.js lit --arcade-stage-flow et retire cette
+   colonne, de largeur fixe, de la place du plateau. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .arcade-mult-display,
+  #arcade-mult-display {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-2);
+    padding-block: var(--space-1);
+  }
+
+  .arcade-mult-display > .arcade-mobile-top {
+    flex: 3 1 0;
+  }
+
+  .arcade-mult-display > .arcade-mobile-bottom {
+    flex: 2 1 0;
+    margin-top: 0;
+  }
+
+  .arcade-game-ui {
+    --arcade-stage-flow: row;
+
+    display: grid;
+    grid-template-columns: auto 14rem;
+    /* Consigne, « Abandonner », puis une rangée souple : pas de rangée vide qui ajouterait
+       un écart et rendrait la colonne plus haute que le plateau */
+    grid-template-rows: min-content min-content 1fr;
+    justify-content: center;
+    align-items: start;
+    gap: var(--space-3) var(--space-4);
+  }
+
+  .arcade-game-ui > canvas {
+    grid-row: 1 / -1;
+    grid-column: 1;
+  }
+
+  .arcade-game-ui > :not(canvas) {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  /* Consigne serrée : elle tient à côté du plateau, même sur un téléphone bas */
+  .arcade-game-ui > .game-instructions {
+    padding: var(--space-2) var(--space-3);
+    line-height: var(--leading-tight);
   }
 }
 

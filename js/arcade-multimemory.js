@@ -27,6 +27,7 @@ import {
   prepareArcadeStage,
   getArcadeCanvasBox,
   clientToCanvasPoint,
+  watchArcadeViewport,
 } from './arcade-common.js';
 import { getDifficultySettings } from './difficulty.js';
 import { TablePreferences } from './core/tablePreferences.js';
@@ -66,6 +67,52 @@ export function resolveMultimemoryTables(baseTables, exclusions) {
 
   // Cas extrême: exclusions couvrent tout; on retourne la base pour éviter un tableau vide
   return basePool;
+}
+
+// Proportions d'une carte (largeur / hauteur) : ni bande étroite, ni ruban
+const CARD_RATIO_MIN = 0.75;
+const CARD_RATIO_MAX = 4 / 3;
+// Colonnes essayées sur téléphone : toutes celles qui ne laissent pas de trou
+const MAX_MEMORY_COLUMNS = 8;
+
+/**
+ * Taille d'une carte dans une grille donnée : la place se partage entre les cartes et leurs
+ * écarts, puis la carte garde des proportions de carte.
+ * @param {number} cols
+ * @param {number} rows
+ * @param {{width: number, height: number}} box - Place du plateau (pixels)
+ * @param {number} margin - Écart entre les cartes et autour d'elles
+ * @returns {{width: number, height: number}}
+ */
+export function memoryCardSize(cols, rows, box, margin) {
+  let width = (box.width - margin * (cols + 1)) / cols;
+  let height = (box.height - margin * (rows + 1)) / rows;
+  width = Math.min(width, height * CARD_RATIO_MAX);
+  height = Math.min(height, width / CARD_RATIO_MIN);
+  return { width: Math.max(1, Math.floor(width)), height: Math.max(1, Math.floor(height)) };
+}
+
+/**
+ * Disposition des cartes qui donne les plus grandes cartes dans la place disponible
+ * (3 × 4 pour 12 cartes sur un téléphone en portrait, 6 × 2 sur un plateau bas et large).
+ * @param {number} count - Nombre de cartes
+ * @param {{width: number, height: number}} box
+ * @param {number} margin
+ * @param {number[]} [columns] - Colonnes permises (par défaut : toutes, sans trou)
+ * @returns {{cols: number, rows: number}}
+ */
+export function chooseMemoryGrid(count, box, margin, columns) {
+  const candidates =
+    columns ??
+    Array.from({ length: MAX_MEMORY_COLUMNS - 1 }, (_, i) => i + 2).filter(c => count % c === 0);
+  let best = null;
+  for (const cols of candidates) {
+    const rows = Math.ceil(count / cols);
+    const card = memoryCardSize(cols, rows, box, margin);
+    const area = card.width * card.height;
+    if (!best || area > best.area) best = { cols, rows, area };
+  }
+  return best ? { cols: best.cols, rows: best.rows } : { cols: 4, rows: Math.ceil(count / 4) };
 }
 
 /**
@@ -286,7 +333,7 @@ function handleAbandonClick() {
 }
 
 // Classe du jeu Memory
-class MemoryGame {
+export class MemoryGame {
   constructor(canvasId, options = {}) {
     this.canvasId = canvasId;
     this.canvas = document.getElementById(canvasId);
@@ -334,16 +381,10 @@ class MemoryGame {
     // Chargement des monstres via ESM (plus de dépendance à window.monsterSprites)
     this.monsterImages = monsterSprites;
 
-    // Dimensions et layout
-    this.resizeCanvas();
-    // Stocker la fonction liée pour pouvoir la retirer plus tard
-    this.boundResizeCanvas = this.resizeCanvas.bind(this);
-    (typeof globalThis !== 'undefined'
-      ? globalThis
-      : typeof window !== 'undefined'
-        ? window
-        : undefined
-    )?.addEventListener?.('resize', this.boundResizeCanvas);
+    // Écart entre les cartes ; la disposition (colonnes, rangées) se choisit au lancement
+    this.margin = this.isMobile ? 6 : 10;
+    this.cols = 0;
+    this.rows = 0;
 
     // Événements
     this.setupEventListeners();
@@ -367,52 +408,35 @@ class MemoryGame {
     return shuffleInPlace(array);
   }
 
-  // Redimensionne le canvas pour s'adapter à l'écran
+  // Disposition des cartes, choisie au lancement pour la place qui restera une fois la
+  // consigne partie : sur téléphone, celle qui donne les plus grandes cartes (3 × 4 en
+  // portrait) ; sur ordinateur, les 4 colonnes habituelles. Elle ne change plus ensuite :
+  // chaque carte garde sa place, que l'enfant mémorise.
+  layoutBoard() {
+    const box = getArcadeCanvasBox(this.canvas, { ignoreInstructions: true });
+    const columns = this.isMobile ? undefined : [4];
+    ({ cols: this.cols, rows: this.rows } = chooseMemoryGrid(
+      this.cards.length,
+      box,
+      this.margin,
+      columns
+    ));
+  }
+
+  // Taille des cartes pour la place actuelle (sous le bandeau, avec la consigne et
+  // « Abandonner ») : à chaque changement d'écran, les cartes suivent sans changer de place
   resizeCanvas() {
-    // Vérifier que le canvas existe toujours avant d'essayer d'y accéder
-    if (!this.canvas || !document.body.contains(this.canvas)) {
-      // Canvas supprimé, désactiver l'écouteur d'événement resize
-      (typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined
-      )?.removeEventListener?.('resize', this.boundResizeCanvas);
-      return;
-    }
+    // Canevas retiré (fin de partie) ou disposition pas encore choisie : rien à dessiner
+    if (!this.canvas?.isConnected || !this.cols) return;
 
-    const container = this.canvas.parentElement;
-    if (!container) return; // Protection supplémentaire
+    const card = memoryCardSize(this.cols, this.rows, getArcadeCanvasBox(this.canvas), this.margin);
+    this.canvas.width = this.cols * card.width + this.margin * (this.cols + 1);
+    this.canvas.height = this.rows * card.height + this.margin * (this.rows + 1);
+    this.canvas.style.width = `${this.canvas.width}px`;
+    this.canvas.style.height = `${this.canvas.height}px`;
 
-    // Place réelle des cartes : sous le bandeau, avec la consigne et « Abandonner »
-    const box = getArcadeCanvasBox(this.canvas);
-    const containerWidth = box.width;
-    const availableHeight = box.height;
-
-    // Garder un ratio d'affichage correct
-    const aspectRatio = this.isMobile ? 0.75 : 1.33; // hauteur / largeur
-
-    let canvasWidth = containerWidth;
-    let canvasHeight = canvasWidth * aspectRatio;
-    if (canvasHeight > availableHeight) {
-      canvasHeight = availableHeight;
-      canvasWidth = canvasHeight / aspectRatio;
-    }
-    canvasWidth = Math.floor(canvasWidth);
-    canvasHeight = Math.floor(canvasHeight);
-
-    this.canvas.width = canvasWidth;
-    this.canvas.height = canvasHeight;
-    this.canvas.style.width = `${canvasWidth}px`;
-    this.canvas.style.height = `${canvasHeight}px`;
-
-    // Recalculer les dimensions des cartes
-    if (this.cards.length > 0) {
-      this.calculateCardDimensions();
-      this.positionCards();
-    }
-
-    // Redessiner le jeu
+    this.calculateCardDimensions();
+    this.positionCards();
     this.draw();
   }
 
@@ -469,23 +493,20 @@ class MemoryGame {
       this.canvas.addEventListener('mousemove', this.boundHandleMouseMove);
     }
 
-    // Redimensionnement
-    this.boundResizeCanvas = this.resizeCanvas.bind(this);
-    (typeof globalThis !== 'undefined'
-      ? globalThis
-      : typeof window !== 'undefined'
-        ? window
-        : undefined
-    )?.addEventListener?.('resize', this.boundResizeCanvas);
+    // L'écran change (consigne partie, rotation, plein écran) : les cartes suivent ; tant
+    // qu'aucune carte n'a été vue, leur disposition aussi
+    this._stopWatchingViewport = watchArcadeViewport(this.canvas, () => {
+      if (!this.cardsSeen) this.layoutBoard();
+      this.resizeCanvas();
+    });
   }
 
   // Initialise le jeu
   start() {
     this.createCards();
-    this.calculateCardDimensions();
-    this.positionCards();
+    this.layoutBoard();
     this.shuffleCards();
-    this.draw();
+    this.resizeCanvas();
 
     // Démarrer la boucle de jeu (la consigne est déjà affichée par le lanceur)
     this.gameLoop();
@@ -580,24 +601,12 @@ class MemoryGame {
     return new Set(array).size;
   }
 
-  // Calcule les dimensions des cartes selon le nombre de paires
+  // Calcule les dimensions des cartes dans la disposition choisie (layoutBoard)
   calculateCardDimensions() {
-    const cardCount = this.cards.length;
-    // Fixed 4 columns, dynamic rows
-    const cols = 4;
-    const rows = Math.ceil(cardCount / cols);
-
-    // Ajouter une marge entre les cartes
-    const margin = this.isMobile ? 6 : 10;
-    const availableWidth = this.canvas.width - margin * (cols + 1);
-    const availableHeight = this.canvas.height - margin * (rows + 1);
-
-    this.cardWidth = availableWidth / cols;
-    this.cardHeight = availableHeight / rows;
-
-    this.cols = cols;
-    this.rows = rows;
-    this.margin = margin;
+    const availableWidth = this.canvas.width - this.margin * (this.cols + 1);
+    const availableHeight = this.canvas.height - this.margin * (this.rows + 1);
+    this.cardWidth = availableWidth / this.cols;
+    this.cardHeight = availableHeight / this.rows;
   }
 
   // Positionne les cartes sur la grille (centré) avec meilleure détection mobile
@@ -627,19 +636,10 @@ class MemoryGame {
     }
   }
 
-  // Mélange les cartes
+  // Mélange les cartes : leur ordre donne leur place dans la grille (positionCards)
   shuffleCards() {
     this.shuffleArray(this.cards);
-
-    // Repositionner les cartes mélangées
-    for (let i = 0; i < this.cards.length; i++) {
-      const col = i % this.cols;
-      const row = Math.floor(i / this.cols);
-
-      this.cards[i].x = this.margin + col * (this.cardWidth + this.margin);
-
-      this.cards[i].y = this.margin + row * (this.cardHeight + this.margin);
-    }
+    if (this.cardWidth) this.positionCards();
   }
 
   // Gère le clic sur une carte
@@ -967,6 +967,8 @@ class MemoryGame {
   }
 
   drawCardFront(card, cardX, cardY, cardWidth, cardHeight) {
+    // Une carte montrée : sa place compte désormais pour l'enfant, la disposition est fixée
+    this.cardsSeen = true;
     this.ctx.fillStyle = '#FFFFFF';
     let fontSize = Math.floor(card.type === 'operation' ? cardHeight / 3 : cardHeight / 2.5);
     this.ctx.font = getCanvasFont(fontSize);
@@ -1052,16 +1054,7 @@ class MemoryGame {
       }
     }
 
-    if (this.boundResizeCanvas) {
-      const globalObject =
-        typeof globalThis !== 'undefined'
-          ? globalThis
-          : typeof window !== 'undefined'
-            ? window
-            : undefined;
-      globalObject?.removeEventListener?.('resize', this.boundResizeCanvas);
-      this.boundResizeCanvas = null;
-    }
+    if (this._stopWatchingViewport) this._stopWatchingViewport();
   }
 
   stopAudioResources() {

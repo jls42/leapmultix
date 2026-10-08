@@ -13,6 +13,16 @@ const LEGACY_STAGE_SELECTOR = '.arcade-game-container';
 // Minuteries de la consigne en cours, pour qu'un nouvel affichage ne soit pas masqué par l'ancien
 const instructionTimers = new WeakMap();
 
+/**
+ * Événement de la zone de jeu quand la place du plateau change sans que l'écran change
+ * (la consigne apparaît ou s'en va) : le plateau se recalcule (watchArcadeViewport).
+ */
+export const STAGE_CHANGE_EVENT = 'arcade:stagechange';
+
+function notifyStageChange(stage) {
+  stage?.dispatchEvent(new Event(STAGE_CHANGE_EVENT));
+}
+
 /** Taille minimale des nombres à lire dans les jeux (DESIGN.md : 16 px au moins) */
 export const MIN_CANVAS_TEXT_PX = 16;
 
@@ -77,10 +87,13 @@ export function showGameInstructions(canvas, message, tone = 'neutral', duration
     const hideTimer = setTimeout(() => {
       instructionsElement.hidden = true;
       instructionTimers.delete(instructionsElement);
+      // Sa place revient au plateau
+      notifyStageChange(gameContainer);
     }, INSTRUCTIONS_FADE_MS);
     instructionTimers.set(instructionsElement, [hideTimer]);
   }, duration);
   instructionTimers.set(instructionsElement, [fadeTimer]);
+  notifyStageChange(gameContainer);
 
   return instructionsElement;
 }
@@ -91,8 +104,18 @@ export function showGameInstructions(canvas, message, tone = 'neutral', duration
    Zone de jeu : haut de page et place du canevas
    - Au lancement, la page revient en haut (le menu a pu être défilé).
    - Le canevas est dimensionné pour tenir dans l'écran, sous le bandeau, avec la
-     consigne et « Abandonner » : la page ne déborde plus.
+     consigne et « Abandonner » (à côté du plateau sur un téléphone tourné) : la page
+     ne déborde plus.
+   - Chaque jeu choisit sa grille au lancement, pour la place qui restera une fois la
+     consigne partie ; ensuite, seul l'affichage suit l'écran (rotation, plein écran,
+     consigne qui part) : la partie ne change pas.
    ===================== */
+
+// Éléments posés par-dessus le jeu (messages, points) : ils ne prennent pas de place
+const OVERLAY_POSITIONS = new Set(['absolute', 'fixed']);
+// Sens de la zone de jeu, donné par css/arcade.css : « row » quand la consigne et
+// « Abandonner » passent à côté du plateau (téléphone tourné)
+const STAGE_FLOW_PROPERTY = '--arcade-stage-flow';
 
 function toPx(value) {
   const n = Number.parseFloat(value);
@@ -197,17 +220,29 @@ export function prepareArcadeStage(canvas) {
 }
 
 /**
+ * Un enfant de la zone de jeu prend-il de la place sous le plateau ?
+ * @param {Element} el
+ * @param {HTMLCanvasElement} canvas
+ * @param {boolean} ignoreInstructions - La consigne va partir : sa place compte pour le plateau
+ * @returns {boolean}
+ */
+function takesStageSpace(el, canvas, ignoreInstructions) {
+  if (el === canvas || el.hidden) return false;
+  return !(ignoreInstructions && el.classList.contains('game-instructions'));
+}
+
+/**
  * Hauteur occupée dans la zone de jeu par tout ce qui n'est pas le canevas
  * (consigne, « Abandonner »), écarts compris. Les messages posés par-dessus
  * (position absolue) ne comptent pas.
  */
-function measureStageSiblings(stage, canvas, gap) {
+function measureStageSiblings(stage, canvas, gap, ignoreInstructions) {
   let total = 0;
   for (const el of stage.children) {
-    if (el === canvas || el.hidden) continue;
+    if (!takesStageSpace(el, canvas, ignoreInstructions)) continue;
     const style = readStyle(el);
     if (!style) continue;
-    if (style.display === 'none' || ['absolute', 'fixed'].includes(style.position)) continue;
+    if (style.display === 'none' || OVERLAY_POSITIONS.has(style.position)) continue;
     const margin = edges(style, 'margin');
     total += el.getBoundingClientRect().height + margin.top + margin.bottom + gap;
   }
@@ -215,12 +250,29 @@ function measureStageSiblings(stage, canvas, gap) {
 }
 
 /**
- * Espace réservé sous la zone de jeu (marges et rembourrages des conteneurs).
+ * Largeur des colonnes posées à côté du plateau (grille de css/arcade.css sur un
+ * téléphone tourné), écarts compris : toutes les colonnes sauf la première.
+ * @param {CSSStyleDeclaration|null} stageStyle
+ * @returns {number}
+ */
+function measureSideColumns(stageStyle) {
+  const tracks = String(stageStyle?.gridTemplateColumns || '')
+    .split(/\s+/)
+    .map(toPx)
+    .filter(size => size > 0);
+  const gap = toPx(stageStyle?.columnGap);
+  return tracks.slice(1).reduce((sum, size) => sum + size + gap, 0);
+}
+
+/**
+ * Espace réservé sous la zone de jeu (marges et rembourrages des conteneurs). En plein
+ * écran, les conteneurs restés dans la page ne comptent plus.
  */
 function measureTrailingSpace(stage, stageStyle) {
   let trailing = edges(stageStyle, 'margin').bottom + edges(stageStyle, 'padding').bottom;
+  const fullscreenRoot = document.fullscreenElement;
   for (const el of [stage.parentElement, stage.closest('.slide')]) {
-    if (!el || el === stage) continue;
+    if (!el || el === stage || (fullscreenRoot && !fullscreenRoot.contains(el))) continue;
     const style = readStyle(el);
     trailing += edges(style, 'padding').bottom + edges(style, 'border').bottom;
   }
@@ -228,14 +280,80 @@ function measureTrailingSpace(stage, stageStyle) {
 }
 
 /**
- * Place disponible pour le dessin du canevas : largeur de la zone de jeu, hauteur de
- * l'écran sous le haut de la zone, moins la consigne, « Abandonner » et les marges.
+ * Cadre du canevas : bordure et marge intérieure. Pas ses marges extérieures : elles ne
+ * servent qu'à le centrer (« auto »), et le navigateur les rend en pixels dès que le plateau
+ * est plus étroit que la zone ; les compter l'empêcherait de regrandir.
+ */
+function canvasFrame(canvas) {
+  const style = readStyle(canvas);
+  return sumEdges(edges(style, 'border'), edges(style, 'padding'));
+}
+
+/**
+ * Sens de la zone de jeu donné par la feuille de style (« row » sur un téléphone tourné).
+ * @param {CSSStyleDeclaration|null} stageStyle
+ * @returns {string}
+ */
+function stageFlow(stageStyle) {
+  if (typeof stageStyle?.getPropertyValue !== 'function') return '';
+  return String(stageStyle.getPropertyValue(STAGE_FLOW_PROPERTY)).trim();
+}
+
+/**
+ * Défilement de la page et des conteneurs du jeu au-dessus de la zone : la partie se joue
+ * page en haut, sa place se mesure donc comme si rien n'avait défilé (sinon un plateau
+ * recalculé page défilée grandirait, et entretiendrait lui-même le défilement).
+ * @param {HTMLElement} stage
+ * @returns {number}
+ */
+function scrolledAbove(stage) {
+  let offset = 0;
+  for (let el = stage.parentElement; el; el = el.parentElement) offset += el.scrollTop || 0;
+  return offset;
+}
+
+/**
+ * Largeur intérieure de la zone de jeu et haut de son contenu, page en haut.
+ * @returns {{width: number, top: number}}
+ */
+function stageContent(stage, stageStyle, view) {
+  const padding = edges(stageStyle, 'padding');
+  const top = stage.getBoundingClientRect().top + scrolledAbove(stage);
+  return {
+    width: (stage.clientWidth || view.width) - padding.left - padding.right,
+    top: top + edges(stageStyle, 'border').top + padding.top,
+  };
+}
+
+/**
+ * Place prise par la consigne et « Abandonner » : à côté du plateau sur un téléphone
+ * tourné (--arcade-stage-flow: row), dessous sinon.
+ * @returns {{beside: number, below: number}}
+ */
+function measureStageOccupancy(stage, stageStyle, canvas, ignoreInstructions) {
+  if (stageFlow(stageStyle) === 'row') {
+    return { beside: measureSideColumns(stageStyle), below: 0 };
+  }
+  const gap = toPx(stageStyle?.rowGap);
+  return { beside: 0, below: measureStageSiblings(stage, canvas, gap, ignoreInstructions) };
+}
+
+/**
+ * Place disponible pour le dessin du canevas : largeur de la zone de jeu (moins la
+ * colonne de côté sur un téléphone tourné), hauteur de l'écran sous le haut de la zone,
+ * moins la consigne, « Abandonner » et les marges.
  * À appeler après prepareArcadeStage() et après l'affichage de la consigne.
  * @param {HTMLCanvasElement} canvas
- * @param {{minWidth?: number, minHeight?: number}} [options]
+ * @param {{minWidth?: number, minHeight?: number, ignoreInstructions?: boolean}} [options]
+ *   minHeight : plancher (160 px, encore jouable) : plus bas, la page défilerait sur un
+ *   téléphone tourné, barre du haut comprise ;
+ *   ignoreInstructions : la place qui restera une fois la consigne partie (choix de la grille)
  * @returns {{width: number, height: number}} En pixels CSS, cadre du canevas exclu
  */
-export function getArcadeCanvasBox(canvas, { minWidth = 200, minHeight = 220 } = {}) {
+export function getArcadeCanvasBox(
+  canvas,
+  { minWidth = 200, minHeight = 160, ignoreInstructions = false } = {}
+) {
   const view = getViewportSize();
   const stage = findStage(canvas) || canvas?.parentElement;
   if (!stage || !canvas) {
@@ -245,24 +363,88 @@ export function getArcadeCanvasBox(canvas, { minWidth = 200, minHeight = 220 } =
     };
   }
   const stageStyle = readStyle(stage);
-  const canvasStyle = readStyle(canvas);
-  const stagePadding = edges(stageStyle, 'padding');
-  // Cadre du canevas : bordure, marge intérieure et extérieure
-  const frame = sumEdges(
-    edges(canvasStyle, 'border'),
-    edges(canvasStyle, 'padding'),
-    edges(canvasStyle, 'margin')
-  );
-
-  const innerWidth = (stage.clientWidth || view.width) - stagePadding.left - stagePadding.right;
-  const contentTop =
-    stage.getBoundingClientRect().top + edges(stageStyle, 'border').top + stagePadding.top;
-  const below = measureStageSiblings(stage, canvas, toPx(stageStyle?.rowGap));
+  const frame = canvasFrame(canvas);
+  const content = stageContent(stage, stageStyle, view);
+  const { beside, below } = measureStageOccupancy(stage, stageStyle, canvas, ignoreInstructions);
   const trailing = measureTrailingSpace(stage, stageStyle);
 
-  const width = Math.floor(innerWidth - frame.x);
-  const height = Math.floor(view.height - contentTop - below - trailing - frame.y);
+  const width = Math.floor(content.width - beside - frame.x);
+  const height = Math.floor(view.height - content.top - below - trailing - frame.y);
   return { width: Math.max(minWidth, width), height: Math.max(minHeight, height) };
+}
+
+/**
+ * Affiche le canevas en entier dans la place donnée, sans changer sa taille interne
+ * (la partie, ses positions et ses vitesses restent les mêmes) ni ses proportions.
+ * @param {HTMLCanvasElement} canvas
+ * @param {{width: number, height: number}} box - Place (pixels CSS, cadre exclu)
+ * @returns {number} Pixels CSS affichés par pixel interne
+ */
+export function fitArcadeCanvas(canvas, box) {
+  const scale = Math.min(box.width / canvas.width, box.height / canvas.height);
+  canvas.style.width = `${Math.max(1, Math.floor(canvas.width * scale))}px`;
+  canvas.style.height = `${Math.max(1, Math.floor(canvas.height * scale))}px`;
+  // L'échelle d'affichage a changé : les nombres se recalculent dès la prochaine image
+  displayScaleCache.delete(canvas);
+  return scale;
+}
+
+/**
+ * Appelle `onChange` quand la place du plateau peut avoir changé : fenêtre redimensionnée
+ * ou tournée, plein écran, consigne qui apparaît ou s'en va, bandeau qui change de hauteur.
+ * Une seule fois par image ; la surveillance s'arrête d'elle-même quand le jeu a quitté la
+ * page.
+ * @param {HTMLCanvasElement} canvas
+ * @param {() => void} onChange
+ * @returns {() => void} Arrêt de la surveillance
+ */
+export function watchArcadeViewport(canvas, onChange) {
+  const cleanups = [];
+  let frame = 0;
+  const stop = () => {
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+    while (cleanups.length) cleanups.pop()();
+  };
+  const run = () => {
+    frame = 0;
+    if (canvas.isConnected) onChange();
+    else stop();
+  };
+  const schedule = () => {
+    if (!canvas.isConnected) stop();
+    else if (!frame) frame = requestAnimationFrame(run);
+  };
+  const stage = findStage(canvas);
+  const targets = [
+    [globalThis, 'resize'],
+    [globalThis.visualViewport, 'resize'],
+    [document, 'fullscreenchange'],
+    [stage, STAGE_CHANGE_EVENT],
+  ];
+  for (const [target, type] of targets) {
+    if (!target) continue;
+    target.addEventListener(type, schedule);
+    cleanups.push(() => target.removeEventListener(type, schedule));
+  }
+  watchBannerSize(stage, schedule, cleanups);
+  return stop;
+}
+
+/**
+ * Le bandeau au-dessus du plateau change de hauteur (calcul affiché, police chargée,
+ * langue) : la place du plateau aussi. Seul le bandeau est observé : sa taille ne dépend
+ * pas du plateau, la mise à l'échelle ne peut pas relancer l'observation en boucle.
+ * @param {HTMLElement|null} stage
+ * @param {() => void} schedule
+ * @param {Array<() => void>} cleanups
+ */
+function watchBannerSize(stage, schedule, cleanups) {
+  const banner = stage?.parentElement?.querySelector('.arcade-mult-display');
+  if (!banner || typeof ResizeObserver !== 'function') return;
+  const observer = new ResizeObserver(schedule);
+  observer.observe(banner);
+  cleanups.push(() => observer.disconnect());
 }
 
 /* =====================

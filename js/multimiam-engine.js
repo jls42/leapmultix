@@ -13,6 +13,7 @@ import { showArcadePenalty } from './arcade-points.js';
 import { chance, pickRandom } from './core/random.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { noteArcadePlay } from './arcade-session.js';
+import { mazeToScreen } from './multimiam-layout.js';
 
 /**
  * Invincibilité après une vie perdue : le personnage clignote, puis redevient normal.
@@ -35,7 +36,9 @@ function updateInvincibility(ctx) {
  * @returns {{x: number, y: number}}
  */
 function cellPoint(ctx, cell) {
-  return { x: (cell.x + 0.5) * ctx.cellSize, y: cell.y * ctx.cellSize };
+  // Case vue à l'écran : le labyrinthe est dessiné transposé en portrait
+  const screen = mazeToScreen(cell.x, cell.y, ctx.transposed);
+  return { x: (screen.x + 0.5) * ctx.cellSize, y: screen.y * ctx.cellSize };
 }
 
 /**

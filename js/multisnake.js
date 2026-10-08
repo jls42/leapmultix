@@ -10,6 +10,7 @@ import {
   getArcadeCanvasBox,
   readableCanvasFontSize,
   canvasToClientPoint,
+  watchArcadeViewport,
 } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
 import { recordOperationResult } from './core/operation-stats.js';
@@ -31,6 +32,30 @@ const SWIPE_VECTORS = {
 };
 // Rayon (pixels CSS) autour de la tête où un toucher n'indique aucune direction
 const TAP_DEAD_ZONE_PX = 30;
+// Plateau de téléphone : des cases d'environ 30 px (le doigt, le nombre de la pomme), de 8 à
+// 16 sur le petit côté et jusqu'à 22 sur le grand : plus haut que large en portrait
+const MOBILE_CELL_PX = 30;
+const MOBILE_GRID_MIN = 8;
+const MOBILE_GRID_SHORT_MAX = 16;
+const MOBILE_GRID_LONG_MAX = 22;
+// Plus petite case quand l'écran rétrécit en pleine partie (la grille, elle, ne change pas)
+const MIN_CELL_PX = 8;
+
+/**
+ * Grille du plateau sur téléphone, choisie au lancement pour la place disponible :
+ * plus haute que large en portrait, plus large que haute en paysage.
+ * @param {{width: number, height: number}} box - Place du plateau (pixels CSS)
+ * @returns {{cols: number, rows: number}}
+ */
+export function chooseMobileSnakeGrid(box) {
+  const portrait = box.height >= box.width;
+  const cells = (size, max) =>
+    Math.max(MOBILE_GRID_MIN, Math.min(max, Math.floor(size / MOBILE_CELL_PX)));
+  return {
+    cols: cells(box.width, portrait ? MOBILE_GRID_SHORT_MAX : MOBILE_GRID_LONG_MAX),
+    rows: cells(box.height, portrait ? MOBILE_GRID_LONG_MAX : MOBILE_GRID_SHORT_MAX),
+  };
+}
 
 class SnakeGame {
   constructor(canvasId, mode = 'operation', options = {}) {
@@ -103,7 +128,8 @@ class SnakeGame {
     // tient dans l'écran sans défilement
     this.showInstructions();
 
-    // Appliquer le redimensionnement du canvas
+    // Grille choisie une fois pour toutes, puis taille des cases pour la place actuelle
+    this.layoutBoard();
     this.resizeCanvas();
 
     // Suivi des écouteurs pour nettoyage propre
@@ -112,19 +138,14 @@ class SnakeGame {
     // Initialiser les contrôles
     this.initControls();
 
-    // Redimensionnement
+    // L'écran change (consigne partie, rotation, plein écran) : les cases suivent, et la
+    // grille aussi tant que rien n'est joué
     this._onResize = () => {
       if (this._disposed) return;
-      this.resizeCanvas();
+      if (!this.relayoutUnplayedBoard()) this.resizeCanvas();
       this.draw();
     };
-    globalThis.addEventListener?.('resize', this._onResize);
-    this.eventListeners.push({
-      element: globalThis,
-      type: 'resize',
-      callback: this._onResize,
-      options: false,
-    });
+    this._stopWatchingViewport = watchArcadeViewport(this.canvas, this._onResize);
 
     // Mapping des sprites pour chaque direction disponible
     this.multisnakeSprites = {
@@ -165,7 +186,44 @@ class SnakeGame {
     this.appleTexture.src = 'assets/images/arcade/snake_apple_128x128.png';
   }
 
-  // Redimensionner le canvas
+  // Grille du plateau, choisie au lancement pour la place qui restera une fois la consigne
+  // partie : sur téléphone, plus haute que large en portrait ; sur ordinateur, 14 × 11.
+  // Elle ne change plus pendant la partie (le serpent et les pommes y restent).
+  layoutBoard() {
+    if (!this.isMobile) {
+      this.cols = this.baseCols;
+      this.rows = this.baseRows;
+      return;
+    }
+    const box = getArcadeCanvasBox(this.canvas, { ignoreInstructions: true });
+    ({ cols: this.cols, rows: this.rows } = chooseMobileSnakeGrid(box));
+  }
+
+  // Rien n'est encore joué : aucune pomme mangée, aucune vie perdue
+  isUnplayed() {
+    const allApples = this.numberPositions.length === this.answers.length;
+    return this.score === 0 && this.lives === 3 && this.multisnake.length === 2 && allApples;
+  }
+
+  /**
+   * Plein écran juste après le lancement, téléphone tourné avant de jouer : tant que rien
+   * n'est joué, la grille se refait pour la nouvelle place (le serpent repart du milieu, les
+   * pommes se replacent, le calcul reste). L'enfant ne perd rien.
+   * @returns {boolean} Vrai si la grille a changé
+   */
+  relayoutUnplayedBoard() {
+    if (!this.isUnplayed()) return false;
+    const { cols, rows } = this;
+    this.layoutBoard();
+    if (this.cols === cols && this.rows === rows) return false;
+    this.resizeCanvas();
+    this.initializeSnakePosition();
+    this.placeNumbers();
+    return true;
+  }
+
+  // Taille des cases pour la place actuelle (sous le bandeau, avec la consigne et
+  // « Abandonner ») : à chaque changement d'écran, seul l'affichage suit
   resizeCanvas() {
     // Éviter tout traitement après nettoyage
     if (this._disposed) return;
@@ -182,48 +240,22 @@ class SnakeGame {
       return;
     }
 
-    // Place réelle du plateau : sous le bandeau, avec la consigne et « Abandonner »
     const box = getArcadeCanvasBox(this.canvas);
-    const containerWidth = Math.max(200, box.width);
-    const containerHeight = Math.max(200, box.height);
-
-    // Adapter la grille à la taille du canvas
-    if (this.isMobile) {
-      this.cols = Math.max(8, Math.min(16, Math.floor(containerWidth / 30)));
-      this.rows = Math.max(8, Math.min(16, Math.floor(containerHeight / 30)));
-    } else {
-      this.cols = this.baseCols;
-      this.rows = this.baseRows;
-    }
-
     this.cellSize = Math.max(
-      20,
-      Math.floor(Math.min(containerWidth / this.cols, containerHeight / this.rows))
+      MIN_CELL_PX,
+      Math.floor(Math.min(box.width / this.cols, box.height / this.rows))
     );
 
-    // Ajuster la taille du canvas pour qu'elle corresponde exactement à la grille
+    // Le canevas correspond exactement à la grille, affiché à sa taille réelle
     this.canvas.width = this.cols * this.cellSize;
     this.canvas.height = this.rows * this.cellSize;
-
-    // Force aspect-ratio carré pour éviter déformation sur mobile
+    this.canvas.style.width = this.canvas.width + 'px';
+    this.canvas.style.height = this.canvas.height + 'px';
     if (this.isMobile) {
-      const size = Math.min(this.canvas.width, this.canvas.height);
-      this.canvas.width = size;
-      this.canvas.height = size;
-      // Recalculer les dimensions de grille pour le canvas carré
-      this.cols = Math.floor(size / this.cellSize);
-      this.rows = Math.floor(size / this.cellSize);
-      this.cellSize = Math.floor(size / Math.max(this.cols, this.rows));
-
-      this.canvas.style.width = size + 'px';
-      this.canvas.style.height = size + 'px';
       // Assurer image-rendering pixel-perfect
       this.canvas.style.imageRendering = 'pixelated';
       this.canvas.style.imageRendering = '-moz-crisp-edges';
       this.canvas.style.imageRendering = 'crisp-edges';
-    } else {
-      this.canvas.style.width = this.canvas.width + 'px';
-      this.canvas.style.height = this.canvas.height + 'px';
     }
 
     this.canvas.style.display = 'block';
@@ -719,6 +751,8 @@ class SnakeGame {
   // Méthode centralisée pour nettoyer toutes les ressources du jeu
   cleanup() {
     this._disposed = true;
+    // Posé par le constructeur ; un second appel ne fait rien
+    this._stopWatchingViewport();
     // S'assurer que le jeu est arrêté
     this.gameOver = true;
 

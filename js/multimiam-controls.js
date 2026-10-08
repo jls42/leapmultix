@@ -3,6 +3,7 @@
 
 import { clientToCanvasPoint } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
+import { mazeToScreen, transposeDirection } from './multimiam-layout.js';
 
 // Case voisine dans chaque direction
 const CELL_STEPS = {
@@ -70,12 +71,8 @@ export function initPacmanControls(game) {
         break;
     }
 
-    if (directionChanged) {
-      game.multimiam.nextDirection = newDirection;
-      if (!game.multimiam.isMoving) {
-        tryToMovePacman(newDirection);
-      }
-    }
+    // La flèche dit une direction à l'écran (labyrinthe transposé en portrait)
+    if (directionChanged) steer(transposeDirection(newDirection, game.transposed));
   }
 
   document.addEventListener('keydown', handleKeyDown);
@@ -91,8 +88,10 @@ export function initPacmanControls(game) {
   // ================= Toucher ou clic sur le labyrinthe =================
   // Le personnage part vers le point visé : l'axe dominant d'abord, l'autre s'il est bloqué
   function steerTowards(clientX, clientY) {
-    // Coordonnées écran -> jeu (cadre et éventuelle réduction du canevas compris)
-    const point = clientToCanvasPoint(game.canvas, clientX, clientY);
+    // Coordonnées écran -> jeu (cadre et éventuelle réduction du canevas compris), puis
+    // dans le labyrinthe s'il est dessiné transposé
+    const onCanvas = clientToCanvasPoint(game.canvas, clientX, clientY);
+    const point = mazeToScreen(onCanvas.x, onCanvas.y, game.transposed);
     const { x, y } = game.multimiam;
 
     // Direction vue depuis le centre de la case du personnage (pas du canevas)
@@ -116,7 +115,10 @@ export function initPacmanControls(game) {
   // ================= Gestes tactiles (glissement et toucher) =================
   // Gestes communs avec MultiSnake (js/arcade-touch.js) : un doigt qui tremble un peu ou
   // reste posé compte comme un toucher
-  attachDirectionalTouch(game.canvas, { onSwipe: steer, onTap: steerTowards });
+  attachDirectionalTouch(game.canvas, {
+    onSwipe: direction => steer(transposeDirection(direction, game.transposed)),
+    onTap: steerTowards,
+  });
 
   // Clic (ordinateur) : même règle que le toucher
   game.canvas.addEventListener('click', e => {
