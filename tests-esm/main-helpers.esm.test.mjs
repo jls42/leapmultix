@@ -144,6 +144,28 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
     expect(hint.hidden).toBe(true);
   });
 
+  test('l’avatar que l’enfant porte n’est jamais verrouillé (profil hérité)', () => {
+    // Profils d'avant : l'avatar choisi à la création manque parfois dans unlockedAvatars
+    UserManager._players.Lina.unlockedAvatars = ['fox'];
+    helpers.renderAvatarSelector('#avatar-choice');
+    const panda = document.querySelector('#avatar-choice .avatar-radio[value="panda"]');
+    expect(panda.checked).toBe(true);
+    expect(panda.disabled).toBe(false);
+    expect(panda.hasAttribute('aria-describedby')).toBe(false);
+    expect(panda.closest('.avatar-btn').querySelector('.lock-icon')).toBeNull();
+    // Le profil n'est pas réécrit : seul l'affichage change
+    expect(UserManager._players.Lina.unlockedAvatars).toEqual(['fox']);
+
+    // Tous les autres débloqués : aucun cadenas affiché, donc aucune ligne d'explication
+    const hint = document.createElement('p');
+    hint.id = 'avatar-locked-hint';
+    document.body.appendChild(hint);
+    UserManager._players.Lina.unlockedAvatars = ['fox', 'unicorn', 'dragon', 'astronaut'];
+    helpers.renderAvatarSelector('#avatar-choice');
+    expect(document.querySelectorAll('#avatar-choice .lock-icon')).toHaveLength(0);
+    expect(hint.hidden).toBe(true);
+  });
+
   test('la ligne existe sous la grille de la personnalisation, traduite, sans fausse promesse', () => {
     const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
     const page = new DOMParser().parseFromString(html, 'text/html');

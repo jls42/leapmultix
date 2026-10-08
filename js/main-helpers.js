@@ -80,9 +80,12 @@ export function renderAvatarSelector(target) {
   const lockTipRaw = getTranslation('avatar_locked_tooltip');
   const lockTip = isMissingTranslation(lockTipRaw) ? 'Avatar verrouillé' : lockTipRaw;
 
+  // L'avatar porté n'est jamais verrouillé : un profil d'avant peut l'avoir hors de la liste
+  const isLocked = avatarName => avatarName !== current && !unlocked.includes(avatarName);
+
   while (avatarSelector.firstChild) avatarSelector.removeChild(avatarSelector.firstChild);
   AVATAR_LIST.forEach(avatarName => {
-    const isUnlocked = unlocked.includes(avatarName);
+    const isUnlocked = !isLocked(avatarName);
     // Un <label> qui habille un bouton radio natif : le navigateur gère le clavier
     // (flèches, Espace), l'état coché et l'annonce « option 2 sur 5 »
     const btn = document.createElement('label');
@@ -120,7 +123,7 @@ export function renderAvatarSelector(target) {
     }
     avatarSelector.appendChild(btn);
   });
-  showLockedHint(AVATAR_LIST.some(avatarName => !unlocked.includes(avatarName)));
+  showLockedHint(AVATAR_LIST.some(isLocked));
 }
 
 /**
