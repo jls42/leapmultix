@@ -949,6 +949,67 @@ body:has(> .message-popup) > .toast-stack {
   stroke-width: 1.5;
 }
 
+/* === FENÊTRE DE CONFIRMATION (js/components/confirm-dialog.js) ===
+   Une question, ce qu'elle implique, puis le bouton sans risque, en touche principale et
+   avec le focus, et l'action, secondaire. Le voile couvre la page et le jeu ; en plein
+   écran, la fenêtre se pose dans la partie affichée, dont elle ne prend pas le texte centré. */
+.confirm-dialog-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.confirm-dialog-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-scrim-modal);
+}
+
+.confirm-dialog {
+  position: relative;
+  max-inline-size: 30rem;
+  max-block-size: 100%;
+  overflow-y: auto;
+  padding: var(--space-5);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--color-ink);
+  text-align: start;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.confirm-dialog-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--color-ink-heading);
+  text-wrap: balance;
+}
+
+.confirm-dialog-message {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* Sur un téléphone, les deux boutons passent l'un sous l'autre, chacun sur toute la largeur */
+.confirm-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+.confirm-dialog-actions .btn {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
 /* === TRANSITIONS DE SLIDES === */
 
 /* L'écran qui entre part de 24 px à droite : sans rognage, il élargissait la page le temps

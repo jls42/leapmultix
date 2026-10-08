@@ -131,6 +131,7 @@ const PRECACHE_CORE = [
   '/js/cache-updater.js',
   '/js/coin-display.js',
   '/js/coin-effects.js',
+  '/js/components/confirm-dialog.js',
   '/js/components/customization.js',
   '/js/components/dashboard.js',
   '/js/components/icons.js',
