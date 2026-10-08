@@ -38,7 +38,7 @@
     "voice:bench": "node scripts/voice/bench.mjs",
     "audit:accessibility": "node scripts/audit-accessibility.js",
     "audit:mobile": "node scripts/audit-mobile-responsive.js",
-    "test:pwa-offline": "node scripts/test-pwa-offline.cjs",
+    "test:pwa-offline": "jest --maxWorkers=50% tests/__tests__/e2e/offline-pwa.test.js",
     "precache:update": "node scripts/precache-list.mjs --write",
     "analyze:jsdoc": "node scripts/analyze-jsdoc.cjs",
     "improve:jsdoc": "node scripts/improve-jsdoc.cjs",
