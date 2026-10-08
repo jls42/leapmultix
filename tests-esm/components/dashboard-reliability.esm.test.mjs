@@ -43,7 +43,9 @@ const rowFacts = title => {
 
 beforeEach(() => {
   localStorage.clear();
-  document.body.innerHTML = DASHBOARD_HTML;
+  // Le vrai tableau de bord d'index.html, monté sans innerHTML
+  const parsed = new DOMParser().parseFromString(DASHBOARD_HTML, 'text/html');
+  document.body.replaceChildren(...parsed.body.childNodes);
   jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
@@ -53,7 +55,7 @@ afterEach(() => {
   UserManager._currentUser = null;
   store.setCurrentLanguage('fr');
   localStorage.clear();
-  document.body.innerHTML = '';
+  document.body.replaceChildren();
 });
 
 describe('Tableau de bord : accords et nombres dans la langue du jeu', () => {

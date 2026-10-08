@@ -59,6 +59,19 @@ describe('mode-stats : une réponse', () => {
     expect(Object.keys(user.modeStats.modes)).toEqual(['quiz']);
   });
 
+  test('des compteurs à jour mais sans leurs conteneurs (null compris) les retrouvent', () => {
+    for (const modeStats of [{ v: 1 }, { v: 1, modes: null, review: null }]) {
+      const user = { modeStats };
+      recordModeAnswer(user, { mode: 'quiz', operator: '×', table: 7, isCorrect: true });
+      expect(user.modeStats).toMatchObject({
+        modes: { quiz: { '×': { questions: 1, correct: 1 } } },
+        imported: { questions: 0, correct: 0 },
+        arcadeTop5: {},
+        review: { 7: '1' },
+      });
+    }
+  });
+
   test('un profil sans compteurs en reçoit', () => {
     const user = {};
     recordModeAnswer(user, { mode: 'chrono', operator: '−', isCorrect: true, startsGame: true });
@@ -144,6 +157,31 @@ describe('mode-stats : amorçage et relecture', () => {
     expect(stats.modes.adventure).toEqual({ '×': { questions: 1, correct: 1 } });
     expect(stats.imported).toEqual({ questions: 1, correct: 1 });
     expect(stats.review).toEqual({ 6: '1', 7: '0' });
+  });
+
+  test('parties anciennes sans opération : celle du profil s’il n’en a joué qu’une, Découverte comprise', () => {
+    const arcade = game => (game === 'invasion' ? [300, 100] : []);
+    const invasionOperators = exploredTables =>
+      Object.keys(seedModeStats({ discoveryProgress: { exploredTables } }, arcade).modes.invasion);
+    expect(invasionOperators(['+:easy'])).toEqual(['+']);
+    expect(invasionOperators(['7'])).toEqual(['×']);
+    expect(invasionOperators(['7', '−:hard'])).toEqual(['?']);
+    // Ancienne clé sans opération : la Découverte l'ignore, elle ne dit rien de l'opération
+    expect(invasionOperators(['easy'])).toEqual(['?']);
+  });
+
+  test('les courses de Chrono hors multiplication sont comptées dans leur opération', () => {
+    const stats = seedModeStats({
+      chronoStats: { buckets: [{ count: 2 }] },
+      chronoStatsByOperator: {
+        '+': { buckets: [{ count: 3 }, { count: 1 }] },
+        '−': { buckets: [] },
+      },
+    });
+    expect(stats.modes.chrono).toEqual({
+      '×': { games: 2, questions: 0, correct: 0 },
+      '+': { games: 4, questions: 0, correct: 0 },
+    });
   });
 
   test('une version plus récente du jeu : rendue telle quelle', () => {

@@ -68,7 +68,9 @@ beforeEach(() => {
   store.setCurrentLanguage('fr');
   localStorage.clear();
   seedLegacyStorage(localStorage);
-  document.body.innerHTML = DASHBOARD_HTML;
+  // Le vrai tableau de bord d'index.html, monté sans innerHTML
+  const parsed = new DOMParser().parseFromString(DASHBOARD_HTML, 'text/html');
+  document.body.replaceChildren(...parsed.body.childNodes);
   jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
@@ -77,13 +79,13 @@ afterEach(() => {
   UserManager._players = {};
   UserManager._currentUser = null;
   localStorage.clear();
-  document.body.innerHTML = '';
+  document.body.replaceChildren();
 });
 
 const NO_SCORE = 'Aucun score';
 
 describe('Tableau de bord : Zoé, × seulement, depuis 2025', () => {
-  test('en-tête, grille, parcours, scores et succès', () => {
+  test('en-tête et grille des tables', () => {
     const view = showFor('Zoé');
     expect(view.nickname).toBe('Zoé');
     expect(view.total).toBe('9 étoiles au total');
@@ -101,89 +103,14 @@ describe('Tableau de bord : Zoé, × seulement, depuis 2025', () => {
       ['×9', 0, ''],
       ['×10', 1, 'À revoir'],
     ]);
+  });
+
+  test('parcours et succès', () => {
+    const view = showFor('Zoé');
     expect(view.journey).toEqual([
       ['Questions', '506'],
       ['Bonnes réponses', '377'],
       ['Meilleure série', '10'],
-    ]);
-    expect(view.groups).toEqual([
-      [
-        'Modes classiques',
-        [
-          [
-            'Quiz',
-            // v37 : les 31 quiz, plus seulement les 20 derniers (anomalie n°6)
-            [
-              ['Questions', '310'],
-              ['Bonnes réponses', '242'],
-            ],
-          ],
-          [
-            'Défi',
-            // v37 : la difficulté du meilleur score (anomalie n°13)
-            [
-              ['Nombre de parties', '9'],
-              ['Meilleur score', '210 (Difficile)'],
-            ],
-          ],
-          [
-            'Aventure',
-            [
-              ['Niveaux complétés', '4'],
-              ['Étoiles', '9'],
-            ],
-          ],
-          [
-            'Chrono',
-            [
-              ['Nombre de parties', '9'],
-              ['Meilleur temps', '19,4 s'],
-              ['Calculs à revoir', '3'],
-            ],
-          ],
-          // v37 : deux rangées de plus, la Découverte et le Défi du jour (décision « chaque mode »)
-          ['Découverte', [['Déjà exploré', '2 tables sur 10']]],
-          ['Défi du jour', [['Défis réussis', '4']]],
-        ],
-      ],
-      [
-        'Mode Arcade',
-        [
-          [
-            'MultiInvaders',
-            [
-              ['Nombre de parties', '5'],
-              // v37 : séparateur de milliers de la langue (anomalie n°17)
-              ['Meilleur score', '1 500'],
-              ['Score moyen', '760'],
-            ],
-          ],
-          [
-            'MultiMiam',
-            [
-              ['Nombre de parties', '5'],
-              ['Meilleur score', '640'],
-              ['Score moyen', '348'],
-            ],
-          ],
-          [
-            'MultiMemory',
-            [
-              ['Nombre de parties', '2'],
-              ['Meilleur score', '140'],
-              ['Score moyen', '130'],
-            ],
-          ],
-          [
-            'MultiSnake',
-            [
-              ['Nombre de parties', '3'],
-              ['Meilleur score', '900'],
-              ['Score moyen', '483'],
-            ],
-          ],
-        ],
-      ],
     ]);
     expect(view.badges).toEqual([
       'Apprenti du Quiz',
@@ -193,10 +120,92 @@ describe('Tableau de bord : Zoé, × seulement, depuis 2025', () => {
       'Chronomètre accepté',
     ]);
   });
+
+  test('modes classiques', () => {
+    const view = showFor('Zoé');
+    expect(view.groups.map(([title]) => title)).toEqual(['Modes classiques', 'Mode Arcade']);
+    const [[, classic]] = view.groups;
+    expect(classic).toEqual([
+      [
+        'Quiz',
+        // v37 : les 31 quiz, plus seulement les 20 derniers (anomalie n°6)
+        [
+          ['Questions', '310'],
+          ['Bonnes réponses', '242'],
+        ],
+      ],
+      [
+        'Défi',
+        // v37 : la difficulté du meilleur score (anomalie n°13)
+        [
+          ['Nombre de parties', '9'],
+          ['Meilleur score', '210 (Difficile)'],
+        ],
+      ],
+      [
+        'Aventure',
+        [
+          ['Niveaux complétés', '4'],
+          ['Étoiles', '9'],
+        ],
+      ],
+      [
+        'Chrono',
+        [
+          ['Nombre de parties', '9'],
+          ['Meilleur temps', '19,4 s'],
+          ['Calculs à revoir', '3'],
+        ],
+      ],
+      // v37 : deux rangées de plus, la Découverte et le Défi du jour (décision « chaque mode »)
+      ['Découverte', [['Déjà exploré', '2 tables sur 10']]],
+      ['Défi du jour', [['Défis réussis', '4']]],
+    ]);
+  });
+
+  test('mode Arcade', () => {
+    const view = showFor('Zoé');
+    const [, [, arcade]] = view.groups;
+    expect(arcade).toEqual([
+      [
+        'MultiInvaders',
+        [
+          ['Nombre de parties', '5'],
+          // v37 : séparateur de milliers de la langue (anomalie n°17)
+          ['Meilleur score', '1 500'],
+          ['Score moyen', '760'],
+        ],
+      ],
+      [
+        'MultiMiam',
+        [
+          ['Nombre de parties', '5'],
+          ['Meilleur score', '640'],
+          ['Score moyen', '348'],
+        ],
+      ],
+      [
+        'MultiMemory',
+        [
+          ['Nombre de parties', '2'],
+          ['Meilleur score', '140'],
+          ['Score moyen', '130'],
+        ],
+      ],
+      [
+        'MultiSnake',
+        [
+          ['Nombre de parties', '3'],
+          ['Meilleur score', '900'],
+          ['Score moyen', '483'],
+        ],
+      ],
+    ]);
+  });
 });
 
 describe('Tableau de bord : Léa, × et +, surnom changé', () => {
-  test('ce qui s’affiche aujourd’hui', () => {
+  test('en-tête, grille et parcours', () => {
     const view = showFor('Léa');
     expect(view.nickname).toBe('Léa B.');
     // v37 : les étoiles de l'Aventure en + comptent aussi, comme pour le badge (anomalie n°2)
@@ -218,7 +227,10 @@ describe('Tableau de bord : Léa, × et +, surnom changé', () => {
       ['Bonnes réponses', '103'],
       ['Meilleure série', '9'],
     ]);
-    const [classic, arcade] = view.groups;
+  });
+
+  test('modes classiques', () => {
+    const [classic] = showFor('Léa').groups;
     // v37 : × et + jouées, chaque rangée se détaille par opération ; le signe se lit, son nom
     // (lecteurs d'écran) suit dans le texte. Défi : parties d'avant la mise à jour, rangées sans
     // opération, donc sans détail. Aventure : enfin la vraie progression (anomalie n°1)
@@ -254,6 +266,10 @@ describe('Tableau de bord : Léa, × et +, surnom changé', () => {
       ],
       ['Découverte', [['Déjà exploré', '2 niveaux sur 3']]],
     ]);
+  });
+
+  test('mode Arcade', () => {
+    const [, arcade] = showFor('Léa').groups;
     expect(arcade[1]).toEqual([
       [
         'MultiInvaders',

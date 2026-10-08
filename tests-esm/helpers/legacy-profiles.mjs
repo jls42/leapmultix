@@ -27,8 +27,11 @@ const ANSWER_GAP = 20000;
 /**
  * Une réponse de progressHistory au format de son époque : sans `operator` avant 236de4b
  * (Quiz, Défi avec sa difficulté, Aventure avec son niveau), avec ensuite.
+ * `game` : opération, mode, ancien format, difficulté et niveau de la partie.
  */
-function answerEntry({ a, b, operator, correct, timestamp, mode, legacy, difficulty, level }) {
+function answerEntry({ fact, correct, timestamp, game }) {
+  const { a, b } = fact;
+  const { operator, mode, legacy, difficulty, level } = game;
   const answer = operator === '+' ? a + b : a * b;
   const entry = { question: `${a} ${operator} ${b} = ?`, correct, timestamp, mode };
   if (mode === 'challenge') entry.difficulty = difficulty;
@@ -40,29 +43,14 @@ function answerEntry({ a, b, operator, correct, timestamp, mode, legacy, difficu
 }
 
 /** Les réponses d'une partie, jouées l'une après l'autre ; `correctFor` décide de chaque réponse */
-function playGame({
-  count,
-  start,
-  operator,
-  mode,
-  legacy,
-  difficulty,
-  level,
-  factFor,
-  correctFor,
-}) {
+function playGame({ count, start, game, factFor, correctFor }) {
   return Array.from({ length: count }, (_, i) => {
-    const { a, b } = factFor(i);
+    const fact = factFor(i);
     return answerEntry({
-      a,
-      b,
-      operator,
-      correct: correctFor(a, i),
+      fact,
+      correct: correctFor(fact.a, i),
       timestamp: start + i * ANSWER_GAP,
-      mode,
-      legacy,
-      difficulty,
-      level,
+      game,
     });
   });
 }
@@ -131,9 +119,7 @@ function buildZoe() {
     const answers = playGame({
       count: 10,
       start: clock,
-      operator: '×',
-      mode: 'quiz',
-      legacy: era === 'old',
+      game: { operator: '×', mode: 'quiz', legacy: era === 'old' },
       factFor: randomFact(tables),
       correctFor: errsFor(era),
     });
@@ -151,10 +137,7 @@ function buildZoe() {
     const answers = playGame({
       count: 14,
       start: clock,
-      operator: '×',
-      mode: 'challenge',
-      legacy: true,
-      difficulty,
+      game: { operator: '×', mode: 'challenge', legacy: true, difficulty },
       factFor: randomFact([3, 4, 6, 7, 7, 8, 9]),
       correctFor: errsFor('old'),
     });
@@ -166,12 +149,9 @@ function buildZoe() {
     const answers = playGame({
       count: 10,
       start: clock,
-      operator: '×',
-      mode: 'adventure',
-      legacy: true,
-      level,
+      game: { operator: '×', mode: 'adventure', legacy: true, level },
       factFor: tableFact(table),
-      correctFor: (_a, i) => i < correctCount,
+      correctFor: (_a, i) => correctCount > i,
     });
     history.push(...answers);
     clock += DAY / 2;
@@ -220,8 +200,7 @@ function buildLea() {
     const answers = playGame({
       count: 10,
       start: clock,
-      operator,
-      mode: 'quiz',
+      game: { operator, mode: 'quiz' },
       factFor: randomFact([2, 3, 4, 5, 6, 7, 8, 9]),
       correctFor: ok,
     });
@@ -234,9 +213,7 @@ function buildLea() {
     const answers = playGame({
       count: 14,
       start: clock,
-      operator,
-      mode: 'challenge',
-      difficulty: 'medium',
+      game: { operator, mode: 'challenge', difficulty: 'medium' },
       factFor: randomFact([2, 3, 4, 5, 6, 7, 8, 9]),
       correctFor: ok,
     });
@@ -248,11 +225,9 @@ function buildLea() {
     const answers = playGame({
       count: 10,
       start: clock,
-      operator,
-      mode: 'adventure',
-      level,
+      game: { operator, mode: 'adventure', level },
       factFor: operator === '×' ? tableFact(table) : randomFact([1, 2, 3, 4, 5]),
-      correctFor: (_a, i) => i < correctCount,
+      correctFor: (_a, i) => correctCount > i,
     });
     history.push(...answers);
     clock += DAY / 2;
