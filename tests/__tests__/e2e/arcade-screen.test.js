@@ -280,12 +280,19 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     );
     await page.touchscreen.tap(point.x, point.y);
     await page.waitForFunction(
-      () =>
-        globalThis.__draws.images
+      startY => {
+        const last = globalThis.__draws.images
           .filter(d => d.canvas === 'multisnake-canvas' && d.src.includes('tete_'))
-          .slice(-1)[0]?.src === 'tete_haut.png',
-      { timeout: 3000 }
+          .slice(-1)[0];
+        return last?.src === 'tete_haut.png' && last.y < startY;
+      },
+      { timeout: 3000 },
+      head.y
     );
+    // La tête redessinée regarde vers le haut, au-dessus de sa place de départ
+    const [turned] = await lastImages(page, 'multisnake-canvas', 'tete_', 1);
+    expect(turned.src).toBe('tete_haut.png');
+    expect(turned.y).toBeLessThan(head.y);
   }, 40000);
 
   test('plein écran, téléphone tourné : MultiInvaders vise la colonne touchée', async () => {

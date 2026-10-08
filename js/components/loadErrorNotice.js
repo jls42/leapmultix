@@ -26,8 +26,13 @@ let focusBeforeNotice = null;
  */
 export function isLoadFailure(error) {
   if (globalThis.navigator?.onLine === false) return true;
-  const message = error instanceof Error ? error.message : String(error);
-  return LOAD_FAILURE.test(message);
+  return LOAD_FAILURE.test(errorText(error));
+}
+
+/** Texte d'une erreur : son message, ou la chaîne reçue ; vide pour le reste */
+function errorText(error) {
+  if (typeof error === 'string') return error;
+  return typeof error?.message === 'string' ? error.message : '';
 }
 
 /** Clé du message : chargement impossible (Internet), ou panne générale */

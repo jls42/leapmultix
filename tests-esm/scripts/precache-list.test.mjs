@@ -15,6 +15,8 @@ import {
   BLOCK_START,
   buildPrecacheList,
   describeToken,
+  insideRoot,
+  matchesName,
   htmlReferences,
   renderPrecacheBlock,
   replacePrecacheBlock,
@@ -48,16 +50,38 @@ describe('lecture des références', () => {
     });
     const template = describeToken('assets/images/arcade/\uFFFC_head_avatar_128x128.png');
     expect(template.dir).toBe('/assets/images/arcade');
-    expect(template.name.test('fox_head_avatar_128x128.png')).toBe(true);
-    expect(template.name.test('fox_left_128x128.png')).toBe(false);
-    expect(describeToken('tete_haut.png').name.test('tete_haut.png')).toBe(true);
+    expect(matchesName(template.parts, 'fox_head_avatar_128x128.png')).toBe(true);
+    expect(matchesName(template.parts, 'fox_left_128x128.png')).toBe(false);
+    expect(matchesName(describeToken('tete_haut.png').parts, 'tete_haut.png')).toBe(true);
     // « ${nom}.png » viserait toutes les images d'un dossier
     expect(describeToken('assets/images/arcade/\uFFFC.png')).toBeNull();
     expect(describeToken('\uFFFC.png')).toBeNull();
     // Hors des images, le dossier borne le gabarit (traductions)
-    expect(describeToken('assets/translations/\uFFFC.json').name.test('fr.json')).toBe(true);
+    expect(matchesName(describeToken('assets/translations/\uFFFC.json').parts, 'fr.json')).toBe(
+      true
+    );
     // Un trou dans le dossier : rien de sûr
     expect(describeToken('assets/\uFFFC/a.png')).toBeNull();
+  });
+
+  test('matchesName : parties fixes dans l’ordre, trous quelconques, jamais de « / »', () => {
+    const parts = ['monstre', '_right_', '.png'];
+    expect(matchesName(parts, 'monstre01_right_128x128.png')).toBe(true);
+    expect(matchesName(parts, 'monstre_right_.png')).toBe(true);
+    expect(matchesName(parts, 'monstre01_left_128x128.png')).toBe(false);
+    expect(matchesName(parts, 'monstre01_right_128x128.webp')).toBe(false);
+    expect(matchesName(['a', '.png'], 'a/b.png')).toBe(false);
+    // Le début et la fin ne se chevauchent pas : « ab » n'est pas « ab…b »
+    expect(matchesName(['ab', 'b'], 'ab')).toBe(false);
+    expect(matchesName(['spaceship_default.png'], 'spaceship_default.png')).toBe(true);
+    expect(matchesName(['spaceship_default.png'], 'xspaceship_default.png')).toBe(false);
+  });
+
+  test('insideRoot : un chemin du site reste sous la racine, même avec « ../ » de trop', () => {
+    const root = path.resolve('/tmp/site');
+    expect(insideRoot(root, '/js/a.js')).toBe(path.join(root, 'js/a.js'));
+    expect(insideRoot(root, 'index.html')).toBe(path.join(root, 'index.html'));
+    expect(insideRoot(root, '/../../etc/passwd')).toBe(path.join(root, 'etc/passwd'));
   });
 });
 

@@ -168,6 +168,13 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
     jest.advanceTimersByTime(50);
   }
 
+  test('partie nettoyée (Accueil), canevas resté dans la page : un changement d’écran ne fait rien', () => {
+    // Ce que fait cleanupGameResources (js/game-cleanup.js) en quittant la partie
+    game.canvas = null;
+    globalThis.dispatchEvent(new Event('resize'));
+    expect(() => jest.advanceTimersByTime(50)).not.toThrow();
+  });
+
   test('rien n’est encore joué : le labyrinthe suit le téléphone tourné', () => {
     rotate();
     expect(game.transposed).toBe(false);
