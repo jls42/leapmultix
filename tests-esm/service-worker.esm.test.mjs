@@ -468,6 +468,26 @@ describe('Service worker : préchargement', () => {
     expect(generated.filter(url => entries.has(`${ORIGIN}${url}`))).toEqual([]);
   });
 
+  test('image servie sans type d’image (S3 qui ne connaît pas .webp) : gardée quand même', async () => {
+    const site = siteNetwork();
+    const worker = loadWorker((url, req) => {
+      const response = site.network(url, req);
+      if (!url.endsWith('.webp')) return response;
+      return new FakeResponse(response.body, {
+        headers: { 'Content-Type': 'binary/octet-stream' },
+      });
+    });
+    site.state.originals = precacheList(worker, 'PRECACHE_IMAGES').filter(url =>
+      ORIGINAL.test(url)
+    );
+    const waits = [];
+    worker.listeners.install({ waitUntil: promise => waits.push(promise) });
+    await Promise.all(waits);
+    const entries = await offlineEntries(worker);
+    const [original] = site.state.originals;
+    expect(entries.has(`${ORIGIN}${variant(original, 128)}`)).toBe(true);
+  });
+
   test('un fichier du code introuvable : l’installation échoue (la précédente reste en place)', async () => {
     const site = siteNetwork({ missing: ['/js/modes/QuizMode.js'] });
     const worker = loadWorker(site.network);

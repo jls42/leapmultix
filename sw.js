@@ -655,11 +655,15 @@ function imageUrls(url, variants) {
   return files.map(file => `${GENERATED_IMAGES}${file}`);
 }
 
-/** Une image n'est gardée que si c'en est une : jamais une page d'erreur à sa place */
+/**
+ * Une image n'est gardée que si c'en est une : jamais la page qu'un serveur de
+ * développement répond pour un fichier absent. Le type d'image n'est pas exigé : S3 ne
+ * connaît pas toujours .webp, et le navigateur reconnaît une image à son contenu.
+ */
 async function keepImage(cache, url) {
   const response = await fetch(freshRequest(url));
   const type = response.headers.get('content-type') || '';
-  if (response.ok && type.startsWith('image/')) await cache.put(url, response);
+  if (response.ok && !type.startsWith('text/html')) await cache.put(url, response);
 }
 
 /**
