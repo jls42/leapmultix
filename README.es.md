@@ -27,9 +27,9 @@
 [![Insignia de Codacy](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Estado de la puerta de calidad](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-[![Calificación de fiabilidad](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Calificación de seguridad](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Calificación de mantenibilidad](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Índice de fiabilidad](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Índice de seguridad](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Índice de mantenibilidad](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 [![Deuda técnica](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 [![Errores](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
@@ -42,7 +42,7 @@
 
 - [Descripción](#descripción)
 - [Vista previa](#-vista-previa)
-- [Funcionalidades](#-funcionalidades)
+- [Características](#-características)
 - [Inicio rápido](#-inicio-rápido)
 - [Arquitectura](#-arquitectura)
 - [Modos de juego detallados](#-modos-de-juego-detallados)
@@ -56,9 +56,9 @@
 
 ## Descripción
 
-LeapMultix es una aplicación web educativa interactiva destinada a niños de 6 a 12 años para dominar las 4 operaciones aritméticas: multiplicación (×), suma (+), resta (−) y división (÷). Ofrece **6 modos de juego** y **4 minijuegos arcade** en una interfaz intuitiva, accesible y multilingüe.
+LeapMultix es una aplicación web educativa e interactiva destinada a niños de 6 a 12 años para dominar las 4 operaciones aritméticas: multiplicación (×), suma (+), resta (−) y división (÷). Ofrece **6 modos de juego** y **4 minijuegos arcade** en una interfaz intuitiva, accesible y multilingüe.
 
-**Compatibilidad con múltiples operaciones:** todos los modos admiten las cuatro operaciones. La elección se realiza en la pantalla de inicio y se aplica a todo el recorrido.
+**Compatibilidad con múltiples operaciones:** todos los modos admiten las cuatro operaciones. La elección se realiza en la pantalla de inicio y se mantiene durante todo el recorrido.
 
 **Desarrollado por:** Julien LS (contact@jls42.org)
 
@@ -68,52 +68,52 @@ LeapMultix es una aplicación web educativa interactiva destinada a niños de 6 
 
 ### Las pantallas
 
-|                                                                                                                                                |                                                                                                                      |
-| :--------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------: |
-|                                  ![Pantalla «¿Quién juega?»: elección del perfil](docs/media/01-accueil.webp)                                  |               ![Menú principal: elección de la operación y del modo de juego](docs/media/02-menu.webp)               |
-|                                      **¿Quién juega?** — un perfil por niño, con su avatar y su progreso.                                      |                         **El menú** — aquí se elige la operación y después el modo de juego.                         |
-|                           ![Modo Descubrimiento: la tabla del 4 mostrada con puntos](docs/media/03-decouverte.webp)                            |           ![Modo Quiz: respuesta incorrecta en rojo, respuesta correcta en verde](docs/media/04-quiz.webp)           |
-|                   **Descubrimiento** — cada igualdad se muestra con puntos, saltos o conteo, junto con el truco de la tabla.                   | **Quiz** — la elección del niño permanece visible junto a la respuesta correcta y la explicación detalla el cálculo. |
-|                                    ![Modo Desafío: cuenta atrás y racha en curso](docs/media/05-defi.webp)                                     |        ![Modo Aventura: mapa de los diez niveles, con los siguientes bloqueados](docs/media/06-aventure.webp)        |
-| **Desafío** — carrera contrarreloj. Al cometer un error, el cronómetro se detiene durante el tiempo necesario para leer la respuesta correcta. |                    **Aventura** — diez niveles que se abren uno tras otro a cambio de estrellas.                     |
-|                          ![Modo Crono: una carrera de resta, el cronómetro y el progreso](docs/media/14-chrono.webp)                           |                           ![Menú Arcade: los cuatro minijuegos](docs/media/07-arcade.webp)                           |
-|     **Crono** — diez respuestas correctas contrarreloj en la operación elegida; los cálculos fallados se añaden a una lista para repasar.      |                   **Arcade** — cuatro minijuegos, con ajuste de dificultad y elección de la nave.                    |
-|         ![Panel de control: partidas, récords y respuestas de cada modo, detallados por operación](docs/media/08-tableau-de-bord.webp)         |               ![Personalización: avatares, temas y accesibilidad](docs/media/09-personnalisation.webp)               |
-|      **Panel de control** — partidas y récords de cada modo, detallados por operación; estrellas y tablas para repasar en multiplicación.      |                  **Personalización** — avatar, tema de colores, tamaño del texto y contraste alto.                   |
+|                                                                                                                                           |                                                                                                                      |
+| :---------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------: |
+|                               ![Pantalla «¿Quién juega?»: selección del perfil](docs/media/01-accueil.webp)                               |              ![Menú principal: selección de la operación y del modo de juego](docs/media/02-menu.webp)               |
+|                                   **¿Quién juega?** — un perfil por niño, con su avatar y su progreso.                                    |                         **El menú** — aquí se elige la operación y después el modo de juego.                         |
+|                       ![Modo Descubrimiento: la tabla del 4 representada con puntos](docs/media/03-decouverte.webp)                       |          ![Modo Quiz: respuesta incorrecta en rojo y respuesta correcta en verde](docs/media/04-quiz.webp)           |
+|            **Descubrimiento** — cada igualdad se representa mediante puntos, saltos o conteo, junto con el truco de la tabla.             | **Quiz** — la elección del niño permanece visible junto a la respuesta correcta y la explicación detalla el cálculo. |
+|                                   ![Modo Desafío: cuenta atrás y racha actual](docs/media/05-defi.webp)                                   |        ![Modo Aventura: mapa de los diez niveles, con los siguientes bloqueados](docs/media/06-aventure.webp)        |
+|  **Desafío** — carrera contrarreloj. Cuando se produce un error, el cronómetro se detiene para dar tiempo a leer la respuesta correcta.   |                 **Aventura** — diez niveles que se desbloquean uno tras otro a cambio de estrellas.                  |
+|                       ![Modo Crono: una carrera de restas, el cronómetro y el progreso](docs/media/14-chrono.webp)                        |                           ![Menú Arcade: los cuatro minijuegos](docs/media/07-arcade.webp)                           |
+| **Crono** — diez respuestas correctas contrarreloj con la operación elegida; los cálculos fallados se añaden a una lista para repasarlos. |                    **Arcade** — cuatro minijuegos, con ajuste de dificultad y selección de nave.                     |
+|      ![Panel de control: partidas, récords y respuestas de cada modo, desglosados por operación](docs/media/08-tableau-de-bord.webp)      |               ![Personalización: avatares, temas y accesibilidad](docs/media/09-personnalisation.webp)               |
+|    **Panel de control** — partidas y récords de cada modo, desglosados por operación; estrellas y tablas de multiplicar para repasar.     |    **Personalización** — avatares desbloqueables con monedas, tema de colores, tamaño del texto y contraste alto.    |
 
 ### Los minijuegos arcade
 
 Cuatro juegos que plantean la misma pregunta —la que aparece sobre la zona de
-juego, junto con el tiempo restante y las vidas—, pero que requieren cada vez un gesto
-diferente.
+juego, junto con el tiempo restante y las vidas—, pero que requieren un gesto
+diferente en cada ocasión.
 
 |                                                                                                                                   |                                                                                                            |
 | :-------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------: |
 |     ![MultiInvaders: monstruos con números y una nave en la parte inferior de la pantalla](docs/media/10-multiinvaders.webp)      | ![MultiMiam: un laberinto donde los puntos muestran las posibles respuestas](docs/media/11-multimiam.webp) |
-|        **MultiInvaders** — disparar a las respuestas incorrectas y perdonar la correcta: oculta a un amigo al que liberar.        |     **MultiMiam** — recorrer el laberinto para atrapar el resultado correcto evitando a los monstruos.     |
-| ![MultiMemory: una cuadrícula de cartas, dos de ellas volteadas mostrando un cálculo y un número](docs/media/12-multimemory.webp) |      ![MultiSnake: una serpiente y manzanas numeradas en una pradera](docs/media/13-multisnake.webp)       |
+|  **MultiInvaders** — disparar a las respuestas incorrectas y dejar intacta la correcta: esconde a un amigo que hay que liberar.   |     **MultiMiam** — recorrer el laberinto para atrapar el resultado correcto evitando a los monstruos.     |
+| ![MultiMemory: una cuadrícula de cartas, con dos boca arriba que muestran un cálculo y un número](docs/media/12-multimemory.webp) |      ![MultiSnake: una serpiente y manzanas numeradas en una pradera](docs/media/13-multisnake.webp)       |
 |                         **MultiMemory** — recordar qué carta contiene el resultado del cálculo mostrado.                          |              **MultiSnake** — crecer comiendo los números correctos y evitar todos los demás.              |
 
-## ✨ Funcionalidades
+## ✨ Características
 
 ### 🎮 Modos de juego
 
-- **Modo Descubrimiento**: Exploración visual e interactiva adaptada a cada operación
-- **Modo Quiz**: Preguntas de opción múltiple compatibles con las 4 operaciones (×, +, −, ÷) y progreso adaptativo
-- **Modo Desafío**: Carrera contrarreloj con las 4 operaciones (×, +, −, ÷) y distintos niveles de dificultad
-- **Modo Aventura**: Progreso narrativo por niveles compatible con las 4 operaciones
+- **Modo Descubrimiento**: exploración visual e interactiva adaptada a cada operación
+- **Modo Quiz**: preguntas de opción múltiple compatibles con las 4 operaciones (×, +, −, ÷) y progreso adaptativo
+- **Modo Desafío**: carrera contrarreloj con las 4 operaciones (×, +, −, ÷) y distintos niveles de dificultad
+- **Modo Aventura**: progreso narrativo por niveles compatible con las 4 operaciones
 - **Modo Crono**: 10 respuestas correctas contra un cronómetro que no se detiene, para superar el mejor tiempo, con las 4 operaciones (×, +, −, ÷)
 
-### 🕹️ Minijuegos arcade
+### 🕹️ Minijuegos Arcade
 
 - **MultiInvaders**: Space Invaders educativo - Destruir las respuestas incorrectas
 - **MultiMiam**: Pac-Man matemático - Recoger las respuestas correctas
-- **MultiMemory**: Juego de memoria - Asociar operaciones y resultados
+- **MultiMemory**: juego de memoria - Emparejar operaciones y resultados
 - **MultiSnake**: Snake educativo - Crecer comiendo los números correctos
 
 ### ➕ Compatibilidad con múltiples operaciones
 
-LeapMultix ofrece una práctica completa de las 4 operaciones aritméticas en **todos los modos**:
+LeapMultix ofrece un entrenamiento completo con las 4 operaciones aritméticas en **todos los modos**:
 
 | Modo           | ×   | +   | −   | ÷   |
 | -------------- | --- | --- | --- | --- |
@@ -124,21 +124,21 @@ LeapMultix ofrece una práctica completa de las 4 operaciones aritméticas en **
 | Crono          | ✅  | ✅  | ✅  | ✅  |
 | Arcade         | ✅  | ✅  | ✅  | ✅  |
 
-### 🌍 Funcionalidades transversales
+### 🌍 Características transversales
 
-- **Multiusuario**: Gestión de perfiles individuales con progreso guardado
-- **Multilingüe**: Compatibilidad con francés, inglés y español
-- **Personalización**: Avatares, temas de color y fondos
-- **Accesibilidad**: Navegación por teclado, compatibilidad táctil y conformidad con WCAG 2.1 AA
-- **Voz grabada**: el juego puede leer las preguntas y los mensajes de ánimo con una voz sintética pregrabada, recurriendo automáticamente a la voz del dispositivo como alternativa. Las voces no están en este repositorio: el sitio leapmultix.jls42.org ofrece a Lucie en francés, a Sulafat en inglés y español, y permite elegir entre Sulafat y Marie en francés y Jane en inglés (véase [Voz grabada](#-voz-grabada))
-- **Mobile responsive**: Interfaz optimizada para tabletas y smartphones
-- **Sistema de progreso**: panel de control por perfil (partidas, récords y tablas para repasar, detallados por operación), insignias y desafíos diarios
+- **Múltiples usuarios**: un perfil por niño, con su progreso; en un equipo de clase, nombres ordenados, filtro a partir de 10 jugadores, papelera durante 30 días y copia de seguridad de los jugadores en un archivo
+- **Multilingüe**: compatibilidad con francés, inglés y español
+- **Personalización**: avatares (el primero se puede elegir y los demás se desbloquean con las monedas obtenidas al jugar, 50 monedas cada uno), temas de color y fondos
+- **Accesibilidad**: navegación completa mediante teclado, compatibilidad táctil, pausa en Arcade, tamaño del texto y contraste alto; comprobada con axe-core, sin infracciones WCAG de nivel A o AA en las pantallas examinadas
+- **Voz grabada**: el juego puede leer preguntas y mensajes de ánimo con una voz sintetizada pregrabada, recurriendo automáticamente a la voz del dispositivo cuando sea necesario. Las voces no están incluidas en este repositorio: el sitio leapmultix.jls42.org utiliza Lucie en francés, Sulafat en inglés y español, y permite elegir entre Sulafat y Marie en francés y Jane en inglés (véase [Voz grabada](#-voz-grabada))
+- **Diseño responsive para móviles**: interfaz optimizada para tabletas y smartphones
+- **Sistema de progreso**: panel de control por perfil (partidas, récords y tablas para repasar, desglosados por operación), insignias, desafíos diarios y monedas (en Crono, Aventura, Desafío y el Desafío del día)
 
 ## 🚀 Inicio rápido
 
 ### Requisitos previos
 
-- Node.js (versión 16 o superior)
+- Node.js (versión 16 o posterior)
 - Un navegador web moderno
 
 ### Instalación
@@ -226,8 +226,8 @@ npm run voice:check-online # Vérifier les clips servis en ligne
 
 ### Estructura de archivos
 
-Los módulos JavaScript están **en un único nivel dentro de `js/`**, salvo por tres carpetas:
-`core/`, `components/` y `modes/`. Por tanto, el nombre del archivo es el que indica la
+Los módulos JavaScript están **dispuestos en un único nivel dentro de `js/`**, salvo por tres carpetas:
+`core/`, `components/` y `modes/`. Por tanto, el nombre del archivo es el que determina la
 agrupación (`arcade-*`, `multimiam-*`, `i18n*`…).
 
 ```
@@ -249,6 +249,9 @@ leapmultix/
 │   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
 │   │   ├── chrono-stats.js, chrono-questions.js, chrono-input.js   # Mode Chrono
 │   │   ├── mode-stats.js, adventure-progress.js   # Compteurs du tableau de bord
+│   │   ├── profile-operation-stats.js        # Statistiques par calcul, rangées dans le profil
+│   │   ├── players-trash.js, players-backup.js   # Corbeille et sauvegarde des joueurs
+│   │   ├── avatar-shop.js                    # Avatars débloqués avec les pièces (prix, achat)
 │   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
 │   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
 │   │   └── operations/                       # Une classe par opération
@@ -257,11 +260,15 @@ leapmultix/
 │   ├── components/         # Composants d'interface
 │   │   ├── topBar.js, infoBar.js, dashboard.js, customization.js
 │   │   ├── operationSelector.js, operationModeAvailability.js
+│   │   ├── playerTools.js  # « Qui joue ? » sur un poste de classe : filtre, corbeille, sauvegarde
+│   │   ├── loadErrorNotice.js   # Avis d'un jeu qui n'a pas pu s'ouvrir (hors ligne…)
+│   │   ├── confirm-dialog.js, avatarShop.js   # Fenêtre de confirmation du jeu, boutique d'avatars
 │   │   └── icons.js, tableSettingsModal.js
 │   ├── modes/              # Les six modes de jeu
 │   │   ├── DiscoveryMode.js, QuizMode.js, ChallengeMode.js
 │   │   └── AdventureMode.js, ChronoMode.js, ArcadeMode.js
-│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux
+│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux (temps et pause :
+│   │                       #   arcade-time.js ; plein écran : arcade-fullscreen.js)
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
 │   ├── i18n.js, i18n-store.js                # Internationalisation
@@ -269,6 +276,7 @@ leapmultix/
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
 │   ├── voice-clips.js      # Lecteur de la voix enregistrée (repli : speech.js)
 │   ├── slides.js, mode-orchestrator.js, lazy-loader.js, game-cleanup.js
+│   ├── game-exit.js        # Une seule règle pour quitter une partie en cours
 │   ├── VideoManager.js, responsive-image-loader.js
 │   ├── userManager.js, main-helpers.js, utils-es6.js, questionGenerator.js
 │   └── main-es6.js, main.js, bootstrap.js, game.js   # Points d'entrée
@@ -281,6 +289,7 @@ leapmultix/
 ├── tests/__tests__/        # Tests Jest (jsdom, et bout-en-bout via Puppeteer)
 ├── tests-esm/              # Tests Jest en modules ES (.mjs)
 ├── scripts/                # Génération d'assets, i18n, rapports
+│   ├── precache-list.mjs   # Liste de préchargement hors ligne de sw.js (npm run precache:update)
 │   └── voice/              # Voix enregistrée : corpus, génération, écoute, publication
 ├── docs/media/             # Captures et animations du README
 └── dist/                   # Build de production (généré)
@@ -288,21 +297,21 @@ leapmultix/
 
 ### Arquitectura técnica
 
-**Módulos ES6 modernos**: El proyecto utiliza una arquitectura modular con clases ES6 e imports/exports nativos.
+**Módulos ES6 modernos**: el proyecto utiliza una arquitectura modular con clases ES6 e imports/exports nativos.
 
-**Componentes reutilizables**: Interfaz construida con componentes UI centralizados (TopBar, InfoBar, Dashboard, Customization).
+**Componentes reutilizables**: interfaz construida con componentes UI centralizados (TopBar, InfoBar, Dashboard, Customization).
 
-**Lazy Loading**: Carga inteligente de módulos bajo demanda mediante `lazy-loader.js` para optimizar el rendimiento inicial.
+**Lazy Loading**: carga inteligente de módulos bajo demanda mediante `lazy-loader.js` para optimizar el rendimiento inicial.
 
-**Sistema de almacenamiento unificado**: API centralizada para la persistencia de datos de usuario mediante LocalStorage con fallbacks.
+**Sistema de almacenamiento unificado**: API centralizada para la persistencia de los datos de usuario mediante LocalStorage con mecanismos alternativos.
 
-**Gestión de audio centralizada**: Control del sonido con compatibilidad multilingüe y preferencias por usuario.
+**Gestión de audio centralizada**: control del sonido compatible con varios idiomas y preferencias por usuario.
 
-**Event Bus**: Comunicación desacoplada basada en eventos entre componentes para una arquitectura mantenible.
+**Event Bus**: comunicación desacoplada basada en eventos entre componentes para lograr una arquitectura mantenible.
 
-**Navegación por slides**: Sistema de navegación basado en slides numeradas (slide0, slide1, etc.) con `goToSlide()`.
+**Navegación mediante slides**: sistema de navegación basado en slides numeradas (slide0, slide1, etc.) con `goToSlide()`.
 
-**Seguridad**: Protección XSS y sanitización mediante `security-utils.js` para todas las manipulaciones del DOM.
+**Seguridad**: protección contra XSS y sanitización mediante `security-utils.js` para todas las manipulaciones del DOM.
 
 ## 🎯 Modos de juego detallados
 
@@ -312,7 +321,7 @@ Interfaz de exploración visual, adaptada a cada operación, con:
 
 - Visualización interactiva de las multiplicaciones
 - Animaciones y recursos mnemotécnicos
-- Arrastrar y soltar educativo
+- Función educativa de arrastrar y soltar
 - Progreso libre por tabla
 
 ### Modo Quiz
@@ -344,11 +353,11 @@ Progreso narrativo con:
 
 ### Modo Crono
 
-Diez respuestas correctas lo más rápido posible, contra un cronómetro que no se detiene:
+Diez respuestas correctas lo antes posible contra un cronómetro que no se detiene:
 
-- Las cuatro operaciones: las tablas de multiplicar (configuradas en los Ajustes de las tablas), y
+- Las cuatro operaciones: las tablas de multiplicar (configuradas en los Ajustes de las tablas) y
   todas las tablas de suma (7 + k), resta ((7 + k) − 7) y división ((7 × k) ÷ 7)
-- Respuesta mediante opciones o teclado numérico, tanto haciendo clic como con el teclado
+- Respuesta mediante opciones o teclado numérico, tanto con clic como con el teclado
 - Mejores tiempos, tiempo medio y gráfica de las últimas partidas, por operación
 - «Mis cálculos para repasar»: una lista por operación, repasada en ambos sentidos (6 × 7 y 7 × 6,
   15 − 7 y 15 − 8)
@@ -359,23 +368,29 @@ Lo que el niño ha jugado realmente, perfil por perfil:
 
 - Estrellas de Aventura y tablas de multiplicar para repasar (las 20 últimas respuestas de cada tabla)
 - Preguntas y respuestas correctas en Quiz, Desafío, Aventura y Crono
-- Partidas y récords de cada modo y de cada minijuego, incluidos los abandonos, detallados por operación
+- Partidas y récords de cada modo y de cada minijuego, incluidos los abandonos, desglosados por operación
   en cuanto el niño practica varias
 
-### Minijuegos arcade
+### Minijuegos Arcade
 
 Cada minijuego ofrece:
 
-- Elección de dificultad y personalización
+- Tres niveles de dificultad en las cuatro operaciones
 - Sistema de vidas y puntuación
-- Controles por teclado y táctiles
-- Clasificaciones individuales por usuario
+- Controles mediante ratón, teclado y pantalla táctil, descritos en la ficha del juego
+- Pausa: botón junto al tiempo o tecla P; el juego también se pausa cuando la pestaña queda
+  oculta y nunca se reanuda por sí solo
+- MultiMemory: opcionalmente, una partida sin límite de tiempo
+- Tablero adaptado al espacio disponible (más alto que ancho en un teléfono en vertical) y pantalla completa,
+  tanto en ordenadores como en teléfonos, incluso con el teléfono girado (excepto en iPhone, cuyo navegador
+  no lo permite)
+- Mejores puntuaciones de cada jugador; «Restablecer» indica todo lo que elimina
 
 ## 🔧 Desarrollo
 
-### Flujo de desarrollo
+### Workflow de desarrollo
 
-**Nunca se debe hacer commit directamente en main.** El proyecto trabaja con ramas de
+**No hacer nunca commits directamente en main.** El proyecto trabaja con ramas de
 funcionalidad.
 
 **1. Crear una rama**, `feat/` para una funcionalidad, `fix/` para una corrección:
@@ -384,8 +399,8 @@ funcionalidad.
 git checkout -b feat/nom-de-la-fonctionnalite
 ```
 
-**2. Desarrollar y verificar.** El formato va primero: la CI lo rechaza
-incluso antes de ejecutar las pruebas.
+**2. Desarrollar y verificar.** El formateo va primero: la CI lo rechaza
+antes incluso de ejecutar las pruebas.
 
 ```bash
 npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
@@ -395,7 +410,7 @@ npm run test          # Tests
 npm run test:coverage # Couverture
 ```
 
-**3. Hacer commit en la rama** y después subirla:
+**3. Hacer un commit en la rama** y después subirla:
 
 ```bash
 git add .
@@ -404,27 +419,27 @@ git push -u origin feat/nom-de-la-fonctionnalite
 ```
 
 **4. Abrir una pull request** y esperar los análisis: verify, Codacy,
-CodeFactor y SonarCloud. Se corrigen los problemas hasta que todo esté en verde antes de fusionar.
+CodeFactor y SonarCloud. Los problemas deben corregirse hasta que todos los análisis estén en verde antes de fusionar.
 
-**Estilo de commit**: Mensajes concisos en modo imperativo (p. ej.: "Fix arcade init errors", "Refactor cache updater")
+**Estilo de los commits**: mensajes concisos en modo imperativo (p. ej.: "Fix arcade init errors", "Refactor cache updater")
 
-**Quality gate**: Asegurarse de que `npm run lint`, `npm test` y `npm run test:coverage` se ejecuten correctamente antes de cada commit
+**Quality gate**: asegurarse de que `npm run lint`, `npm test` y `npm run test:coverage` se ejecuten correctamente antes de cada commit
 
 ### Arquitectura de componentes
 
-**GameMode (clase base)**: Todos los modos heredan de una clase común con métodos estandarizados.
+**GameMode (clase base)**: todos los modos heredan de una clase común con métodos estandarizados.
 
-**GameModeManager**: Orquestación centralizada del inicio y la gestión de los modos.
+**GameModeManager**: orquestación centralizada del inicio y la gestión de los modos.
 
 **Componentes UI**: TopBar, InfoBar, Dashboard y Customization proporcionan una interfaz coherente.
 
-**Lazy Loading**: Los módulos se cargan bajo demanda para optimizar el rendimiento inicial.
+**Lazy Loading**: los módulos se cargan bajo demanda para optimizar el rendimiento inicial.
 
-**Event Bus**: Comunicación desacoplada entre componentes mediante el sistema de eventos.
+**Event Bus**: comunicación desacoplada entre componentes mediante el sistema de eventos.
 
 ### Pruebas
 
-El proyecto incluye un conjunto completo de pruebas:
+El proyecto incluye una suite de pruebas completa:
 
 - Pruebas unitarias de los módulos core
 - Pruebas de integración de los componentes
@@ -441,9 +456,9 @@ npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 
 ### Build de producción
 
-- **Rollup**: Empaqueta `js/main-es6.js` en ESM con code-splitting y sourcemaps
-- **Terser**: Minificación automática para la optimización
-- **Post-build**: Copia `css/` y `assets/`, los favicons (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, y reescribe `dist/index.html` para que apunte al archivo de entrada con hash (p. ej.: `main-es6-*.js`)
+- **Rollup**: empaqueta `js/main-es6.js` en ESM con code-splitting y sourcemaps
+- **Terser**: minificación automática para optimizar
+- **Post-build**: copia `css/` y `assets/`, los favicons (`favicon.ico`, `favicon.png`, `favicon.svg`), `sw.js`, y reescribe `dist/index.html` para que apunte al archivo de entrada con hash (p. ej.: `main-es6-*.js`)
 - **Carpeta final**: `dist/` lista para servirse de forma estática
 
 ```bash
@@ -462,43 +477,49 @@ npm run serve:dist # sert dist/ (port 5000)
 - `npm run format:check` (Prettier)
 
 **`seo-report`** — después de `verify`: auditoría Lighthouse del sitio en línea para
-realizar un seguimiento de las métricas SEO a lo largo del tiempo.
+seguir las métricas SEO a lo largo del tiempo.
 
 **Análisis externos** conectados a las pull requests: Codacy, CodeFactor y
 SonarCloud. La puerta de SonarCloud exige calificaciones A en fiabilidad, seguridad y
-mantenibilidad del código nuevo.
+mantenibilidad para el código nuevo.
 
-**Despliegue**: `./deploy.sh` sincroniza el sitio con S3 e invalida la caché de
-CloudFront. El script regenera cuando es necesario las imágenes responsive, ausentes de git.
+**Despliegue**: `./deploy.sh` sincroniza el sitio con S3 e invalida la caché
+de CloudFront. El script vuelve a generar cuando es necesario las imágenes responsivas que no están en git.
 
 ### PWA (Progressive Web App)
 
 LeapMultix es una PWA completa con soporte sin conexión y posibilidad de instalación.
 
-**Service Worker** (`sw.js`) :
+**Service Worker** (`sw.js`):
 
-- Navegación: Network-first con alternativa sin conexión hacia `offline.html`
-- Imágenes: Cache-first para optimizar el rendimiento
-- Traducciones: Stale-while-revalidate para actualización en segundo plano
-- JS/CSS: Network-first para servir siempre la última versión
+- Instalación: precarga de todo lo que necesita el juego, lista generada a partir del código
+  por `scripts/precache-list.mjs` (`npm run precache:update`, verificada mediante las pruebas): después
+  de una primera visita, los 6 modos y los 4 juegos de Arcade se inician sin conexión
+- Navegación: Network-first; sin conexión, la página del juego en caché (`offline.html` solamente
+  para una página que nunca se haya guardado)
+- Imágenes: Cache-first; sin conexión, otro tamaño del mismo sprite u otro fondo del mismo avatar
+- Traducciones: Stale-while-revalidate para la actualización en segundo plano
+- JS/CSS: Network-first para servir siempre la última versión, caché sin conexión
+- Sonidos y fuentes: Cache-first, se sirven rangos de bytes (reproductor de audio de Safari)
 - Gestión automática de versiones mediante `cache-updater.js`
 
-**Manifest** (`manifest.json`) :
+**Manifest** (`manifest.json`):
 
 - Iconos SVG y PNG para todos los dispositivos
-- Posibilidad de instalación en dispositivos móviles (Add to Home Screen)
-- Configuración standalone para una experiencia app-like
-- Soporte de temas y colores
+- Instalación disponible en dispositivos móviles (Add to Home Screen)
+- Configuración standalone para una experiencia similar a una app
+- Compatibilidad con temas y colores
 
-**Probar el modo sin conexión localmente.** Iniciar el servidor y después abrir
+**Probar el modo sin conexión localmente.** Iniciar el servidor y luego abrir
 `http://localhost:8080` (o el puerto mostrado):
 
 ```bash
 npm run serve
 ```
 
-Manualmente: desactivar la red en las herramientas de desarrollo (pestaña Red,
-modo sin conexión) y después actualizar la página. Debe mostrarse `offline.html`.
+Manualmente: dejar la página abierta hasta que el service worker registre el juego, detener
+el servidor (o desconectar la red del dispositivo) y luego actualizar la página. El juego debe
+mostrarse y todos los modos deben iniciarse.
 
 Automáticamente, con Puppeteer:
 
@@ -517,40 +538,41 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 **Herramientas de calidad del código**:
 
-- **ESLint**: Configuración moderna con flat config (`eslint.config.js`), soporte para ES2022
-- **Prettier**: Formateo automático del código (`.prettierrc`)
-- **Stylelint**: Validación de CSS (`.stylelintrc.json`)
-- **JSDoc**: Documentación automática de las funciones con análisis de cobertura
+- **ESLint**: configuración moderna con flat config (`eslint.config.js`), compatibilidad con ES2022
+- **Prettier**: formateo automático del código (`.prettierrc`)
+- **Stylelint**: validación CSS (`.stylelintrc.json`)
+- **JSDoc**: documentación automática de las funciones con análisis de cobertura
 
 **Reglas de código importantes**:
 
 - Eliminar las variables y los parámetros no utilizados (`no-unused-vars`)
-- Utilizar una gestión de errores específica (sin catch vacíos)
+- Usar una gestión de errores específica (sin catch vacíos)
 - Evitar `innerHTML` en favor de las funciones `security-utils.js`
 - Mantener una complejidad cognitiva < 15 para las funciones
 - Extraer las funciones complejas en helpers más pequeños
 
 **Seguridad**:
 
-- **Protección XSS**: Utilizar las funciones de `security-utils.js`:
+- **Protección XSS**: usar las funciones de `security-utils.js`:
   - `appendSanitizedHTML()` en lugar de `innerHTML`
   - `createSafeElement()` para crear elementos seguros
   - `setSafeMessage()` para el contenido de texto
-- **Scripts externos**: Atributo `crossorigin="anonymous"` obligatorio
-- **Validación de entradas**: Sanitizar siempre los datos externos
-- **Content Security Policy**: Headers CSP para restringir las fuentes de scripts
+- **Scripts externos**: atributo `crossorigin="anonymous"` obligatorio
+- **Validación de entradas**: sanitizar siempre los datos externos
+- **Content Security Policy**: headers CSP para restringir las fuentes de scripts
 
 **Accesibilidad**:
 
-- Cumplimiento de WCAG 2.1 AA
+- Objetivo WCAG 2.1 nivel AA, comprobado con axe-core: ninguna infracción de nivel A o AA ni de
+  buenas prácticas
 - Navegación completa mediante teclado
-- Roles ARIA y labels apropiados
-- Contrastes de color conformes
+- Roles ARIA y nombres accesibles
+- Contrastes verificados por axe-core
 
 **Rendimiento**:
 
 - Lazy loading de los módulos mediante `lazy-loader.js`
-- Optimizaciones de CSS y assets responsivos
+- Optimizaciones CSS y assets responsivos
 - Service Worker para un almacenamiento inteligente en caché
 - Code splitting y minificación en producción
 
@@ -559,7 +581,7 @@ npm run sw:fix      # Corriger les problèmes de cache
 ### Navegadores compatibles
 
 La interfaz se basa en `oklch()` para los colores y en `:has()` para los
-estados contextuales, lo que establece el mínimo en:
+estados contextuales, lo que establece el requisito mínimo:
 
 - Chrome / Chromium 111+
 - Edge 111+
@@ -568,20 +590,29 @@ estados contextuales, lo que establece el mínimo en:
 
 ### Dispositivos
 
-- **Desktop**: Controles mediante teclado y ratón
-- **Tablets**: Interfaz táctil optimizada
-- **Smartphones**: Diseño responsive adaptativo
+- **Ordenadores**: controles mediante teclado y ratón
+- **Tabletas**: interfaz táctil optimizada
+- **Smartphones**: diseño responsive adaptable
 
 ### Accesibilidad
 
-- Navegación completa mediante teclado (Tab, flechas, Esc)
-- Roles ARIA y labels para lectores de pantalla
-- Contrastes de color conformes
-- Soporte de tecnologías de asistencia
+- Navegación completa mediante teclado: Tab, flechas en las cuadrículas de respuestas y las tarjetas de
+  MultiMemory, Intro, Escape; enlace «Ir a los modos de juego» en la parte superior de la página de inicio
+- Una sola regla para salir de una partida: «Abandonar», Escape o un botón de la barra superior
+  plantean la misma pregunta, y la partida continúa si el niño se niega
+- Lectores de pantalla: cada respuesta está vinculada a su pregunta, hay un título de nivel 1 por pantalla y los
+  mensajes se anuncian
+- La página permite hacer zoom con los dedos (fuera de los juegos de Arcade); tamaño del texto, contraste alto,
+  animaciones reducidas y una fuente de lectura derivada de Andika, diseñada para lectores
+  principiantes
+- Arcade: pausa (botón, tecla P o pestaña oculta); MultiMemory sin límite de tiempo, a elección
+- Comprobada con axe-core (WCAG 2.0 a 2.2, niveles A y AA y buenas prácticas): ninguna
+  infracción en 40 pantallas con ancho de ordenador y 39 con ancho de teléfono (390 px), incluidos el tema
+  Noche y el contraste alto
 
 ## 🌍 Localización
 
-Soporte multilingüe completo:
+Compatibilidad multilingüe completa:
 
 - **Francés** (idioma predeterminado)
 - **Inglés**
@@ -616,10 +647,10 @@ Este script (`scripts/compare-translations.cjs`) garantiza la sincronización de
 - Detección de claves ausentes (presentes en fr.json pero ausentes en otros idiomas)
 - Detección de claves adicionales (presentes en otros idiomas pero no en fr.json)
 - Identificación de valores vacíos (`""`, `null`, `undefined`, `[]`)
-- Comprobación de la coherencia de los tipos (string frente a array)
-- Aplanamiento de estructuras JSON anidadas en notación de puntos (p. ej.: `arcade.multiMemory.title`)
+- Comprobación de la coherencia de tipos (string frente a array)
+- Aplanamiento de estructuras JSON anidadas mediante notación de puntos (p. ej.: `arcade.multiMemory.title`)
 - Generación de un informe detallado en la consola
-- Guardado del informe JSON en `docs/translations-comparison-report.json`
+- Almacenamiento del informe JSON en `docs/translations-comparison-report.json`
 
 **Ejemplo de salida:**
 
@@ -653,22 +684,22 @@ Este script (`scripts/compare-translations.cjs`) garantiza la sincronización de
 - Mensajes de error y de feedback
 - Descripciones y ayuda contextual
 - Contenido narrativo del modo Aventura
-- Labels de accesibilidad y ARIA
+- Etiquetas de accesibilidad y ARIA
 
 ## 🔊 Voz grabada
 
-El juego lee en voz alta las preguntas, los mensajes de ánimo y las explicaciones. Solo dice un conjunto finito de frases, unas 7400 por idioma: por tanto, pueden grabarse de una vez por todas y ninguna parte necesita entonces llamar a un servicio de síntesis. Sin clips, el juego lee con la voz del dispositivo.
+El juego lee en voz alta las preguntas, los mensajes de ánimo y las explicaciones. Solo pronuncia un conjunto finito de frases, unas 7 400 por idioma: por tanto, pueden grabarse una vez para siempre, y así ninguna partida llama a un servicio de síntesis. Sin clips, el juego lee con la voz del dispositivo.
 
 ### En este repositorio: la aplicación, sin las voces
 
-El código puede reproducir clips pregrabados y contiene la cadena que los crea. Los clips no están incluidos, al igual que las claves de los proveedores: un fork o una instalación local lee con la voz del dispositivo.
+El código puede reproducir clips pregrabados y contiene la cadena que los genera. Los clips no están incluidos, al igual que las claves de los proveedores: un fork o una instalación local lee con la voz del dispositivo.
 
-- **Alternativa automática** con la voz del dispositivo, frase por frase: clip ausente o con error, reproducción rechazada por el navegador, clip que no se inicia en 1,5 s o uso sin conexión sin el clip en caché.
-- **Ajustes**: el botón de voz de la barra superior activa o desactiva la lectura; la casilla «Voz grabada» (Accesibilidad y controles) permite elegir entre la voz grabada y la voz del dispositivo. Solo aparece en los idiomas para los que se ha publicado una voz.
+- **Fallback automático** a la voz del dispositivo, frase por frase: clip ausente o con errores, reproducción rechazada por el navegador, clip que no se inicia en 1,5 s o uso sin conexión sin que el clip esté en caché.
+- **Ajustes**: el botón de voz de la barra superior activa o desactiva la lectura; la casilla «Voz grabada» (Accesibilidad y controles) permite elegir entre la voz grabada y la voz del dispositivo. Solo aparece en los idiomas en los que hay una voz publicada.
 - **Sin conexión**: los clips ya escuchados permanecen en caché (service worker).
-- **Dónde busca el juego los clips**: en la etiqueta `<meta name="leapmultix-voice-base">`, vacía en el repositorio. Solo el despliegue de producción escribe allí `/voice/`.
+- **Dónde busca el juego los clips**: en la etiqueta `<meta name="leapmultix-voice-base">`, vacía en el repositorio. Solo el despliegue de producción escribe en ella `/voice/`.
 
-Con sus propios clips en el equipo (creados mediante la cadena que se describe a continuación y almacenados junto al juego en `../leapmultix-voices`), el parámetro `?voix=local` hace que el servidor de desarrollo los reproduzca:
+Con sus propios clips en el equipo (generados por la cadena descrita a continuación y guardados junto al juego en `../leapmultix-voices`), el parámetro `?voix=local` permite que el servidor de desarrollo los reproduzca:
 
 ```bash
 npm run voice:publish -- local --lang fr --audience all --default-on   # relie voice/ (ignoré par git) aux clips
@@ -680,26 +711,26 @@ npm run serve
 
 ### En leapmultix.jls42.org: las voces del alojamiento
 
-El sitio ofrecido por el autor proporciona voces de síntesis grabadas:
+El sitio ofrecido por el autor sirve voces de síntesis grabadas:
 
 - en francés, **Lucie**, creada con ElevenLabs (modelo Eleven v3);
 - en inglés británico y en español de España, **Sulafat**, creada con Google Cloud Text-to-Speech (voz Chirp 3 HD);
-- a elección del jugador, **Sulafat** en francés, para mantener la misma voz en los tres idiomas;
+- a elección del jugador, **Sulafat** en francés, para conservar la misma voz en los tres idiomas;
 - también a elección del jugador, **Marie** en francés y **Jane** en inglés, creadas con Mistral AI (Voxtral TTS).
 
-Los clips se encuentran en un repositorio privado y en un bucket S3 dedicado, servido por CloudFront en `/voice/*`. Se generan una sola vez: durante el juego, no se envía nada a estos servicios. En los ajustes, el menú «Voz» ofrece las voces del idioma cuando dispone de varias, y la indicación nombra el servicio de la voz que se escucha.
+Los clips se encuentran en un repositorio privado y en un bucket S3 dedicado, servido por CloudFront en `/voice/*`. Se generan una sola vez: durante el juego, no se envía nada a estos servicios. En los ajustes, el menú «Voz» ofrece las voces del idioma cuando tiene varias, y la mención indica el servicio de la voz que se escucha.
 
 ### Generar los clips
 
-La cadena está programada mediante scripts en `scripts/voice/` y se ejecuta en el equipo del propietario, nunca en la CI pública. Las claves de los proveedores (ElevenLabs para Lucie, Google Cloud Text-to-Speech para Sulafat, Mistral para Marie y Jane) permanecen en un archivo `.env` fuera del repositorio, proporcionado mediante `node --env-file`: ninguna clave entra en git. El skill Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) detalla el procedimiento paso a paso (controles, aprobaciones, reanudaciones); los detalles están en [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
+La cadena está automatizada mediante scripts en `scripts/voice/` y se ejecuta en el equipo del propietario, nunca en la CI pública. Las claves de los proveedores (ElevenLabs para Lucie, Google Cloud Text-to-Speech para Sulafat, Mistral para Marie y Jane) permanecen en un archivo `.env` fuera del repositorio, proporcionado mediante `node --env-file`: ninguna clave entra en git. El skill Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) describe el procedimiento paso a paso (puertas, confirmaciones, reanudaciones); los detalles están en [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
 
-1. **Estimar** las frases restantes y los caracteres que habrá que pagar (Eleven v3: aproximadamente 0,53 créditos por carácter; Chirp 3 HD: 30 $ por millón de caracteres, con el primer millón de cada mes gratuito; Voxtral TTS: 16 $ por millón).
-2. **Generar**. Volver a ejecutar el mismo comando reanuda lo que falta. Cuando se agotan los créditos, el script se detiene correctamente (código 3) sin dejar ningún archivo escrito a medias. `--max-total-chars` limita el gasto acumulado de la versión: cada respuesta pagada se registra en cuanto se recibe en un registro que sobrevive a una interrupción abrupta. En Google y Mistral, que no proporcionan ningún saldo consultable, esta es la única protección.
-3. **Comprobar**: cada frase tiene su clip y cada MP3 es válido. Después, Whisper transcribe cada clip localmente, y el control señala los números mal reconocidos y las duraciones anómalas. `voice:review` encadena Whisper, este control y la página de escucha en un solo comando.
-4. **Escuchar** en la página de escucha (`voice:listen`) los clips señalados y una muestra de formas femeninas («una por 7»), que Whisper no distingue. Cada clip tiene una casilla «rehacer», que lo añade a la lista de clips descartados.
-5. **Rehacer** los clips descartados (`--redo`) y volver a ejecutar Whisper, para después comparar cada clip antes y después en una segunda página. Un clip que siga estando mal pronunciado después de dos o tres intentos recibe un texto impuesto en `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), por ejemplo, el número escrito con letras.
-6. **Publicar** los clips, comprobar que responden en línea y después publicar el índice del idioma, primero para los testers (`?voix=test`).
-7. **Abrir** la voz para todos y después activarla de forma predeterminada. El interruptor de emergencia (`voice:publish -- remove`) retira un idioma del índice: el juego vuelve a utilizar la voz del dispositivo.
+1. **Estimar** las frases restantes y los caracteres que se pagarán (Eleven v3: aproximadamente 0,53 créditos por carácter; Chirp 3 HD: 30 $ por millón de caracteres, con el primer millón de cada mes gratuito; Voxtral TTS: 16 $ por millón).
+2. **Generar**. Volver a ejecutar el mismo comando reanuda lo que falta. Cuando se agotan los créditos, el script se detiene correctamente (código 3) sin dejar ningún archivo escrito a medias. `--max-total-chars` limita el gasto acumulado de la versión: cada respuesta pagada se registra en cuanto se recibe en un registro que sobrevive a una interrupción brusca. En Google y Mistral, que no proporcionan ningún saldo consultable, esta es la única protección.
+3. **Comprobar**: cada frase tiene su clip y cada MP3 es válido. A continuación, Whisper transcribe cada clip localmente, y la comprobación señala los números mal interpretados y las duraciones anómalas. `voice:review` encadena Whisper, esta comprobación y la página de escucha en un solo comando.
+4. **Escuchar** en la página de escucha (`voice:listen`) los clips señalados y una muestra de formas femeninas («una por 7»), que Whisper no distingue. Cada clip tiene una casilla «volver a generar» que lo añade a la lista de clips descartados.
+5. **Volver a generar** los clips descartados (`--redo`) y ejecutar de nuevo Whisper; después, comparar cada clip antes y después en una segunda página. Un clip que siga pronunciándose mal después de dos o tres intentos recibe un texto impuesto en `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`), por ejemplo, el número escrito con todas sus letras.
+6. **Publicar** los clips, comprobar que responden en línea y después publicar el índice del idioma, primero para los evaluadores (`?voix=test`).
+7. **Abrir** la voz para todos y luego activarla de forma predeterminada. El interruptor de emergencia (`voice:publish -- remove`) retira un idioma del índice: el juego vuelve a la voz del dispositivo.
 
 ```bash
 # 1. Estimer (sans frais)
@@ -722,13 +753,13 @@ npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> -
 npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience all --default-on
 ```
 
-### Regla: una frase pronunciada que se modifica debe volver a grabarse antes de pasar a producción
+### Regla: una frase hablada que se modifica debe volver a grabarse antes de pasar a producción
 
-Toda frase pronunciada procede de las traducciones (`assets/translations/{fr,en,es}.json`) y forma parte del corpus. Por tanto, cambiar una frase hablada hace que falle el test de bloqueo del corpus (`scripts/voice/corpus.lock.json`). Para un idioma que dispone de voz grabada, se generan entonces los clips de las frases afectadas, se comprueban y se escuchan, y después se publican **antes** de fusionar. Por último, se actualiza el bloqueo (`npm run voice:corpus:lock`). Sin estos clips, la frase modificada se lee con la voz del dispositivo.
+Todas las frases habladas proceden de las traducciones (`assets/translations/{fr,en,es}.json`) y forman parte del corpus. Por tanto, cambiar una frase hablada hace que falle la prueba del bloqueo del corpus (`scripts/voice/corpus.lock.json`). Para un idioma que dispone de voz grabada, se generan entonces los clips de las frases afectadas, se comprueban y se escuchan, y después se publican **antes** de fusionar. Por último, se actualiza el bloqueo (`npm run voice:corpus:lock`). Sin estos clips, la frase modificada se lee con la voz del dispositivo.
 
 ## 📊 Almacenamiento de datos
 
-### Datos de usuario
+### Datos del usuario
 
 - Perfiles y preferencias
 - Progreso por modo de juego
@@ -737,10 +768,15 @@ Toda frase pronunciada procede de las traducciones (`assets/translations/{fr,en,
 
 ### Funcionalidades técnicas
 
-- Almacenamiento local (localStorage) con fallbacks
-- Datos de juego organizados por perfil (las estadísticas por operación siguen siendo comunes al dispositivo)
+- Almacenamiento local (localStorage) con fallbacks; se solicita al navegador que no lo borre por
+  sí mismo (`navigator.storage.persist()`)
+- Papelera de jugadores eliminados: 30 días con todos sus datos, restauración desde
+  «¿Quién juega?»
+- Copia de seguridad de los jugadores en un archivo JSON y recuperación en este dispositivo o en otro (un jugador
+  ya existente nunca se sobrescribe)
+- Datos del juego organizados por perfil, incluidas las estadísticas por cálculo: en un equipo compartido, los errores de un jugador no influyen en las preguntas de otro
 - Guardado automático del progreso
-- Migración automática de datos antiguos
+- Migración automática de los datos antiguos
 
 ## 🐛 Informar de un problema
 
@@ -757,7 +793,7 @@ Los problemas pueden notificarse mediante las issues de GitHub. Incluya:
 
 ## 📄 Licencia
 
-Este proyecto se distribuye bajo la licencia AGPL v3. Consulte el archivo `LICENSE` para obtener más detalles.
+Este proyecto está bajo la licencia AGPL v3. Consulte el archivo `LICENSE` para obtener más detalles.
 
 ---
 
