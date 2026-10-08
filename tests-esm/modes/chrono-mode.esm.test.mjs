@@ -576,6 +576,21 @@ describe('Chrono : écran de départ', () => {
     expect(chrono.sessionFacts).toHaveLength(0);
   });
 
+  test('lecteur d’écran : chaque réponse et chaque chiffre du pavé sont reliés à la question', async () => {
+    for (const inputMode of ['mcq', 'keypad']) {
+      const chrono = await startChrono({ inputMode });
+      showQuestion(chrono, 6, 7);
+      const answers = document.querySelectorAll('#chrono-options .option, .chrono-key');
+      const digits = [...answers].filter(el => el.dataset.key !== 'back');
+      expect(digits.length).toBeGreaterThan(1);
+      for (const el of digits) {
+        const described = document.getElementById(el.getAttribute('aria-describedby'));
+        expect(described?.textContent).toBe(document.getElementById('chrono-question').textContent);
+      }
+      chrono.stop();
+    }
+  });
+
   test('en « Je tape », la case de réponse vide affiche « ? », comme la question', async () => {
     const chrono = await startChrono({ inputMode: 'keypad' });
     expect(document.querySelector('#chrono-typed').textContent).toBe('?');

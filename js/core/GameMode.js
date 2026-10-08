@@ -918,6 +918,11 @@ export class GameMode {
       }
       button.dataset.value = option.value;
       button.textContent = option.display;
+      // Lecteur d'écran : la réponse qui reçoit le focus est lue avec sa question, sans
+      // annonce de plus par-dessus la voix du jeu
+      if (this.questionElement?.id) {
+        button.setAttribute('aria-describedby', this.questionElement.id);
+      }
       button.onclick = () => this.handleAnswer(option.value);
 
       // Ajouter support clavier

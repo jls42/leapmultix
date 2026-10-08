@@ -1109,6 +1109,8 @@ export class ChronoMode extends GameMode {
     const grid = document.createElement('div');
     grid.className = 'chrono-keys';
     const keys = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'back', 0];
+    // Lecteur d'écran : un chiffre qui reçoit le focus est lu avec la question
+    const questionId = this.questionElement?.id;
     keys.forEach(key => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -1120,6 +1122,7 @@ export class ChronoMode extends GameMode {
       } else {
         btn.textContent = String(key);
         btn.dataset.key = String(key);
+        if (questionId) btn.setAttribute('aria-describedby', questionId);
       }
       btn.addEventListener('click', event => {
         // Clic à la souris ou au doigt (detail > 0) : la touche rend le focus, pour qu'Entrée
