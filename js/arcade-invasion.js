@@ -240,10 +240,11 @@ export function calculateCanvasDimensions(canvas) {
 
 /**
  * Plateau de la partie : taille interne fixée au lancement, puis affichage dans la place
- * actuelle (consigne comprise), et de nouveau à chaque changement d'écran (consigne partie,
- * rotation, plein écran) sans que la partie change.
+ * actuelle (consigne comprise). fitBoard le réaffiche à chaque changement d'écran
+ * (consigne partie, rotation, plein écran) sans que la partie change.
  * @param {HTMLCanvasElement} canvas
- * @returns {{displayWidth: number, displayHeight: number, isMobile: boolean}}
+ * @returns {{displayWidth: number, displayHeight: number, isMobile: boolean,
+ *   fitBoard: () => number}}
  */
 function sizeInvadersBoard(canvas) {
   const dimensions = calculateCanvasDimensions(canvas);
@@ -251,8 +252,7 @@ function sizeInvadersBoard(canvas) {
   canvas.height = dimensions.displayHeight;
   const fitBoard = () => fitArcadeCanvas(canvas, getArcadeCanvasBox(canvas));
   fitBoard();
-  watchArcadeViewport(canvas, fitBoard);
-  return dimensions;
+  return { ...dimensions, fitBoard };
 }
 
 function computeBaseAlienSpeed(isMobile, difficulty, enemySpeed) {
@@ -415,7 +415,9 @@ export function startMultiplicationInvasion() {
     'neutral',
     INVADERS_INSTRUCTION_MS
   );
-  const { displayWidth, displayHeight, isMobile } = sizeInvadersBoard(canvas);
+  const board = sizeInvadersBoard(canvas);
+  const { isMobile } = board;
+  let { displayWidth, displayHeight } = board;
 
   // Ajout de la classe pour appliquer les styles communs
   canvas.classList.add('arcade-canvas');
@@ -1086,6 +1088,30 @@ export function startMultiplicationInvasion() {
     if (e.button === 0) shoot();
   });
   // (Ancien écouteur touchstart générique supprimé: le gestionnaire plus haut gère désormais le tir immédiat.)
+
+  // Rien n'est encore joué (aucun tir, aucune vie perdue) : un changement d'écran refait le
+  // plateau pour la nouvelle place, et la vague repart dedans à l'image suivante
+  function relayoutUnplayedBoard() {
+    if (score !== 0 || lives !== 3 || wave !== 1 || bullets.length > 0) return;
+    const next = calculateCanvasDimensions(canvas);
+    if (next.displayWidth === displayWidth && next.displayHeight === displayHeight) return;
+    ({ displayWidth, displayHeight } = next);
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+    Object.assign(player, {
+      x: displayWidth / 2 - 25,
+      y: displayHeight - 30,
+      speed: Math.max(8, displayWidth / 100),
+    });
+    aliens = [];
+  }
+
+  // L'écran change (consigne partie, rotation, plein écran) : l'affichage suit
+  function refitBoard() {
+    relayoutUnplayedBoard();
+    board.fitBoard();
+  }
+  watchArcadeViewport(canvas, refitBoard);
 
   // Lancer le jeu
   score = 0;
