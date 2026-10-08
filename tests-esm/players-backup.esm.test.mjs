@@ -71,10 +71,10 @@ describe('Export : tous les joueurs de la liste, tels qu’ils sont rangés', ()
       exportedAt: NOW.toISOString(),
     });
     expect(Object.keys(backup.players)).toEqual(['Zoé', 'Léa']);
-    const legacy = legacySnapshot().players;
-    for (const name of ['Zoé', 'Léa']) {
-      const { operationStats, ...rest } = backup.players[name];
-      expect(rest).toEqual(legacy[name]);
+    const legacy = new Map(Object.entries(legacySnapshot().players));
+    for (const [name, profile] of Object.entries(backup.players)) {
+      const { operationStats, ...rest } = profile;
+      expect(rest).toEqual(legacy.get(name));
       // Profil jamais rouvert depuis la mise à jour : il emporte sa copie des statistiques
       expect(operationStats['7×8']).toMatchObject({ attempts: 9, errors: 4 });
     }

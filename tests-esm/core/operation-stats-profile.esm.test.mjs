@@ -14,6 +14,7 @@ const { recordOperationResult, getWeakOperations } = await import(
   '../../js/core/operation-stats.js'
 );
 const { generateQuestion } = await import('../../js/questionGenerator.js');
+const { saveArcadeScore } = await import('../../js/arcade-scores.js');
 
 const stored = () => JSON.parse(localStorage.getItem('players'));
 const fact = (operator, a, b, attempts, errors) => ({
@@ -89,6 +90,20 @@ describe('Une réponse est rangée dans le profil de celui qui joue', () => {
     expect(getWeakOperations('×').map(weak => weak.key)).toEqual(['6×7']);
     UserManager._currentUser = 'Tom';
     expect(getWeakOperations('×')).toEqual([]);
+  });
+});
+
+describe('Les écritures du profil qui suivent ne perdent pas les réponses comptées', () => {
+  test('partie d’Arcade : deux réponses, puis le score de fin ; tout est gardé', () => {
+    UserManager.createUser('Léa', 'panda');
+    UserManager._currentUser = 'Léa';
+    recordOperationResult('×', 6, 7, false);
+    recordOperationResult('×', 6, 7, true);
+    saveArcadeScore(120, 'multimiam', '×');
+
+    const lea = stored()['Léa'];
+    expect(lea.operationStats['6×7']).toMatchObject({ attempts: 2, errors: 1 });
+    expect(lea.modeStats.modes.multimiam['×']).toMatchObject({ games: 1, best: 120 });
   });
 });
 
