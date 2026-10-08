@@ -70,7 +70,7 @@ const PATH_RUN = /[\w\uFFFC./-]+/g;
 /** Nom de sprite passé au chargeur (arcade-sprite-loader.js), sans extension */
 const SPRITE_CALL = /\bloadSprite(?:Sync)?\(\s*([\x22\x27\x60])([^\x22\x27\x60]+)\1/g;
 /** Attributs d'adresse d'une page ; srcset en porte plusieurs */
-const HTML_ATTRIBUTE = /\b(?:src|href|srcset)=\x22([^\x22]*)\x22/g;
+const URL_ATTRIBUTE = /\b(?:src|href|srcset)=\x22([^\x22]*)\x22/g;
 /** url(…) d'une feuille de style */
 const CSS_URL = /url\(\s*[\x22\x27]?([^\x22\x27)\s]+)[\x22\x27]?\s*\)/g;
 /** Fond illustré : img/background_<avatar>_<numéro>.webp */
@@ -107,7 +107,7 @@ const withoutComments = source =>
  * @returns {string[]}
  */
 export function htmlReferences(pageSource) {
-  return [...pageSource.matchAll(HTML_ATTRIBUTE)].flatMap(([, value]) =>
+  return [...pageSource.matchAll(URL_ATTRIBUTE)].flatMap(([, value]) =>
     value.split(',').map(item => item.trim().split(/\s+/)[0])
   );
 }
@@ -206,7 +206,8 @@ function moduleTokens(source) {
  */
 export function insideRoot(root, sitePath) {
   const base = path.resolve(root);
-  const full = path.resolve(base, `.${path.posix.normalize(`/${sitePath}`)}`);
+  const fromRoot = path.posix.normalize(`/${sitePath}`);
+  const full = path.resolve(base, `.${fromRoot}`);
   if (full !== base && !full.startsWith(base + path.sep)) {
     throw new Error(`Chemin hors du dépôt : ${sitePath}`);
   }
