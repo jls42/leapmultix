@@ -267,6 +267,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `arcade-touch.js` - Gestes tactiles communs à MultiSnake et MultiMiam (glisser, toucher tolérant)
 - `arcade-message.js`, `arcade-points.js` - Arcade UI components
 - `arcade-scores.js`, `arcade-session.js` - Arcade scores stored in the player profile; a game counts from its first move, abandon included
+- `arcade-time.js` - Arcade time: pause (button next to the time, P key, hidden tab; never resumes on its own) and MultiMemory's no-time-limit option, kept on the device like the difficulty; the games read `isArcadePaused()` at each step
 
 **Multimiam (Decomposed Architecture):**
 
