@@ -145,11 +145,13 @@ export const InfoBar = {
     bottom.appendChild(ph2);
     return bottom;
   },
-  _createGameUI(canvasId, abandonId, abandonLabel) {
+  _createGameUI(canvasId, abandonId, abandonLabel, abandonKey) {
     const gameUI = document.createElement('div');
     gameUI.className = 'arcade-game-ui';
     gameUI.setAttribute('role', 'region');
+    // Noms et libellés portent leur clé : ils suivent un changement de langue (i18n.js)
     gameUI.setAttribute('aria-label', trLabel('arcade_game_area_label', 'Zone de jeu'));
+    gameUI.dataset.translateAriaLabel = 'arcade_game_area_label';
     // Mise en page portée par css/arcade.css (.arcade-game-ui) ; le plateau est
     // dimensionné à la place disponible par js/arcade-common.js
     gameUI.style.width = '100%';
@@ -158,6 +160,7 @@ export const InfoBar = {
     canvas.id = canvasId;
     canvas.setAttribute('tabindex', '0');
     canvas.setAttribute('aria-label', trLabel('arcade_game_screen_label', 'Écran de jeu'));
+    canvas.dataset.translateAriaLabel = 'arcade_game_screen_label';
     canvas.style.width = '100%';
     canvas.style.height = '100%';
 
@@ -166,6 +169,8 @@ export const InfoBar = {
     abandon.id = abandonId;
     abandon.setAttribute('aria-label', abandonLabel);
     abandon.textContent = abandonLabel;
+    abandon.dataset.translate = abandonKey;
+    abandon.dataset.translateAriaLabel = abandonKey;
 
     gameUI.appendChild(canvas);
     gameUI.appendChild(abandon);
@@ -469,7 +474,8 @@ export const InfoBar = {
       timerId = `${mode}-info-timer`,
       abandonId = 'arcade-abandon-btn',
       operationLabel = '',
-      abandonLabel = _getTranslation('abandon_arcade_button'),
+      abandonKey = 'abandon_arcade_button',
+      abandonLabel = _getTranslation(abandonKey),
       showLives = true,
       showScore = true,
     } = config;
@@ -486,7 +492,7 @@ export const InfoBar = {
     display.appendChild(bottom);
 
     // Game UI container
-    const gameUI = this._createGameUI(canvasId, abandonId, abandonLabel);
+    const gameUI = this._createGameUI(canvasId, abandonId, abandonLabel, abandonKey);
 
     frag.appendChild(display);
     frag.appendChild(gameUI);

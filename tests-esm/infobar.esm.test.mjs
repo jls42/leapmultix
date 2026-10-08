@@ -155,6 +155,16 @@ describe('ESM: bandeau des mini-jeux d’Arcade', () => {
     expect(live[0].classList.contains('arcade-question')).toBe(true);
   });
 
+  test('« Abandonner », le plateau et sa zone suivent un changement de langue', () => {
+    const abandon = document.getElementById('arcade-abandon-btn');
+    expect(abandon.dataset.translate).toBe('abandon_arcade_button');
+    expect(abandon.dataset.translateAriaLabel).toBe('abandon_arcade_button');
+    const canvas = document.querySelector('.arcade-game-ui > canvas');
+    expect(canvas.dataset.translateAriaLabel).toBe('arcade_game_screen_label');
+    const area = document.querySelector('.arcade-game-ui');
+    expect(area.dataset.translateAriaLabel).toBe('arcade_game_area_label');
+  });
+
   test('la version HTML donne le même bandeau', () => {
     const html = InfoBar.createArcadeTemplate({ mode: 'multisnake' });
     expect(html).toContain('id="multisnake-info-lives"');
