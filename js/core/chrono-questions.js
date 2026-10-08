@@ -63,8 +63,7 @@ function isChronoTable(n, operator) {
 }
 
 export function isFullTableSet(tables, operator = '×') {
-  const unique = uniqueTables(tables, operator);
-  return unique.length === (operator === '÷' ? DIVISION_TABLES.length : ALL_TABLES_COUNT);
+  return uniqueTables(tables, operator).length === chronoTables(operator).length;
 }
 
 /**
@@ -82,8 +81,18 @@ export function includedTablesFromExclusions(exclusions, globalEnabled) {
   return tables.length > 0 ? tables : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 }
 
-function uniqueTables(tables, operator = '×') {
-  return [...new Set((tables || []).map(Number).filter(n => isChronoTable(n, operator)))];
+/**
+ * Tables d’une opération, sans doublon, dans l’ordre : celles du tirage, des classements et
+ * de leurs libellés (« Tables 3, 7 »)
+ * @param {unknown} tables
+ * @param {string} [operator]
+ * @returns {number[]}
+ */
+export function uniqueTables(tables, operator = '×') {
+  const list = Array.isArray(tables) ? tables : [];
+  const unique = [...new Set(list.map(Number).filter(n => isChronoTable(n, operator)))];
+  unique.sort((a, b) => a - b);
+  return unique;
 }
 
 function hardness(n) {
