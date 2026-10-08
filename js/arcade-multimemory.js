@@ -89,6 +89,68 @@ export function drawMemoryCalculation({ operator, level, tables, excludedTables 
   return { num1: question.a, num2: question.b, operator, result: question.answer };
 }
 
+/** Opérations où l'ordre des nombres ne change rien : 3 × 4 et 4 × 3 sont le même calcul */
+const COMMUTATIVE_OPERATORS = new Set(['×', '+']);
+/** Tirages permis par paire : chaque niveau offre au moins 10 calculs, pour 8 paires au plus */
+const DRAWS_PER_PAIR = 100;
+
+/**
+ * Clé d'un calcul : deux paires de même clé poseraient le même calcul (dans un sens ou dans
+ * l'autre, pour × et +)
+ * @param {{num1: number, num2: number, operator: string}} calculation
+ * @returns {string}
+ */
+export function calculationKey({ num1, num2, operator }) {
+  const swap = COMMUTATIVE_OPERATORS.has(operator) && num1 > num2;
+  const [first, second] = swap ? [num2, num1] : [num1, num2];
+  return `${first} ${operator} ${second}`;
+}
+
+/**
+ * Calculs d'un plateau : jamais deux fois le même (ni 3 × 4 avec 4 × 3)
+ * @param {number} pairs - Nombre de paires voulu
+ * @param {Object} settings - Voir drawMemoryCalculation
+ * @returns {Array<{num1: number, num2: number, operator: string, result: number}>}
+ */
+export function drawMemoryCalculations(pairs, settings) {
+  const chosen = new Map();
+  for (let draw = 0; chosen.size < pairs && draw < pairs * DRAWS_PER_PAIR; draw++) {
+    const calculation = drawMemoryCalculation(settings);
+    const key = calculationKey(calculation);
+    if (!chosen.has(key)) chosen.set(key, calculation);
+  }
+  return [...chosen.values()];
+}
+
+/**
+ * Une carte, face cachée : le calcul (« 7 × 8 ») ou son résultat (« 56 »)
+ * @param {{num1: number, num2: number, operator: string, result: number}} calculation
+ * @param {number} pairId
+ * @param {'operation'|'result'} type
+ * @param {number} monsterIndex - Monstre dessiné au dos
+ * @returns {Object}
+ */
+function createMemoryCard(calculation, pairId, type, monsterIndex) {
+  const { num1, num2, operator, result } = calculation;
+  return {
+    id: pairId * 2 + (type === 'result' ? 1 : 0),
+    type,
+    content: type === 'operation' ? `${num1} ${operator} ${num2}` : `${result}`,
+    num1,
+    num2,
+    operator,
+    result,
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    isFlipped: false,
+    isMatched: false,
+    monsterIndex,
+    pairId,
+  };
+}
+
 /**
  * Écart entre un point et une carte (0 dedans), sur l'axe le plus éloigné.
  * @param {{x: number, y: number, width: number, height: number}} card
@@ -512,81 +574,35 @@ class MemoryGame {
     this.gameLoop();
   }
 
-  // Crée les cartes pour le jeu
+  // Crée les cartes pour le jeu : une carte calcul et une carte résultat par paire
   createCards() {
     // Forcer la réinitialisation du nombre de paires selon la difficulté actuelle
     // Cette ligne est ajoutée pour s'assurer que le bon nombre de paires est utilisé à chaque fois
     this.pairs = this.getPairsCount();
 
-    this.cards = [];
-    const selectedTables = this.tables.slice();
-    this.shuffleArray(selectedTables);
+    // Des calculs tous différents (R4.3 : +, −, ×, ÷)
+    const calculations = drawMemoryCalculations(this.pairs, {
+      operator: this.operator,
+      level: this.difficulty,
+      tables: this.tables,
+      excludedTables: this.excludedTables,
+    });
+    // La partie se gagne en trouvant toutes les paires posées
+    this.pairs = calculations.length;
 
-    // Préparer pool de monstres uniques
+    const monsterIndices = this.pickMonsterIndices(this.pairs * 2);
+    this.cards = calculations.flatMap((calculation, pairId) => [
+      createMemoryCard(calculation, pairId, 'operation', monsterIndices.pop()),
+      createMemoryCard(calculation, pairId, 'result', monsterIndices.pop()),
+    ]);
+  }
+
+  // Dos des cartes : des monstres tous différents, tant qu'il y en a assez
+  pickMonsterIndices(count) {
     const monsterCount = this.monsterImages.length;
-    const neededCards = this.pairs * 2;
-    let monsterIndices = Array.from({ length: monsterCount }, (_, i) => i);
-    this.shuffleArray(monsterIndices);
-    if (monsterIndices.length < neededCards) {
-      while (monsterIndices.length < neededCards) {
-        monsterIndices.push(randomInt(0, monsterCount - 1));
-      }
-    }
-    monsterIndices = monsterIndices.slice(0, neededCards);
-
-    // Créer et décorer les cartes
-    for (let i = 0; i < this.pairs; i++) {
-      if (i >= selectedTables.length) this.shuffleArray(selectedTables);
-
-      // Utiliser generateQuestion pour génération cohérente (R4.3: support multi-ops)
-      const { num1, num2, result } = drawMemoryCalculation({
-        operator: this.operator,
-        level: this.difficulty,
-        tables: this.tables,
-        excludedTables: this.excludedTables,
-      });
-      // Tirer des indices uniques
-
-      const monsterMul = monsterIndices.pop();
-
-      const monsterRes = monsterIndices.pop();
-      // Carte opération (R4.3: adapté pour +, −, ×, ÷)
-      this.cards.push({
-        id: i * 2,
-        type: 'operation',
-        content: `${num1} ${this.operator} ${num2}`,
-        num1,
-        num2,
-        operator: this.operator,
-        result,
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        isFlipped: false,
-        isMatched: false,
-        monsterIndex: monsterMul,
-        pairId: i,
-      });
-      // Carte résultat
-      this.cards.push({
-        id: i * 2 + 1,
-        type: 'result',
-        content: `${result}`,
-        num1,
-        num2,
-        operator: this.operator,
-        result,
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        isFlipped: false,
-        isMatched: false,
-        monsterIndex: monsterRes,
-        pairId: i,
-      });
-    }
+    const indices = this.shuffleArray(Array.from({ length: monsterCount }, (_, i) => i));
+    while (indices.length < count) indices.push(randomInt(0, monsterCount - 1));
+    return indices.slice(0, count);
   }
 
   // Fonction utilitaire pour compter les éléments uniques dans un tableau
