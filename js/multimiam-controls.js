@@ -79,6 +79,12 @@ export function initPacmanControls(game) {
   }
 
   document.addEventListener('keydown', handleKeyDown);
+  // Retiré avec le jeu (cleanupGameResources) : resté branché, il relançait la partie
+  // abandonnée à la barre d'espace, depuis n'importe quel écran
+  game.eventListeners = [
+    ...(game.eventListeners ?? []),
+    { element: document, type: 'keydown', callback: handleKeyDown },
+  ];
 
   // Le personnage prend la direction demandée dès qu'il le peut
   function steer(direction) {
