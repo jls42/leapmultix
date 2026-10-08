@@ -179,10 +179,17 @@ export class AdventureMode extends GameMode {
                     <div class="adventure-levels" id="adventure-levels"></div>
                 </div>
             `;
-    } else {
-      // Phase de jeu : nom et but du niveau, scène de progression, puis « Abandonner »
-      // (replacé après la zone de réponse dans initializeUI)
-      return `
+    }
+    return this.getLevelHTML();
+  }
+
+  /**
+   * Phase de jeu : nom et but du niveau, scène de progression, puis « Abandonner »
+   * (replacé après la zone de réponse dans initializeUI)
+   * @returns {string}
+   */
+  getLevelHTML() {
+    return `
                 <div class="adventure-level-header">
                     <h3 data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h3>
                     <p class="adventure-level-goal" data-translate="${this.currentLevel.descKey}">${getTranslation(this.currentLevel.descKey)}</p>
@@ -200,7 +207,6 @@ export class AdventureMode extends GameMode {
                     <button id="adventure-abandon" type="button" class="btn btn-quiet btn-danger" data-translate="abandon_adventure_button">${getTranslation('abandon_adventure_button')}</button>
                 </div>
             `;
-    }
   }
 
   /**
