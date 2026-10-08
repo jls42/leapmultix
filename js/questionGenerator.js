@@ -3,7 +3,7 @@
    Supporte toutes les opérations: ×, +, −, ÷
    ====================== */
 
-import Storage from './core/storage.js';
+import { UserState } from './core/userState.js';
 import { getTranslation } from './utils-es6.js';
 import { getOperation } from './core/operations/OperationRegistry.js';
 import { chance, pickRandom, randomFloat } from './core/random.js';
@@ -238,21 +238,31 @@ function getEligibleNums({ forceNum, minNum, maxNum }) {
   return Array.from({ length: maxNum - minNum + 1 }, (_, i) => i + minNum);
 }
 
-function getMultiplicationStats(table, num) {
+/**
+ * Multiplications du joueur courant, par « a×b » : les calculs qu'il rate pèsent davantage
+ * dans le tirage. Ce sont les siennes seules (core/profile-operation-stats.js) : sur un poste
+ * partagé, les erreurs d'un élève n'orientent plus les questions d'un autre.
+ * @returns {Map<string, Object>}
+ */
+function readMultiplicationStats() {
   try {
-    const allStats = Storage.loadMultiplicationStats();
-    const stats = allStats?.[`${table}x${num}`] || { attempts: 0, errors: 0 };
-    return {
-      attempts: Number(stats.attempts) || 0,
-      errors: Number(stats.errors) || 0,
-    };
+    const stats = UserState.getCurrentUserData()?.operationStats;
+    return new Map(Object.entries(stats ?? {}).filter(([, entry]) => entry?.operator === '×'));
   } catch {
-    return { attempts: 0, errors: 0 };
+    return new Map();
   }
 }
 
-function calculateWeight(table, num, weakTables) {
-  const { attempts, errors } = getMultiplicationStats(table, num);
+function getMultiplicationStats(stats, table, num) {
+  const entry = stats.get(`${table}×${num}`) ?? {};
+  return {
+    attempts: Number(entry.attempts) || 0,
+    errors: Number(entry.errors) || 0,
+  };
+}
+
+function calculateWeight(table, num, weakTables, stats) {
+  const { attempts, errors } = getMultiplicationStats(stats, table, num);
   const errRate = attempts > 0 ? errors / attempts : 0;
   let weight = 1 + errRate;
   if (weakTables.includes(table)) weight += 1;
@@ -260,10 +270,12 @@ function calculateWeight(table, num, weakTables) {
 }
 
 function buildWeightedPairs(eligibleTables, eligibleNums, weakTables) {
+  // Une seule lecture du profil par question
+  const stats = readMultiplicationStats();
   const pairs = [];
   for (const t of eligibleTables) {
     for (const n of eligibleNums) {
-      const weight = calculateWeight(t, n, weakTables);
+      const weight = calculateWeight(t, n, weakTables, stats);
       pairs.push({ t, n, weight });
     }
   }

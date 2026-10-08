@@ -25,6 +25,7 @@ import {
   normalizeChronoStatsByOperator,
   emptyChronoStats,
 } from './core/chrono-stats.js';
+import { profileOperationStats } from './core/profile-operation-stats.js';
 
 /**
  * Traduction avec texte de secours tant que la clé n'existe pas dans les fichiers de langue.
@@ -80,6 +81,7 @@ const createDefaultUserData = (nickname = '') => ({
   chronoStats: emptyChronoStats(),
   chronoStatsByOperator: normalizeChronoStatsByOperator(),
   modeStats: emptyModeStats(),
+  operationStats: {},
 });
 
 /** Clé localStorage des 5 meilleurs scores d'un jeu d'Arcade, rangés sous le surnom (avant la v37) */
@@ -150,6 +152,19 @@ const normalizeUserData = (rawData, currentUser) => {
 };
 
 /**
+ * Profil relu : champs normalisés, plus les calculs ratés de ce joueur seul (tirage du Quiz).
+ * Un profil d'avant ce champ part de la copie de la clé commune à l'appareil
+ * (core/profile-operation-stats.js).
+ * @param {Object|null|undefined} rawData
+ * @param {string} currentUser
+ * @returns {Object}
+ */
+const normalizeProfile = (rawData, currentUser) => ({
+  ...normalizeUserData(rawData, currentUser),
+  operationStats: profileOperationStats(rawData),
+});
+
+/**
  * Gestionnaire principal des utilisateurs
  */
 export const UserManager = {
@@ -200,7 +215,7 @@ export const UserManager = {
       return createDefaultUserData(this._currentUser || '');
     }
 
-    const normalized = normalizeUserData(this._players[this._currentUser], this._currentUser);
+    const normalized = normalizeProfile(this._players[this._currentUser], this._currentUser);
     this._players[this._currentUser] = normalized;
     return normalized;
   },
@@ -245,13 +260,14 @@ export const UserManager = {
   /**
    * Mettre à jour directement les données de l'utilisateur actuel
    * @param {Object} updatedData - Données à fusionner
+   * @returns {boolean} Vrai si un joueur courant a reçu ces données
    */
   updateCurrentUserData(updatedData) {
     if (
       !this._currentUser ||
       !Object.prototype.hasOwnProperty.call(this._players, this._currentUser)
     )
-      return;
+      return false;
 
     this._players[this._currentUser] = {
       ...this._players[this._currentUser],
@@ -259,6 +275,7 @@ export const UserManager = {
     };
 
     this.savePlayers();
+    return true;
   },
 
   /**
@@ -446,6 +463,8 @@ export const UserManager = {
         // Compteurs vierges : un nouveau profil ne reprend pas les anciens scores d'Arcade
         // d'un homonyme supprimé (clés rangées sous le surnom avant la v37)
         modeStats: emptyModeStats(),
+        // Ni les calculs ratés des autres joueurs de l'appareil
+        operationStats: {},
       },
       enumerable: true,
       configurable: true,

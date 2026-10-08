@@ -94,7 +94,13 @@ const V36_FIELDS = {
 };
 
 /** Champs ajoutés par cette version : aucun autre n'apparaît */
-const NEW_FIELDS = new Set(['chronoStatsByOperator', 'adventureProgressByOperator', 'modeStats']);
+const NEW_FIELDS = new Set([
+  'chronoStatsByOperator',
+  'adventureProgressByOperator',
+  'modeStats',
+  // Statistiques par calcul du joueur (copie de la clé commune pour un profil d'avant)
+  'operationStats',
+]);
 
 beforeEach(() => {
   jest.spyOn(console, 'warn').mockImplementation(() => {});

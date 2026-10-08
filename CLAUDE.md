@@ -228,6 +228,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `chrono-questions.js` - Chrono grids per operation (n × k, n + k, (n + k) − n, (n × k) ÷ n), draw weighted toward the harder facts, and revision queue (both members of a fact family, no repeat in a row)
 - `mode-stats.js` - Dashboard counters per mode and per operation (`modeStats`): answers, games started (first answer, abandons included), records of finished games, 20-answer window per × table for « À revoir »; seeded once from older profiles, never deleting anything
 - `adventure-progress.js` - Adventure progress per operation; the pre-December-2025 format is copied into × (best of each level), never deleted
+- `profile-operation-stats.js` - Per-calculation stats stored in each profile (`operationStats`, read by the Quiz draw); a profile from before this field starts from a copy of the device-wide `operationStats` key, which is never written again nor deleted
 - `chrono-input.js` - Chrono typed-answer check (validates as soon as the answer is right or can no longer be)
 - `daily-challenge.js` - Daily challenge management
 - `utils.js` - Core utility functions (canonical source)
