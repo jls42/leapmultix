@@ -385,6 +385,14 @@ body:has(#slide1.active-slide) .skip-link:focus {
   border-color: var(--color-action);
 }
 
+/* Le cadenas expliqué en clair sous la grille : une infobulle ne se voit pas au doigt */
+.avatar-locked-hint {
+  max-inline-size: 36rem;
+  margin: var(--space-2) auto 0;
+  color: var(--color-ink-muted);
+  text-wrap: pretty;
+}
+
 .avatar-btn:active {
   transform: translateY(var(--key-edge));
   box-shadow: 0 0 0 var(--color-border-strong);

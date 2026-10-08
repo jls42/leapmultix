@@ -1,5 +1,6 @@
 /* eslint-env jest, node */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { readFileSync } from 'node:fs';
 
 const helpers = await import('../js/main-helpers.js');
 const { UserManager } = await import('../js/userManager.js');
@@ -121,6 +122,43 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
     }
     const unlocked = buttons.find(b => !b.classList.contains('locked'));
     expect(unlocked.hasAttribute('data-translate-title')).toBe(false);
+  });
+
+  test('au doigt aussi : une ligne visible explique le cadenas, reliée aux avatars verrouillés', () => {
+    const hint = document.createElement('p');
+    hint.id = 'avatar-locked-hint';
+    hint.hidden = true;
+    document.body.appendChild(hint);
+
+    helpers.renderAvatarSelector('#avatar-choice');
+    expect(hint.hidden).toBe(false);
+    const radios = [...document.querySelectorAll('#avatar-choice .avatar-radio')];
+    for (const radio of radios) {
+      const expected = radio.disabled ? 'avatar-locked-hint' : null;
+      expect(radio.getAttribute('aria-describedby')).toBe(expected);
+    }
+
+    // Tous débloqués : plus rien à expliquer
+    UserManager._players.Lina.unlockedAvatars = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
+    helpers.renderAvatarSelector('#avatar-choice');
+    expect(hint.hidden).toBe(true);
+  });
+
+  test('la ligne existe sous la grille de la personnalisation, traduite, sans fausse promesse', () => {
+    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const page = new DOMParser().parseFromString(html, 'text/html');
+    const hint = page.querySelector('#slide6 .avatar-selector + #avatar-locked-hint');
+    expect(hint?.hidden).toBe(true);
+    for (const lang of ['fr', 'en', 'es']) {
+      const t = JSON.parse(
+        readFileSync(new URL(`../assets/translations/${lang}.json`, import.meta.url), 'utf8')
+      );
+      // Rien ne débloque un avatar dans le jeu : ni l'Aventure ni des pièces ne sont promises
+      for (const key of [hint.dataset.translate, 'avatar_locked_tooltip']) {
+        expect(t[key]).toEqual(expect.any(String));
+        expect(t[key]).not.toMatch(/Aventura|Adventure|Aventure|pièces|coins|monedas/i);
+      }
+    }
   });
 
   test('la mascotte accueille le joueur en une ligne, avec son prénom', async () => {

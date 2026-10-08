@@ -41,6 +41,9 @@ export function getAvatarHeadSrc(avatarId) {
   return `assets/images/arcade/${normalizeAvatarId(avatarId)}_head_avatar_128x128.png`;
 }
 
+/** Explication visible du cadenas, sous la grille de la personnalisation */
+const LOCKED_HINT_ID = 'avatar-locked-hint';
+
 // Cadenas des avatars verrouillés : icône partagée (components/icons.js), pas d'émoji.
 // Le conteneur .lock-icon est celui que la personnalisation sait déjà décorer.
 function createLockIcon() {
@@ -113,9 +116,21 @@ export function renderAvatarSelector(target) {
       btn.appendChild(createLockIcon());
       btn.title = lockTip;
       btn.dataset.translateTitle = 'avatar_locked_tooltip';
+      radio.setAttribute('aria-describedby', LOCKED_HINT_ID);
     }
     avatarSelector.appendChild(btn);
   });
+  showLockedHint(AVATAR_LIST.some(avatarName => !unlocked.includes(avatarName)));
+}
+
+/**
+ * Ligne visible sous la grille (index.html) : elle dit ce que montre le cadenas, qu'une
+ * infobulle ne montrait pas au doigt. Masquée quand tout est débloqué.
+ * @param {boolean} anyLocked
+ */
+function showLockedHint(anyLocked) {
+  const hint = document.getElementById(LOCKED_HINT_ID);
+  if (hint) hint.hidden = !anyLocked;
 }
 
 /**
