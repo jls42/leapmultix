@@ -51,8 +51,9 @@ async function launchGame(page, game) {
   await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
 }
 
-/** Retour au menu Arcade : « Abandonner », puis « Retour au menu Arcade » */
+/** Retour au menu Arcade : « Abandonner », confirmé, puis « Retour au menu Arcade » */
 async function backToArcadeMenu(page) {
+  page.once('dialog', dialog => dialog.accept());
   await pressButton(page, '#game [id$="abandon-btn"]');
   await pressButton(page, '#arcade-back-btn');
 }

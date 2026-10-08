@@ -252,11 +252,25 @@ export class ChallengeMode extends GameMode {
         : typeof window !== 'undefined'
           ? window
           : undefined;
-    if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_challenge'))) {
-      // Un défi abandonné reste compté, mais son score n'est pas un record
-      this._abandoned = true;
+    if (Root?.confirm && Root.confirm(this.abandonQuestion())) {
+      this.recordAbandon();
       this.finish();
     }
+  }
+
+  /** Partie en cours (game-exit.js) : la difficulté choisie, jusqu'à l'enregistrement */
+  isGameInProgress() {
+    return this.state.isActive && this.phase === 'playing' && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_challenge');
+  }
+
+  /** Un défi abandonné reste compté, mais son score n'est pas un record */
+  recordAbandon() {
+    this._abandoned = true;
+    this.saveResultsOnce();
   }
 
   /**

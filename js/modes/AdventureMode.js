@@ -375,9 +375,18 @@ export class AdventureMode extends GameMode {
         : typeof window !== 'undefined'
           ? window
           : undefined;
-    if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_adventure'))) {
+    if (Root?.confirm && Root.confirm(this.abandonQuestion())) {
       this.returnToLevelSelection().catch(error => this.handleError(error));
     }
+  }
+
+  /** Partie en cours (game-exit.js) : un niveau, de sa première question à sa dernière réponse */
+  isGameInProgress() {
+    return this.state.isActive && this.phase === 'playing' && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_adventure');
   }
 
   /**

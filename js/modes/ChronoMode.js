@@ -405,10 +405,24 @@ export class ChronoMode extends GameMode {
   }
 
   confirmAbandon() {
-    if (!globalThis.confirm?.(getTranslation('confirm_abandon_chrono'))) return;
-    this._abandoned = true;
+    if (!globalThis.confirm?.(this.abandonQuestion())) return;
+    this.recordAbandon();
     this.stop();
     void goToSlide(1);
+  }
+
+  /** Partie en cours (game-exit.js) : une course ou une révision, jusqu'à sa dernière réponse */
+  isGameInProgress() {
+    return this.state.isActive && this.phase === 'playing' && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_chrono');
+  }
+
+  /** Une partie abandonnée n'enregistre ni temps ni liste à revoir */
+  recordAbandon() {
+    this._abandoned = true;
   }
 
   /**

@@ -2,6 +2,7 @@
  * Module d'accessibilité centralisé
  * Fournit des fonctions pour améliorer l'accessibilité de LeapMultix
  */
+import { pressAbandon } from './game-exit.js';
 
 export class AccessibilityManager {
   constructor() {
@@ -48,8 +49,9 @@ export class AccessibilityManager {
       // Touche déjà traitée ailleurs (fenêtre, navigation clavier) : ne rien refaire
       if (e.defaultPrevented) return;
 
-      // Échap pour fermer/retour, sauf si une fenêtre ouverte le gère elle-même
-      if (e.key === 'Escape' && !this.isDialogOpen()) {
+      // Échap pour fermer/retour, sauf si une fenêtre ouverte le gère elle-même. Pendant une
+      // partie, Échap presse son « Abandonner » : même confirmation, même suite (game-exit.js)
+      if (e.key === 'Escape' && !this.isDialogOpen() && !pressAbandon()) {
         import('./slides.js')
           .then(m => m.goToSlide(0))
           .catch(error => console.error('Retour au menu principal impossible', error));
@@ -142,7 +144,7 @@ export class AccessibilityManager {
   // Afficher l'aide accessibilité
   showHelp() {
     const helpMessage = `Raccourcis clavier LeapMultix:
-- Échap: Retour au menu
+- Échap: Abandonner la partie en cours (après confirmation), sinon retour au menu
 - Tab/Shift+Tab: Navigation
 - Entrée: Activer bouton
 - Flèches: Navigation dans les groupes

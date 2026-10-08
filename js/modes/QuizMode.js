@@ -119,10 +119,24 @@ export class QuizMode extends GameMode {
         : typeof window !== 'undefined'
           ? window
           : undefined;
-    if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_quiz'))) {
+    if (Root?.confirm && Root.confirm(this.abandonQuestion())) {
       this.hideContinueButton();
       this.finish();
     }
+  }
+
+  /** Partie en cours (game-exit.js) : de la première question à l'enregistrement du bilan */
+  isGameInProgress() {
+    return this.state.isActive && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_quiz');
+  }
+
+  /** Quitté par la barre du haut : le bilan s'enregistre comme pour « Abandonner » (finish) */
+  recordAbandon() {
+    this.saveResultsOnce();
   }
 
   /**

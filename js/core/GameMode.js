@@ -24,6 +24,7 @@ import { recordOperationResult } from './operation-stats.js';
 import { recordModeAnswer, ANSWER_MODES } from './mode-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
+import { setActiveMode, clearActiveMode } from '../game-exit.js';
 import { cancelSpeech, preloadSpeech, whenSpeechEnds } from '../speech.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
@@ -543,6 +544,8 @@ export class GameMode {
       // couperait l'annonce du nouveau s'il arrivait après elle
       await goToSlide(4);
       gameState.gameMode = this.modeName;
+      // Règle de sortie (game-exit.js) : ce mode dit si une partie est en cours
+      setActiveMode(this);
 
       // Réinitialiser l'état
       this.resetState();
@@ -574,6 +577,7 @@ export class GameMode {
    */
   stop() {
     this.state.isActive = false;
+    clearActiveMode(this);
 
     // Arrêter la voix et les sons en cours
     cancelSpeech();
