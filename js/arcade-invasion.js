@@ -704,6 +704,9 @@ export function startMultiplicationInvasion() {
 
   // Gestion locale de la barre espace (supprime le bridge global window.shoot)
   const handleSpaceDown = e => {
+    // Sur un bouton (« Reprendre », « Pause »…), la barre d'espace reste au bouton : sur
+    // « Reprendre », elle relançait la partie et tirait aussitôt
+    if (e.target?.closest?.('button')) return;
     if (e.key === ' ' || e.key === 'Spacebar' || e.code === 'Space') {
       e.preventDefault();
       shoot();
