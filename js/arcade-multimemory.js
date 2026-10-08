@@ -619,8 +619,6 @@ class MemoryGame {
         ? window
         : undefined
     )?.addEventListener?.('resize', this.boundResizeCanvas);
-
-    this.setupKeyboard();
   }
 
   // Clavier : flèches pour choisir une carte, Entrée ou Espace pour la retourner. Ce que la
@@ -697,6 +695,7 @@ class MemoryGame {
     this.calculateCardDimensions();
     this.positionCards();
     this.shuffleCards();
+    this.setupKeyboard();
     this.draw();
     this.focusBoard();
 
