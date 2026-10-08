@@ -43,7 +43,11 @@ function applesOf(operator) {
 }
 
 /** Rang de la bonne réponse parmi les quatre pommes rangées par ordre croissant */
-const rankOf = ({ correct, values }) => [...values].sort((x, y) => x - y).indexOf(correct);
+function rankOf({ correct, values }) {
+  const sorted = [...values];
+  sorted.sort((x, y) => x - y);
+  return sorted.indexOf(correct);
+}
 
 /** La bonne réponse et ses deux voisins immédiats sont-ils tous proposés ? */
 const isMiddleOfThree = ({ correct, values }) =>
