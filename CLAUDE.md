@@ -229,6 +229,8 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `mode-stats.js` - Dashboard counters per mode and per operation (`modeStats`): answers, games started (first answer, abandons included), records of finished games, 20-answer window per × table for « À revoir »; seeded once from older profiles, never deleting anything
 - `adventure-progress.js` - Adventure progress per operation; the pre-December-2025 format is copied into × (best of each level), never deleted
 - `profile-operation-stats.js` - Per-calculation stats stored in each profile (`operationStats`, read by the Quiz draw); a profile from before this field starts from a copy of the device-wide `operationStats` key, which is never written again nor deleted
+- `players-trash.js` - Trash of deleted players (`playersTrash`): a deleted profile waits 30 days with all its data, restorable from « Qui joue ? », then is erased at the next launch with its old Arcade scores
+- `players-backup.js` - Players backup file (JSON `leapmultix-players`, version 1): export, checked import that never overwrites a player already there, `navigator.storage.persist()`
 - `chrono-input.js` - Chrono typed-answer check (validates as soon as the answer is right or can no longer be)
 - `daily-challenge.js` - Daily challenge management
 - `utils.js` - Core utility functions (canonical source)
@@ -249,6 +251,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `dashboard.js` - Progress tracking and statistics
 - `customization.js` - Avatar, theme, and personalization
 - `infoBar.js` - Game status information display
+- `playerTools.js` - « Qui joue ? » on a classroom device: name filter from 10 players, « Nouveau joueur » shortcut, trash, backup buttons (tiles sorted by `UserManager.refreshUserList`, which emits `playersChanged`)
 
 #### Specialized Modules
 
@@ -418,7 +421,7 @@ leur empreinte.
 
 **Security and Error Handling:**
 
-- `security-utils.js` - Security utilities (XSS protection, sanitization)
+- `security-utils.js` - Security utilities (XSS protection, sanitization); `checkUsername()` keeps a player name as typed (letters of any script and their accents, apostrophes, hyphen, space) and refuses the rest, quoting the refused signs
 - `error-handlers.js` - Global error handling
 - `logger.js` - Logging system
 
