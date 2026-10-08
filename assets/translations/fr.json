@@ -29,6 +29,9 @@
       "fail": "Essaie encore, les monstres sont toujours là !",
       "match": "Bravo ! Tu as trouvé une paire !",
       "mismatch": "Ce n'est pas une paire. Essaie encore !",
+      "cardHidden": "Ligne {row}, colonne {col} : carte cachée",
+      "cardShown": "Ligne {row}, colonne {col} : {content}",
+      "cardFound": "Ligne {row}, colonne {col} : {content}, paire trouvée",
       "welcome": "Trouve toutes les paires de multiplications !",
       "intro": "Trouve les paires de multiplications et leurs résultats !",
       "controls": {
@@ -308,6 +311,7 @@
   "arcade.controls.invasion.touch": "Tactile : touche la colonne d'un monstre pour y placer ta fusée et tirer",
   "arcade.controls.multimiam.keyboard": "Clavier : flèches pour déplacer le personnage",
   "arcade.controls.multimiam.touch": "Tactile : touche l'écran au-dessus, en dessous ou à côté du personnage pour le diriger",
+  "arcade.controls.multimemory.keyboard": "Clavier : flèches pour choisir une carte, Entrée ou Espace pour la retourner",
   "arcade.controls.multimemory.mouse": "Souris : clique sur les cartes pour les retourner et trouver les paires",
   "arcade.controls.multimemory.touch": "Tactile : touche les cartes pour les retourner et trouver les paires",
   "arcade.controls.multisnake.keyboard": "Clavier : flèches pour déplacer le serpent",

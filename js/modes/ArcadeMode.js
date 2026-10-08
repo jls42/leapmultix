@@ -49,6 +49,7 @@ const CONTROL_LINES = new Map([
   [
     'multimemory',
     [
+      ['keyboard', 'arcade.controls.multimemory.keyboard'],
       ['mouse', 'arcade.controls.multimemory.mouse'],
       ['touch', 'arcade.controls.multimemory.touch'],
     ],

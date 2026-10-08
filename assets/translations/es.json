@@ -29,6 +29,9 @@
       "fail": "¡Inténtalo de nuevo, los monstruos siguen ahí!",
       "match": "¡Genial! ¡Has encontrado una pareja!",
       "mismatch": "No es una pareja. ¡Inténtalo de nuevo!",
+      "cardHidden": "Fila {row}, columna {col}: carta oculta",
+      "cardShown": "Fila {row}, columna {col}: {content}",
+      "cardFound": "Fila {row}, columna {col}: {content}, pareja encontrada",
       "welcome": "¡Encuentra todos los pares de multiplicaciones!",
       "intro": "¡Encuentra los pares de multiplicaciones y sus resultados!",
       "controls": {
@@ -304,6 +307,7 @@
   "arcade.controls.invasion.touch": "Táctil: toca la columna de un monstruo para colocar tu nave debajo y disparar",
   "arcade.controls.multimiam.keyboard": "Teclado: flechas para mover el personaje",
   "arcade.controls.multimiam.touch": "Táctil: toca encima, debajo o al lado del personaje para dirigirlo",
+  "arcade.controls.multimemory.keyboard": "Teclado: flechas para elegir una carta, Intro o Espacio para voltearla",
   "arcade.controls.multimemory.mouse": "Ratón: haz clic en las cartas para voltearlas y encontrar las parejas",
   "arcade.controls.multimemory.touch": "Táctil: toca las cartas para voltearlas y encontrar las parejas",
   "arcade.controls.multisnake.keyboard": "Teclado: flechas para mover la serpiente",

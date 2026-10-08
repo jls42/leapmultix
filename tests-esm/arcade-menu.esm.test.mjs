@@ -135,4 +135,9 @@ describe('Menu Arcade', () => {
     mode.handleListClick({ target: card.querySelector('.game-title') });
     expect(card.classList.contains('collapsed')).toBe(true);
   });
+
+  test('MultiMemory se joue aussi au clavier, et son aide le dit', () => {
+    const lines = [...screen.querySelectorAll('#multimemory-arcade-card .arcade-control')];
+    expect(lines.map(li => li.dataset.input)).toEqual(['keyboard', 'mouse', 'touch']);
+  });
 });

@@ -29,6 +29,9 @@
       "fail": "Try again, the monsters are still there!",
       "match": "Great! You found a pair!",
       "mismatch": "Not a pair. Try again!",
+      "cardHidden": "Row {row}, column {col}: hidden card",
+      "cardShown": "Row {row}, column {col}: {content}",
+      "cardFound": "Row {row}, column {col}: {content}, pair found",
       "welcome": "Find all the multiplication pairs!",
       "intro": "Find the pairs of multiplications and their results!",
       "controls": {
@@ -298,6 +301,7 @@
   "arcade.controls.invasion.touch": "Touch: tap a monster's column to move your rocket under it and shoot",
   "arcade.controls.multimiam.keyboard": "Keyboard: arrow keys to move the character",
   "arcade.controls.multimiam.touch": "Touch: tap above, below or beside the character to steer it",
+  "arcade.controls.multimemory.keyboard": "Keyboard: arrow keys to choose a card, Enter or Space to flip it",
   "arcade.controls.multimemory.mouse": "Mouse: click the cards to flip them and find the pairs",
   "arcade.controls.multimemory.touch": "Touch: tap the cards to flip them and find the pairs",
   "arcade.controls.multisnake.keyboard": "Keyboard: arrow keys to move the snake",
