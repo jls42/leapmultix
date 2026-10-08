@@ -4,6 +4,7 @@
 import { lazyLoader } from './lazy-loader.js';
 import { getTranslation, showMessage } from './utils-es6.js';
 import { canLaunchMode } from './components/operationModeAvailability.js';
+import { hideLoadErrorNotice, showLoadErrorNotice } from './components/loadErrorNotice.js';
 // gameState import removed as it's unused
 
 // Keep import() arguments literal to avoid security tool false-positives.
@@ -102,10 +103,13 @@ export async function setGameMode(mode, options = {}) {
     }
 
     const mod = await loader();
-    return await startModuleForMode(mod, mode, options);
+    const started = await startModuleForMode(mod, mode, options);
+    hideLoadErrorNotice();
+    return started;
   } catch (err) {
     console.error(`Erreur lors du démarrage du mode ${mode}:`, err);
-    showMessage?.(getTranslation('mode_start_error', { modeName: mode }));
+    // Un avis qui reste : hors ligne, un mode jamais gardé dit pourquoi il ne s'ouvre pas
+    showLoadErrorNotice(err);
   } finally {
     startingMode = null;
   }

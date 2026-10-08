@@ -814,6 +814,37 @@ body:has(> .message-popup) > .toast-stack {
   color: var(--color-ink);
 }
 
+/* Avis d'un jeu qui n'a pas pu s'ouvrir (js/components/loadErrorNotice.js) : en bas comme
+   les toasts, mais il reste affiché jusqu'à « D'accord » ou jusqu'au jeu suivant */
+.load-error-notice {
+  position: fixed;
+  bottom: var(--space-5);
+  bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+  justify-content: center;
+  inline-size: min(90vw, 36rem);
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-action);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transform: translateX(-50%);
+}
+
+.load-error-message {
+  flex: 1 1 16rem;
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+}
+
 @keyframes badge-fade-in-out {
   0% {
     opacity: 0;
