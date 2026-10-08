@@ -367,7 +367,47 @@
             <p data-translate="user_selection_desc">Choisis ton joueur ou crée le tien.</p>
           </div>
 
-          <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList) -->
+          <!-- Poste partagé par une classe (js/components/playerTools.js) : filtre des
+               prénoms dès 10 joueurs, raccourci vers « Nouveau joueur », corbeille -->
+          <div class="user-list-tools" id="user-list-tools" hidden>
+            <div class="user-filter" id="user-filter" hidden>
+              <label for="user-filter-input" data-translate="user_filter_label"
+                >Cherche ton prénom</label
+              >
+              <input
+                type="search"
+                id="user-filter-input"
+                autocomplete="off"
+                spellcheck="false"
+                enterkeyhint="go"
+              />
+            </div>
+            <div class="user-list-actions">
+              <button type="button" class="btn btn-secondary" id="new-player-shortcut">
+                <span data-translate="new_player_title">Nouveau joueur</span>
+              </button>
+              <!-- Libellé « Corbeille (n) » et icône posés par playerTools.js -->
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="player-trash-toggle"
+                aria-expanded="false"
+                aria-controls="player-trash-panel"
+                hidden
+              >
+                <span class="player-trash-label">Corbeille</span>
+              </button>
+            </div>
+            <p class="user-filter-empty" id="user-filter-empty" hidden></p>
+            <div class="player-trash-panel" id="player-trash-panel" hidden>
+              <p class="player-trash-rule" id="player-trash-rule"></p>
+              <ul class="player-trash-list" id="player-trash-list"></ul>
+            </div>
+            <p class="user-tools-message" id="user-tools-message" role="status"></p>
+          </div>
+
+          <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList),
+               triées par prénom -->
           <div class="user-list" id="user-list"></div>
 
           <section class="new-player" aria-labelledby="new-player-title">
@@ -497,6 +537,44 @@
             <button type="button" class="btn" id="create-user-btn" data-translate="create_user">
               Créer
             </button>
+          </section>
+
+          <!-- Sauvegarde des joueurs dans un fichier, et reprise (js/components/playerTools.js) -->
+          <section class="players-backup" aria-labelledby="players-backup-title">
+            <h2 id="players-backup-title" data-translate="players_backup_title">
+              Sauvegarde des joueurs
+            </h2>
+            <p class="players-backup-hint" data-translate="players_backup_hint">
+              Les joueurs sont gardés seulement dans ce navigateur. Enregistre-les aussi dans un
+              fichier&nbsp;: tu pourras les reprendre si le navigateur est vidé, ou sur un autre
+              appareil.
+            </p>
+            <div class="players-backup-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="export-players-btn"
+                data-translate="export_players"
+              >
+                Enregistrer les joueurs dans un fichier
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="import-players-btn"
+                data-translate="import_players"
+              >
+                Reprendre des joueurs d’un fichier
+              </button>
+              <input
+                type="file"
+                id="import-players-input"
+                accept=".json,application/json"
+                tabindex="-1"
+                hidden
+              />
+            </div>
+            <p class="players-backup-message" id="players-backup-message" role="status"></p>
           </section>
 
           <!-- Présentation du projet : contenu indexable, visible sans JavaScript,
@@ -1324,7 +1402,9 @@
                   <li><strong>Partage&nbsp;:</strong> aucun (données non transmises)</li>
                   <li>
                     <strong>Durée&nbsp;:</strong> jusqu'à suppression par l'utilisateur (paramètres
-                    du navigateur)
+                    du navigateur). Un joueur supprimé dans le jeu reste 30&nbsp;jours dans la
+                    corbeille de «&nbsp;Qui joue&nbsp;?&nbsp;», d'où il peut être restauré, puis il
+                    est effacé.
                   </li>
                 </ul>
 
