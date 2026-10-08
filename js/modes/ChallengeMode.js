@@ -471,6 +471,17 @@ export class ChallengeMode extends GameMode {
     }
   }
 
+  /** Tableau de bord : le meilleur score d'un défi terminé, dans sa difficulté et son opération */
+  recordDashboardBest(userData) {
+    if (!this._abandoned && this.state.questionCount > 0) {
+      recordChallengeBest(userData, {
+        operator: this._statsOperator ?? '×',
+        difficulty: this.difficulty,
+        score: this.state.score,
+      });
+    }
+  }
+
   /**
    * Sauvegarder les résultats du Challenge
    */
@@ -517,14 +528,7 @@ export class ChallengeMode extends GameMode {
     // Mettre à jour la meilleure série globale
     userData.bestStreak = Math.max(userData.bestStreak || 0, this.state.streak);
 
-    // Tableau de bord : le meilleur score d'un défi terminé, dans sa difficulté et son opération
-    if (!this._abandoned && this.state.questionCount > 0) {
-      recordChallengeBest(userData, {
-        operator: this._statsOperator ?? '×',
-        difficulty: this.difficulty,
-        score: this.state.score,
-      });
-    }
+    this.recordDashboardBest(userData);
 
     // Sauvegarder AVANT les badges : checkAndUnlockBadge enregistre sa propre copie des
     // données ; réécrire ensuite cette copie-ci effacerait le badge tout juste gagné

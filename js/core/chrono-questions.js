@@ -160,12 +160,16 @@ function crossesTen(operator, a, b) {
 export function chronoFactWeight(operator, n, k, allTables) {
   if (operator === '×' || operator === '÷') return chronoPairWeight(n, k, allTables);
   const { a, b } = chronoFact(operator, n, k);
-  let weight = crossesTen(operator, a, b) ? TEN_CROSSING_WEIGHT : ADD_SUB_WEIGHT;
-  if (allTables) {
-    if (n === 1 || n === 10) weight *= EASY_TABLE_PENALTY;
-    if (k === 1 || k === 10) weight *= EASY_FACTOR_PENALTY;
-  }
-  return Math.max(weight, 0.01);
+  const weight = crossesTen(operator, a, b) ? TEN_CROSSING_WEIGHT : ADD_SUB_WEIGHT;
+  return Math.max(allTables ? withEasyPenalties(weight, n, k) : weight, 0.01);
+}
+
+/** Les calculs avec 1 ou 10, rares quand toutes les tables sont jouées (+ et −) */
+function withEasyPenalties(weight, n, k) {
+  let result = weight;
+  if (n === 1 || n === 10) result *= EASY_TABLE_PENALTY;
+  if (k === 1 || k === 10) result *= EASY_FACTOR_PENALTY;
+  return result;
 }
 
 function pairKey(t, n, operator = '×') {

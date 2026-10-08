@@ -42,6 +42,14 @@ function isTable(n, operator) {
   return isFactor(n) && (operator !== '÷' || n >= MIN_DIVISOR);
 }
 
+/** × et + : deux nombres de 1 à 10 */
+const isTermsFact = (a, b) => isFactor(a) && isFactor(b);
+/** (n + k) − n et (n × k) ÷ n : le second nombre et le résultat de 1 à 10 (diviseur de 2 à 10) */
+const CHRONO_FACT_CHECKS = new Map([
+  ['−', (a, b) => isFactor(b) && isFactor(a - b)],
+  ['÷', (a, b) => isTable(b, '÷') && a % b === 0 && isFactor(a / b)],
+]);
+
 /**
  * Un calcul que Chrono pose dans cette opération : 1–10 × 1–10, 1–10 + 1–10,
  * (n + k) − n et (n × k) ÷ n avec n et k de 1 à 10 (diviseur de 2 à 10).
@@ -52,9 +60,8 @@ function isTable(n, operator) {
  */
 export function isChronoFact(operator, a, b) {
   if (!Number.isInteger(a) || !Number.isInteger(b)) return false;
-  if (operator === '−') return isFactor(b) && isFactor(a - b);
-  if (operator === '÷') return isTable(b, '÷') && a % b === 0 && isFactor(a / b);
-  return isFactor(a) && isFactor(b);
+  const check = CHRONO_FACT_CHECKS.get(operator) ?? isTermsFact;
+  return check(a, b);
 }
 
 function factKey(a, b, operator = '×') {
@@ -249,9 +256,11 @@ export function normalizeChronoOperatorStats(raw, operator) {
  * @returns {Record<string, {buckets: Array, basket: Array}>}
  */
 export function normalizeChronoStatsByOperator(raw) {
-  const src = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const src = new Map(
+    raw && typeof raw === 'object' && !Array.isArray(raw) ? Object.entries(raw) : []
+  );
   return Object.fromEntries(
-    CHRONO_EXTRA_OPERATORS.map(op => [op, normalizeChronoOperatorStats(src[op], op)])
+    CHRONO_EXTRA_OPERATORS.map(op => [op, normalizeChronoOperatorStats(src.get(op), op)])
   );
 }
 

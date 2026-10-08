@@ -476,6 +476,11 @@ export const GOOD_SOUND_MS = 200;
  */
 export const EXPLANATION_WAIT_MAX_MS = 6000;
 
+/** Table d'une question pour « À revoir » au tableau de bord : en multiplication seulement */
+function reviewTableOf(question, operator) {
+  return operator === '×' ? (question.table ?? question.a) : null;
+}
+
 export class GameMode {
   /**
    * Fonction constructor
@@ -1470,7 +1475,7 @@ export class GameMode {
       recordModeAnswer(userData, {
         mode: this.modeName,
         operator,
-        table: operator === '×' ? (question.table ?? question.a) : null,
+        table: reviewTableOf(question, operator),
         isCorrect,
         startsGame,
       });

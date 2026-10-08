@@ -16,7 +16,7 @@ import { recordArcadeGame, arcadeTopScores, resetArcadeGame } from './core/mode-
  * @param {string} [game] - invasion, multimiam, multimemory, multisnake
  * @param {string} [operator] - Opération de la partie (celle du profil par défaut)
  */
-export function saveArcadeScore(score, game = 'invasion', operator) {
+export function saveArcadeScore(score, game = 'invasion', operator = null) {
   try {
     const userData = UserState.getCurrentUserData();
     recordArcadeGame(userData, {

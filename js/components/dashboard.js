@@ -162,6 +162,8 @@ function countValue(entries, pick) {
  * plusieurs opérations ; « — » sans aucun record
  * @param {Array<{operator: string, value: (string|number|null)}>} records
  * @param {number} operatorCount - Opérations jouées dans la rangée
+ * @returns {string|number|{parts: Array<{operator: string, value: (string|number)}>}} La
+ *   valeur d'un fait, telle que fillValue l'affiche : le record seul, « — », ou le détail
  */
 function recordsValue(records, operatorCount) {
   const parts = records.filter(part => part.value !== null && part.value !== undefined);
@@ -309,17 +311,24 @@ function chronoFacts(userData, stats) {
   ];
 }
 
+/**
+ * Ce qu'une clé de la Découverte a exploré : « 7 », une table de × ; « +:easy », un niveau.
+ * Null pour une clé que la Découverte ignore.
+ * @returns {{operator: string, item: (string|number)}|null}
+ */
+function discoveryItem(key) {
+  const [operator, level] = String(key).split(':');
+  if (level !== undefined) return DISCOVERY_LEVELS.has(level) ? { operator, item: level } : null;
+  const table = /^\d+$/.test(operator) ? Number(operator) : 0;
+  return table >= 1 && table <= TABLE_COUNT ? { operator: '×', item: table } : null;
+}
+
 /** Explorations de la Découverte, par opération : tables (×) ou niveaux (+ − ÷) */
 function discoveryExplored(userData) {
-  const explored = Object.fromEntries(OPERATORS.map(op => [op, new Set()]));
+  const explored = new Map(OPERATORS.map(op => [op, new Set()]));
   for (const key of userData.discoveryProgress?.exploredTables ?? []) {
-    const [operator, level] = String(key).split(':');
-    if (level !== undefined && explored[operator] && DISCOVERY_LEVELS.has(level)) {
-      explored[operator].add(level);
-    } else if (level === undefined && /^\d+$/.test(operator)) {
-      const table = Number(operator);
-      if (table >= 1 && table <= TABLE_COUNT) explored['×'].add(table);
-    }
+    const found = discoveryItem(key);
+    if (found) explored.get(found.operator)?.add(found.item);
   }
   return explored;
 }
@@ -327,12 +336,12 @@ function discoveryExplored(userData) {
 /** Faits de la Découverte : « 2 tables sur 10 », « 1 niveau sur 3 », par opération */
 function discoveryFacts(userData) {
   const explored = discoveryExplored(userData);
-  const parts = OPERATORS.filter(op => explored[op].size > 0).map(op => ({
+  const parts = OPERATORS.filter(op => explored.get(op).size > 0).map(op => ({
     operator: op,
     value:
       op === '×'
-        ? tr('discovery_tables_explored', '{n} tables sur 10', { n: explored[op].size })
-        : tr('discovery_levels_explored', '{n} niveaux sur 3', { n: explored[op].size }),
+        ? tr('discovery_tables_explored', '{n} tables sur 10', { n: explored.get(op).size })
+        : tr('discovery_levels_explored', '{n} niveaux sur 3', { n: explored.get(op).size }),
   }));
   if (parts.length === 0) return null;
   return [
@@ -379,7 +388,7 @@ function isNewPlayer(userData, stats) {
   }
   if ([...starsMapFrom(userData.starsByTable).values()].some(Boolean)) return false;
   const explored = discoveryExplored(userData);
-  if (OPERATORS.some(op => explored[op].size > 0)) return false;
+  if (OPERATORS.some(op => explored.get(op).size > 0)) return false;
   const stores = chronoStores(userData);
   return OPERATORS.every(op => (stores[op]?.basket.length ?? 0) === 0);
 }
@@ -415,6 +424,40 @@ function mergeAdventureStars(starsByTable, adventureProgress) {
 function statsOf(userData) {
   return normalizeModeStats(userData);
 }
+
+/** Rangées des modes classiques, dans l'ordre affiché : logo, nom, faits du profil */
+const CLASSIC_ROWS = [
+  {
+    logo: 'logo_mode_quizz.png',
+    key: 'quiz_mode_title',
+    name: 'Quiz',
+    facts: (_userData, stats) => quizFacts(stats),
+  },
+  {
+    logo: 'logo_mode_defi.png',
+    key: 'challenge_mode_title',
+    name: 'Défi',
+    facts: (_userData, stats) => challengeFacts(stats),
+  },
+  {
+    logo: 'logo_mode_aventure.png',
+    key: 'adventure_mode_title',
+    name: 'Aventure',
+    facts: userData => adventureFacts(userData),
+  },
+  {
+    logo: 'logo_mode_chrono.png',
+    key: 'chrono_mode_title',
+    name: 'Chrono',
+    facts: (userData, stats) => chronoFacts(userData, stats),
+  },
+  {
+    logo: 'logo_mode_decouverte.png',
+    key: 'discovery_mode_title',
+    name: 'Découverte',
+    facts: userData => discoveryFacts(userData),
+  },
+];
 
 export const Dashboard = {
   /**
@@ -476,6 +519,22 @@ export const Dashboard = {
   /**
    * Afficher le tableau de bord
    */
+  /** Total d'étoiles de l'en-tête, accordé au nombre */
+  showTotalStars() {
+    const totalStarsEl = document.getElementById('total-stars');
+    if (!totalStarsEl) return;
+    const total = this.calculateTotalStars();
+    totalStarsEl.textContent = formatValue(total);
+    // « 1 étoile au total », « 0 étoile » en français, « 0 stars » en anglais
+    const label = document.getElementById('total-stars-label');
+    if (label) label.textContent = tr('total_stars_label', 'étoiles au total', { count: total });
+    const summary = totalStarsEl.parentElement;
+    if (summary && !summary.querySelector(':scope > svg.icon')) {
+      const star = createIcon('star', { size: 20, className: 'star-icon is-filled' });
+      if (star) summary.prepend(star);
+    }
+  },
+
   show() {
     // Charger les données de l'utilisateur
     const userData = UserState.getCurrentUserData();
@@ -493,21 +552,7 @@ export const Dashboard = {
     if (nicknameEl) nicknameEl.textContent = userData.nickname || '';
 
     // Calculer et afficher le nombre total d'étoiles
-    const totalStarsEl = document.getElementById('total-stars');
-    if (totalStarsEl) {
-      const total = this.calculateTotalStars();
-      totalStarsEl.textContent = formatValue(total);
-      // « 1 étoile au total », « 0 étoile » en français, « 0 stars » en anglais
-      const label = document.getElementById('total-stars-label');
-      if (label) {
-        label.textContent = tr('total_stars_label', 'étoiles au total', { count: total });
-      }
-      const summary = totalStarsEl.parentElement;
-      if (summary && !summary.querySelector(':scope > svg.icon')) {
-        const star = createIcon('star', { size: 20, className: 'star-icon is-filled' });
-        if (star) summary.prepend(star);
-      }
-    }
+    this.showTotalStars();
 
     this.initReplayVideoButton();
 
@@ -769,18 +814,12 @@ export const Dashboard = {
    */
   _buildClassicRows(userData) {
     const stats = statsOf(userData);
-    const rows = [
-      ['logo_mode_quizz.png', 'quiz_mode_title', 'Quiz', quizFacts(stats)],
-      ['logo_mode_defi.png', 'challenge_mode_title', 'Défi', challengeFacts(stats)],
-      ['logo_mode_aventure.png', 'adventure_mode_title', 'Aventure', adventureFacts(userData)],
-      ['logo_mode_chrono.png', 'chrono_mode_title', 'Chrono', chronoFacts(userData, stats)],
-      ['logo_mode_decouverte.png', 'discovery_mode_title', 'Découverte', discoveryFacts(userData)],
-    ].map(([logo, nameKey, fallback, facts]) =>
+    const rows = CLASSIC_ROWS.map(row =>
       this._buildScoreRow({
         className: 'classic-game-stats',
-        logo: `assets/images/arcade/${logo}`,
-        name: tr(nameKey, fallback),
-        facts,
+        logo: `assets/images/arcade/${row.logo}`,
+        name: tr(row.key, row.name),
+        facts: row.facts(userData, stats),
       })
     );
     const daily = dailyFacts(userData);

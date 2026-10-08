@@ -111,7 +111,8 @@ function loadChronoStore(operator = '×') {
   userData.chronoStats = normalizeChronoStats(userData.chronoStats);
   if (operator === '×') return { userData, store: userData.chronoStats };
   userData.chronoStatsByOperator = normalizeChronoStatsByOperator(userData.chronoStatsByOperator);
-  return { userData, store: userData.chronoStatsByOperator[operator] };
+  const stores = new Map(Object.entries(userData.chronoStatsByOperator));
+  return { userData, store: stores.get(operator) };
 }
 
 /** Opération choisie à l’accueil, multiplication par défaut */

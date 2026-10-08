@@ -37,6 +37,17 @@ function updateInvincibility(ctx) {
 function cellPoint(ctx, cell) {
   return { x: (cell.x + 0.5) * ctx.cellSize, y: cell.y * ctx.cellSize };
 }
+
+/**
+ * Une réponse croquée : la partie est jouée, et le calcul compte dans les statistiques,
+ * comme dans MultiInvaders et MultiSnake
+ */
+function noteEatenAnswer(game, answer) {
+  noteArcadePlay();
+  const { num1, num2 } = game.currentOperation ?? {};
+  recordOperationResult(game.operator, num1, num2, Boolean(answer.isCorrect));
+}
+
 export function initPacmanEngine(game) {
   /* === DÉPLACEMENTS & COLLISIONS =============================== */
 
@@ -269,11 +280,7 @@ export function initPacmanEngine(game) {
         this.labyrinth[answer.y][answer.x] = 0;
         const multimiamPosX = this.multimiam.x;
         const multimiamPosY = this.multimiam.y;
-        // Une réponse croquée : la partie est jouée, et le calcul compte dans les statistiques,
-        // comme dans MultiInvaders et MultiSnake
-        noteArcadePlay();
-        const { num1, num2 } = this.currentOperation ?? {};
-        recordOperationResult(this.operator, num1, num2, Boolean(answer.isCorrect));
+        noteEatenAnswer(this, answer);
         if (answer.isCorrect) {
           this.score += 100;
           if (this.canvas) {

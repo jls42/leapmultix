@@ -28,13 +28,14 @@ function bestOfLevel(older, current) {
 export function normalizeAdventureProgressByOperator(byOperator, legacy) {
   const source = isPlainObject(byOperator) ? byOperator : {};
   if (!isPlainObject(legacy) || Object.keys(legacy).length === 0) return { ...source };
-  const merged = { ...(isPlainObject(source['×']) ? source['×'] : {}) };
+  const multiplication = source['×'];
+  const merged = new Map(Object.entries(isPlainObject(multiplication) ? multiplication : {}));
   for (const [levelId, older] of Object.entries(legacy)) {
     if (!isPlainObject(older)) continue;
-    const current = merged[levelId];
-    merged[levelId] = isPlainObject(current) ? bestOfLevel(older, current) : { ...older };
+    const current = merged.get(levelId);
+    merged.set(levelId, isPlainObject(current) ? bestOfLevel(older, current) : { ...older });
   }
-  return { ...source, '×': merged };
+  return { ...source, '×': Object.fromEntries(merged) };
 }
 
 /**
@@ -43,15 +44,19 @@ export function normalizeAdventureProgressByOperator(byOperator, legacy) {
  * @returns {Record<string, {levels: number, stars: number}>}
  */
 export function adventureTotalsByOperator(byOperator) {
-  const totals = {};
-  for (const [operator, levels] of Object.entries(isPlainObject(byOperator) ? byOperator : {})) {
-    let completed = 0;
-    let stars = 0;
-    for (const level of Object.values(isPlainObject(levels) ? levels : {})) {
-      if (level?.completed) completed += 1;
-      stars += Number(level?.stars) || 0;
-    }
-    if (completed > 0 || stars > 0) totals[operator] = { levels: completed, stars };
+  const totals = Object.entries(isPlainObject(byOperator) ? byOperator : {})
+    .map(([operator, levels]) => [operator, levelTotals(levels)])
+    .filter(([, total]) => total.levels > 0 || total.stars > 0);
+  return Object.fromEntries(totals);
+}
+
+/** Niveaux terminés et étoiles des niveaux d'une opération */
+function levelTotals(levels) {
+  let completed = 0;
+  let stars = 0;
+  for (const level of Object.values(isPlainObject(levels) ? levels : {})) {
+    if (level?.completed) completed += 1;
+    stars += Number(level?.stars) || 0;
   }
-  return totals;
+  return { levels: completed, stars };
 }
