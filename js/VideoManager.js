@@ -334,9 +334,11 @@ export const VideoManager = {
       );
     }
 
-    // Événements vidéo
+    // Événements vidéo. Une source qui ne se charge pas (hors ligne, fichier absent) le dit
+    // à son élément <source>, jamais à la vidéo : écouté à la capture, sinon la fenêtre
+    // restait ouverte sur un cadre vide
     this._currentVideo.addEventListener('ended', () => this.onVideoEnded());
-    this._currentVideo.addEventListener('error', () => this.onVideoError());
+    this._currentVideo.addEventListener('error', () => this.onVideoError(), true);
     this._currentVideo.addEventListener('loadstart', () => this.onVideoLoadStart());
     this._currentVideo.addEventListener('canplay', () => this.onVideoCanPlay());
     this._currentVideo.addEventListener('timeupdate', () => this.updateProgress());
