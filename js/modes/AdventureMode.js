@@ -14,6 +14,7 @@
  */
 
 import { GameMode } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
 import { getAdventureLevelsByOperator } from '../core/adventure-data.js';
 import { createSafeImage, createSafeElement } from '../security-utils.js';
 import {
@@ -327,7 +328,7 @@ export class AdventureMode extends GameMode {
   setupGameControls() {
     const abandonBtn = document.getElementById('adventure-abandon');
     if (abandonBtn) {
-      abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+      abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
     }
   }
 
@@ -375,18 +376,12 @@ export class AdventureMode extends GameMode {
   }
 
   /**
-   * Demander confirmation d'abandon
+   * Demander confirmation d'abandon (game-exit.js) ; le niveau a pu finir pendant la question
+   * @returns {Promise<void>}
    */
-  confirmAbandon() {
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root?.confirm && Root.confirm(this.abandonQuestion())) {
-      this.returnToLevelSelection().catch(error => this.handleError(error));
-    }
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
+    await this.returnToLevelSelection().catch(error => this.handleError(error));
   }
 
   /** Partie en cours (game-exit.js) : un niveau, de sa première question à sa dernière réponse */

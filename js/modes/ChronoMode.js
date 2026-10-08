@@ -7,6 +7,7 @@
  */
 
 import { GameMode } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
 import {
   getTranslation,
   playSound,
@@ -405,11 +406,15 @@ export class ChronoMode extends GameMode {
 
   setupGameControls() {
     const abandonBtn = document.getElementById('chrono-abandon');
-    if (abandonBtn) abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+    if (abandonBtn) abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
   }
 
-  confirmAbandon() {
-    if (!globalThis.confirm?.(this.abandonQuestion())) return;
+  /**
+   * Demander confirmation d'abandon (game-exit.js)
+   * @returns {Promise<void>}
+   */
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
     // stop() annule la question suivante et la fin : l'abandon n'enregistre rien (une course
     // finie l'est déjà, dès sa dernière réponse)
     this.stop();

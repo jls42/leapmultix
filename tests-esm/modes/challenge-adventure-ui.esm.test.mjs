@@ -9,6 +9,7 @@
  * un retour à la carte qui échoue est signalé.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
+import { answerDialog, closeOpenDialog } from '../helpers/confirm-dialog-helpers.mjs';
 
 const userStore = { preferredOperator: '×', progressHistory: [], adventureProgressByOperator: {} };
 jest.unstable_mockModule('../../js/core/userState.js', () => ({
@@ -84,6 +85,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  closeOpenDialog();
   jest.restoreAllMocks();
 });
 
@@ -411,10 +413,10 @@ describe('Aventure : carte des niveaux', () => {
     const failure = new Error('carte illisible');
     jest.spyOn(adventure, 'returnToLevelSelection').mockRejectedValue(failure);
     const handled = jest.spyOn(adventure, 'handleError').mockImplementation(() => {});
-    jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
 
-    adventure.confirmAbandon();
-    await new Promise(r => setTimeout(r, 0));
+    const abandon = adventure.confirmAbandon();
+    await answerDialog(true);
+    await abandon;
     expect(handled).toHaveBeenCalledWith(failure);
   });
 

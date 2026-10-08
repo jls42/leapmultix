@@ -5,7 +5,7 @@
  */
 
 const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
+const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
 // Téléphone : les jeux reconnaissent un mobile à son agent utilisateur
@@ -53,8 +53,8 @@ async function launchGame(page, game) {
 
 /** Retour au menu Arcade : « Abandonner », confirmé, puis « Retour au menu Arcade » */
 async function backToArcadeMenu(page) {
-  page.once('dialog', dialog => dialog.accept());
   await pressButton(page, '#game [id$="abandon-btn"]');
+  await answerGameDialog(page, true);
   await pressButton(page, '#arcade-back-btn');
 }
 

@@ -6,6 +6,7 @@
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 import { readFileSync } from 'node:fs';
 import { createSlidesMock } from '../helpers/mode-test-helpers.mjs';
+import { answerDialog, closeOpenDialog } from '../helpers/confirm-dialog-helpers.mjs';
 
 let persisted;
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -77,6 +78,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  closeOpenDialog();
   jest.useRealTimers();
   jest.restoreAllMocks();
 });
@@ -181,8 +183,10 @@ describe('Défi : parties et records', () => {
     const challenge = await startChallenge('hard');
     reply(challenge);
     reply(challenge, false);
-    jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
-    challenge.confirmAbandon();
+    const abandon = challenge.confirmAbandon();
+    await answerDialog(true);
+    await abandon;
+    expect(challenge.state.isActive).toBe(false);
     const entry = persisted.modeStats.modes.challenge['×'];
     expect(entry).toMatchObject({ games: 1, questions: 2, correct: 1 });
     expect(entry.best).toEqual({});

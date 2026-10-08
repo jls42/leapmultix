@@ -1,7 +1,8 @@
 /**
  * Tests E2E - Clavier et sorties de partie, dans le vrai jeu :
- * - pendant une partie, Échap pose la question de « Abandonner », et la langue ne se change
- *   pas (le choix revient avec l'écran suivant) ;
+ * - pendant une partie, Échap pose la question de « Abandonner » dans la fenêtre du jeu, le
+ *   focus sur « Continuer la partie » ; la langue ne se change pas (le choix revient avec
+ *   l'écran suivant) ;
  * - les flèches restent dans la grille des réponses ;
  * - sur l'accueil, le premier arrêt de tabulation mène aux modes.
  * @jest-environment node
@@ -10,7 +11,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
+const {
+  createUserAndSkipIntro,
+  answerGameDialog,
+  gameDialogState,
+} = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
 const FR = JSON.parse(
@@ -30,6 +35,17 @@ const focusedMatches = (page, selector) =>
 async function startQuiz(page) {
   await page.click('.mode-btn[data-mode="quiz"]');
   await page.waitForSelector('#quiz-options .option:not([disabled])', { visible: true });
+}
+
+/** Lance MultiInvaders depuis le menu Arcade : tuile dépliée, puis « Jouer » */
+async function startInvasion(page) {
+  await page.$eval('.mode-btn[data-mode="arcade"]', button => button.click());
+  const card = '.arcade-game-card[data-game="invasion"]';
+  await page.waitForSelector(`${card} .arcade-game-toggle`, { visible: true });
+  const expanded = await page.$eval(card, el => el.classList.contains('expanded'));
+  if (!expanded) await page.$eval(`${card} .arcade-game-toggle`, toggle => toggle.click());
+  await page.$eval(`${card} .play-arcade-btn`, play => play.click());
+  await page.waitForSelector('#slide4.active-slide .arcade-game-ui canvas', { visible: true });
 }
 
 describe('Clavier et sorties de partie (E2E)', () => {
@@ -55,9 +71,10 @@ describe('Clavier et sorties de partie (E2E)', () => {
     dialogs = [];
     page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 800 });
+    // Plus aucune fenêtre du navigateur : la question se pose dans la fenêtre du jeu
     page.on('dialog', dialog => {
       dialogs.push(dialog.message());
-      return page.__acceptDialogs ? dialog.accept() : dialog.dismiss();
+      return dialog.dismiss();
     });
     await page.goto(server.url, server.gotoOptions);
     await createUserAndSkipIntro(page);
@@ -67,20 +84,45 @@ describe('Clavier et sorties de partie (E2E)', () => {
     if (page) await page.close();
   });
 
-  test('pendant le Quiz, Échap pose la question de « Abandonner » ; refusée, la partie continue', async () => {
+  test('pendant le Quiz, Échap pose la question de « Abandonner » ; Échap encore, la partie continue', async () => {
     await startQuiz(page);
     await page.keyboard.press('Escape');
-    await page.waitForFunction(() => document.querySelector('#slide4.active-slide'));
-    expect(dialogs).toEqual([FR.confirm_abandon_quiz]);
+    expect(await gameDialogState(page)).toEqual({
+      question: FR.confirm_abandon_quiz,
+      focused: 'cancel',
+    });
+    await page.keyboard.press('Escape');
+    expect(await gameDialogState(page)).toBeNull();
     expect(await page.$('#slide4.active-slide #quiz-options .option')).not.toBeNull();
+    expect(dialogs).toEqual([]);
   }, 30000);
+
+  test('MultiInvaders : Tab, Espace, Espace ne quitte pas la partie', async () => {
+    await startInvasion(page);
+    await page.waitForFunction(() => document.activeElement?.matches('#slide4 canvas'));
+    await page.keyboard.press('Tab');
+    expect(await focusedMatches(page, '#slide4 [id$="-abandon-btn"]')).toBe(true);
+    await page.keyboard.press('Space');
+    expect(await gameDialogState(page)).toEqual({
+      question: FR.confirm_abandon_arcade,
+      focused: 'cancel',
+    });
+    // La seconde Espace tombe sur « Continuer la partie »
+    await page.keyboard.press('Space');
+    await page.waitForFunction(() => !document.querySelector('[role="alertdialog"]'));
+    expect(await page.$('#slide4.active-slide .arcade-game-ui canvas')).not.toBeNull();
+    expect(await page.$('#slide4.active-slide .arcade-gameover')).toBeNull();
+    // La partie attend « Reprendre », qui a le focus
+    expect(await focusedMatches(page, '.arcade-resume-btn')).toBe(true);
+    expect(dialogs).toEqual([]);
+  }, 40000);
 
   test('pendant une partie, la langue ne se change pas ; elle revient avec l’écran de fin', async () => {
     expect(await visibleLanguages(page)).toEqual(['fr', 'en', 'es']);
     await startQuiz(page);
     expect(await visibleLanguages(page)).toEqual([]);
-    page.__acceptDialogs = true;
     await page.click('#quiz-abandon');
+    await answerGameDialog(page, true);
     await page.waitForSelector('#slide5.active-slide', { visible: true });
     expect(await visibleLanguages(page)).toEqual(['fr', 'en', 'es']);
   }, 30000);
@@ -169,7 +211,12 @@ describe('Clavier et sorties de partie au téléphone (E2E)', () => {
     });
     expect(onButton).toBe(true);
     await page.tap(dashboard);
+    expect(await gameDialogState(page)).toEqual({
+      question: FR.confirm_abandon_arcade,
+      focused: 'cancel',
+    });
+    await answerGameDialog(page, false);
     await page.waitForFunction(() => document.querySelector('#slide4.active-slide'));
-    expect(dialogs).toEqual([FR.confirm_abandon_arcade]);
+    expect(dialogs).toEqual([]);
   }, 40000);
 });

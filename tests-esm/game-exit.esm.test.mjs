@@ -1,12 +1,18 @@
 /* eslint-env jest, node */
 /**
- * Règle de sortie d'une partie en cours (js/game-exit.js) : chaque façon de quitter demande la
- * confirmation de « Abandonner » et enregistre la partie comme lui ; hors partie, rien ne change.
- * Modes réels, profil copié à chaque lecture comme UserManager.
+ * Règle de sortie d'une partie en cours (js/game-exit.js) : chaque façon de quitter pose la
+ * question de « Abandonner », dans la fenêtre du jeu, et enregistre la partie comme lui ; hors
+ * partie, rien ne change. Modes réels, profil copié à chaque lecture comme UserManager.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 import { readFileSync } from 'node:fs';
 import { createSlidesMock } from './helpers/mode-test-helpers.mjs';
+import {
+  answerDialog,
+  closeOpenDialog,
+  dialogQuestion,
+  openDialog,
+} from './helpers/confirm-dialog-helpers.mjs';
 
 let persisted;
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -136,6 +142,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  closeOpenDialog();
   current?.stop();
   jest.useRealTimers();
   jest.restoreAllMocks();
@@ -145,24 +152,29 @@ afterEach(() => {
 describe('Barre du haut pendant une partie', () => {
   test('Accueil pendant un quiz : la question de « Abandonner » ; refusée, la partie continue', async () => {
     const quiz = await startQuiz();
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(false);
+    screen.home.focus();
     screen.home.click();
-    expect(confirm).toHaveBeenCalledWith(FR.confirm_abandon_quiz);
+    expect(dialogQuestion()).toBe(FR.confirm_abandon_quiz);
+    expect(navigate).not.toHaveBeenCalled();
+    await answerDialog(false);
     expect(navigate).not.toHaveBeenCalled();
     expect(quiz.isGameInProgress()).toBe(true);
     expect(persisted.quizStats).toBeUndefined();
+    // Le focus revient au bouton pressé
+    expect(document.activeElement).toBe(screen.home);
   });
 
   test('acceptée : le quiz s’enregistre comme avec « Abandonner », puis l’écran s’ouvre', async () => {
-    jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
     await startQuiz([true, false]);
     screen.home.click();
+    await answerDialog(true);
     expect(navigate).toHaveBeenCalledTimes(1);
     const byHome = persisted.quizStats.history.at(-1);
 
     // La même partie, quittée par « Abandonner »
     await startQuiz([true, false]);
     document.getElementById('quiz-abandon').click();
+    await answerDialog(true);
     const byButton = persisted.quizStats.history.at(-1);
     // Même bilan, à la date près
     const homeEntry = withoutDate(byHome);
@@ -179,9 +191,9 @@ describe('Barre du haut pendant une partie', () => {
     await jest.advanceTimersByTimeAsync(20);
     reply(challenge);
     reply(challenge, false);
-    jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
     screen.dashboard.click();
-    expect(globalThis.confirm).toHaveBeenCalledWith(FR.confirm_abandon_challenge);
+    expect(dialogQuestion()).toBe(FR.confirm_abandon_challenge);
+    await answerDialog(true);
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(persisted.modeStats.modes.challenge['×']).toMatchObject({
       games: 1,
@@ -192,11 +204,38 @@ describe('Barre du haut pendant une partie', () => {
     expect(persisted.challengeStats.hard.totalPlayed).toBe(1);
   });
 
+  test('le décompte du Défi attend la réponse à la question, puis repart', async () => {
+    const challenge = await startChallenge();
+    document.querySelector('.difficulty-btn[data-difficulty="hard"]').click();
+    await jest.advanceTimersByTimeAsync(20);
+    const timeLeft = challenge.state.timeLeft;
+    screen.home.click();
+    await jest.advanceTimersByTimeAsync(10000);
+    expect(challenge.state.timeLeft).toBe(timeLeft);
+    await answerDialog(false);
+    await jest.advanceTimersByTimeAsync(3000);
+    expect(challenge.state.timeLeft).toBe(timeLeft - 3);
+  });
+
+  test('une explication finie pendant la question ne relance pas le décompte', async () => {
+    const challenge = await startChallenge();
+    document.querySelector('.difficulty-btn[data-difficulty="hard"]').click();
+    await jest.advanceTimersByTimeAsync(20);
+    reply(challenge, false);
+    const timeLeft = challenge.state.timeLeft;
+    screen.home.click();
+    // L'explication se termine, la question suivante arrive derrière la fenêtre
+    await jest.advanceTimersByTimeAsync(20000);
+    expect(challenge.state.timeLeft).toBe(timeLeft);
+    await answerDialog(false);
+    await jest.advanceTimersByTimeAsync(2000);
+    expect(challenge.state.timeLeft).toBe(timeLeft - 2);
+  });
+
   test('hors partie (choix de la difficulté du Défi) : rien ne change', async () => {
     await startChallenge();
-    const confirm = jest.spyOn(globalThis, 'confirm');
     screen.home.click();
-    expect(confirm).not.toHaveBeenCalled();
+    expect(openDialog()).toBeNull();
     expect(navigate).toHaveBeenCalledTimes(1);
   });
 
@@ -207,17 +246,16 @@ describe('Barre du haut pendant une partie', () => {
     quiz.state.questionCount = 9;
     showQuestion(quiz, 3, 4);
     reply(quiz);
-    const confirm = jest.spyOn(globalThis, 'confirm');
     screen.home.click();
-    expect(confirm).not.toHaveBeenCalled();
+    expect(openDialog()).toBeNull();
+    expect(navigate).toHaveBeenCalledTimes(1);
     expect(persisted.quizStats.totalQuizzes).toBe(1);
   });
 
   test('une langue n’est pas une sortie', async () => {
     await startQuiz();
-    const confirm = jest.spyOn(globalThis, 'confirm');
     screen.english.click();
-    expect(confirm).not.toHaveBeenCalled();
+    expect(openDialog()).toBeNull();
     expect(navigate).toHaveBeenCalledTimes(1);
   });
 });
@@ -225,18 +263,31 @@ describe('Barre du haut pendant une partie', () => {
 describe('Échap', () => {
   test('pendant une partie, Échap presse « Abandonner » : refusé, la partie continue', async () => {
     const quiz = await startQuiz();
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(false);
     pressEscape();
+    expect(dialogQuestion()).toBe(FR.confirm_abandon_quiz);
+    await answerDialog(false);
     await jest.advanceTimersByTimeAsync(20);
-    expect(confirm).toHaveBeenCalledWith(FR.confirm_abandon_quiz);
+    expect(goToSlide).not.toHaveBeenCalledWith(0);
+    expect(quiz.isGameInProgress()).toBe(true);
+  });
+
+  test('Échap dans la fenêtre : la partie continue, et rien d’autre (pas de retour au choix du joueur)', async () => {
+    const quiz = await startQuiz();
+    pressEscape();
+    expect(openDialog()).not.toBeNull();
+    document.activeElement.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    );
+    await jest.advanceTimersByTimeAsync(20);
+    expect(openDialog()).toBeNull();
     expect(goToSlide).not.toHaveBeenCalledWith(0);
     expect(quiz.isGameInProgress()).toBe(true);
   });
 
   test('accepté, la suite de « Abandonner » : l’écran de fin du quiz', async () => {
     const quiz = await startQuiz();
-    jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
     pressEscape();
+    await answerDialog(true);
     await jest.advanceTimersByTimeAsync(20);
     expect(quiz.state.isActive).toBe(false);
     expect(goToSlide).toHaveBeenCalledWith(5);
@@ -244,12 +295,22 @@ describe('Échap', () => {
     expect(persisted.quizStats.totalQuizzes).toBe(1);
   });
 
+  test('partie finie pendant la question : confirmer ne la refinit pas', async () => {
+    const quiz = await startQuiz();
+    pressEscape();
+    // La fin programmée arrive pendant que la fenêtre attend
+    quiz.finish();
+    await answerDialog(true);
+    await jest.advanceTimersByTimeAsync(20);
+    expect(goToSlide.mock.calls.filter(([slide]) => slide === 5)).toHaveLength(1);
+    expect(persisted.quizStats.totalQuizzes).toBe(1);
+  });
+
   test('hors partie, Échap ramène toujours au choix du joueur, sans question', async () => {
     await startChallenge();
-    const confirm = jest.spyOn(globalThis, 'confirm');
     pressEscape();
     await jest.advanceTimersByTimeAsync(20);
-    expect(confirm).not.toHaveBeenCalled();
+    expect(openDialog()).toBeNull();
     expect(goToSlide).toHaveBeenCalledWith(0);
   });
 });
@@ -267,49 +328,71 @@ describe('Jeu d’Arcade', () => {
     return { abandon, endGame };
   }
 
-  test('« Abandonner » demande confirmation ; refusée, le jeu continue', () => {
+  test('« Abandonner » demande confirmation ; refusée, le jeu continue', async () => {
     const { abandon, endGame } = mountArcadeGame();
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(false);
     abandon.click();
-    expect(confirm).toHaveBeenCalledWith(FR.confirm_abandon_arcade);
+    expect(dialogQuestion()).toBe(FR.confirm_abandon_arcade);
+    await answerDialog(false);
     expect(endGame).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
     abandon.click();
+    expect(endGame).not.toHaveBeenCalled();
+    await answerDialog(true);
     expect(endGame).toHaveBeenCalledTimes(1);
   });
 
-  test('la question arrête le jeu ; refusée, la partie attend « Reprendre », sans bond', () => {
+  test('deux activations de suite au clavier (Tab, Espace, Espace) ne quittent pas', async () => {
+    const { abandon, endGame } = mountArcadeGame();
+    abandon.focus();
+    document.activeElement.click();
+    // La seconde tombe sur « Continuer la partie », qui a le focus
+    expect(document.activeElement.dataset.answer).toBe('cancel');
+    expect(document.activeElement.textContent).toBe(FR.exit_dialog_continue);
+    document.activeElement.click();
+    await jest.advanceTimersByTimeAsync(20);
+    expect(openDialog()).toBeNull();
+    expect(endGame).not.toHaveBeenCalled();
+  });
+
+  test('la question arrête le jeu ; refusée, la partie attend « Reprendre », qui a le focus', async () => {
     const { abandon, endGame } = mountArcadeGame();
     const timer = document.createElement('span');
     screen.game.prepend(timer);
     mountArcadePause(timer);
-    let pausedWhileAsking = null;
-    jest.spyOn(globalThis, 'confirm').mockImplementation(() => {
-      pausedWhileAsking = isArcadePaused();
-      return false;
-    });
     abandon.click();
-    expect(pausedWhileAsking).toBe(true);
+    expect(isArcadePaused()).toBe(true);
+    await answerDialog(false);
     expect(endGame).not.toHaveBeenCalled();
-    // La partie ne reprend jamais seule : le jeu ne bondit pas du temps passé à lire
+    // La partie ne reprend jamais seule : « Reprendre » (touche P) la relance
     expect(isArcadePaused()).toBe(true);
     expect(document.activeElement?.classList.contains('arcade-resume-btn')).toBe(true);
     // Déjà en pause : la question n'y change rien
     screen.home.click();
+    await answerDialog(false);
     expect(isArcadePaused()).toBe(true);
     unmountArcadePause();
   });
 
-  test('Échap et Accueil : la même question', () => {
+  test('Échap et Accueil : la même question', async () => {
     const { endGame } = mountArcadeGame();
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(false);
     pressEscape();
+    expect(dialogQuestion()).toBe(FR.confirm_abandon_arcade);
+    await answerDialog(false);
     screen.home.click();
-    expect(confirm.mock.calls).toEqual([[FR.confirm_abandon_arcade], [FR.confirm_abandon_arcade]]);
+    expect(dialogQuestion()).toBe(FR.confirm_abandon_arcade);
+    await answerDialog(false);
     expect(endGame).not.toHaveBeenCalled();
     expect(navigate).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
     pressEscape();
+    await answerDialog(true);
     expect(endGame).toHaveBeenCalledTimes(1);
+  });
+
+  test('la fenêtre est traduite : titre, question et boutons', () => {
+    mountArcadeGame();
+    pressEscape();
+    const dialog = openDialog();
+    expect(dialog.querySelector('h2').textContent).toBe(FR.exit_dialog_title);
+    const labels = [...dialog.querySelectorAll('button')].map(b => b.textContent);
+    expect(labels).toEqual([FR.exit_dialog_continue, FR.exit_dialog_quit]);
   });
 });
