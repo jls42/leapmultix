@@ -36,6 +36,17 @@ const SWIPE_VECTORS = {
 const TAP_DEAD_ZONE_PX = 30;
 
 /**
+ * Tables retirées par le joueur (réglage global des tables), multiplication seulement
+ * @returns {number[]}
+ */
+function excludedTablesOfCurrentUser() {
+  const currentUser = UserManager.getCurrentUser();
+  return TablePreferences.isGlobalEnabled(currentUser)
+    ? TablePreferences.getActiveExclusions(currentUser)
+    : [];
+}
+
+/**
  * Questions d'une partie : les tables du niveau en ×, ses nombres (facile, moyen, difficile)
  * en +, − et ÷
  * @param {{tables?: number[], difficulty?: string}} options - difficulty : niveau de l'Arcade
@@ -503,31 +514,8 @@ class SnakeGame {
   // Générer une opération mathématique
   generateOperation() {
     try {
-      // Appliquer l'exclusion globale de tables
-      const currentUser = UserManager.getCurrentUser();
-      const excluded = TablePreferences.isGlobalEnabled(currentUser)
-        ? TablePreferences.getActiveExclusions(currentUser)
-        : [];
-
       // Utiliser generateQuestion pour cohérence avec le système centralisé (R4.4: multi-ops)
-      const questionData = generateQuestion({
-        type: 'classic',
-        operator: this.operator, // Support +, −, ×, ÷
-        difficulty: this.questionDifficulty,
-        excludeTables: this.operator === '×' ? excluded : [],
-        tables:
-          this.operator === '×' && Array.isArray(this.tables) && this.tables.length > 0
-            ? this.tables
-            : undefined,
-        forceTable:
-          this.operator === '×' && this.mode === 'table' && this.tableNumber
-            ? this.tableNumber
-            : null,
-        minTable: 1,
-        maxTable: 10,
-        minNum: 1,
-        maxNum: 10,
-      });
+      const questionData = generateQuestion(this.questionOptions());
 
       this.currentOperation = {
         num1: questionData.a,
@@ -543,6 +531,25 @@ class SnakeGame {
       this.currentOperation = { num1: 1, num2: 1, operator: this.operator, result: 1 };
       this.displayOperation();
     }
+  }
+
+  // Options de la question : en ×, les tables du niveau, sans les tables retirées par le
+  // joueur ; en +, − et ÷, les nombres du niveau
+  questionOptions() {
+    const isMultiplication = this.operator === '×';
+    return {
+      type: 'classic',
+      operator: this.operator, // Support +, −, ×, ÷
+      difficulty: this.questionDifficulty,
+      excludeTables: isMultiplication ? excludedTablesOfCurrentUser() : [],
+      tables: isMultiplication && this.tables.length > 0 ? this.tables : undefined,
+      forceTable:
+        isMultiplication && this.mode === 'table' && this.tableNumber ? this.tableNumber : null,
+      minTable: 1,
+      maxTable: 10,
+      minNum: 1,
+      maxNum: 10,
+    };
   }
 
   // Bonne réponse et trois leurres, ceux des autres modes : des erreurs d'enfant plausibles

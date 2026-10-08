@@ -27,6 +27,19 @@ function holdMoveClocks(ctx) {
 }
 
 /**
+ * Le personnage et les monstres avancent-ils à ce pas ? Non si la partie est arrêtée, ni en
+ * pause, où les horloges restent à l'heure (holdMoveClocks)
+ * @param {Object} ctx Instance de PacmanGame
+ * @returns {boolean}
+ */
+function readyToMove(ctx) {
+  if (!ctx.running || ctx.gameOver) return false;
+  if (!isArcadePaused()) return true;
+  holdMoveClocks(ctx);
+  return false;
+}
+
+/**
  * Invincibilité après une vie perdue : le personnage clignote, puis redevient normal.
  * @param {Object} ctx Instance de PacmanGame
  */
@@ -432,12 +445,8 @@ export function initPacmanEngine(game) {
 
   // Boucle interne
   game.update = function update() {
-    if (!this.running || this.gameOver) return;
-    // En pause, ni le personnage ni les monstres ne bougent
-    if (isArcadePaused()) {
-      holdMoveClocks(this);
-      return;
-    }
+    // Partie arrêtée, ou en pause : ni le personnage ni les monstres ne bougent
+    if (!readyToMove(this)) return;
     this.updatePlayerAvatar();
     const now = globalThis.performance?.now?.() ?? Date.now();
 
