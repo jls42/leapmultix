@@ -150,8 +150,9 @@ function onFullscreenChange() {
 
 /**
  * Échap en plein écran (ou juste après en être sorti) sert à sortir du plein écran, et à
- * rien d'autre : sans cela, le raccourci global d'accessibility.js ramènerait à
- * « Qui joue ? ». Hors de ces deux cas, la touche garde son rôle.
+ * rien d'autre : la touche est arrêtée, aucun raccourci de la page ne la reçoit (retour à
+ * « Qui joue ? », confirmation de sortie de partie). Hors de ces deux cas, elle garde son
+ * rôle.
  * @param {KeyboardEvent} event
  */
 function onEscape(event) {
@@ -159,6 +160,7 @@ function onEscape(event) {
   const root = fullscreenRoot();
   if (!root && Date.now() - lastExitAt > ESCAPE_GRACE_MS) return;
   event.preventDefault();
+  event.stopImmediatePropagation();
   if (root) exitFullscreen();
 }
 
@@ -166,8 +168,8 @@ function listenOnce() {
   if (listening) return;
   listening = true;
   document.addEventListener('fullscreenchange', onFullscreenChange);
-  // En capture : avant les raccourcis de la page
-  document.addEventListener('keydown', onEscape, true);
+  // Capture sur la fenêtre : avant tout raccourci de la page
+  globalThis.addEventListener('keydown', onEscape, true);
 }
 
 /**

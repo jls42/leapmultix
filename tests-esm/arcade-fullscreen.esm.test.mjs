@@ -177,9 +177,16 @@ describe('Échap en plein écran', () => {
   test('il sort du plein écran et ne ramène pas à « Qui joue ? »', async () => {
     mountArcadeFullscreenButton(stage).click();
     await flush();
+    // Raccourcis de la page (accessibility.js, confirmation de sortie) : rien ne leur arrive
+    const pageShortcut = jest.fn();
+    document.addEventListener('keydown', pageShortcut);
+    window.addEventListener('keydown', pageShortcut);
     const event = pressEscape();
     await flush();
+    document.removeEventListener('keydown', pageShortcut);
+    window.removeEventListener('keydown', pageShortcut);
     expect(event.defaultPrevented).toBe(true);
+    expect(pageShortcut).not.toHaveBeenCalled();
     expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
     expect(document.fullscreenElement).toBeNull();
   });
