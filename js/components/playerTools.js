@@ -1,15 +1,18 @@
 /**
  * « Qui joue ? » sur un poste partagé par une classe (slide 0) : filtre des prénoms dès
- * 10 joueurs et raccourci vers « Nouveau joueur », au-dessus des tuiles.
+ * 10 joueurs, raccourci vers « Nouveau joueur » et corbeille, au-dessus des tuiles.
  *
  * Les tuiles sont dessinées par UserManager.refreshUserList, triées par prénom ; chaque rendu
  * est signalé par l'événement « playersChanged », qui remet cette barre à jour.
  */
+import UserManager from '../userManager.js';
 import { eventBus } from '../core/eventBus.js';
+import { TRASH_DAYS, restorableTrash, trashExpiry } from '../core/players-trash.js';
 import { getCurrentLanguage } from '../i18n-store.js';
 import { getTranslation } from '../i18n.js';
+import { getAvatarHeadSrc } from '../main-helpers.js';
 import { normalizeUsername } from '../security-utils.js';
-import { preferredScrollBehavior } from '../ui-feedback.js';
+import { createTrashIcon, preferredScrollBehavior } from '../ui-feedback.js';
 
 /** Nombre de joueurs à partir duquel le filtre apparaît */
 export const FILTER_THRESHOLD = 10;
@@ -44,6 +47,76 @@ export function nameMatches(name, query, collator = baseCollator()) {
   return startsWith(name) || name.split(/[\s'’-]+/u).some(startsWith);
 }
 
+/**
+ * Date de l'effacement pour de bon : « jusqu'au 7 novembre »
+ * @param {{deletedAt: number}} entry
+ * @returns {string}
+ */
+function expiryLabel(entry) {
+  const format = new Intl.DateTimeFormat(getCurrentLanguage(), { day: 'numeric', month: 'long' });
+  const date = format.format(new Date(trashExpiry(entry)));
+  return translateOr('trash_until', `jusqu’au ${date}`, { date });
+}
+
+/**
+ * Une ligne de la corbeille : visage, prénom, date d'effacement, « Restaurer »
+ * @param {{name: string, deletedAt: number, data: Object}} entry
+ * @returns {HTMLLIElement}
+ */
+function trashItem(entry) {
+  const item = document.createElement('li');
+  item.className = 'trash-entry';
+  const face = document.createElement('img');
+  face.className = 'trash-entry-face';
+  face.src = getAvatarHeadSrc(entry.data?.avatar);
+  face.alt = '';
+  face.width = 40;
+  face.height = 40;
+  const name = document.createElement('span');
+  name.className = 'trash-entry-name';
+  name.textContent = entry.name;
+  const until = document.createElement('span');
+  until.className = 'trash-entry-until';
+  until.textContent = expiryLabel(entry);
+  const restore = document.createElement('button');
+  restore.type = 'button';
+  restore.className = 'btn btn-secondary btn-sm trash-restore-btn';
+  restore.textContent = translateOr('trash_restore', 'Restaurer');
+  const label = `Restaurer «\u00a0${entry.name}\u00a0»`;
+  restore.setAttribute(
+    'aria-label',
+    translateOr('trash_restore_label', label, { name: entry.name })
+  );
+  restore.dataset.trashName = entry.name;
+  restore.dataset.trashDeletedAt = String(entry.deletedAt);
+  item.append(face, name, until, restore);
+  return item;
+}
+
+/**
+ * Ce que dit la barre après « Restaurer »
+ * @param {{ok: boolean, name: string, problem?: string}} result
+ * @returns {string}
+ */
+function restoreMessage({ ok, name, problem }) {
+  if (ok) {
+    const fallback = `«\u00a0${name}\u00a0» est de retour dans la liste.`;
+    return translateOr('trash_restored', fallback, { name });
+  }
+  if (problem === 'exists') {
+    const fallback = `«\u00a0${name}\u00a0» est déjà dans la liste.`;
+    return translateOr('trash_restore_exists', fallback, { name });
+  }
+  return translateOr('trash_restore_failed', 'Ce joueur n’a pas pu être restauré.');
+}
+
+/** Boutons de la barre, branchés par délégation : sélecteur, puis action */
+const CLICK_ACTIONS = [
+  ['#new-player-shortcut', tools => tools.goToNewPlayer()],
+  ['#player-trash-toggle', tools => tools.toggleTrash()],
+  ['.trash-restore-btn', (tools, button) => tools.restore(button)],
+];
+
 export const PlayerTools = {
   _wired: false,
 
@@ -55,6 +128,7 @@ export const PlayerTools = {
     if (!this._wired) {
       this._wired = true;
       eventBus.on('playersChanged', () => this.refresh());
+      eventBus.on('playerTrashed', event => this._announceTrashed(event?.detail?.name));
       document.addEventListener('input', event => this._onInput(event));
       // En capture : Entrée s'arrête ici, avant la navigation clavier globale
       document.addEventListener('keydown', event => this._onFilterEnter(event), true);
@@ -64,15 +138,115 @@ export const PlayerTools = {
   },
 
   /**
-   * Barre visible dès qu'il y a un joueur ; filtre dès FILTER_THRESHOLD joueurs
+   * Barre visible dès qu'il y a un joueur, ou un joueur dans la corbeille ; filtre dès
+   * FILTER_THRESHOLD joueurs
    */
   refresh() {
     const tools = document.getElementById('user-list-tools');
     if (!tools) return;
     const count = document.querySelectorAll('#user-list .user-container').length;
-    tools.hidden = count === 0;
+    const trash = restorableTrash();
+    tools.hidden = count === 0 && trash.length === 0;
+    // Sans joueur, le formulaire « Nouveau joueur » suit déjà
+    const shortcut = document.getElementById('new-player-shortcut');
+    if (shortcut) shortcut.hidden = count === 0;
+    this.say('');
     this._showFilter(count >= FILTER_THRESHOLD);
     this.applyFilter();
+    this._renderTrash(trash);
+  },
+
+  /**
+   * Message de la barre (région « status », lue par les lecteurs d'écran)
+   * @param {string} text
+   */
+  say(text) {
+    const message = document.getElementById('user-tools-message');
+    if (message) message.textContent = text;
+  },
+
+  /**
+   * Bouton « Corbeille (n) », règle de vidage et joueurs à restaurer
+   * @param {Array<Object>} trash
+   * @private
+   */
+  _renderTrash(trash) {
+    const toggle = document.getElementById('player-trash-toggle');
+    const list = document.getElementById('player-trash-list');
+    if (!toggle || !list) return;
+    toggle.hidden = trash.length === 0;
+    if (trash.length === 0) this._setTrashOpen(false);
+    if (!toggle.querySelector('.trash-icon')) toggle.prepend(createTrashIcon());
+    const label = toggle.querySelector('.player-trash-label');
+    const count = trash.length;
+    if (label)
+      label.textContent = translateOr('trash_toggle', `Corbeille (${count})`, { n: count });
+    const rule = document.getElementById('player-trash-rule');
+    const ruleText = `Un joueur supprimé attend ici ${TRASH_DAYS} jours, puis il est effacé pour de bon.`;
+    if (rule) rule.textContent = translateOr('trash_rule', ruleText, { days: TRASH_DAYS });
+    list.replaceChildren(...trash.map(trashItem));
+  },
+
+  /**
+   * @param {boolean} open
+   * @private
+   */
+  _setTrashOpen(open) {
+    const toggle = document.getElementById('player-trash-toggle');
+    const panel = document.getElementById('player-trash-panel');
+    if (!toggle || !panel) return;
+    toggle.setAttribute('aria-expanded', String(open));
+    panel.hidden = !open;
+  },
+
+  /**
+   * Ouvre ou referme la corbeille
+   */
+  toggleTrash() {
+    const toggle = document.getElementById('player-trash-toggle');
+    this._setTrashOpen(toggle?.getAttribute('aria-expanded') !== 'true');
+  },
+
+  /**
+   * « Restaurer » : le joueur revient dans la liste, sa tuile reçoit le focus
+   * @param {HTMLButtonElement} button
+   */
+  restore(button) {
+    const result = UserManager.restoreFromTrash({
+      name: button.dataset.trashName,
+      deletedAt: Number(button.dataset.trashDeletedAt),
+    });
+    if (result.ok) {
+      // Un filtre en cours cacherait la tuile revenue
+      const input = document.getElementById('user-filter-input');
+      if (input) input.value = '';
+      UserManager.refreshUserList();
+      this._focusTile(result.name);
+    }
+    this.say(restoreMessage(result));
+  },
+
+  /**
+   * @param {string} name
+   * @private
+   */
+  _focusTile(name) {
+    const items = [...document.querySelectorAll('#user-list .user-container')];
+    items
+      .find(item => item.dataset.player === name)
+      ?.querySelector('.user-tile')
+      ?.focus();
+  },
+
+  /**
+   * « Léa est dans la corbeille. », après « Supprimer » (userManager.js)
+   * @param {string} name
+   * @private
+   */
+  _announceTrashed(name) {
+    if (!name) return;
+    const fallback = `«\u00a0${name}\u00a0» est dans la corbeille.`;
+    this.say(translateOr('trash_added', fallback, { name }));
   },
 
   /**
@@ -149,7 +323,13 @@ export const PlayerTools = {
 
   /** @private */
   _onClick(event) {
-    if (event.target?.closest?.('#new-player-shortcut')) this.goToNewPlayer();
+    for (const [selector, action] of CLICK_ACTIONS) {
+      const element = event.target?.closest?.(selector);
+      if (element) {
+        action(this, element);
+        return;
+      }
+    }
   },
 };
 

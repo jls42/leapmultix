@@ -27,6 +27,7 @@ import {
   emptyChronoStats,
 } from './core/chrono-stats.js';
 import { profileOperationStats } from './core/profile-operation-stats.js';
+import { TRASH_DAYS, isTrashExpired, loadTrash, saveTrash } from './core/players-trash.js';
 
 /**
  * Traduction avec texte de secours tant que la clé n'existe pas dans les fichiers de langue.
@@ -179,6 +180,8 @@ export const UserManager = {
   init() {
     // Charger les joueurs depuis le stockage
     this._players = this.loadPlayers();
+    // Corbeille : les joueurs supprimés depuis plus de TRASH_DAYS jours sont effacés
+    this.purgeExpiredTrash();
 
     // Initialiser l'interface utilisateur
     this.initUI();
@@ -427,7 +430,8 @@ export const UserManager = {
       return false;
     }
 
-    if (Object.prototype.hasOwnProperty.call(this._players, key)) {
+    // Déjà dans la liste, ou dans la corbeille (d'où il se restaure)
+    if (this._nameTaken(key)) {
       console.error('Un utilisateur avec ce nom existe déjà');
       return false;
     }
@@ -478,7 +482,8 @@ export const UserManager = {
   },
 
   /**
-   * Supprimer un utilisateur
+   * Supprimer un utilisateur : il part dans la corbeille avec toutes ses données (rien n'est
+   * effacé avant purgeExpiredTrash, TRASH_DAYS jours plus tard)
    * @param {string} name - Nom de l'utilisateur à supprimer
    * @returns {boolean} Succès de la suppression
    */
@@ -491,30 +496,100 @@ export const UserManager = {
       return false;
     }
 
+    const trash = loadTrash();
+    trash.push({ name: key, deletedAt: Date.now(), data: Reflect.get(this._players, key) });
+    // Une corbeille qui ne s'écrit pas : le profil reste, plutôt que d'être perdu
+    if (!saveTrash(trash)) {
+      console.error(`Corbeille indisponible : « ${key} » n'est pas supprimé`);
+      return false;
+    }
+
     // Si c'est l'utilisateur actuel, le déconnecter
     const wasCurrentUser = this._currentUser === key;
     if (wasCurrentUser) {
       this._currentUser = null;
     }
-
-    const owner = legacyArcadeOwner(this._players[key] ?? {}, key);
-    if (Object.prototype.hasOwnProperty.call(this._players, key)) {
-      Reflect.deleteProperty(this._players, key);
-    }
+    Reflect.deleteProperty(this._players, key);
     this.savePlayers();
-    // Effacement promis par la page Confidentialité : les anciens scores d'Arcade, rangés sous
-    // le surnom (et donc le prénom en clair), partent avec le profil, sauf ceux d'un autre
-    // profil qui porte le même nom
-    const stillUsed = new Set(
-      Object.entries(this._players).flatMap(([other, data]) => [
-        other,
-        legacyArcadeOwner(data ?? {}, other),
-      ])
-    );
-    this._removeLegacyArcadeScores([owner, key].filter(name => !stillUsed.has(name)));
     // Plus de joueur courant : la barre du haut retire ce qui dépend d'un profil
     if (wasCurrentUser) this.emitUserChanged(null);
     return true;
+  },
+
+  /**
+   * Remet dans la liste, à l'identique, un joueur de la corbeille
+   * @param {{name: string, deletedAt: number}} entry - Entrée choisie (prénom et date)
+   * @returns {{ok: boolean, name: string, problem?: 'missing'|'exists'|'storage'}}
+   */
+  restoreFromTrash({ name, deletedAt }) {
+    const trash = loadTrash();
+    const index = trash.findIndex(entry => entry.name === name && entry.deletedAt === deletedAt);
+    if (index === -1) return { ok: false, name, problem: 'missing' };
+    // Un joueur de la liste porte ce prénom : il n'est pas écrasé
+    if (Object.prototype.hasOwnProperty.call(this._players, name)) {
+      return { ok: false, name, problem: 'exists' };
+    }
+    this._addPlayer(name, trash.at(index).data);
+    if (!this.savePlayers()) {
+      Reflect.deleteProperty(this._players, name);
+      return { ok: false, name, problem: 'storage' };
+    }
+    trash.splice(index, 1);
+    saveTrash(trash);
+    return { ok: true, name };
+  },
+
+  /**
+   * Efface pour de bon les joueurs supprimés depuis TRASH_DAYS jours, avec leurs anciens
+   * scores d'Arcade
+   * @param {number} [now]
+   * @returns {number} Nombre de joueurs effacés
+   */
+  purgeExpiredTrash(now = Date.now()) {
+    const trash = loadTrash();
+    const expired = trash.filter(entry => isTrashExpired(entry, now));
+    if (expired.length === 0) return 0;
+    const kept = trash.filter(entry => !isTrashExpired(entry, now));
+    saveTrash(kept);
+    // Effacement promis par la page Confidentialité : les anciens scores d'Arcade, rangés sous
+    // le surnom (et donc le prénom en clair), partent avec le profil, sauf ceux d'un autre
+    // profil qui porte le même nom, dans la liste ou dans la corbeille
+    const inUse = this._legacyOwnersInUse(kept);
+    const owners = expired.flatMap(entry => [
+      entry.name,
+      legacyArcadeOwner(entry.data ?? {}, entry.name),
+    ]);
+    this._removeLegacyArcadeScores(owners.filter(owner => !inUse.has(owner)));
+    return expired.length;
+  },
+
+  /**
+   * Prénoms et surnoms des joueurs de la liste et de la corbeille
+   * @param {Array<{name: string, data: Object}>} trash
+   * @returns {Set<string>}
+   * @private
+   */
+  _legacyOwnersInUse(trash) {
+    const profiles = [
+      ...Object.entries(this._players),
+      ...trash.map(entry => [entry.name, entry.data]),
+    ];
+    return new Set(profiles.flatMap(([name, data]) => [name, legacyArcadeOwner(data ?? {}, name)]));
+  },
+
+  /**
+   * Ajoute un joueur à la liste, sous sa clé (propriété propre, jamais héritée)
+   * @param {string} name
+   * @param {Object} data
+   * @private
+   */
+  _addPlayer(name, data) {
+    Object.defineProperty(this._players, name, {
+      value: data,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
   },
 
   /**
@@ -538,12 +613,14 @@ export const UserManager = {
 
   /**
    * Sauvegarder les joueurs dans le stockage
+   * @returns {boolean} Faux si le navigateur refuse d'écrire
    */
   savePlayers() {
     try {
-      Storage.set('players', this._players);
+      return Storage.set('players', this._players);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde des joueurs:', error);
+      return false;
     }
   },
 
@@ -641,10 +718,12 @@ export const UserManager = {
       e.stopPropagation();
       const canConfirm =
         typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-      if (canConfirm ? globalThis.confirm(getTranslation('confirm_delete_user', { name })) : true) {
-        this.deleteUser(name);
+      const question = getTranslation('confirm_delete_user', { name, days: TRASH_DAYS });
+      if ((canConfirm ? globalThis.confirm(question) : true) && this.deleteUser(name)) {
         this.refreshUserList();
         this._focusAfterProfileRemoval();
+        // « Léa est dans la corbeille. » (components/playerTools.js)
+        eventBus.emit('playerTrashed', { name });
       }
     };
 
@@ -802,12 +881,12 @@ export const UserManager = {
 
     const problem = check.problem || this._nameTaken(check.name);
     if (problem) {
-      this._showCreationMessage(this._creationProblemMessage(problem, check.chars));
+      this._showCreationMessage(this._creationProblemMessage(problem, check));
       return;
     }
 
     if (!this.createUser(check.name, selectedAvatar)) {
-      this._showCreationMessage(this._creationProblemMessage('exists', ''));
+      this._showCreationMessage(this._creationProblemMessage('exists', check));
       return;
     }
 
@@ -831,23 +910,24 @@ export const UserManager = {
   },
 
   /**
-   * Prénom déjà pris par un joueur de la liste
+   * Prénom déjà pris par un joueur de la liste, ou de la corbeille
    * @param {string} name - Prénom rangé (checkUsername)
-   * @returns {'exists'|null}
+   * @returns {'exists'|'trash'|null}
    * @private
    */
   _nameTaken(name) {
-    return Object.prototype.hasOwnProperty.call(this._players, name) ? 'exists' : null;
+    if (Object.prototype.hasOwnProperty.call(this._players, name)) return 'exists';
+    return loadTrash().some(entry => entry.name === name) ? 'trash' : null;
   },
 
   /**
    * Message sous le champ « Ton prénom » : ce qui empêche de créer ce joueur
-   * @param {string} problem - 'empty', 'chars', 'long' ou 'exists'
-   * @param {string} chars - Signes refusés, cités tels quels
+   * @param {string} problem - 'empty', 'chars', 'long', 'exists' ou 'trash'
+   * @param {{name: string, chars: string}} check - Prénom rangé et signes refusés
    * @returns {string}
    * @private
    */
-  _creationProblemMessage(problem, chars) {
+  _creationProblemMessage(problem, { name, chars }) {
     switch (problem) {
       case 'chars':
         return translateOr(
@@ -865,6 +945,12 @@ export const UserManager = {
         return translateOr(
           'user_already_exists_alert',
           'Ce joueur existe déjà. Touche son prénom plus haut pour jouer.'
+        );
+      case 'trash':
+        return translateOr(
+          'name_in_trash_alert',
+          `«\u00a0${name}\u00a0» est dans la corbeille, en haut de la liste.`,
+          { name }
         );
       default:
         return translateOr('enter_valid_name_alert', 'Écris d’abord ton prénom.');

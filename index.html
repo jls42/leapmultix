@@ -368,7 +368,7 @@
           </div>
 
           <!-- Poste partagé par une classe (js/components/playerTools.js) : filtre des
-               prénoms dès 10 joueurs, raccourci vers « Nouveau joueur » -->
+               prénoms dès 10 joueurs, raccourci vers « Nouveau joueur », corbeille -->
           <div class="user-list-tools" id="user-list-tools" hidden>
             <div class="user-filter" id="user-filter" hidden>
               <label for="user-filter-input" data-translate="user_filter_label"
@@ -386,8 +386,24 @@
               <button type="button" class="btn btn-secondary" id="new-player-shortcut">
                 <span data-translate="new_player_title">Nouveau joueur</span>
               </button>
+              <!-- Libellé « Corbeille (n) » et icône posés par playerTools.js -->
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="player-trash-toggle"
+                aria-expanded="false"
+                aria-controls="player-trash-panel"
+                hidden
+              >
+                <span class="player-trash-label">Corbeille</span>
+              </button>
             </div>
             <p class="user-filter-empty" id="user-filter-empty" hidden></p>
+            <div class="player-trash-panel" id="player-trash-panel" hidden>
+              <p class="player-trash-rule" id="player-trash-rule"></p>
+              <ul class="player-trash-list" id="player-trash-list"></ul>
+            </div>
+            <p class="user-tools-message" id="user-tools-message" role="status"></p>
           </div>
 
           <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList),
@@ -1367,7 +1383,9 @@
                   <li><strong>Partage&nbsp;:</strong> aucun (données non transmises)</li>
                   <li>
                     <strong>Durée&nbsp;:</strong> jusqu'à suppression par l'utilisateur (paramètres
-                    du navigateur)
+                    du navigateur). Un joueur supprimé dans le jeu reste 30&nbsp;jours dans la
+                    corbeille de «&nbsp;Qui joue&nbsp;?&nbsp;», d'où il peut être restauré, puis il
+                    est effacé.
                   </li>
                 </ul>
 
