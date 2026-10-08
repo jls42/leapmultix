@@ -35,6 +35,7 @@ import {
 } from './arcade.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { noteArcadePlay } from './arcade-session.js';
+import { isArcadePaused, isKeyFromButton } from './arcade-time.js';
 import {
   showGameInstructions,
   getCanvasFont,
@@ -253,6 +254,26 @@ function sizeInvadersBoard(canvas) {
   const fitBoard = () => fitArcadeCanvas(canvas, getArcadeCanvasBox(canvas));
   fitBoard();
   return { ...dimensions, fitBoard };
+}
+
+/**
+ * Question d'une vague (ou réponse d'un monstre) : les tables du niveau en ×, les nombres
+ * du niveau (facile, moyen, difficile) en +, − et ÷
+ * @param {string} operator
+ * @param {{tables: number[], questionDifficulty: string, distractorDistance: string}} settings
+ * @param {number[]} [excludeTables] - Tables retirées (multiplication seulement)
+ * @returns {Object} Question de generateQuestion
+ */
+export function drawInvasionQuestion(operator, settings, excludeTables = []) {
+  const isMultiplication = operator === '×';
+  return generateQuestion({
+    type: 'mcq',
+    operator, // Support multi-opérations (+, −, ×, ÷)
+    difficulty: settings.questionDifficulty,
+    tables: isMultiplication ? settings.tables : undefined,
+    excludeTables: isMultiplication ? excludeTables : [],
+    distractorDistance: settings.distractorDistance,
+  });
 }
 
 function computeBaseAlienSpeed(isMobile, difficulty, enemySpeed) {
@@ -532,6 +553,8 @@ export function startMultiplicationInvasion() {
   // fusée pour que la balle parte exactement sous le point visé
   const bulletOffset = () => player.width / 2 - 2.5;
   function aimAt(canvasX) {
+    // En pause, la fusée ne bouge pas
+    if (isArcadePaused()) return;
     const x = canvasX - bulletOffset();
     player.x = Math.max(5, Math.min(canvas.width - player.width - 5, x));
   }
@@ -628,14 +651,7 @@ export function startMultiplicationInvasion() {
         ? TablePreferences.getActiveExclusions(currentUser)
         : [];
 
-    const q = generateQuestion({
-      type: 'mcq',
-      operator, // Support multi-opérations (+, −, ×, ÷)
-      difficulty: globalGameState?.difficulty || 'moyen',
-      tables: operator === '×' ? difficultySettings.tables : undefined,
-      excludeTables: operator === '×' ? excluded : [],
-      distractorDistance: difficultySettings.distractorDistance,
-    });
+    const q = drawInvasionQuestion(operator, difficultySettings, excluded);
     currentProblem.a = q.a;
     currentProblem.b = q.b;
     const correctAnswer = q.answer;
@@ -657,13 +673,7 @@ export function startMultiplicationInvasion() {
     while (options.length < nbAliens) {
       // Génération des distracteurs selon le niveau de difficulté (Cascade 2025)
       // Réutilisation des paramètres de difficulté + support multi-opérations
-      const wrong = generateQuestion({
-        type: 'mcq',
-        operator, // Support multi-opérations (+, −, ×, ÷)
-        difficulty: globalGameState?.difficulty || 'moyen',
-        tables: operator === '×' ? difficultySettings.tables : undefined,
-        distractorDistance: difficultySettings.distractorDistance,
-      }).answer;
+      const wrong = drawInvasionQuestion(operator, difficultySettings).answer;
       if (!options.includes(wrong)) options.push(wrong);
     }
     shuffleInPlace(options);
@@ -702,6 +712,8 @@ export function startMultiplicationInvasion() {
   }
 
   function shoot() {
+    // En pause, pas de tir : les balles attendraient la reprise toutes ensemble
+    if (isArcadePaused()) return;
     // Positionner le tir au-dessus de la fusée avec des ajustements pour s'assurer
     // qu'il atteint bien les monstres même quand la fusée est en bas
     bullets.push({
@@ -717,6 +729,9 @@ export function startMultiplicationInvasion() {
 
   // Gestion locale de la barre espace (supprime le bridge global window.shoot)
   const handleSpaceDown = e => {
+    // Sur un bouton (« Reprendre », « Pause »…), la barre d'espace reste au bouton : sur
+    // « Reprendre », elle relançait la partie et tirait aussitôt
+    if (isKeyFromButton(e)) return;
     if (e.key === ' ' || e.key === 'Spacebar' || e.code === 'Space') {
       e.preventDefault();
       shoot();
@@ -914,6 +929,8 @@ export function startMultiplicationInvasion() {
     if (!isArcadeActive()) return;
     if (gameOver) return;
     if (showingAvatar) return;
+    // En pause, rien ne bouge (le pas suivant repart du temps de la reprise : frameStep)
+    if (isArcadePaused()) return;
 
     updatePlayerPosition(step);
     aliens.forEach(alien => (alien.y += alien.speed * step));

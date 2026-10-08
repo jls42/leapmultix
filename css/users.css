@@ -1,7 +1,173 @@
 /* ===========================================
    « Qui joue ? » : tuiles des profils (slide 0)
-   Rendu : js/userManager.js (refreshUserList). Jetons : themes.css.
+   Rendu : js/userManager.js (refreshUserList). Barre au-dessus des tuiles (filtre,
+   « Nouveau joueur ») : js/components/playerTools.js. Jetons : themes.css.
    =========================================== */
+
+/* --- Poste de classe : filtre des prénoms (dès 10 joueurs) et raccourci --- */
+.user-list-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: var(--space-3);
+  max-width: 640px;
+  margin: 0 auto var(--space-4);
+}
+
+.user-list-tools[hidden],
+.user-filter[hidden],
+.user-filter-empty[hidden],
+.user-container[hidden] {
+  display: none;
+}
+
+.user-filter {
+  display: flex;
+  flex: 1 1 14rem;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.user-filter label {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* 16 px au moins : iOS ne zoome pas sur le champ */
+#user-filter-input {
+  min-height: 48px;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-md);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+#user-filter-input:hover {
+  border-color: var(--color-action);
+}
+
+.user-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.user-list-actions .btn {
+  min-height: 48px;
+  margin: 0;
+}
+
+/* Aucun prénom trouvé : une indication calme, comme sous le champ « Ton prénom » */
+.user-filter-empty {
+  flex-basis: 100%;
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-ink);
+}
+
+#new-player-shortcut[hidden],
+#player-trash-toggle[hidden],
+.player-trash-panel[hidden] {
+  display: none;
+}
+
+/* --- Corbeille : un joueur supprimé y attend 30 jours (js/core/players-trash.js) --- */
+#player-trash-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+#player-trash-toggle .trash-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+}
+
+#player-trash-toggle .trash-icon path {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.player-trash-panel {
+  flex-basis: 100%;
+  padding: var(--space-3);
+  text-align: left;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.player-trash-rule {
+  margin: 0 0 var(--space-3);
+  color: var(--color-ink);
+}
+
+.player-trash-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trash-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+}
+
+.trash-entry-face {
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+
+.trash-entry-name {
+  font-weight: 700;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+.trash-entry-until {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.trash-entry .trash-restore-btn {
+  margin: 0 0 0 auto;
+}
+
+/* Ce que vient de faire la barre (« Léa est dans la corbeille. ») */
+.user-tools-message {
+  display: block;
+  flex-basis: 100%;
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-ink);
+}
+
+/* Vide, il sort du flux sans quitter l'arbre d'accessibilité : le texte qui arrive est lu */
+.user-tools-message:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 
 .user-list {
   margin: 0 0 var(--space-2);

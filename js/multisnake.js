@@ -21,6 +21,9 @@ import { InfoBar } from './components/infoBar.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
+import { getDifficultySettings } from './difficulty.js';
+import { plausibleWrongAnswers } from './core/GameMode.js';
+import { isArcadePaused } from './arcade-time.js';
 // UserState removed - unused import
 
 // Direction donnée par chaque glissement du doigt
@@ -57,6 +60,30 @@ export function chooseMobileSnakeGrid(box) {
   };
 }
 
+/**
+ * Tables retirées par le joueur (réglage global des tables), multiplication seulement
+ * @returns {number[]}
+ */
+function excludedTablesOfCurrentUser() {
+  const currentUser = UserManager.getCurrentUser();
+  return TablePreferences.isGlobalEnabled(currentUser)
+    ? TablePreferences.getActiveExclusions(currentUser)
+    : [];
+}
+
+/**
+ * Questions d'une partie : les tables du niveau en ×, ses nombres (facile, moyen, difficile)
+ * en +, − et ÷
+ * @param {{tables?: number[], difficulty?: string}} options - difficulty : niveau de l'Arcade
+ * @returns {{tables: number[], questionDifficulty: string}}
+ */
+function questionSettingsOf(options) {
+  return {
+    tables: Array.isArray(options.tables) ? options.tables : [],
+    questionDifficulty: getDifficultySettings(options.difficulty).questionDifficulty,
+  };
+}
+
 class SnakeGame {
   constructor(canvasId, mode = 'operation', options = {}) {
     console.log('Initialisation du jeu Snake');
@@ -69,8 +96,8 @@ class SnakeGame {
       globalThis.navigator?.userAgent || ''
     );
 
-    // Liste des tables autorisées (difficulté)
-    this.tables = Array.isArray(options.tables) ? options.tables : [];
+    // Questions du niveau : tables (×) et nombres (+, −, ÷)
+    Object.assign(this, questionSettingsOf(options));
 
     // Éléments du jeu
     this.canvas = document.getElementById(canvasId);
@@ -519,31 +546,8 @@ class SnakeGame {
   // Générer une opération mathématique
   generateOperation() {
     try {
-      // Appliquer l'exclusion globale de tables
-      const currentUser = UserManager.getCurrentUser();
-      const excluded = TablePreferences.isGlobalEnabled(currentUser)
-        ? TablePreferences.getActiveExclusions(currentUser)
-        : [];
-
       // Utiliser generateQuestion pour cohérence avec le système centralisé (R4.4: multi-ops)
-      const questionData = generateQuestion({
-        type: 'classic',
-        operator: this.operator, // Support +, −, ×, ÷
-        difficulty: 'medium',
-        excludeTables: this.operator === '×' ? excluded : [],
-        tables:
-          this.operator === '×' && Array.isArray(this.tables) && this.tables.length > 0
-            ? this.tables
-            : undefined,
-        forceTable:
-          this.operator === '×' && this.mode === 'table' && this.tableNumber
-            ? this.tableNumber
-            : null,
-        minTable: 1,
-        maxTable: 10,
-        minNum: 1,
-        maxNum: 10,
-      });
+      const questionData = generateQuestion(this.questionOptions());
 
       this.currentOperation = {
         num1: questionData.a,
@@ -561,16 +565,34 @@ class SnakeGame {
     }
   }
 
-  // Générer les réponses
-  generateAnswers(correctResult) {
-    const answers = [
-      { value: correctResult, isCorrect: true },
-      { value: correctResult + 1, isCorrect: false },
-      { value: correctResult - 1, isCorrect: false },
-      { value: correctResult + 10, isCorrect: false },
-    ];
+  // Options de la question : en ×, les tables du niveau, sans les tables retirées par le
+  // joueur ; en +, − et ÷, les nombres du niveau
+  questionOptions() {
+    const isMultiplication = this.operator === '×';
+    return {
+      type: 'classic',
+      operator: this.operator, // Support +, −, ×, ÷
+      difficulty: this.questionDifficulty,
+      excludeTables: isMultiplication ? excludedTablesOfCurrentUser() : [],
+      tables: isMultiplication && this.tables.length > 0 ? this.tables : undefined,
+      forceTable:
+        isMultiplication && this.mode === 'table' && this.tableNumber ? this.tableNumber : null,
+      minTable: 1,
+      maxTable: 10,
+      minNum: 1,
+      maxNum: 10,
+    };
+  }
 
-    return shuffleInPlace(answers);
+  // Bonne réponse et trois leurres, ceux des autres modes : des erreurs d'enfant plausibles
+  // (un de plus ou de moins, une table à côté…), jamais négatifs ni égaux à la bonne
+  // réponse. Avant, les leurres valaient c + 1, c − 1 et c + 10 : la bonne réponse était
+  // toujours le milieu de trois nombres qui se suivent, et « −1 » sortait pour un résultat nul.
+  generateAnswers(correctResult) {
+    const { num1, num2 } = this.currentOperation ?? {};
+    const question = { answer: correctResult, operator: this.operator, a: num1, b: num2 };
+    const decoys = plausibleWrongAnswers(question, 3).map(value => ({ value, isCorrect: false }));
+    return shuffleInPlace([{ value: correctResult, isCorrect: true }, ...decoys]);
   }
 
   // Placer les nombres sur la grille
@@ -623,6 +645,18 @@ class SnakeGame {
     const deltaTime = timestamp - this.lastUpdateTime;
     this.lastUpdateTime = timestamp;
 
+    // En pause (Arcade), le serpent ne bouge plus : le temps de la pause ne compte pas
+    if (!isArcadePaused()) this.advance(deltaTime);
+
+    // Dessiner le jeu avec l'animation
+    this.draw();
+
+    // Continuer la boucle
+    this.animationId = requestAnimationFrame(time => this.gameLoop(time));
+  }
+
+  // Fait avancer le serpent du temps écoulé, d'une case à chaque intervalle
+  advance(deltaTime) {
     // Mettre à jour le temps écoulé depuis le dernier mouvement
     this.moveTime += deltaTime;
 
@@ -644,12 +678,6 @@ class SnakeGame {
       this.moveTime = 0;
       this.animationProgress = 0;
     }
-
-    // Dessiner le jeu avec l'animation
-    this.draw();
-
-    // Continuer la boucle
-    this.animationId = requestAnimationFrame(time => this.gameLoop(time));
   }
 
   // Mettre à jour la logique du jeu (sans dessiner)

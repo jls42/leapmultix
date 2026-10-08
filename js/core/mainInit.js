@@ -8,6 +8,7 @@ import Dashboard from '../components/dashboard.js';
 import { Customization } from '../components/customization.js';
 import { InfoBar } from '../components/infoBar.js';
 import UserManager from '../userManager.js';
+import { PlayerTools } from '../components/playerTools.js';
 import { initThemes, applyHighContrastMode, applyFontSize } from './theme.js';
 import { refreshUserList } from './userUi.js';
 import {
@@ -95,7 +96,9 @@ function wireCreationAvatarSelector() {
 }
 
 function wirePersonalizationButton() {
-  const targets = document.querySelectorAll('[data-translate="personalization"], [data-slide="6"]');
+  // Boutons de la barre du haut (posés par TopBar.init, qui passe avant) ; leur libellé porte
+  // aussi data-translate="personalization" : le bouton seul ouvre l'écran, une seule fois
+  const targets = document.querySelectorAll('button[data-slide="6"]');
   for (const btn of targets) {
     if (btn._customizationWired) continue;
     btn.addEventListener('click', () => {
@@ -177,6 +180,13 @@ function initUserSystems() {
   } catch (error) {
     logInitWarning('Initialisation UserManager impossible', error);
     refreshUserList();
+  }
+
+  // Filtre, raccourci « Nouveau joueur » de « Qui joue ? » (poste de classe)
+  try {
+    PlayerTools.init();
+  } catch (error) {
+    logInitWarning('Outils de « Qui joue ? » indisponibles', error);
   }
 }
 

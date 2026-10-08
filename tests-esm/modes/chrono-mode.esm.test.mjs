@@ -80,7 +80,7 @@ function chronoStats() {
 async function expectNothingRunningAfterHome() {
   await goToSlide(1);
   expect(instances.every(chrono => chrono.state.isActive === false)).toBe(true);
-  expect(instances.every(chrono => chrono.timerInterval === null)).toBe(true);
+  expect(instances.every(chrono => chrono.intervals.size === 0)).toBe(true);
 }
 
 beforeAll(() => {

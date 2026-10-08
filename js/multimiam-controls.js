@@ -4,6 +4,7 @@
 import { clientToCanvasPoint } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
 import { mazeToScreen, transposeDirection } from './multimiam-layout.js';
+import { isKeyFromButton, toggleArcadePause } from './arcade-time.js';
 
 // Case voisine dans chaque direction
 const CELL_STEPS = {
@@ -23,6 +24,18 @@ function directionsToward(dx, dy) {
   const horizontal = dx > 0 ? 'RIGHT' : 'LEFT';
   const vertical = dy > 0 ? 'DOWN' : 'UP';
   return Math.abs(dx) > Math.abs(dy) ? [horizontal, vertical] : [vertical, horizontal];
+}
+
+/**
+ * Barre d'espace : la pause de l'Arcade (comme la touche P), compte à rebours compris.
+ * Quand le focus est sur un bouton (« Reprendre », « Abandonner »), la touche lui revient.
+ * @param {PacmanGame} game
+ * @param {KeyboardEvent} event
+ */
+function onSpaceKey(game, event) {
+  if (isKeyFromButton(event)) return;
+  if (game.gameOver) game.start();
+  else toggleArcadePause();
 }
 
 /**
@@ -63,11 +76,7 @@ export function initPacmanControls(game) {
         break;
       case ' ':
         e.preventDefault(); // Empêcher le scroll de la page
-        if (game.gameOver) {
-          game.start();
-        } else {
-          game.running ? game.pause() : game.resume();
-        }
+        onSpaceKey(game, e);
         break;
     }
 
@@ -76,6 +85,12 @@ export function initPacmanControls(game) {
   }
 
   document.addEventListener('keydown', handleKeyDown);
+  // Retiré avec le jeu (cleanupGameResources) : resté branché, il relançait la partie
+  // abandonnée à la barre d'espace, depuis n'importe quel écran
+  game.eventListeners = [
+    ...(game.eventListeners ?? []),
+    { element: document, type: 'keydown', callback: handleKeyDown },
+  ];
 
   // Le personnage prend la direction demandée dès qu'il le peut
   function steer(direction) {

@@ -14,7 +14,7 @@
  * multiplication par défaut.
  */
 
-import { otherFactDirection } from './chrono-questions.js';
+import { otherFactDirection, uniqueTables } from './chrono-questions.js';
 
 export const CHRONO_GOAL = 10;
 const BEST_LIMIT = 10;
@@ -83,13 +83,6 @@ function sameFactKey(a, b, operator = '×') {
   }
   // Soustraction et division : le premier nombre est commun, le second change de sens
   return factKey(x, Math.min(y, other.b), operator);
-}
-
-/** Tables valides, sans doublon, dans l'ordre */
-export function uniqueTables(tables, operator = '×') {
-  const list = Array.isArray(tables) ? tables : [];
-  const unique = [...new Set(list.map(Number).filter(n => isTable(n, operator)))];
-  return unique.sort((a, b) => a - b);
 }
 
 export function tablesKey(tables, operator = '×') {
@@ -165,16 +158,31 @@ function normalizeBucket(raw, operator) {
   };
 }
 
-function normalizeBuckets(raw, operator) {
-  const buckets = [];
+/**
+ * Éléments valides d'une liste du profil, dans l'ordre, le premier de chaque clé seulement
+ * @param {unknown} raw
+ * @param {(item: unknown) => object|null} normalize - Élément lu, ou null s'il est invalide
+ * @param {(item: object) => string} keyOf
+ * @returns {object[]}
+ */
+function normalizeUnique(raw, normalize, keyOf) {
+  const items = [];
   const seen = new Set();
-  for (const item of Array.isArray(raw) ? raw : []) {
-    const bucket = normalizeBucket(item, operator);
-    if (!bucket || seen.has(bucket.key)) continue;
-    seen.add(bucket.key);
-    buckets.push(bucket);
+  for (const value of Array.isArray(raw) ? raw : []) {
+    const item = normalize(value);
+    if (!item || seen.has(keyOf(item))) continue;
+    seen.add(keyOf(item));
+    items.push(item);
   }
-  return buckets;
+  return items;
+}
+
+function normalizeBuckets(raw, operator) {
+  return normalizeUnique(
+    raw,
+    item => normalizeBucket(item, operator),
+    bucket => bucket.key
+  );
 }
 
 /**
@@ -197,15 +205,11 @@ function normalizeBasketItem(item, operator) {
 
 /** Une ligne par sens au plus : un ajout à la main peut garder 6 × 7 et 7 × 6 */
 function normalizeBasket(raw, operator) {
-  const basket = [];
-  const seen = new Set();
-  for (const item of Array.isArray(raw) ? raw : []) {
-    const entry = normalizeBasketItem(item, operator);
-    if (!entry || seen.has(factKey(entry.a, entry.b, operator))) continue;
-    seen.add(factKey(entry.a, entry.b, operator));
-    basket.push(entry);
-  }
-  return basket;
+  return normalizeUnique(
+    raw,
+    item => normalizeBasketItem(item, operator),
+    entry => factKey(entry.a, entry.b, operator)
+  );
 }
 
 export function emptyChronoStats() {

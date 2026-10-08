@@ -43,6 +43,16 @@ function assertVersion(version) {
 }
 
 /**
+ * Chemins des imports relatifs d'un module, sous les mêmes formes que versionImports :
+ * la liste de préchargement du service worker (scripts/precache-list.mjs) suit ces imports
+ * @param {string} source
+ * @returns {string[]}
+ */
+export function relativeImportSpecifiers(source) {
+  return IMPORT_PATTERNS.flatMap(pattern => [...source.matchAll(pattern)].map(match => match[3]));
+}
+
+/**
  * Ajoute ?v=<version> aux imports relatifs d'un module
  * @param {string} source
  * @param {string} version

@@ -14,6 +14,31 @@ import { chance, pickRandom } from './core/random.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { mazeToScreen } from './multimiam-layout.js';
+import { isArcadePaused } from './arcade-time.js';
+
+/**
+ * Pause de l'Arcade : les horloges des déplacements restent à l'heure, pour que rien ne
+ * saute d'une case à la reprise
+ * @param {Object} ctx Instance de PacmanGame
+ */
+function holdMoveClocks(ctx) {
+  const now = globalThis.performance ? globalThis.performance.now() : Date.now();
+  ctx.lastMoveTime = now;
+  ctx.lastGhostMoveTime = now;
+}
+
+/**
+ * Le personnage et les monstres avancent-ils à ce pas ? Non si la partie est arrêtée, ni en
+ * pause, où les horloges restent à l'heure (holdMoveClocks)
+ * @param {Object} ctx Instance de PacmanGame
+ * @returns {boolean}
+ */
+function readyToMove(ctx) {
+  if (!ctx.running || ctx.gameOver) return false;
+  if (!isArcadePaused()) return true;
+  holdMoveClocks(ctx);
+  return false;
+}
 
 /**
  * Invincibilité après une vie perdue : le personnage clignote, puis redevient normal.
@@ -423,7 +448,8 @@ export function initPacmanEngine(game) {
 
   // Boucle interne
   game.update = function update() {
-    if (!this.running || this.gameOver) return;
+    // Partie arrêtée, ou en pause : ni le personnage ni les monstres ne bougent
+    if (!readyToMove(this)) return;
     this.updatePlayerAvatar();
     const now = globalThis.performance?.now?.() ?? Date.now();
 

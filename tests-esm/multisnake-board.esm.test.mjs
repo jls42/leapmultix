@@ -33,6 +33,10 @@ jest.unstable_mockModule('../js/userManager.js', () => ({
 jest.unstable_mockModule('../js/core/tablePreferences.js', () => ({
   TablePreferences: { isGlobalEnabled: () => false, getActiveExclusions: () => [] },
 }));
+// Les leurres des pommes viennent des modes (GameMode) : trois pommes de plus, comme en jeu
+jest.unstable_mockModule('../js/core/GameMode.js', () => ({
+  plausibleWrongAnswers: ({ answer }) => [answer + 1, answer + 2, answer + 3],
+}));
 
 const { SnakeGame, chooseMobileSnakeGrid } = await import('../js/multisnake.js');
 

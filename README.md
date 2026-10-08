@@ -180,7 +180,7 @@ npm run test:integration # Tests d'intégration
 npm run test:storage   # Tests du système de stockage
 npm run test:esm       # Tests ESM (dossiers tests-esm/, Jest vm-modules)
 npm run test:verbose   # Tests avec sortie détaillée
-npm run test:pwa-offline # Test offline PWA (nécessite Puppeteer), après `npm run serve`
+npm run test:pwa-offline # Hors ligne de bout en bout (Puppeteer, serveur intégré)
 
 # Analyse et maintenance
 npm run analyze:jsdoc  # Analyse de la documentation
@@ -477,10 +477,15 @@ LeapMultix est une PWA complète avec support hors-ligne et possibilité d'insta
 
 **Service Worker** (`sw.js`) :
 
-- Navigation : Network-first avec fallback hors-ligne vers `offline.html`
-- Images : Cache-first pour optimiser les performances
+- Installation : préchargement de tout ce que le jeu demande, liste produite à partir du code
+  par `scripts/precache-list.mjs` (`npm run precache:update`, vérifiée par les tests) : après
+  une première visite, les 6 modes et les 4 jeux d'Arcade démarrent hors ligne
+- Navigation : Network-first ; hors ligne, la page du jeu en cache (`offline.html` seulement
+  pour une page jamais gardée)
+- Images : Cache-first ; hors ligne, une autre taille du même sprite ou un autre fond du même avatar
 - Traductions : Stale-while-revalidate pour mise à jour en arrière-plan
-- JS/CSS : Network-first pour toujours servir la dernière version
+- JS/CSS : Network-first pour toujours servir la dernière version, cache hors ligne
+- Sons et polices : Cache-first, plages d'octets servies (lecteur audio de Safari)
 - Gestion de version automatique via `cache-updater.js`
 
 **Manifest** (`manifest.json`) :
@@ -497,8 +502,9 @@ LeapMultix est une PWA complète avec support hors-ligne et possibilité d'insta
 npm run serve
 ```
 
-À la main : couper le réseau dans les outils de développement (onglet Réseau,
-mode hors ligne), puis rafraîchir la page. `offline.html` doit s'afficher.
+À la main : laisser la page ouverte le temps que le service worker enregistre le jeu, arrêter
+le serveur (ou couper le réseau de l'appareil), puis rafraîchir la page. Le jeu doit
+s'afficher, et chaque mode démarrer.
 
 Automatiquement, avec Puppeteer :
 
@@ -738,7 +744,7 @@ Toute phrase dite vient des traductions (`assets/translations/{fr,en,es}.json`) 
 ### Fonctionnalités techniques
 
 - Stockage local (localStorage) avec fallbacks
-- Données de jeu rangées par profil (les statistiques par calcul restent communes à l'appareil)
+- Données de jeu rangées par profil, statistiques par calcul comprises : sur un poste partagé, les erreurs d'un joueur n'orientent pas les questions d'un autre
 - Sauvegarde automatique de la progression
 - Migration automatique des données anciennes
 
