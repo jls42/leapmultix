@@ -617,6 +617,8 @@
   "select_operation": "Choisis ton opération",
   "practice_arithmetic": "Entraîne-toi au calcul mental",
   "new_player_title": "Nouveau joueur",
+  "user_filter_label": "Cherche ton prénom",
+  "user_filter_empty": "Aucun prénom ne commence par « {query} ».",
   "virtual_keyboard_toggle": "Clavier",
   "delete_profile_button": "Supprimer",
   "delete_profile_label": "Supprimer le profil « {name} »",

@@ -367,7 +367,31 @@
             <p data-translate="user_selection_desc">Choisis ton joueur ou crée le tien.</p>
           </div>
 
-          <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList) -->
+          <!-- Poste partagé par une classe (js/components/playerTools.js) : filtre des
+               prénoms dès 10 joueurs, raccourci vers « Nouveau joueur » -->
+          <div class="user-list-tools" id="user-list-tools" hidden>
+            <div class="user-filter" id="user-filter" hidden>
+              <label for="user-filter-input" data-translate="user_filter_label"
+                >Cherche ton prénom</label
+              >
+              <input
+                type="search"
+                id="user-filter-input"
+                autocomplete="off"
+                spellcheck="false"
+                enterkeyhint="go"
+              />
+            </div>
+            <div class="user-list-actions">
+              <button type="button" class="btn btn-secondary" id="new-player-shortcut">
+                <span data-translate="new_player_title">Nouveau joueur</span>
+              </button>
+            </div>
+            <p class="user-filter-empty" id="user-filter-empty" hidden></p>
+          </div>
+
+          <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList),
+               triées par prénom -->
           <div class="user-list" id="user-list"></div>
 
           <section class="new-player" aria-labelledby="new-player-title">

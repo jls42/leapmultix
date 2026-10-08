@@ -4,6 +4,10 @@ import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globa
 const { UserManager } = await import('../../js/userManager.js');
 const { VideoManager } = await import('../../js/VideoManager.js');
 
+/** La tuile d'un joueur, par son prénom (les tuiles sont triées) */
+const itemOf = name =>
+  document.querySelector(`#user-list li.user-container[data-player="${name}"]`);
+
 const CREATION_MARKUP = `
   <div id="user-list" class="user-list"></div>
   <section class="new-player">
@@ -49,8 +53,10 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
 
     const items = document.querySelectorAll('#user-list ul.user-tiles > li.user-container');
     expect(items).toHaveLength(3);
+    // Dans l'ordre alphabétique, pas dans l'ordre de création
+    expect([...items].map(item => item.dataset.player)).toEqual(['Eve', 'Lina', 'Sam']);
 
-    const linaTile = items[0].querySelector('button.user-tile');
+    const linaTile = itemOf('Lina').querySelector('button.user-tile');
     expect(linaTile.type).toBe('button');
     const face = linaTile.querySelector('img.user-tile-face');
     expect(face.getAttribute('src')).toBe('assets/images/arcade/panda_head_avatar_128x128.png');
@@ -61,7 +67,8 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
   test("l'avatar enregistré est filtré : alias français converti, valeur inconnue remplacée", () => {
     UserManager.refreshUserList();
 
-    const [, sam, eve] = document.querySelectorAll('#user-list .user-tile-face');
+    const sam = itemOf('Sam').querySelector('.user-tile-face');
+    const eve = itemOf('Eve').querySelector('.user-tile-face');
     expect(sam.getAttribute('src')).toBe('assets/images/arcade/astronaut_head_avatar_128x128.png');
     expect(eve.getAttribute('src')).toBe('assets/images/arcade/fox_head_avatar_128x128.png');
   });
@@ -69,8 +76,7 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
   test('« Supprimer » est un petit bouton séparé de la tuile, nommé avec le prénom', () => {
     UserManager.refreshUserList();
 
-    const item = document.querySelector('#user-list li.user-container');
-    const deleteBtn = item.querySelector('.delete-btn');
+    const deleteBtn = itemOf('Lina').querySelector('.delete-btn');
     expect(deleteBtn).not.toBeNull();
     expect(deleteBtn.closest('.user-tile')).toBeNull();
     expect(deleteBtn.classList.contains('btn-quiet')).toBe(true);
@@ -84,12 +90,12 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
     const confirmSpy = jest.fn(() => false);
     globalThis.confirm = confirmSpy;
 
-    document.querySelector('#user-list .delete-btn').click();
+    itemOf('Lina').querySelector('.delete-btn').click();
     expect(confirmSpy).toHaveBeenCalledTimes(1);
     expect(Object.keys(UserManager._players)).toContain('Lina');
 
     confirmSpy.mockReturnValue(true);
-    document.querySelector('#user-list .delete-btn').click();
+    itemOf('Lina').querySelector('.delete-btn').click();
     expect(Object.keys(UserManager._players)).not.toContain('Lina');
     expect(document.querySelectorAll('#user-list .user-tile')).toHaveLength(2);
     // Le focus revient sur une tuile restante

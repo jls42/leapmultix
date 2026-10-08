@@ -613,6 +613,8 @@
   "select_operation": "Elige tu operación",
   "practice_arithmetic": "Practica cálculo mental",
   "new_player_title": "Nuevo jugador",
+  "user_filter_label": "Busca tu nombre",
+  "user_filter_empty": "Ningún nombre empieza por «{query}».",
   "virtual_keyboard_toggle": "Teclado",
   "delete_profile_button": "Eliminar",
   "delete_profile_label": "Eliminar el perfil de {name}",

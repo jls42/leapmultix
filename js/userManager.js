@@ -10,6 +10,7 @@ import {
   updateCoinDisplay,
 } from './utils-es6.js';
 import { getAvatarHeadSrc } from './main-helpers.js';
+import { getCurrentLanguage } from './i18n-store.js';
 import Storage from './core/storage.js';
 import { checkUsername, normalizeUsername, USERNAME_MAX_LENGTH } from './security-utils.js';
 import { VideoManager } from './VideoManager.js';
@@ -565,23 +566,36 @@ export const UserManager = {
     if (!userListDiv) return;
 
     while (userListDiv.firstChild) userListDiv.removeChild(userListDiv.firstChild);
-    const names = Object.keys(this._players);
+    const names = this.sortedPlayerNames();
 
     if (names.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'user-list-empty';
       empty.textContent = getTranslation('no_existing_users');
       userListDiv.appendChild(empty);
-      return;
+    } else {
+      // « Qui joue ? » : une tuile par joueur (visage de l'avatar + prénom).
+      // Les flèches du clavier passent d'une tuile à l'autre grâce à la navigation
+      // spatiale globale de keyboard-navigation.js : pas de gestionnaire local ici.
+      const list = document.createElement('ul');
+      list.className = 'user-tiles';
+      names.forEach(name => list.appendChild(this._createUserTile(name)));
+      userListDiv.appendChild(list);
     }
+    // Filtre et barre de « Qui joue ? » (components/playerTools.js)
+    eventBus.emit('playersChanged', { count: names.length });
+  },
 
-    // « Qui joue ? » : une tuile par joueur (visage de l'avatar + prénom).
-    // Les flèches du clavier passent d'une tuile à l'autre grâce à la navigation
-    // spatiale globale de keyboard-navigation.js : pas de gestionnaire local ici.
-    const list = document.createElement('ul');
-    list.className = 'user-tiles';
-    names.forEach(name => list.appendChild(this._createUserTile(name)));
-    userListDiv.appendChild(list);
+  /**
+   * Prénoms des joueurs dans l'ordre alphabétique de la langue du jeu ; un prénom de
+   * chiffres passe devant, « 2 » avant « 10 »
+   * @returns {string[]}
+   */
+  sortedPlayerNames() {
+    const collator = new Intl.Collator(getCurrentLanguage(), { numeric: true });
+    const names = Object.keys(this._players);
+    names.sort(collator.compare);
+    return names;
   },
 
   /**
@@ -594,6 +608,8 @@ export const UserManager = {
   _createUserTile(name) {
     const userContainer = document.createElement('li');
     userContainer.className = 'user-container';
+    // Prénom lu par le filtre de « Qui joue ? »
+    userContainer.dataset.player = name;
 
     const tile = document.createElement('button');
     tile.type = 'button';

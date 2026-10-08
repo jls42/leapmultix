@@ -607,6 +607,8 @@
   "select_operation": "Choose your operation",
   "practice_arithmetic": "Practice mental math",
   "new_player_title": "New player",
+  "user_filter_label": "Find your name",
+  "user_filter_empty": "No name starts with “{query}”.",
   "virtual_keyboard_toggle": "Keyboard",
   "delete_profile_button": "Delete",
   "delete_profile_label": "Delete {name}’s profile",

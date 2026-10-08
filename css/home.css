@@ -528,6 +528,7 @@
     display: grid;
     grid-template:
       'accueil presentation' auto
+      'outils presentation' auto
       'joueurs presentation' auto
       'nouveau presentation' 1fr
       / minmax(0, 1fr) minmax(0, 0.85fr);
@@ -543,6 +544,10 @@
 
   #slide0 .user-selection-intro {
     grid-area: accueil;
+  }
+
+  #slide0 .user-list-tools {
+    grid-area: outils;
   }
 
   #slide0 .user-list {

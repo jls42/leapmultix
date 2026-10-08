@@ -1,7 +1,76 @@
 /* ===========================================
    « Qui joue ? » : tuiles des profils (slide 0)
-   Rendu : js/userManager.js (refreshUserList). Jetons : themes.css.
+   Rendu : js/userManager.js (refreshUserList). Barre au-dessus des tuiles (filtre,
+   « Nouveau joueur ») : js/components/playerTools.js. Jetons : themes.css.
    =========================================== */
+
+/* --- Poste de classe : filtre des prénoms (dès 10 joueurs) et raccourci --- */
+.user-list-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: var(--space-3);
+  max-width: 640px;
+  margin: 0 auto var(--space-4);
+}
+
+.user-list-tools[hidden],
+.user-filter[hidden],
+.user-filter-empty[hidden],
+.user-container[hidden] {
+  display: none;
+}
+
+.user-filter {
+  display: flex;
+  flex: 1 1 14rem;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.user-filter label {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* 16 px au moins : iOS ne zoome pas sur le champ */
+#user-filter-input {
+  min-height: 48px;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-md);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+#user-filter-input:hover {
+  border-color: var(--color-action);
+}
+
+.user-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.user-list-actions .btn {
+  min-height: 48px;
+  margin: 0;
+}
+
+/* Aucun prénom trouvé : une indication calme, comme sous le champ « Ton prénom » */
+.user-filter-empty {
+  flex-basis: 100%;
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-ink);
+}
 
 .user-list {
   margin: 0 0 var(--space-2);
