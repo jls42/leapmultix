@@ -200,7 +200,7 @@
 }
 
 /* === PARTIE : le nom du niveau et la scène de progression === */
-.adventure-level-header h3 {
+.adventure-level-header h2 {
   margin-bottom: var(--space-1);
 }
 

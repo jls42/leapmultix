@@ -26,7 +26,7 @@
   border-top: 0;
 }
 
-.dashboard-container h3 {
+.dashboard-container .section-title {
   margin-bottom: var(--space-3);
 }
 

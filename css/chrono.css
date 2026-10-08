@@ -26,7 +26,7 @@
   padding-top: var(--space-2);
 }
 
-.chrono-input-mode h3 {
+.chrono-input-mode h2 {
   margin: 0;
 }
 
@@ -54,6 +54,7 @@
   align-self: stretch;
 }
 
+.chrono-block h2,
 .chrono-block h3 {
   margin: 0;
 }

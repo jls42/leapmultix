@@ -858,7 +858,7 @@ export const Dashboard = {
     const group = document.createElement('div');
     group.className = 'scores-subblock';
     group.appendChild(
-      createSafeElement('h4', tr(titleKey, titleFallback), {
+      createSafeElement('h3', tr(titleKey, titleFallback), {
         class: 'scores-subtitle',
         'data-translate': titleKey,
       })
@@ -883,7 +883,8 @@ export const Dashboard = {
     section.id = 'dashboard-scores-section';
     section.className = 'dashboard-scores-section';
     section.appendChild(
-      createSafeElement('h3', tr('dashboard_scores_title', 'Scores et statistiques'), {
+      createSafeElement('h2', tr('dashboard_scores_title', 'Scores et statistiques'), {
+        class: 'section-title',
         'data-translate': 'dashboard_scores_title',
       })
     );

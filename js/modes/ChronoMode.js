@@ -239,17 +239,23 @@ function createSetupBlock(name, titleKey) {
   const section = document.createElement('section');
   section.className = `chrono-block ${name}`;
   section.setAttribute('aria-labelledby', `${name}-title`);
-  const title = translatedElement('h3', titleKey);
+  const title = translatedElement('h2', titleKey, 'section-title');
   title.id = `${name}-title`;
   section.appendChild(title);
   return section;
 }
 
-/** Une section de l’écran de fin ou de « Mes temps » : son titre, sous un filet */
-function createResultsSection(titleKey) {
+/**
+ * Une section de l’écran de fin ou de « Mes temps » : son titre, sous un filet
+ * @param {string} titleKey
+ * @param {string} [headingTag='h3'] - h3 sous le titre d’un panneau (« Mes temps ») ; h2
+ *   sur l’écran de fin, dont le titre est le h1 de l’écran
+ * @returns {HTMLElement}
+ */
+function createResultsSection(titleKey, headingTag = 'h3') {
   const section = document.createElement('section');
   section.className = 'chrono-block';
-  section.appendChild(translatedElement('h3', titleKey));
+  section.appendChild(translatedElement(headingTag, titleKey));
   return section;
 }
 
@@ -466,7 +472,7 @@ export class ChronoMode extends GameMode {
     group.className = 'chrono-input-mode';
     group.setAttribute('role', 'group');
     group.setAttribute('aria-labelledby', 'chrono-input-title');
-    const title = translatedElement('h3', 'chrono_input_legend');
+    const title = translatedElement('h2', 'chrono_input_legend', 'section-title');
     title.id = 'chrono-input-title';
     group.appendChild(title);
     const row = document.createElement('div');
@@ -1363,7 +1369,7 @@ export class ChronoMode extends GameMode {
         ...this.resultsMessages(result, lang),
       })
     );
-    container.appendChild(this.buildFactsTable(result.facts));
+    container.appendChild(this.buildFactsTable(result.facts, 'h2'));
     container.appendChild(this.buildSessionActions(result));
     return container;
   }
@@ -1436,10 +1442,11 @@ export class ChronoMode extends GameMode {
     const container = document.createElement('section');
     container.className = 'results-container content-card game-results chrono-results';
     container.setAttribute('aria-label', getTranslation('chrono_stats_title'));
-    container.appendChild(translatedElement('h2', 'chrono_stats_title'));
+    // Titre de niveau 1 de l’écran, sections en h2
+    container.appendChild(translatedElement('h1', 'chrono_stats_title', 'screen-title'));
     this.appendBucketSummary(container, result);
-    container.appendChild(this.buildRanking(result.ranking));
-    container.appendChild(this.buildCurve(result.curve, result.averageMs));
+    container.appendChild(this.buildRanking(result.ranking, 'h2'));
+    container.appendChild(this.buildCurve(result.curve, result.averageMs, 'h2'));
     container.appendChild(
       createResultsActions([
         {
@@ -1458,9 +1465,14 @@ export class ChronoMode extends GameMode {
     return container;
   }
 
-  buildFactsTable(facts) {
+  /**
+   * Calculs de la partie
+   * @param {Array} facts
+   * @param {string} [headingTag] - Niveau du titre (voir createResultsSection)
+   */
+  buildFactsTable(facts, headingTag) {
     const lang = getCurrentLanguage();
-    const wrap = createResultsSection('chrono_facts_title');
+    const wrap = createResultsSection('chrono_facts_title', headingTag);
     const list = document.createElement('ol');
     list.className = 'chrono-facts';
     facts.forEach(fact => {
@@ -1490,10 +1502,14 @@ export class ChronoMode extends GameMode {
     return wrap;
   }
 
-  /** Les 10 meilleurs temps, avec leur date, dans la langue du jeu */
-  buildRanking(sessions) {
+  /**
+   * Les 10 meilleurs temps, avec leur date, dans la langue du jeu
+   * @param {Array} sessions
+   * @param {string} [headingTag] - Niveau du titre (voir createResultsSection)
+   */
+  buildRanking(sessions, headingTag) {
     const lang = getCurrentLanguage();
-    const wrap = createResultsSection('chrono_ranking_title');
+    const wrap = createResultsSection('chrono_ranking_title', headingTag);
     const list = document.createElement('ol');
     list.className = 'chrono-ranking';
     sessions.forEach(session => {
@@ -1506,8 +1522,14 @@ export class ChronoMode extends GameMode {
     return wrap;
   }
 
-  buildCurve(sessions, averageMs) {
-    const wrap = createResultsSection('chrono_curve_title');
+  /**
+   * Courbe des temps
+   * @param {Array} sessions
+   * @param {number|null} averageMs
+   * @param {string} [headingTag] - Niveau du titre (voir createResultsSection)
+   */
+  buildCurve(sessions, averageMs, headingTag) {
+    const wrap = createResultsSection('chrono_curve_title', headingTag);
     wrap.appendChild(this.drawCurve(sessions, averageMs));
     return wrap;
   }

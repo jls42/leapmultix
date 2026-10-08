@@ -175,7 +175,7 @@ export class AdventureMode extends GameMode {
                     </div>
                     <h1 class="screen-title" data-translate="${titleKey}">${getTranslation(titleKey)}</h1>
                     <p class="adventure-story-intro" data-translate="${introKey}">${getTranslation(introKey)}</p>
-                    <h3 data-translate="adventure_choose_destination">${getTranslation('adventure_choose_destination')}</h3>
+                    <h2 class="section-title" data-translate="adventure_choose_destination">${getTranslation('adventure_choose_destination')}</h2>
                     <div class="adventure-levels" id="adventure-levels"></div>
                 </div>
             `;
@@ -191,7 +191,7 @@ export class AdventureMode extends GameMode {
   getLevelHTML() {
     return `
                 <div class="adventure-level-header">
-                    <h3 data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h3>
+                    <h2 class="section-title" data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h2>
                     <p class="adventure-level-goal" data-translate="${this.currentLevel.descKey}">${getTranslation(this.currentLevel.descKey)}</p>
                 </div>
 

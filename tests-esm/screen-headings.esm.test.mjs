@@ -30,6 +30,17 @@ describe('un titre de niveau 1 par écran de index.html', () => {
     expect(headings[0].dataset.translate).toBe(key);
   });
 
+  test.each(SCREENS)(
+    '%s : les niveaux de titre se suivent, sans saut (axe : heading-order)',
+    id => {
+      const levels = [...doc.querySelectorAll(`#${id} h1, #${id} h2, #${id} h3, #${id} h4`)].map(
+        h => Number(h.tagName[1])
+      );
+      const jumps = levels.filter((level, i) => i > 0 && level > levels[i - 1] + 1);
+      expect(jumps).toEqual([]);
+    }
+  );
+
   test('l’écran de jeu et celui des résultats reçoivent le leur à l’affichage', () => {
     // Construits par le code (GameMode, écrans de fin) : vides dans index.html
     expect(doc.querySelectorAll('#slide4 h1, #slide5 h1')).toHaveLength(0);

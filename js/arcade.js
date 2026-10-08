@@ -341,7 +341,7 @@ function buildTopScores(arcadeScores) {
   if (bestScores.length === 0) return null;
   const topWrap = document.createElement('section');
   topWrap.className = 'arcade-top-scores';
-  const title = document.createElement('h3');
+  const title = document.createElement('h2');
   title.dataset.translate = 'arcade_top_scores';
   title.textContent = translated('arcade_top_scores', 'Meilleurs scores');
   const ol = document.createElement('ol');

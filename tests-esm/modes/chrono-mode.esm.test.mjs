@@ -239,7 +239,7 @@ describe('Chrono : écran de départ', () => {
     await openSetup([{ a: 7, b: 8, due: 1 }]);
     const race = block('chrono-race');
     const basket = block('chrono-basket');
-    expect(race.querySelector('h3').textContent).toBe(FR.chrono_race_title);
+    expect(race.querySelector('h2').textContent).toBe(FR.chrono_race_title);
     expect(race.querySelector('#chrono-start').textContent).toBe(FR.chrono_start);
     expect(race.querySelector('#chrono-open-stats')).not.toBeNull();
     expect(race.querySelector('#chrono-start-revision')).toBeNull();
@@ -261,7 +261,7 @@ describe('Chrono : écran de départ', () => {
     const group = document.querySelector('.chrono-input-mode');
     expect(group.getAttribute('role')).toBe('group');
     const title = document.getElementById(group.getAttribute('aria-labelledby'));
-    expect(title.tagName).toBe('H3');
+    expect(title.tagName).toBe('H2');
     expect(title.textContent).toBe(FR.chrono_input_legend);
     const tiles = [...group.querySelectorAll('.chrono-input-btn')];
     expect(tiles.map(tile => tile.textContent)).toEqual([
@@ -829,7 +829,7 @@ describe('Chrono : langue', () => {
     store.setTranslations(EN);
     store.setCurrentLanguage('en');
     await refreshChronoTexts();
-    expect(document.querySelector('.chrono-race h3').textContent).toBe(EN.chrono_race_title);
+    expect(document.querySelector('.chrono-race h2').textContent).toBe(EN.chrono_race_title);
     expect(document.querySelector('#chrono-start').textContent).toBe(EN.chrono_start);
     expect(document.querySelector('.chrono-basket-item .sr-only').textContent).toBe(
       formatMessage(EN.chrono_basket_errors, { n: 2 }, 'en')

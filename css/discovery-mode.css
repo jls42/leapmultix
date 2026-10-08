@@ -436,7 +436,7 @@
   height: 3.5rem;
 }
 
-.mnemonic-tip h3 {
+.mnemonic-tip h2 {
   margin-bottom: var(--space-1);
   font-size: var(--text-md);
   color: var(--color-warning-ink);

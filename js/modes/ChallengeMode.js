@@ -83,7 +83,7 @@ export class ChallengeMode extends GameMode {
                     <p data-translate="challenge_intro">${getTranslation('challenge_intro')}</p>
 
                     <div class="difficulty-selector" role="group" aria-labelledby="challenge-difficulty-title">
-                        <h3 id="challenge-difficulty-title" data-translate="choose_difficulty">${getTranslation('choose_difficulty')}</h3>
+                        <h2 class="section-title" id="challenge-difficulty-title" data-translate="choose_difficulty">${getTranslation('choose_difficulty')}</h2>
                         <div class="difficulty-options">
                             <button type="button" class="difficulty-btn" data-difficulty="easy" data-translate="challenge_easy">${getTranslation('challenge_easy')}</button>
                             <button type="button" class="difficulty-btn" data-difficulty="medium" data-translate="challenge_medium">${getTranslation('challenge_medium')}</button>

@@ -573,7 +573,7 @@ export class DiscoveryMode extends GameMode {
                     <div class="mnemonic-tip">
                         <img class="mnemonic-mascot" src="${this._getMascotHeadSrc()}" alt="" width="56" height="56" />
                         <div class="mnemonic-body">
-                            <h3>${getTranslation('hint')}</h3>
+                            <h2 class="section-title">${getTranslation('hint')}</h2>
                             <p>${tip}</p>
                         </div>
                     </div>
@@ -756,7 +756,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
       <div class="number-line-section">
-        <h3>${getTranslation('number_line_title')}</h3>
+        <h2 class="section-title">${getTranslation('number_line_title')}</h2>
         <div class="number-line-container">
           <div class="number-line">
             ${range(0, 10)
@@ -841,7 +841,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
       <div class="number-line-section">
-        <h3>${getTranslation(titleKey)}</h3>
+        <h2 class="section-title">${getTranslation(titleKey)}</h2>
         <p class="operation-explanation">${getTranslation(explanationKey)}</p>
         <div class="number-line-container number-line-interactive">
           <div class="number-line">${points.join('')}${arcs.join('')}</div>
@@ -881,7 +881,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
       <div class="number-line-section division-visualization">
-        <h3>${getTranslation('division_sharing_title')}</h3>
+        <h2 class="section-title">${getTranslation('division_sharing_title')}</h2>
         <p class="operation-explanation">${getTranslation('division_sharing_explanation')}</p>
 
         <div class="division-demo">
@@ -924,7 +924,7 @@ export class DiscoveryMode extends GameMode {
   generateVisualExplorationHTML() {
     return `
             <div class="visual-exploration">
-                <h3>${getTranslation('visual_exploration_title')}</h3>
+                <h2 class="section-title">${getTranslation('visual_exploration_title')}</h2>
                 <div class="visual-grid" id="visual-grid-container">
                     ${this.generateVisualAid()}
                 </div>
@@ -1079,7 +1079,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
             <div class="optional-interaction">
-                <h3>${getTranslation('manipulation_title')}</h3>
+                <h2 class="section-title">${getTranslation('manipulation_title')}</h2>
                 <p class="interaction-instructions">${getTranslation('manipulation_instructions')}</p>
                 <div id="drag-area">${items}</div>
                 <div class="lab-dropzone" id="drop-zone">

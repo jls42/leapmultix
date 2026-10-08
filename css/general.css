@@ -137,6 +137,15 @@ h4 {
   font-size: var(--text-xl);
 }
 
+/* Sous ce titre, les sections montent d'un niveau (h2, puis h3) et gardent leur taille */
+.section-title {
+  font-size: var(--text-lg);
+}
+
+.subsection-title {
+  font-size: var(--text-md);
+}
+
 p {
   margin-bottom: 0.75em;
   text-wrap: pretty;
@@ -543,7 +552,7 @@ body:has(#slide1.active-slide) .skip-link:focus {
   border-top: 0;
 }
 
-.faq-item h3 {
+.faq-item h2 {
   margin-bottom: var(--space-2);
   font-size: var(--text-md);
 }
@@ -563,9 +572,9 @@ body:has(#slide1.active-slide) .skip-link:focus {
   margin: 0;
 }
 
-.about-section h3,
-.legal-section h3,
-.privacy-section h3 {
+.about-section h2,
+.legal-section h2,
+.privacy-section h2 {
   margin-bottom: var(--space-3);
   font-size: var(--text-lg);
 }
