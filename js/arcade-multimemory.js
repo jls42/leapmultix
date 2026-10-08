@@ -69,6 +69,27 @@ export function resolveMultimemoryTables(baseTables, exclusions) {
 }
 
 /**
+ * Un calcul pour une paire : les tables du niveau en ×, ses nombres (facile, moyen,
+ * difficile) en +, − et ÷
+ * @param {{operator: string, level: string, tables: number[], excludedTables: number[]}} settings
+ *   level : niveau de l'Arcade (debutant, moyen, difficile)
+ * @returns {{num1: number, num2: number, operator: string, result: number}}
+ */
+export function drawMemoryCalculation({ operator, level, tables, excludedTables }) {
+  const isMultiplication = operator === '×';
+  const question = generateQuestion({
+    type: 'classic',
+    operator, // Support +, −, ×, ÷
+    difficulty: getDifficultySettings(level).questionDifficulty,
+    tables: isMultiplication ? tables : undefined,
+    excludeTables: isMultiplication ? excludedTables : [],
+    minNum: 1,
+    maxNum: 10,
+  });
+  return { num1: question.a, num2: question.b, operator, result: question.answer };
+}
+
+/**
  * Écart entre un point et une carte (0 dedans), sur l'axe le plus éloigné.
  * @param {{x: number, y: number, width: number, height: number}} card
  * @param {number} x
@@ -518,19 +539,12 @@ class MemoryGame {
       if (i >= selectedTables.length) this.shuffleArray(selectedTables);
 
       // Utiliser generateQuestion pour génération cohérente (R4.3: support multi-ops)
-      const questionData = generateQuestion({
-        type: 'classic',
-        operator: this.operator, // Support +, −, ×, ÷
-        difficulty: this.difficulty,
-        tables: this.operator === '×' ? this.tables : undefined,
-        excludeTables: this.operator === '×' ? this.excludedTables : [],
-        minNum: 1,
-        maxNum: 10,
+      const { num1, num2, result } = drawMemoryCalculation({
+        operator: this.operator,
+        level: this.difficulty,
+        tables: this.tables,
+        excludedTables: this.excludedTables,
       });
-
-      const num1 = questionData.a;
-      const num2 = questionData.b;
-      const result = questionData.answer;
       // Tirer des indices uniques
 
       const monsterMul = monsterIndices.pop();

@@ -20,6 +20,7 @@ import { InfoBar } from './components/infoBar.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
+import { getDifficultySettings } from './difficulty.js';
 // UserState removed - unused import
 
 // Direction donnée par chaque glissement du doigt
@@ -31,6 +32,19 @@ const SWIPE_VECTORS = {
 };
 // Rayon (pixels CSS) autour de la tête où un toucher n'indique aucune direction
 const TAP_DEAD_ZONE_PX = 30;
+
+/**
+ * Questions d'une partie : les tables du niveau en ×, ses nombres (facile, moyen, difficile)
+ * en +, − et ÷
+ * @param {{tables?: number[], difficulty?: string}} options - difficulty : niveau de l'Arcade
+ * @returns {{tables: number[], questionDifficulty: string}}
+ */
+function questionSettingsOf(options) {
+  return {
+    tables: Array.isArray(options.tables) ? options.tables : [],
+    questionDifficulty: getDifficultySettings(options.difficulty).questionDifficulty,
+  };
+}
 
 class SnakeGame {
   constructor(canvasId, mode = 'operation', options = {}) {
@@ -44,8 +58,8 @@ class SnakeGame {
       globalThis.navigator?.userAgent || ''
     );
 
-    // Liste des tables autorisées (difficulté)
-    this.tables = Array.isArray(options.tables) ? options.tables : [];
+    // Questions du niveau : tables (×) et nombres (+, −, ÷)
+    Object.assign(this, questionSettingsOf(options));
 
     // Éléments du jeu
     this.canvas = document.getElementById(canvasId);
@@ -497,7 +511,7 @@ class SnakeGame {
       const questionData = generateQuestion({
         type: 'classic',
         operator: this.operator, // Support +, −, ×, ÷
-        difficulty: 'medium',
+        difficulty: this.questionDifficulty,
         excludeTables: this.operator === '×' ? excluded : [],
         tables:
           this.operator === '×' && Array.isArray(this.tables) && this.tables.length > 0

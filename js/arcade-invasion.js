@@ -227,6 +227,26 @@ function calculateCanvasDimensions(canvas) {
   return { displayWidth, displayHeight, isMobile };
 }
 
+/**
+ * Question d'une vague (ou réponse d'un monstre) : les tables du niveau en ×, les nombres
+ * du niveau (facile, moyen, difficile) en +, − et ÷
+ * @param {string} operator
+ * @param {{tables: number[], questionDifficulty: string, distractorDistance: string}} settings
+ * @param {number[]} [excludeTables] - Tables retirées (multiplication seulement)
+ * @returns {Object} Question de generateQuestion
+ */
+export function drawInvasionQuestion(operator, settings, excludeTables = []) {
+  const isMultiplication = operator === '×';
+  return generateQuestion({
+    type: 'mcq',
+    operator, // Support multi-opérations (+, −, ×, ÷)
+    difficulty: settings.questionDifficulty,
+    tables: isMultiplication ? settings.tables : undefined,
+    excludeTables: isMultiplication ? excludeTables : [],
+    distractorDistance: settings.distractorDistance,
+  });
+}
+
 function computeBaseAlienSpeed(isMobile, difficulty, enemySpeed) {
   // Calcule une vitesse de base des aliens en fonction du device et de la difficulté
   const diff = difficulty || 'moyen';
@@ -603,14 +623,7 @@ export function startMultiplicationInvasion() {
         ? TablePreferences.getActiveExclusions(currentUser)
         : [];
 
-    const q = generateQuestion({
-      type: 'mcq',
-      operator, // Support multi-opérations (+, −, ×, ÷)
-      difficulty: globalGameState?.difficulty || 'moyen',
-      tables: operator === '×' ? difficultySettings.tables : undefined,
-      excludeTables: operator === '×' ? excluded : [],
-      distractorDistance: difficultySettings.distractorDistance,
-    });
+    const q = drawInvasionQuestion(operator, difficultySettings, excluded);
     currentProblem.a = q.a;
     currentProblem.b = q.b;
     const correctAnswer = q.answer;
@@ -632,13 +645,7 @@ export function startMultiplicationInvasion() {
     while (options.length < nbAliens) {
       // Génération des distracteurs selon le niveau de difficulté (Cascade 2025)
       // Réutilisation des paramètres de difficulté + support multi-opérations
-      const wrong = generateQuestion({
-        type: 'mcq',
-        operator, // Support multi-opérations (+, −, ×, ÷)
-        difficulty: globalGameState?.difficulty || 'moyen',
-        tables: operator === '×' ? difficultySettings.tables : undefined,
-        distractorDistance: difficultySettings.distractorDistance,
-      }).answer;
+      const wrong = drawInvasionQuestion(operator, difficultySettings).answer;
       if (!options.includes(wrong)) options.push(wrong);
     }
     shuffleInPlace(options);
