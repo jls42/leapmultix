@@ -91,6 +91,12 @@
   border-radius: var(--radius-md);
 }
 
+/* Pendant une partie (son « Abandonner » est affiché), la langue ne change pas : le choix
+   revient avec l'écran suivant. Il ne s'atteint plus par erreur, ni au clavier ni au doigt. */
+.slide:has(.game-quit, .arcade-game-ui) .top-bar .language-selector {
+  display: none;
+}
+
 .lang-btn {
   min-inline-size: 44px;
   min-block-size: 44px;
