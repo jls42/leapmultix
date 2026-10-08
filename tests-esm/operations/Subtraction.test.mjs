@@ -6,6 +6,7 @@
  * Chaque autre calcul a la même chance, comme en addition, en multiplication et en division.
  */
 import { describe, test, expect } from '@jest/globals';
+import { readFileSync } from 'node:fs';
 import { Subtraction } from '../../js/core/operations/Subtraction.js';
 
 const DRAWS = 20000;
@@ -54,6 +55,33 @@ describe('Soustraction : tirage des calculs', () => {
     expect(all.filter(pair => !counts.has(pair))).toEqual([]);
     for (const trivial of ['7−7', '7−1', '7−6', '1−1']) {
       expect(counts.get(trivial)).toBeGreaterThan(0);
+    }
+  });
+
+  test('les exemples des niveaux faciles de l’Aventure sont des calculs que le niveau pose', () => {
+    const easy = new Set(sub.enumerateOperands('easy').map(key));
+    for (const lang of ['fr', 'en', 'es']) {
+      const texts = JSON.parse(
+        readFileSync(new URL(`../../assets/translations/${lang}.json`, import.meta.url), 'utf8')
+      );
+      for (const level of [1, 2, 3]) {
+        const desc = texts[`subtraction_level_${level}_desc`];
+        for (const [, a, b] of desc.matchAll(/(\d+)-(\d+)/g)) {
+          const pair = { a: Number(a), b: Number(b) };
+          expect({ lang, level, pair, posé: easy.has(key(pair)) }).toEqual({
+            lang,
+            level,
+            pair,
+            posé: true,
+          });
+          expect({ lang, level, pair, trivial: isTrivial(pair) }).toEqual({
+            lang,
+            level,
+            pair,
+            trivial: false,
+          });
+        }
+      }
     }
   });
 
