@@ -14,8 +14,9 @@ import { initPacmanControls } from './multimiam-controls.js';
 import { initPacmanUI } from './multimiam-ui.js';
 import { showArcadeGameOver } from './arcade.js';
 import { createArcadeToast, getArcadeText } from './arcade-message.js';
-import { getArcadeCanvasBox } from './arcade-common.js';
+import { getArcadeCanvasBox, watchArcadeViewport } from './arcade-common.js';
 import { cleanupGameResources } from './game-cleanup.js';
+import { shouldTransposeMaze } from './multimiam-layout.js';
 
 /** Positions et couleurs de départ des fantômes */
 const INITIAL_GHOSTS = [
@@ -64,7 +65,7 @@ export class PacmanGame {
     this.cellSize = 30;
     this.cols = 19;
     this.rows = 15;
-    this.resizeCanvas();
+    this.layoutBoard();
 
     // Labyrinthe (0 = vide, 1 = mur, 2 = pastille, 3 = super pastille)
     this.labyrinth = this.createLabyrinth();
@@ -153,21 +154,48 @@ export class PacmanGame {
     this.canvas.style.borderRadius = 'var(--radius-md)';
   }
 
+  // Orientation pour la place qui restera une fois la consigne partie : transposé (15 × 19)
+  // si le labyrinthe y gagne de plus grandes cases (téléphone en portrait)
+  chooseTransposed() {
+    if (!this.canvas.parentElement) return false;
+    const box = getArcadeCanvasBox(this.canvas, { ignoreInstructions: true });
+    return shouldTransposeMaze(this.cols, this.rows, box);
+  }
+
+  // Rien n'est encore joué : aucune réponse croquée ni vie perdue
+  isUnplayed() {
+    return this.score === 0 && this.lives === 3 && this.goodAnswersCount === 0;
+  }
+
+  // Orientation choisie au lancement. Ensuite, l'écran peut changer (consigne partie,
+  // rotation, plein écran) : les cases suivent ; l'orientation aussi tant que rien n'est
+  // joué, puis elle ne change plus (la partie reste la même).
+  layoutBoard() {
+    this.transposed = this.chooseTransposed();
+    this.resizeCanvas();
+    watchArcadeViewport(this.canvas, () => {
+      if (this.isUnplayed()) this.transposed = this.chooseTransposed();
+      this.resizeCanvas();
+      this.renderer?.draw();
+    });
+  }
+
   // Redimensionner le canvas pour s'adapter à l'écran
   resizeCanvas() {
     const dimensions = this.calculateCanvasDimensions();
-
-    this.canvas.width = dimensions.width;
-    this.canvas.height = dimensions.height;
+    // Colonnes et rangées à l'écran (échangées quand le labyrinthe est transposé)
+    const across = this.transposed ? this.rows : this.cols;
+    const down = this.transposed ? this.cols : this.rows;
 
     // Calculer la taille des cellules
-    this.cellSize = Math.floor(
-      Math.min(this.canvas.width / this.cols, this.canvas.height / this.rows)
+    this.cellSize = Math.max(
+      1,
+      Math.floor(Math.min(dimensions.width / across, dimensions.height / down))
     );
 
     // Ajuster la taille du canvas pour qu'il corresponde exactement à la grille
-    const actualWidth = this.cellSize * this.cols;
-    const actualHeight = this.cellSize * this.rows;
+    const actualWidth = this.cellSize * across;
+    const actualHeight = this.cellSize * down;
 
     // S'assurer que le canvas a la bonne taille pour afficher tout le labyrinthe
     this.canvas.width = actualWidth;

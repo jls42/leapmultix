@@ -699,6 +699,8 @@
   "speech_question": "Combien font {expression} ?",
   "speech_gap_question": "{a} {operator} combien égale {result} ?",
   "close_video": "Fermer la vidéo",
+  "arcade_fullscreen_enter": "Plein écran",
+  "arcade_fullscreen_exit": "Quitter le plein écran",
   "arcade_game_area_label": "Zone de jeu",
   "arcade_game_screen_label": "Écran de jeu",
   "game_info_bar_label": "Informations de la partie",

@@ -436,6 +436,10 @@
    pendant la partie, pas de vide entre le bandeau et le plateau. */
 
 .arcade-game-ui {
+  /* Sens de la zone, lu par js/arcade-common.js : la consigne et « Abandonner » sous le
+     plateau (column), ou à côté sur un téléphone tourné (row, plus bas) */
+  --arcade-stage-flow: column;
+
   /* Repère des pastilles de points posées sur le plateau */
   position: relative;
   display: flex;
@@ -453,6 +457,13 @@
 .arcade-game-ui > .btn {
   flex: none;
   margin: 0;
+}
+
+/* Téléphone : la marge de l'écran suffit, le plateau prend toute la largeur restante */
+@media (max-width: 480px) {
+  .arcade-game-ui {
+    padding-inline: 0;
+  }
 }
 
 /* Bandeau de partie : score, calcul, temps et vies, toujours visible */
@@ -585,6 +596,69 @@
     max-width: 280px;
     padding: var(--space-3);
     font-size: var(--text-md);
+  }
+}
+
+/* Téléphone tourné (écran bas et large) : le bandeau tient sur une ligne, le plateau
+   prend la largeur et toute la hauteur dessous, la consigne et « Abandonner » passent
+   dans une colonne à côté. js/arcade-common.js lit --arcade-stage-flow et retire cette
+   colonne, de largeur fixe, de la place du plateau. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .arcade-mult-display,
+  #arcade-mult-display {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    /* Hauteur du bouton plein écran réservée : il arrive juste après le calcul du plateau */
+    min-block-size: calc(44px + 2 * var(--space-1));
+    margin-bottom: var(--space-2);
+    padding-block: var(--space-1);
+  }
+
+  .arcade-mult-display > .arcade-mobile-top {
+    flex: 3 1 0;
+  }
+
+  .arcade-mult-display > .arcade-mobile-bottom {
+    flex: 2 1 0;
+    margin-top: 0;
+  }
+
+  /* Sur une seule ligne, le bouton plein écran prend sa place au bout de la ligne */
+  .arcade-mult-display > .btn.arcade-fullscreen-btn {
+    position: static;
+    flex: none;
+  }
+
+  .arcade-game-ui {
+    --arcade-stage-flow: row;
+
+    display: grid;
+    grid-template-columns: auto 14rem;
+    /* Consigne, « Abandonner », puis une rangée souple : pas de rangée vide qui ajouterait
+       un écart et rendrait la colonne plus haute que le plateau */
+    grid-template-rows: min-content min-content 1fr;
+    justify-content: center;
+    align-items: start;
+    gap: var(--space-3) var(--space-4);
+  }
+
+  .arcade-game-ui > canvas {
+    grid-row: 1 / -1;
+    grid-column: 1;
+  }
+
+  /* La consigne et « Abandonner » se placent seuls dans la colonne libre, à côté du
+     plateau. Aucune colonne imposée : un élément posé par-dessus le jeu (voile de pause,
+     points, messages) garde toute la zone pour repère au lieu de la seule colonne de côté. */
+  .arcade-game-ui > :not(canvas) {
+    justify-self: center;
+  }
+
+  /* Consigne serrée : elle tient à côté du plateau, même sur un téléphone bas */
+  .arcade-game-ui > .game-instructions {
+    padding: var(--space-2) var(--space-3);
+    line-height: var(--leading-tight);
   }
 }
 
@@ -944,4 +1018,44 @@
     opacity: 1;
     transform: translate(-50%, -100%);
   }
+}
+
+/* === 10. PLEIN ÉCRAN (js/arcade-fullscreen.js) ===
+   Toute la partie passe en plein écran : bandeau, plateau, consigne et « Abandonner ».
+   Sans la barre du haut ni les marges de la page, le plateau prend la place libérée. */
+#slide4 #game:fullscreen {
+  overflow: auto;
+  padding: var(--space-2) var(--space-2) 0;
+  background-color: var(--color-page);
+  background-image: var(--current-bg-image-webp, var(--current-bg-image-url, none));
+  background-position: center;
+  background-size: cover;
+}
+
+/* Bouton plein écran : dans le coin du bandeau, par-dessus l'espace réservé à droite du
+   calcul, qui reste centré. Cible de 44 px, icône au trait de la couleur du texte. */
+.btn.arcade-fullscreen-btn {
+  position: absolute;
+  inset-block-start: var(--space-1);
+  inset-inline-end: var(--space-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  margin: 0;
+  padding: 0;
+}
+
+.arcade-fullscreen-icon {
+  flex: none;
+  inline-size: 24px;
+  block-size: 24px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }

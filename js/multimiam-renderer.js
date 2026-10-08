@@ -2,10 +2,40 @@
 // (c) LeapMultix - 2025
 
 import { getCanvasFont, readableCanvasFontSize } from './arcade-common.js';
+import { mazeToScreen, transposeDirection } from './multimiam-layout.js';
 
 export default class PacmanRenderer {
   constructor(game) {
     this.game = game; // Référence à l'instance de PacmanGame
+  }
+
+  /**
+   * Coin d'une case du labyrinthe sur le canevas (labyrinthe transposé en portrait).
+   * @param {number} x - Colonne dans le labyrinthe (décimale pendant un déplacement)
+   * @param {number} y - Rangée dans le labyrinthe
+   * @returns {{px: number, py: number}}
+   */
+  cellOrigin(x, y) {
+    const g = this.game;
+    const screen = mazeToScreen(x, y, g.transposed);
+    return { px: screen.x * g.cellSize, py: screen.y * g.cellSize };
+  }
+
+  /**
+   * Centre d'une case du labyrinthe sur le canevas.
+   * @param {number} x
+   * @param {number} y
+   * @returns {{px: number, py: number}}
+   */
+  cellCenter(x, y) {
+    const { px, py } = this.cellOrigin(x, y);
+    const half = this.game.cellSize / 2;
+    return { px: px + half, py: py + half };
+  }
+
+  /** Direction vue à l'écran (le personnage regarde du côté où il va à l'écran) */
+  screenDirection(direction) {
+    return transposeDirection(direction, this.game.transposed);
   }
 
   // Méthode principale appelée à chaque frame
@@ -37,8 +67,7 @@ export default class PacmanRenderer {
     for (let y = 0; y < g.rows; y++) {
       for (let x = 0; x < g.cols; x++) {
         const cell = g.labyrinth[y][x];
-        const px = x * g.cellSize;
-        const py = y * g.cellSize;
+        const { px, py } = this.cellOrigin(x, y);
         if (cell === 1) {
           // Mur
           if (g.wallTexture && g.wallTexture.complete && g.wallTexture.naturalHeight !== 0) {
@@ -73,8 +102,7 @@ export default class PacmanRenderer {
     ctx.font = getCanvasFont(fontSize);
 
     for (const ans of g.answerPositions) {
-      const x = (ans.x + 0.5) * g.cellSize;
-      const y = (ans.y + 0.5) * g.cellSize;
+      const { px: x, py: y } = this.cellCenter(ans.x, ans.y);
       const label = ans.value.toString();
 
       // Pastille à la taille du nombre (1 à 3 chiffres), jamais plus petite que la case
@@ -144,11 +172,8 @@ export default class PacmanRenderer {
   }
 
   getPacmanPixelCoordinates(x, y) {
-    const g = this.game;
-    return {
-      pixelX: (x + 0.5) * g.cellSize,
-      pixelY: (y + 0.5) * g.cellSize,
-    };
+    const { px, py } = this.cellCenter(x, y);
+    return { pixelX: px, pixelY: py };
   }
 
   shouldRenderPacman() {
@@ -180,7 +205,8 @@ export default class PacmanRenderer {
     const rightImage = g.avatar?.image_right;
 
     if (leftImage?.complete && rightImage?.complete) {
-      const imageToDraw = g.multimiam.direction === 'LEFT' ? leftImage : rightImage;
+      const imageToDraw =
+        this.screenDirection(g.multimiam.direction) === 'LEFT' ? leftImage : rightImage;
       if (imageToDraw.naturalHeight === 0) {
         return false;
       }
@@ -205,7 +231,7 @@ export default class PacmanRenderer {
     ctx.beginPath();
 
     let start, end;
-    switch (g.multimiam.direction) {
+    switch (this.screenDirection(g.multimiam.direction)) {
       case 'LEFT':
         start = 1.2 * Math.PI;
         end = 0.8 * Math.PI;
@@ -270,7 +296,8 @@ export default class PacmanRenderer {
     const ctx = g.ctx;
     const size = g.cellSize * 1.5;
 
-    const imageToDraw = ghost.direction === 'LEFT' ? monster?.image_left : monster?.image_right;
+    const imageToDraw =
+      this.screenDirection(ghost.direction) === 'LEFT' ? monster?.image_left : monster?.image_right;
 
     if (imageToDraw?.complete && imageToDraw.naturalHeight !== 0) {
       ctx.save();
@@ -299,8 +326,7 @@ export default class PacmanRenderer {
 
       const { x, y } = this._getInterpolatedGhostPosition(ghost, i);
 
-      const pixelX = (x + 0.5) * g.cellSize;
-      const pixelY = (y + 0.5) * g.cellSize;
+      const { px: pixelX, py: pixelY } = this.cellCenter(x, y);
 
       const monster = g.monsters && g.monsters[i % g.monsters.length];
 
