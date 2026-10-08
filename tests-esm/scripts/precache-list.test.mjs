@@ -164,6 +164,7 @@ describe('buildPrecacheList sur un petit site', () => {
 
 describe('Le dépôt', () => {
   const list = buildPrecacheList(ROOT);
+  const core = new Set(list.core);
 
   test('sw.js porte la liste à jour (sinon : npm run precache:update)', () => {
     const source = read('sw.js');
@@ -192,7 +193,7 @@ describe('Le dépôt', () => {
     expect(dynamic).toEqual(
       expect.arrayContaining(['/js/modes/ChronoMode.js', '/js/arcade-multisnake.js'])
     );
-    expect([...lazy, ...dynamic].filter(file => !list.core.includes(file))).toEqual([]);
+    expect([...lazy, ...dynamic].filter(file => !core.has(file))).toEqual([]);
   });
 
   test('les sons, les polices, les trois traductions et la page hors ligne sont gardés', () => {
@@ -202,7 +203,7 @@ describe('Le dépôt', () => {
     expect(expected.length).toBeGreaterThanOrEqual(7);
     for (const lang of ['fr', 'en', 'es']) expected.push(`/assets/translations/${lang}.json`);
     expected.push('/index.html', '/offline.html', '/manifest.json');
-    expect(expected.filter(file => !list.core.includes(file))).toEqual([]);
+    expect(expected.filter(file => !core.has(file))).toEqual([]);
   });
 
   test('les avatars, sprites des jeux et logos sont des images gardées', () => {

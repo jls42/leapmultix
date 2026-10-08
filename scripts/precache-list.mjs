@@ -136,7 +136,13 @@ function tokenDir(token) {
   return dir === null || dir.includes(HOLE) ? undefined : dir;
 }
 
-/** Nom à trous : les fichiers du dossier (ou des images) qui lui correspondent */
+/**
+ * Nom à trous : les fichiers du dossier (ou des images) qui lui correspondent
+ * @param {string|null} dir
+ * @param {string} name
+ * @returns {{kind: 'pattern', dir: string|null, name: RegExp}|null} null si le gabarit
+ *   viserait tout un dossier d'images
+ */
 function describeTemplate(dir, name) {
   if (tooVague(dir, name)) return null;
   const source = name.split(HOLE).map(escapeRegExp).join('[^/]*');
@@ -291,11 +297,17 @@ export function buildPrecacheList(root = ROOT) {
   const found = crawl(root, index, [...SHELL, ...pageReferences(root, index)]);
   const all = [...found, ...firstBackgrounds(index)];
   const isImage = sitePath => IMAGE_FAMILY.test(sitePath) || sitePath.startsWith(GENERATED);
-  const sorted = list => [...new Set(list)].sort((a, b) => a.localeCompare(b));
   return {
-    core: sorted(all.filter(sitePath => !isImage(sitePath))),
-    images: sorted(all.filter(isImage)),
+    core: sortedUnique(all.filter(sitePath => !isImage(sitePath))),
+    images: sortedUnique(all.filter(isImage)),
   };
+}
+
+/** Chemins sans doublon, dans l'ordre alphabétique (liste stable d'un passage à l'autre) */
+function sortedUnique(list) {
+  const unique = [...new Set(list)];
+  unique.sort((a, b) => a.localeCompare(b));
+  return unique;
 }
 
 const quoted = list => list.map(item => `  '${item}',`).join('\n');

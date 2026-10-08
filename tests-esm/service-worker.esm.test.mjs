@@ -413,10 +413,11 @@ function imageMap(originals) {
  */
 function siteNetwork({ map = true, missing = [] } = {}) {
   const state = { online: true, originals: [] };
+  const absent = new Set(missing);
   const network = url => {
     if (!state.online) throw new TypeError('Failed to fetch');
     const { pathname } = new URL(url);
-    if (missing.includes(pathname)) return new FakeResponse('', { status: 404 });
+    if (absent.has(pathname)) return new FakeResponse('', { status: 404 });
     if (!pathname.startsWith('/assets/generated-images/')) return siteFile(url);
     if (!map) return siteFile(`${ORIGIN}/index.html`);
     if (!pathname.endsWith('/image-map.json')) return siteFile(url);

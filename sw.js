@@ -824,7 +824,11 @@ async function cachedResponse(request, anyVersion = false) {
   return cachedCopy(url.pathname);
 }
 
-/** Famille d'une image : un sprite et ses tailles, ou les fonds d'un même avatar */
+/**
+ * Famille d'une image : un sprite et ses tailles, ou les fonds d'un même avatar
+ * @param {string} pathname
+ * @returns {string|null} null pour une image sans famille
+ */
 function imageFamily(pathname) {
   const sprite = SPRITE_FAMILY.exec(pathname);
   if (sprite) return `sprite:${sprite[1]}`;
@@ -838,7 +842,11 @@ function variantWidth(request) {
   return width ? Number(width) : Number.POSITIVE_INFINITY;
 }
 
-/** Hors ligne, une image jamais gardée : la plus grande de sa famille parmi les copies */
+/**
+ * Hors ligne, une image jamais gardée : la plus grande de sa famille parmi les copies
+ * @param {Request} request
+ * @returns {Promise<Response|undefined>}
+ */
 async function familyImage(request) {
   const family = imageFamily(new URL(request.url).pathname);
   if (!family) return undefined;
@@ -895,8 +903,11 @@ async function networkFirst(event) {
 }
 
 /**
- * Plage d'octets d'un en-tête Range (« bytes=0- », « bytes=100-199 », « bytes=-500 ») ;
- * null si l'en-tête est illisible ou en demande plusieurs
+ * Plage d'octets d'un en-tête Range (« bytes=0- », « bytes=100-199 », « bytes=-500 »)
+ * @param {string} header
+ * @param {number} size - Taille du fichier entier
+ * @returns {{start: number, end: number}|null} null si l'en-tête est illisible ou en
+ *   demande plusieurs
  */
 function byteRange(header, size) {
   const match = BYTE_RANGE.exec(header.trim());
@@ -936,7 +947,11 @@ async function precachedResponse(request) {
   return cached ? rangeResponse(request, cached) : fetch(request);
 }
 
-/** Hors ligne : la page du jeu pour l'adresse du site, une page gardée, sinon offline.html */
+/**
+ * Hors ligne : la page du jeu pour l'adresse du site, une page gardée, sinon offline.html
+ * @param {Request} request
+ * @returns {Promise<Response|undefined>}
+ */
 async function offlinePage(request) {
   const cache = await caches.open(OFFLINE_CACHE);
   const { pathname } = new URL(request.url);
@@ -952,6 +967,12 @@ async function navigationResponse(request) {
   }
 }
 
+/**
+ * Réponse d'un fichier du site selon sa nature
+ * @param {FetchEvent} event
+ * @param {string} pathname
+ * @returns {Promise<Response>|null} null : le navigateur s'en charge seul
+ */
 function assetResponse(event, pathname) {
   const { destination } = event.request;
   if (destination === 'image') return imageResponse(event);
@@ -962,7 +983,11 @@ function assetResponse(event, pathname) {
   return precachedResponse(event.request);
 }
 
-/** Réponse du service worker, ou null : la requête suit alors son cours sans lui */
+/**
+ * Réponse du service worker
+ * @param {FetchEvent} event
+ * @returns {Promise<Response>|null} null : la requête suit son cours sans lui
+ */
 function routeRequest(event) {
   const { request } = event;
   if (request.method !== 'GET') return null;
