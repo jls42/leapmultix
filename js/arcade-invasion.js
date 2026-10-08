@@ -1090,7 +1090,7 @@ export function startMultiplicationInvasion() {
   // (Ancien écouteur touchstart générique supprimé: le gestionnaire plus haut gère désormais le tir immédiat.)
 
   // Rien n'est encore joué (aucun tir, aucune vie perdue) : un changement d'écran refait le
-  // plateau pour la nouvelle place, et la vague repart dedans à l'image suivante
+  // plateau pour la nouvelle place ; la vague y reprend sa ligne de départ, même calcul
   function relayoutUnplayedBoard() {
     if (score !== 0 || lives !== 3 || wave !== 1 || bullets.length > 0) return;
     const next = calculateCanvasDimensions(canvas);
@@ -1103,7 +1103,19 @@ export function startMultiplicationInvasion() {
       y: displayHeight - 30,
       speed: Math.max(8, displayWidth / 100),
     });
-    aliens = [];
+    placeWaveAgain();
+  }
+
+  // Les monstres de la vague, replacés dans le plateau refait : mêmes nombres, mêmes images
+  function placeWaveAgain() {
+    if (aliens.length === 0) return;
+    layoutAliens(aliens.length);
+    const totalWidth = aliens.length * alienWidth + (aliens.length - 1) * spacing;
+    const startX = (displayWidth - totalWidth) / 2;
+    const startY = (isMobile ? 30 : 50) * (displayHeight / baseHeight);
+    aliens.forEach((alien, i) => {
+      Object.assign(alien, { x: startX + i * (alienWidth + spacing), y: startY });
+    });
   }
 
   // L'écran change (consigne partie, rotation, plein écran) : l'affichage suit

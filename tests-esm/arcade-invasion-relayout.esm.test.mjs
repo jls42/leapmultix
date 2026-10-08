@@ -53,6 +53,12 @@ jest.unstable_mockModule('../js/components/infoBar.js', () => ({
       const frag = document.createDocumentFragment();
       const banner = document.createElement('div');
       banner.className = 'arcade-mult-display';
+      const top = document.createElement('div');
+      top.className = 'arcade-mobile-top';
+      const question = document.createElement('span');
+      question.className = 'arcade-question';
+      top.append(question);
+      banner.append(top);
       const stage = document.createElement('div');
       stage.className = 'arcade-game-ui';
       const canvas = document.createElement('canvas');
@@ -78,9 +84,23 @@ function rotate() {
   jest.advanceTimersByTime(50);
 }
 
+// Nombres écrits sur les monstres, image après image
+let written = [];
+
+/** Nombres de la dernière vague dessinée */
+function waveNumbers() {
+  written = [];
+  jest.advanceTimersByTime(20);
+  return [...new Set(written)].sort((a, b) => a - b);
+}
+
 beforeEach(() => {
   jest.useFakeTimers();
-  HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();
+  HTMLCanvasElement.prototype.getContext = () => {
+    const ctx = fakeCanvasContext();
+    ctx.fillText = text => written.push(Number(text));
+    return ctx;
+  };
   restorers.push(useAndroidUserAgent());
   restorers.push(simulateArcadeScreen({ width: 363, height: 844 }));
   document.body.replaceChildren();
@@ -104,6 +124,15 @@ describe('MultiInvaders, téléphone tourné', () => {
     rotate();
     expect(canvas.width).toBeGreaterThan(canvas.height);
     expect(Number.parseFloat(canvas.style.width)).toBeLessThanOrEqual(620);
+  });
+
+  test('le plateau refait garde le calcul et les nombres des monstres', () => {
+    const question = document.querySelector('.arcade-question').textContent;
+    const numbers = waveNumbers();
+    expect(numbers).toHaveLength(5);
+    rotate();
+    expect(document.querySelector('.arcade-question').textContent).toBe(question);
+    expect(waveNumbers()).toEqual(numbers);
   });
 
   test('un tir déjà parti : la taille interne reste, seul l’affichage suit', () => {
