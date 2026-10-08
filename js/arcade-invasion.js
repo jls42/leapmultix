@@ -43,6 +43,8 @@ import {
   getArcadeCanvasBox,
   clientToCanvasPoint,
   readableCanvasFontSize,
+  fitArcadeCanvas,
+  watchArcadeViewport,
 } from './arcade-common.js';
 import { UserState } from './core/userState.js';
 import { pickRandom, shuffleInPlace } from './core/random.js';
@@ -209,16 +211,25 @@ function setupAbandonButton(gameVars) {
   };
 }
 
+// Proportions du plateau (hauteur / largeur) : sur téléphone, toute la place, plus haut que
+// large en portrait (le temps de viser) et plus large que haut une fois tourné, dans ces
+// bornes ; sur ordinateur, les 4:3 de toujours
+const MOBILE_RATIO_RANGE = [0.5, 1.8];
+
 /**
- * Taille du plateau : la plus grande qui tient dans la zone de jeu, avec ses proportions
- * (plus haut que large sur téléphone, pour laisser le temps de viser). La taille interne
- * est la taille affichée : pas de bandes, le pointeur tombe là où l'enfant vise.
+ * Taille du plateau, choisie au lancement pour la place qui restera une fois la consigne
+ * partie : la plus grande qui tient, avec ses proportions. Elle ne change plus ensuite
+ * (positions et vitesses de la partie) ; seul l'affichage suit l'écran (fitArcadeCanvas).
  * @param {HTMLCanvasElement} canvas
+ * @returns {{displayWidth: number, displayHeight: number, isMobile: boolean}}
  */
-function calculateCanvasDimensions(canvas) {
+export function calculateCanvasDimensions(canvas) {
   const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(globalThis.navigator?.userAgent || '');
-  const ratio = isMobile ? 1.5 : baseHeight / baseWidth; // hauteur / largeur
-  const box = getArcadeCanvasBox(canvas);
+  const box = getArcadeCanvasBox(canvas, { ignoreInstructions: true });
+  const [low, high] = MOBILE_RATIO_RANGE;
+  const ratio = isMobile
+    ? Math.min(high, Math.max(low, box.height / box.width))
+    : baseHeight / baseWidth; // hauteur / largeur
   let displayWidth = Math.floor(box.width);
   let displayHeight = Math.floor(displayWidth * ratio);
   if (displayHeight > box.height) {
@@ -226,6 +237,23 @@ function calculateCanvasDimensions(canvas) {
     displayWidth = Math.floor(displayHeight / ratio);
   }
   return { displayWidth, displayHeight, isMobile };
+}
+
+/**
+ * Plateau de la partie : taille interne fixée au lancement, puis affichage dans la place
+ * actuelle (consigne comprise). fitBoard le réaffiche à chaque changement d'écran
+ * (consigne partie, rotation, plein écran) sans que la partie change.
+ * @param {HTMLCanvasElement} canvas
+ * @returns {{displayWidth: number, displayHeight: number, isMobile: boolean,
+ *   fitBoard: () => number}}
+ */
+function sizeInvadersBoard(canvas) {
+  const dimensions = calculateCanvasDimensions(canvas);
+  canvas.width = dimensions.displayWidth;
+  canvas.height = dimensions.displayHeight;
+  const fitBoard = () => fitArcadeCanvas(canvas, getArcadeCanvasBox(canvas));
+  fitBoard();
+  return { ...dimensions, fitBoard };
 }
 
 /**
@@ -408,12 +436,9 @@ export function startMultiplicationInvasion() {
     'neutral',
     INVADERS_INSTRUCTION_MS
   );
-  const { displayWidth, displayHeight, isMobile } = calculateCanvasDimensions(canvas);
-
-  canvas.width = displayWidth;
-  canvas.height = displayHeight;
-  canvas.style.width = displayWidth + 'px';
-  canvas.style.height = displayHeight + 'px';
+  const board = sizeInvadersBoard(canvas);
+  const { isMobile } = board;
+  let { displayWidth, displayHeight } = board;
 
   // Ajout de la classe pour appliquer les styles communs
   canvas.classList.add('arcade-canvas');
@@ -1080,6 +1105,42 @@ export function startMultiplicationInvasion() {
     if (e.button === 0) shoot();
   });
   // (Ancien écouteur touchstart générique supprimé: le gestionnaire plus haut gère désormais le tir immédiat.)
+
+  // Rien n'est encore joué (aucun tir, aucune vie perdue) : un changement d'écran refait le
+  // plateau pour la nouvelle place ; la vague y reprend sa ligne de départ, même calcul
+  function relayoutUnplayedBoard() {
+    if (score !== 0 || lives !== 3 || wave !== 1 || bullets.length > 0) return;
+    const next = calculateCanvasDimensions(canvas);
+    if (next.displayWidth === displayWidth && next.displayHeight === displayHeight) return;
+    ({ displayWidth, displayHeight } = next);
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+    Object.assign(player, {
+      x: displayWidth / 2 - 25,
+      y: displayHeight - 30,
+      speed: Math.max(8, displayWidth / 100),
+    });
+    placeWaveAgain();
+  }
+
+  // Les monstres de la vague, replacés dans le plateau refait : mêmes nombres, mêmes images
+  function placeWaveAgain() {
+    if (aliens.length === 0) return;
+    layoutAliens(aliens.length);
+    const totalWidth = aliens.length * alienWidth + (aliens.length - 1) * spacing;
+    const startX = (displayWidth - totalWidth) / 2;
+    const startY = (isMobile ? 30 : 50) * (displayHeight / baseHeight);
+    aliens.forEach((alien, i) => {
+      Object.assign(alien, { x: startX + i * (alienWidth + spacing), y: startY });
+    });
+  }
+
+  // L'écran change (consigne partie, rotation, plein écran) : l'affichage suit
+  function refitBoard() {
+    relayoutUnplayedBoard();
+    board.fitBoard();
+  }
+  watchArcadeViewport(canvas, refitBoard);
 
   // Lancer le jeu
   score = 0;

@@ -692,6 +692,8 @@
   "speech_question": "What is {expression}?",
   "speech_gap_question": "{a} {operator} what equals {result}?",
   "close_video": "Close the video",
+  "arcade_fullscreen_enter": "Full screen",
+  "arcade_fullscreen_exit": "Exit full screen",
   "arcade_game_area_label": "Game area",
   "arcade_game_screen_label": "Game screen",
   "game_info_bar_label": "Game information",
