@@ -216,7 +216,23 @@ export function prepareArcadeStage(canvas) {
   for (const prop of ['height', 'min-height', 'margin-top', 'justify-content', 'align-items']) {
     stage.style.removeProperty(prop);
   }
+  offerFullscreen(stage);
   return stage;
+}
+
+/**
+ * Bouton plein écran dans le bandeau de la partie (js/arcade-fullscreen.js). Sans l'API
+ * (iPhone, cadre sans permission), rien n'est chargé et aucun bouton n'apparaît.
+ * @param {HTMLElement} stage - Zone de jeu
+ */
+function offerFullscreen(stage) {
+  if (!document.fullscreenEnabled) return;
+  import('./arcade-fullscreen.js')
+    .then(module => {
+      // Le bouton arrive après le calcul du plateau : la place est revue s'il l'a changée
+      if (module.mountArcadeFullscreenButton(stage)) notifyStageChange(stage);
+    })
+    .catch(error => console.warn('[Arcade] Plein écran indisponible', error));
 }
 
 /**

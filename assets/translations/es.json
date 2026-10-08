@@ -652,6 +652,8 @@
   "speech_question": "¿Cuánto es {expression}?",
   "speech_gap_question": "¿{a} {operator} cuánto es {result}?",
   "close_video": "Cerrar el vídeo",
+  "arcade_fullscreen_enter": "Pantalla completa",
+  "arcade_fullscreen_exit": "Salir de pantalla completa",
   "arcade_game_area_label": "Zona de juego",
   "arcade_game_screen_label": "Pantalla de juego",
   "game_info_bar_label": "Información de la partida",

@@ -609,6 +609,8 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    /* Hauteur du bouton plein écran réservée : il arrive juste après le calcul du plateau */
+    min-block-size: calc(44px + 2 * var(--space-1));
     margin-bottom: var(--space-2);
     padding-block: var(--space-1);
   }
@@ -620,6 +622,12 @@
   .arcade-mult-display > .arcade-mobile-bottom {
     flex: 2 1 0;
     margin-top: 0;
+  }
+
+  /* Sur une seule ligne, le bouton plein écran prend sa place au bout de la ligne */
+  .arcade-mult-display > .btn.arcade-fullscreen-btn {
+    position: static;
+    flex: none;
   }
 
   .arcade-game-ui {
@@ -914,4 +922,44 @@
     opacity: 1;
     transform: translate(-50%, -100%);
   }
+}
+
+/* === 9. PLEIN ÉCRAN (js/arcade-fullscreen.js) ===
+   Toute la partie passe en plein écran : bandeau, plateau, consigne et « Abandonner ».
+   Sans la barre du haut ni les marges de la page, le plateau prend la place libérée. */
+#slide4 #game:fullscreen {
+  overflow: auto;
+  padding: var(--space-2) var(--space-2) 0;
+  background-color: var(--color-page);
+  background-image: var(--current-bg-image-webp, var(--current-bg-image-url, none));
+  background-position: center;
+  background-size: cover;
+}
+
+/* Bouton plein écran : dans le coin du bandeau, par-dessus l'espace réservé à droite du
+   calcul, qui reste centré. Cible de 44 px, icône au trait de la couleur du texte. */
+.btn.arcade-fullscreen-btn {
+  position: absolute;
+  inset-block-start: var(--space-1);
+  inset-inline-end: var(--space-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  margin: 0;
+  padding: 0;
+}
+
+.arcade-fullscreen-icon {
+  flex: none;
+  inline-size: 24px;
+  block-size: 24px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
