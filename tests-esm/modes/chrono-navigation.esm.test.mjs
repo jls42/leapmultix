@@ -40,7 +40,11 @@ test('retour à l’accueil pendant une course : la course s’arrête, le clavi
 
   await goToSlide(1);
   expect(chrono.state.isActive).toBe(false);
-  expect(chrono.timerInterval).toBeNull();
+  // L'horloge de la course est arrêtée : plus aucun intervalle, et le temps ne bouge plus
+  expect(chrono.intervals.size).toBe(0);
+  const elapsed = chrono.elapsedMs;
+  await new Promise(resolve => setTimeout(resolve, 300));
+  expect(chrono.elapsedMs).toBe(elapsed);
   const key = new KeyboardEvent('keydown', { key: '5', cancelable: true, bubbles: true });
   document.dispatchEvent(key);
   expect(key.defaultPrevented).toBe(false);
