@@ -726,6 +726,9 @@ a {
   bottom: var(--space-5);
   bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
   left: 50%;
+  /* Placé à mi-largeur, il ne disposait que de la moitié de l'écran : sur téléphone, trois
+     lignes étroites qui couvraient d'autant plus le bas de l'écran */
+  inline-size: max-content;
   z-index: var(--z-toast);
   opacity: 0;
   transform: translate(-50%, 12px);

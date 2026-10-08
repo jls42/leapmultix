@@ -166,6 +166,26 @@ describe('Aventure', () => {
     expect(tiles.some(t => EMOJI.test(t.textContent))).toBe(false);
   });
 
+  test('le but du niveau reste affiché sous son nom, sans message surgissant', async () => {
+    jest.useFakeTimers();
+    try {
+      store.setTranslations({ ...BASE_TRANSLATIONS, level_1_desc: 'Apprends la table de 1' });
+      const adventure = new AdventureMode();
+      await adventure.start();
+      await adventure.startLevel(1);
+      await jest.advanceTimersByTimeAsync(50);
+      const goal = document.querySelector('.adventure-level-header .adventure-level-goal');
+      expect(goal?.textContent).toBe('Apprends la table de 1');
+      // Il suit un changement de langue
+      expect(goal.dataset.translate).toBe('level_1_desc');
+      // Un message de 3 s, en bas de l'écran, cachait « Abandonner » sur téléphone
+      expect(document.querySelector('.message-popup')).toBeNull();
+      adventure.stop();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test('réussite : phrase principale, étoiles dessinées, trésor, sans émoji', () => {
     const adventure = new AdventureMode();
     adventure.gameScreen = document.getElementById('game');

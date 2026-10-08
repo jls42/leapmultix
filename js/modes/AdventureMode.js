@@ -46,6 +46,7 @@ import { appendProgressHistory } from '../core/mode-stats.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { chance, randomInt } from '../core/random.js';
+import { accessibilityManager } from '../accessibility.js';
 
 /** Nom des opérations dans les clés de traduction propres à une opération */
 const OPERATION_NAMES = { '+': 'addition', '−': 'subtraction', '÷': 'division' };
@@ -179,11 +180,12 @@ export class AdventureMode extends GameMode {
                 </div>
             `;
     } else {
-      // Phase de jeu : nom du niveau, scène de progression, puis « Abandonner »
+      // Phase de jeu : nom et but du niveau, scène de progression, puis « Abandonner »
       // (replacé après la zone de réponse dans initializeUI)
       return `
                 <div class="adventure-level-header">
                     <h3 data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h3>
+                    <p class="adventure-level-goal" data-translate="${this.currentLevel.descKey}">${getTranslation(this.currentLevel.descKey)}</p>
                 </div>
 
                 <div class="adventure-scene" role="img" aria-label="${getTranslation('adventure_scene_label')}" data-translate-aria-label="adventure_scene_label">
@@ -357,8 +359,9 @@ export class AdventureMode extends GameMode {
     // Revenir en haut (la barre du haut reste visible) sans animation imposée
     scrollToScreenTop(this.gameScreen);
 
-    // Afficher le dialogue de début de niveau (non bloquant)
-    showMessage(getTranslation(this.currentLevel.descKey));
+    // Le but du niveau reste affiché sous son nom (un message de 3 s cachait « Abandonner »
+    // sur téléphone) ; les lecteurs d'écran l'entendent une fois, comme avant
+    accessibilityManager.announce(getTranslation(this.currentLevel.descKey));
 
     // Marquer actif (resetState() l'a mis à false) puis générer la première question immédiatement
     this.state.isActive = true;
