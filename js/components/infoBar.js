@@ -53,15 +53,27 @@ function formatLivesLabel(lives, total) {
  * Libellé réservé aux lecteurs d'écran, retraduit avec la page (data-translate)
  * @param {string} key
  * @param {string} fallback
- * @returns {HTMLSpanElement}
+ * @param {string} [tag='span'] - Balise : h1 pour le titre de l'écran d'un jeu
+ * @returns {HTMLElement}
  */
-function createHiddenLabel(key, fallback) {
-  const label = document.createElement('span');
+function createHiddenLabel(key, fallback, tag = 'span') {
+  const label = document.createElement(tag);
   label.className = 'sr-only';
   label.dataset.translate = key;
   label.textContent = trLabel(key, fallback);
   return label;
 }
+
+/**
+ * Nom de chaque jeu d'Arcade : le titre de niveau 1 de son écran, réservé aux lecteurs
+ * d'écran (le plateau prend toute la place ; un titre visible le réduirait)
+ */
+const ARCADE_TITLES = new Map([
+  ['multiinvaders', ['arcade_invasion_title', 'MultiInvaders']],
+  ['multimiam', ['arcade_pacman_title', 'MultiMiam']],
+  ['multisnake', ['arcade_snake_title', 'MultiSnake']],
+  ['multimemory', ['arcade.multiMemory.title', 'MultiMemory']],
+]);
 
 export const InfoBar = {
   // DOM helpers for arcade template element
@@ -481,6 +493,8 @@ export const InfoBar = {
     } = config;
 
     const frag = document.createDocumentFragment();
+    const title = ARCADE_TITLES.get(mode);
+    if (title) frag.appendChild(createHiddenLabel(...title, 'h1'));
 
     // Bandeau : aria-live est posé sur la question seule (voir _createTopRow)
     const display = document.createElement('div');

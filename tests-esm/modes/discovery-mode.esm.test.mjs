@@ -256,7 +256,7 @@ describe('ESM: Découverte, choix de la table ou du niveau', () => {
 
   test('l’écran des niveaux dit quelle opération on explore, sans émoji', () => {
     const frag = toFragment(createMode('−').getTableSelectionHTML());
-    expect(frag.querySelector('h2.discovery-lab-title').textContent).toBe(
+    expect(frag.querySelector('h1.discovery-lab-title').textContent).toBe(
       'Découvre la soustraction'
     );
     expect(frag.querySelector('.discovery-intro').textContent).toBe(
@@ -278,7 +278,7 @@ describe('ESM: Découverte, choix de la table ou du niveau', () => {
   test('sans titre dédié, l’écran des niveaux retombe sur le nom de l’opération', () => {
     lang = 'en';
     const frag = toFragment(createMode('−').getTableSelectionHTML());
-    expect(frag.querySelector('h2.discovery-lab-title').textContent).toBe('Subtraction');
+    expect(frag.querySelector('h1.discovery-lab-title').textContent).toBe('Subtraction');
   });
 
   test('« Déjà exploré » est propre à chaque opération ; les anciennes coches sans opération sont écartées', () => {
@@ -377,7 +377,7 @@ describe('ESM: Découverte, exploration', () => {
     mode.currentLevel = 'easy';
     mode.phase = 'exploration';
     const frag = toFragment(mode.getTableExplorationHTML());
-    const title = frag.querySelector('h2.discovery-lab-title');
+    const title = frag.querySelector('h1.discovery-lab-title');
     expect(title.textContent).toBe('Addition – Facile');
     expect(title.textContent).not.toMatch(/Laboratoire|Bienvenue/);
   });

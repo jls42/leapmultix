@@ -700,7 +700,9 @@ export class GameMode {
     container.setAttribute('aria-label', getTranslation(titleKey));
     container.dataset.translateAriaLabel = titleKey;
 
-    const title = document.createElement('h2');
+    // Titre de niveau 1 de l'écran de jeu (un par écran), à la taille d'un titre de carte
+    const title = document.createElement('h1');
+    title.className = 'screen-title';
     title.dataset.translate = titleKey;
     title.textContent = getTranslation(titleKey);
     container.appendChild(title);

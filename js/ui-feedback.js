@@ -291,12 +291,13 @@ export function createAvatarPortrait(avatar, size = 96) {
  * Corps d'un écran de fin : phrase principale, message, ligne secondaire compacte.
  * @param {Object} config
  * @param {string} config.lead - Phrase principale (« 7 bonnes réponses sur 10 »)
- * @param {string} [config.leadTag='h2'] - Balise de la phrase principale
+ * @param {string} [config.leadTag='h1'] - Balise de la phrase principale : le titre de l'écran,
+ *   sauf s'il en a un autre (Aventure : « Niveau terminé »)
  * @param {string} [config.message] - Encouragement
  * @param {string[]} [config.details] - Éléments secondaires (score, meilleure série…)
  * @returns {DocumentFragment}
  */
-export function createResultsSummary({ lead, leadTag = 'h2', message = '', details = [] }) {
+export function createResultsSummary({ lead, leadTag = 'h1', message = '', details = [] }) {
   const frag = document.createDocumentFragment();
 
   const leadEl = document.createElement(leadTag);

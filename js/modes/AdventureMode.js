@@ -173,7 +173,7 @@ export class AdventureMode extends GameMode {
                             </div>
                         </div>
                     </div>
-                    <h2 data-translate="${titleKey}">${getTranslation(titleKey)}</h2>
+                    <h1 class="screen-title" data-translate="${titleKey}">${getTranslation(titleKey)}</h1>
                     <p class="adventure-story-intro" data-translate="${introKey}">${getTranslation(introKey)}</p>
                     <h3 data-translate="adventure_choose_destination">${getTranslation('adventure_choose_destination')}</h3>
                     <div class="adventure-levels" id="adventure-levels"></div>
@@ -790,7 +790,7 @@ export class AdventureMode extends GameMode {
     }
 
     const title = createSafeElement(
-      'h2',
+      'h1',
       getTranslation(success ? 'level_completed' : 'level_failed'),
       { id: 'adventure-results-title' }
     );

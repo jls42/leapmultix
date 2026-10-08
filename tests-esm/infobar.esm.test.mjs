@@ -165,6 +165,20 @@ describe('ESM: bandeau des mini-jeux d’Arcade', () => {
     expect(area.dataset.translateAriaLabel).toBe('arcade_game_area_label');
   });
 
+  test.each([
+    ['multiinvaders', 'arcade_invasion_title'],
+    ['multimiam', 'arcade_pacman_title'],
+    ['multisnake', 'arcade_snake_title'],
+    ['multimemory', 'arcade.multiMemory.title'],
+  ])('%s : un titre de niveau 1, le nom du jeu, pour les lecteurs d’écran', (mode, key) => {
+    document.body.replaceChildren(InfoBar.createArcadeTemplateElement({ mode }));
+    const titles = document.querySelectorAll('h1');
+    expect(titles).toHaveLength(1);
+    expect(titles[0].classList.contains('sr-only')).toBe(true);
+    expect(titles[0].dataset.translate).toBe(key);
+    expect(titles[0].textContent).toBe(key);
+  });
+
   test('la version HTML donne le même bandeau', () => {
     const html = InfoBar.createArcadeTemplate({ mode: 'multisnake' });
     expect(html).toContain('id="multisnake-info-lives"');

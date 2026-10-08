@@ -367,7 +367,7 @@ export class DiscoveryMode extends GameMode {
     );
     return `
             <div class="discovery-lab">
-                <h2 class="discovery-lab-title" tabindex="-1">${title}</h2>
+                <h1 class="discovery-lab-title screen-title" tabindex="-1">${title}</h1>
                 <p class="discovery-intro">${intro}</p>
                 <div class="lab-selector lab-selector--levels" id="level-selector">
                     ${LEVELS.map(level => this._renderLevelTile(level)).join('')}
@@ -504,7 +504,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
             <div class="discovery-lab">
-                <h2 class="discovery-lab-title" tabindex="-1">${title}</h2>
+                <h1 class="discovery-lab-title screen-title" tabindex="-1">${title}</h1>
                 <div class="lab-experiment">
                     <p class="experiment-description">${intro}</p>
 

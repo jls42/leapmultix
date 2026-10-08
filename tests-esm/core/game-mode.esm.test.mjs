@@ -337,3 +337,14 @@ describe('Lecteurs d’écran : chaque réponse est reliée à sa question', () 
     mode.stop();
   });
 });
+
+describe('Titre de l’écran de jeu', () => {
+  test('le nom du mode est le titre de niveau 1 de l’écran, à la taille d’un titre de carte', () => {
+    const mode = new GameMode('quiz');
+    const { container } = mode._createMainContainer();
+    const title = container.querySelector('h1');
+    expect(title?.dataset.translate).toBe('quiz_mode');
+    expect(title.classList.contains('screen-title')).toBe(true);
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
+  });
+});

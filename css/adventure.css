@@ -260,7 +260,7 @@
 
 /* === ÉCRAN DE FIN : le trésor, la phrase, les étoiles ===
    Le titre (« Niveau terminé ») reste un cran sous la phrase principale. */
-.adventure-results > h2 {
+.adventure-results > h1 {
   margin: 0;
   font-size: var(--text-lg);
 }

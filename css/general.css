@@ -131,6 +131,12 @@ h4 {
   font-size: var(--text-md);
 }
 
+/* Titre d'un écran : son h1 (un par écran, pour les lecteurs d'écran) garde la taille d'un
+   titre de carte */
+.screen-title {
+  font-size: var(--text-xl);
+}
+
 p {
   margin-bottom: 0.75em;
   text-wrap: pretty;
@@ -497,9 +503,9 @@ body:has(#slide1.active-slide) .skip-link:focus {
   border-bottom: 1px solid var(--color-border);
 }
 
-.legal-header h2,
-.privacy-header h2,
-.faq-header h2 {
+.legal-header h1,
+.privacy-header h1,
+.faq-header h1 {
   margin-bottom: var(--space-2);
 }
 

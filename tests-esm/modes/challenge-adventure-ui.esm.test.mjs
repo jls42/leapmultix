@@ -196,7 +196,7 @@ describe('Aventure', () => {
     adventure.showLevelResults(true, 2);
 
     const results = document.querySelector('.adventure-results');
-    expect(results.querySelector('h2').textContent).toBe('Niveau terminé');
+    expect(results.querySelector('h1').textContent).toBe('Niveau terminé');
     expect(results.querySelector('.results-lead').textContent).toBe('9 bonnes réponses sur 10');
     const rating = results.querySelector('.reward-stars');
     expect(rating.getAttribute('aria-label')).toBe('2 étoiles sur 3');
@@ -214,7 +214,7 @@ describe('Aventure', () => {
     adventure.showLevelResults(false, 0);
 
     const results = document.querySelector('.adventure-results');
-    expect(results.querySelector('h2').textContent).toBe('Pas cette fois');
+    expect(results.querySelector('h1').textContent).toBe('Pas cette fois');
     expect(results.querySelector('.results-lead').textContent).toBe('1 bonne réponse sur 4');
     expect(results.querySelector('img.results-avatar')).not.toBeNull();
     expect(results.querySelector('.reward-stars')).toBeNull();
@@ -329,7 +329,7 @@ describe('Aventure : une erreur est une étape, jusqu’à la dernière question
 
     const results = document.querySelector('.adventure-results');
     expect(results).not.toBeNull();
-    expect(results.querySelector('h2').textContent).toBe('Niveau terminé');
+    expect(results.querySelector('h1').textContent).toBe('Niveau terminé');
     expect(results.querySelector('.results-lead').textContent).toBe('9 bonnes réponses sur 10');
     expect(results.querySelector('.reward-stars').getAttribute('aria-label')).toBe(
       '3 étoiles sur 3'
@@ -368,7 +368,7 @@ describe('Aventure : une erreur est une étape, jusqu’à la dernière question
     document.getElementById('adventure-continue-btn').click();
 
     const results = document.querySelector('.adventure-results');
-    expect(results.querySelector('h2').textContent).toBe('Pas cette fois');
+    expect(results.querySelector('h1').textContent).toBe('Pas cette fois');
     expect(userStore.adventureProgressByOperator['×']).toBeUndefined();
   });
 
@@ -466,7 +466,7 @@ describe('Aventure : carte des niveaux', () => {
     userStore.preferredOperator = '+';
     const adventure = new AdventureMode();
     await adventure.start();
-    const title = document.querySelector('.adventure-container h2');
+    const title = document.querySelector('.adventure-container h1');
     expect(title.textContent).toBe('L’aventure des additions');
     expect(title.getAttribute('data-translate')).toBe('adventure_title_addition');
     expect(document.querySelector('.adventure-story-intro').textContent).toMatch(/trésors/);

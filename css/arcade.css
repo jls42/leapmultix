@@ -620,7 +620,7 @@
   text-align: center;
 }
 
-.arcade-gameover h2 {
+.arcade-gameover h1 {
   margin-bottom: var(--space-2);
 }
 
