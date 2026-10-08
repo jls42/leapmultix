@@ -5,7 +5,8 @@
 /**
  * Service worker (sw.js), exécuté tel quel dans un contexte isolé avec un cache et un
  * réseau simulés : routes de la voix enregistrée (clips en cache d'abord, index en réseau
- * d'abord, purge par version et plafond) et route des traductions.
+ * d'abord, purge par version et plafond), route des traductions, et le hors ligne
+ * (préchargement, page du jeu, modules, sons par plages, images d'une même famille).
  */
 import { describe, test, expect } from '@jest/globals';
 import fs from 'node:fs';
@@ -23,11 +24,16 @@ const INDEX = {
 
 class FakeHeaders {
   constructor(headers = {}) {
-    this.map = new Map(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
+    const entries = headers instanceof FakeHeaders ? headers.map : Object.entries(headers);
+    this.map = new Map([...entries].map(([k, v]) => [k.toLowerCase(), v]));
   }
 
   get(name) {
     return this.map.get(name.toLowerCase()) ?? null;
+  }
+
+  set(name, value) {
+    this.map.set(name.toLowerCase(), value);
   }
 }
 
@@ -36,7 +42,7 @@ class FakeResponse {
     Object.assign(this, { body, status, type, redirected });
     this.ok = status >= 200 && status < 300;
     this.headers = new FakeHeaders(headers);
-    this.init = { status, headers, type, redirected };
+    this.init = { status, headers: this.headers, type, redirected };
   }
 
   clone() {
@@ -47,8 +53,25 @@ class FakeResponse {
     return JSON.parse(this.body);
   }
 
+  async text() {
+    return typeof this.body === 'string' ? this.body : new TextDecoder().decode(this.body);
+  }
+
+  async arrayBuffer() {
+    return typeof this.body === 'string' ? new TextEncoder().encode(this.body).buffer : this.body;
+  }
+
   static error() {
     return new FakeResponse('', { status: 0, type: 'error' });
+  }
+}
+
+/** new Request(url, init) du service worker : adresse relative à son origine */
+class FakeRequest {
+  constructor(url, { cache = 'default', headers = {} } = {}) {
+    this.url = new URL(url, ORIGIN).href;
+    this.cache = cache;
+    this.headers = new FakeHeaders(headers);
   }
 }
 
@@ -56,8 +79,9 @@ const keyOf = request =>
   typeof request === 'string' ? new URL(request, ORIGIN).href : request.url;
 
 class FakeCache {
-  constructor() {
+  constructor(fetchFn) {
     this.entries = new Map();
+    this.fetchFn = fetchFn;
   }
 
   async match(request) {
@@ -76,16 +100,22 @@ class FakeCache {
     return this.entries.delete(keyOf(request));
   }
 
-  async addAll() {}
+  /** Comme Cache.addAll : tout ou rien */
+  async addAll(requests) {
+    const responses = await Promise.all(requests.map(request => this.fetchFn(request)));
+    if (responses.some(response => !response.ok)) throw new TypeError('addAll: réponse en échec');
+    requests.forEach((request, i) => this.entries.set(keyOf(request), responses.at(i)));
+  }
 }
 
 class FakeCaches {
-  constructor() {
+  constructor(fetchFn) {
     this.stores = new Map();
+    this.fetchFn = fetchFn;
   }
 
   async open(name) {
-    if (!this.stores.has(name)) this.stores.set(name, new FakeCache());
+    if (!this.stores.has(name)) this.stores.set(name, new FakeCache(this.fetchFn));
     return this.stores.get(name);
   }
 
@@ -97,17 +127,27 @@ class FakeCaches {
     return this.stores.delete(name);
   }
 
-  async match() {
-    return undefined;
+  /** Comme caches.match : chaque cache dans l'ordre, ou celui de cacheName */
+  async match(request, { cacheName } = {}) {
+    const stores = cacheName ? [this.stores.get(cacheName)] : [...this.stores.values()];
+    const store = stores.find(candidate => candidate?.entries.has(keyOf(request)));
+    return store?.entries.get(keyOf(request)).clone();
   }
 }
 
 const mp3 = (body = 'mp3') => new FakeResponse(body, { headers: { 'Content-Type': 'audio/mpeg' } });
 
-/** Charge sw.js ; network(url) répond à chaque fetch (ou lève : hors ligne) */
+/** Charge sw.js ; network(url, request) répond à chaque fetch (ou lève : hors ligne) */
 function loadWorker(network) {
   const listeners = {};
-  const worker = { listeners, caches: new FakeCaches(), fetches: [] };
+  const worker = { listeners, fetches: [], requests: [] };
+  const fetchFn = async request => {
+    const url = keyOf(request);
+    worker.fetches.push(url);
+    worker.requests.push(request);
+    return network(url, request);
+  };
+  worker.caches = new FakeCaches(fetchFn);
   const context = {
     self: {
       addEventListener: (type, handler) => (listeners[type] = handler),
@@ -116,25 +156,30 @@ function loadWorker(network) {
       clients: { claim: async () => {} },
     },
     caches: worker.caches,
-    fetch: async request => {
-      const url = keyOf(request);
-      worker.fetches.push(url);
-      return network(url);
-    },
+    fetch: fetchFn,
     Response: FakeResponse,
+    Request: FakeRequest,
+    Headers: FakeHeaders,
     URL,
     console,
   };
   vm.createContext(context);
   vm.runInContext(SOURCE, context);
+  worker.context = context;
   return worker;
 }
 
-async function request(worker, url, { destination = '', mode = 'cors' } = {}) {
+async function request(worker, url, { destination = '', mode = 'cors', headers = {} } = {}) {
   const waits = [];
   let response;
   worker.listeners.fetch({
-    request: { url: new URL(url, ORIGIN).href, method: 'GET', mode, destination },
+    request: {
+      url: new URL(url, ORIGIN).href,
+      method: 'GET',
+      mode,
+      destination,
+      headers: new FakeHeaders(headers),
+    },
     respondWith: promise => (response = promise),
     waitUntil: promise => waits.push(promise),
   });
@@ -314,5 +359,235 @@ describe('Service worker : traductions', () => {
     expect((await request(worker, url)).body).toBe('{"a":1}');
     offline = true;
     expect((await request(worker, url)).body).toBe('{"a":1}');
+  });
+});
+
+/** Constante de sw.js (liste de préchargement, noms des caches), copiée hors du contexte */
+const constant = (worker, name) => vm.runInContext(name, worker.context);
+/** Une liste absente (ancien sw.js) se lit vide : le test échoue alors sur le comportement */
+const precacheList = (worker, name) => [
+  ...constant(worker, `typeof ${name} === 'undefined' ? [] : ${name}`),
+];
+
+const TYPES = new Map([
+  ['.js', 'text/javascript'],
+  ['.css', 'text/css'],
+  ['.json', 'application/json'],
+  ['.html', 'text/html'],
+  ['.wav', 'audio/wav'],
+  ['.woff2', 'font/woff2'],
+  ['.png', 'image/png'],
+  ['.webp', 'image/webp'],
+  ['.ico', 'image/x-icon'],
+]);
+
+/** Un fichier du site simulé : son contenu dit son chemin */
+function siteFile(url) {
+  const { pathname } = new URL(url);
+  const type = TYPES.get(pathname.slice(pathname.lastIndexOf('.'))) ?? 'text/plain';
+  return new FakeResponse(`contenu de ${pathname}`, { headers: { 'Content-Type': type } });
+}
+
+/** Variante WebP d'un original : /assets/images/arcade/x.png → …/arcade/x-128.webp */
+const variant = (original, size) =>
+  original
+    .replace('/assets/images/', '/assets/generated-images/')
+    .replace(/\.png$/, `-${size}.webp`);
+
+const ORIGINAL = /^\/assets\/images\/(.+)\.png$/;
+
+/** Carte des images du déploiement : deux variantes par original */
+function imageMap(originals) {
+  const entries = originals.map(url => {
+    const base = ORIGINAL.exec(url)[1];
+    const resolutions = { 64: `${base}-64.webp`, 128: `${base}-128.webp` };
+    return [base, { original: `${base}.png`, resolutions }];
+  });
+  return JSON.stringify(Object.fromEntries(entries));
+}
+
+/**
+ * Site simulé : chaque fichier existe ; les images générées et leur carte sont celles du
+ * déploiement, ou (map: false) absentes : un serveur de développement répond alors la page.
+ * missing : chemins qui répondent 404.
+ */
+function siteNetwork({ map = true, missing = [] } = {}) {
+  const state = { online: true, originals: [] };
+  const network = url => {
+    if (!state.online) throw new TypeError('Failed to fetch');
+    const { pathname } = new URL(url);
+    if (missing.includes(pathname)) return new FakeResponse('', { status: 404 });
+    if (!pathname.startsWith('/assets/generated-images/')) return siteFile(url);
+    if (!map) return siteFile(`${ORIGIN}/index.html`);
+    if (!pathname.endsWith('/image-map.json')) return siteFile(url);
+    return new FakeResponse(imageMap(state.originals), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+  return { network, state };
+}
+
+/** Service worker installé sur le site simulé, puis coupé du réseau */
+async function installedOffline(options) {
+  const site = siteNetwork(options);
+  const worker = loadWorker(site.network);
+  site.state.originals = precacheList(worker, 'PRECACHE_IMAGES').filter(url => ORIGINAL.test(url));
+  const waits = [];
+  worker.listeners.install({ waitUntil: promise => waits.push(promise) });
+  await Promise.all(waits);
+  site.state.online = false;
+  return { worker, site, originals: site.state.originals };
+}
+
+const offlineEntries = async worker =>
+  (await worker.caches.open(constant(worker, 'OFFLINE_CACHE'))).entries;
+
+describe('Service worker : préchargement', () => {
+  test('tout le code, puis les variantes WebP de chaque image, jamais depuis le cache HTTP', async () => {
+    const { worker, originals } = await installedOffline();
+    const entries = await offlineEntries(worker);
+    const core = precacheList(worker, 'PRECACHE_CORE');
+    expect(core.length).toBeGreaterThan(100);
+    expect(core.filter(url => !entries.has(`${ORIGIN}${url}`))).toEqual([]);
+    expect(originals.length).toBeGreaterThan(10);
+    expect(originals.filter(url => entries.has(`${ORIGIN}${url}`))).toEqual([]);
+    const variants = originals.flatMap(url => [variant(url, 64), variant(url, 128)]);
+    expect(variants.filter(url => !entries.has(`${ORIGIN}${url}`))).toEqual([]);
+    expect(worker.requests.filter(r => r.cache !== 'reload')).toEqual([]);
+  });
+
+  test('sans carte des images (développement) : les originaux, jamais une page à leur place', async () => {
+    const worker = (await installedOffline({ map: false })).worker;
+    const entries = await offlineEntries(worker);
+    const images = precacheList(worker, 'PRECACHE_IMAGES');
+    const originals = images.filter(url => ORIGINAL.test(url));
+    expect(originals.filter(url => !entries.has(`${ORIGIN}${url}`))).toEqual([]);
+    // Une image générée nommée par la page, absente : le serveur répond la page, rien n'est gardé
+    const generated = images.filter(url => url.startsWith('/assets/generated-images/'));
+    expect(generated.length).toBeGreaterThan(0);
+    expect(generated.filter(url => entries.has(`${ORIGIN}${url}`))).toEqual([]);
+  });
+
+  test('un fichier du code introuvable : l’installation échoue (la précédente reste en place)', async () => {
+    const site = siteNetwork({ missing: ['/js/modes/QuizMode.js'] });
+    const worker = loadWorker(site.network);
+    const waits = [];
+    worker.listeners.install({ waitUntil: promise => waits.push(promise) });
+    await expect(Promise.all(waits)).rejects.toThrow();
+  });
+});
+
+describe('Service worker : hors ligne', () => {
+  test('recharger le jeu : la page du jeu, à l’adresse du site comme à index.html', async () => {
+    const { worker } = await installedOffline();
+    for (const url of ['/', '/index.html', '/?lang=en', '/index.html?v=v37']) {
+      const response = await request(worker, url, { mode: 'navigate', destination: 'document' });
+      expect(await response.text()).toBe('contenu de /index.html');
+    }
+  });
+
+  test('une page jamais gardée : offline.html', async () => {
+    const { worker } = await installedOffline();
+    const response = await request(worker, '/parents.html', { mode: 'navigate' });
+    expect(await response.text()).toBe('contenu de /offline.html');
+  });
+
+  test('en ligne, la page vient du réseau', async () => {
+    const { worker, site } = await installedOffline();
+    site.state.online = true;
+    const response = await request(worker, '/', { mode: 'navigate' });
+    expect(await response.text()).toBe('contenu de /');
+  });
+
+  test('un mode jamais ouvert : ses modules préchargés, avec ou sans ?v= de cette version', async () => {
+    const { worker } = await installedOffline();
+    const version = constant(worker, 'VERSION');
+    for (const url of [`/js/modes/QuizMode.js?v=${version}`, '/js/core/GameMode.js']) {
+      const response = await request(worker, url, { destination: 'script' });
+      expect(await response.text()).toBe(`contenu de ${url.split('?')[0]}`);
+    }
+    const style = await request(worker, `/css/arcade.css?v=${version}`, { destination: 'style' });
+    expect(await style.text()).toBe('contenu de /css/arcade.css');
+  });
+
+  test('un module d’une autre version (?v=v1) n’est pas remplacé par celui-ci', async () => {
+    const { worker } = await installedOffline();
+    const response = await request(worker, '/js/modes/QuizMode.js?v=v1', { destination: 'script' });
+    expect(response.type).toBe('error');
+  });
+
+  test('traductions jamais demandées en ligne : la copie préchargée', async () => {
+    const { worker } = await installedOffline();
+    const version = constant(worker, 'VERSION');
+    const response = await request(worker, `/assets/translations/es.json?v=v=${version}`);
+    expect(await response.text()).toBe('contenu de /assets/translations/es.json');
+  });
+
+  test('police : la copie préchargée', async () => {
+    const { worker } = await installedOffline();
+    const font = precacheList(worker, 'PRECACHE_CORE').find(url => url.endsWith('.woff2'));
+    const response = await request(worker, font, { destination: 'font' });
+    expect(await response.text()).toBe(`contenu de ${font}`);
+  });
+});
+
+describe('Service worker : sons hors ligne', () => {
+  const sound = worker => precacheList(worker, 'PRECACHE_CORE').find(url => url.endsWith('.wav'));
+  const play = (worker, url, range) =>
+    request(worker, url, { destination: 'audio', headers: range ? { Range: range } : {} });
+
+  test('servi entier, ou par plages d’octets comme le demande un lecteur audio (206)', async () => {
+    const { worker } = await installedOffline();
+    const url = sound(worker);
+    const body = `contenu de ${url}`;
+    const size = new TextEncoder().encode(body).length;
+    expect((await play(worker, url)).status).toBe(200);
+    const all = await play(worker, url, 'bytes=0-');
+    expect(all.status).toBe(206);
+    expect(all.headers.get('content-range')).toBe(`bytes 0-${size - 1}/${size}`);
+    expect(await all.text()).toBe(body);
+    const part = await play(worker, url, 'bytes=2-5');
+    expect(await part.text()).toBe(body.slice(2, 6));
+    expect(part.headers.get('content-length')).toBe('4');
+    expect(await (await play(worker, url, 'bytes=-3')).text()).toBe(body.slice(-3));
+  });
+
+  test('plage hors du fichier : 416 ; plage illisible : le fichier entier', async () => {
+    const { worker } = await installedOffline();
+    const url = sound(worker);
+    expect((await play(worker, url, 'bytes=99999-')).status).toBe(416);
+    const several = await play(worker, url, 'bytes=0-1, 4-5');
+    expect(several.status).toBe(200);
+    expect(await several.text()).toBe(`contenu de ${url}`);
+  });
+});
+
+describe('Service worker : images hors ligne', () => {
+  test('un original jamais gardé : la plus grande variante gardée du même sprite', async () => {
+    const { worker, originals } = await installedOffline();
+    const [original] = originals;
+    const response = await request(worker, `${original}?v=v37`, { destination: 'image' });
+    expect(await response.text()).toBe(`contenu de ${variant(original, 128)}`);
+  });
+
+  test('une taille jamais gardée : une autre taille du même sprite', async () => {
+    const { worker, originals } = await installedOffline();
+    const [original] = originals;
+    const response = await request(worker, variant(original, 256), { destination: 'image' });
+    expect(await response.text()).toBe(`contenu de ${variant(original, 128)}`);
+  });
+
+  test('un fond tiré au hasard, jamais gardé : un fond gardé du même avatar', async () => {
+    const { worker } = await installedOffline();
+    const kept = precacheList(worker, 'PRECACHE_CORE').find(url => url.includes('background_fox_'));
+    const response = await request(worker, '/img/background_fox_013.png', { destination: 'image' });
+    expect(await response.text()).toBe(`contenu de ${kept}`);
+  });
+
+  test('une image sans copie ni famille gardée : échec, jamais une autre image', async () => {
+    const { worker } = await installedOffline();
+    for (const url of ['/img/background_zebre_002.webp', '/assets/social/inconnue.webp']) {
+      expect((await request(worker, url, { destination: 'image' })).type).toBe('error');
+    }
   });
 });
