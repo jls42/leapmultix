@@ -18,7 +18,7 @@ export function escapeHtml(text) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/\u0027/g, '&#39;');
 }
 
 /**
@@ -77,19 +77,55 @@ export function setSafeFeedback(element, message, type = 'info') {
   setSafeMessage(element, message, className);
 }
 
-/**
- * Valide et nettoie les noms d'utilisateur
- * @param {string} username - Nom d'utilisateur à valider
- * @returns {string} Nom nettoyé
- */
-export function sanitizeUsername(username) {
-  if (typeof username !== 'string') return '';
+/** Plus long prénom accepté, en caractères */
+export const USERNAME_MAX_LENGTH = 50;
 
-  // Autoriser seulement lettres, chiffres, espaces et quelques caractères
-  return username
-    .replace(/[^a-zA-Z0-9À-ÿ\s._-]/g, '')
-    .trim()
-    .slice(0, 50);
+/**
+ * Un caractère de prénom : lettre de n'importe quelle écriture ou accent qui s'y pose,
+ * apostrophe droite ou typographique, espace, trait d'union, point médian du catalan
+ * (« Gal·la ») et antiliant U+200C (persan, écritures de l'Inde)
+ */
+const USERNAME_CHAR = /^[\p{L}\p{M}\u0027’ ·\u200C-]$/u;
+
+/**
+ * Les signes tels qu'on les voit (graphèmes) : un émoji composé reste un seul signe
+ * @param {string} text
+ * @returns {string[]}
+ */
+function visibleSigns(text) {
+  if (typeof Intl?.Segmenter !== 'function') return Array.from(text);
+  const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+  return Array.from(segmenter.segment(text), part => part.segment);
+}
+
+/** Signe accepté si chacun de ses caractères l'est (lettre et ses accents) */
+const isNameSign = sign => Array.from(sign).every(char => USERNAME_CHAR.test(char));
+
+/**
+ * Prénom tel qu'il est rangé : forme Unicode composée (un « é » tapé en deux temps est le
+ * même que l'autre), une seule espace entre les mots, aucune autour
+ * @param {*} username
+ * @returns {string}
+ */
+export function normalizeUsername(username) {
+  if (typeof username !== 'string') return '';
+  return username.normalize('NFC').replace(/\s+/gu, ' ').trim();
+}
+
+/**
+ * Vérifie un prénom avant de créer le joueur. Rien n'est retiré en silence : un signe refusé
+ * est cité, pour un message exact.
+ * @param {*} username - Saisie brute
+ * @returns {{name: string, problem: null|'empty'|'chars'|'long', chars: string}} Le prénom
+ *   rangé, ce qui l'empêche, et les signes refusés (séparés par une espace)
+ */
+export function checkUsername(username) {
+  const name = normalizeUsername(username);
+  if (!name) return { name, problem: 'empty', chars: '' };
+  const refused = [...new Set(visibleSigns(name).filter(sign => !isNameSign(sign)))];
+  if (refused.length > 0) return { name, problem: 'chars', chars: refused.join(' ') };
+  if (Array.from(name).length > USERNAME_MAX_LENGTH) return { name, problem: 'long', chars: '' };
+  return { name, problem: null, chars: '' };
 }
 
 /**

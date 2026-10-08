@@ -11,7 +11,7 @@ import {
 } from './utils-es6.js';
 import { getAvatarHeadSrc } from './main-helpers.js';
 import Storage from './core/storage.js';
-import { sanitizeUsername } from './security-utils.js';
+import { checkUsername, normalizeUsername, USERNAME_MAX_LENGTH } from './security-utils.js';
 import { VideoManager } from './VideoManager.js';
 import { AudioManager } from './core/audio.js';
 import { createVirtualKeyboard } from './virtual-keyboard.js';
@@ -372,8 +372,10 @@ export const UserManager = {
    */
   selectUser(name) {
     const raw = typeof name === 'string' ? name : '';
-    const safe = sanitizeUsername(raw);
-    const key = Object.prototype.hasOwnProperty.call(this._players, raw) ? raw : safe;
+    // Clé exacte d'abord : les prénoms rangés par l'ancienne règle (« Léa B. ») restent valables
+    const key = Object.prototype.hasOwnProperty.call(this._players, raw)
+      ? raw
+      : normalizeUsername(raw);
 
     if (!Object.prototype.hasOwnProperty.call(this._players, key)) {
       console.error(`Utilisateur "${name}" non trouvé`);
@@ -417,41 +419,26 @@ export const UserManager = {
    * @returns {boolean} Succès de la création
    */
   createUser(name, avatar = 'fox') {
-    if (!name || typeof name !== 'string') {
-      console.error("Nom d'utilisateur invalide");
+    // Le prénom est gardé tel qu'il est écrit, ou refusé : jamais modifié en silence
+    const { name: key, problem } = checkUsername(name);
+    if (problem) {
+      console.error(`Nom d'utilisateur refusé (${problem})`);
       return false;
     }
 
-    const trimmedName = name.trim();
-    const sanitized = sanitizeUsername(trimmedName);
-    /**
-     * Fonction if
-     * @param {*} !trimmedName - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (!trimmedName) {
-      console.error("Le nom d'utilisateur ne peut pas être vide");
-      return false;
-    }
-
-    /**
-     * Fonction if
-     * @param {*} this._players[trimmedName] - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (Object.prototype.hasOwnProperty.call(this._players, sanitized)) {
+    if (Object.prototype.hasOwnProperty.call(this._players, key)) {
       console.error('Un utilisateur avec ce nom existe déjà');
       return false;
     }
 
     // Créer le nouvel utilisateur
-    Object.defineProperty(this._players, sanitized, {
+    Object.defineProperty(this._players, key, {
       value: {
         bestScore: 0,
         wrongAnswers: {},
         progressHistory: [],
         avatar: avatar,
-        nickname: sanitized,
+        nickname: key,
         theme: 'forest',
         colorTheme: 'default',
         unlockedAvatars: [avatar],
@@ -482,7 +469,7 @@ export const UserManager = {
     ) {
       // Callback pour sélectionner l'utilisateur après la vidéo
       VideoManager.playCharacterIntro(avatar, () => {
-        this.selectUser(sanitized);
+        this.selectUser(key);
       });
     }
 
@@ -495,8 +482,9 @@ export const UserManager = {
    * @returns {boolean} Succès de la suppression
    */
   deleteUser(name) {
-    const safe = sanitizeUsername(typeof name === 'string' ? name : '');
-    const key = Object.prototype.hasOwnProperty.call(this._players, name) ? name : safe;
+    const key = Object.prototype.hasOwnProperty.call(this._players, name)
+      ? name
+      : normalizeUsername(name);
     if (!Object.prototype.hasOwnProperty.call(this._players, key)) {
       console.error(`Utilisateur "${name}" non trouvé`);
       return false;
@@ -792,23 +780,18 @@ export const UserManager = {
    * @private
    */
   _handleCreateUser(input, keyboardToggle) {
-    const newName = input.value.trim();
+    const check = checkUsername(input.value);
     const selectedRadio = document.querySelector('.creation-avatar-selector .avatar-radio:checked');
     const selectedAvatar = selectedRadio ? selectedRadio.value : 'fox';
 
-    // Un prénom fait seulement de caractères refusés deviendrait vide une fois nettoyé
-    if (!newName || !sanitizeUsername(newName)) {
-      this._showCreationMessage(translateOr('enter_valid_name_alert', 'Écris d’abord ton prénom.'));
+    const problem = check.problem || this._nameTaken(check.name);
+    if (problem) {
+      this._showCreationMessage(this._creationProblemMessage(problem, check.chars));
       return;
     }
 
-    if (!this.createUser(newName, selectedAvatar)) {
-      this._showCreationMessage(
-        translateOr(
-          'user_already_exists_alert',
-          'Ce joueur existe déjà. Touche son prénom plus haut pour jouer.'
-        )
-      );
+    if (!this.createUser(check.name, selectedAvatar)) {
+      this._showCreationMessage(this._creationProblemMessage('exists', ''));
       return;
     }
 
@@ -827,7 +810,48 @@ export const UserManager = {
     // 🎬 Ne sélectionner l'utilisateur que si aucune vidéo ne va être jouée
     // (createUser gère déjà la sélection via le callback vidéo)
     if (!VideoManager?.CHARACTER_VIDEOS?.has(selectedAvatar)) {
-      this.selectUser(newName);
+      this.selectUser(check.name);
+    }
+  },
+
+  /**
+   * Prénom déjà pris par un joueur de la liste
+   * @param {string} name - Prénom rangé (checkUsername)
+   * @returns {'exists'|null}
+   * @private
+   */
+  _nameTaken(name) {
+    return Object.prototype.hasOwnProperty.call(this._players, name) ? 'exists' : null;
+  },
+
+  /**
+   * Message sous le champ « Ton prénom » : ce qui empêche de créer ce joueur
+   * @param {string} problem - 'empty', 'chars', 'long' ou 'exists'
+   * @param {string} chars - Signes refusés, cités tels quels
+   * @returns {string}
+   * @private
+   */
+  _creationProblemMessage(problem, chars) {
+    switch (problem) {
+      case 'chars':
+        return translateOr(
+          'name_bad_chars_alert',
+          `Ton prénom ne peut pas contenir «\u00a0${chars}\u00a0».`,
+          { chars }
+        );
+      case 'long':
+        return translateOr(
+          'name_too_long_alert',
+          `Ton prénom est trop long\u00a0: ${USERNAME_MAX_LENGTH}\u00a0caractères au plus.`,
+          { max: USERNAME_MAX_LENGTH }
+        );
+      case 'exists':
+        return translateOr(
+          'user_already_exists_alert',
+          'Ce joueur existe déjà. Touche son prénom plus haut pour jouer.'
+        );
+      default:
+        return translateOr('enter_valid_name_alert', 'Écris d’abord ton prénom.');
     }
   },
 

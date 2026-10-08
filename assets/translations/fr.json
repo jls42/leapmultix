@@ -249,6 +249,8 @@
   "unicorn": "Licorne",
   "unlocked_achievements_title": "Succès débloqués",
   "user_already_exists_alert": "Ce joueur existe déjà. Touche son prénom plus haut pour jouer.",
+  "name_bad_chars_alert": "Ton prénom ne peut pas contenir « {chars} ». Garde les lettres, l’espace, l’apostrophe et le trait d’union.",
+  "name_too_long_alert": "Ton prénom est trop long : {max, plural, one {# caractère} other {# caractères}} au plus.",
   "user_selection_desc": "Choisis ton joueur ou crée le tien.",
   "user_selection_title": "Qui joue ?",
   "very_good": "Très bien !",

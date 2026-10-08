@@ -259,8 +259,9 @@ describe('UserManager : surnom partagé', () => {
     jest.spyOn(VideoManager, 'playCharacterIntro').mockImplementation(() => {});
     UserManager._players = {};
     UserManager.createUser('Zoé', 'panda');
-    UserManager.createUser('Zoé2', 'fox');
-    UserManager._players['Zoé2'].nickname = 'Zoé';
+    // Un chiffre n'entre plus dans un prénom : l'homonyme s'appelle « Zoé Martin »
+    UserManager.createUser('Zoé Martin', 'fox');
+    UserManager._players['Zoé Martin'].nickname = 'Zoé';
     localStorage.setItem('arcadeScores_Zoé', '[300]');
     UserManager.deleteUser('Zoé');
     expect(localStorage.getItem('arcadeScores_Zoé')).toBe('[300]');
