@@ -216,6 +216,17 @@ describe('Modale vidéo de l’avatar', () => {
     expect(document.getElementById('character-intro-modal').style.display).toBe('none');
   });
 
+  test('fenêtre fermée : la source encore vide de la page qui s’ouvre ne déclenche rien', () => {
+    withListeners();
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    document.getElementById('video-source').dispatchEvent(new Event('error'));
+    expect(error).not.toHaveBeenCalled();
+    expect(document.getElementById('character-intro-modal').classList.contains('is-closing')).toBe(
+      false
+    );
+    error.mockRestore();
+  });
+
   test('« Revoir ma vidéo » (demande explicite) démarre tout de suite, même avec moins d’animations', () => {
     withListeners();
     setReducedMotion(true);

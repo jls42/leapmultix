@@ -725,6 +725,8 @@ export const VideoManager = {
    * Erreur de lecture vidéo
    */
   onVideoError() {
+    // Fenêtre fermée : la source encore vide de la page qui s'ouvre, rien à faire
+    if (!this.isOpen()) return;
     console.error('❌ Erreur de lecture vidéo');
 
     if (this._sourceQueue.length) {
