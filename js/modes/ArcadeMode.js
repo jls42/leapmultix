@@ -13,6 +13,11 @@ import { GameMode } from '../core/GameMode.js';
 import { getTranslation } from '../utils-es6.js';
 import { showArcadeMessage } from '../arcade-message.js';
 import { gameState } from '../game.js';
+import {
+  hideLoadErrorNotice,
+  isLoadFailure,
+  showLoadErrorNotice,
+} from '../components/loadErrorNotice.js';
 
 /* Icônes des lignes « Commandes » : des SVG au trait (couleur du texte), décoratifs,
    le mot « Clavier », « Souris » ou « Tactile » étant écrit juste après. */
@@ -115,13 +120,18 @@ function launchArcadeGame(gameId) {
     .charger()
     .then(mod => {
       const demarrer = mod[loader.demarrer];
-      if (typeof demarrer === 'function') return demarrer();
+      if (typeof demarrer === 'function') {
+        hideLoadErrorNotice();
+        return demarrer();
+      }
       console.error(`❌ ${loader.demarrer} non disponible pour ${gameId}`);
       showArcadeMessage('arcade_load_error', 'warning', 1800);
     })
     .catch(err => {
       console.error(`❌ Import du jeu ${gameId} échoué :`, err);
       showArcadeMessage('arcade_load_error', 'warning', 1800);
+      // Hors ligne, jeu jamais gardé : un avis qui reste dit pourquoi et quoi faire
+      if (isLoadFailure(err)) showLoadErrorNotice(err);
     });
 }
 
