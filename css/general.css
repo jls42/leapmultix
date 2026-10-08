@@ -175,6 +175,34 @@ a {
   outline-offset: 3px !important;
 }
 
+/* === LIEN D'ÉVITEMENT : sur l'accueil seulement, premier arrêt de tabulation, visible
+   quand il a le focus. Il mène au titre des modes, sans repasser par la barre du haut. === */
+.skip-link {
+  display: none;
+}
+
+body:has(#slide1.active-slide) .skip-link {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  z-index: var(--z-tooltip);
+  display: block;
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-on-action);
+  text-decoration: none;
+  background: var(--color-action);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transform: translateY(calc(-100% - 2 * var(--space-2)));
+}
+
+body:has(#slide1.active-slide) .skip-link:focus {
+  transform: none;
+}
+
 /* === SLIDES === */
 .slide {
   display: none;

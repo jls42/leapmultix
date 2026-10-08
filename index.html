@@ -356,6 +356,10 @@
 
   <body>
     <main id="main-content" role="main">
+      <!-- Lien d'évitement : sur l'accueil, le premier arrêt de tabulation mène aux modes -->
+      <a class="skip-link" href="#home-modes-title" data-translate="skip_to_modes"
+        >Aller aux modes de jeu</a
+      >
       <!-- Contrôles globaux et barre d'info retirés d'ici -->
 
       <!-- SLIDE 0 : « Qui joue ? » (choisir son joueur ou en créer un) -->
@@ -556,7 +560,9 @@
           <div id="operation-selector-container"></div>
 
           <div class="game-modes">
-            <h2 data-translate="choose_mode">Choisis ton mode de jeu</h2>
+            <h2 id="home-modes-title" tabindex="-1" data-translate="choose_mode">
+              Choisis ton mode de jeu
+            </h2>
             <div class="mode-buttons">
               <button type="button" class="mode-btn" data-mode="discovery">
                 <span class="mode-icon">
