@@ -400,14 +400,6 @@ body:has(#slide1.active-slide) .skip-link:focus {
   border-color: var(--color-action);
 }
 
-/* Le cadenas expliqué en clair sous la grille : une infobulle ne se voit pas au doigt */
-.avatar-locked-hint {
-  max-inline-size: 36rem;
-  margin: var(--space-2) auto 0;
-  color: var(--color-ink-muted);
-  text-wrap: pretty;
-}
-
 .avatar-btn:active {
   transform: translateY(var(--key-edge));
   box-shadow: 0 0 0 var(--color-border-strong);
@@ -434,28 +426,6 @@ body:has(#slide1.active-slide) .skip-link:focus {
 .avatar-btn:has(.avatar-radio:focus-visible) {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
-}
-
-/* Verrouillé : posé à plat (pas de tranche, on ne peut pas l'enfoncer), nom à l'encre
-   atténuée (toujours lisible : c'est lui qui dit quel personnage on débloquera),
-   seul le visage est estompé. Le cadenas est un élément du bouton (.lock-icon). */
-.avatar-btn.locked {
-  position: relative;
-  overflow: hidden;
-  color: var(--color-ink-muted);
-  background: var(--color-surface-sunken);
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-.avatar-btn.locked img {
-  opacity: 0.6;
-  filter: grayscale(1);
-}
-
-.avatar-btn.locked:hover {
-  border-color: var(--color-border);
-  transform: none;
 }
 
 /* === LIENS ET PAGES D'INFORMATION (À propos, mentions légales, confidentialité) === */

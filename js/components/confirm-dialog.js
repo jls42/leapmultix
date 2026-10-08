@@ -36,11 +36,12 @@ function createAnswerButton(answer, label, className) {
 
 /**
  * La fenêtre et son voile. Le bouton sans risque vient d'abord, en touche principale ; la
- * confirmation, destructive, reste secondaire. Sans confirmLabel, il reste seul : la
- * fenêtre informe.
+ * confirmation, destructive, reste secondaire. Une action qui ne détruit rien (un achat)
+ * passe en touche principale (emphasis « confirm »), le refus gardant le focus. Sans
+ * confirmLabel, il reste seul : la fenêtre informe.
  * @returns {{layer: HTMLElement, buttons: HTMLButtonElement[]}}
  */
-function buildDialog({ title, message, confirmLabel, cancelLabel }) {
+function buildDialog({ title, message, confirmLabel, cancelLabel, emphasis }) {
   const layer = document.createElement('div');
   layer.className = 'confirm-dialog-layer';
   const scrim = document.createElement('div');
@@ -63,9 +64,13 @@ function buildDialog({ title, message, confirmLabel, cancelLabel }) {
     box.setAttribute('aria-describedby', MESSAGE_ID);
     box.appendChild(text);
   }
-  const buttons = [createAnswerButton('cancel', cancelLabel, 'btn')];
+  const actionFirst = emphasis === 'confirm';
+  const buttons = [
+    createAnswerButton('cancel', cancelLabel, actionFirst ? 'btn btn-secondary' : 'btn'),
+  ];
   if (confirmLabel) {
-    buttons.push(createAnswerButton('confirm', confirmLabel, 'btn btn-secondary btn-danger'));
+    const confirmClass = actionFirst ? 'btn' : 'btn btn-secondary btn-danger';
+    buttons.push(createAnswerButton('confirm', confirmLabel, confirmClass));
   }
   const actions = document.createElement('div');
   actions.className = 'confirm-dialog-actions';
@@ -171,11 +176,20 @@ function close(confirmed) {
  * @param {string} options.cancelLabel - Bouton sans risque, qui a le focus (« Continuer… »)
  * @param {HTMLElement|null} [options.returnFocusTo] - Où rendre le focus (par défaut,
  *   l'élément qui l'avait à l'ouverture)
+ * @param {'cancel'|'confirm'} [options.emphasis] - Bouton principal : le refus (par défaut)
+ *   ou, pour une action qui ne détruit rien, la confirmation
  * @returns {Promise<boolean>} true si confirmé
  */
-export function confirmDialog({ title, message = '', confirmLabel, cancelLabel, returnFocusTo }) {
+export function confirmDialog({
+  title,
+  message = '',
+  confirmLabel,
+  cancelLabel,
+  returnFocusTo,
+  emphasis = 'cancel',
+}) {
   if (current) return current.answer;
-  const { layer, buttons } = buildDialog({ title, message, confirmLabel, cancelLabel });
+  const { layer, buttons } = buildDialog({ title, message, confirmLabel, cancelLabel, emphasis });
   const dialog = { layer, buttons, origin: returnFocusTo ?? document.activeElement, inerted: [] };
   dialog.answer = new Promise(resolve => {
     dialog.resolve = resolve;
