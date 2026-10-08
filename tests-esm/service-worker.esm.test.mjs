@@ -591,3 +591,14 @@ describe('Service worker : images hors ligne', () => {
     }
   });
 });
+
+describe('Service worker : version', () => {
+  test('répond sa version à la page qui la demande (rechargement après mise à jour)', () => {
+    const worker = loadWorker(() => new FakeResponse(''));
+    const replies = [];
+    const port = { postMessage: message => replies.push({ ...message }) };
+    worker.listeners.message?.({ data: { type: 'version' }, ports: [port] });
+    worker.listeners.message?.({ data: { type: 'autre' }, ports: [port] });
+    expect(replies).toEqual([{ version: constant(worker, 'VERSION') }]);
+  });
+});

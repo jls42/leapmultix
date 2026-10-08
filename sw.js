@@ -698,6 +698,12 @@ self.addEventListener('activate', event => {
   );
 });
 
+// La page demande la version de ce service worker (js/cache-updater.js) : elle ne se
+// recharge que si ce n'est pas la sienne
+self.addEventListener('message', event => {
+  if (event.data?.type === 'version') event.ports?.[0]?.postMessage({ version: VERSION });
+});
+
 /** Un clip ne se garde que s'il est bien un MP3 du site, reçu en entier */
 function isStorableClip(response) {
   return (
