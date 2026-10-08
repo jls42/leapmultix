@@ -61,6 +61,8 @@ async function launchGame(page, game) {
 }
 
 async function backToArcadeMenu(page) {
+  // « Abandonner » demande confirmation (règle de sortie, js/game-exit.js)
+  page.once('dialog', dialog => dialog.accept());
   await pressButton(page, '#game [id$="abandon-btn"]');
   await pressButton(page, '#arcade-back-btn');
 }
