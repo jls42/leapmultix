@@ -14,6 +14,7 @@
  */
 
 import { GameMode } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
 import { getAdventureLevelsByOperator } from '../core/adventure-data.js';
 import { createSafeImage, createSafeElement } from '../security-utils.js';
 import {
@@ -46,6 +47,7 @@ import { appendProgressHistory } from '../core/mode-stats.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { chance, randomInt } from '../core/random.js';
+import { accessibilityManager } from '../accessibility.js';
 
 /** Nom des opérations dans les clés de traduction propres à une opération */
 const OPERATION_NAMES = { '+': 'addition', '−': 'subtraction', '÷': 'division' };
@@ -172,18 +174,26 @@ export class AdventureMode extends GameMode {
                             </div>
                         </div>
                     </div>
-                    <h2 data-translate="${titleKey}">${getTranslation(titleKey)}</h2>
+                    <h1 class="screen-title" data-translate="${titleKey}">${getTranslation(titleKey)}</h1>
                     <p class="adventure-story-intro" data-translate="${introKey}">${getTranslation(introKey)}</p>
-                    <h3 data-translate="adventure_choose_destination">${getTranslation('adventure_choose_destination')}</h3>
+                    <h2 class="section-title" data-translate="adventure_choose_destination">${getTranslation('adventure_choose_destination')}</h2>
                     <div class="adventure-levels" id="adventure-levels"></div>
                 </div>
             `;
-    } else {
-      // Phase de jeu : nom du niveau, scène de progression, puis « Abandonner »
-      // (replacé après la zone de réponse dans initializeUI)
-      return `
+    }
+    return this.getLevelHTML();
+  }
+
+  /**
+   * Phase de jeu : nom et but du niveau, scène de progression, puis « Abandonner »
+   * (replacé après la zone de réponse dans initializeUI)
+   * @returns {string}
+   */
+  getLevelHTML() {
+    return `
                 <div class="adventure-level-header">
-                    <h3 data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h3>
+                    <h2 class="section-title" data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h2>
+                    <p class="adventure-level-goal" data-translate="${this.currentLevel.descKey}">${getTranslation(this.currentLevel.descKey)}</p>
                 </div>
 
                 <div class="adventure-scene" role="img" aria-label="${getTranslation('adventure_scene_label')}" data-translate-aria-label="adventure_scene_label">
@@ -198,7 +208,6 @@ export class AdventureMode extends GameMode {
                     <button id="adventure-abandon" type="button" class="btn btn-quiet btn-danger" data-translate="abandon_adventure_button">${getTranslation('abandon_adventure_button')}</button>
                 </div>
             `;
-    }
   }
 
   /**
@@ -319,7 +328,7 @@ export class AdventureMode extends GameMode {
   setupGameControls() {
     const abandonBtn = document.getElementById('adventure-abandon');
     if (abandonBtn) {
-      abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+      abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
     }
   }
 
@@ -357,8 +366,9 @@ export class AdventureMode extends GameMode {
     // Revenir en haut (la barre du haut reste visible) sans animation imposée
     scrollToScreenTop(this.gameScreen);
 
-    // Afficher le dialogue de début de niveau (non bloquant)
-    showMessage(getTranslation(this.currentLevel.descKey));
+    // Le but du niveau reste affiché sous son nom (un message de 3 s cachait « Abandonner »
+    // sur téléphone) ; les lecteurs d'écran l'entendent une fois, comme avant
+    accessibilityManager.announce(getTranslation(this.currentLevel.descKey));
 
     // Marquer actif (resetState() l'a mis à false) puis générer la première question immédiatement
     this.state.isActive = true;
@@ -366,18 +376,21 @@ export class AdventureMode extends GameMode {
   }
 
   /**
-   * Demander confirmation d'abandon
+   * Demander confirmation d'abandon (game-exit.js) ; le niveau a pu finir pendant la question
+   * @returns {Promise<void>}
    */
-  confirmAbandon() {
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_adventure'))) {
-      this.returnToLevelSelection().catch(error => this.handleError(error));
-    }
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
+    await this.returnToLevelSelection().catch(error => this.handleError(error));
+  }
+
+  /** Partie en cours (game-exit.js) : un niveau, de sa première question à sa dernière réponse */
+  isGameInProgress() {
+    return this.state.isActive && this.phase === 'playing' && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_adventure');
   }
 
   /**
@@ -772,7 +785,7 @@ export class AdventureMode extends GameMode {
     }
 
     const title = createSafeElement(
-      'h2',
+      'h1',
       getTranslation(success ? 'level_completed' : 'level_failed'),
       { id: 'adventure-results-title' }
     );

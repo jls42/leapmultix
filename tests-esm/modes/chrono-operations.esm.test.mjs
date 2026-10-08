@@ -8,6 +8,7 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { readFileSync } from 'node:fs';
 import { createSlidesMock } from '../helpers/mode-test-helpers.mjs';
+import { answerDialog, closeOpenDialog } from '../helpers/confirm-dialog-helpers.mjs';
 import {
   createLazyLoaderMock,
   createGameMock,
@@ -75,6 +76,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  closeOpenDialog();
   stopChronoMode();
   jest.useRealTimers();
   jest.restoreAllMocks();
@@ -207,9 +209,11 @@ describe('Chrono hors multiplication : ce qui s’enregistre', () => {
     persisted.preferredOperator = '+';
     const chrono = await startChrono();
     await answer(chrono, false);
-    jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
-    chrono.confirmAbandon();
+    const abandon = chrono.confirmAbandon();
+    await answerDialog(true);
+    await abandon;
     await flush(2000);
+    expect(chrono.state.isActive).toBe(false);
     expect(persisted.chronoStatsByOperator?.['+']?.buckets ?? []).toEqual([]);
     expect(persisted.chronoStatsByOperator?.['+']?.basket ?? []).toEqual([]);
   });
@@ -315,9 +319,11 @@ describe('Chrono : ce que voit le tableau de bord', () => {
     const chrono = await startChrono();
     await answer(chrono);
     await answer(chrono, false);
-    jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
-    chrono.confirmAbandon();
+    const abandon = chrono.confirmAbandon();
+    await answerDialog(true);
+    await abandon;
     await flush(2000);
+    expect(chrono.state.isActive).toBe(false);
     expect(persisted.modeStats.modes.chrono['−']).toEqual({ games: 1, questions: 2, correct: 1 });
   });
 

@@ -24,6 +24,7 @@ import { recordOperationResult } from './operation-stats.js';
 import { recordModeAnswer, ANSWER_MODES } from './mode-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
+import { setActiveMode, clearActiveMode } from '../game-exit.js';
 import { cancelSpeech, preloadSpeech, whenSpeechEnds } from '../speech.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
@@ -551,6 +552,8 @@ export class GameMode {
       // couperait l'annonce du nouveau s'il arrivait après elle
       await goToSlide(4);
       gameState.gameMode = this.modeName;
+      // Règle de sortie (game-exit.js) : ce mode dit si une partie est en cours
+      setActiveMode(this);
 
       // Réinitialiser l'état
       this.resetState();
@@ -582,6 +585,7 @@ export class GameMode {
    */
   stop() {
     this.state.isActive = false;
+    clearActiveMode(this);
 
     // Arrêter la voix et les sons en cours
     cancelSpeech();
@@ -696,7 +700,9 @@ export class GameMode {
     container.setAttribute('aria-label', getTranslation(titleKey));
     container.dataset.translateAriaLabel = titleKey;
 
-    const title = document.createElement('h2');
+    // Titre de niveau 1 de l'écran de jeu (un par écran), à la taille d'un titre de carte
+    const title = document.createElement('h1');
+    title.className = 'screen-title';
     title.dataset.translate = titleKey;
     title.textContent = getTranslation(titleKey);
     container.appendChild(title);
@@ -922,6 +928,11 @@ export class GameMode {
       }
       button.dataset.value = option.value;
       button.textContent = option.display;
+      // Lecteur d'écran : la réponse qui reçoit le focus est lue avec sa question, sans
+      // annonce de plus par-dessus la voix du jeu
+      if (this.questionElement?.id) {
+        button.setAttribute('aria-describedby', this.questionElement.id);
+      }
       button.onclick = () => this.handleAnswer(option.value);
 
       // Ajouter support clavier

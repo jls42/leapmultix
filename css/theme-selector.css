@@ -24,7 +24,7 @@
 }
 
 /* Titre en tête de carte, bouton « Terminer » en bas de carte */
-#slide6 .content-card > h2 {
+#slide6 .content-card > h1 {
   margin-bottom: var(--space-4);
 }
 

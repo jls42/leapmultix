@@ -250,11 +250,11 @@ export class ArcadeMode extends GameMode {
                          class="arcade-logo" onerror="this.src='assets/images/arcade/logo_mode_arcade.png';this.onerror=null;">
                 </div>
 
-                <h3 class="game-title">
+                <h2 class="game-title">
                     <button type="button" class="arcade-game-toggle" data-action="arcade-toggle"
                             aria-expanded="false" aria-controls="${this.getSettingsId(game.id)}"
                             aria-describedby="${this.getCardId(game.id)}-desc">${this.getGameTitle(game.id)}</button>
-                </h3>
+                </h2>
 
                 <p class="game-desc" id="${this.getCardId(game.id)}-desc">
                     ${this.getGameDescription(game.id)}

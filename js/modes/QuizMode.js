@@ -8,6 +8,7 @@
  */
 
 import { GameMode, GOOD_SOUND_MS } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
 import { setGameMode } from '../mode-orchestrator.js';
 import { getTranslation, getWeakTables, showFeedback, playSound, speak } from '../utils-es6.js';
 import { setSafeFeedback } from '../security-utils.js';
@@ -105,24 +106,32 @@ export class QuizMode extends GameMode {
   setupGameControls() {
     const abandonBtn = document.getElementById('quiz-abandon');
     if (abandonBtn) {
-      abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+      abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
     }
   }
 
   /**
-   * Demander confirmation d'abandon
+   * Demander confirmation d'abandon (game-exit.js) ; la partie a pu finir pendant la question
+   * @returns {Promise<void>}
    */
-  confirmAbandon() {
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_quiz'))) {
-      this.hideContinueButton();
-      this.finish();
-    }
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
+    this.hideContinueButton();
+    this.finish();
+  }
+
+  /** Partie en cours (game-exit.js) : de la première question à l'enregistrement du bilan */
+  isGameInProgress() {
+    return this.state.isActive && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_quiz');
+  }
+
+  /** Quitté par la barre du haut : le bilan s'enregistre comme pour « Abandonner » (finish) */
+  recordAbandon() {
+    this.saveResultsOnce();
   }
 
   /**

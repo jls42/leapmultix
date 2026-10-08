@@ -80,6 +80,12 @@
     0 0 0 var(--color-action-edge);
 }
 
+/* Menu ouvert : la barre passe au-dessus du bandeau collant d'un jeu d'Arcade (même couche,
+   venu après elle), qui couvrait le haut du menu sur téléphone et en volait les touchers */
+.top-bar:has(.top-bar-nav.is-open) {
+  z-index: var(--z-overlay);
+}
+
 /* --- Langue : trois touches texte groupées, la langue active est pleine --- */
 .language-selector {
   display: inline-flex;
@@ -89,6 +95,12 @@
   background-color: var(--color-surface-sunken);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
+}
+
+/* Pendant une partie (son « Abandonner » est affiché), la langue ne change pas : le choix
+   revient avec l'écran suivant. Il ne s'atteint plus par erreur, ni au clavier ni au doigt. */
+.slide:has(.game-quit, .arcade-game-ui) .top-bar .language-selector {
+  display: none;
 }
 
 .lang-btn {

@@ -437,6 +437,7 @@ leur empreinte.
 **Accessibility and Input:**
 
 - `accessibility.js` - Accessibility features
+- `game-exit.js` - Single exit rule during a game: Escape, « Abandonner » and the top-bar screens (Home, About, Dashboard, Customization, Change player) ask the mode's own confirmation; confirmed, the game is recorded as an abandon, then the screen opens. Outside a game, nothing changes
 - `speech.js` - Single speech queue (see `docs/voix-enregistree.md`): `speak(text, {priority, queue})`,
   `cancelSpeech()`, pluggable engine (`setSpeechEngine`); never call `speechSynthesis` directly
 

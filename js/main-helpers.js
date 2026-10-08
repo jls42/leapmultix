@@ -41,6 +41,9 @@ export function getAvatarHeadSrc(avatarId) {
   return `assets/images/arcade/${normalizeAvatarId(avatarId)}_head_avatar_128x128.png`;
 }
 
+/** Explication visible du cadenas, sous la grille de la personnalisation */
+const LOCKED_HINT_ID = 'avatar-locked-hint';
+
 // Cadenas des avatars verrouillés : icône partagée (components/icons.js), pas d'émoji.
 // Le conteneur .lock-icon est celui que la personnalisation sait déjà décorer.
 function createLockIcon() {
@@ -77,9 +80,12 @@ export function renderAvatarSelector(target) {
   const lockTipRaw = getTranslation('avatar_locked_tooltip');
   const lockTip = isMissingTranslation(lockTipRaw) ? 'Avatar verrouillé' : lockTipRaw;
 
+  // L'avatar porté n'est jamais verrouillé : un profil d'avant peut l'avoir hors de la liste
+  const isLocked = avatarName => avatarName !== current && !unlocked.includes(avatarName);
+
   while (avatarSelector.firstChild) avatarSelector.removeChild(avatarSelector.firstChild);
   AVATAR_LIST.forEach(avatarName => {
-    const isUnlocked = unlocked.includes(avatarName);
+    const isUnlocked = !isLocked(avatarName);
     // Un <label> qui habille un bouton radio natif : le navigateur gère le clavier
     // (flèches, Espace), l'état coché et l'annonce « option 2 sur 5 »
     const btn = document.createElement('label');
@@ -113,9 +119,21 @@ export function renderAvatarSelector(target) {
       btn.appendChild(createLockIcon());
       btn.title = lockTip;
       btn.dataset.translateTitle = 'avatar_locked_tooltip';
+      radio.setAttribute('aria-describedby', LOCKED_HINT_ID);
     }
     avatarSelector.appendChild(btn);
   });
+  showLockedHint(AVATAR_LIST.some(isLocked));
+}
+
+/**
+ * Ligne visible sous la grille (index.html) : elle dit ce que montre le cadenas, qu'une
+ * infobulle ne montrait pas au doigt. Masquée quand tout est débloqué.
+ * @param {boolean} anyLocked
+ */
+function showLockedHint(anyLocked) {
+  const hint = document.getElementById(LOCKED_HINT_ID);
+  if (hint) hint.hidden = !anyLocked;
 }
 
 /**

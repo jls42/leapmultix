@@ -109,7 +109,7 @@ describe('Écran de fin d’arcade', () => {
 
   test('les libellés passent par les traductions (plus de français codé en dur)', () => {
     arcade.showArcadeGameOver(0);
-    expect(document.querySelector('.arcade-gameover h2').textContent).toBe('game_over');
+    expect(document.querySelector('.arcade-gameover h1').textContent).toBe('game_over');
     expect(document.getElementById('arcade-retry-btn').textContent).toBe('retry_button');
     expect(document.querySelector('.arcade-final-score').textContent).toBe('arcade_try_again');
   });
@@ -139,7 +139,7 @@ describe('Écran de fin d’arcade', () => {
 
   test('le focus va sur le titre de l’écran de fin, pas sur « Rejouer »', () => {
     arcade.showArcadeGameOver(40);
-    const title = document.querySelector('.arcade-gameover h2');
+    const title = document.querySelector('.arcade-gameover h1');
     expect(document.activeElement).toBe(title);
     expect(title.getAttribute('tabindex')).toBe('-1');
   });

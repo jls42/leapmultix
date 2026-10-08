@@ -66,6 +66,8 @@ async function goHome(page) {
       document.querySelector('.slide.active-slide .home-btn:not([hidden])') ||
       document.querySelector('[data-slide="1"]');
     button?.click();
+    // Partie en cours : la fenêtre du jeu demande confirmation (js/game-exit.js)
+    document.querySelector('[role="alertdialog"] [data-answer="confirm"]')?.click();
   });
   await page.waitForSelector('.mode-btn[data-mode="quiz"]', { visible: true, timeout: 10000 });
 }

@@ -155,6 +155,30 @@ describe('ESM: bandeau des mini-jeux d’Arcade', () => {
     expect(live[0].classList.contains('arcade-question')).toBe(true);
   });
 
+  test('« Abandonner », le plateau et sa zone suivent un changement de langue', () => {
+    const abandon = document.getElementById('arcade-abandon-btn');
+    expect(abandon.dataset.translate).toBe('abandon_arcade_button');
+    expect(abandon.dataset.translateAriaLabel).toBe('abandon_arcade_button');
+    const canvas = document.querySelector('.arcade-game-ui > canvas');
+    expect(canvas.dataset.translateAriaLabel).toBe('arcade_game_screen_label');
+    const area = document.querySelector('.arcade-game-ui');
+    expect(area.dataset.translateAriaLabel).toBe('arcade_game_area_label');
+  });
+
+  test.each([
+    ['multiinvaders', 'arcade_invasion_title'],
+    ['multimiam', 'arcade_pacman_title'],
+    ['multisnake', 'arcade_snake_title'],
+    ['multimemory', 'arcade.multiMemory.title'],
+  ])('%s : un titre de niveau 1, le nom du jeu, pour les lecteurs d’écran', (mode, key) => {
+    document.body.replaceChildren(InfoBar.createArcadeTemplateElement({ mode }));
+    const titles = document.querySelectorAll('h1');
+    expect(titles).toHaveLength(1);
+    expect(titles[0].classList.contains('sr-only')).toBe(true);
+    expect(titles[0].dataset.translate).toBe(key);
+    expect(titles[0].textContent).toBe(key);
+  });
+
   test('la version HTML donne le même bandeau', () => {
     const html = InfoBar.createArcadeTemplate({ mode: 'multisnake' });
     expect(html).toContain('id="multisnake-info-lives"');

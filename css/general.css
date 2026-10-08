@@ -131,6 +131,21 @@ h4 {
   font-size: var(--text-md);
 }
 
+/* Titre d'un écran : son h1 (un par écran, pour les lecteurs d'écran) garde la taille d'un
+   titre de carte */
+.screen-title {
+  font-size: var(--text-xl);
+}
+
+/* Sous ce titre, les sections montent d'un niveau (h2, puis h3) et gardent leur taille */
+.section-title {
+  font-size: var(--text-lg);
+}
+
+.subsection-title {
+  font-size: var(--text-md);
+}
+
 p {
   margin-bottom: 0.75em;
   text-wrap: pretty;
@@ -173,6 +188,34 @@ a {
 .keyboard-navigation :focus {
   outline: 3px solid var(--color-focus) !important;
   outline-offset: 3px !important;
+}
+
+/* === LIEN D'ÉVITEMENT : sur l'accueil seulement, premier arrêt de tabulation, visible
+   quand il a le focus. Il mène au titre des modes, sans repasser par la barre du haut. === */
+.skip-link {
+  display: none;
+}
+
+body:has(#slide1.active-slide) .skip-link {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  z-index: var(--z-tooltip);
+  display: block;
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-on-action);
+  text-decoration: none;
+  background: var(--color-action);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transform: translateY(calc(-100% - 2 * var(--space-2)));
+}
+
+body:has(#slide1.active-slide) .skip-link:focus {
+  transform: none;
 }
 
 /* === SLIDES === */
@@ -357,6 +400,14 @@ a {
   border-color: var(--color-action);
 }
 
+/* Le cadenas expliqué en clair sous la grille : une infobulle ne se voit pas au doigt */
+.avatar-locked-hint {
+  max-inline-size: 36rem;
+  margin: var(--space-2) auto 0;
+  color: var(--color-ink-muted);
+  text-wrap: pretty;
+}
+
 .avatar-btn:active {
   transform: translateY(var(--key-edge));
   box-shadow: 0 0 0 var(--color-border-strong);
@@ -461,9 +512,9 @@ a {
   border-bottom: 1px solid var(--color-border);
 }
 
-.legal-header h2,
-.privacy-header h2,
-.faq-header h2 {
+.legal-header h1,
+.privacy-header h1,
+.faq-header h1 {
   margin-bottom: var(--space-2);
 }
 
@@ -501,7 +552,7 @@ a {
   border-top: 0;
 }
 
-.faq-item h3 {
+.faq-item h2 {
   margin-bottom: var(--space-2);
   font-size: var(--text-md);
 }
@@ -521,9 +572,9 @@ a {
   margin: 0;
 }
 
-.about-section h3,
-.legal-section h3,
-.privacy-section h3 {
+.about-section h2,
+.legal-section h2,
+.privacy-section h2 {
   margin-bottom: var(--space-3);
   font-size: var(--text-lg);
 }
@@ -726,6 +777,9 @@ a {
   bottom: var(--space-5);
   bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
   left: 50%;
+  /* Placé à mi-largeur, il ne disposait que de la moitié de l'écran : sur téléphone, trois
+     lignes étroites qui couvraient d'autant plus le bas de l'écran */
+  inline-size: max-content;
   z-index: var(--z-toast);
   opacity: 0;
   transform: translate(-50%, 12px);
@@ -893,6 +947,67 @@ body:has(> .message-popup) > .toast-stack {
   fill: var(--color-reward);
   stroke: var(--color-reward-edge);
   stroke-width: 1.5;
+}
+
+/* === FENÊTRE DE CONFIRMATION (js/components/confirm-dialog.js) ===
+   Une question, ce qu'elle implique, puis le bouton sans risque, en touche principale et
+   avec le focus, et l'action, secondaire. Le voile couvre la page et le jeu ; en plein
+   écran, la fenêtre se pose dans la partie affichée, dont elle ne prend pas le texte centré. */
+.confirm-dialog-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.confirm-dialog-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-scrim-modal);
+}
+
+.confirm-dialog {
+  position: relative;
+  max-inline-size: 30rem;
+  max-block-size: 100%;
+  overflow-y: auto;
+  padding: var(--space-5);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--color-ink);
+  text-align: start;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.confirm-dialog-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--color-ink-heading);
+  text-wrap: balance;
+}
+
+.confirm-dialog-message {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* Sur un téléphone, les deux boutons passent l'un sous l'autre, chacun sur toute la largeur */
+.confirm-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+.confirm-dialog-actions .btn {
+  flex: 1 1 auto;
+  margin: 0;
 }
 
 /* === TRANSITIONS DE SLIDES === */

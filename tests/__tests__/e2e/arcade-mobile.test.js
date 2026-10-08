@@ -5,7 +5,7 @@
  */
 
 const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
+const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
 // Téléphone : les jeux reconnaissent un mobile à son agent utilisateur
@@ -51,9 +51,10 @@ async function launchGame(page, game) {
   await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
 }
 
-/** Retour au menu Arcade : « Abandonner », puis « Retour au menu Arcade » */
+/** Retour au menu Arcade : « Abandonner », confirmé, puis « Retour au menu Arcade » */
 async function backToArcadeMenu(page) {
   await pressButton(page, '#game [id$="abandon-btn"]');
+  await answerGameDialog(page, true);
   await pressButton(page, '#arcade-back-btn');
 }
 
