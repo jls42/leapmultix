@@ -1,7 +1,8 @@
 /**
  * MultiInvaders, téléphone tourné en cours de partie : tant qu'aucun tir n'est parti, le
  * plateau se refait pour la nouvelle place (la vague repart dedans) ; ensuite, seul
- * l'affichage suit, la partie (taille interne, positions) ne change plus.
+ * l'affichage suit, la partie (taille interne, positions) ne change plus. La consigne, posée
+ * sur le plateau, ne change rien en partant.
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { fakeCanvasContext } from './helpers/touch-test-helpers.mjs';
@@ -141,5 +142,24 @@ describe('MultiInvaders, téléphone tourné', () => {
     rotate();
     expect([canvas.width, canvas.height]).toEqual(before);
     expect(Number.parseFloat(canvas.style.height)).toBeLessThanOrEqual(390 - 120);
+  });
+});
+
+describe('MultiInvaders, la consigne posée sur le plateau', () => {
+  test('au milieu du plateau : les monstres sont en haut, le vaisseau en bas', () => {
+    expect(document.querySelector('.game-instructions').dataset.placement).toBe('middle');
+  });
+
+  test('la consigne qui part ne change rien : même plateau à 1 s et à 9 s', () => {
+    const plateau = () => ({
+      internal: [canvas.width, canvas.height],
+      shown: [canvas.style.width, canvas.style.height],
+    });
+    jest.advanceTimersByTime(1000);
+    const at1s = plateau();
+    // Sa consigne reste 8 s, plus le fondu
+    jest.advanceTimersByTime(8000);
+    expect(document.querySelector('.game-instructions').hidden).toBe(true);
+    expect(plateau()).toEqual(at1s);
   });
 });

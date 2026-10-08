@@ -600,7 +600,7 @@
 }
 
 /* Téléphone tourné (écran bas et large) : le bandeau tient sur une ligne, le plateau
-   prend la largeur et toute la hauteur dessous, la consigne et « Abandonner » passent
+   prend la largeur et toute la hauteur dessous, « Abandonner » et la consigne passent
    dans une colonne à côté. js/arcade-common.js lit --arcade-stage-flow et retire cette
    colonne, de largeur fixe, de la place du plateau. */
 @media (orientation: landscape) and (max-height: 540px) {
@@ -655,8 +655,10 @@
     justify-self: center;
   }
 
-  /* Consigne serrée : elle tient à côté du plateau, même sur un téléphone bas */
+  /* Consigne serrée, sous « Abandonner » : elle tient à côté du plateau, même sur un
+     téléphone bas, et en partant ne déplace pas le bouton */
   .arcade-game-ui > .game-instructions {
+    grid-row: 2;
     padding: var(--space-2) var(--space-3);
     line-height: var(--leading-tight);
   }
@@ -863,8 +865,9 @@
   transform: translate(-50%, calc(-100% - var(--space-6)));
 }
 
-/* Consigne du jeu, juste sous le plateau : elle ne cache rien et, en partant,
-   ne déplace pas le canevas */
+/* Consigne du jeu, le temps de la lire. Elle ne prend aucune place au plateau, qui garde
+   ainsi sa taille quand elle part : posée dessus (plus bas), ou à côté sur un téléphone
+   tourné (section 5). Elle laisse toujours passer le doigt. */
 .game-instructions {
   flex: none;
   max-width: min(100%, 40rem);
@@ -900,6 +903,30 @@
 
 .game-instructions.is-leaving {
   opacity: 0;
+}
+
+/* Posée sur le plateau, dont js/arcade-common.js donne la place (--arcade-board-top,
+   -height et -width, cadre compris) : en bas, ou au milieu là où le bas sert dès le départ
+   (data-placement="middle" : vaisseau de MultiInvaders, rangées de cartes de MultiMemory).
+   Sous le voile de pause, qui la couvre avec le plateau. */
+@media not all and (orientation: landscape) and (max-height: 540px) {
+  .arcade-game-ui > .game-instructions {
+    position: absolute;
+    z-index: var(--z-raised);
+    top: calc(var(--arcade-board-top, 0px) + var(--arcade-board-height, 0px) - var(--space-3));
+    right: 0;
+    left: 0;
+    width: fit-content;
+    max-width: min(calc(var(--arcade-board-width, 100%) - 2 * var(--space-3)), 40rem);
+    margin-inline: auto;
+    box-shadow: var(--shadow-md);
+    transform: translateY(-100%);
+  }
+
+  .arcade-game-ui > .game-instructions[data-placement='middle'] {
+    top: calc(var(--arcade-board-top, 0px) + var(--arcade-board-height, 0px) / 2);
+    transform: translateY(-50%);
+  }
 }
 
 /* === 9. TEMPS : PAUSE ET PARTIE SANS LIMITE (WCAG 2.2.1, js/arcade-time.js) ===

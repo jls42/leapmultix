@@ -1,6 +1,7 @@
 /**
  * Tests E2E - Écran des jeux d'Arcade : les plateaux prennent la place disponible (téléphone
- * en portrait et tourné), le bouton plein écran met toute la partie en plein écran et Échap
+ * en portrait et tourné), la consigne part sans rien déplacer (posée sur le plateau, ou à côté
+ * sur un téléphone tourné), le bouton plein écran met toute la partie en plein écran et Échap
  * en sort sans quitter la partie, et le doigt vise toujours la bonne case une fois le plateau
  * mis à l'échelle (carte retournée, serpent dirigé, monstre touché).
  * @jest-environment node
@@ -92,6 +93,62 @@ function screenState(page) {
     };
   });
 }
+
+/**
+ * Plateau, « Abandonner » et consigne à l'écran (pixels CSS), ce que le doigt touche au
+ * milieu de la consigne, et le débordement de la page
+ */
+function stageLayout(page) {
+  return page.evaluate(() => {
+    const box = el => {
+      const r = el.getBoundingClientRect();
+      return {
+        left: Math.round(r.left),
+        top: Math.round(r.top),
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+      };
+    };
+    const note = document.querySelector('#game .game-instructions');
+    const shown = note && !note.hidden ? { ...box(note), placement: note.dataset.placement } : null;
+    const touched = shown
+      ? document.elementFromPoint(shown.left + shown.width / 2, shown.top + shown.height / 2)
+      : null;
+    const abandon = document.querySelector('#game [id$="abandon-btn"]');
+    return {
+      board: box(document.querySelector('#game canvas')),
+      abandon: box(abandon),
+      note: shown,
+      underNote: touched?.tagName ?? null,
+      emptyBelow: Math.round(innerHeight - abandon.getBoundingClientRect().bottom),
+      overflowY: document.documentElement.scrollHeight - innerHeight,
+    };
+  });
+}
+
+/**
+ * La consigne est-elle là où le jeu l'a posée : au milieu du plateau, ou en bas, juste
+ * au-dessus de son bord ?
+ */
+function placedAsSaid(note, board) {
+  const middleGap = Math.abs(note.top + note.height / 2 - (board.top + board.height / 2));
+  const bottomGap = board.top + board.height - (note.top + note.height);
+  return note.placement === 'middle' ? middleGap <= 2 : bottomGap > 0 && bottomGap <= 16;
+}
+
+/** Le rectangle a est-il entièrement dans b ? */
+const isInside = (a, b) =>
+  a.left >= b.left &&
+  a.top >= b.top &&
+  a.left + a.width <= b.left + b.width &&
+  a.top + a.height <= b.top + b.height;
+
+/** Les rectangles a et b se chevauchent-ils ? */
+const overlaps = (a, b) =>
+  a.left < b.left + b.width &&
+  b.left < a.left + a.width &&
+  a.top < b.top + b.height &&
+  b.top < a.top + a.height;
 
 /** Point de la fenêtre où s'affiche un point interne du canevas */
 function toScreen(page, canvasId, x, y) {
@@ -190,20 +247,69 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     }
   }, 90000);
 
-  test('MultiMemory : la consigne partie, les cartes remplissent la place sous le bandeau', async () => {
+  test('MultiMemory : dès le lancement, consigne affichée, les cartes remplissent la place', async () => {
     await openArcade(PORTRAIT);
     await launchGame(page, 'multimemory');
-    await page.waitForFunction(() => document.querySelector('.game-instructions')?.hidden, {
-      timeout: 9000,
-    });
-    await pause(300);
-    const emptyBelow = await page.$eval(
-      '#game [id$="abandon-btn"]',
-      button => innerHeight - button.getBoundingClientRect().bottom
-    );
+    await settle(page);
+    const { note, emptyBelow } = await stageLayout(page);
+    expect(note).not.toBeNull();
     // Avant : 346 px vides sous « Abandonner » ; il ne reste que la marge du bas
     expect(emptyBelow).toBeLessThan(40);
   }, 40000);
+
+  // Le plateau garde sa taille du premier au dernier instant : la consigne, posée dessus
+  // (à côté sur un téléphone tourné), ne lui prend pas de place et part sans rien déplacer.
+  // Dans les deux cas, elle laisse passer le doigt (au plateau, ou à la zone de jeu à côté).
+  // En portrait, les quatre jeux : chacun pose sa consigne à sa place. Ailleurs, la mise en
+  // page est commune à tous ; MultiMemory sur ordinateur a trois rangées, consigne en bas.
+  const ON_BOARD = { inside: true, overlaps: true, touched: 'CANVAS', placedAsSaid: true };
+  const BESIDE_BOARD = { inside: false, overlaps: false, touched: 'DIV' };
+  test.each([
+    ['téléphone en portrait', PORTRAIT, true, ON_BOARD, ARCADE_GAMES],
+    ['téléphone tourné', LANDSCAPE, true, BESIDE_BOARD, ['multisnake']],
+    ['ordinateur', DESKTOP, false, ON_BOARD, ['multimemory', 'multisnake']],
+  ])(
+    '%s : la consigne part sans rien déplacer, ni le plateau ni « Abandonner »',
+    async (_screen, viewport, phone, spot, games) => {
+      await openArcade(viewport, { phone });
+      for (const game of games) {
+        await launchGame(page, game);
+        await settle(page);
+        await pause(700);
+        const during = await stageLayout(page);
+        // Lisible dès le lancement, sans faire défiler la page ni toucher « Abandonner »
+        expect({ game, note: Boolean(during.note), overflowY: during.overflowY }).toEqual({
+          game,
+          note: true,
+          overflowY: 0,
+        });
+        expect({ game, onAbandon: overlaps(during.note, during.abandon) }).toEqual({
+          game,
+          onAbandon: false,
+        });
+        expect({
+          game,
+          inside: isInside(during.note, during.board),
+          overlaps: overlaps(during.note, during.board),
+          touched: during.underNote,
+          ...('placedAsSaid' in spot && { placedAsSaid: placedAsSaid(during.note, during.board) }),
+        }).toEqual({ game, ...spot });
+        await page.waitForFunction(
+          () => document.querySelector('#game .game-instructions')?.hidden,
+          { timeout: 10000 }
+        );
+        await pause(300);
+        const after = await stageLayout(page);
+        expect({ game, board: after.board, abandon: after.abandon }).toEqual({
+          game,
+          board: during.board,
+          abandon: during.abandon,
+        });
+        await backToArcadeMenu(page);
+      }
+    },
+    120000
+  );
 
   test('plein écran : toute la partie, puis Échap en sort sans quitter la partie', async () => {
     await openArcade(PORTRAIT);

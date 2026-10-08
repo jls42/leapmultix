@@ -209,8 +209,8 @@ class SnakeGame {
     // Initialiser le serpent avant tout (évite les erreurs de undefined)
     this.setInitialSnake();
 
-    // La consigne s'affiche sous le plateau avant le calcul de sa place : l'ensemble
-    // tient dans l'écran sans défilement
+    // La consigne se pose sur le plateau sans lui prendre de place : il garde sa taille
+    // quand elle part
     this.showInstructions();
 
     // Grille choisie une fois pour toutes, puis taille des cases pour la place actuelle
@@ -223,8 +223,8 @@ class SnakeGame {
     // Initialiser les contrôles
     this.initControls();
 
-    // L'écran change (consigne partie, rotation, plein écran) : les cases suivent, et la
-    // grille aussi tant que rien n'est joué
+    // L'écran change (rotation, plein écran) : les cases suivent, et la grille aussi tant
+    // que rien n'est joué
     this._onResize = () => {
       if (this._disposed) return;
       if (!this.relayoutUnplayedBoard()) this.resizeCanvas();
@@ -292,16 +292,16 @@ class SnakeGame {
     this.appleTexture.src = 'assets/images/arcade/snake_apple_128x128.png';
   }
 
-  // Grille du plateau, choisie au lancement pour la place qui restera une fois la consigne
-  // partie : sur téléphone, plus haute que large en portrait ; sur ordinateur, 14 × 11.
-  // Elle ne change plus pendant la partie (le serpent et les pommes y restent).
+  // Grille du plateau, choisie au lancement pour toute la place : sur téléphone, plus haute
+  // que large en portrait ; sur ordinateur, 14 × 11. Elle ne change plus pendant la partie
+  // (le serpent et les pommes y restent).
   layoutBoard() {
     if (!this.isMobile) {
       this.cols = this.baseCols;
       this.rows = this.baseRows;
       return;
     }
-    const box = getArcadeCanvasBox(this.canvas, { ignoreInstructions: true });
+    const box = getArcadeCanvasBox(this.canvas);
     ({ cols: this.cols, rows: this.rows } = chooseMobileSnakeGrid(box));
   }
 
@@ -328,8 +328,8 @@ class SnakeGame {
     return true;
   }
 
-  // Taille des cases pour la place actuelle (sous le bandeau, avec la consigne et
-  // « Abandonner ») : à chaque changement d'écran, seul l'affichage suit
+  // Taille des cases pour la place actuelle (sous le bandeau, avec « Abandonner ») : à
+  // chaque changement d'écran, seul l'affichage suit
   resizeCanvas() {
     // Éviter tout traitement après nettoyage
     if (this._disposed) return;

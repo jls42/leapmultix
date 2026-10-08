@@ -1,8 +1,8 @@
 /**
- * Place du plateau d'Arcade (js/arcade-common.js) : la grille se choisit pour la place
- * qui restera une fois la consigne partie, la consigne et « Abandonner » passent à côté du
- * plateau sur un téléphone tourné, le plein écran ne compte pas les marges de la page, et
- * le plateau suit l'écran (rotation, plein écran, consigne qui part) sans changer la partie.
+ * Place du plateau d'Arcade (js/arcade-common.js) : la consigne, posée sur le plateau, ne
+ * lui prend aucune place (il garde sa taille quand elle part) ; la consigne et « Abandonner »
+ * passent à côté du plateau sur un téléphone tourné, le plein écran ne compte pas les marges
+ * de la page, et le plateau suit l'écran (rotation, plein écran) sans changer la partie.
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
@@ -92,8 +92,8 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-describe('Place du plateau : la consigne ne compte pas pour choisir la grille', () => {
-  test('ignoreInstructions rend la place qui restera quand la consigne sera partie', () => {
+describe('Place du plateau : la consigne, posée dessus, ne lui prend aucune place', () => {
+  test('la même place pendant la consigne et une fois partie', () => {
     const { stage, canvas, abandon } = renderStage();
     const instructions = showGameInstructions(canvas, 'Glisse le doigt');
     Object.defineProperty(stage, 'clientWidth', { value: 390, configurable: true });
@@ -104,13 +104,83 @@ describe('Place du plateau : la consigne ne compte pas pour choisir la grille', 
       [abandon, { rect: [0, 0, 280, 48] }],
     ]);
     try {
-      // 844 − 175 − (66 + 12) − (48 + 12) − 4 (cadre)
-      expect(getArcadeCanvasBox(canvas).height).toBe(527);
-      // La consigne partira : seule « Abandonner » reste sous le plateau
-      expect(getArcadeCanvasBox(canvas, { ignoreInstructions: true }).height).toBe(605);
+      // 844 − 175 − (48 + 12) − 4 (cadre) : seule « Abandonner » est sous le plateau
+      expect(getArcadeCanvasBox(canvas).height).toBe(605);
+      instructions.hidden = true;
+      expect(getArcadeCanvasBox(canvas).height).toBe(605);
     } finally {
       restore();
     }
+  });
+});
+
+/** Valeurs posées sur la zone de jeu pour placer la consigne (css/arcade.css) */
+function boardGeometry(stage) {
+  return ['top', 'height', 'width'].map(side =>
+    stage.style.getPropertyValue(`--arcade-board-${side}`)
+  );
+}
+
+/** ResizeObserver factice : les éléments observés, et l'appel qui simule un changement */
+function fakeResizeObserver() {
+  const observers = [];
+  const saved = globalThis.ResizeObserver;
+  globalThis.ResizeObserver = class {
+    constructor(callback) {
+      this.callback = callback;
+      this.targets = [];
+      this.connected = true;
+      observers.push(this);
+    }
+    observe(element) {
+      this.targets.push(element);
+    }
+    disconnect() {
+      this.connected = false;
+    }
+  };
+  return {
+    observers,
+    restore: () => {
+      globalThis.ResizeObserver = saved;
+    },
+  };
+}
+
+describe('Consigne posée sur le plateau', () => {
+  test('la zone de jeu dit à la feuille de style où est le plateau, et le suit', () => {
+    jest.useFakeTimers();
+    const { stage, canvas } = renderStage();
+    let layout = { offsetTop: 0, offsetHeight: 610, offsetWidth: 367 };
+    for (const key of Object.keys(layout)) {
+      Object.defineProperty(canvas, key, { configurable: true, get: () => layout[key] });
+    }
+    const fake = fakeResizeObserver();
+    try {
+      showGameInstructions(canvas, 'Glisse le doigt');
+      expect(boardGeometry(stage)).toEqual(['0px', '610px', '367px']);
+      // Le plateau change de taille (téléphone tourné, plein écran) : la consigne suit
+      const [observer] = fake.observers;
+      expect(observer.targets).toEqual([canvas]);
+      layout = { offsetTop: 4, offsetHeight: 238, offsetWidth: 472 };
+      observer.callback([]);
+      expect(boardGeometry(stage)).toEqual(['4px', '238px', '472px']);
+      // Partie : plus rien à suivre
+      jest.advanceTimersByTime(5000 + 320);
+      expect(observer.connected).toBe(false);
+    } finally {
+      fake.restore();
+    }
+  });
+
+  test('en bas du plateau, ou au milieu quand le jeu le demande (vaisseau en bas)', () => {
+    const { canvas } = renderStage();
+    expect(showGameInstructions(canvas, 'Glisse le doigt').dataset.placement).toBe('bottom');
+    const middle = showGameInstructions(canvas, 'Tire', 'neutral', 8000, 'middle');
+    expect(middle.dataset.placement).toBe('middle');
+    expect(showGameInstructions(canvas, 'Go', 'neutral', 5000, 'ailleurs').dataset.placement).toBe(
+      'bottom'
+    );
   });
 });
 
@@ -260,7 +330,7 @@ describe('Le plateau suit l’écran', () => {
     stop();
   });
 
-  test('la consigne qui part libère de la place : le plateau se recalcule', () => {
+  test('la consigne qui apparaît puis part ne fait pas recalculer le plateau', () => {
     jest.useFakeTimers();
     const { canvas, stage } = renderStage();
     const changes = jest.fn();
@@ -268,10 +338,9 @@ describe('Le plateau suit l’écran', () => {
     const onChange = jest.fn();
     watchArcadeViewport(canvas, onChange);
     showGameInstructions(canvas, 'Glisse le doigt', 'neutral', 1000);
-    jest.advanceTimersByTime(1000 + 320);
-    expect(changes).toHaveBeenCalled();
-    jest.advanceTimersByTime(50);
-    expect(onChange).toHaveBeenCalled();
+    jest.advanceTimersByTime(1000 + 320 + 50);
+    expect(changes).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   test('le bandeau qui change de hauteur (calcul affiché, langue) fait revoir la place', () => {

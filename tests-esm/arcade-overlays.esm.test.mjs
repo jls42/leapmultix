@@ -242,7 +242,7 @@ describe('Zone de jeu : hauteur libre et place du canevas', () => {
     expect(stage.style.width).toBe('100%');
   });
 
-  test('la place du canevas tient dans l’écran, consigne et « Abandonner » déduits', () => {
+  test('la place du canevas tient dans l’écran : « Abandonner » déduit, la consigne posée dessus', () => {
     const canvas = renderStage();
     const instructions = showGameInstructions(canvas, 'Consigne');
     const stage = canvas.parentElement;
@@ -268,8 +268,9 @@ describe('Zone de jeu : hauteur libre et place du canevas', () => {
     globalThis.innerHeight = 800;
     try {
       const box = getArcadeCanvasBox(canvas);
-      // 800 − 200 (haut de la zone) − (42 + 12) − (48 + 12) − 12 (bas) − 4 (cadre)
-      expect(box.height).toBe(470);
+      // 800 − 200 (haut de la zone) − (48 + 12) − 12 (bas) − 4 (cadre) : la consigne,
+      // posée sur le plateau, ne prend pas de place
+      expect(box.height).toBe(524);
       expect(box.width).toBe(1196);
     } finally {
       globalThis.innerHeight = previousHeight;

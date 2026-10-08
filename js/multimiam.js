@@ -130,8 +130,8 @@ export class PacmanGame {
     this.logoImg = arcadeSpriteLoader.loadSpriteSync('logo_multimiam_128x128', 'logo');
   }
 
-  // Place disponible pour le labyrinthe : sous le bandeau, avec la consigne et
-  // « Abandonner », sans faire défiler la page (voir js/arcade-common.js)
+  // Place disponible pour le labyrinthe : sous le bandeau, avec « Abandonner », sans faire
+  // défiler la page ; la consigne est posée dessus (voir js/arcade-common.js)
   calculateCanvasDimensions() {
     if (!this.canvas.parentElement) {
       return { width: 800, height: 600 };
@@ -154,11 +154,11 @@ export class PacmanGame {
     this.canvas.style.borderRadius = 'var(--radius-md)';
   }
 
-  // Orientation pour la place qui restera une fois la consigne partie : transposé (15 × 19)
-  // si le labyrinthe y gagne de plus grandes cases (téléphone en portrait)
+  // Orientation pour la place disponible : transposé (15 × 19) si le labyrinthe y gagne de
+  // plus grandes cases (téléphone en portrait)
   chooseTransposed() {
     if (!this.canvas.parentElement) return false;
-    const box = getArcadeCanvasBox(this.canvas, { ignoreInstructions: true });
+    const box = getArcadeCanvasBox(this.canvas);
     return shouldTransposeMaze(this.cols, this.rows, box);
   }
 
@@ -167,9 +167,9 @@ export class PacmanGame {
     return this.score === 0 && this.lives === 3 && this.goodAnswersCount === 0;
   }
 
-  // Orientation choisie au lancement. Ensuite, l'écran peut changer (consigne partie,
-  // rotation, plein écran) : les cases suivent ; l'orientation aussi tant que rien n'est
-  // joué, puis elle ne change plus (la partie reste la même).
+  // Orientation choisie au lancement. Ensuite, l'écran peut changer (rotation, plein
+  // écran) : les cases suivent ; l'orientation aussi tant que rien n'est joué, puis elle ne
+  // change plus (la partie reste la même).
   layoutBoard() {
     this.transposed = this.chooseTransposed();
     this.resizeCanvas();
