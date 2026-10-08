@@ -174,6 +174,9 @@ export class PacmanGame {
     this.transposed = this.chooseTransposed();
     this.resizeCanvas();
     watchArcadeViewport(this.canvas, () => {
+      // Jeu déjà nettoyé (sortie de la partie) : un recalage resté en attente n'a plus rien à
+      // faire, le canevas est encore dans l'écran masqué
+      if (!this.canvas) return;
       if (this.isUnplayed()) this.transposed = this.chooseTransposed();
       this.resizeCanvas();
       this.renderer?.draw();
