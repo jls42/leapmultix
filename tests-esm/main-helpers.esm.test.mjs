@@ -179,6 +179,8 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
       for (const key of [hint.dataset.translate, 'avatar_locked_tooltip']) {
         expect(t[key]).toEqual(expect.any(String));
         expect(t[key]).not.toMatch(/Aventura|Adventure|Aventure|pièces|coins|monedas/i);
+        // Ni « pas encore » : il promettrait un déblocage qui n'existe pas
+        expect(t[key]).not.toMatch(/encore|yet|aún|todavía/i);
       }
     }
   });
