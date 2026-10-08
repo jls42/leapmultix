@@ -202,7 +202,8 @@ function getGameTitle(mode) {
 
 function confirmAndResetScores(mode, score) {
   const canConfirm = typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-  // Seuls les scores de CE jeu sont effacés : la question le dit
+  // Les meilleurs scores de CE jeu et ses compteurs du tableau de bord (parties, score
+  // moyen), dans toutes les opérations, sont effacés : la question dit tout cela
   const question = getTranslation('reset_scores_confirm', { game: getGameTitle(mode) });
   if (canConfirm ? globalThis.confirm(question) : true) {
     resetScoresForMode(mode);

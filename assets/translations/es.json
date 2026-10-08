@@ -222,7 +222,7 @@
   "quiz_mode_title": "Quiz",
   "quiz_results": "Resultados del Quiz",
   "reset_scores_button": "Restablecer puntuaciones",
-  "reset_scores_confirm": "¿Reiniciar las mejores puntuaciones de {game}?",
+  "reset_scores_confirm": "¿Reiniciar las puntuaciones de {game}? Se borrarán sus mejores puntuaciones, así como su número de partidas y su puntuación media en el panel de control, en las cuatro operaciones.",
   "retry_button": "Jugar de nuevo",
   "sessions_count_label": "Número de partidas",
   "skip_video": "Saltar",

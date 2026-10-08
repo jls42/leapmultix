@@ -216,7 +216,7 @@
   "quiz_mode_title": "Quiz",
   "quiz_results": "Quiz Results",
   "reset_scores_button": "Reset scores",
-  "reset_scores_confirm": "Reset the top scores for {game}?",
+  "reset_scores_confirm": "Reset the scores for {game}? Its top scores will be erased, along with its number of sessions and average score on the dashboard, in all four operations.",
   "retry_button": "Play Again",
   "sessions_count_label": "Number of sessions",
   "skip_video": "Skip",

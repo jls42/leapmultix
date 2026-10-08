@@ -226,7 +226,7 @@
   "quiz_mode_title": "Quiz",
   "quiz_results": "Résultats du Quiz",
   "reset_scores_button": "Remettre à zéro les scores",
-  "reset_scores_confirm": "Remettre à zéro les meilleurs scores de {game} ?",
+  "reset_scores_confirm": "Remettre à zéro les scores de {game} ? Ses meilleurs scores seront effacés, ainsi que son nombre de parties et son score moyen au tableau de bord, dans les quatre opérations.",
   "retry_button": "Rejouer",
   "sessions_count_label": "Nombre de parties",
   "skip_video": "Passer",
