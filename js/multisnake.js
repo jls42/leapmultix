@@ -13,6 +13,7 @@ import {
 } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
 import { recordOperationResult } from './core/operation-stats.js';
+import { noteArcadePlay } from './arcade-session.js';
 import { showArcadeGameOver } from './arcade.js';
 import { cleanupGameResources } from './game-cleanup.js';
 import { InfoBar } from './components/infoBar.js';
@@ -662,6 +663,8 @@ class SnakeGame {
 
       if (head.x === pos.x && head.y === pos.y) {
         numberEaten = true;
+        // Une bulle mangée : la partie est jouée (tableau de bord)
+        noteArcadePlay();
 
         if (pos.isCorrect) {
           recordOperationResult(

@@ -68,12 +68,12 @@ export class AccessibilityManager {
     this.keyboardNavigationEnabled = true;
   }
 
-  // Une fenêtre (vidéo, vérification parentale, réglages des tables) ou le menu de la
-  // barre du haut est-il visible ? Échap les ferme d'abord (topBar.js pour le menu).
+  // Une fenêtre (vidéo, réglages des tables) ou le menu de la barre du haut est-il
+  // visible ? Échap les ferme d'abord (topBar.js pour le menu).
   // Certaines restent dans le DOM une fois fermées : seule la visibilité réelle compte.
   isDialogOpen() {
     const candidates = document.querySelectorAll(
-      'dialog[open], [role="dialog"], .popup-overlay.visible, .top-bar-nav.is-open'
+      'dialog[open], [role="dialog"], .top-bar-nav.is-open'
     );
     return Array.from(candidates).some(el =>
       typeof el.checkVisibility === 'function'

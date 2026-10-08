@@ -26,6 +26,7 @@ import { AudioManager } from './core/audio.js';
 import { goToSlide } from './slides.js';
 import { setGameMode } from './mode-orchestrator.js';
 import { eventBus } from './core/eventBus.js';
+import { openArcadeSession, closeArcadeSession, arcadeGameOf } from './arcade-session.js';
 
 // =====================
 // Fonction de lancement du mode Snake (coordination équipe Snake)
@@ -102,6 +103,9 @@ function gameOverMessage(score) {
 }
 
 export function showArcadeGameOver(score, { persist = true } = {}) {
+  // La partie se ferme avant l'arrêt du jeu : sinon stopArcadeMode la compterait comme
+  // quittée. Une fin réaffichée (persist: false, après « Remettre à zéro ») ne compte pas
+  const played = persist ? closeArcadeSession() : null;
   // Arrêter le sous-jeu en même temps que le chronomètre : boucles, minuteries et
   // écouteurs (arcade:stop). Sinon, à la fin du temps, la partie continuait sans être
   // vue : messages sur l'écran de fin, second enregistrement du score, touches avalées.
@@ -109,9 +113,9 @@ export function showArcadeGameOver(score, { persist = true } = {}) {
   // L'écran de fin ne parle pas par-dessus la partie
   cancelSpeech();
 
-  // Historique des scores, par utilisateur et par mode
+  // Scores du profil : une partie jouée (au moins un coup) compte avec son score
   const mode = globalGameState?.gameMode ?? 'arcade';
-  if (persist) saveScoreForMode(mode, score);
+  if (played) saveScoreForMode(played.game, score, played.operator);
   const arcadeScores = getScoresForMode(mode);
   const { key: endMessageKey, text: endMessage, spoken } = gameOverMessage(score);
 
@@ -227,17 +231,25 @@ function bindGameOverActions(wrapper, mode, score) {
 }
 
 // --- Helpers (réduisent la complexité de showArcadeGameOver) ---
-function saveScoreForMode(mode, score) {
-  switch (mode) {
+function saveScoreForMode(mode, score, operator) {
+  switch (arcadeGameOf(mode)) {
     case 'multisnake':
-      return saveArcadeScoreSnake(score);
+      return saveArcadeScoreSnake(score, operator);
     case 'multimiam':
-      return saveArcadeScorePacman(score);
+      return saveArcadeScorePacman(score, operator);
     case 'multimemory':
-      return saveArcadeScoreMemory(score);
+      return saveArcadeScoreMemory(score, operator);
     default:
-      return saveArcadeScore(score);
+      return saveArcadeScore(score, 'invasion', operator);
   }
+}
+
+/** Score affiché par le jeu en cours (barre d'infos), comme le lit la fin du temps */
+function displayedArcadeScore() {
+  const scoreEl =
+    document.getElementById('arcade-info-score') || document.querySelector('[id$="-info-score"]');
+  const score = scoreEl ? Number.parseInt(scoreEl.textContent, 10) : 0;
+  return Number.isFinite(score) ? score : 0;
 }
 
 function getScoresForMode(mode) {
@@ -394,6 +406,10 @@ export function stopArcadeMode() {
   } catch {
     /* ignoré volontairement */
   }
+  // Partie quittée (Accueil, autre écran) après au moins un coup : elle compte, avec le score
+  // affiché ; l'Arcade garde son score à l'abandon
+  const quitted = closeArcadeSession();
+  if (quitted) saveScoreForMode(quitted.game, displayedArcadeScore(), quitted.operator);
   setArcadeActive(false);
   // Arrêt de la boucle d'animation
   // Les sous-jeux gèrent leurs propres boucles via ESM
@@ -453,6 +469,8 @@ let arcadeTimerIntervalId = null,
 export function startArcadeTimer(durationSeconds) {
   stopArcadeTimer();
   setArcadeActive(true);
+  // Chaque jeu lance son minuteur une fois, au départ de la partie : la partie s'ouvre ici
+  openArcadeSession(globalGameState?.gameMode);
   arcadeTimerRemaining = durationSeconds;
   updateArcadeTimerDisplay();
   arcadeTimerIntervalId = setInterval(() => {
@@ -460,11 +478,7 @@ export function startArcadeTimer(durationSeconds) {
     if (arcadeTimerRemaining <= 0) {
       stopArcadeTimer();
       setArcadeActive(false);
-      const scoreEl =
-        document.getElementById('arcade-info-score') ||
-        document.querySelector('[id$="-info-score"]');
-      const finalScore = scoreEl ? Number.parseInt(scoreEl.textContent, 10) : 0;
-      showArcadeGameOver(Number.isFinite(finalScore) ? finalScore : 0);
+      showArcadeGameOver(displayedArcadeScore());
     } else {
       updateArcadeTimerDisplay();
     }

@@ -9,11 +9,9 @@ import { Customization } from '../components/customization.js';
 import { InfoBar } from '../components/infoBar.js';
 import UserManager from '../userManager.js';
 import { initThemes, applyHighContrastMode, applyFontSize } from './theme.js';
-import { removeAvatarAfterCadenas } from './parental.js';
 import { refreshUserList } from './userUi.js';
 import {
   changeLanguage,
-  getTranslation,
   loadTranslations,
   updateBackgroundByAvatar,
   updateSeoHeroImage,
@@ -59,38 +57,18 @@ function isActivableElement(el) {
   );
 }
 
-function handleParentalPopup() {
-  const parentalPopup = document.getElementById('parental-lock-popup');
-  // La fenêtre est masquée par la classe .hidden et affichée par .visible
-  if (
-    !parentalPopup ||
-    parentalPopup.classList.contains('hidden') ||
-    !parentalPopup.classList.contains('visible')
-  ) {
-    return false;
-  }
-
-  if (document.activeElement === document.getElementById('parental-submit')) {
-    document.getElementById('parental-submit')?.click();
-  }
-  return true; // Handled
-}
-
 function setupEnterKeyActivation() {
   document.addEventListener('keydown', e => {
     // keyboard-navigation.js active déjà les boutons (et appelle preventDefault) :
     // ne pas déclencher un second clic pour la même touche
     if (e.key !== 'Enter' || e.defaultPrevented) return;
 
-    if (handleParentalPopup()) return;
-
     const focusedElement = document.activeElement;
     // Boutons, liens et champs s'activent seuls avec Entrée : ne cliquer que les autres
     if (
       focusedElement &&
       !NATIVELY_ACTIVATED_TAGS.has(focusedElement.tagName) &&
-      isActivableElement(focusedElement) &&
-      !focusedElement.closest('#parental-lock-popup')
+      isActivableElement(focusedElement)
     ) {
       e.preventDefault();
       focusedElement.click();
@@ -113,42 +91,6 @@ function wireCreationAvatarSelector() {
     if (!selectedAvatarId) return;
     updateBackgroundByAvatar(selectedAvatarId);
     updateHeroMascot(selectedAvatarId);
-  });
-}
-
-function setupParentalPopup() {
-  const parentalPopup = document.getElementById('parental-lock-popup');
-  const parentalSubmitBtn = document.getElementById('parental-submit');
-  const parentalCancelBtn = document.getElementById('parental-cancel');
-  const parentalAnswerInput = document.getElementById('parental-answer');
-  if (!(parentalPopup && parentalSubmitBtn && parentalCancelBtn && parentalAnswerInput)) return;
-  parentalCancelBtn.addEventListener('click', () => {
-    parentalPopup.classList.remove('visible');
-    setTimeout(() => {
-      parentalPopup.style.display = 'none';
-    }, 300);
-  });
-  parentalSubmitBtn.addEventListener('click', () => {
-    const answer = Number.parseInt(parentalAnswerInput.value, 10);
-    const expectedAnswer = Number.parseInt(parentalAnswerInput.dataset.expectedAnswer, 10);
-    const errorEl = document.getElementById('parental-error');
-    if (answer === expectedAnswer) {
-      parentalPopup.classList.remove('visible');
-      setTimeout(() => {
-        parentalPopup.style.display = 'none';
-      }, 300);
-      if (parentalPopup.callbackOnSuccess) {
-        parentalPopup.callbackOnSuccess();
-        parentalPopup.callbackOnSuccess = null;
-      }
-    } else {
-      if (errorEl) errorEl.textContent = getTranslation('parental_incorrect_answer');
-      parentalAnswerInput.value = '';
-      parentalAnswerInput.focus();
-    }
-  });
-  parentalAnswerInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') parentalSubmitBtn.click();
   });
 }
 
@@ -330,17 +272,8 @@ function wireUiHandlers() {
   setupHighContrastAndFontSize();
   setupEnterKeyActivation();
   wireCreationAvatarSelector();
-  setupParentalPopup();
   wirePersonalizationButton();
   watchSlideChanges();
-}
-
-function safeRemoveAvatarAfterCadenas() {
-  try {
-    removeAvatarAfterCadenas();
-  } catch (error) {
-    logInitWarning('Nettoyage avatar cadenas impossible', error);
-  }
 }
 
 /**
@@ -382,7 +315,6 @@ async function runInit() {
   updateHeroMascot();
   wireUiHandlers();
   attachRecordedVoiceSetting();
-  safeRemoveAvatarAfterCadenas();
 }
 
 let initRequested = false;

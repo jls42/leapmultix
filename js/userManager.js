@@ -17,8 +17,14 @@ import { AudioManager } from './core/audio.js';
 import { createVirtualKeyboard } from './virtual-keyboard.js';
 import { goToSlide } from './slides.js';
 import { gameState, displayDailyChallenge } from './game.js';
+import { normalizeAdventureProgressByOperator } from './core/adventure-progress.js';
+import { normalizeModeStats, emptyModeStats, ARCADE_GAMES } from './core/mode-stats.js';
 import { eventBus } from './core/eventBus.js';
-import { normalizeChronoStats, emptyChronoStats } from './core/chrono-stats.js';
+import {
+  normalizeChronoStats,
+  normalizeChronoStatsByOperator,
+  emptyChronoStats,
+} from './core/chrono-stats.js';
 
 /**
  * Traduction avec texte de secours tant que la clé n'existe pas dans les fichiers de langue.
@@ -49,7 +55,6 @@ const DEFAULT_USER_DATA = Object.freeze({
   unlockedBadges: [],
   volume: 1,
   dailyChallengesCompleted: 0,
-  parentalLockEnabled: false,
   starsByTable: {},
   coins: 0,
   preferredOperator: '×',
@@ -73,12 +78,44 @@ const createDefaultUserData = (nickname = '') => ({
   preferredOperator: '×',
   nickname,
   chronoStats: emptyChronoStats(),
+  chronoStatsByOperator: normalizeChronoStatsByOperator(),
+  modeStats: emptyModeStats(),
 });
+
+/** Clé localStorage des 5 meilleurs scores d'un jeu d'Arcade, rangés sous le surnom (avant la v37) */
+const legacyArcadeKey = (game, nickname) =>
+  game === 'invasion' ? `arcadeScores_${nickname}` : `arcadeScores_${game}_${nickname}`;
+
+/** Surnom sous lequel arcade-scores.js rangeait les scores : le surnom affiché, sans espaces autour */
+const legacyArcadeOwner = (raw, currentUser) => String(raw.nickname || currentUser || '').trim();
+
+/**
+ * Les 5 meilleurs scores d'un jeu d'Arcade d'avant la v37, pour l'amorçage des compteurs
+ * @param {string} nickname
+ * @returns {(game: string) => number[]}
+ */
+const legacyArcadeReader = nickname => game => {
+  if (!nickname) return [];
+  const scores = Storage.get(legacyArcadeKey(game, nickname), []);
+  return Array.isArray(scores) ? scores : [];
+};
 
 const normalizeUserData = (rawData, currentUser) => {
   // raw.x vaut exactement rawData?.x, quelle que soit la valeur reçue
   const raw = rawData ?? {};
   const tablePreferences = ensureObject(raw.tablePreferences, DEFAULT_TABLE_PREFERENCES);
+  const chronoStats = normalizeChronoStats(raw.chronoStats);
+  const chronoStatsByOperator = normalizeChronoStatsByOperator(raw.chronoStatsByOperator);
+  const adventureProgressByOperator = normalizeAdventureProgressByOperator(
+    raw.adventureProgressByOperator,
+    raw.adventureProgress
+  );
+  // Compteurs du tableau de bord, amorcés une fois depuis l'existant déjà normalisé
+  // (core/mode-stats.js) : un classement que la normalisation écarte ne compte pas non plus
+  const modeStats = normalizeModeStats(
+    { ...raw, chronoStats, chronoStatsByOperator, adventureProgressByOperator },
+    legacyArcadeReader(legacyArcadeOwner(raw, currentUser))
+  );
 
   return {
     ...DEFAULT_USER_DATA,
@@ -94,11 +131,15 @@ const normalizeUserData = (rawData, currentUser) => {
     unlockedBadges: ensureArray(raw.unlockedBadges),
     volume: Number.isFinite(raw.volume) ? raw.volume : 1,
     dailyChallengesCompleted: ensureNumber(raw.dailyChallengesCompleted, 0),
-    parentalLockEnabled: raw.parentalLockEnabled === true,
     starsByTable: ensureObject(raw.starsByTable),
     coins: ensureNumber(raw.coins, 0),
     preferredOperator: raw.preferredOperator || '×',
-    chronoStats: normalizeChronoStats(raw.chronoStats),
+    chronoStats,
+    // Chrono hors multiplication : un champ à part, que le code d'avant recopie sans y toucher
+    chronoStatsByOperator,
+    // L'ancienne Aventure (× seule, avant décembre 2025) recopiée dans la multiplication
+    adventureProgressByOperator,
+    modeStats,
     tablePreferences: {
       ...DEFAULT_TABLE_PREFERENCES,
       ...tablePreferences,
@@ -287,9 +328,24 @@ export const UserManager = {
    * @private
    */
   _cleanupDefaultScores() {
-    localStorage.removeItem('arcadeScores_default');
-    localStorage.removeItem('arcadeScores_multisnake_default');
-    localStorage.removeItem('arcadeScores_multimiam_default');
+    this._removeLegacyArcadeScores(['default']);
+  },
+
+  /**
+   * Retire les clés d'Arcade d'avant la v37 (arcadeScores_<surnom>), pour ces surnoms
+   * @param {string[]} owners
+   * @private
+   */
+  _removeLegacyArcadeScores(owners) {
+    for (const owner of new Set(owners.filter(Boolean))) {
+      for (const game of ARCADE_GAMES) {
+        try {
+          localStorage.removeItem(legacyArcadeKey(game, owner));
+        } catch {
+          // Stockage indisponible : rien à effacer
+        }
+      }
+    }
   },
 
   /**
@@ -385,9 +441,11 @@ export const UserManager = {
         unlockedBadges: [],
         volume: 1,
         dailyChallengesCompleted: 0,
-        parentalLockEnabled: false,
         starsByTable: {},
         coins: 0,
+        // Compteurs vierges : un nouveau profil ne reprend pas les anciens scores d'Arcade
+        // d'un homonyme supprimé (clés rangées sous le surnom avant la v37)
+        modeStats: emptyModeStats(),
       },
       enumerable: true,
       configurable: true,
@@ -431,10 +489,21 @@ export const UserManager = {
       this._currentUser = null;
     }
 
+    const owner = legacyArcadeOwner(this._players[key] ?? {}, key);
     if (Object.prototype.hasOwnProperty.call(this._players, key)) {
       Reflect.deleteProperty(this._players, key);
     }
     this.savePlayers();
+    // Effacement promis par la page Confidentialité : les anciens scores d'Arcade, rangés sous
+    // le surnom (et donc le prénom en clair), partent avec le profil, sauf ceux d'un autre
+    // profil qui porte le même nom
+    const stillUsed = new Set(
+      Object.entries(this._players).flatMap(([other, data]) => [
+        other,
+        legacyArcadeOwner(data ?? {}, other),
+      ])
+    );
+    this._removeLegacyArcadeScores([owner, key].filter(name => !stillUsed.has(name)));
     // Plus de joueur courant : la barre du haut retire ce qui dépend d'un profil
     if (wasCurrentUser) this.emitUserChanged(null);
     return true;

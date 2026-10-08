@@ -153,6 +153,12 @@ const ICONS = Object.freeze({
     ['circle', { cx: '12', cy: '12', r: '5' }],
   ],
   'chevron-right': [['path', { d: 'm9 18 6-6-6-6' }]],
+  calendar: [
+    ['rect', { width: '18', height: '18', x: '3', y: '4', rx: '2' }],
+    ['path', { d: 'M16 2v4' }],
+    ['path', { d: 'M8 2v4' }],
+    ['path', { d: 'M3 10h18' }],
+  ],
 });
 
 /** Noms d'icônes disponibles */

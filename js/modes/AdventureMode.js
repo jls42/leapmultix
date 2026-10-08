@@ -42,6 +42,7 @@ import {
   scrollToScreenTop,
 } from '../ui-feedback.js';
 import { UserState } from '../core/userState.js';
+import { appendProgressHistory } from '../core/mode-stats.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { chance, randomInt } from '../core/random.js';
@@ -111,6 +112,19 @@ export class AdventureMode extends GameMode {
   resetState() {
     super.resetState();
     this.sessionBestStreak = 0;
+    this._levelStars = null;
+  }
+
+  /**
+   * Niveau réussi (dernière question atteinte, vies restantes) : sa progression et ses badges
+   * s'enregistrent dès la dernière réponse (GameMode.saveResultsOnce), avant l'animation du
+   * trésor ; quitter pendant celle-ci ne perd plus le niveau. Un échec n'enregistre rien.
+   */
+  saveResults() {
+    if (!this.currentLevel || this.state.lives <= 0) return;
+    this._levelStars = this.calculateStars();
+    this.saveAdventureProgress(this._levelStars);
+    this.checkForNewRewards();
   }
 
   /**
@@ -625,12 +639,9 @@ export class AdventureMode extends GameMode {
       if (!this.currentLevel) return;
       console.log(`🏆 Niveau ${this.currentLevel.id} terminé avec succès !`);
 
-      // Calculer les étoiles (basé sur le score/performance)
-      const stars = this.calculateStars();
-
-      // Sauvegarder la progression, puis les badges qu'elle débloque
-      this.saveAdventureProgress(stars);
-      this.checkForNewRewards();
+      // Progression et badges déjà enregistrés à la dernière réponse (saveResults)
+      this.saveResultsOnce();
+      const stars = this._levelStars ?? this.calculateStars();
 
       // Afficher les résultats
       this.showLevelResults(true, stars);
@@ -865,14 +876,13 @@ export class AdventureMode extends GameMode {
    */
   recordProgressHistory(isCorrect, userAnswer) {
     const userData = UserState.getCurrentUserData();
-    if (!userData.progressHistory) userData.progressHistory = [];
-
     const question = this.state.currentQuestion;
     const a = question.a ?? question.table;
     const b = question.b ?? question.num;
     const operator = question.operator || this.operator;
 
-    userData.progressHistory.push({
+    // Historique borné : les compteurs du tableau de bord portent le reste
+    appendProgressHistory(userData, {
       question: `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
@@ -892,10 +902,10 @@ export class AdventureMode extends GameMode {
    * @returns {Object}
    */
   getOperatorProgress() {
+    // L'ancien format (multiplication seule) est déjà recopié dans la multiplication à la
+    // lecture du profil (core/adventure-progress.js) : une autre opération ne le reprend pas
     const userData = UserState.getCurrentUserData();
-    return (
-      userData.adventureProgressByOperator?.[this.operator] || userData.adventureProgress || {}
-    );
+    return userData.adventureProgressByOperator?.[this.operator] || {};
   }
 
   /**
@@ -1115,11 +1125,9 @@ export class AdventureMode extends GameMode {
    */
   getAllLevelProgress() {
     const userData = UserState.getCurrentUserData();
+    // L'ancien format est déjà dans la multiplication (core/adventure-progress.js)
     const byOperator = userData.adventureProgressByOperator || {};
-    const sources = Object.values(byOperator);
-    // Ancien format (multiplication seule), s'il n'a pas encore été migré
-    if (!byOperator['×'] && userData.adventureProgress) sources.push(userData.adventureProgress);
-    return sources.flatMap(progress => Object.values(progress || {}));
+    return Object.values(byOperator).flatMap(progress => Object.values(progress || {}));
   }
 
   /**

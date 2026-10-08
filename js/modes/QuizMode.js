@@ -24,6 +24,7 @@ import {
 } from '../ui-feedback.js';
 import { goToSlide } from '../slides.js';
 import { UserState } from '../core/userState.js';
+import { appendProgressHistory } from '../core/mode-stats.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { TablePreferences } from '../core/tablePreferences.js';
@@ -271,16 +272,14 @@ export class QuizMode extends GameMode {
   onAnswerSubmitted(isCorrect, userAnswer) {
     const { operator, a, b, table, num } = this.state.currentQuestion;
 
-    // Enregistrer dans l'historique utilisateur
+    // Enregistrer dans l'historique utilisateur (borné : les compteurs portent le reste)
     const userData = UserState.getCurrentUserData();
-    if (!userData.progressHistory) userData.progressHistory = [];
-
-    userData.progressHistory.push({
+    appendProgressHistory(userData, {
       question: `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
       mode: 'quiz',
-      operator, // NOUVEAU
+      operator,
       userAnswer: userAnswer,
       correctAnswer: this.state.currentQuestion.answer,
     });
@@ -288,8 +287,8 @@ export class QuizMode extends GameMode {
     // Sauvegarder immédiatement
     UserState.updateUserData(userData);
 
-    // Mettre à jour le défi quotidien (seulement pour multiplication)
-    if (operator === '×' && table !== undefined && num !== undefined) {
+    // Défi quotidien : une bonne réponse en multiplication, comme le Défi, l'Aventure et Chrono
+    if (isCorrect && operator === '×' && table !== undefined && num !== undefined) {
       updateDailyChallengeProgress(table, num);
     }
   }

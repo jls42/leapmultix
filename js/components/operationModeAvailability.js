@@ -1,27 +1,24 @@
 /**
  * Gère la disponibilité des modes de jeu selon l'opération sélectionnée
- * Tous les modes supportent les 4 opérations (×, +, −, ÷), sauf Chrono (multiplication)
- * R1: Quiz/Challenge, R2: Discovery/Adventure, R3: Division, R4: Arcade
+ * Tous les modes supportent les 4 opérations (×, +, −, ÷), Chrono compris depuis la v37.
+ * La mécanique d'indisponibilité (tuile désactivée, raison écrite, lancement refusé) reste
+ * prête pour un mode qui n'existerait que pour certaines opérations.
  */
 
 import { UserState } from '../core/userState.js';
 import { getTranslation } from '../utils-es6.js';
 
 // Modes disponibles par opération
+const ALL_MODES = ['discovery', 'quiz', 'challenge', 'adventure', 'arcade', 'chrono'];
 const MODE_AVAILABILITY = {
-  '×': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade', 'chrono'],
-  '+': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'],
-  '−': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'],
-  '÷': ['discovery', 'quiz', 'challenge', 'adventure', 'arcade'],
+  '×': ALL_MODES,
+  '+': ALL_MODES,
+  '−': ALL_MODES,
+  '÷': ALL_MODES,
 };
 
-// Messages d'indisponibilité
-const UNAVAILABLE_MESSAGES = {
-  discovery: 'discovery_multiplication_only',
-  adventure: 'adventure_multiplication_only',
-  arcade: 'arcade_multiplication_only',
-  chrono: 'chrono_multiplication_only',
-};
+// Messages d'indisponibilité propres à un mode (aucun aujourd'hui : message général)
+const UNAVAILABLE_MESSAGES = {};
 
 /**
  * Vérifie si un mode est disponible pour l'opération actuelle

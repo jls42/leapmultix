@@ -34,6 +34,7 @@ import {
   isArcadeActive,
 } from './arcade.js';
 import { recordOperationResult } from './core/operation-stats.js';
+import { noteArcadePlay } from './arcade-session.js';
 import {
   showGameInstructions,
   getCanvasFont,
@@ -741,6 +742,7 @@ export function startMultiplicationInvasion() {
 
   function handleWrongAlienHit(bIndex, aIndex) {
     if (!isArcadeActive()) return;
+    noteArcadePlay();
     score += 100;
     if (typeof showArcadePoints === 'function') {
       showArcadePoints(100, canvas, alienPoint(aliens[aIndex]));
@@ -754,6 +756,7 @@ export function startMultiplicationInvasion() {
 
   function handleCorrectAlienHit(alien, bIndex) {
     if (!isArcadeActive()) return;
+    noteArcadePlay();
     bullets.splice(bIndex, 1);
     // Tir absorbé pendant que l'ami apparaît : une seule erreur ne coûte qu'une vie
     if (avatarErrorAnim > 0) return;

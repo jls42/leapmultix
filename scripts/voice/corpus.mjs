@@ -25,6 +25,7 @@ import {
   voiceKey,
 } from '../../js/core/spoken-text.js';
 import { getAdventureLevelsByOperator } from '../../js/core/adventure-data.js';
+import { chronoFact, chronoTables, otherFactDirection } from '../../js/core/chrono-questions.js';
 import {
   DISCOVERY_FACTORS,
   DISCOVERY_TABLES,
@@ -242,6 +243,31 @@ function addAdventureAndDiscoveryPhrases(ctx, operator) {
   }
 }
 
+/** Chrono : le second nombre de chaque table, de 1 à 10 (chrono-questions.js) */
+const CHRONO_NUMS = Array.from({ length: 10 }, (_, i) => i + 1);
+
+/**
+ * Chrono : chaque question de sa grille, dans chaque opération, et l'autre sens de chaque
+ * famille, que pose la révision (chrono-questions.js). Ce sont aussi des questions du Quiz :
+ * les énumérer ici fait échouer le verrou si l'une d'elles perdait son clip parce que le Quiz
+ * aurait changé ses plages. Chrono ne dit rien d'autre que ses questions et son annonce.
+ * @param {Object} ctx - Contexte de construction (voir buildCorpus)
+ * @param {string} operator
+ */
+function addChronoPhrases(ctx, operator) {
+  const { t, add } = ctx;
+  const { symbol } = getOperation(operator);
+  for (const n of chronoTables(operator)) {
+    for (const k of CHRONO_NUMS) {
+      const fact = chronoFact(operator, n, k);
+      const other = otherFactDirection(operator, fact.a, fact.b);
+      for (const { a, b } of other ? [fact, other] : [fact]) {
+        add('question', spokenQuestion(`${a} ${symbol} ${b} = ?`, t), operator);
+      }
+    }
+  }
+}
+
 /**
  * Erreurs : « Presque ! La bonne réponse est 8. » (Quiz et Aventure ; Défi à part)
  * @param {Object} ctx - Contexte de construction (voir buildCorpus)
@@ -306,6 +332,7 @@ export function buildCorpus(lang, dict = readTranslations(lang)) {
   for (const operator of OPERATORS) {
     addQuizPhrases(ctx, operator);
     addAdventureAndDiscoveryPhrases(ctx, operator);
+    addChronoPhrases(ctx, operator);
   }
   addErrorPhrases(ctx);
   addDiscoveryChoicePhrases(ctx);

@@ -2,7 +2,6 @@
    GESTION DU STOCKAGE LOCAL
    ====================== */
 
-import { UserState } from './core/userState.js';
 // updateDailyChallengeProgress import removed as it's unused
 // ESM compatibility re-exports for older arcade modules
 import { recordMultiplicationResult, getMultiplicationStats } from './core/mult-stats.js';
@@ -30,14 +29,6 @@ export function saveLanguage(langCode) {
 }
 
 // ESM only: callers should import saveLanguage from storage modules
-
-// Tâche 5.1: Sauvegarder l'état d'activation du code parental
-function saveParentalLockEnabled(enabled) {
-  const userData = UserState.getCurrentUserData();
-  if (!userData) return;
-  userData.parentalLockEnabled = enabled;
-  UserState.updateUserData(userData);
-}
 
 // Explorations Discovery gérées dans DiscoveryMode et UserState
 
@@ -79,4 +70,4 @@ function loadMultiplicationStats() {
 
 // ESM only: legacy window.* bridges removed
 
-export { loadMultiplicationStats, saveParentalLockEnabled };
+export { loadMultiplicationStats };

@@ -15,7 +15,6 @@ import { initPacmanUI } from './multimiam-ui.js';
 import { showArcadeGameOver } from './arcade.js';
 import { createArcadeToast, getArcadeText } from './arcade-message.js';
 import { getArcadeCanvasBox } from './arcade-common.js';
-import { recordOperationResult } from './core/operation-stats.js';
 import { cleanupGameResources } from './game-cleanup.js';
 
 /** Positions et couleurs de départ des fantômes */
@@ -350,8 +349,9 @@ export class PacmanGame {
     }
   }
 
-  // Fin du jeu
+  // Fin du jeu, une seule fois : deux collisions dans la même image ne l'enregistrent pas deux fois
   endGame() {
+    if (this.gameOver) return;
     this.gameOver = true;
     this.running = false;
 
@@ -495,34 +495,6 @@ export class PacmanGame {
 
     this.pathTexture = new Image();
     this.pathTexture.src = 'assets/images/arcade/chemin_128x128.png';
-  }
-
-  update() {
-    if (this.multimiam.isEatingDot) {
-      const eaten = this.multimiam.eatenDot; // assume set earlier
-      // Correct dot (should be pellet representing answer)
-      if (eaten.isCorrect) {
-        // Adaptive learning: record correct result
-        recordOperationResult(
-          this.operator,
-          this.currentOperation.num1,
-          this.currentOperation.num2,
-          true
-        );
-        this.score += eaten.points;
-      } else {
-        // Adaptive learning: record incorrect result
-        recordOperationResult(
-          this.operator,
-          this.currentOperation.num1,
-          this.currentOperation.num2,
-          false
-        );
-        this.lives -= eaten.penalty;
-      }
-      this.multimiam.isEatingDot = false;
-      this.multimiam.eatenDot = null;
-    }
   }
 }
 

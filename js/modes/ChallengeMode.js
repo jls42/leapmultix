@@ -29,6 +29,7 @@ import {
 } from '../ui-feedback.js';
 import { goToSlide } from '../slides.js';
 import { UserState } from '../core/userState.js';
+import { appendProgressHistory, recordChallengeBest } from '../core/mode-stats.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { TablePreferences } from '../core/tablePreferences.js';
@@ -116,6 +117,12 @@ export class ChallengeMode extends GameMode {
   resetState() {
     super.resetState();
     this.sessionBestStreak = 0;
+    this._abandoned = false;
+  }
+
+  /** Le Défi compte ses parties au tableau de bord, dès la première réponse */
+  countsGames() {
+    return true;
   }
 
   /**
@@ -246,6 +253,8 @@ export class ChallengeMode extends GameMode {
           ? window
           : undefined;
     if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_challenge'))) {
+      // Un défi abandonné reste compté, mais son score n'est pas un record
+      this._abandoned = true;
       this.finish();
     }
   }
@@ -347,17 +356,15 @@ export class ChallengeMode extends GameMode {
       }
     }
 
-    // Enregistrer dans l'historique utilisateur
+    // Enregistrer dans l'historique utilisateur (borné : les compteurs portent le reste)
     const userData = UserState.getCurrentUserData();
-    if (!userData.progressHistory) userData.progressHistory = [];
-
-    userData.progressHistory.push({
+    appendProgressHistory(userData, {
       question: `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
       mode: 'challenge',
       difficulty: this.difficulty,
-      operator, // NOUVEAU
+      operator,
       userAnswer: userAnswer,
       correctAnswer: this.state.currentQuestion.answer,
     });
@@ -509,6 +516,15 @@ export class ChallengeMode extends GameMode {
 
     // Mettre à jour la meilleure série globale
     userData.bestStreak = Math.max(userData.bestStreak || 0, this.state.streak);
+
+    // Tableau de bord : le meilleur score d'un défi terminé, dans sa difficulté et son opération
+    if (!this._abandoned && this.state.questionCount > 0) {
+      recordChallengeBest(userData, {
+        operator: this._statsOperator ?? '×',
+        difficulty: this.difficulty,
+        score: this.state.score,
+      });
+    }
 
     // Sauvegarder AVANT les badges : checkAndUnlockBadge enregistre sa propre copie des
     // données ; réécrire ensuite cette copie-ci effacerait le badge tout juste gagné

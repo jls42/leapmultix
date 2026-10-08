@@ -162,7 +162,7 @@ Des neutres légèrement teintés vers le bleu du thème, une seule couleur d'ac
 - **Encre atténuée** (oklch(49% 0.025 248deg)) : descriptions et mentions secondaires (6,1:1) ; jamais plus pâle.
 - **Encre des titres** (oklch(42% 0.106 245deg)) : titres Baloo 2 (8,3:1).
 - **Filet** (oklch(88.5% 0.014 248deg)) et **contour** (oklch(64% 0.02 248deg)) : séparations internes ; le contour (3,3:1) délimite les champs et la tranche des tuiles neutres.
-- **Voile de jeu** (oklch(96.5% 0.008 248deg / 0.8)) : posé sur l'illustration pendant une partie. **Voile de fenêtre** (oklch(20% 0.02 250deg / 0.55)) : derrière la vidéo, la fenêtre des tables et la vérification parentale.
+- **Voile de jeu** (oklch(96.5% 0.008 248deg / 0.8)) : posé sur l'illustration pendant une partie. **Voile de fenêtre** (oklch(20% 0.02 250deg / 0.55)) : derrière la vidéo et la fenêtre des tables.
 
 ### Tertiary
 

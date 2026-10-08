@@ -258,14 +258,20 @@ const Storage = {
   },
 
   /**
-   * Obtenir la date actuelle comme string
+   * Date du jour sur l'appareil, « AAAA-MM-JJ ». Le jour local, comme la table du Défi du
+   * jour (stats-utils.js) : la date UTC changeait de jour le soir en Amérique et la nuit en
+   * Europe, et le défi se rejouait ou s'affichait déjà terminé.
+   * @param {Date} [date]
+   * @returns {string}
    */
-  getCurrentDateString() {
-    return new Date().toISOString().split('T')[0];
+  getCurrentDateString(date = new Date()) {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
   },
 };
 
 export default Storage;
 // Named exports convenience wrappers for ESM consumers
 export const loadMultiplicationStats = () => Storage.loadMultiplicationStats();
-export const getCurrentDateString = () => Storage.getCurrentDateString();
+export const getCurrentDateString = date => Storage.getCurrentDateString(date);

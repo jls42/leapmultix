@@ -1,8 +1,9 @@
 /* eslint-env jest, node */
 /**
- * Modes selon l'opération : Chrono n'existe qu'en multiplication. Hors ×, sa tuile est
- * désactivée et dit pourquoi en texte (un bouton désactivé ne prend pas le focus : une
- * infobulle ne serait vue ni au toucher ni au clavier), et son lancement est refusé.
+ * Modes selon l'opération : depuis la v37, les six modes, Chrono compris, existent pour les
+ * quatre opérations. La mécanique d'indisponibilité reste : une tuile désactivée dit pourquoi
+ * en texte (un bouton désactivé ne prend pas le focus : une infobulle ne serait vue ni au
+ * toucher ni au clavier), et son lancement est refusé.
  */
 import { test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
@@ -16,11 +17,12 @@ const { isModeAvailable, updateModeButtonsAvailability, canLaunchMode } = await 
   '../../js/components/operationModeAvailability.js'
 );
 
-const ONLY_TABLES = 'Chrono : seulement les tables de multiplication';
+const NOT_AVAILABLE = 'Ce mode n’existe pas pour cette opération.';
+const MODES = ['discovery', 'quiz', 'challenge', 'adventure', 'chrono', 'arcade'];
 
 beforeEach(() => {
   operator = '×';
-  store.setTranslations({ chrono_multiplication_only: ONLY_TABLES });
+  store.setTranslations({ mode_not_available_for_operation: NOT_AVAILABLE });
   store.setCurrentLanguage('fr');
   jest.spyOn(console, 'log').mockImplementation(() => {});
 });
@@ -29,32 +31,46 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-test('Chrono en multiplication seulement ; le Quiz avec les quatre opérations', () => {
+test('les six modes, Chrono compris, pour les quatre opérations', () => {
   for (const op of ['×', '+', '−', '÷']) {
-    expect(isModeAvailable('chrono', op)).toBe(op === '×');
-    expect(isModeAvailable('quiz', op)).toBe(true);
+    for (const mode of MODES)
+      expect([op, mode, isModeAvailable(mode, op)]).toEqual([op, mode, true]);
   }
 });
 
-test('hors ×, la tuile Chrono est désactivée et dit pourquoi ; la note part au retour en ×', () => {
+test('la tuile Chrono reste active dans chaque opération, sans note', () => {
   document.body.innerHTML = '<button class="mode-btn" data-mode="chrono"></button>';
   const tile = document.querySelector('.mode-btn');
-  operator = '+';
+  for (const op of ['+', '−', '÷', '×']) {
+    operator = op;
+    updateModeButtonsAvailability();
+    expect(tile.disabled).toBe(false);
+    expect(tile.querySelector('.mode-unavailable-note')).toBeNull();
+  }
+});
+
+test('Chrono se lance dans chaque opération, sans message', () => {
+  const alert = jest.spyOn(globalThis, 'alert').mockImplementation(() => {});
+  for (const op of ['×', '+', '−', '÷']) {
+    operator = op;
+    expect(canLaunchMode('chrono')).toBe(true);
+  }
+  expect(alert).not.toHaveBeenCalled();
+});
+
+test('une opération inconnue : la tuile est désactivée, dit pourquoi, et ne se lance pas', () => {
+  document.body.innerHTML = '<button class="mode-btn" data-mode="quiz"></button>';
+  const tile = document.querySelector('.mode-btn');
+  const alert = jest.spyOn(globalThis, 'alert').mockImplementation(() => {});
+  operator = '%';
   updateModeButtonsAvailability();
   expect(tile.disabled).toBe(true);
-  expect(tile.querySelector('.mode-unavailable-note').textContent).toBe(ONLY_TABLES);
+  expect(tile.querySelector('.mode-unavailable-note').textContent).toBe(NOT_AVAILABLE);
+  expect(canLaunchMode('quiz')).toBe(false);
+  expect(alert).toHaveBeenCalledWith(NOT_AVAILABLE);
 
   operator = '×';
   updateModeButtonsAvailability();
   expect(tile.disabled).toBe(false);
   expect(tile.querySelector('.mode-unavailable-note')).toBeNull();
-});
-
-test('hors ×, Chrono ne se lance pas, et l’enfant sait pourquoi', () => {
-  const alert = jest.spyOn(globalThis, 'alert').mockImplementation(() => {});
-  operator = '÷';
-  expect(canLaunchMode('chrono')).toBe(false);
-  expect(alert).toHaveBeenCalledWith(ONLY_TABLES);
-  operator = '×';
-  expect(canLaunchMode('chrono')).toBe(true);
 });

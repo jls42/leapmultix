@@ -13,7 +13,6 @@ import {
   updateBackgroundByAvatar,
 } from '../utils-es6.js';
 import { getAvatarHeadSrc, normalizeAvatarId } from '../main-helpers.js';
-import { saveParentalLockEnabled } from '../storage.js';
 import { createVirtualKeyboard } from '../virtual-keyboard.js';
 import { singleActivation } from '../ui-feedback.js';
 import { eventBus } from '../core/eventBus.js';
@@ -253,12 +252,6 @@ export const Customization = {
     const nicknameInput = document.getElementById('nickname-input');
     if (nicknameInput) {
       nicknameInput.value = gameState.nickname;
-    }
-
-    // Tâche 5.1: Mettre à jour l'état de la checkbox du code parental
-    const parentalLockToggle = document.getElementById('parental-lock-toggle');
-    if (parentalLockToggle) {
-      parentalLockToggle.checked = userData.parentalLockEnabled === true;
     }
 
     // Contrôles statiques (idempotent) puis écouteurs
@@ -508,15 +501,7 @@ export const Customization = {
     userData.theme = gameState.theme;
     userData.unlockedAvatars = gameState.unlockedAvatars;
 
-    // Tâche 5.1: Sauvegarder l'état du code parental
-    const parentalLockToggle = document.getElementById('parental-lock-toggle');
-    if (parentalLockToggle) {
-      userData.parentalLockEnabled = parentalLockToggle.checked;
-      // Appeler saveParentalLockEnabled pour sauvegarder spécifiquement cette donnée
-      saveParentalLockEnabled(parentalLockToggle.checked);
-    }
-
-    UserState.updateUserData(userData); // Sauvegarde l'objet players entier (qui inclut maintenant parentalLockEnabled)
+    UserState.updateUserData(userData);
 
     showMessage(getTranslation('customization_saved'));
   },

@@ -12,7 +12,7 @@ web
 
 Des enfants de 6 à 12 ans, du CP à la 6e. Le public va donc du lecteur débutant, qui déchiffre encore, à l'élève de 6e qui lit sans effort et n'accepte pas qu'on le traite en petit. Ils jouent à la maison sur tablette, téléphone ou ordinateur, en classe sur un poste partagé, et parfois hors ligne une fois l'application installée. Leur tâche : s'entraîner aux quatre opérations (×, +, −, ÷), les tables de multiplication en tête, en jouant.
 
-Public secondaire : les parents et les enseignants. Ce sont eux qui choisissent l'application, créent un profil par enfant, consultent le tableau de bord (protégeable par un code parental) et intègrent les modes à un rituel à la maison ou à un atelier en classe. Les pages vitrines (`modes.html`, `parents.html`, `pwa.html`) s'adressent à eux et les vouvoient ; l'application s'adresse aux enfants et les tutoie.
+Public secondaire : les parents et les enseignants. Ce sont eux qui choisissent l'application, créent un profil par enfant, consultent le tableau de bord et intègrent les modes à un rituel à la maison ou à un atelier en classe. Les pages vitrines (`modes.html`, `parents.html`, `pwa.html`) s'adressent à eux et les vouvoient ; l'application s'adresse aux enfants et les tutoie.
 
 ## Product Purpose
 

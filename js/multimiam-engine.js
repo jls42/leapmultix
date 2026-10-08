@@ -11,6 +11,8 @@
 import { showArcadeMessage, showArcadePoints } from './utils-es6.js';
 import { showArcadePenalty } from './arcade-points.js';
 import { chance, pickRandom } from './core/random.js';
+import { recordOperationResult } from './core/operation-stats.js';
+import { noteArcadePlay } from './arcade-session.js';
 
 /**
  * Invincibilité après une vie perdue : le personnage clignote, puis redevient normal.
@@ -267,6 +269,11 @@ export function initPacmanEngine(game) {
         this.labyrinth[answer.y][answer.x] = 0;
         const multimiamPosX = this.multimiam.x;
         const multimiamPosY = this.multimiam.y;
+        // Une réponse croquée : la partie est jouée, et le calcul compte dans les statistiques,
+        // comme dans MultiInvaders et MultiSnake
+        noteArcadePlay();
+        const { num1, num2 } = this.currentOperation ?? {};
+        recordOperationResult(this.operator, num1, num2, Boolean(answer.isCorrect));
         if (answer.isCorrect) {
           this.score += 100;
           if (this.canvas) {
@@ -303,7 +310,8 @@ export function initPacmanEngine(game) {
 
   // Collision Pacman / fantômes
   game.checkGhostCollision = function checkGhostCollision() {
-    if (this.isInvincible) return;
+    // Partie déjà finie (dernière vie perdue au pas précédent) : une seule fin
+    if (this.gameOver || this.isInvincible) return;
     const now = Date.now();
     if (now - this.graceStartTime < this.graceDuration) return;
     for (const ghost of this.ghosts) {

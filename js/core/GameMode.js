@@ -21,6 +21,7 @@ import {
   addArrowKeyNavigation as _addArrowKeyNavigation,
 } from '../utils-es6.js';
 import { recordOperationResult } from './operation-stats.js';
+import { recordModeAnswer, ANSWER_MODES } from './mode-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
 import { cancelSpeech, preloadSpeech, whenSpeechEnds } from '../speech.js';
@@ -599,6 +600,10 @@ export class GameMode {
     this._continuePending = false;
     this._holdProgress = false;
     this._queueNextQuestionSpeech = false;
+    // Tableau de bord : la partie compte dès sa première réponse ; son bilan s'enregistre une fois
+    this._statsGameCounted = false;
+    this._statsOperator = null;
+    this._resultsSaved = false;
 
     gameState.streak = 0;
   }
@@ -951,6 +956,10 @@ export class GameMode {
     // Logique spécifique
     this.onAnswerSubmitted(isCorrect, userAnswer);
 
+    // Partie jouée jusqu'au bout : son bilan s'enregistre tout de suite, l'écran de fin
+    // peut attendre. Quitter pendant l'animation (Accueil, changement de joueur) ne la perd plus
+    if (!this.shouldContinue()) this.saveResultsOnce();
+
     // Progression automatique, sauf si l'explication attend l'enfant ou si la fin
     // du niveau est déjà programmée
     if (this.config.autoProgress && !this._continuePending && !this._holdProgress) {
@@ -973,6 +982,8 @@ export class GameMode {
         // Ignore gameState update errors
       }
 
+      // Meilleure série du tableau de bord, tous modes à questions confondus (Chrono compris,
+      // comme pour « Questions » : hasStreaks ne règle que la barre d'infos)
       try {
         const userData = UserState.getCurrentUserData();
         const currentBest = Number(userData.bestStreak) || 0;
@@ -1224,8 +1235,8 @@ export class GameMode {
   finish() {
     this.state.isActive = false;
 
-    // Sauvegarder les résultats
-    this.saveResults();
+    // Sauvegarder les résultats (déjà fait à la dernière réponse si la partie est allée au bout)
+    this.saveResultsOnce();
 
     // Nettoyer les ressources avant d'afficher les résultats
     this.cleanup();
@@ -1435,6 +1446,53 @@ export class GameMode {
     } catch {
       /* no-op: stats optional */
     }
+
+    this.recordAnswerStats(isCorrect);
+  }
+
+  /**
+   * Compteurs du tableau de bord (core/mode-stats.js) : la réponse, dans son mode et son
+   * opération, et la fenêtre « À revoir » de sa table en multiplication. La première réponse
+   * d'une partie la compte, même si elle est ensuite abandonnée.
+   * @param {boolean} isCorrect
+   */
+  recordAnswerStats(isCorrect) {
+    if (!ANSWER_MODES.includes(this.modeName)) return;
+    const question = this.state.currentQuestion;
+    const operator = question.operator || '×';
+    const startsGame = this.countsGames() && !this._statsGameCounted;
+    if (startsGame) {
+      this._statsGameCounted = true;
+      this._statsOperator = operator;
+    }
+    try {
+      const userData = UserState.getCurrentUserData();
+      recordModeAnswer(userData, {
+        mode: this.modeName,
+        operator,
+        table: operator === '×' ? (question.table ?? question.a) : null,
+        isCorrect,
+        startsGame,
+      });
+      UserState.updateUserData(userData);
+    } catch {
+      /* no-op: statistiques facultatives, le jeu continue */
+    }
+  }
+
+  /**
+   * Le mode compte-t-il ses parties au tableau de bord ? (Défi, course Chrono)
+   * @returns {boolean}
+   */
+  countsGames() {
+    return false;
+  }
+
+  /** Enregistre le bilan de la partie une seule fois : à la dernière réponse, sinon à la fin */
+  saveResultsOnce() {
+    if (this._resultsSaved) return;
+    this._resultsSaved = true;
+    this.saveResults();
   }
 
   /**

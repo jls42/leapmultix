@@ -219,14 +219,15 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `audio.js` - Audio manager with volume controls
 - `eventBus.js` - Event-driven communication between components
 - `mainInit.js` - DOM-ready initialization logic
-- `parental.js` - Parental control features
 - `theme.js` - Theme and color customization system
 - `userUi.js` - User interface utilities
 - `adventure-data.js` - Adventure mode data structures
 - `mult-stats.js` - Multiplication statistics tracking
 - `challenge-stats.js` - Challenge mode statistics
-- `chrono-stats.js` - Chrono mode statistics: times per table set and answer mode, review list of missed facts
-- `chrono-questions.js` - Chrono question draw, weighted toward the harder facts, and revision queue (both orders, no repeat in a row)
+- `chrono-stats.js` - Chrono mode statistics, one store per operation (× in `chronoStats`, + − ÷ in `chronoStatsByOperator`): times per table set and answer mode, review list of missed facts
+- `chrono-questions.js` - Chrono grids per operation (n × k, n + k, (n + k) − n, (n × k) ÷ n), draw weighted toward the harder facts, and revision queue (both members of a fact family, no repeat in a row)
+- `mode-stats.js` - Dashboard counters per mode and per operation (`modeStats`): answers, games started (first answer, abandons included), records of finished games, 20-answer window per × table for « À revoir »; seeded once from older profiles, never deleting anything
+- `adventure-progress.js` - Adventure progress per operation; the pre-December-2025 format is copied into × (best of each level), never deleted
 - `chrono-input.js` - Chrono typed-answer check (validates as soon as the answer is right or can no longer be)
 - `daily-challenge.js` - Daily challenge management
 - `utils.js` - Core utility functions (canonical source)
@@ -238,7 +239,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `ChallengeMode.js` - Timed challenges with scoring
 - `DiscoveryMode.js` - Learning-focused exploration mode
 - `AdventureMode.js` - Story-driven progression
-- `ChronoMode.js` - Timed series of 10 correct answers (multiplication only), with a review list of missed facts
+- `ChronoMode.js` - Timed series of 10 correct answers, in the operation chosen on the home screen, with a review list of missed facts per operation
 - `ArcadeMode.js` - Mini-games collection (Multimiam, Multisnake, etc.)
 
 #### UI Components (`js/components/`)
@@ -264,7 +265,8 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `arcade-multisnake.js` - Snake game integration
 - `arcade-common.js`, `arcade-utils.js` - Shared arcade utilities
 - `arcade-touch.js` - Gestes tactiles communs à MultiSnake et MultiMiam (glisser, toucher tolérant)
-- `arcade-message.js`, `arcade-points.js`, `arcade-scores.js` - Arcade UI components
+- `arcade-message.js`, `arcade-points.js` - Arcade UI components
+- `arcade-scores.js`, `arcade-session.js` - Arcade scores stored in the player profile; a game counts from its first move, abandon included
 
 **Multimiam (Decomposed Architecture):**
 

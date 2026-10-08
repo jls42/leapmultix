@@ -152,12 +152,12 @@
         },
         "featureList": [
           "Support des 4 opérations arithmétiques (multiplication, addition, soustraction, division)",
-          "Mode Découverte : Exploration interactive des tables de multiplication",
+          "Mode Découverte : Exploration interactive des 4 opérations",
           "Mode Quiz : Entraînement multi-opérations avec questions variées (×, +, −, ÷)",
           "Mode Défi : Chronomètre et scoring avec toutes les opérations",
-          "Mode Aventure : Progression par niveaux (multiplication)",
-          "Mode Chrono : Meilleur temps à battre sur 10 bonnes réponses (tables de multiplication)",
-          "Mode Arcade : 4 mini-jeux éducatifs (Multimiam, Multisnake, Space Invasion, Memory)",
+          "Mode Aventure : Progression par niveaux avec les 4 opérations",
+          "Mode Chrono : Meilleur temps à battre sur 10 bonnes réponses, avec les 4 opérations",
+          "Mode Arcade : 4 mini-jeux éducatifs (MultiInvaders, MultiMiam, MultiMemory, MultiSnake)",
           "Support multilingue (FR/EN/ES)",
           "Progressive Web App (PWA) installable",
           "Personnalisation complète (avatars, thèmes)",
@@ -227,7 +227,7 @@
             "name": "Quels sont les modes de jeu disponibles ?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "LeapMultix propose 6 modes de jeu : Découverte (apprentissage), Quiz (entraînement), Défi (contre la montre), Aventure (progression par niveaux), Chrono (10 bonnes réponses, pour battre son meilleur temps) et Arcade (4 mini-jeux : Multimiam, Multisnake, Space Invasion, Memory). Tous fonctionnent avec les 4 opérations (×, +, −, ÷), sauf Chrono, réservé aux tables de multiplication."
+              "text": "LeapMultix propose 6 modes de jeu : Découverte (apprentissage), Quiz (entraînement), Défi (contre la montre), Aventure (progression par niveaux), Chrono (10 bonnes réponses, pour battre son meilleur temps) et Arcade (4 mini-jeux : MultiInvaders, MultiMiam, MultiMemory, MultiSnake). Tous fonctionnent avec les 4 opérations (×, +, −, ÷)."
             }
           },
           {
@@ -267,7 +267,7 @@
             "name": "Quelles opérations arithmétiques sont disponibles ?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "LeapMultix propose les 4 opérations arithmétiques : multiplication (×), addition (+), soustraction (−) et division (÷). Tous les modes de jeu fonctionnent avec chacune d'elles, sauf Chrono, réservé aux tables de multiplication."
+              "text": "LeapMultix propose les 4 opérations arithmétiques : multiplication (×), addition (+), soustraction (−) et division (÷). Tous les modes de jeu fonctionnent avec chacune d'elles."
             }
           },
           {
@@ -919,12 +919,6 @@
                 >
                 <select id="recorded-voice-choice"></select>
               </div>
-              <label>
-                <input type="checkbox" id="parental-lock-toggle" />
-                <span data-translate="enable_parental_lock"
-                  >Activer code parental (pour Tableau de Bord)</span
-                >
-              </label>
               <div class="font-size-selector">
                 <span data-translate="text_size_label">Taille du texte :</span>
                 <button
@@ -985,7 +979,7 @@
               <div class="nickname" id="dashboard-nickname">Joueur</div>
               <div class="stars-summary">
                 <span id="total-stars">0</span>
-                <span data-translate="total_stars_label">étoiles au total</span>
+                <span id="total-stars-label">étoiles au total</span>
               </div>
             </div>
           </div>
@@ -1025,8 +1019,9 @@
             <div class="about-section">
               <h3 data-translate="about_description_title">Description</h3>
               <p data-translate="about_description">
-                LeapMultix est une application éducative interactive pour apprendre les tables de
-                multiplication de façon ludique.
+                LeapMultix est une application éducative interactive et gratuite pour s'entraîner au
+                calcul mental : additions, soustractions, multiplications, divisions et tables de
+                multiplication.
               </p>
             </div>
 
@@ -1035,7 +1030,7 @@
               <ul>
                 <li data-translate="about_features_game_modes">
                   6 modes de jeu&nbsp;: Découverte, Quiz, Défi, Aventure, Chrono et Arcade, pour les
-                  4 opérations (×, +, −, ÷), sauf Chrono, réservé aux tables de multiplication
+                  4 opérations (×, +, −, ÷)
                 </li>
                 <li data-translate="about_features_arcade">4 mini-jeux d'arcade éducatifs</li>
                 <li data-translate="about_features_multilingual">
@@ -1539,9 +1534,8 @@
                   LeapMultix propose 6 modes de jeu&nbsp;: Découverte (apprentissage), Quiz
                   (entraînement), Défi (contre la montre), Aventure (progression par niveaux),
                   Chrono (10 bonnes réponses, pour battre son meilleur temps) et Arcade (4
-                  mini-jeux&nbsp;: Multimiam, Multisnake, Space Invasion, Memory). Tous fonctionnent
-                  avec les 4 opérations (×, +, −, ÷), sauf Chrono, réservé aux tables de
-                  multiplication.
+                  mini-jeux&nbsp;: MultiInvaders, MultiMiam, MultiMemory, MultiSnake). Tous
+                  fonctionnent avec les 4 opérations (×, +, −, ÷).
                 </p>
               </div>
             </div>
@@ -1643,7 +1637,7 @@
                 <p itemprop="text" data-translate="faq_a9">
                   LeapMultix propose les 4 opérations arithmétiques&nbsp;: multiplication (×),
                   addition (+), soustraction (−) et division (÷). Tous les modes de jeu fonctionnent
-                  avec chacune d'elles, sauf Chrono, réservé aux tables de multiplication.
+                  avec chacune d'elles.
                 </p>
               </div>
             </div>
@@ -1697,37 +1691,6 @@
       <!-- <div id="results" class="hidden"></div> -->
 
       <!-- Sons (Supprimés car format .ogg non supporté) -->
-
-      <!-- Tâche 5.1: Popup pour le code parental -->
-      <div id="parental-lock-popup" class="popup-overlay hidden">
-        <div class="popup-content">
-          <h3 data-translate="parental_check_title">Vérification parentale</h3>
-          <p data-translate="parental_check_instruction">
-            Pour continuer, veuillez résoudre cette addition :
-          </p>
-          <p id="parental-question" class="parental-question"></p>
-          <label for="parental-answer" class="sr-only" data-translate="parental_answer_placeholder">
-            Votre réponse
-          </label>
-          <input
-            type="number"
-            id="parental-answer"
-            data-translate-placeholder="parental_answer_placeholder"
-            placeholder="Votre réponse"
-            aria-describedby="parental-answer-help"
-          />
-          <div id="parental-answer-help" class="sr-only" aria-hidden="true">
-            Saisissez un nombre
-          </div>
-          <p id="parental-error" class="error-message"></p>
-          <div class="popup-buttons">
-            <button id="parental-submit" class="btn" data-translate="validate">Valider</button>
-            <button id="parental-cancel" class="btn btn-secondary" data-translate="parental_cancel">
-              Annuler
-            </button>
-          </div>
-        </div>
-      </div>
 
       <!-- Traductions en ligne (Supprimé - Chargé depuis JSON maintenant) -->
     </main>

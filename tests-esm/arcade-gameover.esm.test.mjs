@@ -44,6 +44,7 @@ jest.unstable_mockModule('../js/arcade-invasion.js', () => ({
 }));
 
 const arcade = await import('../js/arcade.js');
+const { openArcadeSession, noteArcadePlay } = await import('../js/arcade-session.js');
 const game = await import('../js/game.js');
 const { eventBus } = await import('../js/core/eventBus.js');
 
@@ -56,6 +57,9 @@ beforeEach(() => {
   speak.mockClear();
   voiceOn = false;
   game.gameState.gameMode = 'multiinvaders';
+  // Une partie ouverte et jouée (au moins un coup), comme après startArcadeTimer
+  openArcadeSession('multiinvaders');
+  noteArcadePlay();
 });
 
 describe('Écran de fin d’arcade', () => {
@@ -73,6 +77,22 @@ describe('Écran de fin d’arcade', () => {
     expect(reset.className).toBe('btn btn-quiet btn-danger btn-sm');
     expect(reset.closest('.arcade-top-scores')).toBeTruthy();
     expect(saveArcadeScore).toHaveBeenCalledTimes(1);
+    expect(saveArcadeScore).toHaveBeenCalledWith(120, 'invasion', '×');
+  });
+
+  test('une partie lancée puis finie sans aucun coup ne compte pas', () => {
+    openArcadeSession('multiinvaders');
+    arcade.showArcadeGameOver(0);
+    expect(saveArcadeScore).not.toHaveBeenCalled();
+    expect(document.querySelector('.arcade-gameover')).toBeTruthy();
+  });
+
+  test('une partie jouée puis quittée (Accueil) compte une fois, avec le score affiché', () => {
+    document.body.innerHTML = '<div id="game"><span id="arcade-info-score">340</span></div>';
+    arcade.stopArcadeMode();
+    arcade.stopArcadeMode();
+    expect(saveArcadeScore).toHaveBeenCalledTimes(1);
+    expect(saveArcadeScore).toHaveBeenCalledWith(340, 'invasion', '×');
   });
 
   test('la voix félicite sans dire le score, qui reste affiché', () => {

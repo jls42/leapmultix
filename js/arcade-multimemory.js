@@ -19,6 +19,7 @@ import {
   isArcadeActive,
 } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
+import { noteArcadePlay } from './arcade-session.js';
 import { AudioManager } from './core/audio.js';
 import {
   showGameInstructions,
@@ -708,6 +709,8 @@ class MemoryGame {
   // Vérifie si les cartes retournées forment une paire
   checkForMatch() {
     const [card1, card2] = this.flippedCards;
+    // Deux cartes retournées : la partie est jouée (tableau de bord)
+    noteArcadePlay();
 
     // Attendre un peu pour montrer les deux cartes
     const timer = setTimeout(() => {

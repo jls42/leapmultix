@@ -233,12 +233,15 @@
   font-size: var(--text-sm);
 }
 
-.score-facts div {
-  display: flex;
-  gap: var(--space-1);
+/* Libellé et valeur se suivent dans le texte : une valeur longue revient à la ligne sous le
+   libellé, qui ne se coupe pas en deux */
+.score-facts dt,
+.score-facts dd {
+  display: inline;
 }
 
 .score-facts dt {
+  margin-inline-end: var(--space-1);
   color: var(--color-ink-muted);
 }
 
@@ -253,6 +256,45 @@
   margin: var(--space-1) 0 0;
   font-size: var(--text-sm);
   color: var(--color-ink-muted);
+}
+
+/* Opération d'une valeur ventilée (« × 12 · + 3 ») : le signe se lit, son nom est pour les
+   lecteurs d'écran ; les données d'avant la mise à jour sont dites en mots, plus discrètes */
+.score-op {
+  font-weight: 700;
+}
+
+.score-op.is-legacy {
+  font-weight: 400;
+  color: var(--color-ink-muted);
+}
+
+/* Une opération et sa valeur (« − 37,9 s ») restent sur la même ligne ; « avant la mise à
+   jour », plus long, peut se couper sur un téléphone */
+.score-part {
+  white-space: nowrap;
+}
+
+.score-part.is-legacy {
+  white-space: normal;
+}
+
+/* Rangée sans logo dessiné (Défi du jour) : une icône centrée dans la place du logo */
+.score-logo-icon {
+  display: grid;
+  place-items: center;
+  color: var(--color-ink-muted);
+}
+
+/* Nouveau joueur : une phrase plutôt qu'une page de zéros */
+.dashboard-welcome {
+  margin: var(--space-3) 0;
+  font-size: var(--text-md);
+  color: var(--color-ink);
+}
+
+.history-section[hidden] {
+  display: none;
 }
 
 /* --- Succès débloqués --- */

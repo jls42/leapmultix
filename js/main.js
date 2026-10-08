@@ -85,7 +85,7 @@ initOnDomReady();
 // - goToSlide(n) pour naviguer
 // - showSlide(slideId) pour afficher une slide précise
 // - hideAllSlides() pour tout masquer
-// Les callbacks métier (parental lock, refreshUserList, etc.) restent inchangés
+// Les callbacks métier (refreshUserList, etc.) restent inchangés
 
 // Adapter les appels dans le code :
 // Exemple :
@@ -165,14 +165,6 @@ initOnDomReady();
  */
 // applyFontSize moved to core/theme.js
 
-// Tâche 5.1: Fonction pour afficher et gérer la popup de code parental
-/**
- * Fonction showParentalLockPopup
- * @param {*} callbackOnSuccess - Description du paramètre
- * @returns {*} Description du retour
- */
-// showParentalLockPopup moved to core/parental.js
-
 // Tâche 2.1: Mise à jour de l'affichage des pièces via ESM (utils-es6.updateCoinDisplay)
 
 // La logique de validation et de fermeture est dans l'écouteur DOMContentLoaded
@@ -185,14 +177,6 @@ initOnDomReady();
 // renderAvatarSelector géré par main-helpers (utils-es6); pas de wrapper ici
 
 // body-level personalization handler removed (replaced by data-attribute wiring in bootstrap)
-
-/**
- * Supprimer un élément
- * @returns {*} Description du retour
- */
-// removeAvatarAfterCadenas moved to core/parental.js
-
-// avatar ::after fix applied in mainInit
 
 // Fond illustré : un monde fixe par avatar, sans rotation (main-helpers.updateBackgroundByAvatar).
 // startBackgroundRotation n'est plus qu'un alias déprécié de updateBackgroundByAvatar.
