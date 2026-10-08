@@ -21,6 +21,7 @@ import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
 import { getDifficultySettings } from './difficulty.js';
+import { plausibleWrongAnswers } from './core/GameMode.js';
 // UserState removed - unused import
 
 // Direction donnée par chaque glissement du doigt
@@ -543,16 +544,15 @@ class SnakeGame {
     }
   }
 
-  // Générer les réponses
+  // Bonne réponse et trois leurres, ceux des autres modes : des erreurs d'enfant plausibles
+  // (un de plus ou de moins, une table à côté…), jamais négatifs ni égaux à la bonne
+  // réponse. Avant, les leurres valaient c + 1, c − 1 et c + 10 : la bonne réponse était
+  // toujours le milieu de trois nombres qui se suivent, et « −1 » sortait pour un résultat nul.
   generateAnswers(correctResult) {
-    const answers = [
-      { value: correctResult, isCorrect: true },
-      { value: correctResult + 1, isCorrect: false },
-      { value: correctResult - 1, isCorrect: false },
-      { value: correctResult + 10, isCorrect: false },
-    ];
-
-    return shuffleInPlace(answers);
+    const { num1, num2 } = this.currentOperation ?? {};
+    const question = { answer: correctResult, operator: this.operator, a: num1, b: num2 };
+    const decoys = plausibleWrongAnswers(question, 3).map(value => ({ value, isCorrect: false }));
+    return shuffleInPlace([{ value: correctResult, isCorrect: true }, ...decoys]);
   }
 
   // Placer les nombres sur la grille
