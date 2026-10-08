@@ -173,7 +173,10 @@ export class PacmanGame {
   layoutBoard() {
     this.transposed = this.chooseTransposed();
     this.resizeCanvas();
-    watchArcadeViewport(this.canvas, () => {
+    // Arrêtée en fin de partie, comme dans MultiSnake et MultiMemory : le nettoyage commun
+    // rend le canevas (this.canvas = null) avant que l'élément ne quitte la page
+    this._stopWatchingViewport = watchArcadeViewport(this.canvas, () => {
+      if (!this.canvas) return;
       if (this.isUnplayed()) this.transposed = this.chooseTransposed();
       this.resizeCanvas();
       this.renderer?.draw();
@@ -382,6 +385,7 @@ export class PacmanGame {
     if (this.gameOver) return;
     this.gameOver = true;
     this.running = false;
+    if (this._stopWatchingViewport) this._stopWatchingViewport();
 
     // Nettoyage centralisé (ESM)
     try {
