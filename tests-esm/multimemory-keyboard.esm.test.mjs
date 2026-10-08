@@ -21,6 +21,7 @@ jest.unstable_mockModule('../js/arcade.js', () => ({
 jest.unstable_mockModule('../js/arcade-session.js', () => ({ noteArcadePlay }));
 
 const store = await import('../js/i18n-store.js');
+const pause = await import('../js/arcade-time.js');
 const { AudioManager } = await import('../js/core/audio.js');
 const { MemoryGame } = await import('../js/arcade-multimemory.js');
 
@@ -119,6 +120,20 @@ describe('MultiMemory au clavier', () => {
     jest.advanceTimersByTime(2000);
     // 10 points par paire, 20 par vie gardée (3 vies)
     expect(showArcadeGameOver).toHaveBeenCalledWith(game.pairs * 10 + 60);
+  });
+
+  test('en pause, aucune carte ne se retourne, ni au clavier ni à la souris', () => {
+    const time = document.createElement('span');
+    document.body.appendChild(time);
+    pause.mountArcadePause(time);
+    pause.pauseArcade();
+    press('Enter');
+    expect(game.flipCardAt(game.cards[1].x + 5, game.cards[1].y + 5)).toBe(false);
+    expect(game.cards.some(card => card.isFlipped)).toBe(false);
+    pause.unmountArcadePause();
+    // Reprise : la carte visée (la dernière cliquée) se retourne
+    press('Enter');
+    expect(game.cards[1].isFlipped).toBe(true);
   });
 
   test('deux cartes qui ne vont pas ensemble se retournent, et le jeu le dit', () => {

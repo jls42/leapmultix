@@ -22,6 +22,7 @@ import { UserManager } from './userManager.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
 import { getDifficultySettings } from './difficulty.js';
 import { plausibleWrongAnswers } from './core/GameMode.js';
+import { isArcadePaused } from './arcade-time.js';
 // UserState removed - unused import
 
 // Direction donnée par chaque glissement du doigt
@@ -605,6 +606,18 @@ class SnakeGame {
     const deltaTime = timestamp - this.lastUpdateTime;
     this.lastUpdateTime = timestamp;
 
+    // En pause (Arcade), le serpent ne bouge plus : le temps de la pause ne compte pas
+    if (!isArcadePaused()) this.advance(deltaTime);
+
+    // Dessiner le jeu avec l'animation
+    this.draw();
+
+    // Continuer la boucle
+    this.animationId = requestAnimationFrame(time => this.gameLoop(time));
+  }
+
+  // Fait avancer le serpent du temps écoulé, d'une case à chaque intervalle
+  advance(deltaTime) {
     // Mettre à jour le temps écoulé depuis le dernier mouvement
     this.moveTime += deltaTime;
 
@@ -626,12 +639,6 @@ class SnakeGame {
       this.moveTime = 0;
       this.animationProgress = 0;
     }
-
-    // Dessiner le jeu avec l'animation
-    this.draw();
-
-    // Continuer la boucle
-    this.animationId = requestAnimationFrame(time => this.gameLoop(time));
   }
 
   // Mettre à jour la logique du jeu (sans dessiner)

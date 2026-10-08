@@ -3,6 +3,7 @@
 
 import { clientToCanvasPoint } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
+import { toggleArcadePause } from './arcade-time.js';
 
 // Case voisine dans chaque direction
 const CELL_STEPS = {
@@ -22,6 +23,18 @@ function directionsToward(dx, dy) {
   const horizontal = dx > 0 ? 'RIGHT' : 'LEFT';
   const vertical = dy > 0 ? 'DOWN' : 'UP';
   return Math.abs(dx) > Math.abs(dy) ? [horizontal, vertical] : [vertical, horizontal];
+}
+
+/**
+ * Barre d'espace : la pause de l'Arcade (comme la touche P), compte à rebours compris.
+ * Quand le focus est sur un bouton (« Reprendre », « Abandonner »), la touche lui revient.
+ * @param {PacmanGame} game
+ * @param {KeyboardEvent} event
+ */
+function onSpaceKey(game, event) {
+  if (event.target?.closest?.('button')) return;
+  if (game.gameOver) game.start();
+  else toggleArcadePause();
 }
 
 /**
@@ -62,11 +75,7 @@ export function initPacmanControls(game) {
         break;
       case ' ':
         e.preventDefault(); // Empêcher le scroll de la page
-        if (game.gameOver) {
-          game.start();
-        } else {
-          game.running ? game.pause() : game.resume();
-        }
+        onSpaceKey(game, e);
         break;
     }
 

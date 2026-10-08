@@ -828,6 +828,99 @@
   opacity: 0;
 }
 
+/* === 9. TEMPS : PAUSE ET PARTIE SANS LIMITE (WCAG 2.2.1, js/arcade-time.js) ===
+   « Pause » suit le temps dans le bandeau. En pause, un voile couvre le plateau (pas
+   « Abandonner »), avec « Reprendre » au centre, à portée de doigt. */
+.arcade-pause-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 var(--space-2);
+  font-size: var(--text-sm);
+  vertical-align: middle;
+}
+
+.arcade-pause-icon {
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+  fill: currentColor;
+}
+
+.arcade-pause-overlay {
+  position: absolute;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: rgb(0 0 0 / 0.6);
+  border-radius: var(--radius-md);
+}
+
+.arcade-pause-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: min(100%, 22rem);
+  padding: var(--space-4) var(--space-5);
+  text-align: center;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.arcade-pause-card p {
+  margin: 0;
+}
+
+.arcade-pause-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-ink-heading);
+}
+
+.arcade-pause-card .arcade-resume-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+}
+
+.arcade-pause-hint {
+  font-size: var(--text-sm);
+}
+
+/* Tuile MultiMemory : « Sans limite de temps », sous la difficulté */
+.arcade-game-card .arcade-untimed-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  font-weight: 700;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.arcade-game-card .arcade-untimed-option input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--color-action);
+}
+
+/* Écran tactile : la touche P ne sert à rien */
+@media (hover: none) and (pointer: coarse) {
+  .arcade-pause-hint[data-input='keyboard'] {
+    display: none;
+  }
+}
+
 @keyframes arcade-overlay-in {
   from {
     opacity: 0;

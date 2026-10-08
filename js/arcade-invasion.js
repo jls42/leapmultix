@@ -35,6 +35,7 @@ import {
 } from './arcade.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { noteArcadePlay } from './arcade-session.js';
+import { isArcadePaused } from './arcade-time.js';
 import {
   showGameInstructions,
   getCanvasFont,
@@ -527,6 +528,8 @@ export function startMultiplicationInvasion() {
   // fusée pour que la balle parte exactement sous le point visé
   const bulletOffset = () => player.width / 2 - 2.5;
   function aimAt(canvasX) {
+    // En pause, la fusée ne bouge pas
+    if (isArcadePaused()) return;
     const x = canvasX - bulletOffset();
     player.x = Math.max(5, Math.min(canvas.width - player.width - 5, x));
   }
@@ -684,6 +687,8 @@ export function startMultiplicationInvasion() {
   }
 
   function shoot() {
+    // En pause, pas de tir : les balles attendraient la reprise toutes ensemble
+    if (isArcadePaused()) return;
     // Positionner le tir au-dessus de la fusée avec des ajustements pour s'assurer
     // qu'il atteint bien les monstres même quand la fusée est en bas
     bullets.push({
@@ -896,6 +901,8 @@ export function startMultiplicationInvasion() {
     if (!isArcadeActive()) return;
     if (gameOver) return;
     if (showingAvatar) return;
+    // En pause, rien ne bouge (le pas suivant repart du temps de la reprise : frameStep)
+    if (isArcadePaused()) return;
 
     updatePlayerPosition(step);
     aliens.forEach(alien => (alien.y += alien.speed * step));

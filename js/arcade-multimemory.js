@@ -33,6 +33,7 @@ import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { UserState } from './core/userState.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
+import { isArcadePaused, isNoTimeLimit } from './arcade-time.js';
 // Dépend des helpers ESM (plus d'assignations window.*)
 
 const FULL_TABLE_SET = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -343,8 +344,8 @@ export function startMemoryArcade() {
     typeof UserManager.getCurrentUser === 'function' ? UserManager.getCurrentUser() : null;
   const globalExclusions = TablePreferences.getActiveExclusions(currentUser);
   const tablesForGame = resolveMultimemoryTables(difficultySettings.tables, globalExclusions);
-  // Durée de la partie selon le niveau
-  startArcadeTimer(difficultySettings.timeSeconds);
+  // Durée de la partie selon le niveau, ou sans limite si le joueur l'a choisi
+  startArcadeTimer(memoryDuration(difficultySettings));
 
   // Forcer la mise à zéro du score via InfoBar
   try {
@@ -384,6 +385,16 @@ export function startMemoryArcade() {
   } catch {
     // Erreur ignorée (non-critique)
   }
+}
+
+/**
+ * Durée d'une partie : celle du niveau, ou sans limite (Infinity) si le joueur l'a choisi
+ * dans la tuile du jeu
+ * @param {{timeSeconds: number}} difficultySettings
+ * @returns {number}
+ */
+function memoryDuration(difficultySettings) {
+  return isNoTimeLimit('multimemory') ? Infinity : difficultySettings.timeSeconds;
 }
 
 // Consigne du jeu, selon l'appareil (doigt ou souris)
@@ -819,7 +830,8 @@ class MemoryGame {
 
   // Retourne une carte (souris, doigt ou clavier) ; faux si elle ne peut pas l'être
   flipCard(card) {
-    if (this.isGameOver || this.isProcessingMatch) return false;
+    // En pause, le plateau est caché et rien ne se retourne
+    if (this.isGameOver || this.isProcessingMatch || isArcadePaused()) return false;
     if (!card || card.isFlipped || card.isMatched) return false;
     card.isFlipped = true;
     this.flippedCards.push(card);
