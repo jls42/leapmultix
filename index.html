@@ -914,15 +914,12 @@
                 />
               </label>
             </div>
-            <!-- Le cadenas expliqué en clair : une infobulle ne se voit pas au doigt -->
-            <p
-              id="avatar-locked-hint"
-              class="avatar-locked-hint"
-              data-translate="avatar_locked_hint"
-              hidden
-            >
-              Les avatars avec un cadenas sont verrouillés.
-            </p>
+            <!-- Avatars à débloquer avec les pièces : boutons et textes écrits par
+                 components/avatarShop.js (un groupe radio ne doit contenir que des radios) -->
+            <div id="avatar-shop" class="avatar-shop" hidden>
+              <p id="avatar-shop-intro" class="avatar-shop-intro"></p>
+              <div class="avatar-shop-list"></div>
+            </div>
           </div>
           <div class="customization-section">
             <h2 class="section-title" data-translate="color_theme_title">Thèmes de couleur</h2>

@@ -104,6 +104,71 @@
   }
 }
 
+/* --- Avatars à débloquer avec les pièces (components/avatarShop.js) ---
+   Les mêmes tuiles que la grille, à plat et le visage estompé comme un avatar verrouillé,
+   avec le prix sous le nom. Ce sont des boutons : ils s'enfoncent et prennent le focus. */
+#slide6 .avatar-shop {
+  margin-block-start: var(--space-5);
+}
+
+#slide6 .avatar-shop-intro {
+  max-inline-size: 36rem;
+  margin: 0 auto var(--space-3);
+  color: var(--color-ink-muted);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+#slide6 .avatar-shop-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+#slide6 .avatar-buy-btn {
+  font-family: inherit;
+  color: var(--color-ink-muted);
+  background: var(--color-surface-sunken);
+}
+
+#slide6 .avatar-buy-btn img {
+  opacity: 0.6;
+  filter: grayscale(1);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    filter var(--dur-base) var(--ease-out);
+}
+
+/* Survolé ou atteint au clavier : le personnage se montre en couleurs, comme un essayage */
+#slide6 .avatar-buy-btn:hover img,
+#slide6 .avatar-buy-btn:focus-visible img {
+  opacity: 1;
+  filter: none;
+}
+
+#slide6 .avatar-buy-btn:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.avatar-price {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.avatar-price .coin-icon {
+  inline-size: 16px;
+  block-size: 16px;
+  fill: var(--color-reward);
+  stroke: var(--color-reward-edge);
+  stroke-width: 1.5;
+}
+
 /* --- Thèmes de couleurs : pastille du thème + libellé --- */
 .color-theme-selector {
   display: flex;

@@ -110,6 +110,28 @@ describe('fenêtre de confirmation du jeu', () => {
     await expect(second).resolves.toBe(true);
   });
 
+  test('par défaut (sortie de partie) : le refus en bouton principal, l’action en secondaire', () => {
+    void confirmDialog(OPTIONS);
+    expect(button('cancel').className).toBe('btn');
+    expect(button('confirm').className).toBe('btn btn-secondary btn-danger');
+  });
+
+  test('emphasis « confirm » (un achat) : l’action en bouton principal, le refus garde le focus', () => {
+    void confirmDialog({
+      ...OPTIONS,
+      confirmLabel: 'Débloquer',
+      cancelLabel: 'Pas maintenant',
+      emphasis: 'confirm',
+    });
+    expect(button('confirm').className).toBe('btn');
+    expect(button('cancel').className).toBe('btn btn-secondary');
+    expect([...dialog().querySelectorAll('button')].map(b => b.dataset.answer)).toEqual([
+      'cancel',
+      'confirm',
+    ]);
+    expect(document.activeElement).toBe(button('cancel'));
+  });
+
   test('sans confirmLabel, un seul bouton : la fenêtre informe et rend false', async () => {
     const answer = confirmDialog({ title: 'Il te manque 3 pièces.', cancelLabel: 'D’accord' });
     expect(dialog().querySelectorAll('button')).toHaveLength(1);

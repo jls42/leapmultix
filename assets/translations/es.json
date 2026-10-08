@@ -75,8 +75,6 @@
   "arcade_no_time_limit": "Sin límite de tiempo",
   "arcade_no_time_limit_short": "Sin límite",
   "avatar_choice_title": "Elección de avatar",
-  "avatar_locked_hint": "Los avatares con candado están bloqueados.",
-  "avatar_locked_tooltip": "Este avatar está bloqueado.",
   "average_score_label": "Puntuación media",
   "back_to_arcade_menu": "Volver al menú Arcade",
   "back_to_home": "Volver al inicio",
@@ -793,5 +791,15 @@
   "chrono_tables_hint": "Tus tablas se eligen con el engranaje, arriba o en el menú: la misma elección que en los demás juegos.",
   "chrono_typed_label": "Tu respuesta",
   "confirm_abandon_chrono": "¿De verdad quieres parar? Tu tiempo no se guardará.",
-  "confirm_clear_chrono_basket": "¿Borrar todos los cálculos de tu lista?"
+  "confirm_clear_chrono_basket": "¿Borrar todos los cálculos de tu lista?",
+  "avatar_shop_intro": "Para desbloquear con tus monedas: {price, plural, one {# moneda} other {# monedas}} cada uno. Tienes {coins, plural, one {# moneda} other {# monedas}}.",
+  "avatar_price": "{price, plural, one {# moneda} other {# monedas}}",
+  "avatar_buy_question": "¿Desbloquear el avatar {avatar} por {price, plural, one {# moneda} other {# monedas}}?",
+  "avatar_buy_left": "Te {left, plural, one {quedará # moneda} other {quedarán # monedas}}.",
+  "avatar_buy_confirm": "Desbloquear",
+  "avatar_buy_cancel": "Ahora no",
+  "avatar_buy_missing": "Te {missing, plural, one {falta # moneda} other {faltan # monedas}} para desbloquear el avatar {avatar}.",
+  "avatar_buy_earn": "Ganas monedas en Crono, Aventura y Desafío, y con el desafío del día.",
+  "avatar_buy_ok": "De acuerdo",
+  "avatar_bought": "¡Nuevo avatar: {avatar}!"
 }
