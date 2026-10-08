@@ -55,6 +55,43 @@ function updateInvincibility(ctx) {
 }
 
 /**
+ * Un pas de Pacman : il avance (arrêté à une intersection, il ne fait que bouger la bouche),
+ * puis les réponses et les fantômes sont vérifiés.
+ * @param {Object} ctx Instance de PacmanGame
+ * @param {number} now Heure du pas (performance.now)
+ */
+function stepPacman(ctx, now) {
+  // Sauvegarder les positions actuelles avant le déplacement
+  ctx.lastPacmanPosition = { x: ctx.multimiam.x, y: ctx.multimiam.y };
+  if (ctx.multimiam.isAtIntersection && !ctx.multimiam.isMoving) ctx.updateMouthAnimation();
+  else ctx.movePacman();
+
+  // Vérifier les collisions après le déplacement
+  ctx.checkAnswerCollision();
+  ctx.checkGhostCollision();
+
+  // Réinitialiser l'animation et mettre à jour le temps
+  ctx.animationProgress = 0;
+  ctx.lastMoveTime = now;
+}
+
+/**
+ * Un pas des fantômes, complètement indépendant de Pacman, puis la collision.
+ * @param {Object} ctx Instance de PacmanGame
+ * @param {number} now Heure du pas (performance.now)
+ */
+function stepGhosts(ctx, now) {
+  // Sauvegarder la position actuelle des fantômes avant de les déplacer
+  ctx.lastGhostPositions = ctx.ghosts.map(ghost => ({ x: ghost.x, y: ghost.y }));
+  ctx.moveGhosts();
+  ctx.checkGhostCollision();
+
+  // Réinitialiser l'animation et mettre à jour le temps
+  ctx.ghostAnimationProgress = 0;
+  ctx.lastGhostMoveTime = now;
+}
+
+/**
  * Point du labyrinthe où poser la pastille de points : au-dessus de la case mangée.
  * @param {Object} ctx Instance de PacmanGame
  * @param {{x: number, y: number}} cell
@@ -469,50 +506,9 @@ export function initPacmanEngine(game) {
     const ghostMoveInterval = this.moveInterval * ghostIntervalMultiplier;
     this.ghostAnimationProgress = Math.min(1, ghostDeltaTime / ghostMoveInterval);
 
-    // IMPORTANT: Les deux blocs suivants sont indépendants - l'un pour Pacman, l'autre pour les fantômes
-
-    // === PACMAN ===
-    if (deltaTime >= this.moveInterval) {
-      // Sauvegarder les positions actuelles avant le déplacement
-      this.lastPacmanPosition = { x: this.multimiam.x, y: this.multimiam.y };
-
-      // Déplacer Pacman
-      if (this.multimiam.isAtIntersection && !this.multimiam.isMoving) {
-        this.multimiam.mouthAngle += this.multimiam.mouthSpeed;
-        if (this.multimiam.mouthAngle > Math.PI / 4 || this.multimiam.mouthAngle < 0) {
-          this.multimiam.mouthSpeed *= -1;
-        }
-      } else {
-        this.movePacman();
-      }
-
-      // Vérifier les collisions après le déplacement
-      this.checkAnswerCollision();
-      this.checkGhostCollision();
-
-      // Réinitialiser l'animation et mettre à jour le temps
-      this.animationProgress = 0;
-      this.lastMoveTime = now;
-    }
-
-    // === FANTÔMES === (complètement indépendant de Pacman)
-    if (ghostDeltaTime >= ghostMoveInterval) {
-      // Sauvegarder la position actuelle des fantômes avant de les déplacer
-      this.lastGhostPositions = this.ghosts.map(ghost => ({ x: ghost.x, y: ghost.y }));
-
-      // Déplacer les fantômes selon leur logique de mouvement
-      this.moveGhosts();
-
-      // Vérifier les collisions après le déplacement
-      this.checkGhostCollision();
-
-      // Réinitialiser l'animation et mettre à jour le temps
-      this.ghostAnimationProgress = 0;
-      this.lastGhostMoveTime = now;
-
-      // Désactiver les logs de débogage en production
-      // console.log('Fantômes déplacés à', now);
-    }
+    // IMPORTANT: Les deux pas suivants sont indépendants - l'un pour Pacman, l'autre pour les fantômes
+    if (deltaTime >= this.moveInterval) stepPacman(this, now);
+    if (ghostDeltaTime >= ghostMoveInterval) stepGhosts(this, now);
 
     updateInvincibility(this);
   };
