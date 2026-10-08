@@ -27,6 +27,7 @@ import { goToSlide } from './slides.js';
 import { setGameMode } from './mode-orchestrator.js';
 import { eventBus } from './core/eventBus.js';
 import { openArcadeSession, closeArcadeSession, arcadeGameOf } from './arcade-session.js';
+import { isArcadePaused, mountArcadePause, unmountArcadePause } from './arcade-time.js';
 
 // =====================
 // Fonction de lancement du mode Snake (coordination équipe Snake)
@@ -202,7 +203,8 @@ function getGameTitle(mode) {
 
 function confirmAndResetScores(mode, score) {
   const canConfirm = typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-  // Seuls les scores de CE jeu sont effacés : la question le dit
+  // Les meilleurs scores de CE jeu et ses compteurs du tableau de bord (parties, score
+  // moyen), dans toutes les opérations, sont effacés : la question dit tout cela
   const question = getTranslation('reset_scores_confirm', { game: getGameTitle(mode) });
   if (canConfirm ? globalThis.confirm(question) : true) {
     resetScoresForMode(mode);
@@ -466,23 +468,45 @@ export const monsterSprites = monsterSpriteNames.map(name => {
 // ===== Timer de l'Arcade (compte à rebours) =====
 let arcadeTimerIntervalId = null,
   arcadeTimerRemaining = 0;
+/**
+ * Lance le temps de la partie (et ouvre la partie pour le tableau de bord).
+ * @param {number} durationSeconds - Durée du niveau ; Infinity : partie sans limite de temps
+ */
 export function startArcadeTimer(durationSeconds) {
   stopArcadeTimer();
   setArcadeActive(true);
   // Chaque jeu lance son minuteur une fois, au départ de la partie : la partie s'ouvre ici
   openArcadeSession(globalGameState?.gameMode);
+  // Sans limite de temps (au choix dans MultiMemory) : ni compte à rebours, ni pause
+  if (!Number.isFinite(durationSeconds)) {
+    showUnlimitedTime();
+    return;
+  }
   arcadeTimerRemaining = durationSeconds;
   updateArcadeTimerDisplay();
-  arcadeTimerIntervalId = setInterval(() => {
-    arcadeTimerRemaining--;
-    if (arcadeTimerRemaining <= 0) {
-      stopArcadeTimer();
-      setArcadeActive(false);
-      showArcadeGameOver(displayedArcadeScore());
-    } else {
-      updateArcadeTimerDisplay();
-    }
-  }, 1000);
+  mountArcadePause(document.getElementById('arcade-info-timer'));
+  arcadeTimerIntervalId = setInterval(tickArcadeTimer, 1000);
+}
+
+/** Une seconde de partie : en pause, le temps ne décompte plus ; à zéro, la fin */
+function tickArcadeTimer() {
+  if (isArcadePaused()) return;
+  arcadeTimerRemaining--;
+  if (arcadeTimerRemaining <= 0) {
+    stopArcadeTimer();
+    setArcadeActive(false);
+    showArcadeGameOver(displayedArcadeScore());
+  } else {
+    updateArcadeTimerDisplay();
+  }
+}
+
+/** Temps affiché d'une partie sans limite (retraduit avec la page) */
+function showUnlimitedTime() {
+  const el = document.getElementById('arcade-info-timer');
+  if (!el) return;
+  el.dataset.translate = 'arcade_no_time_limit_short';
+  el.textContent = translated('arcade_no_time_limit_short', 'Sans limite');
 }
 function updateArcadeTimerDisplay() {
   const m = Math.floor(arcadeTimerRemaining / 60);
@@ -500,6 +524,8 @@ export function stopArcadeTimer() {
     clearInterval(arcadeTimerIntervalId);
     arcadeTimerIntervalId = null;
   }
+  // La pause part avec le temps de la partie (bouton, voile, touche P)
+  unmountArcadePause();
 }
 // Plus de ponts globaux: utiliser les import ESM dans les sous-jeux
 

@@ -744,7 +744,7 @@ Toute phrase dite vient des traductions (`assets/translations/{fr,en,es}.json`) 
 ### Fonctionnalités techniques
 
 - Stockage local (localStorage) avec fallbacks
-- Données de jeu rangées par profil (les statistiques par calcul restent communes à l'appareil)
+- Données de jeu rangées par profil, statistiques par calcul comprises : sur un poste partagé, les erreurs d'un joueur n'orientent pas les questions d'un autre
 - Sauvegarde automatique de la progression
 - Migration automatique des données anciennes
 

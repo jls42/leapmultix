@@ -267,13 +267,19 @@ describe('Chrono × : le profil ancien de Zoé', () => {
     while (chrono.state.correctAnswers < 10) await answer(chrono);
     await flush(1000);
 
-    const { chronoStats, coins, modeStats, ...rest } = persisted;
+    const { chronoStats, coins, modeStats, operationStats, ...rest } = persisted;
     const { chronoStats: oldChrono, coins: oldCoins, ...oldRest } = before;
     // Rien d'autre ne bouge : ni l'historique (Chrono ne l'écrit pas) ni la meilleure série,
     // déjà à 10 chez Zoé ; qu'une course sans faute la fasse monter, comme en v36, est vérifié
     // dans chrono-operations (« comme avant, une course sans faute… »)
     expect(rest).toEqual(oldRest);
     expect(coins).toBe(oldCoins + 10);
+    // Statistiques par calcul, rangées dans le profil et non plus dans une clé commune à
+    // l'appareil : les onze réponses de la course, dont 4 × 4 raté
+    const counted = Object.values(operationStats);
+    expect(counted.reduce((sum, entry) => sum + entry.attempts, 0)).toBe(11);
+    expect(counted.reduce((sum, entry) => sum + entry.errors, 0)).toBe(1);
+    expect(operationStats['4×4']).toMatchObject({ operator: '×', a: 4, b: 4, errors: 1 });
     // v37 : la course compte au tableau de bord, une partie et ses onze réponses, après les
     // neuf courses de Zoé reprises de ses classements (amorçage à la première écriture)
     expect(modeStats.modes.chrono['×']).toEqual({ games: 10, questions: 11, correct: 10 });

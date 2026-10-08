@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, test } from '@jest/globals';
-import { findCardAt, resolveMultimemoryTables } from '../js/arcade-multimemory.js';
+import {
+  calculationKey,
+  drawMemoryCalculations,
+  findCardAt,
+  resolveMultimemoryTables,
+} from '../js/arcade-multimemory.js';
+import { getDifficultySettings } from '../js/difficulty.js';
 
 describe('resolveMultimemoryTables (ESM)', () => {
   test('filtre les tables exclues présentes dans la base', () => {
@@ -62,5 +68,44 @@ describe('findCardAt : carte visée au doigt (ESM)', () => {
   test('une carte déjà trouvée ne se retourne pas, et ne cède pas sa place à sa voisine', () => {
     cards[1].isMatched = true;
     expect(findCardAt(cards, cards[1].x + 8, cards[1].y + 39, TOLERANCE)).toBeNull();
+  });
+});
+
+describe('drawMemoryCalculations : jamais deux fois le même calcul sur un plateau (ESM)', () => {
+  const LEVELS = ['debutant', 'moyen', 'difficile'];
+  const BOARDS = 300;
+
+  test('3 × 4 et 4 × 3 sont le même calcul, 9 − 4 et 4 − 9 non', () => {
+    const key = (num1, operator, num2) => calculationKey({ num1, num2, operator });
+    expect(key(3, '×', 4)).toBe(key(4, '×', 3));
+    expect(key(2, '+', 5)).toBe(key(5, '+', 2));
+    expect(key(9, '−', 4)).not.toBe(key(4, '−', 9));
+    expect(key(12, '÷', 3)).not.toBe(key(3, '÷', 12));
+  });
+
+  const CASES = [
+    ...['×', '+', '−', '÷'].flatMap(operator =>
+      LEVELS.map(level => ({ operator, level, excluded: [] }))
+    ),
+    // Une seule table restante : 10 calculs pour 8 paires
+    { operator: '×', level: 'difficile', excluded: [1, 2, 3, 4, 5, 6, 8, 9, 10] },
+    { operator: '×', level: 'debutant', excluded: [3, 5] },
+  ];
+
+  test.each(CASES)('$operator, $level, tables retirées : $excluded', caseOf => {
+    const { operator, level, excluded } = caseOf;
+    const { pairs, tables } = getDifficultySettings(level);
+    const settings = {
+      operator,
+      level,
+      tables: resolveMultimemoryTables(tables, excluded),
+      excludedTables: excluded,
+    };
+    const boards = Array.from({ length: BOARDS }, () => drawMemoryCalculations(pairs, settings));
+    const withDuplicate = boards.filter(
+      board => new Set(board.map(calculationKey)).size < board.length
+    );
+    expect(withDuplicate).toEqual([]);
+    expect(boards.every(board => board.length === pairs)).toBe(true);
   });
 });

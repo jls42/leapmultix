@@ -39,7 +39,7 @@ import {
   preferredScrollBehavior,
   keepNumbersTogether,
 } from '../ui-feedback.js';
-import { chance, shuffleInPlace } from './random.js';
+import { chance, randomInt, shuffleInPlace } from './random.js';
 
 // ======================================
 // ÉNONCÉS DE PROBLÈMES
@@ -425,18 +425,20 @@ function isUsableWrongAnswer(value, bounds, taken) {
 }
 
 /**
- * Complète la liste avec des voisins de plus en plus lointains, quand le
- * réservoir de distracteurs ne suffit pas.
- * @param {number[]} chosen - Modifiée sur place
- * @param {number} count
+ * Mauvaises réponses d'un côté de la bonne (direction -1 : en dessous, 1 : au-dessus) : celles du
+ * réservoir, mélangées, puis des voisins de plus en plus lointains quand il n'en a pas assez.
+ * @param {number[]} pool - Réservoir déjà filtré
  * @param {{correct: number, min: number, max: number}} bounds
+ * @param {number} direction
+ * @returns {number[]}
  */
-function fillWithNeighbours(chosen, count, bounds) {
-  for (let offset = 3; chosen.length < count && offset < 50; offset++) {
-    for (const value of [bounds.correct + offset, bounds.correct - offset]) {
-      if (chosen.length < count && isUsableWrongAnswer(value, bounds, chosen)) chosen.push(value);
-    }
+function wrongAnswersOnSide(pool, bounds, direction) {
+  const side = shuffle(pool.filter(value => Math.sign(value - bounds.correct) === direction));
+  for (let offset = 3; offset < 50; offset++) {
+    const value = bounds.correct + direction * offset;
+    if (isUsableWrongAnswer(value, bounds, side)) side.push(value);
   }
+  return side;
 }
 
 export function plausibleWrongAnswers(question, count = 3) {
@@ -448,9 +450,15 @@ export function plausibleWrongAnswers(question, count = 3) {
   for (const value of wrongAnswerPool(question, correct)) {
     if (isUsableWrongAnswer(value, bounds, pool)) pool.push(value);
   }
-  const chosen = shuffle(pool).slice(0, count);
-  fillWithNeighbours(chosen, count, bounds);
-  return chosen;
+  const below = wrongAnswersOnSide(pool, bounds, -1);
+  const above = wrongAnswersOnSide(pool, bounds, 1);
+  // La place de la bonne réponse est tirée au sort : autant de leurres en dessous qu'il en faut.
+  // Pris au hasard dans un réservoir symétrique, ils la laissaient presque toujours au milieu,
+  // jamais la plus grande ni la plus petite : un indice qu'un enfant apprend vite.
+  const wanted = Math.min(randomInt(0, count), below.length);
+  const fromAbove = Math.min(count - wanted, above.length);
+  const fromBelow = Math.min(count - fromAbove, below.length);
+  return [...below.slice(0, fromBelow), ...above.slice(0, fromAbove)];
 }
 
 /**

@@ -33,6 +33,14 @@ const getForceTable = (game, operator) => {
   return game?.tableNumber ?? null;
 };
 
+/**
+ * Nombres du niveau en +, − et ÷ (facile, moyen, difficile), lus dans les réglages posés au
+ * lancement ; en ×, ce sont les tables du niveau
+ * @param {Object} game - État du jeu
+ * @returns {string} easy, medium ou hard
+ */
+const getQuestionDifficulty = game => game?.difficultySettings?.questionDifficulty ?? 'medium';
+
 const isFreeLabyrinthCell = (labyrinth, x, y) => {
   if (!Array.isArray(labyrinth) || !isValidIndex(y, labyrinth.length)) {
     return false;
@@ -63,7 +71,7 @@ export const PacmanQuestions = {
       const questionData = generateQuestion({
         type: 'classic',
         operator, // Support multi-opérations (+, −, ×, ÷)
-        difficulty: game?.difficulty || 'medium',
+        difficulty: getQuestionDifficulty(game),
         excludeTables: operator === '×' ? excluded : [],
         tables: getTablesForQuestion(game, operator),
         forceTable: getForceTable(game, operator),
