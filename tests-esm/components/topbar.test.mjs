@@ -19,6 +19,8 @@ const TRANSLATIONS = {
   voice_toggle_on: 'Activer la voix',
   voice_toggle_off: 'Désactiver la voix',
   change_user: 'Changer de joueur',
+  dashboard: 'Tableau de bord',
+  personalization: 'Personnalisation',
 };
 
 describe('TopBar : icônes SVG, libellés et états', () => {
@@ -54,6 +56,25 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     expect(bar.querySelector('.home-btn').getAttribute('aria-label')).toBe('Accueil');
     expect(bar.querySelector('.about-btn').dataset.slide).toBe('8');
     expect(bar.querySelector('.table-settings-btn').title).toBe('Paramètres des tables');
+  });
+
+  test('« Tableau de bord » et « Personnalisation » : dans la barre (le menu sur téléphone), nommés, vers leur écran', () => {
+    const nav = TopBar.buildTopBarElement('slide1').querySelector('.top-bar-nav');
+    const shortcut = selector => {
+      const btn = nav.querySelector(selector);
+      return [btn.dataset.slide, btn.getAttribute('aria-label'), btn.hidden];
+    };
+    expect(shortcut('.dashboard-btn')).toEqual(['7', 'Tableau de bord', false]);
+    expect(shortcut('.personalization-btn')).toEqual(['6', 'Personnalisation', false]);
+  });
+
+  test('sur son propre écran, le bouton est masqué ; aucun sur le choix du joueur', () => {
+    expect(TopBar.buildTopBarElement('slide7').querySelector('.dashboard-btn').hidden).toBe(true);
+    expect(TopBar.buildTopBarElement('slide6').querySelector('.personalization-btn').hidden).toBe(
+      true
+    );
+    const choice = TopBar.buildTopBarElement('slide0');
+    expect(choice.querySelector('.dashboard-btn, .personalization-btn')).toBeNull();
   });
 
   test('langues : boutons texte FR/EN/ES, nom de la langue, une seule active', () => {
@@ -309,6 +330,26 @@ describe('TopBar : sans joueur choisi et touche Échap', () => {
     expect(profileControls()).toEqual([true, true, true]);
   });
 
+  test('« Tableau de bord » et « Personnalisation » suivent aussi le joueur courant', () => {
+    const bar = document.querySelector('#slide8 .top-bar');
+    const shortcuts = () =>
+      ['.dashboard-btn', '.personalization-btn'].map(sel => bar.querySelector(sel).hidden);
+    TopBar.updatePlayerControls();
+    expect(shortcuts()).toEqual([true, true]);
+    UserManager._currentUser = 'Lina';
+    TopBar.updatePlayerControls();
+    expect(shortcuts()).toEqual([false, false]);
+    // Sur l'écran du tableau de bord, son propre bouton reste masqué
+    const own = document.createElement('section');
+    own.id = 'slide7';
+    own.className = 'slide';
+    document.body.appendChild(own);
+    TopBar.injectTopBarIntoSlides();
+    TopBar.updatePlayerControls();
+    expect(own.querySelector('.dashboard-btn').hidden).toBe(true);
+    expect(own.querySelector('.personalization-btn').hidden).toBe(false);
+  });
+
   test('Échap ferme le menu ouvert même si le focus est hors de la barre', () => {
     TopBar.attachMenuEscapeWatcher();
     const bar = document.querySelector('#slide1 .top-bar');
@@ -337,5 +378,15 @@ describe('TopBar : sans joueur choisi et touche Échap', () => {
     for (const bar of bars) TopBar.setMenuOpen(bar, true);
     expect(TopBar.closeAllMenus()).toHaveLength(2);
     expect(document.querySelectorAll('.top-bar-nav.is-open')).toHaveLength(0);
+  });
+});
+
+describe('Accueil : plus de boutons sous le contenu', () => {
+  test('« Personnalisation » et « Tableau de bord » ont quitté le bas de l’accueil', async () => {
+    const { readFileSync } = await import('node:fs');
+    const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+    const home = html.match(/<section id="slide1"[\s\S]*?<\/section>/)[0];
+    expect(home).not.toMatch(/data-slide="[67]"/);
+    expect(home).not.toContain('home-links');
   });
 });

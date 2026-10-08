@@ -95,7 +95,9 @@ function wireCreationAvatarSelector() {
 }
 
 function wirePersonalizationButton() {
-  const targets = document.querySelectorAll('[data-translate="personalization"], [data-slide="6"]');
+  // Boutons de la barre du haut (posés par TopBar.init, qui passe avant) ; leur libellé porte
+  // aussi data-translate="personalization" : le bouton seul ouvre l'écran, une seule fois
+  const targets = document.querySelectorAll('button[data-slide="6"]');
   for (const btn of targets) {
     if (btn._customizationWired) continue;
     btn.addEventListener('click', () => {

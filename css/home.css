@@ -464,19 +464,6 @@
   line-height: 1;
 }
 
-/* --- Réglages et suivi : actions secondaires, sous les modes --- */
-.home-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-}
-
-.home-links .btn {
-  margin: 0;
-}
-
 /* --- Confidentialité : une mention discrète, tout en bas --- */
 .privacy-info {
   max-width: 62ch;
