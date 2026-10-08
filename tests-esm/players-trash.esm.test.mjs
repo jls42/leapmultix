@@ -7,6 +7,13 @@
  */
 import { afterEach, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { readFileSync } from 'node:fs';
+import {
+  answerDialog,
+  closeOpenDialog,
+  dialogLabels,
+  dialogQuestion,
+  dialogTitle,
+} from './helpers/confirm-dialog-helpers.mjs';
 
 const { UserManager } = await import('../js/userManager.js');
 const { VideoManager } = await import('../js/VideoManager.js');
@@ -45,6 +52,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  closeOpenDialog();
   jest.restoreAllMocks();
   localStorage.clear();
   UserManager._players = {};
@@ -179,26 +187,46 @@ describe('« Qui joue ? » : la corbeille, en haut de la liste', () => {
     UserManager.refreshUserList();
   });
 
-  const deleteFromTile = name => {
-    globalThis.confirm = jest.fn(() => true);
-    const item = [...document.querySelectorAll('#user-list .user-container')].find(
-      container => container.dataset.player === name
-    );
-    item.querySelector('.delete-btn').click();
-    return globalThis.confirm;
+  const pressDelete = name =>
+    [...document.querySelectorAll('#user-list .user-container')]
+      .find(container => container.dataset.player === name)
+      .querySelector('.delete-btn')
+      .click();
+
+  /** « Supprimer » sur la tuile, puis « Supprimer » dans la fenêtre du jeu */
+  const deleteFromTile = async name => {
+    pressDelete(name);
+    await answerDialog(true);
   };
 
-  test('la confirmation dit que le profil va à la corbeille, pour 30 jours', () => {
-    const confirmSpy = deleteFromTile('Léa');
-    expect(confirmSpy).toHaveBeenCalledWith(
-      'Supprimer le profil « Léa » ? Il ira dans la corbeille : tu pourras le restaurer pendant 30 jours.'
+  test('la fenêtre dit que le profil va à la corbeille, pour 30 jours', () => {
+    pressDelete('Léa');
+    expect(dialogTitle()).toBe('Supprimer le profil «\u00a0Léa\u00a0»\u00a0?');
+    expect(dialogQuestion()).toBe(
+      'Il ira dans la corbeille\u00a0: tu pourras le restaurer pendant 30\u00a0jours.'
     );
+    expect(dialogLabels()).toEqual(['Garder ce joueur', 'Supprimer']);
   });
 
-  test('corbeille vide : pas de bouton ; un profil supprimé : « Corbeille (1) »', () => {
+  test('« Garder ce joueur » : rien ne change, le focus revient à « Supprimer »', async () => {
+    pressDelete('Léa');
+    await answerDialog(false);
+    expect(Object.keys(stored('players'))).toEqual(['Léa', 'Tom']);
+    expect(document.getElementById('player-trash-toggle').hidden).toBe(true);
+    expect(document.activeElement.closest('.user-container').dataset.player).toBe('Léa');
+    expect(document.activeElement.classList.contains('delete-btn')).toBe(true);
+  });
+
+  test('« Supprimer » : le focus va sur la première tuile restante', async () => {
+    await deleteFromTile('Léa');
+    expect(document.activeElement.closest('.user-container').dataset.player).toBe('Tom');
+    expect(document.activeElement.classList.contains('user-tile')).toBe(true);
+  });
+
+  test('corbeille vide : pas de bouton ; un profil supprimé : « Corbeille (1) »', async () => {
     const toggle = document.getElementById('player-trash-toggle');
     expect(toggle.hidden).toBe(true);
-    deleteFromTile('Léa');
+    await deleteFromTile('Léa');
     expect(toggle.hidden).toBe(false);
     expect(toggle.textContent.trim()).toBe('Corbeille (1)');
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
@@ -207,9 +235,9 @@ describe('« Qui joue ? » : la corbeille, en haut de la liste', () => {
     );
   });
 
-  test('ouvrir la corbeille, restaurer : la tuile revient et reçoit le focus', () => {
+  test('ouvrir la corbeille, restaurer : la tuile revient et reçoit le focus', async () => {
     jest.spyOn(Date, 'now').mockReturnValue(NOW);
-    deleteFromTile('Léa');
+    await deleteFromTile('Léa');
     const toggle = document.getElementById('player-trash-toggle');
     toggle.click();
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
@@ -230,8 +258,8 @@ describe('« Qui joue ? » : la corbeille, en haut de la liste', () => {
     );
   });
 
-  test('un prénom de la corbeille ne se recrée pas : le message renvoie à la corbeille', () => {
-    deleteFromTile('Léa');
+  test('un prénom de la corbeille ne se recrée pas : le message renvoie à la corbeille', async () => {
+    await deleteFromTile('Léa');
     document.getElementById('new-user-name').value = 'Léa';
     document.getElementById('create-user-btn').click();
     const message = document.getElementById('new-user-message');
@@ -242,9 +270,9 @@ describe('« Qui joue ? » : la corbeille, en haut de la liste', () => {
     expect(Object.keys(stored('players'))).toEqual(['Tom']);
   });
 
-  test('restauration refusée (prénom repris) : le message le dit, l’entrée reste', () => {
+  test('restauration refusée (prénom repris) : le message le dit, l’entrée reste', async () => {
     jest.spyOn(Date, 'now').mockReturnValue(NOW);
-    deleteFromTile('Léa');
+    await deleteFromTile('Léa');
     UserManager._players['Léa'] = { nickname: 'Léa' };
     UserManager.refreshUserList();
     document.getElementById('player-trash-toggle').click();
@@ -255,9 +283,9 @@ describe('« Qui joue ? » : la corbeille, en haut de la liste', () => {
     expect(document.querySelectorAll('#player-trash-list li')).toHaveLength(1);
   });
 
-  test('plus aucun joueur, mais une corbeille : la barre reste, sans « Nouveau joueur »', () => {
-    deleteFromTile('Léa');
-    deleteFromTile('Tom');
+  test('plus aucun joueur, mais une corbeille : la barre reste, sans « Nouveau joueur »', async () => {
+    await deleteFromTile('Léa');
+    await deleteFromTile('Tom');
     expect(document.getElementById('user-list-tools').hidden).toBe(false);
     expect(document.getElementById('new-player-shortcut').hidden).toBe(true);
     expect(document.getElementById('player-trash-toggle').textContent.trim()).toBe('Corbeille (2)');

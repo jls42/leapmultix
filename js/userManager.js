@@ -29,6 +29,7 @@ import {
 import { profileOperationStats } from './core/profile-operation-stats.js';
 import { TRASH_DAYS, isTrashExpired, loadTrash, saveTrash } from './core/players-trash.js';
 import { buildPlayersBackup, requestPersistentStorage } from './core/players-backup.js';
+import { confirmDialog } from './components/confirm-dialog.js';
 
 /**
  * Traduction avec texte de secours tant que la clé n'existe pas dans les fichiers de langue.
@@ -783,20 +784,37 @@ export const UserManager = {
     );
     deleteBtn.onclick = e => {
       e.stopPropagation();
-      const canConfirm =
-        typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-      const question = getTranslation('confirm_delete_user', { name, days: TRASH_DAYS });
-      if ((canConfirm ? globalThis.confirm(question) : true) && this.deleteUser(name)) {
-        this.refreshUserList();
-        this._focusAfterProfileRemoval();
-        // « Léa est dans la corbeille. » (components/playerTools.js)
-        eventBus.emit('playerTrashed', { name });
-      }
+      this._confirmProfileRemoval(name, deleteBtn).catch(error =>
+        console.error('Suppression du profil impossible', error)
+      );
     };
 
     userContainer.appendChild(tile);
     userContainer.appendChild(deleteBtn);
     return userContainer;
+  },
+
+  /**
+   * « Supprimer » : la fenêtre du jeu demande d'abord ; confirmé, le profil va dans la
+   * corbeille
+   * @param {string} name
+   * @param {HTMLElement} origin - Son bouton « Supprimer » : refusé, le focus y revient
+   * @returns {Promise<void>}
+   * @private
+   */
+  async _confirmProfileRemoval(name, origin) {
+    const confirmed = await confirmDialog({
+      title: getTranslation('confirm_delete_user', { name }),
+      message: getTranslation('confirm_delete_user_detail', { days: TRASH_DAYS }),
+      confirmLabel: getTranslation('delete_profile_dialog_confirm'),
+      cancelLabel: getTranslation('delete_profile_dialog_cancel'),
+      returnFocusTo: origin,
+    });
+    if (!confirmed || !this.deleteUser(name)) return;
+    this.refreshUserList();
+    this._focusAfterProfileRemoval();
+    // « Léa est dans la corbeille. » (components/playerTools.js)
+    eventBus.emit('playerTrashed', { name });
   },
 
   /**

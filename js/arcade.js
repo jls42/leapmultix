@@ -28,6 +28,7 @@ import { setGameMode } from './mode-orchestrator.js';
 import { eventBus } from './core/eventBus.js';
 import { openArcadeSession, closeArcadeSession, arcadeGameOf } from './arcade-session.js';
 import { isArcadePaused, mountArcadePause, unmountArcadePause } from './arcade-time.js';
+import { confirmDialog } from './components/confirm-dialog.js';
 
 // =====================
 // Fonction de lancement du mode Snake (coordination équipe Snake)
@@ -201,22 +202,33 @@ function getGameTitle(mode) {
   return translated(key, fallback);
 }
 
-function confirmAndResetScores(mode, score) {
-  const canConfirm = typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-  // Les meilleurs scores de CE jeu et ses compteurs du tableau de bord (parties, score
-  // moyen), dans toutes les opérations, sont effacés : la question dit tout cela
-  const question = getTranslation('reset_scores_confirm', { game: getGameTitle(mode) });
-  if (canConfirm ? globalThis.confirm(question) : true) {
-    resetScoresForMode(mode);
-    // Même partie, même score affiché : seule la liste des meilleurs scores se vide
-    showArcadeGameOver(score, { persist: false });
-    // Le bouton de remise à zéro a disparu avec la liste : le focus va sur « Rejouer »
-    const retry = document.getElementById('arcade-retry-btn');
-    try {
-      retry?.focus({ preventScroll: true });
-    } catch {
-      retry?.focus();
-    }
+/**
+ * « Remettre à zéro » : les meilleurs scores de CE jeu et ses compteurs du tableau de bord
+ * (parties, score moyen), dans toutes les opérations, sont effacés ; la fenêtre du jeu le
+ * dit d'abord (la question en titre, ce qui sera effacé en texte)
+ * @param {string} mode
+ * @param {number} score
+ * @param {HTMLElement} origin - Le bouton pressé : refusé, le focus y revient
+ * @returns {Promise<void>}
+ */
+async function confirmAndResetScores(mode, score, origin) {
+  const confirmed = await confirmDialog({
+    title: getTranslation('reset_scores_confirm', { game: getGameTitle(mode) }),
+    message: getTranslation('reset_scores_confirm_detail'),
+    confirmLabel: getTranslation('reset_scores_dialog_confirm'),
+    cancelLabel: getTranslation('reset_scores_dialog_cancel'),
+    returnFocusTo: origin,
+  });
+  if (!confirmed) return;
+  resetScoresForMode(mode);
+  // Même partie, même score affiché : seule la liste des meilleurs scores se vide
+  showArcadeGameOver(score, { persist: false });
+  // Le bouton de remise à zéro a disparu avec la liste : le focus va sur « Rejouer »
+  const retry = document.getElementById('arcade-retry-btn');
+  try {
+    retry?.focus({ preventScroll: true });
+  } catch {
+    retry?.focus();
   }
 }
 
@@ -227,9 +239,11 @@ function bindGameOverActions(wrapper, mode, score) {
   const backBtn = wrapper.querySelector('#arcade-back-btn');
   backBtn?.addEventListener('click', () => returnToArcadeMenu(backBtn));
   wrapper.querySelector('#arcade-home-btn')?.addEventListener('click', () => goToSlide(1));
-  wrapper
-    .querySelector('#arcade-reset-btn')
-    ?.addEventListener('click', () => confirmAndResetScores(mode, score));
+  wrapper.querySelector('#arcade-reset-btn')?.addEventListener('click', event => {
+    confirmAndResetScores(mode, score, event.currentTarget).catch(error =>
+      console.error('Remise à zéro des scores impossible', error)
+    );
+  });
 }
 
 // --- Helpers (réduisent la complexité de showArcadeGameOver) ---
