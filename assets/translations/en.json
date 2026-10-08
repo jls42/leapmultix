@@ -456,6 +456,7 @@
   "table_settings_button_label": "Table Settings",
   "global_exclusion_enable": "Remove these tables from my games",
   "excluded_tables_label": "Tables removed:",
+  "table_settings_keep_one": "Keep at least one table so you can play.",
   "numbers": {
     "0": "zero",
     "1": "one",

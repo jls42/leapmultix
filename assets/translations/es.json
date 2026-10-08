@@ -462,6 +462,7 @@
   "table_settings_button_label": "Configuración de tablas",
   "global_exclusion_enable": "Quitar estas tablas de mis juegos",
   "excluded_tables_label": "Tablas quitadas:",
+  "table_settings_keep_one": "Deja al menos una tabla para poder jugar.",
   "numbers": {
     "0": "cero",
     "1": "uno",

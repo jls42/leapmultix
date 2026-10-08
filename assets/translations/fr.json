@@ -466,6 +466,7 @@
   "table_settings_button_label": "Paramètres des tables",
   "global_exclusion_enable": "Retirer ces tables de mes jeux",
   "excluded_tables_label": "Tables retirées :",
+  "table_settings_keep_one": "Garde au moins une table pour pouvoir jouer.",
   "numbers": {
     "0": "zéro",
     "1": "un",
