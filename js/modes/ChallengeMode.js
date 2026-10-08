@@ -51,6 +51,9 @@ export class ChallengeMode extends GameMode {
       autoProgress: true,
       showScore: true,
       initialTime: 60, // Temps par défaut (modifié selon difficulté)
+      // Après une erreur, la bonne réponse reste 5 s au moins, le temps de la lire même voix
+      // coupée ; le décompte est arrêté pendant ce temps (onWrongAnswerPause)
+      wrongAnswerDelay: 5000,
     });
 
     // État spécifique au Challenge
