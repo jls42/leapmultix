@@ -31,6 +31,13 @@ const backupText = players =>
   JSON.stringify({ format: 'leapmultix-players', version: 1, exportedAt: '', players });
 /** Fin des promesses et lectures de fichier en cours */
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+// jsdom n'a pas Blob.text(), qu'ont tous les navigateurs pris en charge : le jeu s'en sert pour lire
+// le fichier choisi, le test le prête à jsdom
+if (typeof Blob.prototype.text !== 'function') {
+  Blob.prototype.text = function text() {
+    return readBlob(this);
+  };
+}
 const readBlob = blob =>
   new Promise(resolve => {
     const reader = new FileReader();
@@ -252,6 +259,14 @@ describe('« Qui joue ? » : boutons de la sauvegarde', () => {
     expect(document.getElementById('players-backup-message').textContent).toBe(
       '3 joueurs enregistrés dans « leapmultix-joueurs-2026-10-08.json ».'
     );
+  });
+
+  test('le champ du fichier est nommé par son bouton, les bilans sont des zones <output>', () => {
+    const input = document.getElementById('import-players-input');
+    const label = document.getElementById(input.getAttribute('aria-labelledby'));
+    expect(label?.id).toBe('import-players-btn');
+    expect(document.getElementById('players-backup-message').tagName).toBe('OUTPUT');
+    expect(document.getElementById('user-tools-message').tagName).toBe('OUTPUT');
   });
 
   test('« Reprendre » ouvre le choix du fichier, puis ajoute et dit ce qu’il a fait', async () => {

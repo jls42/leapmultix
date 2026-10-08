@@ -403,7 +403,7 @@
               <p class="player-trash-rule" id="player-trash-rule"></p>
               <ul class="player-trash-list" id="player-trash-list"></ul>
             </div>
-            <p class="user-tools-message" id="user-tools-message" role="status"></p>
+            <output class="user-tools-message" id="user-tools-message"></output>
           </div>
 
           <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList),
@@ -569,12 +569,13 @@
               <input
                 type="file"
                 id="import-players-input"
+                aria-labelledby="import-players-btn"
                 accept=".json,application/json"
                 tabindex="-1"
                 hidden
               />
             </div>
-            <p class="players-backup-message" id="players-backup-message" role="status"></p>
+            <output class="players-backup-message" id="players-backup-message"></output>
           </section>
 
           <!-- Présentation du projet : contenu indexable, visible sans JavaScript,

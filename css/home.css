@@ -170,6 +170,7 @@
 }
 
 .players-backup-message {
+  display: block;
   max-width: 480px;
   margin: var(--space-3) auto 0;
   font-weight: 700;

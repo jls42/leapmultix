@@ -152,6 +152,7 @@
 
 /* Ce que vient de faire la barre (« Léa est dans la corbeille. ») */
 .user-tools-message {
+  display: block;
   flex-basis: 100%;
   margin: 0;
   font-weight: 700;

@@ -136,21 +136,6 @@ function downloadJson(payload, fileName) {
 }
 
 /**
- * Texte d'un fichier choisi (Blob.text, ou FileReader pour les navigateurs qui ne l'ont pas)
- * @param {File} file
- * @returns {Promise<string>}
- */
-function readFileText(file) {
-  if (typeof file.text === 'function') return file.text();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsText(file);
-  });
-}
-
-/**
  * Pourquoi un fichier n'a rien ajouté
  * @param {string} error - 'version', 'storage', ou autre (fichier illisible)
  * @returns {string}
@@ -448,7 +433,7 @@ export const PlayerTools = {
    * @returns {Promise<void>}
    */
   async importFile(file) {
-    const text = file.size > BACKUP_MAX_BYTES ? '' : await readFileText(file).catch(() => '');
+    const text = file.size > BACKUP_MAX_BYTES ? '' : await file.text().catch(() => '');
     const backup = readPlayersBackup(text);
     if (backup.error) {
       this._sayBackup(importErrorMessage(backup.error));
