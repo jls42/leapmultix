@@ -614,12 +614,24 @@ describe('Service worker : images hors ligne', () => {
 });
 
 describe('Service worker : version', () => {
-  test('répond sa version à la page qui la demande (rechargement après mise à jour)', () => {
+  test('répond sa version à une page du site qui la demande (rechargement après mise à jour)', () => {
     const worker = loadWorker(() => new FakeResponse(''));
     const replies = [];
     const port = { postMessage: message => replies.push({ ...message }) };
-    worker.listeners.message?.({ data: { type: 'version' }, ports: [port] });
-    worker.listeners.message?.({ data: { type: 'autre' }, ports: [port] });
+    worker.listeners.message?.({ origin: ORIGIN, data: { type: 'version' }, ports: [port] });
+    worker.listeners.message?.({ origin: ORIGIN, data: { type: 'autre' }, ports: [port] });
+    // Un message venu d'une autre origine ne reçoit rien
+    const elsewhere = 'https://ailleurs.example';
+    worker.listeners.message?.({ origin: elsewhere, data: { type: 'version' }, ports: [port] });
     expect(replies).toEqual([{ version: constant(worker, 'VERSION') }]);
+  });
+});
+
+describe('Service worker : réseau', () => {
+  test('jamais demandé pour une autre origine que celle du site', async () => {
+    const worker = loadWorker(() => new FakeResponse('réseau'));
+    const response = await request(worker, 'https://ailleurs.example/page', { mode: 'navigate' });
+    expect(response.type).toBe('error');
+    expect(worker.fetches).toEqual([]);
   });
 });

@@ -33,6 +33,7 @@ jest.unstable_mockModule('../js/arcade-message.js', () => ({ showArcadeMessage: 
 const { setTranslations, setCurrentLanguage } = await import('../js/i18n-store.js');
 const { applyStaticTranslations } = await import('../js/i18n.js');
 const { setGameMode } = await import('../js/mode-orchestrator.js');
+const { isLoadFailure } = await import('../js/components/loadErrorNotice.js');
 const { ArcadeMode } = await import('../js/modes/ArcadeMode.js');
 
 const dictionary = lang => JSON.parse(fs.readFileSync(`assets/translations/${lang}.json`, 'utf8'));
@@ -143,6 +144,19 @@ describe('Un mode qui ne se charge pas', () => {
     applyStaticTranslations();
     expect(notice().querySelector('p').textContent).toBe(ES.mode_load_error);
     expect(notice().querySelector('button').textContent).toBe(ES.load_error_close);
+  });
+});
+
+describe('isLoadFailure : un chargement manqué, quelle que soit la forme de l’erreur', () => {
+  test('message d’Error, objet porteur d’un message, simple chaîne ; le reste n’en est pas un', () => {
+    expect(isLoadFailure(new TypeError('Importing a module script failed.'))).toBe(true);
+    expect(
+      isLoadFailure({ message: 'Failed to fetch dynamically imported module: /js/a.js' })
+    ).toBe(true);
+    expect(isLoadFailure('Failed to load script: js/arcade.js')).toBe(true);
+    expect(isLoadFailure({ code: 42 })).toBe(false);
+    expect(isLoadFailure(undefined)).toBe(false);
+    expect(isLoadFailure(new TypeError('x is not a function'))).toBe(false);
   });
 });
 
