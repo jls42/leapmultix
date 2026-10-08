@@ -574,7 +574,7 @@
   "faq_q2": "¿LeapMultix es realmente gratis?",
   "faq_a2": "Sí, LeapMultix es 100 % gratuito y de código abierto (licencia AGPL-3.0). No hay anuncios, compras dentro de la aplicación ni suscripciones. Todos los modos de juego y minijuegos de arcade son accesibles sin restricciones.",
   "faq_q3": "¿Puedo usar LeapMultix sin conexión?",
-  "faq_a3": "¡Sí! LeapMultix es una Progressive Web App (PWA). Una vez instalada en tu dispositivo, la aplicación funciona completamente sin conexión. Tu progreso se guarda localmente en tu navegador.",
+  "faq_a3": "Sí, después de una primera visita con conexión: LeapMultix guarda entonces el juego en el dispositivo (unos pocos megabytes). Luego, los 6 modos, los 4 juegos de arcade y los efectos de sonido funcionan sin internet, en el navegador y en la aplicación instalada. Sin conexión, la voz grabada solo dice las frases que ya se han oído; para las demás, el juego usa la voz del dispositivo. El vídeo del avatar necesita internet. Tu progreso se guarda localmente en tu navegador.",
   "faq_q4": "¿Qué modos de juego están disponibles?",
   "faq_a4": "LeapMultix ofrece 6 modos de juego: Descubrimiento (aprendizaje), Quiz (entrenamiento), Desafío (contrarreloj), Aventura (progresión por niveles), Crono (10 respuestas correctas, para batir tu mejor tiempo) y Arcade (4 minijuegos: MultiInvaders, MultiMiam, MultiMemory, MultiSnake). Todos funcionan con las 4 operaciones (×, +, −, ÷).",
   "faq_q5": "¿Funciona en móvil y tableta?",

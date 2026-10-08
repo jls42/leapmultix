@@ -53,12 +53,20 @@ npm run verify      # Run lint + test + test:esm + coverage (quality gate)
 
 - `npm run audit:accessibility` - Accessibility audit
 - `npm run audit:mobile` - Mobile responsive audit
-- `npm run test:pwa-offline` - Test PWA offline functionality
+- `npm run test:pwa-offline` - Offline end to end (first visit, network cut, reload, every mode and arcade game)
 
 ### Service Worker Management
 
 - `npm run sw:disable` - Disable service worker
 - `npm run sw:fix` - Fix service worker issues
+- `npm run precache:update` - Rewrite the offline precache list in `sw.js` (`scripts/precache-list.mjs`)
+
+**Hors ligne : la liste de préchargement suit le code.** Le service worker garde à
+l'installation tout ce que le jeu charge (modules, styles, polices, sons, traductions, images
+nommées dans le code), pour que chaque mode démarre hors ligne après une première visite. Un
+module, un son, une image ou une feuille de style ajouté : `npm run precache:update`, sinon
+`tests-esm/scripts/precache-list.test.mjs` échoue. La version de `sw.js` et `APP_VERSION`
+montent ensemble (test du même fichier).
 
 ### Code Quality and Formatting
 

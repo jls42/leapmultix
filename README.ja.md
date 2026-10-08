@@ -179,7 +179,7 @@ npm run test:integration # Tests d'intégration
 npm run test:storage   # Tests du système de stockage
 npm run test:esm       # Tests ESM (dossiers tests-esm/, Jest vm-modules)
 npm run test:verbose   # Tests avec sortie détaillée
-npm run test:pwa-offline # Test offline PWA (nécessite Puppeteer), après `npm run serve`
+npm run test:pwa-offline # Hors ligne de bout en bout (Puppeteer, serveur intégré)
 
 # Analyse et maintenance
 npm run analyze:jsdoc  # Analyse de la documentation
