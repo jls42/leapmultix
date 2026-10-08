@@ -1,20 +1,20 @@
 <details>
 <summary>本文档还提供其他语言版本</summary>
 
-- [English](./README.en.md)
-- [Español](./README.es.md)
-- [Português](./README.pt.md)
-- [Deutsch](./README.de.md)
+- [英语](./README.en.md)
+- [西班牙语](./README.es.md)
+- [葡萄牙语](./README.pt.md)
+- [德语](./README.de.md)
 - [中文](./README.zh.md)
-- [हिन्दी](./README.hi.md)
-- [العربية](./README.ar.md)
-- [Italiano](./README.it.md)
-- [Svenska](./README.sv.md)
-- [Polski](./README.pl.md)
-- [Nederlands](./README.nl.md)
-- [Română](./README.ro.md)
-- [日本語](./README.ja.md)
-- [한국어](./README.ko.md)
+- [印地语](./README.hi.md)
+- [阿拉伯语](./README.ar.md)
+- [意大利语](./README.it.md)
+- [瑞典语](./README.sv.md)
+- [波兰语](./README.pl.md)
+- [荷兰语](./README.nl.md)
+- [罗马尼亚语](./README.ro.md)
+- [日语](./README.ja.md)
+- [韩语](./README.ko.md)
 
 </details>
 
@@ -24,93 +24,94 @@
 ![许可证：AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/jls42/leapmultix/badge)](https://www.codefactor.io/repository/github/jls42/leapmultix)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![Codacy 徽章](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![质量门状态](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![可靠性评级](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![安全性评级](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![可维护性评级](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![技术债务](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![错误](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![漏洞](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![代码异味](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![重复行（%）](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![代码行数](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 ## 目录
 
-- [描述](#描述)
+- [说明](#说明)
 - [概览](#-概览)
-- [功能特性](#-功能特性)
-- [快速入门](#-快速入门)
+- [功能](#-功能)
+- [快速开始](#-快速开始)
 - [架构](#-架构)
-- [详细游戏模式](#-详细游戏模式)
+- [游戏模式详解](#-游戏模式详解)
 - [开发](#-开发)
 - [兼容性](#-兼容性)
 - [本地化](#-本地化)
-- [录制语音](#-录制语音)
+- [预录语音](#-录制语音)
 - [数据存储](#-数据存储)
-- [报告问题](#-反馈问题)
+- [报告问题](#-报告问题)
 - [许可证](#-许可证)
 
-## 描述
+## 说明
 
-LeapMultix 是一款面向 6 至 12 岁儿童的交互式教育 Web 应用，帮助他们掌握四则算术运算：乘法（×）、加法（+）、减法（−）和除法（÷）。它在直观、易用且支持多语言的界面中提供了 **5 种游戏模式** 和 **4 款街机小游戏**。
+LeapMultix 是一款面向 6 至 12 岁儿童的互动式教育 Web 应用，旨在帮助他们掌握四则算术运算：乘法（×）、加法（+）、减法（−）和除法（÷）。它在直观、易用且支持多语言的界面中提供 **6 种游戏模式**和 **4 款街机小游戏**。
 
-**多运算支持：** 五种模式均支持全部四则运算。可在主屏幕进行选择，并应用于整个流程。
+**多运算支持：**所有模式均支持四种运算。可在主屏幕上选择运算，并将其应用于整个学习流程。
 
-**开发者：** Julien LS (contact@jls42.org)
+**开发者：**Julien LS（contact@jls42.org）
 
-**在线网址：** https://leapmultix.jls42.org/
+**在线地址：**https://leapmultix.jls42.org/
 
 ## 📸 概览
 
-### 屏幕截图
+### 各个界面
 
-|                                                                        |                                                                              |
-| :--------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
-|      ![“谁在玩？”屏幕：选择个人资料](docs/media/01-accueil.webp)       |          ![主菜单：选择运算类型和五种模式](docs/media/02-menu.webp)          |
-|       **谁在玩？** —— 每个孩子一个个人资料，包含专属头像和进度。       |             **菜单** —— 在此选择运算类型，随后即可开启五种模式。             |
-|  ![探索模式：以圆点展示的 4 的乘法表](docs/media/03-decouverte.webp)   | ![测验模式：错误答案显示为红色，正确答案显示为绿色](docs/media/04-quiz.webp) |
-|   **探索** —— 每个等式都通过圆点、跳跃或计数展示，并附带运算表诀窍。   |      **测验** —— 孩子的选项会与正确答案并列显示，并提供详细的计算说明。      |
-|         ![挑战模式：倒计时与当前连胜](docs/media/05-defi.webp)         |   ![冒险模式：十个关卡的地图，后续关卡已锁定](docs/media/06-aventure.webp)   |
-|     **挑战** —— 与时间赛跑。答错时计时器会暂停，以便阅读正确答案。     |                 **冒险** —— 十个关卡依次解锁，收集星星通关。                 |
-|           ![街机菜单：四款小游戏](docs/media/07-arcade.webp)           |   ![仪表板：各运算表的星星与统计数据](docs/media/08-tableau-de-bord.webp)    |
-|            **街机** —— 四款小游戏，支持难度调节和飞船选择。            |            **仪表板** —— 各运算表的星星、待复习的表、各模式得分。            |
-| ![个性化：头像、主题、无障碍功能](docs/media/09-personnalisation.webp) |                                                                              |
-|      **个性化** —— 头像、颜色主题、字体大小、高对比度、家长密码。      |                                                                              |
+|                                                                                           |                                                                              |
+| :---------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
+|                ![“谁在玩？”界面：选择个人资料](docs/media/01-accueil.webp)                |            ![主菜单：选择运算和游戏模式](docs/media/02-menu.webp)            |
+|                **谁在玩？**——每个孩子都有自己的个人资料、头像和学习进度。                 |                  **菜单**——先在此选择运算，再选择游戏模式。                  |
+|             ![探索模式：以圆点展示 4 的乘法表](docs/media/03-decouverte.webp)             |     ![测验模式：错误答案为红色，正确答案为绿色](docs/media/04-quiz.webp)     |
+|            **探索**——每个等式都可通过圆点、跳跃或计数展示，并附有乘法表技巧。             | **测验**——孩子选择的答案会继续显示在正确答案旁，并通过说明详细解析计算过程。 |
+|              ![挑战模式：倒计时和当前连续答对次数](docs/media/05-defi.webp)               |  ![冒险模式：十个关卡的地图，后续关卡尚未解锁](docs/media/06-aventure.webp)  |
+|              **挑战**——与时间赛跑。答错时，计时器会暂停，以便阅读正确答案。               |                  **冒险**——十个关卡依次开放，并可获得星星。                  |
+|              ![计时模式：减法竞赛、计时器和进度](docs/media/14-chrono.webp)               |              ![街机菜单：四款小游戏](docs/media/07-arcade.webp)              |
+|           **计时**——在所选运算中争分夺秒答对十题；答错的算式会加入待复习列表。            |                 **街机**——四款小游戏，可调整难度并选择飞船。                 |
+| ![仪表板：按运算细分的各模式游戏次数、纪录和答题情况](docs/media/08-tableau-de-bord.webp) |  ![个性化设置：头像、主题和无障碍功能](docs/media/09-personnalisation.webp)  |
+|    **仪表板**——按运算细分各模式的游戏次数和纪录；还会显示乘法中的星星和待复习乘法表。     |             **个性化设置**——头像、配色主题、文字大小和高对比度。             |
 
 ### 街机小游戏
 
-四款游戏提出相同的问题 —— 显示在游戏区域上方，并附有剩余时间和生命值 —— 但每次都需要不同的操作方式。
+四款游戏提出相同的问题——问题显示在游戏区域上方，同时显示剩余时间和生命值——但每款游戏都要求玩家执行不同的操作。
 
-|                                                                                    |                                                                            |
-| :--------------------------------------------------------------------------------: | :------------------------------------------------------------------------: |
-| ![MultiInvaders：携带数字的怪物，屏幕下方的飞船](docs/media/10-multiinvaders.webp) |     ![MultiMiam：药丸带有可选答案的迷宫](docs/media/11-multimiam.webp)     |
-| **MultiInvaders** —— 射击错误答案，保留正确答案：正确答案背后藏着等待解救的朋友。  |         **MultiMiam** —— 穿梭于迷宫中获取正确结果，同时避开怪物。          |
-| ![MultiMemory：卡片网格，翻开的两张显示算式和数字](docs/media/12-multimemory.webp) | ![MultiSnake：草地上带有编号的苹果和一条蛇](docs/media/13-multisnake.webp) |
-|           **MultiMemory** —— 凭记忆找出哪张卡片带有翻开算式的计算结果。            |         **MultiSnake** —— 吞食正确的数字来变长，避开所有其他数字。         |
+|                                                                                                |                                                                        |
+| :--------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------: |
+|     ![MultiInvaders：带有数字的怪物和位于屏幕底部的飞船](docs/media/10-multiinvaders.webp)     | ![MultiMiam：迷宫中的圆点标有可能的答案](docs/media/11-multimiam.webp) |
+|       **MultiInvaders**——射击错误答案，避开正确答案：正确答案中藏着一位等待解救的朋友。        |           **MultiMiam**——穿越迷宫，避开怪物并抓取正确结果。            |
+| ![MultiMemory：卡片网格，其中两张翻开的卡片分别显示算式和数字](docs/media/12-multimemory.webp) | ![MultiSnake：草地上的蛇和带编号的苹果](docs/media/13-multisnake.webp) |
+|                  **MultiMemory**——凭记忆找出哪张卡片上写着已翻开算式的结果。                   |       **MultiSnake**——吞下正确的数字来成长，并避开所有其他数字。       |
 
-## ✨ 功能特性
+## ✨ 功能
 
 ### 🎮 游戏模式
 
-- **探索模式**：针对每种运算量身定制的可视化交互式探索
-- **测验模式**：支持四则运算（×、+、−、÷）的多选题与自适应进度
-- **挑战模式**：支持四则运算（×、+、−、÷）与多种难度级别的计时挑战
-- **冒险模式**：支持四则运算的故事推进式分关卡进度
+- **探索模式**：根据每种运算量身定制的可视化互动探索
+- **测验模式**：支持四种运算（×、+、−、÷）并具有自适应进度的选择题
+- **挑战模式**：支持四种运算（×、+、−、÷）和不同难度等级的限时竞赛
+- **冒险模式**：支持四种运算的叙事式关卡进度
+- **计时模式**：使用四种运算（×、+、−、÷），在不停走动的计时器下答对 10 题，以刷新个人最佳时间
 
 ### 🕹️ 街机小游戏
 
-- **MultiInvaders**：益智太空侵略者 —— 消灭错误答案
-- **MultiMiam**：数学吃豆人 —— 收集正确答案
-- **MultiMemory**：记忆配对游戏 —— 将算式与结果相匹配
-- **MultiSnake**：益智贪吃蛇 —— 吞食正确数字以变长
+- **MultiInvaders**：教育版 Space Invaders——消灭错误答案
+- **MultiMiam**：数学版 Pac-Man——收集正确答案
+- **MultiMemory**：记忆游戏——将运算与结果配对
+- **MultiSnake**：教育版 Snake——吃下正确的数字来成长
 
 ### ➕ 多运算支持
 
-LeapMultix 在**所有模式**中提供四则算术运算的全面训练：
+LeapMultix 在**所有模式**中提供完整的四则算术运算训练：
 
 | 模式 | ×   | +   | −   | ÷   |
 | ---- | --- | --- | --- | --- |
@@ -118,24 +119,25 @@ LeapMultix 在**所有模式**中提供四则算术运算的全面训练：
 | 挑战 | ✅  | ✅  | ✅  | ✅  |
 | 探索 | ✅  | ✅  | ✅  | ✅  |
 | 冒险 | ✅  | ✅  | ✅  | ✅  |
+| 计时 | ✅  | ✅  | ✅  | ✅  |
 | 街机 | ✅  | ✅  | ✅  | ✅  |
 
 ### 🌍 通用功能
 
-- **多用户**：管理保存进度的独立个人资料
+- **多用户**：管理独立个人资料并保存学习进度
 - **多语言**：支持法语、英语和西班牙语
-- **个性化**：头像、颜色主题、背景
-- **无障碍**：键盘导航、触控支持、符合 WCAG 2.1 AA 标准
-- **录制语音**：游戏能够使用预录制的合成语音朗读题目与鼓励语，并在需要时自动回退到设备自带语音。语音文件不包含在此仓库中：leapmultix.jls42.org 网站提供法语的 Lucie、英语与西班牙语的 Sulafat，以及可选的法语 Sulafat 和 Marie、英语 Jane（参见 [录制语音](#-录制语音)）
-- **移动端响应式**：针对平板电脑和智能手机优化的界面
-- **进度系统**：得分、徽章、每日挑战
+- **个性化设置**：头像、配色主题和背景
+- **无障碍功能**：键盘导航、触控支持，并符合 WCAG 2.1 AA 标准
+- **预录语音**：游戏可使用预先录制的合成语音朗读问题和鼓励语，并可自动回退到设备语音。这些语音不在本仓库中：leapmultix.jls42.org 网站的法语使用 Lucie，英语和西班牙语使用 Sulafat；此外，法语可选择 Sulafat 和 Marie，英语可选择 Jane（参见[预录语音](#-录制语音)）
+- **移动端响应式设计**：针对平板电脑和智能手机优化的界面
+- **进度系统**：按个人资料显示的仪表板（游戏次数、纪录和待复习乘法表，并按运算细分）、徽章和每日挑战
 
-## 🚀 快速入门
+## 🚀 快速开始
 
-### 环境要求
+### 前置条件
 
 - Node.js（版本 16 或更高）
-- 现代网络浏览器
+- 现代 Web 浏览器
 
 ### 安装
 
@@ -222,7 +224,8 @@ npm run voice:check-online # Vérifier les clips servis en ligne
 
 ### 文件结构
 
-除三个文件夹（`core/`、`components/` 和 `modes/`）外，JavaScript 模块**扁平存放在 `js/`** 中。因此，文件的逻辑归类直接体现在其命名上（`arcade-*`、`multimiam-*`、`i18n*`……）。
+除三个目录外，JavaScript 模块都**平铺在 `js/` 中**：
+`core/`、`components/` 和 `modes/`。因此，文件名本身承担分组作用（`arcade-*`、`multimiam-*`、`i18n*`……）。
 
 ```
 leapmultix/
@@ -237,10 +240,12 @@ leapmultix/
 │   ├── core/               # Socle applicatif
 │   │   ├── GameMode.js, GameModeManager.js   # Classe de base des modes
 │   │   ├── storage.js, userState.js          # Persistance et session
-│   │   ├── audio.js, theme.js, parental.js   # Son, thèmes, contrôle parental
+│   │   ├── audio.js, theme.js                # Son, thèmes
 │   │   ├── eventBus.js, mainInit.js          # Événements, amorçage DOM
 │   │   ├── adventure-data.js                 # Niveaux du mode Aventure
 │   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
+│   │   ├── chrono-stats.js, chrono-questions.js, chrono-input.js   # Mode Chrono
+│   │   ├── mode-stats.js, adventure-progress.js   # Compteurs du tableau de bord
 │   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
 │   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
 │   │   └── operations/                       # Une classe par opération
@@ -250,9 +255,9 @@ leapmultix/
 │   │   ├── topBar.js, infoBar.js, dashboard.js, customization.js
 │   │   ├── operationSelector.js, operationModeAvailability.js
 │   │   └── icons.js, tableSettingsModal.js
-│   ├── modes/              # Les cinq modes de jeu
+│   ├── modes/              # Les six modes de jeu
 │   │   ├── DiscoveryMode.js, QuizMode.js, ChallengeMode.js
-│   │   └── AdventureMode.js, ArcadeMode.js
+│   │   └── AdventureMode.js, ChronoMode.js, ArcadeMode.js
 │   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
@@ -280,82 +285,99 @@ leapmultix/
 
 ### 技术架构
 
-**现代 ES6 模块**：项目采用模块化架构，使用 ES6 类及原生导入/导出。
+**现代 ES6 模块**：项目采用模块化架构，使用 ES6 类和原生 import/export。
 
-**可复用组件**：使用集中式 UI 组件（TopBar、InfoBar、Dashboard、Customization）构建界面。
+**可复用组件**：界面使用集中管理的 UI 组件构建（TopBar、InfoBar、Dashboard、Customization）。
 
-**懒加载**：通过 `lazy-loader.js` 按需智能加载模块，以优化初始性能。
+**Lazy Loading**：通过 `lazy-loader.js` 按需智能加载模块，以优化初始性能。
 
-**统一存储系统**：通过 LocalStorage 提供集中式 API 实现用户数据持久化，并具备降级回退机制。
+**统一存储系统**：通过 LocalStorage 和回退机制，使用集中式 API 持久化用户数据。
 
-**集中式音频管理**：支持多语言及每个用户的偏好设置的声音控制。
+**集中式音频管理**：集中控制声音，支持多语言和每位用户的偏好设置。
 
-**事件总线（Event Bus）**：组件间解耦的事件驱动通信，实现高可维护性架构。
+**Event Bus**：组件之间通过解耦的事件通信，构建易于维护的架构。
 
-**滑动页面导航**：基于编号滑动页面（slide0、slide1 等）并配合 `goToSlide()` 的导航系统。
+**幻灯片式导航**：基于编号幻灯片（slide0、slide1 等）并使用 `goToSlide()` 的导航系统。
 
-**安全防护**：对所有 DOM 操作通过 `security-utils.js` 进行 XSS 防护与数据净化。
+**安全性**：所有 DOM 操作均通过 `security-utils.js` 进行 XSS 防护和净化。
 
-## 🎯 详细游戏模式
+## 🎯 游戏模式详解
 
 ### 探索模式
 
-乘法表的可视化探索界面，包含：
+针对每种运算设计的可视化探索界面，包含：
 
-- 乘法交互式可视化
-- 动画与记忆卡片
-- 教学拖放操作
-- 按运算表自由推进
+- 乘法的互动可视化
+- 动画和记忆辅助
+- 教育性拖放操作
+- 按乘法表自由推进
 
 ### 测验模式
 
-多选题，包含：
+选择题功能包括：
 
-- 每轮 10 道题目
-- 根据正确率自适应调整难度
+- 每轮 10 道题
+- 根据答题表现自适应调整进度
 - 虚拟数字键盘
-- 连胜（连续答对）系统
+- 连续答对系统
 
 ### 挑战模式
 
-计时挑战，包含：
+限时竞赛功能包括：
 
-- 3 种难度级别（初学者、中等、困难）
-- 答对奖励时间
+- 3 个难度等级（初级、中级、困难）
+- 答对可获得时间奖励
 - 生命值系统
-- 高分排行榜
+- 最高分排行榜
 
 ### 冒险模式
 
-故事推进模式，包含：
+叙事式进度功能包括：
 
 - 10 个可解锁的主题关卡
 - 带有可视化进度的互动地图
 - 包含角色的沉浸式故事
-- 星级与奖励系统
+- 星星和奖励系统
+
+### 计时模式
+
+在不停走动的计时器下尽快答对十题：
+
+- 四种运算：乘法表（在乘法表设置中配置），以及所有加法表（7 + k）、减法表（(7 + k) − 7）和除法表（(7 × k) ÷ 7）
+- 可通过选项或数字键盘作答，支持点击和键盘操作
+- 按运算记录最佳时间、平均时间和最近几轮游戏的曲线
+- “我的待复习算式”：每种运算各有一份列表，并从两个方向进行复习（6 × 7 和 7 × 6，15 − 7 和 15 − 8）
+
+### 仪表板
+
+逐个个人资料展示孩子实际玩过的内容：
+
+- 冒险模式中的星星和待复习乘法表（每张乘法表最近 20 次答题）
+- 测验、挑战、冒险和计时模式中的题目数与正确答案数
+- 各模式和各小游戏的游戏次数与纪录，包括中途退出；当孩子练习多种运算时，还会按运算细分
 
 ### 街机小游戏
 
-每款小游戏提供：
+每款小游戏均提供：
 
-- 难度选择与个性化设置
-- 生命值与得分系统
-- 键盘与触屏控制
-- 每个用户的专属排行榜
+- 难度选择和个性化设置
+- 生命值和得分系统
+- 键盘和触控操作
+- 按用户分别记录的个人排行榜
 
 ## 🔧 开发
 
 ### 开发工作流
 
-**切勿直接提交到 main 分支。** 本项目按特性分支（feature branch）进行协作开发。
+**切勿直接向 main 提交。**项目使用功能分支进行开发。
 
-**1. 创建分支**，功能开发使用 `feat/`，缺陷修复使用 `fix/`：
+**1. 创建分支**：功能使用 `feat/`，修复使用 `fix/`：
 
 ```bash
 git checkout -b feat/nom-de-la-fonctionnalite
 ```
 
-**2. 开发并验证。** 代码格式化排在第一位：CI 会在运行测试之前就因格式问题而直接拒绝。
+**2. 开发并检查。**格式检查最先执行：CI 会在运行测试之前因格式问题而拒绝构建。
 
 ```bash
 npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
@@ -365,7 +387,7 @@ npm run test          # Tests
 npm run test:coverage # Couverture
 ```
 
-**3. 提交到分支**，然后推送：
+**3. 在分支上提交**，然后推送：
 
 ```bash
 git add .
@@ -373,32 +395,32 @@ git commit -m "feat: description de la fonctionnalité"
 git push -u origin feat/nom-de-la-fonctionnalite
 ```
 
-**4. 发起 Pull Request** 并等待各项分析完成：verify、Codacy、CodeFactor 和 SonarCloud。在合并之前必须修复所有问题直到全部通过（绿灯）。
+**4. 创建 pull request**，并等待 verify、Codacy、CodeFactor 和 SonarCloud 分析。在合并前持续修复，直至所有检查通过。
 
-**提交规范**：信息简洁明了，采用祈使语气（例如：“Fix arcade init errors”、“Refactor cache updater”）
+**提交风格**：消息应简洁并使用祈使语气（例如：“Fix arcade init errors”“Refactor cache updater”）
 
-**质量门禁（Quality gate）**：每次提交前确保通过 `npm run lint`、`npm test` 和 `npm run test:coverage`
+**质量门**：确保每次提交前 `npm run lint`、`npm test` 和 `npm run test:coverage` 均通过
 
 ### 组件架构
 
-**GameMode（基类）**：所有模式均继承自一个通用类，包含标准化方法。
+**GameMode（基类）**：所有模式都继承自一个具有标准化方法的公共类。
 
-**GameModeManager**：集中调度模式的启动与管理。
+**GameModeManager**：集中协调各模式的启动和管理。
 
-**UI 组件**：TopBar、InfoBar、Dashboard 和 Customization 提供统一的界面。
+**UI 组件**：TopBar、InfoBar、Dashboard 和 Customization 提供一致的界面。
 
-**懒加载**：按需加载模块以优化初始性能。
+**Lazy Loading**：按需加载模块，以优化初始性能。
 
-**事件总线（Event Bus）**：通过事件系统实现组件间的解耦通信。
+**Event Bus**：组件通过事件系统进行解耦通信。
 
 ### 测试
 
-项目包含完整的测试套件：
+项目包含一套完整的测试：
 
-- 核心模块的单元测试
+- core 模块的单元测试
 - 组件集成测试
 - 游戏模式测试
-- 自动化代码覆盖率检查
+- 自动化代码覆盖率统计
 
 ```bash
 npm test              # Tous les tests (CJS)
@@ -408,12 +430,12 @@ npm test:coverage     # Rapport de couverture
 npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 ```
 
-### 生产环境构建
+### 生产构建
 
-- **Rollup**：将 `js/main-es6.js` 打包为 ESM 格式，支持代码分割（code-splitting）和 sourcemap
-- **Terser**：自动代码压缩以进行优化
-- **构建后处理**：复制 `css/` 与 `assets/`、网站图标（`favicon.ico`、`favicon.png`、`favicon.svg`）、`sw.js`，并将 `dist/index.html` 重写为指向带哈希的入口文件（例如：`main-es6-*.js`）
-- **最终目录**：`dist/` 可直接用于静态资源托管
+- **Rollup**：将 `js/main-es6.js` 打包为 ESM，并支持代码拆分和 sourcemap
+- **Terser**：自动压缩以实现优化
+- **构建后处理**：复制 `css/` 和 `assets/`、favicon（`favicon.ico`、`favicon.png`、`favicon.svg`）以及 `sw.js`，并将 `dist/index.html` 重写为带哈希的入口文件（例如 `main-es6-*.js`）
+- **最终目录**：`dist/`，可直接作为静态内容提供服务
 
 ```bash
 npm run build      # génère dist/
@@ -422,47 +444,49 @@ npm run serve:dist # sert dist/ (port 5000)
 
 ### 持续集成
 
-**GitHub Actions**：`.github/workflows/ci.yml`，在每次推送到 `main` 以及每次 Pull Request 时触发。
+**GitHub Actions**：`.github/workflows/ci.yml`，在每次向 `main` 推送以及每个 pull request 时触发。
 
-**`verify`** —— 质量门禁，阻断性检查：
+**`verify`**——阻断式质量门：
 
-- `npm ci`，随后执行 `npm run verify`（ESLint、Jest 测试、覆盖率）
+- `npm ci`，随后运行 `npm run verify`（ESLint、Jest 测试、覆盖率）
 - `npm run format:check`（Prettier）
 
-**`seo-report`** —— 在 `verify` 之后运行：对线上网站进行 Lighthouse 审计，以长期跟踪 SEO 指标。
+**`seo-report`**——在 `verify` 之后：对在线网站执行 Lighthouse 审计，以便长期跟踪 SEO 指标。
 
-**外部代码分析**已接入 Pull Request：Codacy、CodeFactor 和 SonarCloud。SonarCloud 质量门禁要求对新增代码在可靠性、安全性和可维护性方面均达到 A 级评分。
+**连接到 pull request 的外部分析**：Codacy、CodeFactor 和 SonarCloud。SonarCloud 质量门要求新代码在可靠性、安全性和可维护性方面均获得 A 级评分。
 
-**部署**：`./deploy.sh` 将网站同步到 S3 并刷新 CloudFront 缓存。该脚本会在需要时重新生成未纳入 git 的响应式图片。
+**部署**：`./deploy.sh` 将网站同步到 S3 并使 CloudFront 缓存失效。该脚本会按需重新生成 git 中未包含的响应式图片。
 
 ### PWA（渐进式 Web 应用）
 
-LeapMultix 是一款功能完备的 PWA，支持离线运行并可安装到设备。
+LeapMultix 是一款完整的 PWA，支持离线使用和安装。
 
 **Service Worker**（`sw.js`）：
 
-- 页面导航：网络优先（Network-first），离线时回退到 `offline.html`
-- 图片资源：缓存优先（Cache-first）以优化性能
-- 翻译文本：过期重新验证（Stale-while-revalidate）以在后台静默更新
-- JS/CSS：网络优先（Network-first）以始终提供最新版本
-- 通过 `cache-updater.js` 进行自动版本管理
+- 导航：优先使用网络，离线时回退到 `offline.html`
+- 图片：优先使用缓存，以优化性能
+- 翻译：使用过期内容并在后台重新验证更新
+- JS/CSS：优先使用网络，始终提供最新版本
+- 通过 `cache-updater.js` 自动管理版本
 
-**Manifest 清单**（`manifest.json`）：
+**Manifest**（`manifest.json`）：
 
-- 适用于所有设备的 SVG 与 PNG 图标
-- 支持在移动设备上安装（添加到主屏幕）
-- 独立模式（standalone）配置，带来类似原生应用的体验
-- 支持主题与配色定制
+- 为所有设备提供 SVG 和 PNG 图标
+- 可安装到移动设备（添加到主屏幕）
+- 独立模式配置，提供类似原生应用的体验
+- 支持主题和颜色
 
-**在本地测试离线模式。** 启动服务器，然后打开 `http://localhost:8080`（或显示的端口）：
+**在本地测试离线模式。**启动服务器，然后打开
+`http://localhost:8080`（或显示的端口）：
 
 ```bash
 npm run serve
 ```
 
-手动测试：在开发者工具中切断网络（“网络”选项卡，离线模式），然后刷新页面。此时应显示 `offline.html`。
+手动测试：在开发者工具中断开网络（“网络”选项卡，
+离线模式），然后刷新页面。此时应显示 `offline.html`。
 
-自动测试，使用 Puppeteer：
+使用 Puppeteer 自动测试：
 
 ```bash
 npm run test:pwa-offline
@@ -479,48 +503,49 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 **代码质量工具**：
 
-- **ESLint**：采用 Flat Config（`eslint.config.js`）的现代化配置，支持 ES2022
-- **Prettier**：代码自动格式化（`.prettierrc`）
-- **Stylelint**：CSS 校验（`.stylelintrc.json`）
-- **JSDoc**：包含覆盖率分析的函数文档自动生成
+- **ESLint**：采用扁平配置（`eslint.config.js`）的现代化配置，支持 ES2022
+- **Prettier**：自动格式化代码（`.prettierrc`）
+- **Stylelint**：验证 CSS（`.stylelintrc.json`）
+- **JSDoc**：自动生成函数文档并分析覆盖率
 
-**重要代码规范**：
+**重要代码规则**：
 
-- 移除未使用的变量与参数（`no-unused-vars`）
-- 使用针对性的错误处理（禁止空的 catch 块）
-- 避免使用 `innerHTML`，推荐使用 `security-utils.js` 函数
-- 函数认知复杂度保持 < 15
-- 将复杂函数拆分为更小的辅助函数（helpers）
+- 删除未使用的变量和参数（`no-unused-vars`）
+- 使用有针对性的错误处理（禁止空的 catch）
+- 避免使用 `innerHTML`，改用 `security-utils.js` 函数
+- 将函数的认知复杂度维持在 15 以下
+- 将复杂函数拆分为更小的辅助函数
 
-**安全**：
+**安全性**：
 
-- **XSS 防护**：使用 `security-utils.js` 的函数：
-  - 使用 `appendSanitizedHTML()` 代替 `innerHTML`
+- **XSS 防护**：使用 `security-utils.js` 中的函数：
+  - 使用 `appendSanitizedHTML()`，而不是 `innerHTML`
   - 使用 `createSafeElement()` 创建安全元素
-  - 文本内容使用 `setSafeMessage()`
-- **外部脚本**：强制使用 `crossorigin="anonymous"` 属性
-- **输入验证**：始终清理外部数据
-- **内容安全策略**：通过 CSP 响应头限制脚本来源
+  - 使用 `setSafeMessage()` 处理文本内容
+- **外部脚本**：必须添加 `crossorigin="anonymous"` 属性
+- **输入验证**：始终对外部数据进行清理
+- **Content Security Policy**：通过 CSP 标头限制脚本来源
 
-**无障碍**：
+**无障碍访问**：
 
 - 符合 WCAG 2.1 AA 标准
-- 完整的键盘导航支持
-- 合适的 ARIA 角色与标签
-- 符合标准的颜色对比度
+- 完整支持键盘导航
+- 使用适当的 ARIA 角色和标签
+- 颜色对比度符合标准
 
 **性能**：
 
-- 通过 `lazy-loader.js` 实现模块懒加载
-- CSS 优化与响应式资源
-- 用于智能缓存的 Service Worker
-- 生产环境下的代码分割与混淆压缩
+- 通过 `lazy-loader.js` 延迟加载模块
+- 优化 CSS 和响应式资源
+- 使用 Service Worker 实现智能缓存
+- 在生产环境中进行代码拆分和压缩
 
 ## 📱 兼容性
 
 ### 支持的浏览器
 
-界面依靠 `oklch()` 处理颜色，并依靠 `:has()` 处理上下文状态，由此确定了最低版本要求：
+界面的颜色依赖 `oklch()`，上下文状态依赖 `:has()`，
+因此最低版本要求如下：
 
 - Chrome / Chromium 111+
 - Edge 111+
@@ -529,15 +554,15 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 ### 设备
 
-- **桌面端**：键盘和鼠标控制
-- **平板电脑**：触控优化界面
+- **桌面设备**：支持键盘和鼠标控制
+- **平板电脑**：优化的触控界面
 - **智能手机**：自适应响应式设计
 
-### 无障碍
+### 无障碍访问
 
-- 完整的键盘导航（Tab、方向键、Esc）
-- 屏幕阅读器的 ARIA 角色与标签
-- 符合标准的颜色对比度
+- 完整支持键盘导航（Tab、方向键、Esc）
+- 为屏幕阅读器提供 ARIA 角色和标签
+- 颜色对比度符合标准
 - 支持辅助技术
 
 ## 🌍 本地化
@@ -564,23 +589,23 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 ### i18n 管理脚本
 
-**`npm run i18n:verify`** - 检查翻译键的一致性
+**`npm run i18n:verify`**——检查翻译键的一致性
 
-**`npm run i18n:unused`** - 列出未使用的翻译键
+**`npm run i18n:unused`**——列出未使用的翻译键
 
-**`npm run i18n:compare`** - 将翻译文件与 fr.json（基准参考）进行对比
+**`npm run i18n:compare`**——将翻译文件与 fr.json（基准文件）进行比较
 
-该脚本（`scripts/compare-translations.cjs`）确保所有语言文件的同步：
+此脚本（`scripts/compare-translations.cjs`）确保所有语言文件保持同步：
 
 **功能：**
 
-- 检测缺失的键（存在于 fr.json 但在其他语言中缺失）
-- 检测多余的键（存在于其他语言但未在 fr.json 中定义）
+- 检测缺失的键（存在于 fr.json 中，但在其他语言中缺失）
+- 检测多余的键（存在于其他语言中，但不存在于 fr.json 中）
 - 识别空值（`""`、`null`、`undefined`、`[]`）
-- 类型一致性检查（string 对比 array）
-- 将嵌套的 JSON 结构展平为点记法（例如：`arcade.multiMemory.title`）
+- 检查类型一致性（string 与 array）
+- 将嵌套 JSON 结构展平为点号表示法（例如：`arcade.multiMemory.title`）
 - 生成详细的控制台报告
-- 将 JSON 报告保存至 `docs/translations-comparison-report.json`
+- 将 JSON 报告保存到 `docs/translations-comparison-report.json`
 
 **输出示例：**
 
@@ -610,26 +635,26 @@ npm run sw:fix      # Corriger les problèmes de cache
 **翻译覆盖范围：**
 
 - 完整的用户界面
-- 游戏说明与指导
-- 错误提示与反馈信息
-- 描述与上下文帮助
-- 冒险模式的剧情内容
-- 无障碍与 ARIA 标签
+- 游戏说明
+- 错误和反馈消息
+- 说明和上下文帮助
+- 冒险模式的叙事内容
+- 无障碍标签和 ARIA 标签
 
 ## 🔊 录制语音
 
-游戏会朗读题目、鼓励语句和解释。它只包含有限的句子集合，每种语言大约 7,400 句：因此可以一次性录制完成，实际游戏过程中无需调用任何语音合成服务。若没有音频片段，游戏将使用设备的系统语音进行朗读。
+游戏会朗读问题、鼓励语和解释。它只会说出一组有限的句子，每种语言约 7,400 句，因此可以一次性录制完毕，之后任何部分都无须调用语音合成服务。如果没有音频片段，游戏将使用设备语音朗读。
 
-### 本仓库内：应用（不含语音）
+### 此代码库中：不含语音的应用程序
 
-代码能够播放预录制的音频片段，并包含用于生成这些片段的处理链。但仓库中不包含音频片段，也不包含供应商的 API 密钥：派生或本地安装的项目默认使用设备自带语音朗读。
+代码能够播放预先录制的音频片段，也包含用于生成这些片段的处理链。但代码库中既没有音频片段，也没有供应商密钥：分叉版本或本地安装版本会使用设备语音朗读。
 
-- **自动降级回退**到设备语音，逐句进行：音频片段缺失或出错、浏览器拒绝播放、音频片段在 1.5 秒内未开始播放，或者离线且缓存中没有该片段。
-- **设置**：顶部栏的语音按钮可开启或关闭朗读；“录制语音”复选框（无障碍与控制）用于在录制语音与设备语音之间切换。该选项仅在已发布录制语音的语言中显示。
-- **离线使用**：听过的音频片段会保留在缓存中（Service Worker）。
-- **游戏从何处寻找音频片段**：在 `<meta name="leapmultix-voice-base">` 标签中查找，该标签在仓库中为空。仅在生产环境部署时才会写入 `/voice/`。
+- **自动回退**到设备语音，逐句处理：音频片段缺失或出错、浏览器拒绝播放、音频片段未能在 1.5 秒内开始播放，或离线时缓存中没有该片段。
+- **设置**：顶部栏的语音按钮用于开启或关闭朗读；“录制语音”复选框（无障碍与控制）用于选择录制语音或设备语音。它只会在已发布语音的语言中显示。
+- **离线使用**：已经听过的音频片段会保留在缓存中（Service Worker）。
+- **游戏查找音频片段的位置**：在 `<meta name="leapmultix-voice-base">` 标签中，该标签在代码库中为空。只有生产部署才会向其中写入 `/voice/`。
 
-如果您在本地计算机上有自己的音频片段（通过下述处理链制作，存放在游戏同级的 `../leapmultix-voices` 中），参数 `?voix=local` 可让开发服务器读取它们：
+如果计算机上已有自己的音频片段（通过下述处理链生成，并存放在游戏旁的 `../leapmultix-voices` 中），参数 `?voix=local` 可让开发服务器播放这些片段：
 
 ```bash
 npm run voice:publish -- local --lang fr --audience all --default-on   # relie voice/ (ignoré par git) aux clips
@@ -639,28 +664,28 @@ npm run serve
 # puis ouvrir http://localhost:8080/index.html?voix=local
 ```
 
-### 在 leapmultix.jls42.org 上：托管版语音
+### 在 leapmultix.jls42.org 上：托管语音
 
-作者提供的站点提供了已录制的合成语音：
+作者提供的网站使用录制的合成语音：
 
-- 法语：**Lucie**，使用 ElevenLabs（Eleven v3 模型）生成；
-- 英式英语和西班牙语（西班牙）：**Sulafat**，使用 Google Cloud Text-to-Speech（Chirp 3 HD 语音）生成；
-- 玩家也可选择法语版的 **Sulafat**，以便在三种语言中保持同一种声音；
-- 玩家亦可选用法语的 **Marie** 和英语的 **Jane**，由 Mistral AI（Voxtral TTS）生成。
+- 法语使用 **Lucie**，由 ElevenLabs 创建（Eleven v3 模型）；
+- 英式英语和西班牙本土西班牙语使用 **Sulafat**，由 Google Cloud Text-to-Speech 创建（Chirp 3 HD 语音）；
+- 玩家也可选择在法语中使用 **Sulafat**，从而在三种语言中保持同一种声音；
+- 玩家还可选择法语语音 **Marie** 和英语语音 **Jane**，它们由 Mistral AI 创建（Voxtral TTS）。
 
-音频片段保存在私有仓库和专用的 S3 存储桶中，并通过 CloudFront 在 `/voice/*` 上提供分发。它们只生成一次：在游戏进行期间，不会向这些服务发送任何请求。在设置中，如果某语言拥有多种语音，“语音”菜单会列出该语言可用的语音，相关说明也会标注当前收听语音所对应的服务商。
+音频片段存放在私有代码库和专用 S3 bucket 中，并通过 CloudFront 在 `/voice/*` 上提供。它们只生成一次：游戏运行期间不会向这些服务发送任何内容。在设置中，如果某种语言有多个语音，“语音”菜单会列出该语言可用的语音，同时标注当前听到的语音所使用的服务。
 
 ### 生成音频片段
 
-该流程已在 `scripts/voice/` 中脚本化，且仅在维护者本地机器上运行，绝不在公开 CI 中执行。供应商密钥（ElevenLabs 对应 Lucie，Google Cloud Text-to-Speech 对应 Sulafat，Mistral 对应 Marie 和 Jane）存放在仓库外的 `.env` 文件中，通过 `node --env-file` 传递：没有任何密钥会被提交到 git。Claude Code skill [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) 提供了逐步执行的流程（检查点、授权确认、断点续传）；详细说明请参阅 [`docs/voix-enregistree.md`](docs/voix-enregistree.md)。
+处理链通过 `scripts/voice/` 编写为脚本，仅在所有者的计算机上运行，绝不会在公共 CI 中运行。供应商密钥（Lucie 使用 ElevenLabs、Sulafat 使用 Google Cloud Text-to-Speech、Marie 和 Jane 使用 Mistral）保存在代码库之外的 `.env` 文件中，并通过 `node --env-file` 传入：任何密钥都不会进入 git。Claude Code skill [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) 会逐步执行该流程（检查关卡、确认、重试）；详情参见 [`docs/voix-enregistree.md`](docs/voix-enregistree.md)。
 
-1. **估算**剩余句子数量和需要计费的字符数（Eleven v3：约每字符 0.53 点积分；Chirp 3 HD：每百万字符 30 美元，每月前一百万字符免费；Voxtral TTS：每百万字符 16 美元）。
-2. **生成**。重新运行相同命令可续传缺失部分。当配额或额度耗尽时，脚本会正常退出（退出代码 3），而不会留下未写完的文件。`--max-total-chars` 为该版本的累计花销设定了上限：每收到一次付费响应，就会立即记录在登记册中，即使意外中断也不会丢失记录。对于不提供可读余额的 Google 和 Mistral，这是唯一的保护措施。
-3. **检查**：确保每个句子都有对应的音频片段且每个 MP3 文件有效。随后 Whisper 会在本地对每个片段进行转录，检查程序会标出听错的数字和异常的时长。`voice:review` 可通过一条命令串联运行 Whisper、此项检查及试听页面。
-4. **试听**：在试听页面（`voice:listen`）上检查被标记的片段以及部分阴性形式样本（如 “une fois 7”），Whisper 无法区分这些形式。每个片段都有一个“重做”复选框，勾选后会将其添加到待重录片段列表中。
-5. **重录**被剔除的片段（`--redo`）并重新运行 Whisper，然后在第二个页面上对比每个片段修改前后的效果。如果某个片段经过两三次尝试后发音仍然有误，则可以在 `SAID_OVERRIDES`（`scripts/voice/said-text.mjs`）中指定固定的发音文本，例如拼写出完整的数字文字。
-6. **发布**音频片段，验证它们在线上能正常响应，然后先面向测试人员发布该语言的索引（`?voix=test`）。
-7. **向所有人开放**语音，随后将其设为默认启用。熔断开关（`voice:publish -- remove`）可从索引中移除某种语言：游戏将回退至设备自带语音。
+1. **估算**剩余句子数量和需要付费的字符数（Eleven v3：每个字符约 0.53 个额度；Chirp 3 HD：每百万字符 30 美元，每月首个一百万字符免费；Voxtral TTS：每百万字符 16 美元）。
+2. **生成**。重新运行同一命令时会继续生成缺失内容。额度耗尽后，脚本会正常停止（代码 3），不会留下写入一半的文件。`--max-total-chars` 会限制当前版本的累计支出：每次收到付费响应后，都会立即将其记录在账簿中，即使程序意外中断，记录也不会丢失。对于无法查询余额的 Google 和 Mistral，这是唯一的保护措施。
+3. **检查**：确认每个句子都有对应的音频片段，且每个 MP3 均有效。随后由 Whisper 在本地转写每个片段，检查程序会标记听错的数字和时长异常的片段。`voice:review` 可通过一条命令依次运行 Whisper、此项检查和试听页面。
+4. 在试听页面（`voice:listen`）上**试听**被标记的音频片段，以及一组阴性形式的样本（“une fois 7”），因为 Whisper 无法区分它们。每个片段都有一个“需要重做”复选框，勾选后会将其加入弃用片段列表。
+5. **重做**弃用的音频片段（`--redo`），重新运行 Whisper，然后在另一个页面上逐一比较每个片段重做前后的版本。如果某个片段经过两三次尝试后发音仍不正确，则在 `SAID_OVERRIDES`（`scripts/voice/said-text.mjs`）中为其指定固定文本，例如用完整拼写的数字。
+6. **发布**音频片段，确认它们可在线访问，然后发布该语言的索引，先提供给测试人员（`?voix=test`）。
+7. 向所有人**开放**该语音，然后将其设为默认语音。熔断机制（`voice:publish -- remove`）可从索引中移除某种语言：游戏会恢复使用设备语音。
 
 ```bash
 # 1. Estimer (sans frais)
@@ -683,43 +708,43 @@ npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> -
 npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience all --default-on
 ```
 
-### 规则：已修改的有声文本在发布到生产环境前必须重新录制
+### 规则：任何已修改的朗读句子都必须在上线前重新录制
 
-所有有声台词均来自翻译文件（`assets/translations/{fr,en,es}.json`）且属于语料库的一部分。因此，修改任何口播句子都会导致语料库锁定测试（`scripts/voice/corpus.lock.json`）失败。对于已拥有录制语音的语言，需要为受影响的句子生成音频片段，进行检查与试听，并在合并分支**之前**完成发布。最后再更新锁定文件（`npm run voice:corpus:lock`）。如果没有这些音频片段，修改后的句子将使用设备语音朗读。
+所有朗读句子都来自翻译文件（`assets/translations/{fr,en,es}.json`），并属于语料库的一部分。因此，修改朗读句子会导致语料库锁定测试（`scripts/voice/corpus.lock.json`）失败。对于已提供录制语音的语言，需要生成受影响句子的音频片段，检查并试听，然后在合并**之前**发布。最后再更新锁定文件（`npm run voice:corpus:lock`）。如果缺少这些片段，修改后的句子将使用设备语音朗读。
 
 ## 📊 数据存储
 
 ### 用户数据
 
-- 用户档案与偏好设置
+- 个人资料和偏好设置
 - 各游戏模式的进度
-- 街机游戏的得分与统计数据
+- 街机游戏的分数和统计数据
 - 个性化设置
 
-### 技术特性
+### 技术功能
 
-- 本地存储（localStorage）及后备降级方案
-- 按用户进行数据隔离
+- 使用本地存储（localStorage）并提供回退方案
+- 按个人资料存储游戏数据（各运算类型的统计数据仍由同一设备共用）
 - 自动保存进度
-- 旧数据自动迁移
+- 自动迁移旧数据
 
-## 🐛 反馈问题
+## 🐛 报告问题
 
-可通过 GitHub Issues 报告问题。请提供以下信息：
+可通过 GitHub issues 报告问题。请包含以下信息：
 
-- 问题的详细描述
-- 复现步骤
-- 浏览器及版本
-- 相关截图（若适用）
+- 问题的详细说明
+- 重现步骤
+- 浏览器及其版本
+- 相关的屏幕截图
 
-## 💝 支持本项目
+## 💝 支持项目
 
-**[☕ 通过 PayPal 赞助](https://paypal.me/jls)**
+**[☕ 通过 PayPal 捐款](https://paypal.me/jls)**
 
 ## 📄 许可证
 
-本项目采用 AGPL v3 许可证。详情请参阅 `LICENSE` 文件。
+本项目采用 AGPL v3 许可证。有关更多详情，请参阅 `LICENSE` 文件。
 
 ---
 
-_LeapMultix — 用于学习四则运算的自由开源教育应用_
+_LeapMultix——用于学习四则运算的自由教育应用_

@@ -58,7 +58,7 @@
 
 LeapMultix est une application web éducative interactive destinée aux enfants de 6 à 12 ans pour maîtriser les 4 opérations arithmétiques : multiplication (×), addition (+), soustraction (−) et division (÷). Elle propose **6 modes de jeu** et **4 mini-jeux d'arcade** dans une interface intuitive, accessible et multilingue.
 
-**Support multi-opérations :** tous les modes acceptent les quatre opérations, sauf Chrono, réservé aux tables de multiplication. Le choix se fait sur l'écran d'accueil et vaut pour tout le parcours.
+**Support multi-opérations :** tous les modes acceptent les quatre opérations. Le choix se fait sur l'écran d'accueil et vaut pour tout le parcours.
 
 **Développé par :** Julien LS (contact@jls42.org)
 
@@ -68,18 +68,18 @@ LeapMultix est une application web éducative interactive destinée aux enfants 
 
 ### Les écrans
 
-|                                                                                                               |                                                                                                                |
-| :-----------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------: |
-|                     ![Écran « Qui joue ? » : choix du profil](docs/media/01-accueil.webp)                     |              ![Menu principal : choix de l'opération et du mode de jeu](docs/media/02-menu.webp)               |
-|                   **Qui joue ?** — un profil par enfant, avec son avatar et sa progression.                   |                         **Le menu** — l'opération se choisit ici, puis le mode de jeu.                         |
-|              ![Mode Découverte : la table de 4 montrée en points](docs/media/03-decouverte.webp)              |             ![Mode Quiz : réponse fausse en rouge, bonne réponse en vert](docs/media/04-quiz.webp)             |
-|   **Découverte** — chaque égalité se montre en points, en bonds ou en comptage, avec l'astuce de la table.    | **Quiz** — le choix de l'enfant reste affiché à côté de la bonne réponse, et l'explication détaille le calcul. |
-|                  ![Mode Défi : compte à rebours et série en cours](docs/media/05-defi.webp)                   |        ![Mode Aventure : carte des dix niveaux, les suivants verrouillés](docs/media/06-aventure.webp)         |
-| **Défi** — course contre la montre. Sur une erreur, le chronomètre se fige le temps de lire la bonne réponse. |                **Aventure** — dix niveaux qui s'ouvrent l'un après l'autre, contre des étoiles.                |
-|                       ![Menu Arcade : les quatre mini-jeux](docs/media/07-arcade.webp)                        |           ![Tableau de bord : étoiles par table et statistiques](docs/media/08-tableau-de-bord.webp)           |
-|              **Arcade** — quatre mini-jeux, avec réglage de la difficulté et choix du vaisseau.               |                   **Tableau de bord** — étoiles par table, tables à revoir, scores par mode.                   |
-|           ![Personnalisation : avatars, thèmes, accessibilité](docs/media/09-personnalisation.webp)           |                                                                                                                |
-|      **Personnalisation** — avatar, thème de couleurs, taille du texte, contraste élevé, code parental.       |                                                                                                                |
+|                                                                                                                                  |                                                                                                                |
+| :------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------: |
+|                              ![Écran « Qui joue ? » : choix du profil](docs/media/01-accueil.webp)                               |              ![Menu principal : choix de l'opération et du mode de jeu](docs/media/02-menu.webp)               |
+|                            **Qui joue ?** — un profil par enfant, avec son avatar et sa progression.                             |                         **Le menu** — l'opération se choisit ici, puis le mode de jeu.                         |
+|                       ![Mode Découverte : la table de 4 montrée en points](docs/media/03-decouverte.webp)                        |             ![Mode Quiz : réponse fausse en rouge, bonne réponse en vert](docs/media/04-quiz.webp)             |
+|             **Découverte** — chaque égalité se montre en points, en bonds ou en comptage, avec l'astuce de la table.             | **Quiz** — le choix de l'enfant reste affiché à côté de la bonne réponse, et l'explication détaille le calcul. |
+|                            ![Mode Défi : compte à rebours et série en cours](docs/media/05-defi.webp)                            |        ![Mode Aventure : carte des dix niveaux, les suivants verrouillés](docs/media/06-aventure.webp)         |
+|          **Défi** — course contre la montre. Sur une erreur, le chronomètre se fige le temps de lire la bonne réponse.           |                **Aventure** — dix niveaux qui s'ouvrent l'un après l'autre, contre des étoiles.                |
+|             ![Mode Chrono : une course en soustraction, le chronomètre et la progression](docs/media/14-chrono.webp)             |                        ![Menu Arcade : les quatre mini-jeux](docs/media/07-arcade.webp)                        |
+|  **Chrono** — dix bonnes réponses contre la montre, dans l'opération choisie ; les calculs ratés vont dans une liste à revoir.   |               **Arcade** — quatre mini-jeux, avec réglage de la difficulté et choix du vaisseau.               |
+|  ![Tableau de bord : parties, records et réponses de chaque mode, détaillés par opération](docs/media/08-tableau-de-bord.webp)   |           ![Personnalisation : avatars, thèmes, accessibilité](docs/media/09-personnalisation.webp)            |
+| **Tableau de bord** — parties et records de chaque mode, détaillés par opération ; étoiles et tables à revoir en multiplication. |              **Personnalisation** — avatar, thème de couleurs, taille du texte, contraste élevé.               |
 
 ### Les mini-jeux d'arcade
 
@@ -102,7 +102,7 @@ différent.
 - **Mode Quiz** : Questions à choix multiples avec support des 4 opérations (×, +, −, ÷) et progression adaptative
 - **Mode Défi** : Course contre la montre avec les 4 opérations (×, +, −, ÷) et différents niveaux de difficulté
 - **Mode Aventure** : Progression narrative par niveaux avec support des 4 opérations
-- **Mode Chrono** : 10 bonnes réponses sur les tables de multiplication, contre un chrono qui ne s'arrête pas, pour battre son meilleur temps
+- **Mode Chrono** : 10 bonnes réponses contre un chrono qui ne s'arrête pas, pour battre son meilleur temps, avec les 4 opérations (×, +, −, ÷)
 
 ### 🕹️ Mini-jeux Arcade
 
@@ -113,7 +113,7 @@ différent.
 
 ### ➕ Support Multi-Opérations
 
-LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans **tous les modes**, sauf Chrono, réservé aux tables de multiplication :
+LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans **tous les modes** :
 
 | Mode       | ×   | +   | −   | ÷   |
 | ---------- | --- | --- | --- | --- |
@@ -121,7 +121,7 @@ LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans 
 | Défi       | ✅  | ✅  | ✅  | ✅  |
 | Découverte | ✅  | ✅  | ✅  | ✅  |
 | Aventure   | ✅  | ✅  | ✅  | ✅  |
-| Chrono     | ✅  | ❌  | ❌  | ❌  |
+| Chrono     | ✅  | ✅  | ✅  | ✅  |
 | Arcade     | ✅  | ✅  | ✅  | ✅  |
 
 ### 🌍 Fonctionnalités Transversales
@@ -132,7 +132,7 @@ LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans 
 - **Accessibilité** : Navigation clavier, support tactile, conformité WCAG 2.1 AA
 - **Voix enregistrée** : le jeu sait lire questions et encouragements avec une voix de synthèse pré-enregistrée, avec repli automatique sur la voix de l'appareil. Les voix ne sont pas dans ce dépôt : le site leapmultix.jls42.org sert Lucie en français, Sulafat en anglais et en espagnol, et au choix Sulafat et Marie en français, Jane en anglais (voir [Voix enregistrée](#-voix-enregistrée))
 - **Mobile responsive** : Interface optimisée pour tablettes et smartphones
-- **Système de progression** : Scores, badges, défis quotidiens
+- **Système de progression** : tableau de bord par profil (parties, records et tables à revoir, détaillés par opération), badges, défis quotidiens
 
 ## 🚀 Démarrage rapide
 
@@ -243,11 +243,12 @@ leapmultix/
 │   ├── core/               # Socle applicatif
 │   │   ├── GameMode.js, GameModeManager.js   # Classe de base des modes
 │   │   ├── storage.js, userState.js          # Persistance et session
-│   │   ├── audio.js, theme.js, parental.js   # Son, thèmes, contrôle parental
+│   │   ├── audio.js, theme.js                # Son, thèmes
 │   │   ├── eventBus.js, mainInit.js          # Événements, amorçage DOM
 │   │   ├── adventure-data.js                 # Niveaux du mode Aventure
 │   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
 │   │   ├── chrono-stats.js, chrono-questions.js, chrono-input.js   # Mode Chrono
+│   │   ├── mode-stats.js, adventure-progress.js   # Compteurs du tableau de bord
 │   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
 │   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
 │   │   └── operations/                       # Une classe par opération
@@ -307,7 +308,7 @@ leapmultix/
 
 ### Mode Découverte
 
-Interface d'exploration visuelle des tables de multiplication avec :
+Interface d'exploration visuelle, adaptée à chaque opération, avec :
 
 - Visualisation interactive des multiplications
 - Animations et aide-mémoires
@@ -340,6 +341,26 @@ Progression narrative avec :
 - Carte interactive avec progression visuelle
 - Histoire immersive avec personnages
 - Système d'étoiles et de récompenses
+
+### Mode Chrono
+
+Dix bonnes réponses le plus vite possible, contre un chrono qui ne s'arrête pas :
+
+- Les quatre opérations : les tables de multiplication (réglées dans les Paramètres des tables), et
+  toutes les tables d'addition (7 + k), de soustraction ((7 + k) − 7) et de division ((7 × k) ÷ 7)
+- Réponse au choix ou au pavé numérique, au clic comme au clavier
+- Meilleurs temps, temps moyen et courbe des dernières parties, par opération
+- « Mes calculs à revoir » : une liste par opération, révisée dans les deux sens (6 × 7 et 7 × 6,
+  15 − 7 et 15 − 8)
+
+### Tableau de bord
+
+Ce que l'enfant a vraiment joué, profil par profil :
+
+- Étoiles de l'Aventure et tables de multiplication à revoir (20 dernières réponses de chaque table)
+- Questions et bonnes réponses en Quiz, Défi, Aventure et Chrono
+- Parties et records de chaque mode et de chaque mini-jeu, abandons compris, détaillés par opération
+  dès que l'enfant en pratique plusieurs
 
 ### Mini-jeux Arcade
 
@@ -717,7 +738,7 @@ Toute phrase dite vient des traductions (`assets/translations/{fr,en,es}.json`) 
 ### Fonctionnalités techniques
 
 - Stockage local (localStorage) avec fallbacks
-- Isolation des données par utilisateur
+- Données de jeu rangées par profil (les statistiques par calcul restent communes à l'appareil)
 - Sauvegarde automatique de la progression
 - Migration automatique des données anciennes
 
