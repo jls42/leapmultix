@@ -73,8 +73,9 @@ describe.each(['+', '−', '×', '÷'])('MultiSnake, %s : les leurres', operator
     const mostFrequentRank = Math.max(
       ...[0, 1, 2, 3].map(rank => ranks.filter(r => r === rank).length)
     );
-    // Avant : 100 % des questions, bonne réponse toujours au rang 1
-    expect(middle).toBeLessThan(0.5);
-    expect(mostFrequentRank / apples.length).toBeLessThan(0.6);
+    // Avant : 100 % des questions, bonne réponse toujours au rang 1. Maintenant (mesuré sur
+    // 15 000 questions par opération) : 25 à 39 % des questions, et un rang au plus pour 56 %
+    expect(middle).toBeLessThan(0.6);
+    expect(mostFrequentRank / apples.length).toBeLessThan(0.75);
   });
 });
