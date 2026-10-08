@@ -83,9 +83,13 @@ export const USERNAME_MAX_LENGTH = 50;
 /**
  * Un caractère de prénom : lettre de n'importe quelle écriture ou accent qui s'y pose,
  * apostrophe droite ou typographique, espace, trait d'union, point médian du catalan
- * (« Gal·la ») et antiliant U+200C (persan, écritures de l'Inde)
+ * (« Gal·la ») et antiliant U+200C (persan, écritures de l'Inde). Plus les chiffres, le point
+ * et le tiret bas, déjà permis avant : « Léa B. » ou « Léa 2 » distinguent deux élèves.
  */
-const USERNAME_CHAR = /^[\p{L}\p{M}\u0027’ ·\u200C-]$/u;
+const USERNAME_CHAR = /^[\p{L}\p{M}\p{Nd}\u0027’ ._·\u200C-]$/u;
+
+/** Noms réservés de JavaScript : rangés comme clé, ils toucheraient au prototype d'un objet */
+const RESERVED_USERNAMES = new Set(['__proto__']);
 
 /**
  * Les signes tels qu'on les voit (graphèmes) : un émoji composé reste un seul signe
@@ -122,6 +126,7 @@ export function normalizeUsername(username) {
 export function checkUsername(username) {
   const name = normalizeUsername(username);
   if (!name) return { name, problem: 'empty', chars: '' };
+  if (RESERVED_USERNAMES.has(name)) return { name, problem: 'chars', chars: name };
   const refused = [...new Set(visibleSigns(name).filter(sign => !isNameSign(sign)))];
   if (refused.length > 0) return { name, problem: 'chars', chars: refused.join(' ') };
   if (Array.from(name).length > USERNAME_MAX_LENGTH) return { name, problem: 'long', chars: '' };

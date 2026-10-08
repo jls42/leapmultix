@@ -1,21 +1,11 @@
 /**
- * Prénom d'essai unique, en lettres seulement : un chiffre n'entre pas dans un prénom
- * (checkUsername, security-utils.js). L'heure est écrite avec les lettres a à j.
- * @returns {string}
- */
-function uniqueTestName() {
-  const letters = [...String(Date.now())].map(digit => String.fromCharCode(97 + Number(digit)));
-  return `Testeur-${letters.join('')}`;
-}
-
-/**
  * Parcours commun des tests E2E : créer un joueur, l'ouvrir et passer l'intro vidéo, jusqu'au
  * menu des modes
  * @param {import('puppeteer').Page} page
  */
 async function createUserAndSkipIntro(page) {
   await page.waitForSelector('#new-user-name', { visible: true, timeout: 10000 });
-  await page.type('#new-user-name', uniqueTestName());
+  await page.type('#new-user-name', 'TestUser-' + Date.now());
   await page.click('#create-user-btn');
   await page.waitForSelector('.user-container .user-tile', { visible: true, timeout: 10000 });
   const users = await page.$$('.user-container .user-tile');

@@ -145,6 +145,15 @@ describe('Reprise d’un fichier : vérifiée, sans écraser personne', () => {
     expect(Object.keys(stored())).toEqual(['7', 'Zoé_2', 'Léa B.']);
   });
 
+  test('tout prénom qu’une version du jeu a pu ranger est repris', () => {
+    // L'ancienne règle ([a-zA-Z0-9À-ÿ\s._-]) laissait passer « × », « ÷ » et toute espace
+    const names = ['Léa 2', 'Lucas_B', 'Gal·la', 'Léa×', 'Tom÷', 'Zoé\tB'];
+    const players = Object.fromEntries(names.map(name => [name, { nickname: name }]));
+    const backup = readPlayersBackup(backupText(players));
+    expect(backup.players.map(([name]) => name)).toEqual(names);
+    expect(backup.rejected).toBe(0);
+  });
+
   test('stockage plein : rien n’est ajouté, l’erreur est rendue', () => {
     UserManager.createUser('Léa', 'panda');
     jest.spyOn(localStorage, 'setItem').mockImplementation(() => {

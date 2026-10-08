@@ -239,7 +239,7 @@
   "unicorn": "Unicorn",
   "unlocked_achievements_title": "Unlocked achievements",
   "user_already_exists_alert": "This player already exists. Tap their name above to play.",
-  "name_bad_chars_alert": "Your name can’t contain “{chars}”. Use letters, spaces, apostrophes and hyphens.",
+  "name_bad_chars_alert": "Your name can’t contain “{chars}”. Use letters, numbers, spaces, apostrophes, hyphens, periods and underscores.",
   "name_too_long_alert": "Your name is too long: {max, plural, one {# character} other {# characters}} at most.",
   "user_selection_desc": "Pick your player or create a new one.",
   "user_selection_title": "Who’s playing?",

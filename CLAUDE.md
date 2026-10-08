@@ -421,7 +421,7 @@ leur empreinte.
 
 **Security and Error Handling:**
 
-- `security-utils.js` - Security utilities (XSS protection, sanitization); `checkUsername()` keeps a player name as typed (letters of any script and their accents, apostrophes, hyphen, space) and refuses the rest, quoting the refused signs
+- `security-utils.js` - Security utilities (XSS protection, sanitization); `checkUsername()` keeps a player name as typed (letters of any script and their accents, digits, apostrophes, hyphen, period, underscore, space) and refuses the rest, quoting the refused signs
 - `error-handlers.js` - Global error handling
 - `logger.js` - Logging system
 

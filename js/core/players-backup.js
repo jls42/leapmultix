@@ -16,10 +16,10 @@ export const BACKUP_VERSION = 1;
 export const BACKUP_MAX_BYTES = 10 * 1024 * 1024;
 
 /**
- * Prénom qu'une version du jeu a pu ranger : la règle actuelle (checkUsername), ou l'ancienne,
- * qui gardait aussi chiffres, point et tiret bas (« Léa B. », « 7 »). Jamais « __proto__ ».
+ * Prénom qu'une version du jeu a pu ranger : la règle actuelle (checkUsername), ou l'ancienne
+ * ([a-zA-Z0-9À-ÿ\s._-], où passaient aussi « × », « ÷ » et toute espace). Jamais « __proto__ ».
  */
-const STORED_NAME = /^[\p{L}\p{M}\p{N}\p{Zs}'’.·_‌-]{1,50}$/u;
+const STORED_NAME = /^[\p{L}\p{M}\p{N}\s\u0027\u2019.\u00B7_\u00D7\u00F7\u200C-]{1,50}$/u;
 
 const isPlainObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 

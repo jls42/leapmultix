@@ -52,6 +52,10 @@ const ACCEPTED = [
   'Maximilien-Alexandre de la Tour-Dupont',
   '王芳',
   'Gal·la',
+  // Chiffres, point et tiret bas, permis avant : ils distinguent deux élèves de même prénom
+  'Léa B.',
+  'Léa 2',
+  'Lucas_B',
 ];
 
 describe('checkUsername : ce qui est écrit est gardé', () => {
@@ -73,13 +77,17 @@ describe('checkUsername : ce qui est écrit est gardé', () => {
 
   test.each([
     ['🦊', '🦊'],
-    ['Léa2', '2'],
-    ['Lucas B.', '.'],
-    ['Zoé_', '_'],
+    ['Léa !', '!'],
+    ['Tom & Léo', '&'],
+    ['Zoé (CM2)', '( )'],
     ['<b>Léo</b>', '< > /'],
     ['👨‍👩‍👧 Lou', '👨‍👩‍👧'],
   ])('« %s » est refusé, en citant « %s »', (name, chars) => {
     expect(checkUsername(name)).toMatchObject({ problem: 'chars', chars });
+  });
+
+  test('« __proto__ », nom réservé de JavaScript, est refusé en entier', () => {
+    expect(checkUsername('__proto__')).toMatchObject({ problem: 'chars', chars: '__proto__' });
   });
 
   test('plus de 50 caractères : refusé, jamais coupé', () => {
@@ -140,15 +148,20 @@ describe('« Nouveau joueur » : le prénom créé est celui qui a été écrit'
     const message = create('🦊');
     expect(message.hidden).toBe(false);
     expect(message.textContent).toBe(
-      'Ton prénom ne peut pas contenir « 🦊 ». Garde les lettres, l’espace, l’apostrophe et le trait d’union.'
+      'Ton prénom ne peut pas contenir « 🦊 ». Garde les lettres, les chiffres, l’espace, l’apostrophe, le trait d’union, le point et le tiret bas.'
     );
     expect(UserManager.getAllPlayers()).toEqual({});
   });
 
-  test('un chiffre aussi, sans toucher au reste du prénom', () => {
-    expect(create('Léa2').textContent).toContain('« 2 »');
-    expect(UserManager.getAllPlayers()).toEqual({});
-  });
+  test.each(['Léa B.', 'Léa 2', 'Lucas_B'])(
+    '« %s » se crée tel quel, pour distinguer deux élèves de même prénom',
+    name => {
+      expect(create(name).hidden).toBe(true);
+      expect(Object.keys(UserManager.getAllPlayers())).toEqual([name]);
+      expect(UserManager.getCurrentUser()).toBe(name);
+      expect(document.querySelector('#user-list .user-tile-name').textContent).toBe(name);
+    }
+  );
 
   test('un prénom trop long est refusé avec sa limite', () => {
     expect(create('A'.repeat(51)).textContent).toBe(
