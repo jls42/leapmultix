@@ -3,7 +3,7 @@
  * la partie en plein écran et en sort, dit dans quel état il est, rend le plateau au clavier,
  * et Échap sort du plein écran sans ramener à « Qui joue ? ». Sans l'API, aucun bouton.
  */
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach, afterAll, jest } from '@jest/globals';
 
 const LABELS = new Map([
   ['arcade_fullscreen_enter', 'Plein écran'],
@@ -87,8 +87,11 @@ function pressEscape() {
   return event;
 }
 
+// Une seule horloge simulée pour tout le fichier : le délai de grâce d'Échap se mesure
+// d'un test à l'autre sur un temps continu
+jest.useFakeTimers();
+
 beforeEach(() => {
-  jest.useFakeTimers();
   // Loin de toute sortie du plein écran d'un test précédent
   jest.advanceTimersByTime(5000);
   fullscreenElement = null;
@@ -96,9 +99,15 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // Sortie du plein écran comme dans un navigateur : le module repart d'un état propre
+  fullscreenElement = null;
+  document.dispatchEvent(new Event('fullscreenchange'));
   Reflect.deleteProperty(document, 'fullscreenEnabled');
   Reflect.deleteProperty(document, 'fullscreenElement');
   Reflect.deleteProperty(document, 'exitFullscreen');
+});
+
+afterAll(() => {
   jest.useRealTimers();
 });
 
@@ -193,6 +202,28 @@ describe('Échap en plein écran', () => {
     mountArcadeFullscreenButton(stage).click();
     await flush();
     jest.advanceTimersByTime(1000);
+    expect(pressEscape().defaultPrevented).toBe(false);
+  });
+});
+
+describe('Un autre élément en plein écran (vidéo)', () => {
+  beforeEach(provideFullscreenApi);
+
+  test('il ne touche ni à son plein écran, ni à Échap, ni au bouton', async () => {
+    const button = mountArcadeFullscreenButton(stage);
+    const video = document.createElement('video');
+    document.body.append(video);
+    fullscreenElement = video;
+    document.dispatchEvent(new Event('fullscreenchange'));
+    // Une mutation de la page ne le fait pas sortir du plein écran
+    game.replaceChildren(document.createElement('div'));
+    await flush();
+    expect(document.exitFullscreen).not.toHaveBeenCalled();
+    expect(pressEscape().defaultPrevented).toBe(false);
+    expect(button.getAttribute('aria-label')).toBe('Plein écran');
+    // Sa sortie n'ouvre pas de délai de grâce pour Échap
+    fullscreenElement = null;
+    document.dispatchEvent(new Event('fullscreenchange'));
     expect(pressEscape().defaultPrevented).toBe(false);
   });
 });

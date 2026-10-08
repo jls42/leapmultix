@@ -26,6 +26,9 @@ const ESCAPE_GRACE_MS = 500;
 let lastExitAt = Number.NEGATIVE_INFINITY;
 let leaveObserver = null;
 let listening = false;
+// Élément que ce module met en plein écran (#game) : un autre (vidéo) ne le concerne pas
+let arcadeRoot = null;
+let arcadeWasFullscreen = false;
 
 /**
  * Le navigateur peut-il mettre cet élément en plein écran ?
@@ -36,9 +39,10 @@ export function isFullscreenAvailable(target) {
   return Boolean(document.fullscreenEnabled) && typeof target?.requestFullscreen === 'function';
 }
 
-/** Élément en plein écran, ou null */
+/** La partie d'Arcade si c'est elle qui est en plein écran, sinon null */
 function fullscreenRoot() {
-  return document.fullscreenElement || null;
+  const element = document.fullscreenElement;
+  return element && element === arcadeRoot ? element : null;
 }
 
 /**
@@ -132,8 +136,11 @@ function watchLeaving(root) {
 function onFullscreenChange() {
   const root = fullscreenRoot();
   if (root) {
+    arcadeWasFullscreen = true;
     watchLeaving(root);
-  } else {
+  } else if (arcadeWasFullscreen) {
+    // C'est la partie qui sort du plein écran (pas une vidéo)
+    arcadeWasFullscreen = false;
     lastExitAt = Date.now();
     leaveObserver?.disconnect();
     leaveObserver = null;
@@ -175,6 +182,7 @@ export function mountArcadeFullscreenButton(stage) {
   const existing = banner.querySelector(`.${BUTTON_CLASS}`);
   if (existing) return existing;
 
+  arcadeRoot = root;
   const button = document.createElement('button');
   button.type = 'button';
   button.className = `btn btn-secondary ${BUTTON_CLASS}`;
