@@ -80,6 +80,12 @@
     0 0 0 var(--color-action-edge);
 }
 
+/* Menu ouvert : la barre passe au-dessus du bandeau collant d'un jeu d'Arcade (même couche,
+   venu après elle), qui couvrait le haut du menu sur téléphone et en volait les touchers */
+.top-bar:has(.top-bar-nav.is-open) {
+  z-index: var(--z-overlay);
+}
+
 /* --- Langue : trois touches texte groupées, la langue active est pleine --- */
 .language-selector {
   display: inline-flex;
