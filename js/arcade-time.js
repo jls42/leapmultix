@@ -159,6 +159,21 @@ function focusWithoutScroll(element) {
   }
 }
 
+/**
+ * Le voile suit le canevas et sa zone de jeu : la consigne qui part, le plein écran ou le
+ * bandeau qui change de hauteur les redimensionnent sans redimensionner la fenêtre
+ * @param {HTMLElement} stage - Zone de jeu (parent du canevas)
+ * @returns {ResizeObserver|null}
+ */
+function watchStage(stage) {
+  if (typeof globalThis.ResizeObserver !== 'function') return null;
+  const observer = new globalThis.ResizeObserver(placeOverlay);
+  observer.observe(stage);
+  const canvas = document.querySelector(CANVAS_SELECTOR);
+  if (canvas) observer.observe(canvas);
+  return observer;
+}
+
 /** En pause : le bouton dit « Reprendre », le voile couvre le plateau et prend le focus */
 function showPaused() {
   setButtonContent(controls.button, RESUME_LABEL);
@@ -168,14 +183,17 @@ function showPaused() {
   stage.appendChild(controls.overlay);
   placeOverlay();
   globalThis.addEventListener('resize', placeOverlay);
+  controls.stageObserver = watchStage(stage);
   focusWithoutScroll(controls.overlay.querySelector('.arcade-resume-btn'));
 }
 
 /** Voile retiré (reprise ou fin de partie) */
 function removeOverlay() {
   globalThis.removeEventListener('resize', placeOverlay);
-  controls?.overlay?.remove();
-  if (controls) controls.overlay = null;
+  if (!controls) return;
+  controls.stageObserver?.disconnect();
+  controls.overlay?.remove();
+  Object.assign(controls, { overlay: null, stageObserver: null });
 }
 
 /** Reprise : le bouton redit « Pause », le plateau retrouve le focus pour jouer au clavier */
