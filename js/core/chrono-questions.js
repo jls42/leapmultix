@@ -16,7 +16,8 @@
  * ils gardent leur poids normal.
  * Une famille de calculs, ce sont les mêmes trois nombres : 6 × 7 et 7 × 6, 3 + 8 et 8 + 3,
  * 15 − 7 et 15 − 8, 56 ÷ 7 et 56 ÷ 8. Une course n’en pose qu’un membre ; la révision pose
- * chaque calcul de la liste dans les deux sens, jamais deux fois d’affilée.
+ * chaque calcul de la liste dans les deux sens, jamais deux fois d’affilée, sauf quand la
+ * liste n’a qu’un calcul sans autre sens (7 × 7, 14 − 7, 49 ÷ 7).
  */
 
 import { randomFloat, shuffleInPlace } from './random.js';
@@ -349,6 +350,28 @@ export function separateRevisionRepeats(round) {
     items.splice(i, 1, other);
     items.splice(swap, 1, current);
   }
+  return spreadTrailingRepeats(items);
+}
+
+/**
+ * Le tri ci-dessus ne regarde que devant lui : quand les dernières copies d’une passe sont le
+ * même calcul ([7 × 6, 6 × 7, 6 × 7]), il les laisse côte à côte. Chaque copie en trop se
+ * glisse alors plus tôt, entre deux autres calculs ([6 × 7, 7 × 6, 6 × 7]), tant qu’il y a
+ * une place.
+ * @param {Array<{a: number, b: number}>} items - Passe triée, modifiée sur place
+ * @returns {Array<{a: number, b: number}>}
+ */
+function spreadTrailingRepeats(items) {
+  while (items.length > 1 && sameFact(items.at(-1), items.at(-2))) {
+    const repeated = items.at(-1);
+    const slot = items.findIndex(
+      (item, index) =>
+        !sameFact(item, repeated) && (index === 0 || !sameFact(items.at(index - 1), repeated))
+    );
+    if (slot < 0) break;
+    items.pop();
+    items.splice(slot, 0, repeated);
+  }
   return items;
 }
 
@@ -357,7 +380,8 @@ function sameFact(left, right) {
 }
 
 /**
- * Prochain calcul de révision : une passe complète de la liste avant de recommencer.
+ * Prochain calcul de révision : une passe complète de la liste avant de recommencer, sauf
+ * quand il ne reste de la passe que le calcul qui vient d’être posé.
  * @param {Array<{a: number, b: number}>} queue
  * @param {Array<{a: number, b: number}>} basket
  * @param {{a: number, b: number}} [lastFact] - Dernier calcul posé : s’il est en tête de file,
@@ -367,7 +391,7 @@ function sameFact(left, right) {
  */
 export function takeNextRevisionFact(queue, basket, lastFact, operator = '×') {
   if (!basket || basket.length === 0) return undefined;
-  if (queue.length === 0) refillRevisionQueue(queue, basket, operator);
+  if (needsNextRound(queue, lastFact)) refillRevisionQueue(queue, basket, operator);
   if (lastFact && queue.length > 1) {
     const index = queue.findIndex(item => !sameFact(item, lastFact));
     if (index > 0) {
@@ -376,4 +400,17 @@ export function takeNextRevisionFact(queue, basket, lastFact, operator = '×') {
     }
   }
   return queue.shift();
+}
+
+/**
+ * La passe suivante s’ajoute quand la file est vide, ou quand il n’y reste que le calcul qui
+ * vient d’être posé : son premier calcul différent passe alors devant. Sans cela, 9 × 8 à
+ * revoir deux fois (passes 9 × 8, 8 × 9, 9 × 8) se posait deux fois de suite à chaque passe.
+ * @param {Array<{a: number, b: number}>} queue
+ * @param {{a: number, b: number}} [lastFact]
+ * @returns {boolean}
+ */
+function needsNextRound(queue, lastFact) {
+  if (queue.length === 0) return true;
+  return Boolean(lastFact) && queue.every(item => sameFact(item, lastFact));
 }
