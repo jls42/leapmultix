@@ -32,9 +32,8 @@ import { relativeImportSpecifiers } from './version-module-urls.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const SW_FILE = 'sw.js';
-export const BLOCK_START =
-  '// <precache> Produit par scripts/precache-list.mjs (npm run precache:update)';
-export const BLOCK_END = '// </precache>';
+export const BLOCK_START = '// precache:start (scripts/precache-list.mjs, npm run precache:update)';
+export const BLOCK_END = '// precache:end';
 
 /** Toujours gardés : la page, la page hors ligne, le manifeste */
 const SHELL = ['/index.html', '/offline.html', '/manifest.json'];
@@ -63,23 +62,21 @@ const HOLE = '\uFFFC';
 // Guillemets écrits \x22, \x27 et \x60 : lizard (Codacy) lit un guillemet de regex comme
 // le début d'une chaîne et mesurerait mal les fonctions qui suivent
 /**
- * Chemin de fichier écrit dans le code, où qu'il soit : chaîne, gabarit HTML sur plusieurs
- * lignes, attribut (« onerror=\"this.src='…png'\" »). ${…} y est déjà remplacé par la marque.
+ * Suite de caractères de chemin écrite dans le code, où qu'elle soit : chaîne, gabarit sur
+ * plusieurs lignes, attribut (« onerror=\"this.src='…png'\" »). ${…} y est déjà remplacé par
+ * la marque ; l'extension se vérifie ensuite (ASSET), sans retour en arrière.
  */
-const PATH_TOKEN =
-  /[\w\uFFFC./-]+\.(?:js|css|png|webp|jpe?g|svg|gif|ico|wav|woff2?|json)(?![\w\uFFFC.])/g;
+const PATH_RUN = /[\w\uFFFC./-]+/g;
 /** Nom de sprite passé au chargeur (arcade-sprite-loader.js), sans extension */
 const SPRITE_CALL = /\bloadSprite(?:Sync)?\(\s*([\x22\x27\x60])([^\x22\x27\x60]+)\1/g;
 /** Attributs d'adresse d'une page ; srcset en porte plusieurs */
 const HTML_ATTRIBUTE = /\b(?:src|href|srcset)=\x22([^\x22]*)\x22/g;
 /** url(…) d'une feuille de style */
-const CSS_URL = /url\(\s*[\x22\x27]?([^\x22\x27)]+)[\x22\x27]?\s*\)/g;
+const CSS_URL = /url\(\s*[\x22\x27]?([^\x22\x27)\s]+)[\x22\x27]?\s*\)/g;
 /** Fond illustré : img/background_<avatar>_<numéro>.webp */
 const BACKGROUND = /^background_([a-z]+)_(\d+)\.webp$/;
 /** Image d'assets/images qui a ses variantes générées (une famille) */
 const IMAGE_FAMILY = /^\/assets\/images\/.+\.png$/;
-
-const escapeRegExp = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * Chemin du site (« /js/a.js ») d'une référence relative à la racine ; null pour une
@@ -90,7 +87,14 @@ const escapeRegExp = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 export function toSitePath(reference) {
   const value = reference.trim().split(/[?#]/)[0];
   if (!value || /^(?:[a-z]+:|\/\/)/i.test(value)) return null;
-  return path.posix.normalize(`/${value.replace(/^(?:\.{1,2}\/)+/, '')}`);
+  return path.posix.normalize(`/${withoutRelativePrefix(value)}`);
+}
+
+/** « ./a.js », « ../../a.js » : le chemin sans ses préfixes relatifs */
+function withoutRelativePrefix(value) {
+  let rest = value;
+  while (rest.startsWith('./') || rest.startsWith('../')) rest = rest.slice(rest.indexOf('/') + 1);
+  return rest;
 }
 
 /** Commentaires retirés : exemples de JSDoc, apostrophes des phrases en français */
@@ -99,28 +103,52 @@ const withoutComments = source =>
 
 /**
  * Références d'une page : src, href et chaque adresse d'un srcset
- * @param {string} html
+ * @param {string} pageSource - Texte de la page
  * @returns {string[]}
  */
-export function htmlReferences(html) {
-  return [...html.matchAll(HTML_ATTRIBUTE)].flatMap(([, value]) =>
+export function htmlReferences(pageSource) {
+  return [...pageSource.matchAll(HTML_ATTRIBUTE)].flatMap(([, value]) =>
     value.split(',').map(item => item.trim().split(/\s+/)[0])
   );
 }
 
 /**
  * Ce que désigne un chemin écrit dans le code : un chemin, un gabarit de chemin (dossier connu,
- * nom à trous) ou un nom de fichier seul, éventuellement à trous
+ * nom à trous) ou un nom de fichier seul, éventuellement à trous. Un nom se décrit par ses
+ * parties fixes, dans l'ordre ; chaque trou vaut un bout de nom quelconque (matchesName).
  * @param {string} token
- * @returns {{kind: 'path', path: string}|{kind: 'pattern', dir: string|null, name: RegExp}|null}
+ * @returns {{kind: 'path', path: string}|{kind: 'pattern', dir: string|null, parts: string[]}|null}
  */
 export function describeToken(token) {
   const dir = tokenDir(token);
   if (dir === undefined) return null;
   const name = token.slice(token.lastIndexOf('/') + 1);
   if (name.includes(HOLE)) return describeTemplate(dir, name);
-  if (dir === null) return { kind: 'pattern', dir, name: exactName(name) };
+  if (dir === null) return { kind: 'pattern', dir, parts: [name] };
   return { kind: 'path', path: path.posix.join(dir, name) };
+}
+
+/**
+ * Un nom de fichier correspond-il aux parties fixes d'un gabarit ? Première partie au début,
+ * dernière à la fin, les autres dans l'ordre entre elles ; jamais de « / » dans un trou.
+ * @param {string[]} parts
+ * @param {string} fileName
+ * @returns {boolean}
+ */
+export function matchesName(parts, fileName) {
+  if (parts.length === 1) return fileName === parts.at(0);
+  const first = parts.at(0);
+  const last = parts.at(-1);
+  if (fileName.includes('/') || !fileName.startsWith(first) || !fileName.endsWith(last)) {
+    return false;
+  }
+  let from = first.length;
+  for (const part of parts.slice(1, -1)) {
+    const at = fileName.indexOf(part, from);
+    if (at === -1) return false;
+    from = at + part.length;
+  }
+  return from <= fileName.length - last.length;
 }
 
 /**
@@ -140,16 +168,13 @@ function tokenDir(token) {
  * Nom à trous : les fichiers du dossier (ou des images) qui lui correspondent
  * @param {string|null} dir
  * @param {string} name
- * @returns {{kind: 'pattern', dir: string|null, name: RegExp}|null} null si le gabarit
+ * @returns {{kind: 'pattern', dir: string|null, parts: string[]}|null} null si le gabarit
  *   viserait tout un dossier d'images
  */
 function describeTemplate(dir, name) {
   if (tooVague(dir, name)) return null;
-  const source = name.split(HOLE).map(escapeRegExp).join('[^/]*');
-  return { kind: 'pattern', dir, name: new RegExp(`^${source}$`) };
+  return { kind: 'pattern', dir, parts: name.split(HOLE) };
 }
-
-const exactName = name => new RegExp(`^${escapeRegExp(name)}$`);
 
 /**
  * Gabarit trop large parmi les images : « ${nom}.png » viserait les 700 images d'un
@@ -163,11 +188,53 @@ function tooVague(dir, name) {
 
 /** Mots de chemin d'un module, plus les noms de sprites (extension .png) */
 function moduleTokens(source) {
-  const paths = source.replace(/\$\{[^}]*\}/g, HOLE).match(PATH_TOKEN) ?? [];
+  const runs = source.replace(/\$\{[^}]*\}/g, HOLE).match(PATH_RUN) ?? [];
+  const paths = runs.filter(run => ASSET.test(run));
   const sprites = [...source.matchAll(SPRITE_CALL)]
     .map(([, , name]) => name.replace(/\$\{[^}]*\}/g, HOLE))
     .map(name => (ASSET.test(name) ? name : `${name}.png`));
   return [...paths, ...sprites];
+}
+
+/**
+ * Chemin sur le disque d'un fichier du site, toujours sous la racine du dépôt : les chemins
+ * viennent du code du jeu, et un « ../ » de trop s'arrête à la racine, comme une adresse du
+ * site. Ce qui en sortirait malgré tout arrête la liste au lieu d'être lu.
+ * @param {string} root
+ * @param {string} sitePath - « /js/a.js », ou relatif à la racine
+ * @returns {string}
+ */
+export function insideRoot(root, sitePath) {
+  const base = path.resolve(root);
+  const full = path.resolve(base, `.${path.posix.normalize(`/${sitePath}`)}`);
+  if (full !== base && !full.startsWith(base + path.sep)) {
+    throw new Error(`Chemin hors du dépôt : ${sitePath}`);
+  }
+  return full;
+}
+
+// Les quatre seuls accès au disque : chacun passe par insideRoot
+function readSiteFile(root, sitePath) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- chemin confiné à la racine du dépôt par insideRoot
+  return fs.readFileSync(insideRoot(root, sitePath), 'utf8');
+}
+
+function siteFileExists(root, sitePath) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- chemin confiné à la racine du dépôt par insideRoot
+  return fs.existsSync(insideRoot(root, sitePath));
+}
+
+/** Entrées d'un dossier du site ; aucune s'il n'existe pas */
+function siteDirEntries(root, dir) {
+  if (!siteFileExists(root, dir)) return [];
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- chemin confiné à la racine du dépôt par insideRoot
+  return fs.readdirSync(insideRoot(root, dir), { withFileTypes: true });
+}
+
+function siteFileSize(root, sitePath) {
+  if (!siteFileExists(root, sitePath)) return 0;
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- chemin confiné à la racine du dépôt par insideRoot
+  return fs.statSync(insideRoot(root, sitePath)).size;
 }
 
 /**
@@ -177,9 +244,7 @@ function moduleTokens(source) {
  * @returns {string[]}
  */
 function filesUnder(root, dir) {
-  const full = path.join(root, dir);
-  if (!fs.existsSync(full)) return [];
-  return fs.readdirSync(full, { withFileTypes: true }).flatMap(entry => {
+  return siteDirEntries(root, dir).flatMap(entry => {
     const rel = `${dir}/${entry.name}`;
     if (entry.isDirectory()) return filesUnder(root, rel);
     return entry.isFile() ? [`/${rel}`] : [];
@@ -191,13 +256,9 @@ function createFileIndex(root) {
   const byDir = new Map();
   const listDir = dir => {
     if (!byDir.has(dir)) {
-      const full = path.join(root, dir);
-      const names = fs.existsSync(full)
-        ? fs
-            .readdirSync(full, { withFileTypes: true })
-            .filter(e => e.isFile())
-            .map(e => e.name)
-        : [];
+      const names = siteDirEntries(root, dir)
+        .filter(entry => entry.isFile())
+        .map(entry => entry.name);
       byDir.set(dir, names);
     }
     return byDir.get(dir);
@@ -213,15 +274,17 @@ function createFileIndex(root) {
 function resolveToken(root, index, description) {
   if (description.kind === 'path') {
     const { path: sitePath } = description;
-    const known = sitePath.startsWith(GENERATED) || fs.existsSync(path.join(root, sitePath));
+    const known = sitePath.startsWith(GENERATED) || siteFileExists(root, sitePath);
     return known ? [sitePath] : [];
   }
-  const { dir, name } = description;
-  if (dir === null) return index.images.filter(file => name.test(path.posix.basename(file)));
+  const { dir, parts } = description;
+  if (dir === null) {
+    return index.images.filter(file => matchesName(parts, path.posix.basename(file)));
+  }
   if (dir.startsWith(GENERATED)) return [];
   return index
     .listDir(dir.slice(1))
-    .filter(file => name.test(file))
+    .filter(file => matchesName(parts, file))
     .map(file => `${dir}/${file}`);
 }
 
@@ -234,7 +297,7 @@ function resolveTokens(root, index, tokens) {
 
 /** Modules et autres chemins d'un module : imports relatifs, puis littéraux */
 function moduleReferences(root, index, modulePath) {
-  const source = fs.readFileSync(path.join(root, modulePath), 'utf8');
+  const source = readSiteFile(root, modulePath);
   const imports = relativeImportSpecifiers(source).map(specifier =>
     path.posix.join(path.posix.dirname(modulePath), specifier)
   );
@@ -243,7 +306,7 @@ function moduleReferences(root, index, modulePath) {
 
 /** Polices et images d'une feuille de style, relatives à elle */
 function cssReferences(root, cssPath) {
-  const source = fs.readFileSync(path.join(root, cssPath), 'utf8');
+  const source = readSiteFile(root, cssPath);
   return [...source.matchAll(CSS_URL)]
     .map(([, url]) => url.trim())
     .filter(url => !url.startsWith('data:') && ASSET.test(url.split(/[?#]/)[0]))
@@ -266,10 +329,10 @@ function crawl(root, index, start) {
 
 /** Références de la page et icônes du manifeste */
 function pageReferences(root, index) {
-  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
+  const pageSource = readSiteFile(root, 'index.html');
+  const manifest = JSON.parse(readSiteFile(root, 'manifest.json'));
   const tokens = [
-    ...htmlReferences(html).map(toSitePath),
+    ...htmlReferences(pageSource).map(toSitePath),
     ...(manifest.icons ?? []).map(icon => toSitePath(icon.src)),
   ].filter(sitePath => sitePath && ASSET.test(sitePath));
   return resolveTokens(root, index, tokens);
@@ -351,10 +414,7 @@ export function replacePrecacheBlock(source, block) {
  * @returns {number}
  */
 export function totalBytes(root, list) {
-  return list.reduce((sum, sitePath) => {
-    const full = path.join(root, sitePath);
-    return sum + (fs.existsSync(full) ? fs.statSync(full).size : 0);
-  }, 0);
+  return list.reduce((sum, sitePath) => sum + siteFileSize(root, sitePath), 0);
 }
 
 const megabytes = bytes => `${(bytes / 1024 / 1024).toFixed(2)} Mo`;
@@ -369,11 +429,11 @@ function summary(list) {
 function main(args) {
   const list = buildPrecacheList(ROOT);
   if (!args.includes('--write') && !args.includes('--check')) return summary(list);
-  const swPath = path.join(ROOT, SW_FILE);
-  const current = fs.readFileSync(swPath, 'utf8');
+  const current = readSiteFile(ROOT, SW_FILE);
   const next = replacePrecacheBlock(current, renderPrecacheBlock(list));
   if (args.includes('--write')) {
-    fs.writeFileSync(swPath, next);
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- sw.js à la racine du dépôt (insideRoot)
+    fs.writeFileSync(insideRoot(ROOT, SW_FILE), next);
     console.log(`${SW_FILE} : ${list.core.length} fichiers, ${list.images.length} images`);
     return 0;
   }
