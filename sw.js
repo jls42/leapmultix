@@ -32,7 +32,8 @@ const GENERATED_IMAGES = '/assets/generated-images/';
 
 // Familles d'images interchangeables hors ligne : un sprite et ses tailles (arcade/x.png,
 // arcade/x-128.webp), les fonds illustrés d'un même avatar (le jeu en tire un au hasard)
-const SPRITE_FAMILY = /^\/assets\/(?:images|generated-images)\/(.+?)(?:-(\d+))?\.(?:png|webp)$/;
+const SPRITE_IMAGE = /^\/assets\/(?:images|generated-images)\/(.+)\.(?:png|webp)$/;
+const SIZE_SUFFIX = /-(\d+)$/;
 const BACKGROUND_FAMILY = /^\/img\/background_([a-z]+)_\d+\.(?:png|webp)$/;
 
 const TRANSLATIONS = /^\/assets\/translations\/[^/]+\.json$/;
@@ -45,7 +46,7 @@ const VOICE_CACHE_LIMIT = 2000;
 const VOICE_INDEX = '/voice/index.json';
 const VOICE_CLIP = /^\/voice\/([a-z]{2})\/([a-z0-9][a-z0-9.-]*)\/[0-9a-z]+\.mp3$/;
 
-// <precache> Produit par scripts/precache-list.mjs (npm run precache:update)
+// precache:start (scripts/precache-list.mjs, npm run precache:update)
 const PRECACHE_CORE = [
   '/assets/fonts/baloo2-600.woff2',
   '/assets/fonts/baloo2-700.woff2',
@@ -628,7 +629,7 @@ const PRECACHE_IMAGES = [
   '/assets/images/forest.png',
   '/assets/images/river.png',
 ];
-// </precache>
+// precache:end
 
 /** Préchargement : jamais servi par le cache HTTP, qui garde parfois une version ancienne */
 const freshRequest = url => new Request(url, { cache: 'reload' });
@@ -710,8 +711,9 @@ self.addEventListener('activate', event => {
 });
 
 // La page demande la version de ce service worker (js/cache-updater.js) : elle ne se
-// recharge que si ce n'est pas la sienne
+// recharge que si ce n'est pas la sienne. Seule une page du site reçoit une réponse.
 self.addEventListener('message', event => {
+  if (event.origin !== self.location.origin) return;
   if (event.data?.type === 'version') event.ports?.[0]?.postMessage({ version: VERSION });
 });
 
@@ -799,6 +801,21 @@ function sameOrigin(url) {
   }
 }
 
+/**
+ * Le réseau, pour une requête du site seulement : le service worker relaie au réseau les
+ * requêtes que le navigateur fait vers sa propre origine (routeRequest écarte les autres),
+ * jamais une adresse venue d'ailleurs.
+ * @param {Request} request
+ * @param {RequestInit} [init]
+ * @returns {Promise<Response>}
+ */
+function fromNetwork(request, init) {
+  if (!sameOrigin(request.url)) return Promise.resolve(Response.error());
+  // Requête de même origine, vérifiée juste au-dessus, faite par le navigateur de l'enfant :
+  // ni serveur ni adresse fournie par un tiers, donc aucune falsification de requête serveur
+  return fetch(request, init); // nosemgrep: rules_lgpl_javascript_ssrf_rule-node-ssrf
+}
+
 /** Copie gardée par cette version : le préchargement d'abord, puis ce qui a servi en ligne */
 async function cachedCopy(key) {
   const offline = await caches.open(OFFLINE_CACHE);
@@ -837,16 +854,29 @@ async function cachedResponse(request, anyVersion = false) {
  * @returns {string|null} null pour une image sans famille
  */
 function imageFamily(pathname) {
-  const sprite = SPRITE_FAMILY.exec(pathname);
-  if (sprite) return `sprite:${sprite[1]}`;
+  const sprite = spriteOf(pathname);
+  if (sprite) return `sprite:${sprite.base}`;
   const background = BACKGROUND_FAMILY.exec(pathname);
   return background ? `fond:${background[1]}` : null;
 }
 
-/** Largeur d'une variante (« -128.webp ») ; l'original passe avant toutes */
+/**
+ * Sprite d'une adresse : son nom sans taille ni extension, et la largeur de la variante
+ * (« -128.webp ») ; l'original, sans largeur, passe avant toutes
+ * @param {string} pathname
+ * @returns {{base: string, width: number}|null}
+ */
+function spriteOf(pathname) {
+  const name = SPRITE_IMAGE.exec(pathname)?.[1];
+  if (!name) return null;
+  const size = SIZE_SUFFIX.exec(name);
+  if (!size) return { base: name, width: Number.POSITIVE_INFINITY };
+  return { base: name.slice(0, size.index), width: Number(size[1]) };
+}
+
+/** Largeur d'une copie gardée (les fonds n'en ont pas : toutes égales) */
 function variantWidth(request) {
-  const width = SPRITE_FAMILY.exec(new URL(request.url).pathname)?.[2];
-  return width ? Number(width) : Number.POSITIVE_INFINITY;
+  return spriteOf(new URL(request.url).pathname)?.width ?? 0;
 }
 
 /**
@@ -861,7 +891,10 @@ async function familyImage(request) {
   const keys = (await Promise.all(stores.map(store => store.keys()))).flat();
   const members = keys.filter(key => imageFamily(new URL(key.url).pathname) === family);
   if (members.length === 0) return undefined;
-  const best = members.reduce((a, b) => (variantWidth(b) > variantWidth(a) ? b : a));
+  const best = members.reduce(
+    (kept, key) => (kept && variantWidth(kept) >= variantWidth(key) ? kept : key),
+    null
+  );
   return cachedCopy(best);
 }
 
@@ -870,7 +903,7 @@ async function imageResponse(event) {
   const cached = await cachedResponse(request, true);
   if (cached) return cached;
   try {
-    const net = await fetch(request);
+    const net = await fromNetwork(request);
     if (net.ok) {
       const cache = await caches.open(RUNTIME_CACHE);
       event.waitUntil(cache.put(request, net.clone()));
@@ -885,7 +918,7 @@ async function translationResponse(event) {
   const { request } = event;
   const cache = await caches.open(RUNTIME_CACHE);
   const cached = await cachedResponse(request);
-  const fetchPromise = fetch(request)
+  const fetchPromise = fromNetwork(request)
     .then(net => {
       if (net.ok) event.waitUntil(cache.put(request, net.clone()));
       return net;
@@ -901,7 +934,7 @@ async function networkFirst(event) {
   const { request } = event;
   const cache = await caches.open(RUNTIME_CACHE);
   try {
-    const net = await fetch(request, { cache: 'no-store' });
+    const net = await fromNetwork(request, { cache: 'no-store' });
     if (net.ok) event.waitUntil(cache.put(request, net.clone()));
     return net;
   } catch {
@@ -951,7 +984,7 @@ async function rangeResponse(request, response) {
 /** Sons, polices, manifeste, carte des images : la copie préchargée, sinon le réseau */
 async function precachedResponse(request) {
   const cached = await cachedResponse(request);
-  return cached ? rangeResponse(request, cached) : fetch(request);
+  return cached ? rangeResponse(request, cached) : fromNetwork(request);
 }
 
 /**
@@ -968,7 +1001,7 @@ async function offlinePage(request) {
 
 async function navigationResponse(request) {
   try {
-    return await fetch(request);
+    return await fromNetwork(request);
   } catch {
     return (await offlinePage(request)) || Response.error();
   }
@@ -1008,5 +1041,5 @@ function routeRequest(event) {
 
 self.addEventListener('fetch', event => {
   const response = routeRequest(event);
-  if (response) event.respondWith(response);
+  if (response !== null) event.respondWith(response);
 });
