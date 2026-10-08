@@ -174,6 +174,8 @@ export class PacmanGame {
     this.transposed = this.chooseTransposed();
     this.resizeCanvas();
     watchArcadeViewport(this.canvas, () => {
+      // Partie nettoyée (fin, Accueil : js/game-cleanup.js retire le canevas) : rien à suivre
+      if (!this.canvas) return;
       if (this.isUnplayed()) this.transposed = this.chooseTransposed();
       this.resizeCanvas();
       this.renderer?.draw();
