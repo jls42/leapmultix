@@ -41,6 +41,9 @@ const { QuizMode } = await import('../js/modes/QuizMode.js');
 const { ChallengeMode } = await import('../js/modes/ChallengeMode.js');
 // Échap : le gestionnaire global d'accessibility.js (posé à l'import)
 await import('../js/accessibility.js');
+const { mountArcadePause, unmountArcadePause, isArcadePaused } = await import(
+  '../js/arcade-time.js'
+);
 const FR = JSON.parse(
   readFileSync(new URL('../assets/translations/fr.json', import.meta.url), 'utf8')
 );
@@ -273,6 +276,28 @@ describe('Jeu d’Arcade', () => {
     confirm.mockReturnValue(true);
     abandon.click();
     expect(endGame).toHaveBeenCalledTimes(1);
+  });
+
+  test('la question arrête le jeu ; refusée, la partie attend « Reprendre », sans bond', () => {
+    const { abandon, endGame } = mountArcadeGame();
+    const timer = document.createElement('span');
+    screen.game.prepend(timer);
+    mountArcadePause(timer);
+    let pausedWhileAsking = null;
+    jest.spyOn(globalThis, 'confirm').mockImplementation(() => {
+      pausedWhileAsking = isArcadePaused();
+      return false;
+    });
+    abandon.click();
+    expect(pausedWhileAsking).toBe(true);
+    expect(endGame).not.toHaveBeenCalled();
+    // La partie ne reprend jamais seule : le jeu ne bondit pas du temps passé à lire
+    expect(isArcadePaused()).toBe(true);
+    expect(document.activeElement?.classList.contains('arcade-resume-btn')).toBe(true);
+    // Déjà en pause : la question n'y change rien
+    screen.home.click();
+    expect(isArcadePaused()).toBe(true);
+    unmountArcadePause();
   });
 
   test('Échap et Accueil : la même question', () => {

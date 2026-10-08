@@ -12,6 +12,7 @@
  * Refusé, la partie continue. Hors partie, rien ne change.
  */
 import { getTranslation } from './i18n.js';
+import { pauseArcade } from './arcade-time.js';
 
 /** Boutons de la barre du haut qui changent d'écran */
 const TOP_BAR_EXITS = '.top-bar .home-btn, .top-bar [data-slide]';
@@ -22,14 +23,14 @@ const ARCADE_ABANDON = `${ARCADE_SCREEN} [id$="-abandon-btn"]`;
 const ABANDON_BUTTON = `.slide.active-slide .game-quit button, ${ARCADE_ABANDON}`;
 
 /**
- * Jeu d'Arcade en cours. Son « Abandonner » enregistre la partie et affiche la fin ; quitter
- * par la barre du haut l'enregistre aussi (stopArcadeMode) : rien à faire de plus ici.
+ * Jeu d'Arcade en cours. La question le met d'abord en pause : refusée, la partie attend
+ * « Reprendre » (touche P) au lieu de repartir d'un bond du temps passé à lire. Son
+ * « Abandonner » enregistre la partie et affiche la fin ; quitter par la barre du haut
+ * l'enregistre aussi (stopArcadeMode) : rien à enregistrer de plus ici.
  */
 const arcadeGame = {
   abandonQuestion: () => getTranslation('confirm_abandon_arcade'),
-  recordAbandon() {
-    // Rien ici : stopArcadeMode compte la partie jouée, avec son score
-  },
+  beforeAsking: pauseArcade,
 };
 
 /**
@@ -54,7 +55,8 @@ export function clearActiveMode(mode) {
 
 /**
  * La partie en cours, s'il y en a une
- * @returns {{abandonQuestion: () => string, recordAbandon?: () => void}|null}
+ * @returns {{abandonQuestion: () => string, beforeAsking?: () => void,
+ *   recordAbandon?: () => void}|null}
  */
 export function gameInProgress() {
   if (activeMode?.isGameInProgress?.()) return activeMode;
@@ -70,6 +72,7 @@ export function gameInProgress() {
 export function confirmLeavingGame() {
   const game = gameInProgress();
   if (!game) return true;
+  game.beforeAsking?.();
   if (!globalThis.confirm?.(game.abandonQuestion())) return false;
   game.recordAbandon?.();
   return true;
