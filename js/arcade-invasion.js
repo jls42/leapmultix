@@ -35,7 +35,7 @@ import {
 } from './arcade.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { noteArcadePlay } from './arcade-session.js';
-import { isArcadePaused } from './arcade-time.js';
+import { isArcadePaused, isKeyFromButton } from './arcade-time.js';
 import {
   showGameInstructions,
   getCanvasFont,
@@ -706,7 +706,7 @@ export function startMultiplicationInvasion() {
   const handleSpaceDown = e => {
     // Sur un bouton (« Reprendre », « Pause »…), la barre d'espace reste au bouton : sur
     // « Reprendre », elle relançait la partie et tirait aussitôt
-    if (e.target?.closest?.('button')) return;
+    if (isKeyFromButton(e)) return;
     if (e.key === ' ' || e.key === 'Spacebar' || e.code === 'Space') {
       e.preventDefault();
       shoot();

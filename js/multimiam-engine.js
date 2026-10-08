@@ -21,7 +21,7 @@ import { isArcadePaused } from './arcade-time.js';
  * @param {Object} ctx Instance de PacmanGame
  */
 function holdMoveClocks(ctx) {
-  const now = globalThis.performance?.now?.() ?? Date.now();
+  const now = globalThis.performance ? globalThis.performance.now() : Date.now();
   ctx.lastMoveTime = now;
   ctx.lastGhostMoveTime = now;
 }

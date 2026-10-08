@@ -45,6 +45,16 @@ export function isArcadePaused() {
 }
 
 /**
+ * Touche reçue par un bouton (« Reprendre », « Pause », « Abandonner ») : elle revient au
+ * bouton, pas au jeu
+ * @param {KeyboardEvent} event
+ * @returns {boolean}
+ */
+export function isKeyFromButton(event) {
+  return event.target instanceof Element && event.target.closest('button') !== null;
+}
+
+/**
  * Contenu d'un bouton : une icône (pause ou lecture) et son libellé, retraduit avec la page
  * @param {HTMLButtonElement} button
  * @param {{key: string, fallback: string, icon: string}} label
@@ -157,13 +167,13 @@ function showPaused() {
   controls.overlay = createPauseOverlay();
   stage.appendChild(controls.overlay);
   placeOverlay();
-  globalThis.addEventListener?.('resize', placeOverlay);
+  globalThis.addEventListener('resize', placeOverlay);
   focusWithoutScroll(controls.overlay.querySelector('.arcade-resume-btn'));
 }
 
 /** Voile retiré (reprise ou fin de partie) */
 function removeOverlay() {
-  globalThis.removeEventListener?.('resize', placeOverlay);
+  globalThis.removeEventListener('resize', placeOverlay);
   controls?.overlay?.remove();
   if (controls) controls.overlay = null;
 }
@@ -203,7 +213,7 @@ export function toggleArcadePause() {
 function isPauseKey(event) {
   if (event.repeat || event.ctrlKey || event.metaKey || event.altKey) return false;
   if (String(event.key).toLowerCase() !== PAUSE_KEY) return false;
-  return !event.target?.closest?.(TEXT_FIELDS);
+  return !(event.target instanceof Element && event.target.closest(TEXT_FIELDS));
 }
 
 function onPauseKey(event) {

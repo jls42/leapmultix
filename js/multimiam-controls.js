@@ -3,7 +3,7 @@
 
 import { clientToCanvasPoint } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
-import { toggleArcadePause } from './arcade-time.js';
+import { isKeyFromButton, toggleArcadePause } from './arcade-time.js';
 
 // Case voisine dans chaque direction
 const CELL_STEPS = {
@@ -32,7 +32,7 @@ function directionsToward(dx, dy) {
  * @param {KeyboardEvent} event
  */
 function onSpaceKey(game, event) {
-  if (event.target?.closest?.('button')) return;
+  if (isKeyFromButton(event)) return;
   if (game.gameOver) game.start();
   else toggleArcadePause();
 }
