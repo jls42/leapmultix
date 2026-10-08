@@ -13,6 +13,7 @@ import { GameMode } from '../core/GameMode.js';
 import { getTranslation } from '../utils-es6.js';
 import { showArcadeMessage } from '../arcade-message.js';
 import { gameState } from '../game.js';
+import { UNTIMED_GAMES, isNoTimeLimit, setNoTimeLimit } from '../arcade-time.js';
 
 /* Icônes des lignes « Commandes » : des SVG au trait (couleur du texte), décoratifs,
    le mot « Clavier », « Souris » ou « Tactile » étant écrit juste après. */
@@ -50,6 +51,7 @@ const CONTROL_LINES = new Map([
   [
     'multimemory',
     [
+      ['keyboard', 'arcade.controls.multimemory.keyboard'],
       ['mouse', 'arcade.controls.multimemory.mouse'],
       ['touch', 'arcade.controls.multimemory.touch'],
     ],
@@ -250,6 +252,7 @@ export class ArcadeMode extends GameMode {
 
                 <div class="arcade-game-settings" id="${this.getSettingsId(game.id)}">
                     ${this.getDifficultyHTML(game.id)}
+                    ${this.getTimeLimitHTML(game.id)}
                     ${game.id === 'invasion' ? this.getSpaceshipHTML(game.id) : ''}
                     ${this.getControlsHelpHTML(game.id)}
 
@@ -333,6 +336,21 @@ export class ArcadeMode extends GameMode {
                       .join('')}
                 </div>
             </div>
+        `;
+  }
+
+  /**
+   * « Sans limite de temps » (MultiMemory) : la partie dure jusqu'à la dernière paire,
+   * sans compte à rebours. Le choix reste sur l'appareil, comme la difficulté.
+   */
+  getTimeLimitHTML(gameId) {
+    if (!UNTIMED_GAMES.has(gameId)) return '';
+    const checked = isNoTimeLimit(gameId) ? ' checked' : '';
+    return `
+            <label class="arcade-untimed-option">
+                <input type="checkbox" data-action="arcade-set-untimed" data-game="${gameId}"${checked}>
+                <span>${getTranslation('arcade_no_time_limit')}</span>
+            </label>
         `;
   }
 
@@ -480,6 +498,7 @@ export class ArcadeMode extends GameMode {
         const input = e.target.closest('input[type="radio"]');
         if (input?.value) this.setSpaceship(input.value);
       },
+      'arcade-set-untimed': () => setNoTimeLimit(actionEl.dataset.game, actionEl.checked),
     };
     const action = actions[actionEl.dataset.action];
     if (!action) return false;

@@ -13,6 +13,18 @@ import { showArcadePenalty } from './arcade-points.js';
 import { chance, pickRandom } from './core/random.js';
 import { recordOperationResult } from './core/operation-stats.js';
 import { noteArcadePlay } from './arcade-session.js';
+import { isArcadePaused } from './arcade-time.js';
+
+/**
+ * Pause de l'Arcade : les horloges des déplacements restent à l'heure, pour que rien ne
+ * saute d'une case à la reprise
+ * @param {Object} ctx Instance de PacmanGame
+ */
+function holdMoveClocks(ctx) {
+  const now = globalThis.performance ? globalThis.performance.now() : Date.now();
+  ctx.lastMoveTime = now;
+  ctx.lastGhostMoveTime = now;
+}
 
 /**
  * Invincibilité après une vie perdue : le personnage clignote, puis redevient normal.
@@ -421,6 +433,11 @@ export function initPacmanEngine(game) {
   // Boucle interne
   game.update = function update() {
     if (!this.running || this.gameOver) return;
+    // En pause, ni le personnage ni les monstres ne bougent
+    if (isArcadePaused()) {
+      holdMoveClocks(this);
+      return;
+    }
     this.updatePlayerAvatar();
     const now = globalThis.performance?.now?.() ?? Date.now();
 
