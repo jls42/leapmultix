@@ -48,8 +48,6 @@ const CURSOR_STEPS = new Map([
   ['ArrowDown', [0, 1]],
 ]);
 const FLIP_KEYS = new Set(['Enter', ' ']);
-// Son d'une paire ratée, adouci comme l'erreur du Chrono (BAD_SOUND_VOLUME de ChronoMode.js)
-const ERROR_SOUND_VOLUME = 0.35;
 const KEYBOARD_HELP_KEY = 'arcade.controls.multimemory.keyboard';
 // Cadre de la carte visée au clavier : un trait sombre sous un trait blanc, visible sur le
 // fond violet comme sur les cartes bleues ou vertes
@@ -909,7 +907,8 @@ class MemoryGame {
     card1.isFlipped = false;
     card2.isFlipped = false;
 
-    AudioManager.playSound('bad', { volume: ERROR_SOUND_VOLUME });
+    // Son d'erreur adouci par le gestionnaire audio, comme dans tous les modes
+    AudioManager.playSound('bad');
     // Pas une paire : une étape, pas une sanction (ton neutre, le texte encourage)
     showArcadeMessage('arcade.multiMemory.mismatch', 'neutral', 1000);
     this.announce(getTranslation('arcade.multiMemory.mismatch'));

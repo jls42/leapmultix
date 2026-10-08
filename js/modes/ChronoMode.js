@@ -79,7 +79,6 @@ import {
 } from '../core/chrono-stats.js';
 
 const FEEDBACK_MS = 800;
-const BAD_SOUND_VOLUME = 0.35;
 const ALL_TABLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 // Ajout à la main d’un calcul : en multiplication et en addition seulement (deux nombres de
 // 1 à 10) ; en soustraction et en division, seules les erreurs remplissent la liste
@@ -1271,7 +1270,8 @@ export class ChronoMode extends GameMode {
       playSound('good');
       return;
     }
-    playSound('bad', { volume: BAD_SOUND_VOLUME });
+    // Son d'erreur adouci par le gestionnaire audio, comme dans tous les modes
+    playSound('bad');
   }
 
   scheduleNextQuestion() {
