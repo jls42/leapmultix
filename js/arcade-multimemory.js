@@ -48,6 +48,8 @@ const CURSOR_STEPS = new Map([
   ['ArrowDown', [0, 1]],
 ]);
 const FLIP_KEYS = new Set(['Enter', ' ']);
+// Son d'une paire ratée, adouci comme l'erreur du Chrono (BAD_SOUND_VOLUME de ChronoMode.js)
+const ERROR_SOUND_VOLUME = 0.35;
 const KEYBOARD_HELP_KEY = 'arcade.controls.multimemory.keyboard';
 // Cadre de la carte visée au clavier : un trait sombre sous un trait blanc, visible sur le
 // fond violet comme sur les cartes bleues ou vertes
@@ -516,10 +518,6 @@ class MemoryGame {
     // Images pour les cartes
     this.cardBack = arcadeSpriteLoader.loadSpriteSync('chemin', 'ui');
 
-    // Sons
-    this.successSound = new Audio('assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav');
-    this.failureSound = new Audio('assets/sounds/mixkit-failure-arcade-alert-notification-240.wav');
-
     // Chargement des monstres via ESM (plus de dépendance à window.monsterSprites)
     this.monsterImages = monsterSprites;
 
@@ -894,7 +892,8 @@ class MemoryGame {
       // Erreur ignorée (non-critique)
     }
 
-    this.playSound(this.successSound);
+    // Sons du gestionnaire audio : ils suivent le volume choisi dans le jeu
+    AudioManager.playSound('good');
     // Afficher un message de félicitations
     showArcadeMessage('arcade.multiMemory.match', 'success', 1000);
     this.announce(getTranslation('arcade.multiMemory.match'));
@@ -910,22 +909,10 @@ class MemoryGame {
     card1.isFlipped = false;
     card2.isFlipped = false;
 
-    this.playSound(this.failureSound);
+    AudioManager.playSound('bad', { volume: ERROR_SOUND_VOLUME });
     // Pas une paire : une étape, pas une sanction (ton neutre, le texte encourage)
     showArcadeMessage('arcade.multiMemory.mismatch', 'neutral', 1000);
     this.announce(getTranslation('arcade.multiMemory.mismatch'));
-  }
-
-  // Joue un son du jeu depuis le début, si le son est activé globalement
-  playSound(sound) {
-    if (!sound) return;
-    if (!sound.paused) {
-      sound.pause();
-      sound.currentTime = 0;
-    }
-    if (!AudioManager.isMuted()) {
-      sound.play().catch(() => {});
-    }
   }
 
   // Le joueur a gagné en trouvant toutes les paires
@@ -1242,21 +1229,6 @@ class MemoryGame {
     if (this._stopWatchingViewport) this._stopWatchingViewport();
   }
 
-  stopAudioResources() {
-    const stopSound = sound => {
-      if (sound) {
-        sound.pause();
-        sound.currentTime = 0;
-        sound.src = '';
-        return null;
-      }
-      return sound;
-    };
-
-    this.successSound = stopSound(this.successSound);
-    this.failureSound = stopSound(this.failureSound);
-  }
-
   releaseImageResources() {
     if (this.cardBack) {
       this.cardBack.src = '';
@@ -1282,7 +1254,6 @@ class MemoryGame {
     this.stopGameLoop();
     this.clearTimersAndAnimations();
     this.removeEventListeners();
-    this.stopAudioResources();
     this.releaseImageResources();
     this.clearGameData();
   }
