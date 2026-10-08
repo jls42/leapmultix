@@ -801,5 +801,9 @@
   "avatar_buy_missing": "Te {missing, plural, one {falta # moneda} other {faltan # monedas}} para desbloquear el avatar {avatar}.",
   "avatar_buy_earn": "Ganas monedas en Crono, Aventura y Desafío, y con el desafío del día.",
   "avatar_buy_ok": "De acuerdo",
-  "avatar_bought": "¡Nuevo avatar: {avatar}!"
+  "avatar_bought": "¡Nuevo avatar: {avatar}!",
+  "a11y_back_to_players": "Volver a «¿Quién juega?»",
+  "a11y_sound_off": "Sonido desactivado",
+  "a11y_sound_on": "Sonido activado",
+  "a11y_shortcuts_help": "Atajos de teclado de LeapMultix:\n- Escape: abandonar la partida en curso (tras confirmar); si no, volver a «¿Quién juega?»\n- Tab y Mayús+Tab: pasar de un elemento a otro\n- Intro: activar un botón\n- Flechas: moverse dentro de un grupo\n- Ctrl+M: quitar o poner el sonido\n- Ctrl+H: esta ayuda"
 }

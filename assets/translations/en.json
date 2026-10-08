@@ -795,5 +795,9 @@
   "avatar_buy_missing": "You need {missing, plural, one {# more coin} other {# more coins}} to unlock the {avatar} avatar.",
   "avatar_buy_earn": "You earn coins in Chrono, Adventure and Challenge, and with the daily challenge.",
   "avatar_buy_ok": "OK",
-  "avatar_bought": "New avatar: {avatar}!"
+  "avatar_bought": "New avatar: {avatar}!",
+  "a11y_back_to_players": "Back to “Who’s playing?”",
+  "a11y_sound_off": "Sound off",
+  "a11y_sound_on": "Sound on",
+  "a11y_shortcuts_help": "LeapMultix keyboard shortcuts:\n- Escape: give up the current game (after confirming), otherwise go back to “Who’s playing?”\n- Tab and Shift+Tab: move from one item to the next\n- Enter: activate a button\n- Arrow keys: move within a group\n- Ctrl+M: turn the sound off or on\n- Ctrl+H: this help"
 }

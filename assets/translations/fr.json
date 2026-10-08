@@ -805,5 +805,9 @@
   "avatar_buy_missing": "Il te manque {missing, plural, one {# pièce} other {# pièces}} pour débloquer l’avatar {avatar}.",
   "avatar_buy_earn": "Tu gagnes des pièces en Chrono, en Aventure et en Défi, et avec le Défi du jour.",
   "avatar_buy_ok": "D’accord",
-  "avatar_bought": "Nouvel avatar : {avatar} !"
+  "avatar_bought": "Nouvel avatar : {avatar} !",
+  "a11y_back_to_players": "Retour à « Qui joue ? »",
+  "a11y_sound_off": "Son coupé",
+  "a11y_sound_on": "Son remis",
+  "a11y_shortcuts_help": "Raccourcis clavier de LeapMultix :\n- Échap : abandonner la partie en cours (après confirmation), sinon revenir à « Qui joue ? »\n- Tab et Maj+Tab : passer d’un élément à l’autre\n- Entrée : activer un bouton\n- Flèches : se déplacer dans un groupe\n- Ctrl+M : couper ou remettre le son\n- Ctrl+H : cette aide"
 }

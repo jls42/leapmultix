@@ -3,6 +3,8 @@
  * Fournit des fonctions pour améliorer l'accessibilité de LeapMultix
  */
 import { pressAbandon } from './game-exit.js';
+// Traductions lues dans le magasin seul : les annonces suivent la langue du jeu
+import { translate } from './i18n-store.js';
 
 export class AccessibilityManager {
   constructor() {
@@ -55,7 +57,7 @@ export class AccessibilityManager {
         import('./slides.js')
           .then(m => m.goToSlide(0))
           .catch(error => console.error('Retour au menu principal impossible', error));
-        this.announce('Retour au menu principal');
+        this.announce(translate('a11y_back_to_players'));
       }
 
       // Entrée : un <button> natif s'active déjà seul (et keyboard-navigation.js
@@ -134,24 +136,17 @@ export class AccessibilityManager {
             } catch {
               /* ignoré volontairement */
             }
-            this.announce('Son activé/désactivé');
+            // L'annonce dit l'état du son après le changement
+            this.announce(translate(AudioManager.isMuted() ? 'a11y_sound_off' : 'a11y_sound_on'));
           })
           .catch(error => console.error('Réglage du son impossible', error));
       }
     });
   }
 
-  // Afficher l'aide accessibilité
+  // Afficher l'aide accessibilité, dans la langue du jeu
   showHelp() {
-    const helpMessage = `Raccourcis clavier LeapMultix:
-- Échap: Abandonner la partie en cours (après confirmation), sinon retour au menu
-- Tab/Shift+Tab: Navigation
-- Entrée: Activer bouton
-- Flèches: Navigation dans les groupes
-- Ctrl+M: Activer/désactiver le son
-- Ctrl+H: Cette aide`;
-
-    this.alert(helpMessage);
+    this.alert(translate('a11y_shortcuts_help'));
   }
 
   // Améliorer le focus sur un élément
