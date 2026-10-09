@@ -20,7 +20,7 @@ function checkFunction(funcName) {
 
   for (const file of files) {
     const filePath = path.join(JS_DIR, file);
-    // eslint-disable-next-line -- Safe file read from controlled filePath in JS_DIR
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- Safe file read from controlled filePath in JS_DIR
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split('\n');
 
