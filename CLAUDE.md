@@ -60,6 +60,7 @@ npm run verify      # Run lint + test + test:esm + coverage (quality gate)
 - `npm run sw:disable` - Disable service worker
 - `npm run sw:fix` - Fix service worker issues
 - `npm run precache:update` - Rewrite the offline precache list in `sw.js` (`scripts/precache-list.mjs`)
+- In local development the modes (`lazy-loader.js`) and the optional styles carry `?v=APP_VERSION`: once the service worker is installed, they come from its precache, so a change shows only after the service worker updates (DevTools, Application: « Update on reload » or « Bypass for network »)
 
 **Hors ligne : la liste de préchargement suit le code.** Le service worker garde à
 l'installation tout ce que le jeu charge (modules, styles, polices, sons, traductions, images
@@ -644,7 +645,11 @@ Deux points à connaître avant d'y toucher :
   consulter le service worker. Sans ce versionnage, un joueur déjà venu mélangeait
   anciens et nouveaux modules après un déploiement (export absent : le mode ne
   démarre pas, constaté le 25/09/2026 en v22). **Monter `APP_VERSION` à chaque mise
-  en prod** : c'est elle qui change toutes les adresses.
+  en prod** : c'est elle qui change toutes les adresses. C'est aussi elle qui renouvelle
+  la copie du service worker : un module ou un style de sa version (`?v=<version>`) est
+  servi par son préchargement avant le réseau, si bien qu'un déploiement sans montée de
+  version laisse aux joueurs déjà venus leurs anciens modules jusqu'à la suivante
+  (`sw.js` et `APP_VERSION` montent ensemble, un test l'exige).
 
 Après chaque fusion, vérifier en ligne que la prod sert la version fusionnée.
 Le déploiement attend la fin de `verify` : compter 5 à 20 minutes.
