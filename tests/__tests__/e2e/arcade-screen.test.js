@@ -27,7 +27,8 @@ const CANVAS_SPY_SOURCE = `(() => {
   const drawImage = proto.drawImage;
   proto.drawImage = function spyImage(image, ...rest) {
     if (rest.length >= 4) {
-      const src = ((image && image.src) || '').split('/').pop();
+      // Nom de l'image quelle que soit sa variante (« tete_haut-128.webp » : « tete_haut.png »)
+      const src = ((image && image.src) || '').split('/').pop().replace(/-\\d+\\.webp$/, '.png');
       draws.images.push({ src, x: rest[0], y: rest[1], w: rest[2], h: rest[3], canvas: this.canvas.id });
       keep(draws.images);
     }

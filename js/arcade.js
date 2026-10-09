@@ -19,7 +19,8 @@ import {
   resetArcadeScoresMemory,
 } from './utils-es6.js';
 import { cancelSpeech } from './speech.js';
-import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
+import { spriteFor } from './arcade-sprites.js';
+import { monsterSpec } from './arcade-sprite-catalog.js';
 // showArcadeMessage import not needed here
 import { gameState as globalGameState } from './game.js';
 import { AudioManager } from './core/audio.js';
@@ -464,22 +465,13 @@ export function stopArcadeMode() {
 
 // Plus d'export global: stopArcadeMode est importable depuis modes/ArcadeMode.js
 
-// --- ENNEMIS : monstres dédiés ---
-export const monsterSpriteNames = [];
-for (let i = 1; i <= 83; i++) {
-  const num = i.toString().padStart(2, '0');
-  monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
-}
-// Include newly added monsters 146–155
-for (let i = 146; i <= 155; i++) {
-  const num = i.toString().padStart(2, '0');
-  monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
-}
-export const monsterSprites = monsterSpriteNames.map(name => {
-  // Remove .png extension for sprite loader
-  const spriteName = name.replace(/\.png$/, '');
-  return arcadeSpriteLoader.loadSpriteSync(spriteName, 'monster');
-});
+// --- Monstres des cartes de MultiMemory (1 à 83, 146 à 155) : rien ne se charge à
+// l'ouverture de l'Arcade, chaque carte charge le sien à sa taille (js/arcade-sprites.js) ---
+const MEMORY_MONSTERS = [
+  ...Array.from({ length: 83 }, (_, i) => i + 1),
+  ...Array.from({ length: 10 }, (_, i) => i + 146),
+];
+export const monsterSprites = MEMORY_MONSTERS.map(number => spriteFor(monsterSpec(number)));
 
 // ===== Timer de l'Arcade (compte à rebours) =====
 let arcadeTimerIntervalId = null,

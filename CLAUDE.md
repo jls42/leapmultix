@@ -280,6 +280,8 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `arcade-multisnake.js` - Snake game integration
 - `arcade-common.js`, `arcade-utils.js` - Shared arcade utilities
 - `arcade-touch.js` - Gestes tactiles communs à MultiSnake et MultiMiam (glisser, toucher tolérant)
+- `arcade-sprite-catalog.js` - Every image the four games draw: its high-definition source (1024 px for most), largest WebP variant, small PNG fallbacks and facing side; read by `scripts/generate-responsive-assets.cjs` (512 and 1024 variants for these sources only) and `scripts/precache-list.mjs` (one offline variant each)
+- `arcade-sprites.js` - Arcade images loaded at their on-screen size (drawn size × canvas display scale × device pixel ratio, capped at 3), upgraded when the board grows, drawn at their proportions (`drawArcadeSprite`: contain, cover for textures, fill for snake tiles; mirrored to face the other way)
 - `arcade-message.js`, `arcade-points.js` - Arcade UI components
 - `arcade-scores.js`, `arcade-session.js` - Arcade scores stored in the player profile; a game counts from its first move, abandon included
 - `arcade-time.js` - Arcade time: pause (button next to the time, P key, hidden tab; never resumes on its own) and MultiMemory's no-time-limit option, kept on the device like the difficulty; the games read `isArcadePaused()` at each step

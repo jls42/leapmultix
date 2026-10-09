@@ -24,6 +24,8 @@ import { randomInt, shuffleInPlace } from './core/random.js';
 import { getDifficultySettings } from './difficulty.js';
 import { plausibleWrongAnswers } from './core/GameMode.js';
 import { isArcadePaused } from './arcade-time.js';
+import { spriteFor, drawArcadeSprite } from './arcade-sprites.js';
+import { snakePartSpec, textureSpec } from './arcade-sprite-catalog.js';
 // UserState removed - unused import
 
 // Direction donnée par chaque glissement du doigt
@@ -267,12 +269,12 @@ class SnakeGame {
         '0,-1': this.loadSprite('corps_milieu_queue_bas_tete_haut.png'), // corps vertical (haut)
         '0,1': this.loadSprite('corps_milieu_queue_bas_tete_haut.png'), // corps vertical (bas)
       },
-      bodyCurves: {
-        'haut-droite': this.loadSprite('corps_courbe_droite_bas.png'),
-        'droite-bas': this.loadSprite('corps_courbe_haut_droite.png'),
-        'bas-gauche': this.loadSprite('corps_courbe_gauche_haut.png'),
-        'gauche-haut': this.loadSprite('corps_courbe_bas_gauche.png'),
-      },
+      bodyCurves: new Map([
+        ['haut-droite', this.loadSprite('corps_courbe_droite_bas.png')],
+        ['droite-bas', this.loadSprite('corps_courbe_haut_droite.png')],
+        ['bas-gauche', this.loadSprite('corps_courbe_gauche_haut.png')],
+        ['gauche-haut', this.loadSprite('corps_courbe_bas_gauche.png')],
+      ]),
       tail: {
         '1,0': this.loadSprite('queue_fin_droite.png'), // queue tournée vers la droite (serpent va à droite)
         '-1,0': this.loadSprite('queue_fin_gauche.png'), // queue tournée vers la gauche (serpent va à gauche)
@@ -281,15 +283,9 @@ class SnakeGame {
       },
     };
 
-    // Ajout d'une propriété pour le logo du jeu
-    this.logoImg = new Image();
-    this.logoImg.src = 'assets/images/arcade/logo_multimiam_128x128.png';
-    // Chargement de la texture d'herbe
-    this.grassTexture = new Image();
-    this.grassTexture.src = 'assets/images/arcade/herbe.png';
-    // Texture pour fond réponses (snake_apple)
-    this.appleTexture = new Image();
-    this.appleTexture.src = 'assets/images/arcade/snake_apple_128x128.png';
+    // Herbe du plateau et pommes des réponses
+    this.grassTexture = spriteFor(textureSpec('herbe.png'));
+    this.appleTexture = spriteFor(textureSpec('snake_apple.png'));
   }
 
   // Grille du plateau, choisie au lancement pour toute la place : sur téléphone, plus haute
@@ -923,10 +919,9 @@ class SnakeGame {
     if (!this.ctx || !this.canvas) return;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Dessiner le fond herbe en plein écran (pas de répétition)
-    if (this.grassTexture && this.grassTexture.complete && this.grassTexture.naturalHeight !== 0) {
-      this.ctx.drawImage(this.grassTexture, 0, 0, this.canvas.width, this.canvas.height);
-    } else {
+    // L'herbe couvre tout le plateau, à ses proportions (rognée aux bords)
+    const board = { x: 0, y: 0, width: this.canvas.width, height: this.canvas.height };
+    if (!drawArcadeSprite(this.ctx, this.grassTexture, board, { fit: 'cover' })) {
       this.ctx.fillStyle = '#000000';
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
@@ -955,16 +950,9 @@ class SnakeGame {
       // Décalages pour centrer numéros : pomme un peu plus haut, texte un peu plus bas
       const appleOffsetY = -size * 0.05;
       const textOffsetY = size * 0.05;
-      if (this.appleTexture.complete && this.appleTexture.naturalWidth) {
-        // Dessiner la pomme légèrement vers le haut
-        this.ctx.drawImage(
-          this.appleTexture,
-          x - size / 2,
-          y - size / 2 + appleOffsetY,
-          size,
-          size
-        );
-      } else {
+      // La pomme, légèrement vers le haut ; un rond bleu tant que son image n'est pas arrivée
+      const apple = { x: x - size / 2, y: y - size / 2 + appleOffsetY, width: size, height: size };
+      if (!drawArcadeSprite(this.ctx, this.appleTexture, apple)) {
         this.ctx.beginPath();
         const radius = size / 2;
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1066,33 +1054,28 @@ class SnakeGame {
     const x = segment.x * this.cellSize;
     const y = segment.y * this.cellSize;
 
-    if (curveKey && this.multisnakeSprites.bodyCurves[curveKey]) {
-      this.ctx.drawImage(
-        this.multisnakeSprites.bodyCurves[curveKey],
-        x,
-        y,
-        this.cellSize,
-        this.cellSize
-      );
+    const curve = this.multisnakeSprites.bodyCurves.get(curveKey);
+    if (curve) {
+      this.drawCellSprite(curve, x, y);
     } else {
       const bodyKey = `${dirIn.x},${dirIn.y}`;
 
       const bodySprite = this.multisnakeSprites.body[bodyKey] || this.multisnakeSprites.body['1,0'];
-      this.ctx.drawImage(bodySprite, x, y, this.cellSize, this.cellSize);
+      this.drawCellSprite(bodySprite, x, y);
     }
+  }
+
+  // Morceau du serpent : il remplit sa case pour se raccorder à ses voisins
+  drawCellSprite(sprite, x, y) {
+    const cell = { x, y, width: this.cellSize, height: this.cellSize };
+    drawArcadeSprite(this.ctx, sprite, cell, { fit: 'fill' });
   }
 
   drawSnakeHead(head) {
     const dirKey = `${this.direction.x},${this.direction.y}`;
 
     const headSprite = this.multisnakeSprites.head[dirKey] || this.multisnakeSprites.body['1,0'];
-    this.ctx.drawImage(
-      headSprite,
-      head.x * this.cellSize,
-      head.y * this.cellSize,
-      this.cellSize,
-      this.cellSize
-    );
+    this.drawCellSprite(headSprite, head.x * this.cellSize, head.y * this.cellSize);
   }
 
   calculateTailDirection(tail, beforeTail) {
@@ -1126,13 +1109,7 @@ class SnakeGame {
     const tailKey = `${tailDir.x},${tailDir.y}`;
 
     const tailSprite = this.multisnakeSprites.tail[tailKey] || this.multisnakeSprites.tail['1,0'];
-    this.ctx.drawImage(
-      tailSprite,
-      tail.x * this.cellSize,
-      tail.y * this.cellSize,
-      this.cellSize,
-      this.cellSize
-    );
+    this.drawCellSprite(tailSprite, tail.x * this.cellSize, tail.y * this.cellSize);
   }
 
   drawSnakeAtPositions(multisnakePositions) {
@@ -1183,11 +1160,9 @@ class SnakeGame {
     return { x: (cell.x + 0.5) * this.cellSize, y: cell.y * this.cellSize };
   }
 
-  // Méthode utilitaire pour charger une image
+  // Morceau du serpent (« tete_droite.png ») : sa variante se charge à la taille d'une case
   loadSprite(filename) {
-    const img = new Image();
-    img.src = 'assets/images/arcade/' + filename;
-    return img;
+    return spriteFor(snakePartSpec(filename));
   }
 
   // Fonction utilitaire pour détecter la clé de courbe, peu importe le sens

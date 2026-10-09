@@ -5,7 +5,8 @@ import { loadSingleAvatar } from './arcade-utils.js';
 import { gameState } from './game.js';
 import { InfoBar } from './components/infoBar.js';
 import { getTranslation } from './utils-es6.js';
-import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
+import { spriteFor } from './arcade-sprites.js';
+import { MONSTER_COUNT, monsterSpec, textureSpec } from './arcade-sprite-catalog.js';
 import PacmanQuestions from './multimiam-questions.js';
 import PacmanRenderer from './multimiam-renderer.js';
 import { initPacmanEngine } from './multimiam-engine.js';
@@ -17,6 +18,9 @@ import { createArcadeToast, getArcadeText } from './arcade-message.js';
 import { getArcadeCanvasBox, watchArcadeViewport } from './arcade-common.js';
 import { cleanupGameResources } from './game-cleanup.js';
 import { shouldTransposeMaze } from './multimiam-layout.js';
+
+/** Un monstre différent pour chacun des cinq fantômes */
+const GHOST_MONSTERS = 5;
 
 /** Positions et couleurs de départ des fantômes */
 const INITIAL_GHOSTS = [
@@ -55,10 +59,7 @@ export class PacmanGame {
     this.ctx = this.canvas.getContext('2d');
     this.canvas.classList.add('multimiam-canvas');
 
-    // Les variables de monstres (this.monsters, this.monstersLoaded, this.totalMonsters)
-    // sont initialisées dans la méthode loadImages()
-
-    // Chargement des images d'avatars et de monstres
+    // Images de l'avatar, des monstres et du labyrinthe (loadImages)
     this.loadImages();
 
     // Dimensions et grille
@@ -125,9 +126,6 @@ export class PacmanGame {
 
     // Remplacer le nom du jeu dans l'UI
     this.gameTitle = getTranslation('multimiam_mode_title');
-
-    // Utiliser le logo MultiMiam
-    this.logoImg = arcadeSpriteLoader.loadSpriteSync('logo_multimiam_128x128', 'logo');
   }
 
   // Place disponible pour le labyrinthe : sous le bandeau, avec « Abandonner », sans faire
@@ -464,77 +462,22 @@ export class PacmanGame {
     }
   }
 
-  // Chargement des images d'avatars et de monstres
+  // Images de l'avatar du joueur, des monstres et du labyrinthe : une source haute définition
+  // chacune (un personnage qui va à gauche est retourné au dessin), chargée à la taille où elle
+  // s'affiche (js/arcade-sprites.js)
   loadImages() {
-    // Charger l'avatar du joueur depuis gameState
     const avatarName = gameState && gameState.avatar ? gameState.avatar : 'fox';
     this.avatar = loadSingleAvatar(avatarName);
 
-    // Optimisation pour mobile : précharger et mettre en cache les monstres
-    this.monsters = [];
-    this.monstersLoaded = 0;
-    this.totalMonsters = 5; // Limité à 5 monstres (un pour chaque fantôme)
+    // Cinq monstres différents, tirés parmi les 155
+    const indices = Array.from({ length: MONSTER_COUNT }, (_, i) => i + 1);
+    shuffleInPlace(indices);
+    this.monsters = indices
+      .slice(0, GHOST_MONSTERS)
+      .map(id => ({ id, sprite: spriteFor(monsterSpec(id)) }));
 
-    // Force la limitation à 5 monstres maximum pour éviter les problèmes de mémoire
-
-    // Créer des images optimisées pour mobile
-
-    // Créer un tableau d'indices disponibles (1 à 43)
-    const availableIndices = [];
-    for (let i = 1; i <= 155; i++) {
-      availableIndices.push(i);
-    }
-
-    // Mélanger les indices disponibles
-    shuffleInPlace(availableIndices);
-
-    // Précharger les images avec des événements de chargement
-    for (let i = 0; i < this.totalMonsters; i++) {
-      // Prendre les premiers indices du tableau mélangé (garantit l'unicité)
-      const monsterIndex = availableIndices[i];
-
-      // Formatter le numéro avec zéro de remplissage (01, 02, etc.)
-      const formattedIndex = monsterIndex.toString().padStart(2, '0');
-
-      // Créer un objet monstre avec des images directionnelles
-      const monsterObj = {
-        id: monsterIndex,
-        image_left: arcadeSpriteLoader.loadSpriteSync(
-          `monstre${formattedIndex}_left_128x128`,
-          'monster'
-        ),
-        image_right: arcadeSpriteLoader.loadSpriteSync(
-          `monstre${formattedIndex}_right_128x128`,
-          'monster'
-        ),
-      };
-
-      // Événement quand les images sont chargées
-      let loadedCount = 0;
-      const onImageLoad = () => {
-        loadedCount++;
-        if (loadedCount === 2) {
-          // Attend que les deux images (gauche/droite) soient chargées
-          this.monstersLoaded++;
-          console.log(
-            `Monstre ${monsterIndex} chargé (${this.monstersLoaded}/${this.totalMonsters})`
-          );
-        }
-      };
-
-      monsterObj.image_left.onload = onImageLoad;
-      monsterObj.image_right.onload = onImageLoad;
-
-      // Ajout de l'objet monstre à la collection
-      this.monsters.push(monsterObj);
-    }
-
-    // Chargement des textures mur et chemin
-    this.wallTexture = new Image();
-    this.wallTexture.src = 'assets/images/arcade/mur_128x128.png';
-
-    this.pathTexture = new Image();
-    this.pathTexture.src = 'assets/images/arcade/chemin_128x128.png';
+    this.wallTexture = spriteFor(textureSpec('mur.png'));
+    this.pathTexture = spriteFor(textureSpec('chemin.png'));
   }
 }
 
