@@ -106,7 +106,7 @@ const Storage = {
 
     const playersObj = this.get(STORAGE_KEYS.PLAYERS, {});
     const id = String(userId)
-      .replace(/[^\w ._-]/g, '')
+      .replaceAll(/[^\w .-]/g, '')
       .slice(0, 50);
     const pMap = new Map(Object.entries(playersObj || {}));
     const existing = pMap.get(id) || {};

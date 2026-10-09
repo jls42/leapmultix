@@ -117,7 +117,7 @@ export async function updateWelcomeMessageUI() {
       welcomeText = WELCOME_FALLBACK.replace('{nickname}', nickname);
     }
     // Sans prénom, « Salut {nickname} ! » laisserait deux espaces consécutives
-    welcomeMsgElement.textContent = String(welcomeText).replace(/\s{2,}/g, ' ');
+    welcomeMsgElement.textContent = String(welcomeText).replaceAll(/\s{2,}/g, ' ');
   } else {
     const welcomeNicknameSpan = document.getElementById('welcome-nickname');
     if (welcomeNicknameSpan) {

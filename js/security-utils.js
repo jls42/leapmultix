@@ -14,11 +14,11 @@ export function escapeHtml(text) {
 
   // Manual HTML escaping without innerHTML
   return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/\u0027/g, '&#39;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('\u0027', '&#39;');
 }
 
 /**
@@ -113,7 +113,7 @@ const isNameSign = sign => Array.from(sign).every(char => USERNAME_CHAR.test(cha
  */
 export function normalizeUsername(username) {
   if (typeof username !== 'string') return '';
-  return username.normalize('NFC').replace(/\s+/gu, ' ').trim();
+  return username.normalize('NFC').replaceAll(/\s+/gu, ' ').trim();
 }
 
 /**
