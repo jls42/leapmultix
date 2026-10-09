@@ -153,6 +153,26 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
     game.pause();
   });
 
+  test('le plateau va jusqu’à « Abandonner », le labyrinthe centré dedans, à cases carrées', () => {
+    // 844 − 175 − 48 − 4 (cadre) : toute la hauteur, comme les autres jeux ; le labyrinthe,
+    // limité par la largeur (15 cases), garde sa taille et se centre entre deux bandes de mur
+    expect(game.canvas.style.height).toBe('617px');
+    expect(game.canvas.style.width).toBe(`${game.canvas.width}px`);
+    expect(game.canvas.height).toBe(19 * game.cellSize);
+    expect(game.canvas.style.objectFit).toBe('contain');
+  });
+
+  test('un toucher juste à droite du personnage, à l’écran, l’envoie à droite : bandes comptées', () => {
+    // Murs ignorés : seul compte le point visé
+    game.canMove = () => true;
+    const cell = game.cellSize;
+    const at = mazeToScreen(game.multimiam.x, game.multimiam.y, game.transposed);
+    // Bande de mur au-dessus du labyrinthe, puis la case à droite du personnage
+    const band = (Number.parseFloat(game.canvas.style.height) - game.canvas.height) / 2;
+    tap(game.canvas, { x: (at.x + 1.5) * cell, y: 175 + band + (at.y + 0.5) * cell });
+    expect(transposeDirection(game.multimiam.nextDirection, game.transposed)).toBe('RIGHT');
+  });
+
   test('le labyrinthe se dessine en 15 colonnes sur 19 rangées, plus grandes cases', () => {
     expect(game.transposed).toBe(true);
     expect([game.cols, game.rows]).toEqual([19, 15]);
@@ -195,6 +215,20 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
 });
 
 describe('MultiMiam sur ordinateur, la consigne posée sur le labyrinthe', () => {
+  test('le plateau va jusqu’à « Abandonner », comme les autres jeux', () => {
+    jest.useFakeTimers();
+    HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();
+    restorers.push(simulateArcadeScreen({ width: 1234, height: 800, top: 202 }));
+    renderArcadeStage('multimiam-canvas');
+    const game = new PacmanGame('multimiam-canvas', 2, 'operation', null, 0, '×');
+    game.start();
+    game.pause();
+    // 800 − 202 − 48 − 4 (cadre) : le labyrinthe (15 rangées de cases entières) y tient à
+    // moins d'une case près
+    expect(game.canvas.style.height).toBe('546px');
+    expect(546 - game.canvas.height).toBeLessThan(game.cellSize);
+  });
+
   test('la consigne qui part ne change rien : même labyrinthe à 1 s et à 7 s', () => {
     jest.useFakeTimers();
     HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();

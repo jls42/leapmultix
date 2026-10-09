@@ -249,22 +249,21 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     }
   }, 90000);
 
-  test('MultiMemory : dès le lancement, consigne affichée, les cartes remplissent la place', async () => {
-    await openArcade(PORTRAIT);
-    await launchGame(page, 'multimemory');
-    await settle(page);
-    const { note, emptyBelow } = await stageLayout(page);
-    expect(note).not.toBeNull();
-    // Avant : 346 px vides sous « Abandonner » ; il ne reste que la marge du bas
-    expect(emptyBelow).toBeLessThan(40);
-  }, 40000);
-
   // Le plateau garde sa taille du premier au dernier instant : la consigne, posée dessus
   // (à côté sur un téléphone tourné), ne lui prend pas de place et part sans rien déplacer.
   // Dans les deux cas, elle laisse passer le doigt (au plateau, ou à la zone de jeu à côté).
   // En portrait, les quatre jeux : chacun pose sa consigne à sa place. Ailleurs, la mise en
   // page est commune à tous ; MultiMemory sur ordinateur a trois rangées, consigne en bas.
-  const ON_BOARD = { inside: true, overlaps: true, touched: 'CANVAS', placedAsSaid: true };
+  // Sous le plateau, « Abandonner » reste en bas de l'écran dès le lancement : tous les
+  // plateaux prennent la hauteur, MultiMiam compris (avant : 346 px vides sous le bouton dans
+  // MultiMemory, puis 139 px dans MultiMiam en portrait).
+  const ON_BOARD = {
+    inside: true,
+    overlaps: true,
+    touched: 'CANVAS',
+    placedAsSaid: true,
+    abandonAtBottom: true,
+  };
   const BESIDE_BOARD = { inside: false, overlaps: false, touched: 'DIV' };
   test.each([
     ['téléphone en portrait', PORTRAIT, true, ON_BOARD, ARCADE_GAMES],
@@ -295,6 +294,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
           overlaps: overlaps(during.note, during.board),
           touched: during.underNote,
           ...('placedAsSaid' in spot && { placedAsSaid: placedAsSaid(during.note, during.board) }),
+          ...('abandonAtBottom' in spot && { abandonAtBottom: during.emptyBelow < 40 }),
         }).toEqual({ game, ...spot });
         await page.waitForFunction(
           () => document.querySelector('#game .game-instructions')?.hidden,
