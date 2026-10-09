@@ -3,6 +3,7 @@
 
 import { getCanvasFont, readableCanvasFontSize } from './arcade-common.js';
 import { mazeToScreen, transposeDirection } from './multimiam-layout.js';
+import { drawArcadeSprite, prefetchArcadeSprite } from './arcade-sprites.js';
 
 export default class PacmanRenderer {
   constructor(game) {
@@ -38,6 +39,20 @@ export default class PacmanRenderer {
     return transposeDirection(direction, this.game.transposed);
   }
 
+  /** Côté vers lequel regarde un personnage qui va dans cette direction */
+  facingOf(direction) {
+    return this.screenDirection(direction) === 'LEFT' ? 'left' : 'right';
+  }
+
+  /**
+   * Case d'un personnage centré sur ce point : une fois et demie une case du labyrinthe
+   * @returns {{x: number, y: number, width: number, height: number}}
+   */
+  spriteBox(pixelX, pixelY) {
+    const size = this.game.cellSize * 1.5;
+    return { x: pixelX - size / 2, y: pixelY - size / 2, width: size, height: size };
+  }
+
   // Méthode principale appelée à chaque frame
   draw() {
     const g = this.game;
@@ -62,31 +77,34 @@ export default class PacmanRenderer {
   drawLabyrinth() {
     const g = this.game;
     const ctx = g.ctx;
+    const wall = this.tileImage(g.wallTexture);
+    const path = this.tileImage(g.pathTexture);
 
-    // On ne remplit plus tout le fond en bleu, on va dessiner chaque case
+    // Chaque case : sa texture (mur, ou chemin sous les pastilles et les réponses), sinon
+    // sa couleur tant que la texture n'est pas arrivée
     for (let y = 0; y < g.rows; y++) {
       for (let x = 0; x < g.cols; x++) {
-        const cell = g.labyrinth[y][x];
+        const isWall = g.labyrinth.at(y).at(x) === 1;
         const { px, py } = this.cellOrigin(x, y);
-        if (cell === 1) {
-          // Mur
-          if (g.wallTexture && g.wallTexture.complete && g.wallTexture.naturalHeight !== 0) {
-            ctx.drawImage(g.wallTexture, px, py, g.cellSize, g.cellSize);
-          } else {
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(px, py, g.cellSize, g.cellSize);
-          }
+        const texture = isWall ? wall : path;
+        if (texture) {
+          ctx.drawImage(texture, px, py, g.cellSize, g.cellSize);
         } else {
-          // Chemin, pastille, super pastille, réponse...
-          if (g.pathTexture && g.pathTexture.complete && g.pathTexture.naturalHeight !== 0) {
-            ctx.drawImage(g.pathTexture, px, py, g.cellSize, g.cellSize);
-          } else {
-            ctx.fillStyle = '#0000FF';
-            ctx.fillRect(px, py, g.cellSize, g.cellSize);
-          }
+          ctx.fillStyle = isWall ? '#000000' : '#0000FF';
+          ctx.fillRect(px, py, g.cellSize, g.cellSize);
         }
       }
     }
+  }
+
+  /**
+   * Image d'une texture de case, demandée une fois par image à la taille d'une case
+   * @returns {HTMLImageElement|null}
+   */
+  tileImage(texture) {
+    const g = this.game;
+    prefetchArcadeSprite(g.canvas, texture, g.cellSize, g.cellSize);
+    return texture?.image ?? null;
   }
 
   /* === RÉPONSES ================================= */
@@ -201,27 +219,8 @@ export default class PacmanRenderer {
 
   drawAvatarSprite(pixelX, pixelY) {
     const g = this.game;
-    const leftImage = g.avatar?.image_left;
-    const rightImage = g.avatar?.image_right;
-
-    if (leftImage?.complete && rightImage?.complete) {
-      const imageToDraw =
-        this.screenDirection(g.multimiam.direction) === 'LEFT' ? leftImage : rightImage;
-      if (imageToDraw.naturalHeight === 0) {
-        return false;
-      }
-
-      const size = g.cellSize * 1.5;
-      const ctx = g.ctx;
-      ctx.save();
-      ctx.translate(pixelX, pixelY);
-      ctx.drawImage(imageToDraw, -size / 2, -size / 2, size, size);
-      ctx.restore();
-
-      return true;
-    }
-
-    return false;
+    const facing = this.facingOf(g.multimiam.direction);
+    return drawArcadeSprite(g.ctx, g.avatar?.sprite, this.spriteBox(pixelX, pixelY), { facing });
   }
 
   drawClassicPacman(px, py) {
@@ -292,25 +291,15 @@ export default class PacmanRenderer {
    * @param {number} pixelY - Coordonnée Y en pixels.
    */
   _drawSingleGhost(ghost, monster, pixelX, pixelY) {
-    const g = this.game;
-    const ctx = g.ctx;
-    const size = g.cellSize * 1.5;
-
-    const imageToDraw =
-      this.screenDirection(ghost.direction) === 'LEFT' ? monster?.image_left : monster?.image_right;
-
-    if (imageToDraw?.complete && imageToDraw.naturalHeight !== 0) {
-      ctx.save();
-      ctx.translate(pixelX, pixelY);
-      ctx.drawImage(imageToDraw, -size / 2, -size / 2, size, size);
-      ctx.restore();
-    } else {
-      // Fallback: dessiner un cercle rouge
-      ctx.fillStyle = 'red';
-      ctx.beginPath();
-      ctx.arc(pixelX, pixelY, size / 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    const ctx = this.game.ctx;
+    const box = this.spriteBox(pixelX, pixelY);
+    const facing = this.facingOf(ghost.direction);
+    if (drawArcadeSprite(ctx, monster?.sprite, box, { facing })) return;
+    // Repli tant que l'image n'est pas arrivée : un cercle rouge
+    ctx.fillStyle = 'red';
+    ctx.beginPath();
+    ctx.arc(pixelX, pixelY, box.width / 2, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   /**

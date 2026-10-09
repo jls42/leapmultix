@@ -241,6 +241,10 @@ describe('Le dépôt', () => {
         '/assets/images/arcade/herbe.png',
         '/assets/images/arcade/cadeau_ouvert.png',
         '/assets/generated-images/arcade/logo_mode_quizz-256.webp',
+        // Images haute définition des jeux d'Arcade : une variante chacune (catalogue)
+        '/assets/generated-images/arcade/monstre01_right-128.webp',
+        '/assets/generated-images/arcade/fox-128.webp',
+        '/assets/generated-images/arcade/renard_vaisseau_2-128.webp',
       ])
     );
     const family = /^\/assets\/(?:images\/.+\.png|generated-images\/.+)$/;

@@ -8,7 +8,8 @@ import { generateQuestion } from './questionGenerator.js';
 import { goToSlide } from './slides.js';
 import { gameState } from './game.js';
 import { getTranslation, cleanupGameResources, showArcadeMessage } from './utils-es6.js';
-import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
+import { spriteFor, drawArcadeSprite, prefetchArcadeSprite } from './arcade-sprites.js';
+import { textureSpec } from './arcade-sprite-catalog.js';
 import { setStartingMode } from './mode-orchestrator.js';
 import { InfoBar } from './components/infoBar.js';
 import {
@@ -513,8 +514,8 @@ class MemoryGame {
     this.timers = [];
     this.animations = [];
 
-    // Images pour les cartes
-    this.cardBack = arcadeSpriteLoader.loadSpriteSync('chemin', 'ui');
+    // Dos des cartes (texture) ; chaque carte y montre un monstre (arcade.js)
+    this.cardBack = spriteFor(textureSpec('chemin.png'));
 
     // Sons
     this.successSound = new Audio('assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav');
@@ -1165,33 +1166,42 @@ class MemoryGame {
     this.ctx.fillText(card.content, cardX + cardWidth / 2, cardY + cardHeight / 2);
   }
 
-  drawCardBack(card, cardX, cardY, cardWidth, cardHeight) {
-    if (
-      card.monsterIndex >= 0 &&
-      card.monsterIndex < this.monsterImages.length &&
-      this.monsterImages[card.monsterIndex].complete
-    ) {
-      if (this.cardBack.complete) {
-        this.ctx.drawImage(this.cardBack, cardX, cardY, cardWidth, cardHeight);
-      }
-      const monsterSize = Math.min(cardWidth, cardHeight) * 0.8;
-      const monsterX = cardX + (cardWidth - monsterSize) / 2;
-      const monsterY = cardY + (cardHeight - monsterSize) / 2;
+  /**
+   * Monstre dessiné au dos d'une carte
+   * @returns {import('./arcade-sprites.js').ArcadeSprite|undefined}
+   */
+  monsterOf(card) {
+    const index = card.monsterIndex;
+    return Number.isInteger(index) && index >= 0 ? this.monsterImages?.at(index) : undefined;
+  }
 
-      this.ctx.drawImage(
-        this.monsterImages[card.monsterIndex],
-        monsterX,
-        monsterY,
-        monsterSize,
-        monsterSize
-      );
-    } else {
-      this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.font = getCanvasFont(cardHeight / 5);
-      this.ctx.fillText('?', cardX + cardWidth / 2, cardY + cardHeight / 2);
+  // Dos d'une carte : la texture rognée à la carte, puis son monstre à ses proportions ; un
+  // « ? » tant que le monstre n'est pas arrivé
+  drawCardBack(card, cardX, cardY, cardWidth, cardHeight) {
+    const monster = this.monsterOf(card);
+    const size = Math.min(cardWidth, cardHeight) * 0.8;
+    prefetchArcadeSprite(this.canvas, monster, size, size);
+    if (!monster?.image) {
+      this.drawCardQuestionMark(cardX, cardY, cardWidth, cardHeight);
+      return;
     }
+    const cardBox = { x: cardX, y: cardY, width: cardWidth, height: cardHeight };
+    drawArcadeSprite(this.ctx, this.cardBack, cardBox, { fit: 'cover' });
+    const monsterBox = {
+      x: cardX + (cardWidth - size) / 2,
+      y: cardY + (cardHeight - size) / 2,
+      width: size,
+      height: size,
+    };
+    drawArcadeSprite(this.ctx, monster, monsterBox);
+  }
+
+  drawCardQuestionMark(cardX, cardY, cardWidth, cardHeight) {
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.font = getCanvasFont(cardHeight / 5);
+    this.ctx.fillText('?', cardX + cardWidth / 2, cardY + cardHeight / 2);
   }
 
   // Boucle principale du jeu
@@ -1258,11 +1268,8 @@ class MemoryGame {
   }
 
   releaseImageResources() {
-    if (this.cardBack) {
-      this.cardBack.src = '';
-      this.cardBack.onload = null;
-      this.cardBack = null;
-    }
+    // Images partagées entre les parties (js/arcade-sprites.js) : seule la référence part
+    this.cardBack = null;
 
     if (this.monsterImages && this.monsterImages.length) {
       this.monsterImages = null;

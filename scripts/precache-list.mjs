@@ -14,7 +14,11 @@
 //   nom de fichier seul (« tete_haut.png ») ou nom de sprite (loadSpriteSync('chemin'))
 //   cherchés dans assets/images ;
 // - un fond illustré par avatar : le jeu en tire un au hasard, et hors ligne le service
-//   worker sert celui qu'il a gardé.
+//   worker sert celui qu'il a gardé ;
+// - une variante WebP de chaque image haute définition des jeux d'Arcade (monstres,
+//   personnages, fusées) que liste js/arcade-sprite-catalog.js, dont les adresses se
+//   construisent (aucun nom à chercher) : hors ligne, le service worker la sert pour toutes
+//   les tailles de l'image.
 //
 // Deux listes : « core », des fichiers du dépôt, tous gardés ou aucun ; « images », les
 // images d'assets/images (une famille chacune : à l'installation, le service worker garde
@@ -29,6 +33,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { relativeImportSpecifiers } from './version-module-urls.mjs';
+import { arcadeOfflineImages } from '../js/arcade-sprite-catalog.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const SW_FILE = 'sw.js';
@@ -67,7 +72,7 @@ const HOLE = '\uFFFC';
  * la marque ; l'extension se vérifie ensuite (ASSET), sans retour en arrière.
  */
 const PATH_RUN = /[\w\uFFFC./-]+/g;
-/** Nom de sprite passé au chargeur (arcade-sprite-loader.js), sans extension */
+/** Nom de sprite passé à un chargeur (« loadSprite('tete_haut.png') »), extension facultative */
 const SPRITE_CALL = /\bloadSprite(?:Sync)?\(\s*([\x22\x27\x60])([^\x22\x27\x60]+)\1/g;
 /** Attributs d'adresse d'une page ; srcset en porte plusieurs */
 const URL_ATTRIBUTE = /\b(?:src|href|srcset)=\x22([^\x22]*)\x22/g;
@@ -339,6 +344,9 @@ function pageReferences(root, index) {
   return resolveTokens(root, index, tokens);
 }
 
+/** Catalogue des images d'Arcade, quand le code du jeu l'atteint */
+const ARCADE_CATALOG = '/js/arcade-sprite-catalog.js';
+
 /** Le premier fond illustré de chaque avatar */
 function firstBackgrounds(index) {
   const firsts = new Map();
@@ -359,7 +367,8 @@ function firstBackgrounds(index) {
 export function buildPrecacheList(root = ROOT) {
   const index = createFileIndex(root);
   const found = crawl(root, index, [...SHELL, ...pageReferences(root, index)]);
-  const all = [...found, ...firstBackgrounds(index)];
+  const arcade = found.has(ARCADE_CATALOG) ? arcadeOfflineImages() : [];
+  const all = [...found, ...firstBackgrounds(index), ...arcade];
   const isImage = sitePath => IMAGE_FAMILY.test(sitePath) || sitePath.startsWith(GENERATED);
   return {
     core: sortedUnique(all.filter(sitePath => !isImage(sitePath))),
