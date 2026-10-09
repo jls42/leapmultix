@@ -3,8 +3,9 @@
  * Internet, portail captif, filtre qui retient. Le serveur accepte les connexions mais ne
  * répond jamais ; navigator.onLine reste vrai. Passé le délai du service worker, la copie
  * gardée sert « Qui joue ? », puis un mode et un jeu d'Arcade, chacun dans le délai + 2 s.
- * Sur un réseau lent qui répond (3G bridée), le réseau l'emporte : aucune copie servie à sa
- * place, la page et ses modules sont ceux que le serveur vient d'envoyer.
+ * Sur un réseau lent qui répond (3G bridée), le réseau l'emporte pour la page et les fichiers
+ * sans ?v= : aucune copie servie à leur place. Ceux de cette version (?v=, toutes les adresses
+ * d'un site déployé) viennent de leur copie préchargée, la même version par construction.
  * @jest-environment node
  */
 
@@ -18,6 +19,8 @@ const { startStaticServer } = require('../../utils/static-server.cjs');
 const SW_SOURCE = fs.readFileSync(path.resolve(__dirname, '../../../sw.js'), 'utf8');
 const NETWORK_TIMEOUT_MS = Number(/const NETWORK_TIMEOUT_MS = (\d+);/.exec(SW_SOURCE)?.[1] ?? 4000);
 const STEP_LIMIT_MS = NETWORK_TIMEOUT_MS + 2000;
+// Version du service worker : ses adresses ?v=<VERSION> viennent toujours de leur copie
+const SW_VERSION = /^const VERSION = '([^']+)';/m.exec(SW_SOURCE)[1];
 
 // 3G de la sonde des réseaux lents (150 ms, 1,6 Mbit/s), simulée par le serveur : elle vaut
 // pour la page comme pour le service worker, dans tout navigateur (l'émulation de Chrome ne
@@ -187,11 +190,23 @@ describe('3G bridée qui répond : le réseau l’emporte', () => {
     expect(tilesAfterMs).toBeGreaterThan(3000);
   });
 
-  test('la page, ses modules et ses styles viennent du serveur, aucun de la copie', () => {
-    // Date à la seconde près : une réponse du serveur date du rechargement ou après
-    const fresh = response => response.date >= Math.floor(reloadedAt / 1000) * 1000 - 1000;
-    expect(responses.filter(r => r.type === 'Document')).toHaveLength(1);
-    expect(responses.length).toBeGreaterThan(50);
-    expect(responses.filter(response => !fresh(response)).map(r => r.url)).toEqual([]);
+  // Date à la seconde près : une réponse du serveur date du rechargement ou après
+  const fresh = response => response.date >= Math.floor(reloadedAt / 1000) * 1000 - 1000;
+  const thisVersion = response => new URL(response.url).searchParams.get('v') === SW_VERSION;
+
+  test('la page et les fichiers sans ?v= viennent du serveur, aucun de la copie', () => {
+    // En développement, la page et ses imports n'ont pas de ?v= : le réseau l'emporte
+    const unversioned = responses.filter(response => !thisVersion(response));
+    expect(unversioned.filter(r => r.type === 'Document')).toHaveLength(1);
+    expect(unversioned.length).toBeGreaterThan(50);
+    expect(unversioned.filter(response => !fresh(response)).map(r => r.url)).toEqual([]);
+  });
+
+  test('les fichiers de cette version (?v=) viennent de leur copie, même quand le réseau répond', () => {
+    // Le serveur ignore ?v= : après un déploiement, il servirait sous ces adresses une autre
+    // version. Leur copie préchargée est la leur par construction (sw.js, thisVersionFile).
+    const versioned = responses.filter(thisVersion);
+    expect(versioned.length).toBeGreaterThan(10);
+    expect(versioned.filter(fresh).map(r => r.url)).toEqual([]);
   });
 });
