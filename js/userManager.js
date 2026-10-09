@@ -709,7 +709,7 @@ export const UserManager = {
     const userListDiv = document.getElementById('user-list');
     if (!userListDiv) return;
 
-    while (userListDiv.firstChild) userListDiv.removeChild(userListDiv.firstChild);
+    while (userListDiv.firstChild) userListDiv.firstChild.remove();
     const names = this.sortedPlayerNames();
 
     if (names.length === 0) {

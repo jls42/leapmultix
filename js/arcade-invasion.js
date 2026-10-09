@@ -123,7 +123,7 @@ function setupGameUI() {
   document.removeEventListener('keyup', arcadeKeyUp);
 
   const gameScreen = document.getElementById('game');
-  while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
+  while (gameScreen.firstChild) gameScreen.firstChild.remove();
 
   const _frag = InfoBar.createArcadeTemplateElement({
     mode: 'multiinvaders',

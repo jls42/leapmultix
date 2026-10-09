@@ -253,7 +253,7 @@ function displayDailyChallenge() {
   const challengeStatus = checkDailyChallengeStatus();
   // DOM construction handled below - old HTML string building removed
   // Construire DOM sans innerHTML
-  while (container.firstChild) container.removeChild(container.firstChild);
+  while (container.firstChild) container.firstChild.remove();
 
   const h3 = document.createElement('h3');
   h3.dataset.translate = 'daily_challenge_title';

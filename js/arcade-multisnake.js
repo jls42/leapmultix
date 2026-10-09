@@ -81,7 +81,7 @@ export function startSnakeArcade() {
 
   // Nettoyer l'écran jeu
   const gameScreen = document.getElementById('game');
-  while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
+  while (gameScreen.firstChild) gameScreen.firstChild.remove();
   const frag = InfoBar.createArcadeTemplateElement({
     mode: 'multisnake',
     canvasId: 'multisnake-canvas',

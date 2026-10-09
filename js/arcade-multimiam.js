@@ -52,7 +52,7 @@ function cleanupPacmanGame() {
 
 function renderPacmanUI() {
   const gameScreen = document.getElementById('game');
-  while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
+  while (gameScreen.firstChild) gameScreen.firstChild.remove();
   const frag = InfoBar.createArcadeTemplateElement({
     mode: 'multimiam',
     canvasId: 'multimiam-canvas',

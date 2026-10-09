@@ -129,8 +129,7 @@ export function showGameInstructions(
   followBoard(instructionsElement, gameContainer, canvas);
 
   // Ajouter le message d'instruction sans innerHTML
-  while (instructionsElement.firstChild)
-    instructionsElement.removeChild(instructionsElement.firstChild);
+  while (instructionsElement.firstChild) instructionsElement.firstChild.remove();
   const p = document.createElement('p');
   p.textContent = message;
   instructionsElement.appendChild(p);
