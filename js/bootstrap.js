@@ -43,8 +43,9 @@ function rewireSetGameModeButtons(root = document) {
     const handler = el.getAttribute('onclick');
     if (!handler) return;
 
-    // setGameMode('mode')
-    const m = /setGameMode\('([^']+)'\)/.exec(handler);
+    // setGameMode('mode') ; l'apostrophe s'écrit \u0027 dans le motif : Lizard la prenait pour
+    // le début d'une chaîne et mesurait tout le reste du fichier comme une seule fonction
+    const m = /setGameMode\(\u0027([^\u0027]+)\u0027\)/.exec(handler);
     if (m) {
       const mode = m[1];
       el.removeAttribute('onclick');
