@@ -29,7 +29,129 @@ const MESSAGE_DURATION = 3000;
 const MESSAGE_EXIT = 300;
 
 /** Un seul message à la fois : le suivant remplace le texte au lieu de s'empiler */
-const messageState = { popup: null, dismissTimer: null, removeTimer: null };
+const messageState = { popup: null, dismissTimer: null, removeTimer: null, unfollow: null };
+
+/** Commandes que le message ne doit jamais cacher (« Abandonner », réponses, barre du haut) */
+const CONTROL_SELECTOR =
+  'button, a[href], input:not([type="hidden"]), select, textarea, [role="button"]';
+/** Écart minimal entre le message et une commande, ou le bord de l'écran (px) */
+const MESSAGE_GAP = 8;
+
+/**
+ * Le message à sa place, en bas, sans le décalage de son apparition (transform) : il est
+ * centré dans la largeur de l'écran
+ * @param {HTMLElement} popup
+ * @returns {{left: number, right: number, top: number, height: number}}
+ */
+function messageBox(popup) {
+  const width = popup.offsetWidth;
+  const left = (globalThis.innerWidth - width) / 2;
+  return { left, right: left + width, top: popup.offsetTop, height: popup.offsetHeight };
+}
+
+/**
+ * Commande affichée dans l'écran, dans la largeur du message
+ * @param {Element} el
+ * @param {{left: number, right: number}} box
+ * @returns {DOMRect|null} Sa boîte, ou null
+ */
+function controlUnder(el, box) {
+  if (el.closest('[inert]')) return null;
+  const r = el.getBoundingClientRect();
+  const onScreen = r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < globalThis.innerHeight;
+  return onScreen && r.right > box.left && r.left < box.right ? r : null;
+}
+
+/**
+ * Hauteurs occupées par les commandes dans la largeur du message, écart compris, de haut en
+ * bas
+ * @param {{left: number, right: number}} box
+ * @returns {Array<[number, number]>}
+ */
+function controlBands(box) {
+  const bands = [];
+  for (const el of document.querySelectorAll(CONTROL_SELECTOR)) {
+    const r = controlUnder(el, box);
+    if (r) bands.push([r.top - MESSAGE_GAP, r.bottom + MESSAGE_GAP]);
+  }
+  bands.sort((a, b) => a[0] - b[0]);
+  return bands;
+}
+
+/**
+ * Posé à cette hauteur, le message ne touche aucune commande et reste dans l'écran
+ * @returns {boolean}
+ */
+function isFreeAt(top, height, bands) {
+  if (top < MESSAGE_GAP || top + height > globalThis.innerHeight - MESSAGE_GAP) return false;
+  return bands.every(([start, end]) => end <= top || start >= top + height);
+}
+
+/**
+ * Juste sous la barre du haut, si elle est à l'écran (elle défile avec la page au
+ * téléphone) : là, le message ne couvre que la ligne du score
+ * @returns {number|undefined}
+ */
+function belowTopBar() {
+  const bar = document.querySelector('.slide.active-slide .top-bar')?.getBoundingClientRect();
+  return bar && bar.bottom > 0 ? bar.bottom + MESSAGE_GAP : undefined;
+}
+
+/**
+ * La place libre la plus basse, entre les commandes, où le message tient entier
+ * @returns {number|undefined}
+ */
+function lowestFreeTop(height, bands) {
+  let lowest;
+  let cursor = MESSAGE_GAP;
+  for (const [start, end] of [...bands, [globalThis.innerHeight - MESSAGE_GAP, Infinity]]) {
+    if (start - cursor >= height) lowest = start - height;
+    cursor = Math.max(cursor, end);
+  }
+  return lowest;
+}
+
+/**
+ * Pose le message là où il ne cache aucune commande : à sa place en bas, sinon sous la
+ * barre du haut, sinon dans la place libre la plus basse. Nulle part : il reste en bas.
+ * @param {HTMLElement} popup
+ */
+function placeMessage(popup) {
+  popup.classList.remove('is-raised');
+  const box = messageBox(popup);
+  const bands = controlBands(box);
+  if (isFreeAt(box.top, box.height, bands)) return;
+  const top = [belowTopBar(), lowestFreeTop(box.height, bands)].find(
+    candidate => candidate !== undefined && isFreeAt(candidate, box.height, bands)
+  );
+  if (top === undefined) return;
+  popup.style.setProperty('--message-top', `${Math.round(top)}px`);
+  popup.classList.add('is-raised');
+}
+
+/**
+ * Tant qu'il est affiché, le message se repose quand la page défile ou change de taille
+ * @param {HTMLElement} popup
+ * @returns {() => void} Arrête le suivi
+ */
+function followPlacement(popup) {
+  let frame = 0;
+  const replace = () => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      placeMessage(popup);
+    });
+  };
+  // En capture : la page ou l'écran qui défile (les écrans de jeu ont leur propre défilement)
+  document.addEventListener('scroll', replace, { capture: true, passive: true });
+  globalThis.addEventListener('resize', replace);
+  return () => {
+    document.removeEventListener('scroll', replace, { capture: true });
+    globalThis.removeEventListener('resize', replace);
+    cancelAnimationFrame(frame);
+  };
+}
 
 export function showMessage(message) {
   clearTimeout(messageState.dismissTimer);
@@ -45,16 +167,22 @@ export function showMessage(message) {
     messageState.popup = popup;
   }
 
-  // Apparition (ou nouveau texte dans le message déjà affiché)
+  // Apparition (ou nouveau texte dans le message déjà affiché), là où il ne cache aucune
+  // commande : au téléphone, sa place en bas est souvent celle de « Abandonner »
   setTimeout(() => {
     popup.textContent = message;
     popup.classList.add('active');
+    placeMessage(popup);
   }, 10);
+  messageState.unfollow?.();
+  messageState.unfollow = followPlacement(popup);
 
   // Disparition, repoussée par chaque nouveau message
   messageState.dismissTimer = setTimeout(() => {
     popup.classList.remove('active');
     messageState.removeTimer = setTimeout(() => {
+      messageState.unfollow?.();
+      messageState.unfollow = null;
       popup.remove();
       if (messageState.popup === popup) messageState.popup = null;
     }, MESSAGE_EXIT);

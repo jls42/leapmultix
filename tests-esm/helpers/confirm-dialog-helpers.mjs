@@ -6,6 +6,14 @@
 /** @returns {HTMLElement|null} La fenêtre ouverte */
 export const openDialog = () => document.querySelector('[role="alertdialog"]');
 
+/** @returns {string|null} Le titre de la fenêtre ouverte */
+export const dialogTitle = () =>
+  openDialog()?.querySelector('.confirm-dialog-title')?.textContent ?? null;
+
+/** @returns {string[]} Les boutons de la fenêtre ouverte, dans l'ordre (refus d'abord) */
+export const dialogLabels = () =>
+  [...(openDialog()?.querySelectorAll('button') ?? [])].map(button => button.textContent);
+
 /** @returns {string|null} Le texte de la question ouverte (sous son titre) */
 export const dialogQuestion = () =>
   openDialog()?.querySelector('.confirm-dialog-message')?.textContent ?? null;

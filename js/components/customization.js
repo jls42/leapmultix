@@ -17,6 +17,7 @@ import { createVirtualKeyboard } from '../virtual-keyboard.js';
 import { singleActivation } from '../ui-feedback.js';
 import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
+import { confirmDialog } from './confirm-dialog.js';
 
 /** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
 const SLIDE6_AVATAR_RADIOS = '#slide6 .avatar-selector .avatar-radio';
@@ -388,14 +389,19 @@ export const Customization = {
     if (clearBtn && !clearBtn.dataset.listenerAttached) {
       clearBtn.addEventListener('click', () => {
         // handleClearCacheClick rattrape ses erreurs : son repli vide les caches à la main
-        void this.handleClearCacheClick();
+        void this.handleClearCacheClick(clearBtn);
       });
       clearBtn.dataset.listenerAttached = 'true';
     }
   },
 
-  async handleClearCacheClick() {
-    if (!this._confirmClear()) return;
+  /**
+   * « Vider le cache », après la fenêtre du jeu
+   * @param {HTMLElement} [origin] - Le bouton pressé : refusé, le focus y revient
+   * @returns {Promise<void>}
+   */
+  async handleClearCacheClick(origin) {
+    if (!(await this._confirmClear(origin))) return;
     this._notifyClearing();
     try {
       await this._tryModuleClear();
@@ -404,11 +410,18 @@ export const Customization = {
     }
   },
 
-  _confirmClear() {
-    const msg = getTranslation('clear_cache_confirm') || 'Vider le cache et recharger ?';
-    const canConfirm =
-      typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-    return canConfirm ? globalThis.confirm(msg) : true;
+  /**
+   * La fenêtre du jeu demande d'abord : vider le cache recharge la page
+   * @param {HTMLElement} [origin] - Où rendre le focus si l'enfant refuse
+   * @returns {Promise<boolean>} true si confirmé
+   */
+  _confirmClear(origin) {
+    return confirmDialog({
+      title: getTranslation('clear_cache_confirm') || 'Vider le cache et recharger ?',
+      confirmLabel: getTranslation('clear_cache_dialog_confirm') || 'Vider le cache',
+      cancelLabel: getTranslation('clear_cache_dialog_cancel') || 'Annuler',
+      returnFocusTo: origin,
+    });
   },
 
   _notifyClearing() {

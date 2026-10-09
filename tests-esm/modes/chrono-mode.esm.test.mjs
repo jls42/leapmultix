@@ -26,7 +26,9 @@ import { createUserStateMock, createSlidesMock } from '../helpers/mode-test-help
 import {
   answerDialog,
   closeOpenDialog,
+  dialogLabels,
   dialogQuestion,
+  dialogTitle,
 } from '../helpers/confirm-dialog-helpers.mjs';
 import {
   createLazyLoaderMock,
@@ -406,26 +408,31 @@ describe('Chrono : écran de départ', () => {
       `${FR.chrono_basket_remove} 6 × 7`
     );
     // Tout effacer : le focus revient à la ligne d’ajout
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
     document.querySelector('#chrono-basket-clear').click();
+    await answerDialog(true);
     await flush();
     expect(document.activeElement.id).toBe('chrono-add-a');
-    confirm.mockRestore();
   });
 
-  test('« Tout effacer » demande d’abord ; « Annuler » garde la liste', async () => {
+  test('« Tout effacer » demande d’abord, dans la fenêtre du jeu ; « Garder ma liste » la garde', async () => {
     await openSetup([{ a: 7, b: 8, due: 1 }]);
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(false);
-    document.querySelector('#chrono-basket-clear').click();
+    const clear = document.querySelector('#chrono-basket-clear');
+    clear.focus();
+    clear.click();
+    expect(dialogTitle()).toBe(FR.confirm_clear_chrono_basket);
+    expect(dialogLabels()).toEqual([
+      FR.chrono_basket_dialog_cancel,
+      FR.chrono_basket_dialog_confirm,
+    ]);
+    await answerDialog(false);
     await flush();
-    expect(confirm).toHaveBeenCalledWith(FR.confirm_clear_chrono_basket);
     expect(chronoStats().basket).toEqual([{ a: 7, b: 8, due: 1 }]);
+    expect(document.activeElement).toBe(clear);
 
-    confirm.mockReturnValue(true);
     document.querySelector('#chrono-basket-clear').click();
+    await answerDialog(true);
     await flush();
     expect(chronoStats().basket).toEqual([]);
-    confirm.mockRestore();
   });
 
   test('« Ajouter » sans les deux nombres : le focus va sur celui qui manque', async () => {

@@ -1,5 +1,12 @@
 /* eslint-env jest, node */
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  answerDialog,
+  closeOpenDialog,
+  dialogLabels,
+  dialogQuestion,
+  dialogTitle,
+} from './helpers/confirm-dialog-helpers.mjs';
 
 const saveArcadeScore = jest.fn();
 const resetArcadeScores = jest.fn();
@@ -62,6 +69,10 @@ beforeEach(() => {
   noteArcadePlay();
 });
 
+afterEach(() => {
+  closeOpenDialog();
+});
+
 describe('Écran de fin d’arcade', () => {
   test('une seule surface, une phrase avec le score, une seule touche primaire', () => {
     arcade.showArcadeGameOver(120);
@@ -114,13 +125,12 @@ describe('Écran de fin d’arcade', () => {
     expect(document.querySelector('.arcade-final-score').textContent).toBe('arcade_try_again');
   });
 
-  test('remettre à zéro vide la liste sans réenregistrer de score ni changer le résultat', () => {
-    const confirmSpy = jest.fn(() => true);
-    globalThis.confirm = confirmSpy;
+  test('remettre à zéro vide la liste sans réenregistrer de score ni changer le résultat', async () => {
     arcade.showArcadeGameOver(120);
     storedScores = [];
     document.getElementById('arcade-reset-btn').click();
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(resetArcadeScores).not.toHaveBeenCalled();
+    await answerDialog(true);
     expect(resetArcadeScores).toHaveBeenCalledTimes(1);
     expect(saveArcadeScore).toHaveBeenCalledTimes(1);
     expect(document.querySelector('.arcade-final-score strong').textContent).toBe('120');
@@ -155,13 +165,25 @@ describe('Écran de fin d’arcade', () => {
     expect(document.querySelector('.arcade-top-scores')).toBeNull();
   });
 
-  test('la confirmation nomme le jeu dont les scores seront effacés, puis le focus va sur « Rejouer »', () => {
-    const confirmSpy = jest.fn(() => true);
-    globalThis.confirm = confirmSpy;
+  test('la fenêtre du jeu nomme le jeu dont les scores seront effacés, puis le focus va sur « Rejouer »', async () => {
     arcade.showArcadeGameOver(120);
     document.getElementById('arcade-reset-btn').click();
-    expect(confirmSpy).toHaveBeenCalledWith('reset_scores_confirm|arcade_invasion_title');
+    expect(dialogTitle()).toBe('reset_scores_confirm|arcade_invasion_title');
+    expect(dialogQuestion()).toBe('reset_scores_confirm_detail');
+    expect(dialogLabels()).toEqual(['reset_scores_dialog_cancel', 'reset_scores_dialog_confirm']);
+    await answerDialog(true);
     expect(document.activeElement).toBe(document.getElementById('arcade-retry-btn'));
+  });
+
+  test('« Garder mes scores » : rien n’est effacé, le focus revient à « Remettre à zéro »', async () => {
+    arcade.showArcadeGameOver(120);
+    const reset = document.getElementById('arcade-reset-btn');
+    reset.focus();
+    reset.click();
+    await answerDialog(false);
+    expect(resetArcadeScores).not.toHaveBeenCalled();
+    expect(document.querySelector('.arcade-top-scores')).not.toBeNull();
+    expect(document.activeElement).toBe(reset);
   });
 
   test('deux affichages rapprochés ne doublent pas les actions', async () => {

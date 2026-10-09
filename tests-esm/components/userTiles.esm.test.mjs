@@ -1,5 +1,6 @@
 /* eslint-env jest, node */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { answerDialog, closeOpenDialog, openDialog } from '../helpers/confirm-dialog-helpers.mjs';
 
 const { UserManager } = await import('../../js/userManager.js');
 const { VideoManager } = await import('../../js/VideoManager.js');
@@ -30,8 +31,6 @@ const CREATION_MARKUP = `
 `;
 
 describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', () => {
-  let originalConfirm;
-
   beforeEach(() => {
     document.body.innerHTML = CREATION_MARKUP;
     UserManager._players = {
@@ -40,11 +39,10 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
       Eve: { avatar: '../../../etc/passwd', nickname: 'Eve' },
     };
     UserManager._currentUser = null;
-    originalConfirm = globalThis.confirm;
   });
 
   afterEach(() => {
-    globalThis.confirm = originalConfirm;
+    closeOpenDialog();
     document.body.innerHTML = '';
   });
 
@@ -85,17 +83,16 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
     expect(deleteBtn.textContent).toBe('Supprimer');
   });
 
-  test('la suppression passe toujours par la confirmation', () => {
+  test('la suppression passe toujours par la fenêtre de confirmation du jeu', async () => {
     UserManager.refreshUserList();
-    const confirmSpy = jest.fn(() => false);
-    globalThis.confirm = confirmSpy;
 
     itemOf('Lina').querySelector('.delete-btn').click();
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(openDialog()).not.toBeNull();
+    await answerDialog(false);
     expect(Object.keys(UserManager._players)).toContain('Lina');
 
-    confirmSpy.mockReturnValue(true);
     itemOf('Lina').querySelector('.delete-btn').click();
+    await answerDialog(true);
     expect(Object.keys(UserManager._players)).not.toContain('Lina');
     expect(document.querySelectorAll('#user-list .user-tile')).toHaveLength(2);
     // Le focus revient sur une tuile restante

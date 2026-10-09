@@ -766,6 +766,13 @@ body:has(#slide1.active-slide) .skip-link:focus {
   transform: translate(-50%, 0);
 }
 
+/* Une commande sous sa place (« Abandonner » au téléphone) : le message se pose plus haut,
+   là où il n'en cache aucune (js/ui-feedback.js) */
+.message-popup.is-raised {
+  top: var(--message-top);
+  bottom: auto;
+}
+
 .badge-notification {
   animation: badge-fade-in-out 6s var(--ease-out) forwards;
 }
