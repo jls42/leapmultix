@@ -10,6 +10,12 @@ import { gameState } from '../game.js';
 import { eventBus } from './eventBus.js';
 
 /**
+ * Part du volume général donnée au son d'erreur : il est adouci, dans tous les modes, pour ne pas
+ * faire sursauter l'enfant à chaque réponse fausse (valeur du Chrono depuis la PR #78)
+ */
+const ERROR_SOUND_VOLUME = 0.35;
+
+/**
  * API audio centralisée
  */
 const AudioManager = {
@@ -19,6 +25,9 @@ const AudioManager = {
     ['bad', 'assets/sounds/mixkit-failure-arcade-alert-notification-240.wav'],
     ['shoot', 'assets/sounds/mixkit-short-laser-gun-shot-1670.wav'],
   ]),
+
+  // Volume propre à un son, en part du volume général (sinon tout le volume)
+  soundVolumes: new Map([['bad', ERROR_SOUND_VOLUME]]),
 
   // État audio interne
   _volume: 1,
@@ -206,17 +215,8 @@ const AudioManager = {
       // Créer l'instance audio
       const audio = new Audio(src);
 
-      // Appliquer le volume (global * local)
-      let effectiveVolume = this._volume;
-      /**
-       * Fonction if
-       * @param {*} options.volume - Description du paramètre
-       * @returns {*} Description du retour
-       */
-      if (options.volume !== undefined) {
-        effectiveVolume *= options.volume;
-      }
-      audio.volume = Math.max(0, Math.min(1, effectiveVolume));
+      // Volume : le volume général, multiplié par la part donnée à ce son
+      audio.volume = Math.max(0, Math.min(1, this._volume * this.relativeVolume(name, options)));
 
       // Appliquer les options
       /**
@@ -257,6 +257,18 @@ const AudioManager = {
     } catch (error) {
       console.error(`Erreur création audio "${name}":`, error);
     }
+  },
+
+  /**
+   * Part du volume général donnée à un son : celle demandée, sinon celle du son (le son d'erreur
+   * est adouci), sinon tout le volume
+   * @param {string} name - Nom du son
+   * @param {{volume?: number}} options - Options de playSound
+   * @returns {number}
+   */
+  relativeVolume(name, options) {
+    if (typeof options.volume === 'number') return options.volume;
+    return this.soundVolumes.get(name) ?? 1;
   },
 
   /**

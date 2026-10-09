@@ -10,8 +10,11 @@ import { canvasToClientPoint } from './arcade-common.js';
 const POINTS_HOLD_MS = 500;
 const POINTS_REMOVE_MS = 900;
 
+// Le gain reste discret (il revient souvent) ; une perte joue le son d'erreur du jeu,
+// adouci au même niveau partout par js/core/audio.js
 function playPointsSound(isGain) {
-  AudioManager.playSound(isGain ? 'good' : 'bad', { volume: 0.4 });
+  if (isGain) AudioManager.playSound('good', { volume: 0.4 });
+  else AudioManager.playSound('bad');
 }
 
 /**
