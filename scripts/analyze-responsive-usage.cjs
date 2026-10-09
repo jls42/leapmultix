@@ -11,6 +11,13 @@ const path = require('node:path');
 /** Répertoires sans intérêt pour l'analyse, et qui la noieraient sous le bruit */
 const IGNORES = new Set(['node_modules', 'coverage', 'dist', 'analysis', '.git', 'backups']);
 
+/** Pastille de chaque type de recommandation ; un type absent prend la bleue */
+const RECOMMENDATION_ICONS = new Map([
+  ['critical', '🔴'],
+  ['optimization', '🟡'],
+  ['performance', '🟠'],
+]);
+
 class ResponsiveUsageAnalyzer {
   constructor() {
     this.report = {
@@ -250,15 +257,8 @@ class ResponsiveUsageAnalyzer {
 
     if (this.report.recommendations.length > 0) {
       console.log('\n💡 Recommandations:');
-      this.report.recommendations.forEach((rec, index) => {
-        const icon =
-          rec.type === 'critical'
-            ? '🔴'
-            : rec.type === 'optimization'
-              ? '🟡'
-              : rec.type === 'performance'
-                ? '🟠'
-                : '🔵';
+      this.report.recommendations.forEach(rec => {
+        const icon = RECOMMENDATION_ICONS.get(rec.type) ?? '🔵';
         console.log(`${icon} ${rec.message}`);
       });
     }

@@ -178,9 +178,9 @@ function promptUser(question) {
 
 // Fonction principale
 async function main() {
-  const args = process.argv.slice(2);
-  const executeMode = args.includes('--execute');
-  const forceMode = args.includes('--force');
+  const args = new Set(process.argv.slice(2));
+  const executeMode = args.has('--execute');
+  const forceMode = args.has('--force');
 
   console.log('\n🔍 Analyse des fichiers à nettoyer...');
   const toDelete = analyzeFilesToDelete();

@@ -215,8 +215,7 @@ function getStructure(obj, path = '') {
   for (const [key, value] of Object.entries(obj)) {
     const currentPath = path ? `${path}.${key}` : key;
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      structure.push({ path: currentPath, type: 'object' });
-      structure.push(...getStructure(value, currentPath));
+      structure.push({ path: currentPath, type: 'object' }, ...getStructure(value, currentPath));
     } else if (Array.isArray(value)) {
       structure.push({ path: currentPath, type: 'array' });
     } else {
