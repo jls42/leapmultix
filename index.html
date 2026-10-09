@@ -350,8 +350,10 @@
     <!-- Plausible Analytics initialization -->
     <script src="js/plausible-init.js"></script>
     <!-- eslint-disable-next-line sonarjs/no-script-without-integrity -- Analytics script auto-updates, integrity would break functionality -->
+    <!-- async, pas defer : un script defer passe avant ceux du jeu et retient DOMContentLoaded ; un
+    plausible.io muet (pare-feu qui ne répond pas) bloquait ainsi le démarrage jusqu'à 30 s -->
     <script
-      defer
+      async
       data-domain="{{PLAUSIBLE_DOMAIN}}"
       src="https://plausible.io/js/script.js"
       crossorigin="anonymous"
