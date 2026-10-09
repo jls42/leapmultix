@@ -45,6 +45,7 @@ const { shouldTransposeMaze, mazeToScreen, transposeDirection } = await import(
 const { initPacmanControls } = await import('../js/multimiam-controls.js');
 const { default: PacmanRenderer } = await import('../js/multimiam-renderer.js');
 const { PacmanGame } = await import('../js/multimiam.js');
+const { showGameInstructions } = await import('../js/arcade-common.js');
 
 const CELL = 20;
 const restorers = [];
@@ -190,6 +191,30 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
     expect(game.transposed).toBe(true);
     expect({ x: game.multimiam.x, y: game.multimiam.y }).toEqual(before);
     expect(game.canvas.height).toBeLessThanOrEqual(220);
+  });
+});
+
+describe('MultiMiam sur ordinateur, la consigne posée sur le labyrinthe', () => {
+  test('la consigne qui part ne change rien : même labyrinthe à 1 s et à 7 s', () => {
+    jest.useFakeTimers();
+    HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();
+    restorers.push(simulateArcadeScreen({ width: 1234, height: 800, top: 202 }));
+    // Comme au lancement (js/arcade-multimiam.js) : la consigne, puis le jeu
+    const { canvas } = renderArcadeStage('multimiam-canvas');
+    showGameInstructions(canvas, 'Utilise les flèches du clavier');
+    const game = new PacmanGame('multimiam-canvas', 2, 'operation', null, 0, '×');
+    game.start();
+    game.pause();
+    const labyrinthe = () => ({
+      cellSize: game.cellSize,
+      internal: [canvas.width, canvas.height],
+      shown: [canvas.style.width, canvas.style.height],
+    });
+    jest.advanceTimersByTime(1000);
+    const at1s = labyrinthe();
+    jest.advanceTimersByTime(6000);
+    expect(document.querySelector('.game-instructions').hidden).toBe(true);
+    expect(labyrinthe()).toEqual(at1s);
   });
 });
 

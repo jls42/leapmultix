@@ -87,9 +87,3 @@ export function useAndroidUserAgent() {
     else Reflect.deleteProperty(globalThis.navigator, 'userAgent');
   };
 }
-
-/** Masque la consigne comme à la fin de son minuteur, et le signale à la zone de jeu */
-export function hideInstructions(stage) {
-  for (const el of stage.querySelectorAll('.game-instructions')) el.hidden = true;
-  stage.dispatchEvent(new Event('arcade:stagechange'));
-}

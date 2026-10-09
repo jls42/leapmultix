@@ -1,7 +1,8 @@
 /**
- * Plateau de MultiInvaders : sa taille interne se choisit au lancement pour la place qui
- * restera une fois la consigne partie (plus haut que large sur un téléphone en portrait,
- * plus large que haut une fois tourné) ; sur ordinateur, les proportions 4:3 de toujours.
+ * Plateau de MultiInvaders : sa taille interne se choisit au lancement pour toute la place,
+ * la consigne posée dessus sans lui en prendre (plus haut que large sur un téléphone en
+ * portrait, plus large que haut une fois tourné) ; sur ordinateur, les proportions 4:3 de
+ * toujours.
  */
 import { describe, test, expect, afterEach } from '@jest/globals';
 import {
@@ -27,14 +28,14 @@ function stageWithInstructions() {
 }
 
 describe('MultiInvaders sur un téléphone', () => {
-  test('en portrait, le plateau prend toute la largeur et la hauteur qui restera', () => {
+  test('en portrait, le plateau prend toute la largeur et toute la hauteur', () => {
     restorers.push(useAndroidUserAgent());
     restorers.push(simulateArcadeScreen({ width: 363, height: 844 }));
     const { displayWidth, displayHeight, isMobile } =
       calculateCanvasDimensions(stageWithInstructions());
     expect(isMobile).toBe(true);
     expect(displayWidth).toBe(363);
-    // 844 − 175 − 48 : la consigne partira, sa place revient au plateau
+    // 844 − 175 − 48 : la consigne est posée sur le plateau, seule « Abandonner » est dessous
     expect(displayHeight).toBe(621);
   });
 

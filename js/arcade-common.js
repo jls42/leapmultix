@@ -5,17 +5,25 @@
 
 // Durée du fondu de sortie de la consigne : suit le jeton --dur-slow (css/themes.css)
 const INSTRUCTIONS_FADE_MS = 320;
+// Durée d'affichage de la consigne, sauf demande du jeu
+export const INSTRUCTIONS_MS = 5000;
 const INSTRUCTION_TONES = new Set(['neutral', 'success', 'warning']);
+// Où poser la consigne sur le plateau (css/arcade.css) : en bas, ou au milieu quand elle y
+// cache moins (vaisseau de MultiInvaders en bas, rangées de cartes de MultiMemory)
+const INSTRUCTION_PLACEMENTS = new Set(['bottom', 'middle']);
 // Zone de jeu créée par le gabarit commun (js/components/infoBar.js)
 const STAGE_SELECTOR = '.arcade-game-ui';
 // Ancien conteneur, gardé pour les intégrations qui l'utiliseraient encore
 const LEGACY_STAGE_SELECTOR = '.arcade-game-container';
 // Minuteries de la consigne en cours, pour qu'un nouvel affichage ne soit pas masqué par l'ancien
 const instructionTimers = new WeakMap();
+// Surveillance du plateau tant que la consigne est posée dessus
+const instructionObservers = new WeakMap();
 
 /**
  * Événement de la zone de jeu quand la place du plateau change sans que l'écran change
- * (la consigne apparaît ou s'en va) : le plateau se recalcule (watchArcadeViewport).
+ * (le bouton plein écran arrive dans le bandeau) : le plateau se recalcule
+ * (watchArcadeViewport).
  */
 export const STAGE_CHANGE_EVENT = 'arcade:stagechange';
 
@@ -44,16 +52,59 @@ function clearInstructionTimers(element) {
 }
 
 /**
- * Affiche la consigne d'un jeu juste sous le canevas, puis l'efface.
- * Placée sous le plateau, elle ne cache rien du jeu, et sa disparition ne déplace
- * pas le canevas. L'apparence vient de css/arcade.css (.game-instructions et ses tons).
+ * Donne à la zone de jeu la place du plateau (haut, hauteur, largeur, cadre compris) :
+ * css/arcade.css y pose la consigne.
+ * @param {HTMLElement} stage
+ * @param {HTMLCanvasElement} canvas
+ */
+function shareBoardPlace(stage, canvas) {
+  stage.style.setProperty('--arcade-board-top', `${canvas.offsetTop}px`);
+  stage.style.setProperty('--arcade-board-height', `${canvas.offsetHeight}px`);
+  stage.style.setProperty('--arcade-board-width', `${canvas.offsetWidth}px`);
+}
+
+/**
+ * La consigne suit le plateau tant qu'elle est affichée : au lancement, il peut être
+ * dimensionné après elle, puis changer (téléphone tourné, plein écran).
+ * @param {HTMLElement} element - La consigne
+ * @param {HTMLElement} stage
+ * @param {HTMLCanvasElement} canvas
+ */
+function followBoard(element, stage, canvas) {
+  shareBoardPlace(stage, canvas);
+  if (instructionObservers.has(element) || typeof ResizeObserver !== 'function') return;
+  const observer = new ResizeObserver(() => shareBoardPlace(stage, canvas));
+  observer.observe(canvas);
+  instructionObservers.set(element, observer);
+}
+
+function stopFollowingBoard(element) {
+  const observer = instructionObservers.get(element);
+  if (!observer) return;
+  observer.disconnect();
+  instructionObservers.delete(element);
+}
+
+/**
+ * Affiche la consigne d'un jeu, puis l'efface.
+ * Elle est posée sur le plateau (sur un téléphone tourné, à côté) et laisse passer le doigt :
+ * elle ne lui prend aucune place, il garde donc sa taille du premier au dernier instant de
+ * la partie. L'apparence vient de css/arcade.css (.game-instructions et ses tons).
  * @param {HTMLCanvasElement} canvas - Canvas du jeu
  * @param {string} message - Consigne déjà traduite
  * @param {string} [tone='neutral'] - neutral | success | warning
- * @param {number} [duration=5000] - Durée d'affichage en millisecondes
+ * @param {number} [duration=INSTRUCTIONS_MS] - Durée d'affichage en millisecondes
+ * @param {string} [placement='bottom'] - bottom | middle : où la poser sur le plateau, là où
+ *   elle cache le moins au départ
  * @returns {HTMLElement|undefined} L'élément de consigne
  */
-export function showGameInstructions(canvas, message, tone = 'neutral', duration = 5000) {
+export function showGameInstructions(
+  canvas,
+  message,
+  tone = 'neutral',
+  duration = INSTRUCTIONS_MS,
+  placement = 'bottom'
+) {
   if (!canvas) return;
 
   const gameContainer = findStage(canvas);
@@ -64,14 +115,18 @@ export function showGameInstructions(canvas, message, tone = 'neutral', duration
   if (!instructionsElement) {
     instructionsElement = document.createElement('div');
     instructionsElement.setAttribute('role', 'status');
-    // Juste après le canevas, avant le bouton « Abandonner »
+    // Juste après le canevas, avant le bouton « Abandonner » (ordre de lecture)
     canvas.after(instructionsElement);
   }
 
   clearInstructionTimers(instructionsElement);
   const safeTone = INSTRUCTION_TONES.has(tone) ? tone : 'neutral';
   instructionsElement.className = `game-instructions game-instructions--${safeTone}`;
+  instructionsElement.dataset.placement = INSTRUCTION_PLACEMENTS.has(placement)
+    ? placement
+    : 'bottom';
   instructionsElement.hidden = false;
+  followBoard(instructionsElement, gameContainer, canvas);
 
   // Ajouter le message d'instruction sans innerHTML
   while (instructionsElement.firstChild)
@@ -87,13 +142,11 @@ export function showGameInstructions(canvas, message, tone = 'neutral', duration
     const hideTimer = setTimeout(() => {
       instructionsElement.hidden = true;
       instructionTimers.delete(instructionsElement);
-      // Sa place revient au plateau
-      notifyStageChange(gameContainer);
+      stopFollowingBoard(instructionsElement);
     }, INSTRUCTIONS_FADE_MS);
     instructionTimers.set(instructionsElement, [hideTimer]);
   }, duration);
   instructionTimers.set(instructionsElement, [fadeTimer]);
-  notifyStageChange(gameContainer);
 
   return instructionsElement;
 }
@@ -103,12 +156,11 @@ export function showGameInstructions(canvas, message, tone = 'neutral', duration
 /* =====================
    Zone de jeu : haut de page et place du canevas
    - Au lancement, la page revient en haut (le menu a pu être défilé).
-   - Le canevas est dimensionné pour tenir dans l'écran, sous le bandeau, avec la
-     consigne et « Abandonner » (à côté du plateau sur un téléphone tourné) : la page
-     ne déborde plus.
-   - Chaque jeu choisit sa grille au lancement, pour la place qui restera une fois la
-     consigne partie ; ensuite, seul l'affichage suit l'écran (rotation, plein écran,
-     consigne qui part) : la partie ne change pas.
+   - Le canevas est dimensionné pour tenir dans l'écran, sous le bandeau, avec
+     « Abandonner » (à côté du plateau sur un téléphone tourné) : la page ne déborde plus.
+     La consigne, posée sur le plateau, ne lui prend pas de place.
+   - Chaque jeu choisit sa grille au lancement ; ensuite, seul l'affichage suit l'écran
+     (rotation, plein écran) : la partie ne change pas.
    ===================== */
 
 // Éléments posés par-dessus le jeu (messages, points) : ils ne prennent pas de place
@@ -236,26 +288,26 @@ function offerFullscreen(stage) {
 }
 
 /**
- * Un enfant de la zone de jeu prend-il de la place sous le plateau ?
+ * Un enfant de la zone de jeu prend-il de la place sous le plateau ? La consigne jamais :
+ * elle est posée sur le plateau (css/arcade.css), qui garde ainsi sa taille quand elle part.
  * @param {Element} el
  * @param {HTMLCanvasElement} canvas
- * @param {boolean} ignoreInstructions - La consigne va partir : sa place compte pour le plateau
  * @returns {boolean}
  */
-function takesStageSpace(el, canvas, ignoreInstructions) {
+function takesStageSpace(el, canvas) {
   if (el === canvas || el.hidden) return false;
-  return !(ignoreInstructions && el.classList.contains('game-instructions'));
+  return !el.classList.contains('game-instructions');
 }
 
 /**
  * Hauteur occupée dans la zone de jeu par tout ce qui n'est pas le canevas
- * (consigne, « Abandonner »), écarts compris. Les messages posés par-dessus
- * (position absolue) ne comptent pas.
+ * (« Abandonner »), écarts compris. Les messages posés par-dessus (position absolue)
+ * ne comptent pas.
  */
-function measureStageSiblings(stage, canvas, gap, ignoreInstructions) {
+function measureStageSiblings(stage, canvas, gap) {
   let total = 0;
   for (const el of stage.children) {
-    if (!takesStageSpace(el, canvas, ignoreInstructions)) continue;
+    if (!takesStageSpace(el, canvas)) continue;
     const style = readStyle(el);
     if (!style) continue;
     if (style.display === 'none' || OVERLAY_POSITIONS.has(style.position)) continue;
@@ -342,34 +394,31 @@ function stageContent(stage, stageStyle, view) {
 }
 
 /**
- * Place prise par la consigne et « Abandonner » : à côté du plateau sur un téléphone
- * tourné (--arcade-stage-flow: row), dessous sinon.
+ * Place prise par « Abandonner » (et la consigne sur un téléphone tourné) : à côté du
+ * plateau sur un téléphone tourné (--arcade-stage-flow: row), dessous sinon.
  * @returns {{beside: number, below: number}}
  */
-function measureStageOccupancy(stage, stageStyle, canvas, ignoreInstructions) {
+function measureStageOccupancy(stage, stageStyle, canvas) {
   if (stageFlow(stageStyle) === 'row') {
     return { beside: measureSideColumns(stageStyle), below: 0 };
   }
   const gap = toPx(stageStyle?.rowGap);
-  return { beside: 0, below: measureStageSiblings(stage, canvas, gap, ignoreInstructions) };
+  return { beside: 0, below: measureStageSiblings(stage, canvas, gap) };
 }
 
 /**
  * Place disponible pour le dessin du canevas : largeur de la zone de jeu (moins la
  * colonne de côté sur un téléphone tourné), hauteur de l'écran sous le haut de la zone,
- * moins la consigne, « Abandonner » et les marges.
- * À appeler après prepareArcadeStage() et après l'affichage de la consigne.
+ * moins « Abandonner » et les marges. La consigne ne compte pas : elle est posée sur le
+ * plateau, la place reste la même qu'elle soit affichée ou partie.
+ * À appeler après prepareArcadeStage().
  * @param {HTMLCanvasElement} canvas
- * @param {{minWidth?: number, minHeight?: number, ignoreInstructions?: boolean}} [options]
+ * @param {{minWidth?: number, minHeight?: number}} [options]
  *   minHeight : plancher (160 px, encore jouable) : plus bas, la page défilerait sur un
- *   téléphone tourné, barre du haut comprise ;
- *   ignoreInstructions : la place qui restera une fois la consigne partie (choix de la grille)
+ *   téléphone tourné, barre du haut comprise
  * @returns {{width: number, height: number}} En pixels CSS, cadre du canevas exclu
  */
-export function getArcadeCanvasBox(
-  canvas,
-  { minWidth = 200, minHeight = 160, ignoreInstructions = false } = {}
-) {
+export function getArcadeCanvasBox(canvas, { minWidth = 200, minHeight = 160 } = {}) {
   const view = getViewportSize();
   const stage = findStage(canvas) || canvas?.parentElement;
   if (!stage || !canvas) {
@@ -381,7 +430,7 @@ export function getArcadeCanvasBox(
   const stageStyle = readStyle(stage);
   const frame = canvasFrame(canvas);
   const content = stageContent(stage, stageStyle, view);
-  const { beside, below } = measureStageOccupancy(stage, stageStyle, canvas, ignoreInstructions);
+  const { beside, below } = measureStageOccupancy(stage, stageStyle, canvas);
   const trailing = measureTrailingSpace(stage, stageStyle);
 
   const width = Math.floor(content.width - beside - frame.x);
@@ -407,7 +456,7 @@ export function fitArcadeCanvas(canvas, box) {
 
 /**
  * Appelle `onChange` quand la place du plateau peut avoir changé : fenêtre redimensionnée
- * ou tournée, plein écran, consigne qui apparaît ou s'en va, bandeau qui change de hauteur.
+ * ou tournée, plein écran, bouton plein écran arrivé, bandeau qui change de hauteur.
  * Une seule fois par image ; la surveillance s'arrête d'elle-même quand le jeu a quitté la
  * page.
  * @param {HTMLCanvasElement} canvas

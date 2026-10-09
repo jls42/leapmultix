@@ -1,8 +1,9 @@
 /**
  * Plateau de MultiMemory : sur téléphone, la disposition qui donne les plus grandes cartes
  * (3 × 4 pour 12 cartes en portrait), choisie au lancement ; sur ordinateur, toujours
- * 4 colonnes, avec des cartes aux proportions de carte. Ensuite l'écran peut changer :
- * les cartes gardent leur place dans la grille, et une carte touchée se retourne.
+ * 4 colonnes, avec des cartes aux proportions de carte. La consigne, posée sur le plateau,
+ * ne change rien en partant. Ensuite l'écran peut changer : les cartes gardent leur place
+ * dans la grille, et une carte touchée se retourne.
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { fakeCanvasContext, touchEvent } from './helpers/touch-test-helpers.mjs';
@@ -10,7 +11,6 @@ import {
   renderArcadeStage,
   simulateArcadeScreen,
   useAndroidUserAgent,
-  hideInstructions,
 } from './helpers/arcade-screen-helpers.mjs';
 
 const { chooseMemoryGrid, memoryCardSize, MemoryGame } = await import(
@@ -23,6 +23,14 @@ let game;
 
 /** Ordre des cartes dans la grille : ce que l'enfant mémorise */
 const cardOrder = g => g.cards.map(card => card.id);
+
+/** Cartes à l'écran : grille, ordre, taille des cartes et taille affichée du canevas */
+const cartes = g => ({
+  grid: [g.cols, g.rows],
+  order: cardOrder(g),
+  card: [g.cardWidth, g.cardHeight],
+  shown: [g.canvas.style.width, g.canvas.style.height],
+});
 
 /** Partie de 12 cartes (niveau moyen), consigne affichée comme au lancement */
 function startGame() {
@@ -96,20 +104,20 @@ describe('MultiMemory sur un téléphone de 390 × 844', () => {
   test('12 cartes en 3 × 4, qui remplissent la largeur', () => {
     startGame();
     expect([game.cols, game.rows]).toEqual([3, 4]);
+    // Quatre rangées : la consigne se pose entre la 2e et la 3e, loin du milieu des cartes
+    expect(game.instructionPlacement()).toBe('middle');
     // Une seule bordure de 6 px de chaque côté : les cartes prennent la largeur
     expect(game.canvas.width).toBeGreaterThan(363 - game.cols);
     expect(game.canvas.width).toBeLessThanOrEqual(363);
   });
 
-  test('la consigne partie, les cartes grandissent sans changer de place', () => {
+  test('la consigne qui part ne change rien : mêmes cartes, de même taille, à 1 s et à 7 s', () => {
     startGame();
-    const order = cardOrder(game);
-    const heightBefore = game.cardHeight;
-    hideInstructions(document.querySelector('.arcade-game-ui'));
-    jest.advanceTimersByTime(50);
-    expect(cardOrder(game)).toEqual(order);
-    expect([game.cols, game.rows]).toEqual([3, 4]);
-    expect(game.cardHeight).toBeGreaterThan(heightBefore);
+    jest.advanceTimersByTime(1000);
+    const at1s = cartes(game);
+    jest.advanceTimersByTime(6000);
+    expect(document.querySelector('.game-instructions').hidden).toBe(true);
+    expect(cartes(game)).toEqual(at1s);
   });
 
   /** Toucher au centre d'une carte (coordonnées de la fenêtre) */
@@ -153,6 +161,8 @@ describe('MultiMemory sur ordinateur', () => {
     restorers.push(simulateArcadeScreen({ width: 1234, height: 800, top: 200 }));
     startGame();
     expect(game.cols).toBe(4);
+    // Trois rangées : la consigne se pose en bas, pas sur le milieu de la rangée du centre
+    expect(game.instructionPlacement()).toBe('bottom');
     expect(game.cardWidth).toBeGreaterThan(79);
     expect(game.cardWidth / game.cardHeight).toBeGreaterThanOrEqual(0.74);
   });

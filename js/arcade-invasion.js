@@ -61,6 +61,8 @@ const INVADERS_INSTRUCTION_FALLBACK =
 const AVATAR_ERROR_FALLBACK = 'Oups\u00a0! Ne tire pas sur la bonne réponse.';
 // La consigne reste le temps de la lire (règle inhabituelle : ne pas tirer sur la bonne)
 const INVADERS_INSTRUCTION_MS = 8000;
+// Posée au milieu du plateau, entre les monstres en haut et le vaisseau en bas
+const INVADERS_INSTRUCTION_PLACEMENT = 'middle';
 
 function initializeInvadersGame() {
   try {
@@ -217,15 +219,15 @@ function setupAbandonButton(gameVars) {
 const MOBILE_RATIO_RANGE = [0.5, 1.8];
 
 /**
- * Taille du plateau, choisie au lancement pour la place qui restera une fois la consigne
- * partie : la plus grande qui tient, avec ses proportions. Elle ne change plus ensuite
+ * Taille du plateau, choisie au lancement pour toute la place (la consigne est posée
+ * dessus) : la plus grande qui tient, avec ses proportions. Elle ne change plus ensuite
  * (positions et vitesses de la partie) ; seul l'affichage suit l'écran (fitArcadeCanvas).
  * @param {HTMLCanvasElement} canvas
  * @returns {{displayWidth: number, displayHeight: number, isMobile: boolean}}
  */
 export function calculateCanvasDimensions(canvas) {
   const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(globalThis.navigator?.userAgent || '');
-  const box = getArcadeCanvasBox(canvas, { ignoreInstructions: true });
+  const box = getArcadeCanvasBox(canvas);
   const [low, high] = MOBILE_RATIO_RANGE;
   const ratio = isMobile
     ? Math.min(high, Math.max(low, box.height / box.width))
@@ -240,9 +242,23 @@ export function calculateCanvasDimensions(canvas) {
 }
 
 /**
+ * Consigne de MultiInvaders, posée au milieu du plateau le temps de la lire
+ * @param {HTMLCanvasElement} canvas
+ */
+function showInvadersInstructions(canvas) {
+  showGameInstructions(
+    canvas,
+    getArcadeText('multiinvaders_instruction', INVADERS_INSTRUCTION_FALLBACK),
+    'neutral',
+    INVADERS_INSTRUCTION_MS,
+    INVADERS_INSTRUCTION_PLACEMENT
+  );
+}
+
+/**
  * Plateau de la partie : taille interne fixée au lancement, puis affichage dans la place
- * actuelle (consigne comprise). fitBoard le réaffiche à chaque changement d'écran
- * (consigne partie, rotation, plein écran) sans que la partie change.
+ * actuelle. fitBoard le réaffiche à chaque changement d'écran (rotation, plein écran) sans
+ * que la partie change.
  * @param {HTMLCanvasElement} canvas
  * @returns {{displayWidth: number, displayHeight: number, isMobile: boolean,
  *   fitBoard: () => number}}
@@ -427,15 +443,10 @@ export function startMultiplicationInvasion() {
   const setupAbandonButtonHandler = setupAbandonButton(gameVars);
   const canvas = document.getElementById('arcade-canvas');
   const ctx = canvas.getContext('2d');
-  // Haut de page, zone de jeu sans hauteur imposée, consigne sous le plateau :
-  // la place du plateau se calcule ensuite, consigne comprise
+  // Haut de page, zone de jeu sans hauteur imposée, consigne posée sur le plateau : la
+  // place du plateau se calcule ensuite, la même que la consigne soit là ou partie
   prepareArcadeStage(canvas);
-  showGameInstructions(
-    canvas,
-    getArcadeText('multiinvaders_instruction', INVADERS_INSTRUCTION_FALLBACK),
-    'neutral',
-    INVADERS_INSTRUCTION_MS
-  );
+  showInvadersInstructions(canvas);
   const board = sizeInvadersBoard(canvas);
   const { isMobile } = board;
   let { displayWidth, displayHeight } = board;
@@ -1135,7 +1146,7 @@ export function startMultiplicationInvasion() {
     });
   }
 
-  // L'écran change (consigne partie, rotation, plein écran) : l'affichage suit
+  // L'écran change (rotation, plein écran) : l'affichage suit
   function refitBoard() {
     relayoutUnplayedBoard();
     board.fitBoard();

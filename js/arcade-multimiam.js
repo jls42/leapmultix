@@ -112,8 +112,9 @@ export function startPacmanArcade() {
 
   // Nettoyer l'écran jeu et rendre l'UI
   renderPacmanUI();
-  // Haut de page, zone de jeu sans hauteur imposée, consigne sous le labyrinthe :
-  // le labyrinthe se dimensionne ensuite pour que l'ensemble tienne dans l'écran
+  // Haut de page, zone de jeu sans hauteur imposée, consigne posée sur le labyrinthe (en
+  // bas : le personnage part en haut à gauche) : le labyrinthe se dimensionne ensuite pour
+  // que l'ensemble tienne dans l'écran
   const canvas = document.getElementById('multimiam-canvas');
   prepareArcadeStage(canvas);
   showGameInstructions(canvas, getInstructions());

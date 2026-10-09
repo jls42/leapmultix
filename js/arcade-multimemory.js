@@ -23,6 +23,7 @@ import { noteArcadePlay } from './arcade-session.js';
 import { AudioManager } from './core/audio.js';
 import {
   showGameInstructions,
+  INSTRUCTIONS_MS,
   getCanvasFont,
   prepareArcadeStage,
   getArcadeCanvasBox,
@@ -378,11 +379,10 @@ export function startMemoryArcade() {
     showScore: true, // Activer le score comme dans les autres jeux
   });
   gameScreen.appendChild(frag);
-  // Haut de page, zone de jeu sans hauteur imposée, consigne sous le plateau :
-  // les cartes se dimensionnent ensuite pour que l'ensemble tienne dans l'écran
+  // Haut de page, zone de jeu sans hauteur imposée : les cartes se dimensionnent ensuite
+  // pour que l'ensemble tienne dans l'écran
   const memoryCanvas = document.getElementById('multimemory-canvas');
   prepareArcadeStage(memoryCanvas);
-  showGameInstructions(memoryCanvas, getMemoryInstructions());
 
   // Utilisation des paramètres de difficulté (Cascade 2025)
   const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
@@ -419,6 +419,7 @@ export function startMemoryArcade() {
     operator, // R4.3: Support multi-opérations (+, −, ×, ÷)
   });
   _memoryGameInstance.start();
+  showMemoryInstructions(memoryCanvas, _memoryGameInstance);
 
   try {
     setTimeout(() => setStartingMode(null), 0);
@@ -442,6 +443,21 @@ export function startMemoryArcade() {
  */
 function memoryDuration(difficultySettings) {
   return isNoTimeLimit('multimemory') ? Infinity : difficultySettings.timeSeconds;
+}
+
+/**
+ * Consigne posée sur les cartes, à l'endroit choisi par leur disposition
+ * @param {HTMLCanvasElement} canvas
+ * @param {MemoryGame} game - Partie lancée (disposition choisie)
+ */
+function showMemoryInstructions(canvas, game) {
+  showGameInstructions(
+    canvas,
+    getMemoryInstructions(),
+    'neutral',
+    INSTRUCTIONS_MS,
+    game.instructionPlacement()
+  );
 }
 
 // Consigne du jeu, selon l'appareil (doigt ou souris)
@@ -546,12 +562,12 @@ class MemoryGame {
     return shuffleInPlace(array);
   }
 
-  // Disposition des cartes, choisie au lancement pour la place qui restera une fois la
-  // consigne partie : sur téléphone, celle qui donne les plus grandes cartes (3 × 4 en
-  // portrait) ; sur ordinateur, les 4 colonnes habituelles. Elle ne change plus ensuite :
-  // chaque carte garde sa place, que l'enfant mémorise.
+  // Disposition des cartes, choisie au lancement pour toute la place (la consigne est posée
+  // dessus) : sur téléphone, celle qui donne les plus grandes cartes (3 × 4 en portrait) ;
+  // sur ordinateur, les 4 colonnes habituelles. Elle ne change plus ensuite : chaque carte
+  // garde sa place, que l'enfant mémorise.
   layoutBoard() {
-    const box = getArcadeCanvasBox(this.canvas, { ignoreInstructions: true });
+    const box = getArcadeCanvasBox(this.canvas);
     const columns = this.isMobile ? undefined : [4];
     ({ cols: this.cols, rows: this.rows } = chooseMemoryGrid(
       this.cards.length,
@@ -561,8 +577,14 @@ class MemoryGame {
     ));
   }
 
-  // Taille des cartes pour la place actuelle (sous le bandeau, avec la consigne et
-  // « Abandonner ») : à chaque changement d'écran, les cartes suivent sans changer de place
+  // Où poser la consigne sur les cartes : entre deux rangées quand leur nombre est pair (3 × 4
+  // en portrait), sinon en bas ; elle ne cache ainsi ni les nombres ni le milieu des cartes
+  instructionPlacement() {
+    return this.rows % 2 === 0 ? 'middle' : 'bottom';
+  }
+
+  // Taille des cartes pour la place actuelle (sous le bandeau, avec « Abandonner ») : à
+  // chaque changement d'écran, les cartes suivent sans changer de place
   resizeCanvas() {
     // Canevas retiré (fin de partie) ou disposition pas encore choisie : rien à dessiner
     if (!this.canvas?.isConnected || !this.cols) return;
@@ -631,8 +653,8 @@ class MemoryGame {
       this.canvas.addEventListener('mousemove', this.boundHandleMouseMove);
     }
 
-    // L'écran change (consigne partie, rotation, plein écran) : les cartes suivent ; tant
-    // qu'aucune carte n'a été vue, leur disposition aussi
+    // L'écran change (rotation, plein écran) : les cartes suivent ; tant qu'aucune carte
+    // n'a été vue, leur disposition aussi
     this._stopWatchingViewport = watchArcadeViewport(this.canvas, () => {
       if (!this.cardsSeen) this.layoutBoard();
       this.resizeCanvas();
@@ -717,7 +739,7 @@ class MemoryGame {
     this.draw();
     this.focusBoard();
 
-    // Démarrer la boucle de jeu (la consigne est déjà affichée par le lanceur)
+    // Démarrer la boucle de jeu (le lanceur affiche ensuite la consigne)
     this.gameLoop();
   }
 
