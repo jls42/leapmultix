@@ -15,10 +15,12 @@ const puppeteer = require('puppeteer');
 const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
-// Sans images générées (CI : npm run assets:generate ne tourne qu'au déploiement), les jeux
-// prennent les petits PNG du dépôt : seules les proportions se vérifient alors
+// Sans images générées par le générateur actuel (CI : npm run assets:generate ne tourne
+// qu'au déploiement ; un dossier d'images plus ancien n'a pas les variantes 512 et 1024 des
+// sources de l'Arcade), les jeux prennent les petits PNG du dépôt : seules les proportions se
+// vérifient alors
 const GENERATED = fs.existsSync(
-  path.resolve(__dirname, '../../../assets/generated-images/image-map.json')
+  path.resolve(__dirname, '../../../assets/generated-images/arcade/renard_vaisseau_2-1024.webp')
 );
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
