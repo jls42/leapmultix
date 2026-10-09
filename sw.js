@@ -944,6 +944,9 @@ async function imageResponse(event) {
     }
     return net;
   } catch {
+    // Image que la page n'attend plus (rechargée, écran quitté) : une réponse vide plutôt
+    // qu'une erreur, que Firefox signalerait dans la console
+    if (request.signal?.aborted) return new Response(null, { status: 204 });
     return (await familyImage(request)) || Response.error();
   }
 }
