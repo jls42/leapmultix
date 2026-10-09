@@ -121,9 +121,11 @@
     color var(--dur-fast) var(--ease-out);
 }
 
-.lang-btn:hover {
-  color: var(--color-ink);
-  background-color: var(--color-action-tint);
+@media (hover: hover) {
+  .lang-btn:hover {
+    color: var(--color-ink);
+    background-color: var(--color-action-tint);
+  }
 }
 
 .lang-btn.active,
@@ -207,8 +209,10 @@
   transition: background-color var(--dur-fast) var(--ease-out);
 }
 
-.top-bar .burger-menu-btn:hover {
-  background-color: var(--color-action-tint);
+@media (hover: hover) {
+  .top-bar .burger-menu-btn:hover {
+    background-color: var(--color-action-tint);
+  }
 }
 
 .top-bar .coin-display + .burger-menu-btn {

@@ -215,8 +215,10 @@
     border-color var(--dur-base) var(--ease-out);
 }
 
-.arcade-game-card .difficulty-btn:hover {
-  border-color: var(--color-action);
+@media (hover: hover) {
+  .arcade-game-card .difficulty-btn:hover {
+    border-color: var(--color-action);
+  }
 }
 
 .arcade-game-card .difficulty-btn:active,
@@ -284,8 +286,10 @@
     background-color var(--dur-base) var(--ease-out);
 }
 
-.arcade-game-card .spaceship-option:hover .spaceship-thumb {
-  border-color: var(--color-border-strong);
+@media (hover: hover) {
+  .arcade-game-card .spaceship-option:hover .spaceship-thumb {
+    border-color: var(--color-border-strong);
+  }
 }
 
 .arcade-game-card .spaceship-option input[type='radio']:checked + .spaceship-thumb {

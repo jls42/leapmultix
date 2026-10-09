@@ -298,8 +298,10 @@ body:has(#slide1.active-slide) .skip-link:focus {
     background-color var(--dur-base) var(--ease-out);
 }
 
-.btn:hover {
-  background: var(--color-action-hover);
+@media (hover: hover) {
+  .btn:hover {
+    background: var(--color-action-hover);
+  }
 }
 
 .btn:active {
@@ -324,8 +326,10 @@ body:has(#slide1.active-slide) .skip-link:focus {
     0 var(--key-edge) 0 var(--color-border-strong);
 }
 
-.btn-secondary:hover {
-  background: var(--color-action-tint);
+@media (hover: hover) {
+  .btn-secondary:hover {
+    background: var(--color-action-tint);
+  }
 }
 
 .btn-secondary:active {
@@ -342,8 +346,10 @@ body:has(#slide1.active-slide) .skip-link:focus {
   text-underline-offset: 0.2em;
 }
 
-.btn-quiet:hover {
-  background: var(--color-action-tint);
+@media (hover: hover) {
+  .btn-quiet:hover {
+    background: var(--color-action-tint);
+  }
 }
 
 .btn-quiet:active {
@@ -396,8 +402,10 @@ body:has(#slide1.active-slide) .skip-link:focus {
     border-color var(--dur-base) var(--ease-out);
 }
 
-.avatar-btn:hover {
-  border-color: var(--color-action);
+@media (hover: hover) {
+  .avatar-btn:hover {
+    border-color: var(--color-action);
+  }
 }
 
 .avatar-btn:active {
@@ -442,8 +450,10 @@ body:has(#slide1.active-slide) .skip-link:focus {
   transition: color var(--dur-fast) var(--ease-out);
 }
 
-.inline-link:hover {
-  color: var(--color-action-hover);
+@media (hover: hover) {
+  .inline-link:hover {
+    color: var(--color-action-hover);
+  }
 }
 
 /* Pages pour adultes : texte aligné à gauche, 70 caractères par ligne au plus
@@ -564,9 +574,11 @@ body:has(#slide1.active-slide) .skip-link:focus {
   transition: color var(--dur-fast) var(--ease-out);
 }
 
-.legal-section a[href^='http']:hover,
-.legal-section a[href^='mailto:']:hover {
-  color: var(--color-action-hover);
+@media (hover: hover) {
+  .legal-section a[href^='http']:hover,
+  .legal-section a[href^='mailto:']:hover {
+    color: var(--color-action-hover);
+  }
 }
 
 .about-section ul,
@@ -660,8 +672,10 @@ body:has(#slide1.active-slide) .skip-link:focus {
     box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.keyboard-key:hover {
-  background-color: var(--color-action-tint);
+@media (hover: hover) {
+  .keyboard-key:hover {
+    background-color: var(--color-action-tint);
+  }
 }
 
 .keyboard-key:active {
@@ -712,10 +726,12 @@ body:has(#slide1.active-slide) .skip-link:focus {
   cursor: pointer;
 }
 
-.card-base--clickable:hover {
-  border-color: var(--color-action);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .card-base--clickable:hover {
+    border-color: var(--color-action);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
 }
 
 /* === NOTIFICATIONS : toasts (messages et badges) ===

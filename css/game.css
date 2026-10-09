@@ -547,8 +547,10 @@ body:has(.chrono-container) {
   box-shadow: 0 var(--key-edge) 0 var(--accent-edge, var(--color-action-edge));
 }
 
-.game-content-area .btn:not(.btn-quiet, .btn-secondary, .btn-danger):hover {
-  background-color: var(--accent-edge, var(--color-action-hover));
+@media (hover: hover) {
+  .game-content-area .btn:not(.btn-quiet, .btn-secondary, .btn-danger):hover {
+    background-color: var(--accent-edge, var(--color-action-hover));
+  }
 }
 
 .game-content-area .btn:not(.btn-quiet, .btn-secondary, .btn-danger):active {

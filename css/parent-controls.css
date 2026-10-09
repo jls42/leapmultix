@@ -64,8 +64,10 @@
     0 var(--key-edge) 0 var(--color-border-strong);
 }
 
-.font-size-selector .font-size-btn:hover {
-  background: var(--color-action-tint);
+@media (hover: hover) {
+  .font-size-selector .font-size-btn:hover {
+    background: var(--color-action-tint);
+  }
 }
 
 .font-size-selector .font-size-btn:active {

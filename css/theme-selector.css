@@ -141,10 +141,16 @@
 }
 
 /* Survolé ou atteint au clavier : le personnage se montre en couleurs, comme un essayage */
-#slide6 .avatar-buy-btn:hover img,
 #slide6 .avatar-buy-btn:focus-visible img {
   opacity: 1;
   filter: none;
+}
+
+@media (hover: hover) {
+  #slide6 .avatar-buy-btn:hover img {
+    opacity: 1;
+    filter: none;
+  }
 }
 
 #slide6 .avatar-buy-btn:focus-visible {
@@ -201,10 +207,12 @@
     background-color var(--dur-base) var(--ease-out);
 }
 
-.color-theme-btn:hover {
-  box-shadow:
-    inset 0 0 0 2px var(--color-action),
-    0 var(--key-edge) 0 var(--color-border-strong);
+@media (hover: hover) {
+  .color-theme-btn:hover {
+    box-shadow:
+      inset 0 0 0 2px var(--color-action),
+      0 var(--key-edge) 0 var(--color-border-strong);
+  }
 }
 
 .color-theme-btn:active {

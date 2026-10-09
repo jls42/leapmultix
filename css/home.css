@@ -71,8 +71,10 @@
   opacity: 1;
 }
 
-#new-user-name:hover {
-  border-color: var(--color-action);
+@media (hover: hover) {
+  #new-user-name:hover {
+    border-color: var(--color-action);
+  }
 }
 
 /* Prénom manquant ou déjà pris : une indication, pas une faute. Jamais de rouge (réservé
