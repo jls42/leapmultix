@@ -649,7 +649,6 @@ async function generateLocked(opts, paths) {
   return finalSummary(summary, ctx);
 }
 
-/** Refait le clip d'une empreinte depuis son brut ; le réécrit seulement s'il change */
 /** Travailleur du retraitement : prend les clips de la file un par un, jusqu'à la vider */
 async function reprocessQueue(queue, context) {
   const key = queue.shift();
@@ -658,6 +657,7 @@ async function reprocessQueue(queue, context) {
   await reprocessQueue(queue, context);
 }
 
+/** Refait le clip d'une empreinte depuis son brut ; le réécrit seulement s'il change */
 async function reprocessOne(key, { opts, paths, manifest, voice, report }) {
   const entry = manifest.clips[key];
   const raw = rawFile(paths, key, entry.said);
