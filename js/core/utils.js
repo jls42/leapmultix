@@ -170,6 +170,33 @@ export const Utils = {
       }
     }
 
+    // Un cran en arrière : avant le premier, le dernier (en boucle) ou le premier
+    function stepBack(count) {
+      currentIndex--;
+      if (currentIndex < 0) {
+        currentIndex = opts.loop ? count - 1 : 0;
+      }
+    }
+
+    // Un cran en avant : après le dernier, le premier (en boucle) ou le dernier
+    function stepForward(count) {
+      currentIndex++;
+      if (currentIndex >= count) {
+        currentIndex = opts.loop ? 0 : count - 1;
+      }
+    }
+
+    // Entrée ou Espace : l'élément courant, s'il existe encore
+    function activateCurrent(items) {
+      const item = items.item(currentIndex);
+      if (!item) return;
+      if (opts.onClick) {
+        opts.onClick(item, currentIndex);
+      } else {
+        item.click();
+      }
+    }
+
     function handleKeydown(e) {
       const items = containerEl.querySelectorAll(itemSelector);
       if (items.length === 0) return;
@@ -178,33 +205,21 @@ export const Utils = {
         case 'ArrowUp':
         case 'ArrowLeft':
           e.preventDefault();
-          currentIndex--;
-          if (currentIndex < 0) {
-            currentIndex = opts.loop ? items.length - 1 : 0;
-          }
+          stepBack(items.length);
           updateFocus();
           break;
 
         case 'ArrowDown':
         case 'ArrowRight':
           e.preventDefault();
-          currentIndex++;
-          if (currentIndex >= items.length) {
-            currentIndex = opts.loop ? 0 : items.length - 1;
-          }
+          stepForward(items.length);
           updateFocus();
           break;
 
         case 'Enter':
         case ' ':
           e.preventDefault();
-          if (items[currentIndex]) {
-            if (opts.onClick) {
-              opts.onClick(items[currentIndex], currentIndex);
-            } else {
-              items[currentIndex].click();
-            }
-          }
+          activateCurrent(items);
           break;
       }
     }

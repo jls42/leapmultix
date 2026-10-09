@@ -57,7 +57,7 @@ const AudioManager = {
     let volumeLoaded = false;
 
     // 1. Priorité: volume depuis les données utilisateur actuelles
-    if (UserManager && UserManager.getCurrentUser()) {
+    if (UserManager?.getCurrentUser()) {
       const currentUserData = UserState.getCurrentUserData();
       /**
        * Fonction if
@@ -109,7 +109,7 @@ const AudioManager = {
     }
 
     // 2. Sauvegarde dans les données utilisateur si possible
-    if (UserManager && UserManager.getCurrentUser()) {
+    if (UserManager?.getCurrentUser()) {
       const currentUserData = UserState.getCurrentUserData();
       currentUserData.volume = this._volume;
 
@@ -278,7 +278,7 @@ const AudioManager = {
    */
   addSound(name, path) {
     if (typeof name !== 'string' || !/^[a-z0-9_-]+$/i.test(name)) return;
-    if (typeof path !== 'string' || !/^assets\/sounds\//.test(path)) return;
+    if (typeof path !== 'string' || !path.startsWith('assets/sounds/')) return;
     this.sounds.set(name, path);
   },
 

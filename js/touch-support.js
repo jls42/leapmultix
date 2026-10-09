@@ -141,7 +141,7 @@ export class TouchSupportManager {
   // Optimiser performance tactile
   optimizeTouchPerformance() {
     // Désactiver sélection texte lors de touch
-    document.body.style.webkitUserSelect = 'none';
+    document.body.style.setProperty('-webkit-user-select', 'none');
     document.body.style.webkitTouchCallout = 'none';
 
     // Désactiver délai 300ms sur mobile

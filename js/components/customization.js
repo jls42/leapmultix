@@ -464,8 +464,8 @@ export const Customization = {
           .finally(() => globalThis.location?.reload())
           // Un cache resté en place n'empêche pas le rechargement, demandé juste avant
           .catch(error => console.warn('Nettoyage du cache incomplet', error));
-      } else {
-        if (globalThis.location) globalThis.location.reload();
+      } else if (globalThis.location) {
+        globalThis.location.reload();
       }
     } catch {
       if (globalThis.location) globalThis.location.reload();

@@ -4,8 +4,7 @@
 
 // updateDailyChallengeProgress import removed as it's unused
 // ESM compatibility re-exports for older arcade modules
-import { recordMultiplicationResult, getMultiplicationStats } from './core/mult-stats.js';
-export { recordMultiplicationResult, getMultiplicationStats };
+export { recordMultiplicationResult, getMultiplicationStats } from './core/mult-stats.js';
 
 // Clés pour le localStorage
 const LANGUAGE_KEY = 'language';

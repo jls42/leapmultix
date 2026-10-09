@@ -2,9 +2,9 @@
  * Lightweight EventBus using a single EventTarget
  * Provides on/off/emit with detail payloads
  */
-const _target = (typeof globalThis !== 'undefined' && globalThis) || new (class {})();
+const _target = (typeof globalThis !== 'undefined' && globalThis) || {};
 const _et =
-  typeof globalThis !== 'undefined' && typeof globalThis.EventTarget !== 'undefined'
+  typeof globalThis !== 'undefined' && globalThis.EventTarget !== undefined
     ? new globalThis.EventTarget()
     : null;
 
@@ -43,7 +43,7 @@ export const eventBus = {
     const type = _toType(event);
     if (!type) return false;
     const ce =
-      typeof globalThis !== 'undefined' && typeof globalThis.CustomEvent !== 'undefined'
+      typeof globalThis !== 'undefined' && globalThis.CustomEvent !== undefined
         ? new globalThis.CustomEvent(type, { detail })
         : { type, detail };
     try {

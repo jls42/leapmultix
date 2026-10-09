@@ -134,7 +134,7 @@ export function showArcadeGameOver(score, { persist = true } = {}) {
 function renderGameOverScreen({ mode, score, endMessageKey, endMessage, arcadeScores, persist }) {
   const gameScreen = document.getElementById('game');
   if (!gameScreen) return;
-  while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
+  while (gameScreen.firstChild) gameScreen.firstChild.remove();
   const wrapper = buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScores);
   gameScreen.appendChild(wrapper);
   // Actions liées aux boutons de CET écran : un second affichage rapproché

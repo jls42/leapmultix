@@ -64,7 +64,7 @@ export function cleanupGameResources(gameInstance, options = {}) {
 
 // --- Sous-routines de nettoyage (réduisent la complexité) ---
 function cleanAnimations(gameInstance) {
-  if (gameInstance && gameInstance.animationId) {
+  if (gameInstance?.animationId) {
     cancelAnimationFrame(gameInstance.animationId);
     gameInstance.animationId = null;
     console.log("✔️ Boucle d'animation du jeu nettoyée");

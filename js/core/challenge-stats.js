@@ -19,5 +19,6 @@ export function getChallengeTopScores(limit = 5) {
       }
     });
   }
-  return scores.sort((a, b) => b - a).slice(0, limit);
+  scores.sort((a, b) => b - a);
+  return scores.slice(0, limit);
 }

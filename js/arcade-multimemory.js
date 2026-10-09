@@ -370,7 +370,7 @@ export function startMemoryArcade() {
 
   // Nettoyer l'écran jeu
   const gameScreen = document.getElementById('game');
-  while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
+  while (gameScreen.firstChild) gameScreen.firstChild.remove();
   const frag = InfoBar.createArcadeTemplateElement({
     mode: 'multimemory',
     canvasId: 'multimemory-canvas',
@@ -610,13 +610,11 @@ class MemoryGame {
 
   // Configure les écouteurs d'événements
   setupEventListeners() {
-    const self = this;
-
     // Gestionnaire de clic pour desktop
     this.boundHandleClick = e => {
       // Seulement pour les vrais clics (non tactiles)
       if (e.isTrusted && e.type === 'click') {
-        self.handleCardClick(e);
+        this.handleCardClick(e);
       }
     };
     this.canvas.addEventListener('click', this.boundHandleClick);
@@ -629,9 +627,9 @@ class MemoryGame {
       if (e.changedTouches && e.changedTouches.length > 0) {
         const touch = e.changedTouches[0];
         // Coordonnées écran -> cartes (cadre du canevas et réduction éventuelle compris)
-        const { x, y } = clientToCanvasPoint(self.canvas, touch.clientX, touch.clientY);
+        const { x, y } = clientToCanvasPoint(this.canvas, touch.clientX, touch.clientY);
 
-        self.handleDirectTouch(x, y);
+        this.handleDirectTouch(x, y);
       }
     };
 
@@ -648,11 +646,11 @@ class MemoryGame {
 
     // Suivi de la position de la souris pour desktop
     this.boundHandleMouseMove = e => {
-      self.lastMousePos = clientToCanvasPoint(self.canvas, e.clientX, e.clientY);
+      this.lastMousePos = clientToCanvasPoint(this.canvas, e.clientX, e.clientY);
 
       // Redessiner seulement si nous sommes en hover sur une carte (desktop uniquement)
-      if (!self.isMobile && self.getCardAtPosition(self.lastMousePos.x, self.lastMousePos.y)) {
-        self.draw();
+      if (!this.isMobile && this.getCardAtPosition(this.lastMousePos.x, this.lastMousePos.y)) {
+        this.draw();
       }
     };
 
@@ -1273,14 +1271,14 @@ class MemoryGame {
   }
 
   clearTimersAndAnimations() {
-    if (this.timers && this.timers.length) {
+    if (this.timers?.length) {
       for (const timer of this.timers) {
         clearTimeout(timer);
       }
       this.timers = [];
     }
 
-    if (this.animations && this.animations.length) {
+    if (this.animations?.length) {
       for (const animId of this.animations) {
         cancelAnimationFrame(animId);
       }
@@ -1307,7 +1305,7 @@ class MemoryGame {
     // Images partagées entre les parties (js/arcade-sprites.js) : seule la référence part
     this.cardBack = null;
 
-    if (this.monsterImages && this.monsterImages.length) {
+    if (this.monsterImages?.length) {
       this.monsterImages = null;
     }
   }

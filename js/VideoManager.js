@@ -158,7 +158,7 @@ export const VideoManager = {
     );
 
     // Détecter aussi la connexion lente
-    if (globalThis.navigator && globalThis.navigator.connection) {
+    if (globalThis.navigator?.connection) {
       const slowConnection = ['slow-2g', '2g', '3g'].includes(
         globalThis.navigator.connection.effectiveType
       );

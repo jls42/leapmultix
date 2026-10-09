@@ -89,14 +89,9 @@ function initializeInvadersGame() {
     // Erreur ignorée (non-critique)
   }
 
-  const Root =
-    typeof globalThis !== 'undefined'
-      ? globalThis
-      : typeof window !== 'undefined'
-        ? window
-        : undefined;
+  const Root = globalThis;
 
-  if (Root?.invadersGame) {
+  if (Root.invadersGame) {
     cleanupGameResources(Root.invadersGame, {
       cleanAnimations: true,
       cleanEvents: true,
@@ -123,7 +118,7 @@ function setupGameUI() {
   document.removeEventListener('keyup', arcadeKeyUp);
 
   const gameScreen = document.getElementById('game');
-  while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
+  while (gameScreen.firstChild) gameScreen.firstChild.remove();
 
   const _frag = InfoBar.createArcadeTemplateElement({
     mode: 'multiinvaders',
@@ -397,7 +392,6 @@ export function startMultiplicationInvasion() {
   };
   const bullets = [];
   let aliens = [];
-  const explosions = [];
   const currentProblem = { a: 0, b: 0 };
   let score = 0;
   let lives = 3;
@@ -614,7 +608,7 @@ export function startMultiplicationInvasion() {
     // Met à jour la question dans la structure responsive (score/question centrée)
     const questionSpan = document.querySelector('.arcade-mobile-top .arcade-question');
     if (questionSpan) {
-      if (currentProblem && currentProblem.a !== undefined && currentProblem.b !== undefined) {
+      if (currentProblem?.a !== undefined && currentProblem.b !== undefined) {
         questionSpan.textContent = `${currentProblem.a} ${operator} ${currentProblem.b} = ?`;
       } else {
         questionSpan.textContent = '';
@@ -657,10 +651,6 @@ export function startMultiplicationInvasion() {
     () => ({ score, avatarImg }),
     handleSpaceDown
   );
-
-  function createExplosion(x, y) {
-    explosions.push({ x: x, y: y, radius: 1, maxRadius: 30, color: '#ffff00' });
-  }
 
   function updatePlayerPosition(step) {
     if (arcadeControls.leftPressed) player.x -= player.speed * step;
@@ -746,7 +736,6 @@ export function startMultiplicationInvasion() {
           bullet.y > alien.y &&
           bullet.y < alien.y + alienWidth
         ) {
-          createExplosion(alien.x + alienWidth / 2, alien.y + alienWidth / 2);
           const correctVal = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
           if (alien.value !== correctVal) {
             handleWrongAlienHit(bIndex, aIndex);

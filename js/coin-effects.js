@@ -37,7 +37,7 @@ export function showCoinGainAnimation(targetElement) {
 
   setTimeout(() => {
     if (document.body.contains(coinEffect)) {
-      document.body.removeChild(coinEffect);
+      coinEffect.remove();
     }
   }, 800);
 }

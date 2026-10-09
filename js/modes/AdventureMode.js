@@ -295,8 +295,9 @@ export class AdventureMode extends GameMode {
     const nameEl = document.getElementById('adventure-name');
     if (nameEl) {
       const data = UserState.getCurrentUserData?.() || {};
-      nameEl.textContent =
-        data.nickname && data.nickname.trim() ? data.nickname : gameState?.nickname || 'Joueur';
+      // || '' plutôt que ?. : un surnom 0 ou false (profil abîmé) mène au repli sans erreur, comme avant
+      const nickname = data.nickname || '';
+      nameEl.textContent = nickname.trim() ? nickname : gameState?.nickname || 'Joueur';
     }
 
     // Une étoile dessinée devant le total (récompense, jamais du texte coloré)

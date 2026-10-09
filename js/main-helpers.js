@@ -16,7 +16,7 @@ import {
 
 // Ancienne adresse de la liste blanche des avatars (js/avatar-heads.js) : un module qui
 // l'importe encore d'ici la trouve toujours
-export { normalizeAvatarId };
+export { normalizeAvatarId } from './avatar-heads.js';
 
 const HERO_IMAGE_BY_LANG = {
   fr: 'assets/social/leapmultix-social-card.webp',
@@ -117,7 +117,7 @@ export async function updateWelcomeMessageUI() {
       welcomeText = WELCOME_FALLBACK.replace('{nickname}', nickname);
     }
     // Sans prénom, « Salut {nickname} ! » laisserait deux espaces consécutives
-    welcomeMsgElement.textContent = String(welcomeText).replace(/\s{2,}/g, ' ');
+    welcomeMsgElement.textContent = String(welcomeText).replaceAll(/\s{2,}/g, ' ');
   } else {
     const welcomeNicknameSpan = document.getElementById('welcome-nickname');
     if (welcomeNicknameSpan) {

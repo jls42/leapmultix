@@ -113,6 +113,130 @@ function noteEatenAnswer(game, answer) {
   recordOperationResult(game.operator, num1, num2, Boolean(answer.isCorrect));
 }
 
+/**
+ * Bonne réponse croquée : 100 points, un monstre de plus peut entrer, et un nouveau calcul
+ * part de la case de MultiMiam
+ */
+function eatCorrectAnswer(game, answer, fromX, fromY) {
+  game.score += 100;
+  if (game.canvas) {
+    showArcadePoints(100, game.canvas, cellPoint(game, answer));
+  }
+  game.updateUI();
+
+  // Incrémenter le compteur de bonnes réponses
+  game.goodAnswersCount++;
+
+  // Vérifier si on doit activer un nouveau monstre (tous les 5 points)
+  game.checkAndActivateGhost();
+  game.generateOperation(fromX, fromY);
+  // Met à jour l'affichage de la multiplication via l'UI si disponible
+  if (typeof game.displayOperationUI === 'function') {
+    game.displayOperationUI();
+  }
+}
+
+/** Mauvaise réponse croquée : jusqu'à 50 points de moins, et la réponse disparaît */
+function eatWrongAnswer(game, answer, index) {
+  // Seuls les points vraiment retirés s'affichent (rien à retirer à 0 point)
+  const removed = Math.min(game.score, 50);
+  game.score -= removed;
+  if (game.canvas) {
+    showArcadePenalty(removed, game.canvas, cellPoint(game, answer));
+  }
+  game.updateUI();
+
+  game.answerPositions.splice(index, 1);
+}
+
+/** Un monstre actif sur la case de MultiMiam */
+function touchesMultimiam(game, ghost) {
+  return ghost.active && game.multimiam.x === ghost.x && game.multimiam.y === ghost.y;
+}
+
+/** Monstre vulnérable croqué : il retourne au centre, 20 points */
+function eatGhost(game, ghost) {
+  ghost.x = 9;
+  ghost.y = 8;
+  ghost.vulnerable = false;
+  game.score += 20;
+  game.updateUI();
+}
+
+/**
+ * Un monstre attrape MultiMiam : une vie de moins. Rend true si c'était la dernière (la
+ * partie se termine), sinon MultiMiam repart, invincible un moment
+ * @returns {boolean}
+ */
+function loseLife(game) {
+  game.lives--;
+  game.updateUI();
+  // Utiliser la fonction unifiée pour tous les jeux d'arcade
+  // Only show message if game is still running to prevent sounds after navigation away
+  // Ton neutre : une vie perdue n'est pas signalée en rouge
+  if (!game.gameOver && game.running) {
+    showArcadeMessage('arcade_life_lost', 'neutral');
+  }
+  if (game.lives <= 0) {
+    game.endGame();
+    return true;
+  }
+  respawnAfterLifeLost(game);
+  return false;
+}
+
+// Cases et couleurs des cinq monstres quand MultiMiam repart après une vie perdue
+const GHOST_RESPAWNS = [
+  { x: 9, y: 8, color: '#FF0000' },
+  { x: 10, y: 8, color: '#FFB8FF' },
+  { x: 8, y: 8, color: '#00FFFF' },
+  { x: 9, y: 7, color: '#FFB852' },
+  { x: 10, y: 7, color: '#800080' },
+];
+
+/** MultiMiam repart de l'intersection (2, 1), invincible ; les monstres sont replacés */
+function respawnAfterLifeLost(game) {
+  game.isInvincible = true;
+  game.invincibilityEndTime = Date.now() + game.invincibilityDuration;
+  game.multimiam.x = 2; // respawn on intersection
+  game.multimiam.y = 1;
+  game.multimiam.direction = 'RIGHT';
+  game.multimiam.nextDirection = 'RIGHT';
+  game.multimiam.isMoving = true;
+
+  game.labyrinth[game.multimiam.y][game.multimiam.x] = 0;
+  game.answerPositions = game.answerPositions.filter(
+    pos => pos.x !== game.multimiam.x || pos.y !== game.multimiam.y
+  );
+  // Chaque monstre garde son état actif ; le tableau est remplacé en place, dans l'ordre
+  const activeStatus = game.ghosts.map(g => g.active);
+  const respawned = GHOST_RESPAWNS.map(({ x, y, color }, i) => ({
+    x,
+    y,
+    color,
+    direction: 'UP',
+    vulnerable: false,
+    active: activeStatus.at(i),
+  }));
+  Object.assign(game.ghosts, respawned);
+  console.log('Respawn at', game.multimiam.x, game.multimiam.y);
+  game.generateOperation(game.multimiam.x, game.multimiam.y);
+  // Met à jour l'affichage de la multiplication via l'UI si disponible
+  if (typeof game.displayOperationUI === 'function') {
+    game.displayOperationUI();
+  }
+  console.log('New pellets after respawn:', game.answerPositions);
+}
+
+function ensureTimingState(ctx, now) {
+  if (!ctx.lastMoveTime) ctx.lastMoveTime = now;
+  if (!ctx.lastGhostMoveTime) ctx.lastGhostMoveTime = now;
+  if (!ctx.lastPacmanPosition) ctx.lastPacmanPosition = { x: ctx.multimiam.x, y: ctx.multimiam.y };
+  if (!ctx.lastGhostPositions || ctx.lastGhostPositions.length === 0) {
+    ctx.lastGhostPositions = ctx.ghosts.map(g => ({ x: g.x, y: g.y }));
+  }
+}
+
 export function initPacmanEngine(game) {
   /* === DÉPLACEMENTS & COLLISIONS =============================== */
 
@@ -168,16 +292,6 @@ export function initPacmanEngine(game) {
     });
     if (possibles.length === 0) return chosenDir;
     return pickRandom(possibles);
-  }
-
-  function ensureTimingState(ctx, now) {
-    if (!ctx.lastMoveTime) ctx.lastMoveTime = now;
-    if (!ctx.lastGhostMoveTime) ctx.lastGhostMoveTime = now;
-    if (!ctx.lastPacmanPosition)
-      ctx.lastPacmanPosition = { x: ctx.multimiam.x, y: ctx.multimiam.y };
-    if (!ctx.lastGhostPositions || ctx.lastGhostPositions.length === 0) {
-      ctx.lastGhostPositions = ctx.ghosts.map(g => ({ x: g.x, y: g.y }));
-    }
   }
 
   // Peut-on se déplacer sur la case (x,y) ?
@@ -294,7 +408,7 @@ export function initPacmanEngine(game) {
     targetX,
     targetY
   ) {
-    if (
+    return (
       (x === multimiamX &&
         x === targetX &&
         y >= Math.min(multimiamY, targetY) &&
@@ -303,10 +417,7 @@ export function initPacmanEngine(game) {
         y === targetY &&
         x >= Math.min(multimiamX, targetX) &&
         x <= Math.max(multimiamX, targetX))
-    ) {
-      return true;
-    }
-    return false;
+    );
   };
 
   // Déplacer les fantômes
@@ -337,46 +448,21 @@ export function initPacmanEngine(game) {
     }
   };
 
-  // Collision Pacman / réponses
+  // Collision Pacman / réponses : seule la première réponse sous MultiMiam compte
   game.checkAnswerCollision = function checkAnswerCollision() {
     for (let i = 0; i < this.answerPositions.length; i++) {
       const answer = this.answerPositions[i];
-      if (this.multimiam.x === answer.x && this.multimiam.y === answer.y) {
-        this.labyrinth[answer.y][answer.x] = 0;
-        const multimiamPosX = this.multimiam.x;
-        const multimiamPosY = this.multimiam.y;
-        noteEatenAnswer(this, answer);
-        if (answer.isCorrect) {
-          this.score += 100;
-          if (this.canvas) {
-            showArcadePoints(100, this.canvas, cellPoint(this, answer));
-          }
-          this.updateUI();
-
-          // Incrémenter le compteur de bonnes réponses
-          this.goodAnswersCount++;
-
-          // Vérifier si on doit activer un nouveau monstre (tous les 5 points)
-          this.checkAndActivateGhost();
-          this.generateOperation(multimiamPosX, multimiamPosY);
-          // Met à jour l'affichage de la multiplication via l'UI si disponible
-          if (typeof this.displayOperationUI === 'function') {
-            this.displayOperationUI();
-          }
-          return;
-        } else {
-          // Seuls les points vraiment retirés s'affichent (rien à retirer à 0 point)
-          const removed = Math.min(this.score, 50);
-          this.score -= removed;
-          if (this.canvas) {
-            showArcadePenalty(removed, this.canvas, cellPoint(this, answer));
-          }
-          this.updateUI();
-
-          this.answerPositions.splice(i, 1);
-          break;
-        }
+      if (this.multimiam.x !== answer.x || this.multimiam.y !== answer.y) continue;
+      this.labyrinth[answer.y][answer.x] = 0;
+      const multimiamPosX = this.multimiam.x;
+      const multimiamPosY = this.multimiam.y;
+      noteEatenAnswer(this, answer);
+      if (answer.isCorrect) {
+        eatCorrectAnswer(this, answer, multimiamPosX, multimiamPosY);
+      } else {
+        eatWrongAnswer(this, answer, i);
       }
+      return;
     }
   };
 
@@ -387,98 +473,11 @@ export function initPacmanEngine(game) {
     const now = Date.now();
     if (now - this.graceStartTime < this.graceDuration) return;
     for (const ghost of this.ghosts) {
-      if (!ghost.active) continue;
-      if (this.multimiam.x === ghost.x && this.multimiam.y === ghost.y) {
-        if (ghost.vulnerable) {
-          ghost.x = 9;
-          ghost.y = 8;
-          ghost.vulnerable = false;
-          this.score += 20;
-          this.updateUI();
-        } else {
-          this.lives--;
-          this.updateUI();
-          // Utiliser la fonction unifiée pour tous les jeux d'arcade
-          // Only show message if game is still running to prevent sounds after navigation away
-          // Ton neutre : une vie perdue n'est pas signalée en rouge
-          if (!this.gameOver && this.running) {
-            showArcadeMessage('arcade_life_lost', 'neutral');
-          }
-          if (this.lives <= 0) {
-            this.endGame();
-            return;
-          }
-          this.isInvincible = true;
-          this.invincibilityEndTime = Date.now() + this.invincibilityDuration;
-          this.multimiam.x = 2; // respawn on intersection
-          this.multimiam.y = 1;
-          this.multimiam.direction = 'RIGHT';
-          this.multimiam.nextDirection = 'RIGHT';
-          this.multimiam.isMoving = true;
-
-          this.labyrinth[this.multimiam.y][this.multimiam.x] = 0;
-          this.answerPositions = this.answerPositions.filter(
-            pos => pos.x !== this.multimiam.x || pos.y !== this.multimiam.y
-          );
-          const activeStatus = this.ghosts.map(g => g.active);
-
-          this.ghosts[0] = {
-            x: 9,
-            y: 8,
-            color: '#FF0000',
-            direction: 'UP',
-            vulnerable: false,
-
-            active: activeStatus[0],
-          };
-
-          this.ghosts[1] = {
-            x: 10,
-            y: 8,
-            color: '#FFB8FF',
-            direction: 'UP',
-            vulnerable: false,
-
-            active: activeStatus[1],
-          };
-
-          this.ghosts[2] = {
-            x: 8,
-            y: 8,
-            color: '#00FFFF',
-            direction: 'UP',
-            vulnerable: false,
-
-            active: activeStatus[2],
-          };
-
-          this.ghosts[3] = {
-            x: 9,
-            y: 7,
-            color: '#FFB852',
-            direction: 'UP',
-            vulnerable: false,
-
-            active: activeStatus[3],
-          };
-
-          this.ghosts[4] = {
-            x: 10,
-            y: 7,
-            color: '#800080',
-            direction: 'UP',
-            vulnerable: false,
-
-            active: activeStatus[4],
-          };
-          console.log('Respawn at', this.multimiam.x, this.multimiam.y);
-          this.generateOperation(this.multimiam.x, this.multimiam.y);
-          // Met à jour l'affichage de la multiplication via l'UI si disponible
-          if (typeof this.displayOperationUI === 'function') {
-            this.displayOperationUI();
-          }
-          console.log('New pellets after respawn:', this.answerPositions);
-        }
+      if (!touchesMultimiam(this, ghost)) continue;
+      if (ghost.vulnerable) {
+        eatGhost(this, ghost);
+      } else if (loseLife(this)) {
+        return;
       }
     }
   };

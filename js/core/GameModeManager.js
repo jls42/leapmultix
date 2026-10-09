@@ -128,7 +128,7 @@ export class GameModeManager {
       ]);
       const loader = LOADERS.get(modeName);
       if (typeof loader !== 'function') {
-        throw new Error(`Loader non défini pour le mode: ${modeName}`);
+        throw new TypeError(`Loader non défini pour le mode: ${modeName}`);
       }
       const module = await loader();
       const ModeClass = module.default;
@@ -171,7 +171,7 @@ export class GameModeManager {
      * @returns {*} Description du retour
      */
     if (typeof window[config.function] !== 'function') {
-      throw new Error(`Fonction legacy ${config.function} non disponible`);
+      throw new TypeError(`Fonction legacy ${config.function} non disponible`);
     }
 
     // Appeler la fonction legacy
@@ -310,7 +310,7 @@ export class GameModeManager {
    */
   async preloadMode(modeName) {
     const config = this.modeConfig[modeName];
-    if (!config || config.type !== 'refactored' || this.modes.has(modeName)) {
+    if (config?.type !== 'refactored' || this.modes.has(modeName)) {
       return;
     }
 
@@ -433,12 +433,7 @@ const gameModeManager = new GameModeManager();
 
 // Nettoyage automatique lors du déchargement de la page (ESM context)
 try {
-  (typeof globalThis !== 'undefined'
-    ? globalThis
-    : typeof window !== 'undefined'
-      ? window
-      : undefined
-  )?.addEventListener?.('beforeunload', () => {
+  globalThis.addEventListener?.('beforeunload', () => {
     gameModeManager.cleanup();
   });
 } catch {
