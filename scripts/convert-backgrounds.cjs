@@ -7,6 +7,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { inSequence } = require('./lib/in-sequence.cjs');
 let sharp = null;
 
 try {
@@ -34,14 +35,14 @@ async function convertAll() {
   const files = listBackgrounds();
   console.log(`🎨 Conversion de ${files.length} backgrounds en WebP (qualité ${QUALITY})...`);
 
-  for (const { input, output } of files) {
+  await inSequence(files, async ({ input, output }) => {
     try {
       await sharp(input).webp({ quality: QUALITY, effort: 5 }).toFile(output);
       console.log(`✅ ${path.basename(output)}`);
     } catch (error) {
       console.warn(`⚠️  Impossible de convertir ${path.basename(input)}: ${error.message}`);
     }
-  }
+  });
 }
 
 convertAll().catch(error => {
