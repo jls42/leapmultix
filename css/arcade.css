@@ -689,6 +689,16 @@
   -webkit-touch-callout: none;
 }
 
+/* MultiMiam : quand le labyrinthe est plus large que la place (téléphone en portrait), le
+   plateau prend quand même toute la hauteur ; les bandes autour du labyrinthe sont du même
+   mur (js/multimiam.js aligne la texture sur ses cases). Noir, comme le mur de repli du
+   dessin, tant que l'image n'est pas chargée. */
+#multimiam-canvas {
+  background-color: #000;
+  background-image: url('../assets/images/arcade/mur_128x128.png');
+  background-repeat: repeat;
+}
+
 /* === 7. FIN DE PARTIE : une carte, une phrase, les meilleurs scores, les suites === */
 .arcade-gameover {
   max-width: 40rem;

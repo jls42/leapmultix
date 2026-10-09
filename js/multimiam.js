@@ -140,11 +140,19 @@ export class PacmanGame {
     return { width: Math.floor(box.width), height: Math.floor(box.height) };
   }
 
-  // Appliquer les styles visuels au canvas : taille affichée = taille interne,
-  // pour que les clics et les touchers tombent sur la bonne case
-  applyCanvasStyles(width, height) {
+  // Appliquer les styles visuels au canvas : le labyrinthe à sa taille interne (cases
+  // carrées), et le plateau sur toute la hauteur disponible, jusqu'à « Abandonner », comme
+  // dans les autres jeux. Plus large que la place (téléphone en portrait), le labyrinthe s'y
+  // centre entre deux bandes de mur (css/arcade.css) ; les clics et les touchers suivent
+  // (object-fit, converti par js/arcade-common.js).
+  applyCanvasStyles(width, height, boardHeight = height) {
+    const shownHeight = Math.max(height, boardHeight);
     this.canvas.style.width = width + 'px';
-    this.canvas.style.height = height + 'px';
+    this.canvas.style.height = shownHeight + 'px';
+    this.canvas.style.objectFit = 'contain';
+    // La texture des bandes continue les cases du labyrinthe
+    this.canvas.style.backgroundSize = `${this.cellSize}px ${this.cellSize}px`;
+    this.canvas.style.backgroundPosition = `0 ${(shownHeight - height) / 2}px`;
     this.canvas.style.boxSizing = 'content-box';
     this.canvas.style.padding = '0';
     this.canvas.style.display = 'block';
@@ -206,7 +214,7 @@ export class PacmanGame {
 
     // IMPORTANT: Appliquer les styles CSS APRÈS avoir défini les dimensions internes
     // pour éviter un décalage entre taille CSS et taille interne du canvas
-    this.applyCanvasStyles(actualWidth, actualHeight);
+    this.applyCanvasStyles(actualWidth, actualHeight, dimensions.height);
   }
 
   /** Pacman au point de départ, à la taille de la grille actuelle */
