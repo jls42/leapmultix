@@ -185,10 +185,10 @@ describe('AudioManager : lecture d’un son', () => {
 
   test('le son d’erreur est adouci partout : 35 % du volume général, sauf volume demandé', () => {
     AudioManager.setVolume(0.4);
-    // Quiz, Défi, Aventure, Chrono, MultiMemory : playSound('bad') sans volume
+    // Quiz, Défi, Aventure, Chrono, points perdus de l'Arcade, MultiMemory : playSound('bad') sans volume
     AudioManager.playSound('bad');
     expect(sonsCrees.at(-1).volume).toBeCloseTo(0.4 * 0.35, 5);
-    // Un volume demandé garde la main (pastilles de points de l'Arcade)
+    // Un volume demandé garde la main
     AudioManager.playSound('bad', { volume: 0.4 });
     expect(sonsCrees.at(-1).volume).toBeCloseTo(0.16, 5);
     // Les autres sons gardent tout le volume général
