@@ -16,19 +16,19 @@ function getAllFunctionUsages(funcName, content, filename) {
 
   // Patterns de recherche pour différents types d'usage
   const patterns = [
-    `${funcName}\\s*\\(`, // funcName(
-    `${funcName}\\s*,`, // funcName,
-    `${funcName}\\s*;`, // funcName;
-    `addEventListener\\s*\\([^,]*,\\s*${funcName}`, // addEventListener(event, funcName)
-    `removeEventListener\\s*\\([^,]*,\\s*${funcName}`, // removeEventListener(event, funcName)
-    `setTimeout\\s*\\(\\s*${funcName}`, // setTimeout(funcName, delay)
-    `setInterval\\s*\\(\\s*${funcName}`, // setInterval(funcName, delay)
-    `\\.onclick\\s*=\\s*${funcName}`, // .onclick = funcName
-    `\\.onload\\s*=\\s*${funcName}`, // .onload = funcName
-    `window\\.${funcName}`, // window.funcName
-    `\\[\\s*['"]${funcName}['"]\\s*\\]`, // ['funcName'] ou ["funcName"]
-    `\\.${funcName}\\s*\\(`, // .funcName(
-    `:\\s*${funcName}\\s*[,}]`, // : funcName, ou : funcName}
+    String.raw`${funcName}\s*\(`, // funcName(
+    String.raw`${funcName}\s*,`, // funcName,
+    String.raw`${funcName}\s*;`, // funcName;
+    String.raw`addEventListener\s*\([^,]*,\s*${funcName}`, // addEventListener(event, funcName)
+    String.raw`removeEventListener\s*\([^,]*,\s*${funcName}`, // removeEventListener(event, funcName)
+    String.raw`setTimeout\s*\(\s*${funcName}`, // setTimeout(funcName, delay)
+    String.raw`setInterval\s*\(\s*${funcName}`, // setInterval(funcName, delay)
+    String.raw`\.onclick\s*=\s*${funcName}`, // .onclick = funcName
+    String.raw`\.onload\s*=\s*${funcName}`, // .onload = funcName
+    String.raw`window\.${funcName}`, // window.funcName
+    String.raw`\[\s*['"]${funcName}['"]\s*\]`, // ['funcName'] ou ["funcName"]
+    String.raw`\.${funcName}\s*\(`, // .funcName(
+    String.raw`:\s*${funcName}\s*[,}]`, // : funcName, ou : funcName}
   ];
 
   lines.forEach((line, index) => {
@@ -37,14 +37,14 @@ function getAllFunctionUsages(funcName, content, filename) {
 
     // Tester chaque pattern
     patterns.forEach(pattern => {
-      // eslint-disable-next-line -- pattern is constructed from controlled strings
+      // eslint-disable-next-line security/detect-non-literal-regexp -- pattern is constructed from controlled strings
       const regex = new RegExp(pattern, 'g');
       if (regex.test(line)) {
         // Vérifier que ce n'est pas la définition
         if (
           !line.includes(`function ${funcName}`) &&
-          // eslint-disable-next-line -- funcName is from function parameter, controlled
-          !line.match(new RegExp(`^\\s*(const|let|var)\\s+${funcName}\\s*=`))
+          // eslint-disable-next-line security/detect-non-literal-regexp -- funcName is from function parameter, controlled
+          !new RegExp(String.raw`^\s*(const|let|var)\s+${funcName}\s*=`).test(line)
         ) {
           usages.push({
             file: filename,
@@ -78,10 +78,10 @@ function checkFunctionThoroughly(funcName) {
     lines.forEach((line, index) => {
       if (
         line.includes(`function ${funcName}`) ||
-        // eslint-disable-next-line -- funcName is from function parameter, controlled
-        line.match(new RegExp(`^\\s*(const|let|var)\\s+${funcName}\\s*=.*function`)) ||
-        // eslint-disable-next-line -- funcName is from function parameter, controlled
-        line.match(new RegExp(`^\\s*(const|let|var)\\s+${funcName}\\s*=.*=>`))
+        // eslint-disable-next-line security/detect-non-literal-regexp -- funcName is from function parameter, controlled
+        new RegExp(String.raw`^\s*(const|let|var)\s+${funcName}\s*=.*function`).test(line) ||
+        // eslint-disable-next-line security/detect-non-literal-regexp -- funcName is from function parameter, controlled
+        new RegExp(String.raw`^\s*(const|let|var)\s+${funcName}\s*=.*=>`).test(line)
       ) {
         definitions.push({ file, line: index + 1, content: line.trim() });
       }

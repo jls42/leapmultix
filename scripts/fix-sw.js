@@ -12,7 +12,7 @@ const SW_FILE = './sw.js';
 function fixServiceWorker() {
   console.log('🔧 Correction du Service Worker...');
 
-  const improvedSW = `// Service Worker pour LeapMultix - Version corrigée
+  const improvedSW = String.raw`// Service Worker pour LeapMultix - Version corrigée
 const CACHE_NAME = 'leapmultix-cache-v2';
 const APP_VERSION = '1.0.1';
 const SW_VERSION = '2025-05-29-fixed';
@@ -73,7 +73,7 @@ self.addEventListener('fetch', event => {
   // Pour les ressources HTML et images, network first
   if (event.request.url.endsWith('.html') || 
       event.request.url.endsWith('/') || 
-      event.request.url.match(/\\\\.(png|jpe?g|gif|svg|webp)$/) || 
+      event.request.url.match(/\\.(png|jpe?g|gif|svg|webp)$/) || 
       event.request.url.includes('/assets/images/')) {
     
     event.respondWith(
