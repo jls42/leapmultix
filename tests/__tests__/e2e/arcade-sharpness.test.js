@@ -31,8 +31,10 @@ const SCREENS = [
   ],
 ];
 const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory'];
-// Morceaux du serpent : chacun remplit sa case pour se raccorder aux voisins
-const TILE = /\/(?:tete|corps|queue)_[a-z_]+[-.]/;
+// Morceaux du serpent, mur et couloirs de MultiMiam : chacun remplit sa case pour se raccorder
+// aux voisins (les cases de MultiMiam sont presque carrées, au plus 1,25 fois plus hautes que
+// larges ou l'inverse : js/multimiam-layout.js)
+const TILE = /\/(?:(?:tete|corps|queue)_[a-z_]+|mur|chemin)[-._]/;
 // Plus grande variante produite : une image plus grande à l'écran ne peut pas mieux faire
 const LARGEST_VARIANT = 1024;
 
