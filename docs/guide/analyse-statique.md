@@ -84,5 +84,5 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 
 - ESLint comments are recognized by Codacy/SonarCloud
 - Some "Code patterns" (Codacy UI-specific) may not respect inline annotations - disable them in **Repository → Code patterns**
-- Ensure tools use your ESLint config (`.eslintrc.js`, `eslint.config.js`) to respect your inline exclusions
+- Ensure tools use your ESLint config (`eslint.config.js`) to respect your inline exclusions
 - Regular review of suppressions during code review to prevent abuse

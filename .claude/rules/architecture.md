@@ -72,8 +72,8 @@ paths:
 **Arcade Games:**
 
 - `arcade.js` - Main arcade mode orchestrator
-- `arcade-invasion.js` - Space Invaders-style game (31 KB)
-- `arcade-multimemory.js` - Memory matching game (31 KB)
+- `arcade-invasion.js` - Space Invaders-style game
+- `arcade-multimemory.js` - Memory matching game
 - `arcade-multimiam.js` - Multimiam arcade integration
 - `arcade-multisnake.js` - Snake game integration
 - `arcade-common.js`, `arcade-utils.js` - Shared arcade utilities
@@ -88,18 +88,18 @@ paths:
 **Multimiam (Decomposed Architecture):**
 
 - `multimiam.js` - Main Multimiam game controller
-- `multimiam-engine.js` - Game engine and logic (15 KB)
-- `multimiam-renderer.js` - Rendering system (9 KB)
-- `multimiam-controls.js` - Input handling (7 KB)
-- `multimiam-questions.js` - Question generation (6 KB)
+- `multimiam-engine.js` - Game engine and logic
+- `multimiam-renderer.js` - Rendering system
+- `multimiam-controls.js` - Input handling
+- `multimiam-questions.js` - Question generation
 - `multimiam-ui.js` - UI elements
-- `multisnake.js` - Snake game implementation (38 KB)
+- `multisnake.js` - Snake game implementation
 
 **User Interface and Feedback:**
 
 - `uiUtils.js` - UI utility functions
 - `ui-feedback.js` - User feedback mechanisms
-- `touch-support.js` - Touch and mobile support (7 KB)
+- `touch-support.js` - Touch and mobile support
 - `virtual-keyboard.js` - Virtual keyboard implementation
 - `coin-display.js`, `coin-effects.js` - Coin/currency system
 - `notifications.js` - Notification system
@@ -107,21 +107,21 @@ paths:
 
 **Video and Media:**
 
-- `VideoManager.js` - Video playback management (12 KB)
-- `responsive-image-loader.js` - Responsive image loading (9 KB)
+- `VideoManager.js` - Video playback management
+- `responsive-image-loader.js` - Responsive image loading
 - `webp-images.js` - Screen illustrations (Arcade menu logos and ships, dashboard logos, Adventure gifts) served as WebP at their displayed size × device pixel ratio (`srcset`, `sizes`), with the repository PNG as fallback until `npm run assets:generate` has produced the variants: `createWebpImage`, `webpImageAttributes` for templates, `attachImageFallbacks` once a template is shown (the sanitizer strips `onerror`). Keep the PNG file name as a literal outside `${…}`: `scripts/precache-list.mjs` finds the images to keep offline by their names in the code
 - `avatar-heads.js` - Every avatar head on screen (« Qui joue ? » tiles, form and trash, home mascot, Personalisation, dashboard, Adventure map, Discovery tip, end screens) goes through `setAvatarHead(img, id, HEAD_SIZES.<place>)`, or `avatarHeadAttributes()` in a template: WebP 128/256/512 from the 1024 px source at the size the CSS gives it, the 128 px PNG as fallback; it rewrites srcset, sizes, src and fallback together (with a srcset, changing `src` alone no longer changes the picture). The heads written in `index.html` carry the same attributes (test). Also the avatar whitelist (`AVATAR_IDS`, `normalizeAvatarId`, old French names)
 
 **Game Orchestration:**
 
 - `mode-orchestrator.js` - Mode switching orchestration
-- `lazy-loader.js` - Dynamic module loading (10 KB)
+- `lazy-loader.js` - Dynamic module loading
 - `game-cleanup.js` - Game state cleanup utilities
 
 **Utilities:**
 
-- `utils-es6.js` - Main utilities aggregator (5 KB)
-- `core/utils.js` - Core utility functions (canonical source, 10 KB)
+- `utils-es6.js` - Main utilities aggregator
+- `core/utils.js` - Core utility functions (canonical source)
 - `main-helpers.js` - Main application helpers
 - `helpers.js` - Legacy helper functions
 - `stats-utils.js` - Statistics utilities
@@ -131,7 +131,7 @@ paths:
 **Storage and State:**
 
 - `storage.js` - Legacy storage wrapper
-- `userManager.js` - Multi-user profile management (19 KB)
+- `userManager.js` - Multi-user profile management
 
 **Internationalization:**
 
@@ -154,7 +154,7 @@ paths:
 **Integration and Analytics:**
 
 - `plausible-init.js` - Plausible analytics initialization
-- `cache-updater.js` - Cache management and version control (10 KB)
+- `cache-updater.js` - Cache management and version control
 - `imports.js` - Module import utilities
 
 ## Module Import Patterns
