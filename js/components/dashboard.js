@@ -930,7 +930,7 @@ export const Dashboard = {
     // Placer la section AVANT les succès débloqués
     const achievementsSection = document.getElementById('achievements-list')?.parentElement;
     if (achievementsSection?.parentElement === dashboardContainer) {
-      dashboardContainer.insertBefore(section, achievementsSection);
+      achievementsSection.before(section);
     } else {
       dashboardContainer.appendChild(section);
     }

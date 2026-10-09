@@ -610,13 +610,11 @@ class MemoryGame {
 
   // Configure les écouteurs d'événements
   setupEventListeners() {
-    const self = this;
-
     // Gestionnaire de clic pour desktop
     this.boundHandleClick = e => {
       // Seulement pour les vrais clics (non tactiles)
       if (e.isTrusted && e.type === 'click') {
-        self.handleCardClick(e);
+        this.handleCardClick(e);
       }
     };
     this.canvas.addEventListener('click', this.boundHandleClick);
@@ -629,9 +627,9 @@ class MemoryGame {
       if (e.changedTouches && e.changedTouches.length > 0) {
         const touch = e.changedTouches[0];
         // Coordonnées écran -> cartes (cadre du canevas et réduction éventuelle compris)
-        const { x, y } = clientToCanvasPoint(self.canvas, touch.clientX, touch.clientY);
+        const { x, y } = clientToCanvasPoint(this.canvas, touch.clientX, touch.clientY);
 
-        self.handleDirectTouch(x, y);
+        this.handleDirectTouch(x, y);
       }
     };
 
@@ -648,11 +646,11 @@ class MemoryGame {
 
     // Suivi de la position de la souris pour desktop
     this.boundHandleMouseMove = e => {
-      self.lastMousePos = clientToCanvasPoint(self.canvas, e.clientX, e.clientY);
+      this.lastMousePos = clientToCanvasPoint(this.canvas, e.clientX, e.clientY);
 
       // Redessiner seulement si nous sommes en hover sur une carte (desktop uniquement)
-      if (!self.isMobile && self.getCardAtPosition(self.lastMousePos.x, self.lastMousePos.y)) {
-        self.draw();
+      if (!this.isMobile && this.getCardAtPosition(this.lastMousePos.x, this.lastMousePos.y)) {
+        this.draw();
       }
     };
 

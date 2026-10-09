@@ -278,7 +278,7 @@ const AudioManager = {
    */
   addSound(name, path) {
     if (typeof name !== 'string' || !/^[a-z0-9_-]+$/i.test(name)) return;
-    if (typeof path !== 'string' || !/^assets\/sounds\//.test(path)) return;
+    if (typeof path !== 'string' || !path.startsWith('assets/sounds/')) return;
     this.sounds.set(name, path);
   },
 

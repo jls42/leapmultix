@@ -44,7 +44,7 @@ function rewireSetGameModeButtons(root = document) {
     if (!handler) return;
 
     // setGameMode('mode')
-    const m = handler.match(/setGameMode\('([^']+)'\)/);
+    const m = /setGameMode\('([^']+)'\)/.exec(handler);
     if (m) {
       const mode = m[1];
       el.removeAttribute('onclick');
@@ -61,7 +61,7 @@ function rewireSetGameModeButtons(root = document) {
     }
 
     // goToSlide(n)
-    const s = handler.match(/goToSlide\((\d+)\)/);
+    const s = /goToSlide\((\d+)\)/.exec(handler);
     if (s) {
       const slide = Number.parseInt(s[1], 10);
       el.removeAttribute('onclick');
@@ -74,7 +74,6 @@ function rewireSetGameModeButtons(root = document) {
         },
         { once: false }
       );
-      return;
     }
   });
 }

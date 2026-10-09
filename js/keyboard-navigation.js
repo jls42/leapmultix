@@ -195,11 +195,9 @@ class KeyboardNavigation {
       }
     } else if (
       activeElement.classList.contains('background-btn') ||
-      activeElement.classList.contains('color-theme-btn')
+      activeElement.classList.contains('color-theme-btn') ||
+      activeElement.classList.contains('card-base--clickable')
     ) {
-      event.preventDefault();
-      activeElement.click();
-    } else if (activeElement.classList.contains('card-base--clickable')) {
       event.preventDefault();
       activeElement.click();
     }

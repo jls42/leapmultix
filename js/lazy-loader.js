@@ -95,7 +95,7 @@ export class LazyLoader {
   async loadModule(moduleId) {
     // Si déjà chargé, retourner immédiatement
     if (this.loadedModules.has(moduleId)) {
-      return Promise.resolve();
+      return;
     }
 
     // Si en cours de chargement, retourner la promesse existante
@@ -224,7 +224,6 @@ export class LazyLoader {
 
       default:
         console.warn(`⚠️ Mode de jeu inconnu: ${gameMode}`);
-        return Promise.resolve();
     }
   }
 

@@ -128,7 +128,7 @@ export class GameModeManager {
       ]);
       const loader = LOADERS.get(modeName);
       if (typeof loader !== 'function') {
-        throw new Error(`Loader non défini pour le mode: ${modeName}`);
+        throw new TypeError(`Loader non défini pour le mode: ${modeName}`);
       }
       const module = await loader();
       const ModeClass = module.default;
@@ -171,7 +171,7 @@ export class GameModeManager {
      * @returns {*} Description du retour
      */
     if (typeof window[config.function] !== 'function') {
-      throw new Error(`Fonction legacy ${config.function} non disponible`);
+      throw new TypeError(`Fonction legacy ${config.function} non disponible`);
     }
 
     // Appeler la fonction legacy

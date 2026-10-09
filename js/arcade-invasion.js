@@ -392,7 +392,6 @@ export function startMultiplicationInvasion() {
   };
   const bullets = [];
   let aliens = [];
-  const explosions = [];
   const currentProblem = { a: 0, b: 0 };
   let score = 0;
   let lives = 3;
@@ -653,10 +652,6 @@ export function startMultiplicationInvasion() {
     handleSpaceDown
   );
 
-  function createExplosion(x, y) {
-    explosions.push({ x: x, y: y, radius: 1, maxRadius: 30, color: '#ffff00' });
-  }
-
   function updatePlayerPosition(step) {
     if (arcadeControls.leftPressed) player.x -= player.speed * step;
     if (arcadeControls.rightPressed) player.x += player.speed * step;
@@ -741,7 +736,6 @@ export function startMultiplicationInvasion() {
           bullet.y > alien.y &&
           bullet.y < alien.y + alienWidth
         ) {
-          createExplosion(alien.x + alienWidth / 2, alien.y + alienWidth / 2);
           const correctVal = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
           if (alien.value !== correctVal) {
             handleWrongAlienHit(bIndex, aIndex);

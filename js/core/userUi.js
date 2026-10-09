@@ -3,7 +3,7 @@
  */
 import UserManager from '../userManager.js';
 import { UserState } from '../core/userState.js';
-import { gameState } from '../game.js';
+import { gameState, displayDailyChallenge } from '../game.js';
 import { goToSlide } from '../slides.js';
 import {
   getTranslation,
@@ -13,7 +13,6 @@ import {
   showMessage,
 } from '../utils-es6.js';
 import { updateVolume } from './theme.js';
-import { displayDailyChallenge } from '../game.js';
 
 /**
  * Affiche les tuiles « Qui joue ? » (rendu : UserManager.refreshUserList).

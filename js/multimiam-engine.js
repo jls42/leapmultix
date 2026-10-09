@@ -113,6 +113,15 @@ function noteEatenAnswer(game, answer) {
   recordOperationResult(game.operator, num1, num2, Boolean(answer.isCorrect));
 }
 
+function ensureTimingState(ctx, now) {
+  if (!ctx.lastMoveTime) ctx.lastMoveTime = now;
+  if (!ctx.lastGhostMoveTime) ctx.lastGhostMoveTime = now;
+  if (!ctx.lastPacmanPosition) ctx.lastPacmanPosition = { x: ctx.multimiam.x, y: ctx.multimiam.y };
+  if (!ctx.lastGhostPositions || ctx.lastGhostPositions.length === 0) {
+    ctx.lastGhostPositions = ctx.ghosts.map(g => ({ x: g.x, y: g.y }));
+  }
+}
+
 export function initPacmanEngine(game) {
   /* === DÉPLACEMENTS & COLLISIONS =============================== */
 
@@ -168,16 +177,6 @@ export function initPacmanEngine(game) {
     });
     if (possibles.length === 0) return chosenDir;
     return pickRandom(possibles);
-  }
-
-  function ensureTimingState(ctx, now) {
-    if (!ctx.lastMoveTime) ctx.lastMoveTime = now;
-    if (!ctx.lastGhostMoveTime) ctx.lastGhostMoveTime = now;
-    if (!ctx.lastPacmanPosition)
-      ctx.lastPacmanPosition = { x: ctx.multimiam.x, y: ctx.multimiam.y };
-    if (!ctx.lastGhostPositions || ctx.lastGhostPositions.length === 0) {
-      ctx.lastGhostPositions = ctx.ghosts.map(g => ({ x: g.x, y: g.y }));
-    }
   }
 
   // Peut-on se déplacer sur la case (x,y) ?
@@ -294,7 +293,7 @@ export function initPacmanEngine(game) {
     targetX,
     targetY
   ) {
-    if (
+    return (
       (x === multimiamX &&
         x === targetX &&
         y >= Math.min(multimiamY, targetY) &&
@@ -303,10 +302,7 @@ export function initPacmanEngine(game) {
         y === targetY &&
         x >= Math.min(multimiamX, targetX) &&
         x <= Math.max(multimiamX, targetX))
-    ) {
-      return true;
-    }
-    return false;
+    );
   };
 
   // Déplacer les fantômes
