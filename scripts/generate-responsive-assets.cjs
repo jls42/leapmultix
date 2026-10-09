@@ -8,12 +8,13 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const { inSequence } = require('./lib/in-sequence.cjs');
 let sharp = null;
 
 try {
   // sharp fournit la conversion WebP + resize avec support alpha
   sharp = require('sharp');
-} catch (error) {
+} catch {
   // La dépendance n'est peut-être pas installée dans l'environnement courant
   console.warn('⚠️  Module "sharp" introuvable. Activera le mode fallback.');
 }
@@ -53,6 +54,24 @@ const SMALL_SET_MAX_WIDTH = 256;
 /** Chemin d'une source relatif à assets/images, avec des « / » (« arcade/fox.png ») */
 function sourceKey(sourceFile) {
   return path.relative(ASSETS_SOURCE, sourceFile).split(path.sep).join('/');
+}
+
+/** Fins de ligne : le « . » d'une expression régulière ne les traverse pas */
+const LINE_BREAKS = ['\n', '\r', '\u2028', '\u2029'];
+
+/**
+ * Base et largeur d'une variante « <base>-<largeur>.webp », comme le faisait
+ * /(.+)-(\d+)\.webp$/, sans ses retours arrière : le suffixe d'abord, puis la base devant
+ * lui, depuis la dernière fin de ligne (que « . » ne traverse pas)
+ * @param {string} relativePath
+ * @returns {{baseName: string, resolution: string} | null}
+ */
+function variantOf(relativePath) {
+  const suffix = /-(\d+)\.webp$/.exec(relativePath);
+  if (!suffix) return null;
+  const head = relativePath.slice(0, suffix.index);
+  const baseName = head.slice(Math.max(...LINE_BREAKS.map(mark => head.lastIndexOf(mark))) + 1);
+  return baseName ? { baseName, resolution: suffix[1] } : null;
 }
 
 class ResponsiveAssetGenerator {
@@ -164,8 +183,7 @@ class ResponsiveAssetGenerator {
 
     console.log(`📊 Trouvé ${sourceFiles.length} fichiers PNG sources`);
 
-    for (let i = 0; i < sourceFiles.length; i++) {
-      const sourceFile = sourceFiles[i];
+    await inSequence(sourceFiles, async (sourceFile, i) => {
       try {
         await this.processFile(sourceFile);
 
@@ -179,7 +197,7 @@ class ResponsiveAssetGenerator {
           error: error.message,
         });
       }
-    }
+    });
   }
 
   findSourceFiles() {
@@ -231,11 +249,11 @@ class ResponsiveAssetGenerator {
     // Déterminer quelles résolutions générer
     const targetResolutions = this.getTargetResolutions(sourceFile, dimensions);
 
-    for (const [suffix, config] of Object.entries(targetResolutions)) {
+    await inSequence(Object.entries(targetResolutions), async ([suffix, config]) => {
       await this.generateResolution(sourceFile, destDir, baseName, suffix, config);
       this.report.resolutions[suffix]++;
       this.report.generatedFiles++;
-    }
+    });
   }
 
   async getImageDimensions(filePath) {
@@ -248,7 +266,7 @@ class ResponsiveAssetGenerator {
         width: metadata.width || 1024,
         height: metadata.height || 1024,
       };
-    } catch (error) {
+    } catch {
       console.warn(`⚠️  Impossible de lire dimensions: ${filePath}`);
       return { width: 1024, height: 1024 };
     }
@@ -325,11 +343,10 @@ class ResponsiveAssetGenerator {
 
       webpFiles.forEach(webpFile => {
         const relativePath = path.relative(ASSETS_DIST, webpFile);
-        const match = relativePath.match(/(.+)-(\d+)\.webp$/);
+        const match = variantOf(relativePath);
 
         if (match) {
-          const baseName = match[1];
-          const resolution = match[2];
+          const { baseName, resolution } = match;
 
           if (!imageMap[baseName]) {
             imageMap[baseName] = {
