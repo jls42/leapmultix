@@ -19,7 +19,8 @@ const {
   MAX_CANVAS_SIDE,
 } = await import('../js/arcade-common.js');
 const { initPacmanControls } = await import('../js/multimiam-controls.js');
-const { tap } = await import('./helpers/touch-test-helpers.mjs');
+const { MemoryGame } = await import('../js/arcade-multimemory.js');
+const { tap, fakeCanvasContext } = await import('./helpers/touch-test-helpers.mjs');
 
 const realRatio = globalThis.devicePixelRatio;
 
@@ -148,5 +149,78 @@ describe('pointeur et nombres en unités du jeu, à toute densité', () => {
     // Trois cases à gauche du personnage, au-dessus de sa ligne : la gauche domine
     tap(canvas, { x: (7.5 - 3) * 20, y: (7.5 - 1) * 20 });
     expect(game.multimiam.nextDirection).toBe('LEFT');
+  });
+});
+
+describe('MultiMemory : une seule ombre floue par carte', () => {
+  // Image déjà chargée, à l'interface des images d'Arcade (js/arcade-sprites.js)
+  const loaded = () => ({
+    request() {},
+    image: { naturalWidth: 256, naturalHeight: 256 },
+    aspect: 1,
+    facing: 'right',
+  });
+
+  test('dos de carte : ni la texture ni le monstre ne portent l’ombre de la carte', () => {
+    // À densité 3, une ombre floue par image (texture, monstre) divisait par trois le
+    // nombre d'images par seconde : seule la forme de la carte garde son ombre
+    const shadows = [];
+    const ctx = {
+      shadowColor: 'rgba(0, 0, 0, 0.3)',
+      drawImage() {
+        shadows.push(this.shadowColor);
+      },
+      save() {},
+      restore() {},
+      beginPath() {},
+      rect() {},
+      clip() {},
+    };
+    const game = {
+      ctx,
+      canvas: document.createElement('canvas'),
+      cardBack: loaded(),
+      monsterImages: [loaded()],
+      monsterOf: MemoryGame.prototype.monsterOf,
+      drawCardQuestionMark() {},
+    };
+    ctx.canvas = game.canvas;
+    MemoryGame.prototype.drawCardBack.call(game, { monsterIndex: 0 }, 0, 0, 100, 120);
+    expect(shadows).toEqual(['transparent', 'transparent']);
+  });
+
+  test('le plateau ne se redessine que s’il a changé (seize cartes et leurs ombres, × 9 à densité 3)', () => {
+    let drawn = 0;
+    const ctx = Object.assign(fakeCanvasContext(), {
+      createLinearGradient: () => ({ addColorStop() {} }),
+      clearRect: () => {
+        drawn += 1;
+      },
+    });
+    const canvas = document.createElement('canvas');
+    Object.assign(canvas, { width: 300, height: 200 });
+    const card = { x: 10, y: 10, width: 50, height: 60, monsterIndex: 0 };
+    const game = Object.assign(Object.create(MemoryGame.prototype), {
+      canvas,
+      ctx,
+      cards: [{ ...card, isFlipped: false, isMatched: false, content: '3 × 4' }],
+      monsterImages: [loaded()],
+      cardBack: loaded(),
+      lastMousePos: { x: -100, y: -100 },
+      isMobile: false,
+      cursorIndex: 0,
+    });
+    game.drawIfChanged();
+    game.drawIfChanged();
+    expect(drawn).toBe(1);
+    // Carte retournée, puis survolée à la souris, puis survol fini : chaque fois redessiné
+    game.cards[0].isFlipped = true;
+    game.drawIfChanged();
+    game.lastMousePos = { x: 30, y: 30 };
+    game.drawIfChanged();
+    game.draw();
+    game.lastMousePos = { x: -100, y: -100 };
+    game.drawIfChanged();
+    expect(drawn).toBe(5);
   });
 });

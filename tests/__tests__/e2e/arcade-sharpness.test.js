@@ -106,12 +106,16 @@ async function backToArcadeMenu(page) {
 }
 
 /**
- * Images dessinées une fois la partie posée : l'espion repart de zéro après le chargement,
- * puis note quelques dizaines d'images (les variantes plus grandes ont eu le temps d'arriver)
+ * Images dessinées une fois la partie posée : l'espion repart de zéro après le chargement
+ * (les variantes plus grandes ont eu le temps d'arriver), puis note les images suivantes.
+ * MultiMemory ne redessine qu'un plateau qui change : un redimensionnement le redessine.
  */
 async function settledSprites(page) {
   await pause(2500);
-  await page.evaluate(() => globalThis.__sprites.clear());
+  await page.evaluate(() => {
+    globalThis.__sprites.clear();
+    globalThis.dispatchEvent(new Event('resize'));
+  });
   await pause(800);
   return page.evaluate(() => [...globalThis.__sprites.values()]);
 }

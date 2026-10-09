@@ -43,6 +43,8 @@ import { isArcadePaused, isNoTimeLimit } from './arcade-time.js';
 // Dépend des helpers ESM (plus d'assignations window.*)
 
 const FULL_TABLE_SET = Array.from({ length: 10 }, (_, i) => i + 1);
+// Largeur de l'image arrivée d'une image d'Arcade (0 tant qu'elle n'est pas là)
+const imageWidth = sprite => sprite?.image?.naturalWidth ?? 0;
 
 // Clavier : la carte visée se déplace aux flèches ([colonnes, lignes]), se retourne à
 // Entrée ou à Espace
@@ -1026,6 +1028,7 @@ class MemoryGame {
 
   // Dessine le jeu
   draw() {
+    this.drawnSignature = this.boardSignature();
     // Effacer le plateau (unités du jeu)
     const board = getArcadeCanvasSize(this.canvas);
     this.ctx.clearRect(0, 0, board.width, board.height);
@@ -1204,6 +1207,9 @@ class MemoryGame {
       this.drawCardQuestionMark(cardX, cardY, cardWidth, cardHeight);
       return;
     }
+    // L'ombre est celle de la carte : ni la texture ni le monstre n'en portent une à eux (à
+    // la densité de l'écran, une ombre floue par image coûtait deux tiers des images par seconde)
+    this.ctx.shadowColor = 'transparent';
     const cardBox = { x: cardX, y: cardY, width: cardWidth, height: cardHeight };
     drawArcadeSprite(this.ctx, this.cardBack, cardBox, { fit: 'cover' });
     const monsterBox = {
@@ -1223,10 +1229,36 @@ class MemoryGame {
     this.ctx.fillText('?', cardX + cardWidth / 2, cardY + cardHeight / 2);
   }
 
+  /**
+   * Ce que montre le plateau : sa taille, chaque carte (place, état, animation, image
+   * arrivée), la carte survolée, la carte visée au clavier, la police chargée
+   * @returns {string}
+   */
+  boardSignature() {
+    const hovered = this.getCardAtPosition(this.lastMousePos.x, this.lastMousePos.y);
+    const cursor = this.isKeyboardCursorVisible() ? this.cursorIndex : -1;
+    const fonts = globalThis.document?.fonts?.status;
+    const board = [this.canvas.width, this.canvas.height, this.cards.indexOf(hovered), cursor];
+    const cards = this.cards.map(card => this.cardSignature(card));
+    return [...board, imageWidth(this.cardBack), fonts, ...cards].join('|');
+  }
+
+  cardSignature(card) {
+    const { x, y, width, height, isFlipped, isMatched, victoryScale, victoryOpacity } = card;
+    const shown = [x, y, width, height, isFlipped, isMatched, victoryScale, victoryOpacity];
+    return [...shown, imageWidth(this.monsterOf(card))].join(',');
+  }
+
+  // Redessine le plateau s'il a changé depuis le dernier dessin : à la densité de l'écran,
+  // seize cartes et leurs ombres redessinées à chaque image coûtaient des images par seconde
+  drawIfChanged() {
+    if (this.boardSignature() !== this.drawnSignature) this.draw();
+  }
+
   // Boucle principale du jeu
   gameLoop() {
     if (!this.isGameOver && isArcadeActive()) {
-      this.draw();
+      this.drawIfChanged();
       this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
       this.animations.push(this.gameLoopId);
     }

@@ -181,10 +181,10 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
     async (_name, viewport) => {
       await openArcade(viewport);
       await launchGame(page, 'multimemory');
-      // Plateau posé (bouton plein écran monté, police chargée), puis dos de cartes neufs,
-      // dessinés avec leur image (centrée sur la carte)
+      // Plateau posé (bouton plein écran monté, police chargée) : les derniers dos de cartes
+      // dessinés avec leur image (centrée sur la carte). Le plateau ne se redessine que s'il
+      // change : son dernier dessin est le bon.
       await pause(1500);
-      await page.evaluate(() => globalThis.__client.images.splice(0));
       await page.waitForFunction(
         () => globalThis.__client.images.filter(d => d.src.startsWith('chemin')).length >= 8,
         { timeout: 8000 }
@@ -251,16 +251,17 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
         () => globalThis.__client.images.filter(d => d.src.startsWith('tete_')).slice(-1)[0]
       );
       await pointAt(page, viewport, { x: head.x, y: head.y - 90 });
-      await page.waitForFunction(
-        () =>
-          globalThis.__client.images.filter(d => d.src.startsWith('tete_')).slice(-1)[0]?.src ===
-          'tete_haut.png',
-        { timeout: 3000 }
+      // La tête, redessinée vers le haut, au-dessus de sa place de départ (relevé à chaque
+      // image : sur une machine chargée, le serpent finirait par faire le tour du plateau)
+      const turned = await page.waitForFunction(
+        startY => {
+          const last = globalThis.__client.images.filter(d => d.src.startsWith('tete_')).at(-1);
+          return last?.src === 'tete_haut.png' && last.y < startY && last;
+        },
+        { timeout: 3000 },
+        head.y
       );
-      const turned = await page.evaluate(
-        () => globalThis.__client.images.filter(d => d.src.startsWith('tete_')).slice(-1)[0]
-      );
-      expect(turned.y).toBeLessThan(head.y);
+      expect((await turned.jsonValue()).src).toBe('tete_haut.png');
     },
     40000
   );
