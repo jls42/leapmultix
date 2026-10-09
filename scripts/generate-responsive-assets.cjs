@@ -24,14 +24,24 @@ const ASSETS_DIST = './dist/assets/images'; // Build optimisés pour futur build
 const PUBLIC_ASSETS_DIR = './assets/generated-images'; // Compatible deploy.sh actuel
 const REPORT_FILE = './analysis/responsive-assets-report.json';
 
+// Réglages WebP. Les sources sont des dessins aux contours nets : en qualité 75 à 80, les
+// contours sombres bavaient et les aplats se tachaient (mesuré dans Chrome, dessin au canevas
+// comme dans les jeux : 36,6 à 37,8 dB de la réduction parfaite de la source).
+// - 64 et 128 (préchargés pour le hors ligne, petits écrans) : qualité 90, couleurs
+//   sous-échantillonnées sans bavure (sharp YUV) ; poids × 1,2 environ ;
+// - 256, 512 et 1024 (tablettes, écrans denses et grands, chargés à la demande) : quasi sans
+//   perte, niveau 40 : 39 à 42,5 dB, autant que le niveau 80 pour un cinquième de poids en moins.
+const SMALL_WEBP = { quality: 90, alphaQuality: 100, smartSubsample: true, effort: 6 };
+const NEAR_LOSSLESS_WEBP = { nearLossless: true, quality: 40, effort: 6 };
+
 // Configuration des résolutions cibles
 const RESOLUTION_TARGETS = {
-  // Format: suffix -> {width, quality, description}
-  64: { width: 64, quality: 85, desc: 'Icons/thumbnails' },
-  128: { width: 128, quality: 85, desc: 'Mobile small' },
-  256: { width: 256, quality: 80, desc: 'Mobile/tablet' },
-  512: { width: 512, quality: 80, desc: 'Desktop standard' },
-  1024: { width: 1024, quality: 75, desc: 'High-DPI/4K' },
+  // Format: suffix -> {width, webp (réglages de sharp), description}
+  64: { width: 64, webp: SMALL_WEBP, desc: 'Icons/thumbnails' },
+  128: { width: 128, webp: SMALL_WEBP, desc: 'Mobile small' },
+  256: { width: 256, webp: NEAR_LOSSLESS_WEBP, desc: 'Mobile/tablet' },
+  512: { width: 512, webp: NEAR_LOSSLESS_WEBP, desc: 'Desktop standard' },
+  1024: { width: 1024, webp: NEAR_LOSSLESS_WEBP, desc: 'High-DPI/4K' },
 };
 
 // Patterns spéciaux par type d'asset
@@ -321,11 +331,7 @@ class ResponsiveAssetGenerator {
 
       await sharp(sourceFile)
         .resize({ width: config.width, withoutEnlargement: true })
-        .webp({
-          quality: config.quality,
-          alphaQuality: 100,
-          effort: 5,
-        })
+        .webp(config.webp)
         .toFile(webpFile);
 
       const stats = fs.statSync(webpFile);
