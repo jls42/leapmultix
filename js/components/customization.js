@@ -18,6 +18,7 @@ import { singleActivation } from '../ui-feedback.js';
 import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
 import { confirmDialog } from './confirm-dialog.js';
+import { keepWornAvatar } from '../core/avatar-shop.js';
 
 /** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
 const SLIDE6_AVATAR_RADIOS = '#slide6 .avatar-selector .avatar-radio';
@@ -298,6 +299,10 @@ export const Customization = {
     }
 
     const userData = UserState.getCurrentUserData();
+    // Celui qu'il portait reste à l'enfant (profil d'avant les pièces) ; gameState aussi,
+    // qu'« Enregistrer » réécrit dans le profil
+    keepWornAvatar(userData, normalizeAvatarId(userData.avatar));
+    gameState.unlockedAvatars = [...userData.unlockedAvatars];
     userData.avatar = avatarName;
     UserState.updateUserData(userData);
     // « Qui joue ? » montre le visage de l'avatar : la tuile suit le nouveau choix

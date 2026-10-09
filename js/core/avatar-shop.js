@@ -45,3 +45,17 @@ export function buyAvatar(userData, avatarId, price = AVATAR_PRICE) {
   userData.unlockedAvatars = [...unlocked, avatarId];
   return 'unlocked';
 }
+
+/**
+ * L'avatar porté reste au joueur. Avant les pièces, tous les avatars étaient libres : un profil
+ * d'alors peut porter un avatar absent de sa liste. En choisir un autre ne doit pas le lui
+ * retirer.
+ * @param {Object} userData - Profil que l'appelant enregistre ensuite
+ * @param {string} wornAvatar - Avatar porté jusqu'ici (identifiant connu)
+ */
+export function keepWornAvatar(userData, wornAvatar) {
+  const unlocked = Array.isArray(userData.unlockedAvatars) ? userData.unlockedAvatars : [];
+  if (wornAvatar && !unlocked.includes(wornAvatar)) {
+    userData.unlockedAvatars = [...unlocked, wornAvatar];
+  }
+}

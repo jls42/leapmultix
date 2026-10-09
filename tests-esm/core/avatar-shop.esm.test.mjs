@@ -4,7 +4,12 @@
  * pièces baissent ; sinon, rien ne change, et le jeu sait combien il en manque.
  */
 import { describe, test, expect } from '@jest/globals';
-import { AVATAR_PRICE, buyAvatar, missingCoins } from '../../js/core/avatar-shop.js';
+import {
+  AVATAR_PRICE,
+  buyAvatar,
+  keepWornAvatar,
+  missingCoins,
+} from '../../js/core/avatar-shop.js';
 
 const player = coins => ({ coins, unlockedAvatars: ['fox'] });
 
@@ -35,5 +40,22 @@ describe('Avatars achetés avec les pièces', () => {
     const user = { coins: 'beaucoup' };
     expect(buyAvatar(user, 'panda')).toBe('missing');
     expect(user).toEqual({ coins: 'beaucoup' });
+  });
+});
+
+describe('Avatar porté (profil d’avant les pièces)', () => {
+  test('absent de la liste : il y entre, sans rien retirer', () => {
+    const user = { avatar: 'panda', unlockedAvatars: ['fox'] };
+    keepWornAvatar(user, 'panda');
+    expect(user.unlockedAvatars).toEqual(['fox', 'panda']);
+  });
+
+  test('déjà dans la liste, ou liste absente : une seule fois', () => {
+    const user = { unlockedAvatars: ['fox', 'panda'] };
+    keepWornAvatar(user, 'panda');
+    expect(user.unlockedAvatars).toEqual(['fox', 'panda']);
+    const old = {};
+    keepWornAvatar(old, 'unicorn');
+    expect(old.unlockedAvatars).toEqual(['unicorn']);
   });
 });

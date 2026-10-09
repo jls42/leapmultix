@@ -108,3 +108,34 @@ describe('Personnalisation : avatar acheté avec les pièces', () => {
     expect(stored().avatar).toBe('dragon');
   });
 });
+
+describe('Profil d’avant : l’avatar porté reste à l’enfant', () => {
+  // Avant les pièces, tous les avatars étaient libres : Zoé porte le panda (instantané d'une
+  // version publiée, tests-esm/helpers/legacy-profiles.mjs) et sa liste ne dit que le renard
+  beforeEach(() => {
+    UserManager._players = {
+      Zoé: { nickname: 'Zoé', avatar: 'panda', coins: 62, unlockedAvatars: ['fox'] },
+    };
+    gameState.avatar = 'panda';
+    gameState.unlockedAvatars = ['fox'];
+    renderAvatarSelector('#slide6 .avatar-selector');
+    Customization._wireAvatarSelection();
+  });
+
+  test('après l’achat du dragon, le panda reste dans ses avatars, pas dans la boutique', async () => {
+    await buy('dragon');
+    expect(radios().map(radio => radio.value)).toEqual(['fox', 'panda', 'dragon']);
+    expect(document.querySelector('#avatar-shop [data-avatar="panda"]')).toBeNull();
+    expect([...stored().unlockedAvatars].sort()).toEqual(['dragon', 'fox', 'panda']);
+  });
+
+  test('essayer le renard ne lui retire pas le panda, même après « Enregistrer »', () => {
+    const fox = radios().find(radio => radio.value === 'fox');
+    fox.checked = true;
+    fox.dispatchEvent(new Event('change', { bubbles: true }));
+    Customization.save();
+    renderAvatarSelector('#slide6 .avatar-selector');
+    expect(radios().map(radio => radio.value)).toEqual(['fox', 'panda']);
+    expect(stored()).toMatchObject({ avatar: 'fox', unlockedAvatars: ['fox', 'panda'] });
+  });
+});
