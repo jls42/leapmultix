@@ -13,6 +13,21 @@ import { GameMode } from '../core/GameMode.js';
 import { getTranslation } from '../utils-es6.js';
 import { showArcadeMessage } from '../arcade-message.js';
 import { gameState } from '../game.js';
+import {
+  hideLoadErrorNotice,
+  isLoadFailure,
+  showLoadErrorNotice,
+} from '../components/loadErrorNotice.js';
+import { UNTIMED_GAMES, isNoTimeLimit, setNoTimeLimit } from '../arcade-time.js';
+import { spaceshipSpec } from '../arcade-sprite-catalog.js';
+import { attachImageFallbacks, webpImageAttributes } from '../webp-images.js';
+
+// Images du menu en WebP, à la taille où elles s'affichent × la densité de l'écran
+// (js/webp-images.js). Logos des jeux : 144 px affichés, 120 sur un écran de 480 px au plus
+// (css/arcade.css)
+const LOGO_IMAGE = { widths: [128, 256, 512], src: 256, sizes: '(max-width: 480px) 120px, 144px' };
+// Fusées à choisir : vignette ronde de 84 px, 70 px de dessin (marge et bord déduits)
+const THUMB_IMAGE = { widths: [128, 256], src: 128, sizes: '70px' };
 
 /* Icônes des lignes « Commandes » : des SVG au trait (couleur du texte), décoratifs,
    le mot « Clavier », « Souris » ou « Tactile » étant écrit juste après. */
@@ -43,12 +58,14 @@ const CONTROL_LINES = new Map([
     'multimiam',
     [
       ['keyboard', 'arcade.controls.multimiam.keyboard'],
+      ['mouse', 'arcade.controls.multimiam.mouse'],
       ['touch', 'arcade.controls.multimiam.touch'],
     ],
   ],
   [
     'multimemory',
     [
+      ['keyboard', 'arcade.controls.multimemory.keyboard'],
       ['mouse', 'arcade.controls.multimemory.mouse'],
       ['touch', 'arcade.controls.multimemory.touch'],
     ],
@@ -57,6 +74,7 @@ const CONTROL_LINES = new Map([
     'multisnake',
     [
       ['keyboard', 'arcade.controls.multisnake.keyboard'],
+      ['mouse', 'arcade.controls.multisnake.mouse'],
       ['touch', 'arcade.controls.multisnake.touch'],
     ],
   ],
@@ -115,13 +133,18 @@ function launchArcadeGame(gameId) {
     .charger()
     .then(mod => {
       const demarrer = mod[loader.demarrer];
-      if (typeof demarrer === 'function') return demarrer();
+      if (typeof demarrer === 'function') {
+        hideLoadErrorNotice();
+        return demarrer();
+      }
       console.error(`❌ ${loader.demarrer} non disponible pour ${gameId}`);
       showArcadeMessage('arcade_load_error', 'warning', 1800);
     })
     .catch(err => {
       console.error(`❌ Import du jeu ${gameId} échoué :`, err);
       showArcadeMessage('arcade_load_error', 'warning', 1800);
+      // Hors ligne, jeu jamais gardé : un avis qui reste dit pourquoi et quoi faire
+      if (isLoadFailure(err)) showLoadErrorNotice(err);
     });
 }
 
@@ -232,15 +255,15 @@ export class ArcadeMode extends GameMode {
         game => `
             <div id="${this.getCardId(game.id)}" class="arcade-game-card collapsed" data-game="${game.id}">
                 <div class="game-thumb">
-                    <img src="assets/images/arcade/${game.logo}" alt=""
-                         class="arcade-logo" onerror="this.src='assets/images/arcade/logo_mode_arcade.png';this.onerror=null;">
+                    <img ${webpImageAttributes(game.logo, LOGO_IMAGE)}
+                         width="144" height="144" alt="" class="arcade-logo">
                 </div>
 
-                <h3 class="game-title">
+                <h2 class="game-title">
                     <button type="button" class="arcade-game-toggle" data-action="arcade-toggle"
                             aria-expanded="false" aria-controls="${this.getSettingsId(game.id)}"
                             aria-describedby="${this.getCardId(game.id)}-desc">${this.getGameTitle(game.id)}</button>
-                </h3>
+                </h2>
 
                 <p class="game-desc" id="${this.getCardId(game.id)}-desc">
                     ${this.getGameDescription(game.id)}
@@ -248,6 +271,7 @@ export class ArcadeMode extends GameMode {
 
                 <div class="arcade-game-settings" id="${this.getSettingsId(game.id)}">
                     ${this.getDifficultyHTML(game.id)}
+                    ${this.getTimeLimitHTML(game.id)}
                     ${game.id === 'invasion' ? this.getSpaceshipHTML(game.id) : ''}
                     ${this.getControlsHelpHTML(game.id)}
 
@@ -335,6 +359,21 @@ export class ArcadeMode extends GameMode {
   }
 
   /**
+   * « Sans limite de temps » (MultiMemory) : la partie dure jusqu'à la dernière paire,
+   * sans compte à rebours. Le choix reste sur l'appareil, comme la difficulté.
+   */
+  getTimeLimitHTML(gameId) {
+    if (!UNTIMED_GAMES.has(gameId)) return '';
+    const checked = isNoTimeLimit(gameId) ? ' checked' : '';
+    return `
+            <label class="arcade-untimed-option">
+                <input type="checkbox" data-action="arcade-set-untimed" data-game="${gameId}"${checked}>
+                <span>${getTranslation('arcade_no_time_limit')}</span>
+            </label>
+        `;
+  }
+
+  /**
    * Générer le HTML de sélection de vaisseau
    */
   getSpaceshipHTML(gameId) {
@@ -359,9 +398,8 @@ export class ArcadeMode extends GameMode {
                                    ${idx === checkedIndex ? 'checked' : ''}
                                    data-action="arcade-set-spaceship" data-game="${gameId}"
                                    data-value="${valueOf(variant)}">
-                            <img class="spaceship-thumb" src="assets/images/arcade/${variant.file}"
-                                 alt=""
-                                 onerror="this.src='assets/images/arcade/${variant.fallback}';this.onerror=null;">
+                            <img class="spaceship-thumb" alt=""
+                                 ${webpImageAttributes(variant.file, THUMB_IMAGE, spaceshipSpec(valueOf(variant)).source)}>
                             <span class="spaceship-label">${variant.name}</span>
                         </label>
                     `
@@ -418,6 +456,8 @@ export class ArcadeMode extends GameMode {
       contentCard.classList.add('arcade-wide');
     }
 
+    // Logos et fusées en WebP, produits au déploiement : sans eux, le PNG d'origine
+    attachImageFallbacks(this.gameScreen);
     this.attachArcadeListEvents();
   }
 
@@ -478,6 +518,7 @@ export class ArcadeMode extends GameMode {
         const input = e.target.closest('input[type="radio"]');
         if (input?.value) this.setSpaceship(input.value);
       },
+      'arcade-set-untimed': () => setNoTimeLimit(actionEl.dataset.game, actionEl.checked),
     };
     const action = actions[actionEl.dataset.action];
     if (!action) return false;

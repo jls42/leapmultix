@@ -18,6 +18,8 @@ import { UserState } from '../core/userState.js';
 import { getOperation } from '../core/operations/OperationRegistry.js';
 import { appendSanitizedHTML } from '../security-utils.js';
 import { randomInt } from '../core/random.js';
+import { HEAD_SIZES, avatarHeadAttributes } from '../avatar-heads.js';
+import { attachImageFallbacks } from '../webp-images.js';
 import {
   DISCOVERY_FACTORS,
   DISCOVERY_TABLES,
@@ -38,9 +40,6 @@ import {
   singleActivation,
   toSpokenForm,
 } from '../ui-feedback.js';
-
-/** Avatars qui ont une tête illustrée (assets/images/arcade/<id>_head_avatar_128x128.png) */
-const MASCOT_AVATARS = new Set(['fox', 'panda', 'unicorn', 'dragon', 'astronaut']);
 
 /** Niveaux des opérations +, −, ÷ (le × se choisit par table) */
 const LEVELS = ['easy', 'medium', 'hard'];
@@ -367,7 +366,7 @@ export class DiscoveryMode extends GameMode {
     );
     return `
             <div class="discovery-lab">
-                <h2 class="discovery-lab-title" tabindex="-1">${title}</h2>
+                <h1 class="discovery-lab-title screen-title" tabindex="-1">${title}</h1>
                 <p class="discovery-intro">${intro}</p>
                 <div class="lab-selector lab-selector--levels" id="level-selector">
                     ${LEVELS.map(level => this._renderLevelTile(level)).join('')}
@@ -504,7 +503,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
             <div class="discovery-lab">
-                <h2 class="discovery-lab-title" tabindex="-1">${title}</h2>
+                <h1 class="discovery-lab-title screen-title" tabindex="-1">${title}</h1>
                 <div class="lab-experiment">
                     <p class="experiment-description">${intro}</p>
 
@@ -571,9 +570,9 @@ export class DiscoveryMode extends GameMode {
     const tip = keepNumbersTogether(getTranslation(`mnemonic_${this.currentTable}`));
     return `
                     <div class="mnemonic-tip">
-                        <img class="mnemonic-mascot" src="${this._getMascotHeadSrc()}" alt="" width="56" height="56" />
+                        <img class="mnemonic-mascot" ${this._getMascotHeadAttributes()} alt="" width="56" height="56" />
                         <div class="mnemonic-body">
-                            <h3>${getTranslation('hint')}</h3>
+                            <h2 class="section-title">${getTranslation('hint')}</h2>
                             <p>${tip}</p>
                         </div>
                     </div>
@@ -581,14 +580,12 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * Tête illustrée de l'avatar du joueur (renard par défaut)
+   * Tête illustrée de l'avatar du joueur (renard par défaut) : attributs du gabarit
    * @returns {string}
    * @private
    */
-  _getMascotHeadSrc() {
-    const avatar = UserState.getCurrentUserData()?.avatar;
-    const id = MASCOT_AVATARS.has(avatar) ? avatar : 'fox';
-    return `assets/images/arcade/${id}_head_avatar_128x128.png`;
+  _getMascotHeadAttributes() {
+    return avatarHeadAttributes(UserState.getCurrentUserData()?.avatar, HEAD_SIZES.discovery);
   }
 
   /**
@@ -756,7 +753,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
       <div class="number-line-section">
-        <h3>${getTranslation('number_line_title')}</h3>
+        <h2 class="section-title">${getTranslation('number_line_title')}</h2>
         <div class="number-line-container">
           <div class="number-line">
             ${range(0, 10)
@@ -841,7 +838,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
       <div class="number-line-section">
-        <h3>${getTranslation(titleKey)}</h3>
+        <h2 class="section-title">${getTranslation(titleKey)}</h2>
         <p class="operation-explanation">${getTranslation(explanationKey)}</p>
         <div class="number-line-container number-line-interactive">
           <div class="number-line">${points.join('')}${arcs.join('')}</div>
@@ -881,7 +878,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
       <div class="number-line-section division-visualization">
-        <h3>${getTranslation('division_sharing_title')}</h3>
+        <h2 class="section-title">${getTranslation('division_sharing_title')}</h2>
         <p class="operation-explanation">${getTranslation('division_sharing_explanation')}</p>
 
         <div class="division-demo">
@@ -924,7 +921,7 @@ export class DiscoveryMode extends GameMode {
   generateVisualExplorationHTML() {
     return `
             <div class="visual-exploration">
-                <h3>${getTranslation('visual_exploration_title')}</h3>
+                <h2 class="section-title">${getTranslation('visual_exploration_title')}</h2>
                 <div class="visual-grid" id="visual-grid-container">
                     ${this.generateVisualAid()}
                 </div>
@@ -1079,7 +1076,7 @@ export class DiscoveryMode extends GameMode {
 
     return `
             <div class="optional-interaction">
-                <h3>${getTranslation('manipulation_title')}</h3>
+                <h2 class="section-title">${getTranslation('manipulation_title')}</h2>
                 <p class="interaction-instructions">${getTranslation('manipulation_instructions')}</p>
                 <div id="drag-area">${items}</div>
                 <div class="lab-dropzone" id="drop-zone">
@@ -1118,6 +1115,8 @@ export class DiscoveryMode extends GameMode {
    * @param {ParentNode} [root] - Carte affichée (les écouteurs ne sortent pas de cette carte)
    */
   setupTableExploration(root = this._scope()) {
+    // Tête de la mascotte en WebP, produite au déploiement : sans elle, le PNG du dépôt
+    attachImageFallbacks(root);
     root.querySelector('#discovery-table-back-btn')?.addEventListener(
       'click',
       singleActivation(() => this.returnToTableSelection())

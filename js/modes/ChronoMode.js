@@ -1,10 +1,14 @@
 /**
- * Mode Chrono : dix bonnes réponses contre un chrono qui ne s’arrête pas, sur les tables
- * choisies, en choisissant ou en tapant la réponse. Les calculs ratés vont dans « Mes
- * calculs à revoir », qu’une révision de dix questions fait travailler.
+ * Mode Chrono : dix bonnes réponses contre un chrono qui ne s’arrête pas, dans l’opération
+ * choisie à l’accueil, en choisissant ou en tapant la réponse. En multiplication, sur les
+ * tables des Paramètres ; en addition, soustraction et division, sur toutes les tables
+ * (voir chrono-questions.js). Les calculs ratés vont dans « Mes calculs à revoir » de
+ * l’opération, qu’une révision de dix questions fait travailler.
  */
 
 import { GameMode } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
+import { confirmDialog } from '../components/confirm-dialog.js';
 import {
   getTranslation,
   playSound,
@@ -32,17 +36,23 @@ import { UserState } from '../core/userState.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { classifyTypedAnswer } from '../core/chrono-input.js';
 import {
+  CHRONO_OPERATORS,
+  chronoAnswer,
+  chronoTables,
   factKeys,
-  pickChronoPair,
+  pickChronoFact,
   takeNextRevisionFact,
   includedTablesFromExclusions,
   isFullTableSet,
+  uniqueTables,
 } from '../core/chrono-questions.js';
+import { getOperation } from '../core/operations/OperationRegistry.js';
 import { TablePreferences } from '../core/tablePreferences.js';
 import { UserManager } from '../userManager.js';
 import { getCurrentLanguage } from '../i18n-store.js';
 import {
   normalizeChronoStats,
+  normalizeChronoStatsByOperator,
   findBucket,
   sessionAverageMs,
   saveChronoSession,
@@ -55,7 +65,6 @@ import {
   listPlayedChronoBuckets,
   parseBucketKey,
   tablesListLabel,
-  uniqueTables,
   rankedSessions,
   recentSessions,
   formatDuration,
@@ -71,8 +80,16 @@ import {
 } from '../core/chrono-stats.js';
 
 const FEEDBACK_MS = 800;
-const BAD_SOUND_VOLUME = 0.35;
 const ALL_TABLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+// Ajout à la main d’un calcul : en multiplication et en addition seulement (deux nombres de
+// 1 à 10) ; en soustraction et en division, seules les erreurs remplissent la liste
+const MANUAL_ADD_OPERATORS = new Set(['×', '+']);
+// Phrase de la course hors multiplication : l’opération, sur toutes les tables
+const RACE_HINT_KEYS = Object.freeze({
+  '+': 'chrono_race_hint_addition',
+  '−': 'chrono_race_hint_subtraction',
+  '÷': 'chrono_race_hint_division',
+});
 // Case de réponse vide en « Je tape » : le « ? » de la question (« 8 × 6 = ? »)
 const TYPED_PLACEHOLDER = '?';
 
@@ -84,10 +101,30 @@ function clockNow() {
   return performance.now();
 }
 
-function loadChronoStore() {
+/**
+ * Profil et réserve de l’opération : `chronoStats` pour la multiplication, au format publié,
+ * `chronoStatsByOperator[op]` pour les autres. La façon de répondre retenue reste dans
+ * `chronoStats`, commune aux quatre opérations.
+ * @param {string} [operator]
+ */
+function loadChronoStore(operator = '×') {
   const userData = UserState.getCurrentUserData();
   userData.chronoStats = normalizeChronoStats(userData.chronoStats);
-  return { userData, store: userData.chronoStats };
+  if (operator === '×') return { userData, store: userData.chronoStats };
+  userData.chronoStatsByOperator = normalizeChronoStatsByOperator(userData.chronoStatsByOperator);
+  const stores = new Map(Object.entries(userData.chronoStatsByOperator));
+  return { userData, store: stores.get(operator) };
+}
+
+/** Opération choisie à l’accueil, multiplication par défaut */
+function currentOperator() {
+  const operator = UserState.getCurrentUserData()?.preferredOperator;
+  return CHRONO_OPERATORS.includes(operator) ? operator : '×';
+}
+
+/** « 7 × 8 », « 15 − 7 » : le calcul tel qu’il est posé */
+function factText(operator, a, b) {
+  return `${a} ${operator} ${b}`;
 }
 
 function persistChronoStore(userData) {
@@ -203,17 +240,23 @@ function createSetupBlock(name, titleKey) {
   const section = document.createElement('section');
   section.className = `chrono-block ${name}`;
   section.setAttribute('aria-labelledby', `${name}-title`);
-  const title = translatedElement('h3', titleKey);
+  const title = translatedElement('h2', titleKey, 'section-title');
   title.id = `${name}-title`;
   section.appendChild(title);
   return section;
 }
 
-/** Une section de l’écran de fin ou de « Mes temps » : son titre, sous un filet */
-function createResultsSection(titleKey) {
+/**
+ * Une section de l’écran de fin ou de « Mes temps » : son titre, sous un filet
+ * @param {string} titleKey
+ * @param {string} [headingTag='h3'] - h3 sous le titre d’un panneau (« Mes temps ») ; h2
+ *   sur l’écran de fin, dont le titre est le h1 de l’écran
+ * @returns {HTMLElement}
+ */
+function createResultsSection(titleKey, headingTag = 'h3') {
   const section = document.createElement('section');
   section.className = 'chrono-block';
-  section.appendChild(translatedElement('h3', titleKey));
+  section.appendChild(translatedElement(headingTag, titleKey));
   return section;
 }
 
@@ -228,7 +271,7 @@ function createBlockActions(buttons) {
  * Cible du focus (rendue, pas focalisée) après un ajout, « Tout effacer » ou le retrait du
  * dernier calcul : la ligne d’ajout
  */
-function focusAddRow(screen) {
+function addRowFocusTarget(screen) {
   return screen.querySelector('#chrono-add-a');
 }
 
@@ -266,7 +309,9 @@ export class ChronoMode extends GameMode {
     // Hors de resetState : start() réinitialise l’état avant d’appeler onStart()
     this.launch = { autoStart: options?.autoStart === true };
     this.phase = 'setup';
-    this.selectedTables = [...ALL_TABLES];
+    // L’opération est lue une fois, au lancement, comme l’Aventure
+    this.operator = currentOperator();
+    this.selectedTables = chronoTables(this.operator);
     this.inputMode = lastChronoInputMode(loadChronoStore().store);
     this.isRevision = false;
     this.revisionQueue = [];
@@ -280,11 +325,10 @@ export class ChronoMode extends GameMode {
     this.questionStartedAt = 0;
     this.typedValue = '';
     this.elapsedMs = 0;
-    this.timerInterval = null;
-    this._abandoned = false;
     this.lastSnapshot = null;
     this.resultsPane = 'session';
-    this.statsFocus = null;
+    // Classement ouvert dans « Mes temps » : ses tables, sa façon de répondre et sa clé
+    this.openBucket = null;
     this._onKeyDown = event => this.onPhysicalKey(event);
   }
 
@@ -299,7 +343,6 @@ export class ChronoMode extends GameMode {
     this.revisionTally = new Map();
     this.revisionOutcome = null;
     this.sessionOutcome = null;
-    this._abandoned = false;
   }
 
   async onStart() {
@@ -363,14 +406,28 @@ export class ChronoMode extends GameMode {
 
   setupGameControls() {
     const abandonBtn = document.getElementById('chrono-abandon');
-    if (abandonBtn) abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+    if (abandonBtn) abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
   }
 
-  confirmAbandon() {
-    if (!globalThis.confirm?.(getTranslation('confirm_abandon_chrono'))) return;
-    this._abandoned = true;
+  /**
+   * Demander confirmation d'abandon (game-exit.js)
+   * @returns {Promise<void>}
+   */
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
+    // stop() annule la question suivante et la fin : l'abandon n'enregistre rien (une course
+    // finie l'est déjà, dès sa dernière réponse)
     this.stop();
     void goToSlide(1);
+  }
+
+  /** Partie en cours (game-exit.js) : une course ou une révision, jusqu'à sa dernière réponse */
+  isGameInProgress() {
+    return this.state.isActive && this.phase === 'playing' && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_chrono');
   }
 
   /**
@@ -379,7 +436,7 @@ export class ChronoMode extends GameMode {
    * vaut pour les deux.
    */
   buildSetupPanel() {
-    const { store } = loadChronoStore();
+    const { store } = loadChronoStore(this.operator);
     const panel = document.createElement('div');
     panel.className = 'chrono-setup-panel';
     panel.appendChild(this.buildInputPicker());
@@ -388,10 +445,16 @@ export class ChronoMode extends GameMode {
     return panel;
   }
 
-  /** La course : 10 bonnes réponses contre le chrono, puis ses temps */
+  /**
+   * La course : 10 bonnes réponses contre le chrono, puis ses temps. Les tables se règlent
+   * dans les Paramètres en multiplication seulement : ailleurs, la phrase dit l’opération et
+   * que toutes les tables sont jouées.
+   */
   buildRacePanel() {
     const section = createSetupBlock('chrono-race', 'chrono_race_title');
-    section.appendChild(translatedElement('p', 'chrono_race_hint'));
+    section.appendChild(
+      translatedElement('p', RACE_HINT_KEYS[this.operator] ?? 'chrono_race_hint')
+    );
     section.appendChild(
       createBlockActions([
         translatedButton('chrono-start', 'chrono_start', 'btn btn-primary'),
@@ -399,7 +462,9 @@ export class ChronoMode extends GameMode {
       ])
     );
     // Mention secondaire après les boutons, comme le bonus du Défi
-    section.appendChild(translatedElement('p', 'chrono_tables_hint', 'chrono-tables-hint'));
+    if (this.operator === '×') {
+      section.appendChild(translatedElement('p', 'chrono_tables_hint', 'chrono-tables-hint'));
+    }
     return section;
   }
 
@@ -412,7 +477,7 @@ export class ChronoMode extends GameMode {
     group.className = 'chrono-input-mode';
     group.setAttribute('role', 'group');
     group.setAttribute('aria-labelledby', 'chrono-input-title');
-    const title = translatedElement('h3', 'chrono_input_legend');
+    const title = translatedElement('h2', 'chrono_input_legend', 'section-title');
     title.id = 'chrono-input-title';
     group.appendChild(title);
     const row = document.createElement('div');
@@ -442,14 +507,15 @@ export class ChronoMode extends GameMode {
    */
   buildBasketPanel(store) {
     const section = createSetupBlock('chrono-basket', 'chrono_basket_title');
+    const canAdd = MANUAL_ADD_OPERATORS.has(this.operator);
     if (store.basket.length === 0) {
       section.appendChild(translatedElement('p', 'chrono_basket_empty', 'chrono-tables-hint'));
-      section.appendChild(this.buildBasketAddRow());
+      if (canAdd) section.appendChild(this.buildBasketAddRow());
       return section;
     }
     section.appendChild(translatedElement('p', 'chrono_revision_hint'));
     section.appendChild(this.buildBasketList(store.basket));
-    section.appendChild(this.buildBasketAddRow());
+    if (canAdd) section.appendChild(this.buildBasketAddRow());
     section.appendChild(
       createBlockActions([
         translatedButton('chrono-start-revision', 'chrono_start_revision', 'btn btn-secondary'),
@@ -476,7 +542,7 @@ export class ChronoMode extends GameMode {
    * comme une multiplication.
    */
   buildBasketItem(item) {
-    const fact = `${item.a} × ${item.b}`;
+    const fact = factText(this.operator, item.a, item.b);
     const li = document.createElement('li');
     li.className = 'chrono-basket-item';
     const label = document.createElement('span');
@@ -506,7 +572,7 @@ export class ChronoMode extends GameMode {
     return li;
   }
 
-  /** Ajout à la main : « Ajouter un calcul : [ ? ] × [ ? ] [Ajouter] » */
+  /** Ajout à la main : « Ajouter un calcul : [ ? ] × [ ? ] [Ajouter] » (ou +) */
   buildBasketAddRow() {
     const row = document.createElement('div');
     row.className = 'chrono-basket-add';
@@ -516,7 +582,7 @@ export class ChronoMode extends GameMode {
     const a = this.buildFactorSelect('chrono-add-a', getTranslation('chrono_basket_add_a'));
     const times = document.createElement('span');
     times.className = 'chrono-basket-times';
-    times.textContent = '×';
+    times.textContent = this.operator;
     times.setAttribute('aria-hidden', 'true');
     const b = this.buildFactorSelect('chrono-add-b', getTranslation('chrono_basket_add_b'));
     const add = document.createElement('button');
@@ -567,10 +633,10 @@ export class ChronoMode extends GameMode {
       return;
     }
     const [a, b] = selects.map(select => select?.value);
-    const { userData, store } = loadChronoStore();
-    if (!addManualBasketFact(store, a, b)) return;
+    const { userData, store } = loadChronoStore(this.operator);
+    if (!addManualBasketFact(store, a, b, this.operator)) return;
     persistChronoStore(userData);
-    this.screenTask(this.rebuildSetup(focusAddRow));
+    this.screenTask(this.rebuildSetup(addRowFocusTarget));
   }
 
   /** « Choisis les deux nombres. » sous la ligne d’ajout, relié aux listes à choisir */
@@ -597,7 +663,7 @@ export class ChronoMode extends GameMode {
   }
 
   removeBasketFact(btn, index) {
-    const { userData, store } = loadChronoStore();
+    const { userData, store } = loadChronoStore(this.operator);
     removeFromBasket(store, { a: Number(btn.dataset.removeA), b: Number(btn.dataset.removeB) });
     persistChronoStore(userData);
     // Le focus va au calcul qui prend la place du retiré (au précédent si c’était le
@@ -605,7 +671,7 @@ export class ChronoMode extends GameMode {
     this.screenTask(
       this.rebuildSetup(screen => {
         const left = screen.querySelectorAll('.chrono-basket-remove');
-        return left[Math.min(index, left.length - 1)] ?? focusAddRow(screen);
+        return left[Math.min(index, left.length - 1)] ?? addRowFocusTarget(screen);
       })
     );
   }
@@ -649,14 +715,29 @@ export class ChronoMode extends GameMode {
         }
       });
     });
-    document.getElementById('chrono-basket-clear')?.addEventListener('click', () => {
-      // Toute la liste part d'un coup, sans retour : on demande d'abord
-      if (!globalThis.confirm?.(getTranslation('confirm_clear_chrono_basket'))) return;
-      const { userData, store } = loadChronoStore();
-      emptyBasket(store);
-      persistChronoStore(userData);
-      this.screenTask(this.rebuildSetup(focusAddRow));
+    document.getElementById('chrono-basket-clear')?.addEventListener('click', event => {
+      this.screenTask(this.confirmClearBasket(event.currentTarget));
     });
+  }
+
+  /**
+   * « Tout effacer » : toute la liste part d'un coup, sans retour, donc la fenêtre du jeu
+   * demande d'abord ; effacée, le focus revient à la ligne d'ajout
+   * @param {HTMLElement} origin - « Tout effacer » : refusé, le focus y revient
+   * @returns {Promise<void>}
+   */
+  async confirmClearBasket(origin) {
+    const confirmed = await confirmDialog({
+      title: getTranslation('confirm_clear_chrono_basket'),
+      confirmLabel: getTranslation('chrono_basket_dialog_confirm'),
+      cancelLabel: getTranslation('chrono_basket_dialog_cancel'),
+      returnFocusTo: origin,
+    });
+    if (!confirmed) return;
+    const { userData, store } = loadChronoStore(this.operator);
+    emptyBasket(store);
+    persistChronoStore(userData);
+    await this.rebuildSetup(addRowFocusTarget);
   }
 
   /**
@@ -666,7 +747,7 @@ export class ChronoMode extends GameMode {
    */
   async openStatsPick(returnKey = null) {
     this.phase = 'stats-pick';
-    this.statsFocus = null;
+    this.openBucket = null;
     await this.initializeUI();
     const rows = this.gameScreen?.querySelectorAll('[data-bucket-key]') ?? [];
     const row = [...rows].find(btn => btn.dataset.bucketKey === returnKey);
@@ -675,9 +756,9 @@ export class ChronoMode extends GameMode {
   }
 
   async openStatsDetail(key) {
-    const parsed = parseBucketKey(key);
+    const parsed = parseBucketKey(key, this.operator);
     if (!parsed) return;
-    this.statsFocus = { ...parsed, key };
+    this.openBucket = { ...parsed, key };
     this.phase = 'stats-detail';
     await this.initializeUI();
     this.focusPanelTitle();
@@ -705,11 +786,11 @@ export class ChronoMode extends GameMode {
   }
 
   bucketTablesText(tables) {
-    if (isFullTableSet(tables)) return getTranslation('chrono_stats_tables_all');
+    if (isFullTableSet(tables, this.operator)) return getTranslation('chrono_stats_tables_all');
     // « Table 7 », « Tables 3, 7 » : l'accord suit le nombre de tables
     return getTranslation('chrono_stats_tables', {
-      count: uniqueTables(tables).length,
-      list: tablesListLabel(tables),
+      count: uniqueTables(tables, this.operator).length,
+      list: tablesListLabel(tables, this.operator),
     });
   }
 
@@ -742,8 +823,8 @@ export class ChronoMode extends GameMode {
   }
 
   buildStatsPickPanel() {
-    const { store } = loadChronoStore();
-    const rows = listPlayedChronoBuckets(store);
+    const { store } = loadChronoStore(this.operator);
+    const rows = listPlayedChronoBuckets(store, this.operator);
     const panel = createStatsPanel('chrono_stats_pick_title');
     if (rows.length === 0) {
       panel.appendChild(translatedElement('p', 'chrono_stats_empty', 'chrono-tables-hint'));
@@ -805,14 +886,14 @@ export class ChronoMode extends GameMode {
     });
   }
 
+  /** Détail du classement ouvert (openStatsDetail le choisit avant de passer à cet écran) */
   buildStatsDetailPanel() {
-    const focus = this.statsFocus;
-    if (!focus) return this.buildStatsPickPanel();
-    const { store } = loadChronoStore();
-    const bucket = findBucket(store, focus.tables, focus.inputMode);
+    const { tables, inputMode } = this.openBucket;
+    const { store } = loadChronoStore(this.operator);
+    const bucket = findBucket(store, tables, inputMode, this.operator);
     const panel = createStatsPanel('chrono_stats_title');
     const averageMs = sessionAverageMs(bucket);
-    this.appendBucketSummary(panel, { ...focus, averageMs });
+    this.appendBucketSummary(panel, { tables, inputMode, averageMs });
     panel.appendChild(this.buildRanking(rankedSessions(bucket)));
     panel.appendChild(this.buildCurve(recentSessions(bucket), averageMs));
     panel.appendChild(
@@ -823,7 +904,7 @@ export class ChronoMode extends GameMode {
 
   bindStatsDetailPanel() {
     document.getElementById('chrono-stats-back-pick')?.addEventListener('click', () => {
-      this.screenTask(this.openStatsPick(this.statsFocus?.key));
+      this.screenTask(this.openStatsPick(this.openBucket?.key));
     });
   }
 
@@ -848,36 +929,33 @@ export class ChronoMode extends GameMode {
     persistChronoStore(userData);
   }
 
+  /** Tables de la course : celles des Paramètres en multiplication, toutes ailleurs */
   tablesFromPreferences() {
+    if (this.operator !== '×') return chronoTables(this.operator);
     const user = UserManager.getCurrentUser();
     const enabled = TablePreferences.isGlobalEnabled(user);
     const exclusions = enabled ? TablePreferences.getActiveExclusions(user) : [];
     return includedTablesFromExclusions(exclusions, enabled);
   }
 
+  /**
+   * Lance la course ou la révision. Une partie par instance (« Rejouer » en crée une autre) :
+   * start() vient de tout remettre à zéro (resetState), il reste à fixer ce qui sera joué.
+   * @param {boolean} revision
+   */
   async beginSession(revision) {
     if (this.phase !== 'setup') return;
-    const { store } = loadChronoStore();
+    const { store } = loadChronoStore(this.operator);
     if (revision) {
       if (store.basket.length === 0) return;
       this.isRevision = true;
       this.revisionBasket = store.basket.map(item => ({ ...item }));
-      this.revisionTally = startRevisionTally(store.basket);
+      this.revisionTally = startRevisionTally(store.basket, this.operator);
     } else {
       this.selectedTables = this.tablesFromPreferences();
-      this.isRevision = false;
-      this.revisionBasket = [];
-      this.revisionTally = new Map();
     }
     this.phase = 'playing';
-    this.sessionFacts = [];
-    this.revisionQueue = [];
     this.sessionStartedAt = clockNow();
-    this.endedAt = null;
-    this.elapsedMs = 0;
-    this._abandoned = false;
-    this.sessionOutcome = null;
-    this.revisionOutcome = null;
     await this.initializeUI();
     this.startElapsedTimer();
     this.generateQuestion();
@@ -888,65 +966,68 @@ export class ChronoMode extends GameMode {
     return (this.endedAt ?? clockNow()) - this.sessionStartedAt;
   }
 
+  /** Horloge de la barre d'information ; cleanup() l'arrête avec la partie (fin ou abandon) */
   startElapsedTimer() {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.intervals.delete(this.timerInterval);
-    }
     this.updateInfoBar();
-    this.timerInterval = setInterval(() => {
-      this.elapsedMs = this.sessionDurationMs();
-      this.updateInfoBar();
-    }, 250);
-    this.intervals.add(this.timerInterval);
+    this.intervals.add(
+      setInterval(() => {
+        this.elapsedMs = this.sessionDurationMs();
+        this.updateInfoBar();
+      }, 250)
+    );
   }
 
-  getQuestionOptions() {
-    // Ni un calcul déjà posé, ni son inverse : 6 × 8 après 8 × 6, c’est le même calcul
-    const avoid = this.sessionFacts.flatMap(fact => factKeys(fact.a, fact.b));
+  /**
+   * Prochain calcul d’une course : ni un calcul déjà posé, ni l’autre membre de sa famille
+   * (6 × 8 après 8 × 6, 15 − 8 après 15 − 7 : c’est le même calcul)
+   * @returns {{a: number, b: number}}
+   */
+  nextRaceFact() {
+    const keysOf = fact => factKeys(fact.a, fact.b, this.operator);
+    const avoid = this.sessionFacts.flatMap(keysOf);
     const last = this.sessionFacts.at(-1);
-    const recent = last ? factKeys(last.a, last.b) : [];
-    const { t, n } = pickChronoPair(this.selectedTables, avoid, recent);
-    return {
-      operator: '×',
-      type: this.inputMode === 'mcq' ? 'mcq' : 'classic',
-      forceTable: t,
-      forceNum: n,
-      tables: [t],
-      minNum: n,
-      maxNum: n,
+    const recent = last ? keysOf(last) : [];
+    return pickChronoFact(this.operator, this.selectedTables, avoid, recent);
+  }
+
+  /**
+   * La question d’un calcul, pour la course comme pour la révision : le texte de
+   * l’opération (signe moins U+2212, dont dépendent la voix et son clip), sa réponse, et
+   * table et multiplicande en multiplication seulement (Défi du jour, statistiques).
+   * @param {number} a
+   * @param {number} b
+   */
+  buildQuestion(a, b) {
+    const type = this.inputMode === 'mcq' ? 'mcq' : 'classic';
+    const question = {
+      question: getOperation(this.operator).formatQuestion(a, b, type),
+      answer: chronoAnswer(this.operator, a, b),
+      type,
+      operator: this.operator,
+      a,
+      b,
     };
+    if (this.operator === '×') Object.assign(question, { table: a, num: b });
+    return question;
   }
 
   generateQuestion() {
-    if (!this.isRevision) {
-      super.generateQuestion();
-      return;
-    }
     if (!this.state.isActive) return;
     try {
       this.hideContinueButton();
-      const fact = takeNextRevisionFact(
-        this.revisionQueue,
-        this.revisionBasket,
-        this.sessionFacts.at(-1)
-      );
+      const fact = this.isRevision
+        ? takeNextRevisionFact(
+            this.revisionQueue,
+            this.revisionBasket,
+            this.sessionFacts.at(-1),
+            this.operator
+          )
+        : this.nextRaceFact();
       if (!fact) {
         this.finish();
         return;
       }
-      const a = Number(fact.a);
-      const b = Number(fact.b);
-      this.state.currentQuestion = {
-        question: `${a} × ${b} = ?`,
-        answer: a * b,
-        type: this.inputMode === 'mcq' ? 'mcq' : 'classic',
-        operator: '×',
-        a,
-        b,
-        table: a,
-        num: b,
-      };
+      this.state.currentQuestion = this.buildQuestion(Number(fact.a), Number(fact.b));
       this.displayQuestion();
       this.onQuestionGenerated();
     } catch (error) {
@@ -1038,6 +1119,8 @@ export class ChronoMode extends GameMode {
     const grid = document.createElement('div');
     grid.className = 'chrono-keys';
     const keys = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'back', 0];
+    // Lecteur d'écran : un chiffre qui reçoit le focus est lu avec la question
+    const questionId = this.questionElement?.id;
     keys.forEach(key => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -1049,6 +1132,7 @@ export class ChronoMode extends GameMode {
       } else {
         btn.textContent = String(key);
         btn.dataset.key = String(key);
+        if (questionId) btn.setAttribute('aria-describedby', questionId);
       }
       btn.addEventListener('click', event => {
         // Clic à la souris ou au doigt (detail > 0) : la touche rend le focus, pour qu'Entrée
@@ -1141,33 +1225,50 @@ export class ChronoMode extends GameMode {
     const question = this.state.currentQuestion;
     const isCorrect = userAnswer === question.answer;
     this.sessionFacts.push({
-      a: question.a ?? question.table,
-      b: question.b ?? question.num,
+      a: question.a,
+      b: question.b,
       correct: isCorrect,
       ms: now - this.questionStartedAt,
     });
     this.detachKeyboard();
+    // La dernière réponse arrête le chrono, avant que la partie s’enregistre (dès cette
+    // réponse, GameMode.saveResultsOnce) : l’affichage qui la suit ne compte pas
+    if (this.isLastAnswer(isCorrect)) this.endedAt = now;
     super.handleAnswer(userAnswer);
-    // La dernière réponse arrête le chrono : l’affichage qui la suit ne compte pas
-    if (!this.shouldContinue()) this.endedAt = now;
+  }
+
+  /** Cette réponse termine-t-elle la partie ? (10 justes en course, 10 questions en révision) */
+  isLastAnswer(isCorrect) {
+    return !chronoShouldContinue({
+      isRevision: this.isRevision,
+      correctAnswers: this.state.correctAnswers + (isCorrect ? 1 : 0),
+      questionCount: this.state.questionCount + 1,
+    });
+  }
+
+  /** Une course compte au tableau de bord dès sa première réponse, même abandonnée ; pas une révision */
+  countsGames() {
+    return !this.isRevision;
   }
 
   onAnswerSubmitted(isCorrect) {
     const question = this.state.currentQuestion;
     if (this.isRevision) {
       // Révision : les compteurs vivent en mémoire jusqu’à la fin, aucune pièce par réponse
-      tallyRevisionAnswer(this.revisionTally, question, isCorrect);
+      tallyRevisionAnswer(this.revisionTally, question, isCorrect, this.operator);
       return;
     }
     if (!isCorrect) return;
-    const { userData } = loadChronoStore();
+    const { userData } = loadChronoStore(this.operator);
     grantChronoCoins(userData);
     persistChronoStore(userData);
     updateCoinDisplay();
     const coinIcon = document.querySelector('.coin-count');
     if (coinIcon) showCoinGainAnimation(coinIcon);
-    // Après l’enregistrement : le profil, réécrit en entier, effacerait sa récompense
-    updateDailyChallengeProgress(question.table, question.num);
+    // Après l’enregistrement : le profil, réécrit en entier, effacerait sa récompense. Le Défi
+    // du jour porte sur une table de multiplication : les autres opérations ne le font pas
+    // avancer, comme dans le Quiz, le Défi et l’Aventure
+    if (question.operator === '×') updateDailyChallengeProgress(question.table, question.num);
   }
 
   showAnswerFeedback(isCorrect, userAnswer) {
@@ -1185,7 +1286,8 @@ export class ChronoMode extends GameMode {
       playSound('good');
       return;
     }
-    playSound('bad', { volume: BAD_SOUND_VOLUME });
+    // Son d'erreur adouci par le gestionnaire audio, comme dans tous les modes
+    playSound('bad');
   }
 
   scheduleNextQuestion() {
@@ -1202,35 +1304,30 @@ export class ChronoMode extends GameMode {
 
   onStop() {
     this.detachKeyboard();
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.intervals.delete(this.timerInterval);
-      this.timerInterval = null;
-    }
   }
 
   saveResults() {
-    if (this._abandoned) return;
     if (this.isRevision) {
       this.saveRevision();
       return;
     }
     if (this.sessionFacts.length === 0) return;
-    const { userData, store } = loadChronoStore();
+    const { userData, store } = loadChronoStore(this.operator);
     this.sessionOutcome = saveChronoSession(store, {
       tables: this.selectedTables,
       inputMode: this.inputMode,
       durationMs: this.sessionDurationMs(),
       date: Date.now(),
       facts: this.sessionFacts,
+      operator: this.operator,
     });
     persistChronoStore(userData);
   }
 
   /** Fin d’une révision terminée : la liste évolue, une pièce par calcul qui en sort */
   saveRevision() {
-    const { userData, store } = loadChronoStore();
-    this.revisionOutcome = applyRevisionTally(store, this.revisionTally);
+    const { userData, store } = loadChronoStore(this.operator);
+    this.revisionOutcome = applyRevisionTally(store, this.revisionTally, this.operator);
     grantChronoCoins(userData, this.revisionOutcome.mastered.length);
     persistChronoStore(userData);
     if (this.revisionOutcome.mastered.length > 0) updateCoinDisplay();
@@ -1240,8 +1337,10 @@ export class ChronoMode extends GameMode {
     const shown = goToSlide(5);
     const resultsScreen = document.getElementById('results');
     if (!resultsScreen) return;
-    const { store } = loadChronoStore();
-    const bucket = this.isRevision ? null : findBucket(store, this.selectedTables, this.inputMode);
+    const { store } = loadChronoStore(this.operator);
+    const bucket = this.isRevision
+      ? null
+      : findBucket(store, this.selectedTables, this.inputMode, this.operator);
     this.resultsPane = 'session';
     this.lastSnapshot = {
       durationMs: this.sessionDurationMs(),
@@ -1254,7 +1353,6 @@ export class ChronoMode extends GameMode {
       curve: recentSessions(bucket),
       tables: [...this.selectedTables],
       inputMode: this.inputMode,
-      basketSize: store.basket.length,
       avatar: gameState?.avatar,
     };
     this.mountResultsPane({ ready: shown });
@@ -1292,7 +1390,7 @@ export class ChronoMode extends GameMode {
         ...this.resultsMessages(result, lang),
       })
     );
-    container.appendChild(this.buildFactsTable(result.facts));
+    container.appendChild(this.buildFactsTable(result.facts, 'h2'));
     container.appendChild(this.buildSessionActions(result));
     return container;
   }
@@ -1305,13 +1403,9 @@ export class ChronoMode extends GameMode {
     if (result.isRevision) {
       return {
         message: getTranslation('chrono_revision_mastered', {
-          n: result.revision?.mastered.length ?? 0,
+          n: result.revision.mastered.length,
         }),
-        details: [
-          getTranslation('chrono_revision_left', {
-            n: result.revision?.remaining ?? result.basketSize,
-          }),
-        ],
+        details: [getTranslation('chrono_revision_left', { n: result.revision.remaining })],
       };
     }
     const outcome = result.outcome;
@@ -1369,10 +1463,11 @@ export class ChronoMode extends GameMode {
     const container = document.createElement('section');
     container.className = 'results-container content-card game-results chrono-results';
     container.setAttribute('aria-label', getTranslation('chrono_stats_title'));
-    container.appendChild(translatedElement('h2', 'chrono_stats_title'));
+    // Titre de niveau 1 de l’écran, sections en h2
+    container.appendChild(translatedElement('h1', 'chrono_stats_title', 'screen-title'));
     this.appendBucketSummary(container, result);
-    container.appendChild(this.buildRanking(result.ranking));
-    container.appendChild(this.buildCurve(result.curve, result.averageMs));
+    container.appendChild(this.buildRanking(result.ranking, 'h2'));
+    container.appendChild(this.buildCurve(result.curve, result.averageMs, 'h2'));
     container.appendChild(
       createResultsActions([
         {
@@ -1391,9 +1486,14 @@ export class ChronoMode extends GameMode {
     return container;
   }
 
-  buildFactsTable(facts) {
+  /**
+   * Calculs de la partie
+   * @param {Array} facts
+   * @param {string} [headingTag] - Niveau du titre (voir createResultsSection)
+   */
+  buildFactsTable(facts, headingTag) {
     const lang = getCurrentLanguage();
-    const wrap = createResultsSection('chrono_facts_title');
+    const wrap = createResultsSection('chrono_facts_title', headingTag);
     const list = document.createElement('ol');
     list.className = 'chrono-facts';
     facts.forEach(fact => {
@@ -1402,7 +1502,8 @@ export class ChronoMode extends GameMode {
       const equation = document.createElement('span');
       equation.className = 'chrono-fact-eq';
       // La correction des erreurs : le calcul complet, ici plutôt qu’en jeu
-      equation.textContent = `${fact.a} × ${fact.b} = ${fact.a * fact.b}`;
+      const result = chronoAnswer(this.operator, fact.a, fact.b);
+      equation.textContent = `${factText(this.operator, fact.a, fact.b)} = ${result}`;
       const time = document.createElement('span');
       time.className = 'chrono-fact-time';
       time.textContent = formatDuration(fact.ms, lang);
@@ -1422,10 +1523,14 @@ export class ChronoMode extends GameMode {
     return wrap;
   }
 
-  /** Les 10 meilleurs temps, avec leur date, dans la langue du jeu */
-  buildRanking(sessions) {
+  /**
+   * Les 10 meilleurs temps, avec leur date, dans la langue du jeu
+   * @param {Array} sessions
+   * @param {string} [headingTag] - Niveau du titre (voir createResultsSection)
+   */
+  buildRanking(sessions, headingTag) {
     const lang = getCurrentLanguage();
-    const wrap = createResultsSection('chrono_ranking_title');
+    const wrap = createResultsSection('chrono_ranking_title', headingTag);
     const list = document.createElement('ol');
     list.className = 'chrono-ranking';
     sessions.forEach(session => {
@@ -1438,8 +1543,14 @@ export class ChronoMode extends GameMode {
     return wrap;
   }
 
-  buildCurve(sessions, averageMs) {
-    const wrap = createResultsSection('chrono_curve_title');
+  /**
+   * Courbe des temps
+   * @param {Array} sessions
+   * @param {number|null} averageMs
+   * @param {string} [headingTag] - Niveau du titre (voir createResultsSection)
+   */
+  buildCurve(sessions, averageMs, headingTag) {
+    const wrap = createResultsSection('chrono_curve_title', headingTag);
     wrap.appendChild(this.drawCurve(sessions, averageMs));
     return wrap;
   }

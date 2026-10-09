@@ -1,0 +1,39 @@
+{
+  "_lisez-moi": "Verrou des pages juridiques (tests-esm/legal-pages.esm.test.mjs). Un texte modifié dans #slide9 ou #slide10 d’index.html change de date de révision : ajouter en fin de « revisions » une entrée avec la nouvelle date (fr, en, es) et l’empreinte que donne le test, puis mettre cette date dans index.html et dans la clé de traduction de la page (fr, en, es).",
+  "slide9": {
+    "titre": "Mentions légales",
+    "cle": "legal_last_updated",
+    "revisions": [
+      {
+        "date": {
+          "fr": "Dernière mise à jour : 15 septembre 2025",
+          "en": "Last updated: September 15, 2025",
+          "es": "Última actualización: 15 de septiembre de 2025"
+        },
+        "empreinte": "b5bc2609d39bba0a797ccec47e515172ab001b9d82d64ddd52266685bec5d35c"
+      }
+    ]
+  },
+  "slide10": {
+    "titre": "Politique de confidentialité",
+    "cle": "privacy_last_updated",
+    "revisions": [
+      {
+        "date": {
+          "fr": "Dernière mise à jour : 15 septembre 2025",
+          "en": "Last updated: September 15, 2025",
+          "es": "Última actualización: 15 de septiembre de 2025"
+        },
+        "empreinte": "018de7930f99de1092a010f439e4b31e25f0bf017fc1433e4fd8546010c52bbf"
+      },
+      {
+        "date": {
+          "fr": "Dernière mise à jour : 9 octobre 2026",
+          "en": "Last updated: October 9, 2026",
+          "es": "Última actualización: 9 de octubre de 2026"
+        },
+        "empreinte": "edb9176e8fd53e856fa03192770a414fc12a95db86dc73b6c7d331aa57c183b1"
+      }
+    ]
+  }
+}

@@ -1,80 +1,71 @@
 /**
- * Arcade scores helpers (ESM)
- * Centralized helpers to save/get/reset per-user arcade scores (Top 5)
- * Exposes window bridges for legacy compatibility.
+ * Scores d'Arcade, rangés dans le profil du joueur (`modeStats`, core/mode-stats.js) : les
+ * 5 meilleurs scores de chaque jeu pour l'écran de fin, et les compteurs du tableau de bord
+ * (parties, total, record), par opération.
+ * Avant la v37, ils vivaient dans localStorage sous le SURNOM (arcadeScores_<surnom>) : un
+ * changement de surnom les faisait disparaître, deux profils au même surnom les partageaient,
+ * et ils survivaient à la suppression du profil. Ces clés sont importées une fois dans le
+ * profil (userManager.js) et ne sont plus écrites.
  */
 import { UserState } from './core/userState.js';
+import { recordArcadeGame, arcadeTopScores, resetArcadeGame } from './core/mode-stats.js';
 
-function getCurrentUserId() {
+/**
+ * Enregistre une partie jouée : score, opération du lancement
+ * @param {number} score
+ * @param {string} [game] - invasion, multimiam, multimemory, multisnake
+ * @param {string} [operator] - Opération de la partie (celle du profil par défaut)
+ */
+export function saveArcadeScore(score, game = 'invasion', operator = null) {
   try {
-    // ESM path: use UserState current user's nickname if available
-    const name = UserState.getCurrentUserData()?.nickname;
-    if (name && String(name).trim()) return String(name).trim();
-  } catch {
-    // Erreur ignorée (non-critique)
+    const userData = UserState.getCurrentUserData();
+    recordArcadeGame(userData, {
+      game,
+      operator: operator || userData.preferredOperator || '×',
+      score,
+    });
+    UserState.updateUserData(userData);
+  } catch (error) {
+    // Stockage indisponible : l'écran de fin s'affiche quand même
+    console.error('[arcade-scores] Score non enregistré :', error);
   }
-  return 'default';
 }
 
-export function saveArcadeScore(score, prefix = 'arcadeScores_') {
-  const user = getCurrentUserId();
-  let arcadeScores;
+/** Les 5 meilleurs scores d'un jeu, du plus grand au plus petit */
+export function getArcadeScores(game = 'invasion') {
   try {
-    arcadeScores = JSON.parse(localStorage.getItem(prefix + user) || '[]');
-  } catch {
-    arcadeScores = [];
-  }
-  arcadeScores.push(Number(score) || 0);
-  arcadeScores = arcadeScores.sort((a, b) => b - a).slice(0, 5);
-  localStorage.setItem(prefix + user, JSON.stringify(arcadeScores));
-}
-
-export function getArcadeScores(prefix = 'arcadeScores_') {
-  const user = getCurrentUserId();
-  try {
-    return JSON.parse(localStorage.getItem(prefix + user) || '[]');
+    return arcadeTopScores(UserState.getCurrentUserData(), game);
   } catch {
     return [];
   }
 }
 
-export function resetArcadeScores(prefix = 'arcadeScores_') {
-  const user = getCurrentUserId();
-  localStorage.setItem(prefix + user, '[]');
+/** « Remettre à zéro » : les meilleurs scores et les compteurs de ce jeu */
+export function resetArcadeScores(game = 'invasion') {
+  try {
+    const userData = UserState.getCurrentUserData();
+    resetArcadeGame(userData, game);
+    UserState.updateUserData(userData);
+  } catch (error) {
+    console.error('[arcade-scores] Remise à zéro impossible :', error);
+  }
 }
 
-// Specific wrappers
-export function saveArcadeScoreSnake(score) {
-  saveArcadeScore(score, 'arcadeScores_multisnake_');
-}
-export function getArcadeScoresSnake() {
-  return getArcadeScores('arcadeScores_multisnake_');
-}
-export function resetArcadeScoresSnake() {
-  resetArcadeScores('arcadeScores_multisnake_');
-}
+// Chaque jeu a ses scores
+export const saveArcadeScoreSnake = (score, operator) =>
+  saveArcadeScore(score, 'multisnake', operator);
+export const getArcadeScoresSnake = () => getArcadeScores('multisnake');
+export const resetArcadeScoresSnake = () => resetArcadeScores('multisnake');
 
-export function saveArcadeScorePacman(score) {
-  saveArcadeScore(score, 'arcadeScores_multimiam_');
-}
-export function getArcadeScoresPacman() {
-  return getArcadeScores('arcadeScores_multimiam_');
-}
-export function resetArcadeScoresPacman() {
-  resetArcadeScores('arcadeScores_multimiam_');
-}
+export const saveArcadeScorePacman = (score, operator) =>
+  saveArcadeScore(score, 'multimiam', operator);
+export const getArcadeScoresPacman = () => getArcadeScores('multimiam');
+export const resetArcadeScoresPacman = () => resetArcadeScores('multimiam');
 
-export function saveArcadeScoreMemory(score) {
-  saveArcadeScore(score, 'arcadeScores_multimemory_');
-}
-export function getArcadeScoresMemory() {
-  return getArcadeScores('arcadeScores_multimemory_');
-}
-export function resetArcadeScoresMemory() {
-  resetArcadeScores('arcadeScores_multimemory_');
-}
-
-// No global bridges; import functions via ESM
+export const saveArcadeScoreMemory = (score, operator) =>
+  saveArcadeScore(score, 'multimemory', operator);
+export const getArcadeScoresMemory = () => getArcadeScores('multimemory');
+export const resetArcadeScoresMemory = () => resetArcadeScores('multimemory');
 
 export default {
   saveArcadeScore,

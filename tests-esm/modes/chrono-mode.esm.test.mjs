@@ -24,6 +24,13 @@ import {
 import { readFileSync } from 'node:fs';
 import { createUserStateMock, createSlidesMock } from '../helpers/mode-test-helpers.mjs';
 import {
+  answerDialog,
+  closeOpenDialog,
+  dialogLabels,
+  dialogQuestion,
+  dialogTitle,
+} from '../helpers/confirm-dialog-helpers.mjs';
+import {
   createLazyLoaderMock,
   createGameMock,
   createSpeechMock,
@@ -80,7 +87,7 @@ function chronoStats() {
 async function expectNothingRunningAfterHome() {
   await goToSlide(1);
   expect(instances.every(chrono => chrono.state.isActive === false)).toBe(true);
-  expect(instances.every(chrono => chrono.timerInterval === null)).toBe(true);
+  expect(instances.every(chrono => chrono.intervals.size === 0)).toBe(true);
 }
 
 beforeAll(() => {
@@ -102,6 +109,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  closeOpenDialog();
   stopChronoMode();
   jest.useRealTimers();
   jest.mocked(AudioManager.playSound).mockRestore();
@@ -202,24 +210,24 @@ describe('Chrono : une partie', () => {
     const chrono = await startChrono();
     showQuestion(chrono, 7, 8);
     await answer(chrono, false);
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
-    chrono.confirmAbandon();
+    const abandon = chrono.confirmAbandon();
+    await answerDialog(true);
+    await abandon;
     await flush(5000);
+    expect(goToSlide).toHaveBeenCalledWith(1);
     expect(chronoStats().buckets).toEqual([]);
     expect(chronoStats().basket).toEqual([]);
-    confirm.mockRestore();
   });
 
-  test('« Annuler » à la question d’abandon : la course continue', async () => {
+  test('« Continuer la partie » à la question d’abandon : la course continue', async () => {
     const chrono = await startChrono();
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(false);
     document.querySelector('#chrono-abandon').click();
+    expect(dialogQuestion()).toBe(FR.confirm_abandon_chrono);
+    await answerDialog(false);
     await flush(5000);
-    expect(confirm).toHaveBeenCalledWith(FR.confirm_abandon_chrono);
     expect(chrono.state.isActive).toBe(true);
     expect(chrono.phase).toBe('playing');
     expect(goToSlide).not.toHaveBeenCalledWith(1);
-    confirm.mockRestore();
   });
 });
 
@@ -239,7 +247,7 @@ describe('Chrono : écran de départ', () => {
     await openSetup([{ a: 7, b: 8, due: 1 }]);
     const race = block('chrono-race');
     const basket = block('chrono-basket');
-    expect(race.querySelector('h3').textContent).toBe(FR.chrono_race_title);
+    expect(race.querySelector('h2').textContent).toBe(FR.chrono_race_title);
     expect(race.querySelector('#chrono-start').textContent).toBe(FR.chrono_start);
     expect(race.querySelector('#chrono-open-stats')).not.toBeNull();
     expect(race.querySelector('#chrono-start-revision')).toBeNull();
@@ -261,7 +269,7 @@ describe('Chrono : écran de départ', () => {
     const group = document.querySelector('.chrono-input-mode');
     expect(group.getAttribute('role')).toBe('group');
     const title = document.getElementById(group.getAttribute('aria-labelledby'));
-    expect(title.tagName).toBe('H3');
+    expect(title.tagName).toBe('H2');
     expect(title.textContent).toBe(FR.chrono_input_legend);
     const tiles = [...group.querySelectorAll('.chrono-input-btn')];
     expect(tiles.map(tile => tile.textContent)).toEqual([
@@ -400,26 +408,31 @@ describe('Chrono : écran de départ', () => {
       `${FR.chrono_basket_remove} 6 × 7`
     );
     // Tout effacer : le focus revient à la ligne d’ajout
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
     document.querySelector('#chrono-basket-clear').click();
+    await answerDialog(true);
     await flush();
     expect(document.activeElement.id).toBe('chrono-add-a');
-    confirm.mockRestore();
   });
 
-  test('« Tout effacer » demande d’abord ; « Annuler » garde la liste', async () => {
+  test('« Tout effacer » demande d’abord, dans la fenêtre du jeu ; « Garder ma liste » la garde', async () => {
     await openSetup([{ a: 7, b: 8, due: 1 }]);
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(false);
-    document.querySelector('#chrono-basket-clear').click();
+    const clear = document.querySelector('#chrono-basket-clear');
+    clear.focus();
+    clear.click();
+    expect(dialogTitle()).toBe(FR.confirm_clear_chrono_basket);
+    expect(dialogLabels()).toEqual([
+      FR.chrono_basket_dialog_cancel,
+      FR.chrono_basket_dialog_confirm,
+    ]);
+    await answerDialog(false);
     await flush();
-    expect(confirm).toHaveBeenCalledWith(FR.confirm_clear_chrono_basket);
     expect(chronoStats().basket).toEqual([{ a: 7, b: 8, due: 1 }]);
+    expect(document.activeElement).toBe(clear);
 
-    confirm.mockReturnValue(true);
     document.querySelector('#chrono-basket-clear').click();
+    await answerDialog(true);
     await flush();
     expect(chronoStats().basket).toEqual([]);
-    confirm.mockRestore();
   });
 
   test('« Ajouter » sans les deux nombres : le focus va sur celui qui manque', async () => {
@@ -574,6 +587,21 @@ describe('Chrono : écran de départ', () => {
     // Le navigateur clique lui-même le bouton qui a le focus : Chrono n'y touche pas
     expect(event.defaultPrevented).toBe(false);
     expect(chrono.sessionFacts).toHaveLength(0);
+  });
+
+  test('lecteur d’écran : chaque réponse et chaque chiffre du pavé sont reliés à la question', async () => {
+    for (const inputMode of ['mcq', 'keypad']) {
+      const chrono = await startChrono({ inputMode });
+      showQuestion(chrono, 6, 7);
+      const answers = document.querySelectorAll('#chrono-options .option, .chrono-key');
+      const digits = [...answers].filter(el => el.dataset.key !== 'back');
+      expect(digits.length).toBeGreaterThan(1);
+      for (const el of digits) {
+        const described = document.getElementById(el.getAttribute('aria-describedby'));
+        expect(described?.textContent).toBe(document.getElementById('chrono-question').textContent);
+      }
+      chrono.stop();
+    }
   });
 
   test('en « Je tape », la case de réponse vide affiche « ? », comme la question', async () => {
@@ -762,12 +790,13 @@ describe('Chrono : révision', () => {
     seedBasket([{ a: 7, b: 8, due: 2 }]);
     const chrono = await startChrono({ revision: true });
     for (let i = 0; i < 4; i += 1) await answer(chrono);
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
-    chrono.confirmAbandon();
+    const abandon = chrono.confirmAbandon();
+    await answerDialog(true);
+    await abandon;
     await flush(5000);
+    expect(chrono.state.isActive).toBe(false);
     expect(chronoStats().basket).toEqual([{ a: 7, b: 8, due: 2 }]);
     expect(userStore.coins).toBe(0);
-    confirm.mockRestore();
   });
 });
 
@@ -814,7 +843,7 @@ describe('Chrono : langue', () => {
     store.setTranslations(EN);
     store.setCurrentLanguage('en');
     await refreshChronoTexts();
-    expect(document.querySelector('.chrono-race h3').textContent).toBe(EN.chrono_race_title);
+    expect(document.querySelector('.chrono-race h2').textContent).toBe(EN.chrono_race_title);
     expect(document.querySelector('#chrono-start').textContent).toBe(EN.chrono_start);
     expect(document.querySelector('.chrono-basket-item .sr-only').textContent).toBe(
       formatMessage(EN.chrono_basket_errors, { n: 2 }, 'en')
@@ -858,18 +887,14 @@ describe('Chrono : clavier, avec la navigation clavier de l’application', () =
   });
 
   test('Entrée sur « Abandonner » abandonne, sans valider ce qui est tapé', async () => {
-    const confirm = jest.spyOn(globalThis, 'confirm').mockReturnValue(false);
-    try {
-      const chrono = await startChrono({ inputMode: 'keypad' });
-      showQuestion(chrono, 6, 7);
-      key('4').click();
-      enterOn(document.getElementById('chrono-abandon'));
-      expect(confirm).toHaveBeenCalledTimes(1);
-      expect(chrono.sessionFacts).toHaveLength(0);
-      expect(typed()).toBe('4');
-    } finally {
-      confirm.mockRestore();
-    }
+    const chrono = await startChrono({ inputMode: 'keypad' });
+    showQuestion(chrono, 6, 7);
+    key('4').click();
+    enterOn(document.getElementById('chrono-abandon'));
+    expect(dialogQuestion()).toBe(FR.confirm_abandon_chrono);
+    expect(chrono.sessionFacts).toHaveLength(0);
+    expect(typed()).toBe('4');
+    await answerDialog(false);
   });
 
   test('après un clic à la souris, Entrée valide ce qui est tapé : « 10 », pas « 100 »', async () => {

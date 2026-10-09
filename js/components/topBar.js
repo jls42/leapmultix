@@ -185,6 +185,42 @@ function applyLanguageState(button, activeLang) {
   button.setAttribute('aria-pressed', String(isActive));
 }
 
+/**
+ * Écrans du joueur choisi, dans la barre du haut comme les autres boutons (dans le menu sur
+ * téléphone et tablette) : ils étaient deux boutons sous le contenu de l'accueil
+ */
+const PLAYER_SCREENS = Object.freeze([
+  {
+    slide: '7',
+    className: 'dashboard-btn',
+    icon: 'chart-column',
+    labelKey: 'dashboard',
+    labelFallback: 'Tableau de bord',
+  },
+  {
+    slide: '6',
+    className: 'personalization-btn',
+    icon: 'palette',
+    labelKey: 'personalization',
+    labelFallback: 'Personnalisation',
+  },
+]);
+
+/** Ce qui n'existe qu'avec un joueur choisi */
+const PLAYER_CONTROLS = [
+  '.coin-display',
+  '.table-settings-btn',
+  '.change-user-btn',
+  '.dashboard-btn',
+  '.personalization-btn',
+]
+  .map(selector => `.top-bar ${selector}`)
+  .join(', ');
+
+/** Bouton qui mène à l'écran où il se trouve déjà (le tableau de bord sur le tableau de bord) */
+const opensOwnScreen = el =>
+  Boolean(el.dataset.slide) && el.closest('.slide')?.id === `slide${el.dataset.slide}`;
+
 /** Un joueur est-il choisi ? (sinon, l'accueil et les réglages de profil n'ont pas de sens) */
 function hasCurrentPlayer() {
   try {
@@ -311,6 +347,9 @@ export const TopBar = {
 
     navContainer.appendChild(this._buildLanguageSelector());
 
+    // Tableau de bord et Personnalisation : écrans du joueur choisi
+    this._appendPlayerScreens(navContainer, slideNumber, config.showCoinDisplay);
+
     // Paramètres des tables (visible uniquement si un profil est choisi)
     if (config.showCoinDisplay) {
       navContainer.appendChild(
@@ -354,6 +393,27 @@ export const TopBar = {
     }
 
     return top;
+  },
+
+  /** Les écrans du joueur, à la suite dans le menu (pas sur le choix du joueur) */
+  _appendPlayerScreens(navContainer, slideNumber, withPlayer) {
+    if (!withPlayer) return;
+    for (const screen of PLAYER_SCREENS) {
+      navContainer.appendChild(this._buildScreenButton(screen, slideNumber));
+    }
+  },
+
+  /** Bouton d'un écran du joueur ; masqué sur cet écran même, qu'il n'a pas à rouvrir */
+  _buildScreenButton(screen, slideNumber) {
+    const button = createIconButton({
+      className: `btn btn-sm btn-secondary icon-btn ${screen.className}`,
+      icon: screen.icon,
+      labelKey: screen.labelKey,
+      labelFallback: screen.labelFallback,
+    });
+    button.dataset.slide = screen.slide;
+    if (screen.slide === slideNumber) button.hidden = true;
+    return button;
   },
 
   _buildCoinDisplay() {
@@ -483,15 +543,14 @@ export const TopBar = {
   },
 
   /**
-   * Pièces, paramètres des tables et « Changer de joueur » n'existent qu'avec un
-   * joueur choisi : sans lui, ils sont retirés de toutes les barres.
+   * Pièces, paramètres des tables, « Changer de joueur », tableau de bord et personnalisation
+   * n'existent qu'avec un joueur choisi : sans lui, ils sont retirés de toutes les barres.
+   * Le bouton d'un écran reste masqué sur cet écran.
    */
   updatePlayerControls() {
     const hidden = !hasCurrentPlayer();
-    for (const el of document.querySelectorAll(
-      '.top-bar .coin-display, .top-bar .table-settings-btn, .top-bar .change-user-btn'
-    )) {
-      el.hidden = hidden;
+    for (const el of document.querySelectorAll(PLAYER_CONTROLS)) {
+      el.hidden = hidden || opensOwnScreen(el);
     }
   },
 
@@ -665,7 +724,11 @@ export const TopBar = {
       for (const nav of document.querySelectorAll('.top-bar-nav.is-open')) {
         const topBar = nav.closest('.top-bar');
         if (topBar && !topBar.contains(event.target)) {
+          // Une fenêtre ouverte depuis ce menu vient d'y rendre le focus (clic sur l'un de ses
+          // boutons) : il passe au bouton ☰, sinon il se perdrait avec le menu caché
+          const focusInMenu = nav.contains(document.activeElement);
           this.setMenuOpen(topBar, false);
+          if (focusInMenu) topBar.querySelector('.burger-menu-btn')?.focus({ preventScroll: true });
         }
       }
     });

@@ -80,6 +80,9 @@ import { APP_VERSION, VERSION_PARAM } from './cache-updater.js';
       runtime.requestIdleCallback(runner, { timeout: 2500 });
     } else {
       runtime.addEventListener('load', runner, { once: true });
+      // Sans requestIdleCallback (Safari), load peut tarder : un script tiers qui ne répond pas
+      // le retient. Les styles arrivent alors au même délai qu'ailleurs (runner ne double rien)
+      runtime.setTimeout(runner, 2500);
     }
   };
 

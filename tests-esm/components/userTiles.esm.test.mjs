@@ -1,8 +1,24 @@
 /* eslint-env jest, node */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { answerDialog, closeOpenDialog, openDialog } from '../helpers/confirm-dialog-helpers.mjs';
 
 const { UserManager } = await import('../../js/userManager.js');
 const { VideoManager } = await import('../../js/VideoManager.js');
+
+/** La tuile d'un joueur, par son prénom (les tuiles sont triées) */
+const itemOf = name =>
+  document.querySelector(`#user-list li.user-container[data-player="${name}"]`);
+
+/** Avatar d'une tête (js/avatar-heads.js) : ses variantes WebP et son PNG de repli */
+function headOf(img) {
+  const variants = img.getAttribute('srcset').split(', ');
+  const avatar = /arcade\/([a-z]+)_head_avatar-128\.webp 128w$/.exec(variants.at(0))?.[1];
+  expect(variants.at(-1)).toBe(
+    `assets/generated-images/arcade/${avatar}_head_avatar-512.webp 512w`
+  );
+  expect(img.dataset.fallback).toBe(`assets/images/arcade/${avatar}_head_avatar_128x128.png`);
+  return { avatar, sizes: img.getAttribute('sizes') };
+}
 
 const CREATION_MARKUP = `
   <div id="user-list" class="user-list"></div>
@@ -26,8 +42,6 @@ const CREATION_MARKUP = `
 `;
 
 describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', () => {
-  let originalConfirm;
-
   beforeEach(() => {
     document.body.innerHTML = CREATION_MARKUP;
     UserManager._players = {
@@ -36,11 +50,10 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
       Eve: { avatar: '../../../etc/passwd', nickname: 'Eve' },
     };
     UserManager._currentUser = null;
-    originalConfirm = globalThis.confirm;
   });
 
   afterEach(() => {
-    globalThis.confirm = originalConfirm;
+    closeOpenDialog();
     document.body.innerHTML = '';
   });
 
@@ -49,11 +62,14 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
 
     const items = document.querySelectorAll('#user-list ul.user-tiles > li.user-container');
     expect(items).toHaveLength(3);
+    // Dans l'ordre alphabétique, pas dans l'ordre de création
+    expect([...items].map(item => item.dataset.player)).toEqual(['Eve', 'Lina', 'Sam']);
 
-    const linaTile = items[0].querySelector('button.user-tile');
+    const linaTile = itemOf('Lina').querySelector('button.user-tile');
     expect(linaTile.type).toBe('button');
     const face = linaTile.querySelector('img.user-tile-face');
-    expect(face.getAttribute('src')).toBe('assets/images/arcade/panda_head_avatar_128x128.png');
+    // 72 px (css/users.css) : la variante de 256 px en densité 2 et 3
+    expect(headOf(face)).toEqual({ avatar: 'panda', sizes: '72px' });
     expect(face.getAttribute('alt')).toBe('');
     expect(linaTile.querySelector('.user-tile-name').textContent).toBe('Lina');
   });
@@ -61,16 +77,16 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
   test("l'avatar enregistré est filtré : alias français converti, valeur inconnue remplacée", () => {
     UserManager.refreshUserList();
 
-    const [, sam, eve] = document.querySelectorAll('#user-list .user-tile-face');
-    expect(sam.getAttribute('src')).toBe('assets/images/arcade/astronaut_head_avatar_128x128.png');
-    expect(eve.getAttribute('src')).toBe('assets/images/arcade/fox_head_avatar_128x128.png');
+    const sam = itemOf('Sam').querySelector('.user-tile-face');
+    const eve = itemOf('Eve').querySelector('.user-tile-face');
+    expect(headOf(sam).avatar).toBe('astronaut');
+    expect(headOf(eve).avatar).toBe('fox');
   });
 
   test('« Supprimer » est un petit bouton séparé de la tuile, nommé avec le prénom', () => {
     UserManager.refreshUserList();
 
-    const item = document.querySelector('#user-list li.user-container');
-    const deleteBtn = item.querySelector('.delete-btn');
+    const deleteBtn = itemOf('Lina').querySelector('.delete-btn');
     expect(deleteBtn).not.toBeNull();
     expect(deleteBtn.closest('.user-tile')).toBeNull();
     expect(deleteBtn.classList.contains('btn-quiet')).toBe(true);
@@ -79,17 +95,16 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
     expect(deleteBtn.textContent).toBe('Supprimer');
   });
 
-  test('la suppression passe toujours par la confirmation', () => {
+  test('la suppression passe toujours par la fenêtre de confirmation du jeu', async () => {
     UserManager.refreshUserList();
-    const confirmSpy = jest.fn(() => false);
-    globalThis.confirm = confirmSpy;
 
-    document.querySelector('#user-list .delete-btn').click();
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    itemOf('Lina').querySelector('.delete-btn').click();
+    expect(openDialog()).not.toBeNull();
+    await answerDialog(false);
     expect(Object.keys(UserManager._players)).toContain('Lina');
 
-    confirmSpy.mockReturnValue(true);
-    document.querySelector('#user-list .delete-btn').click();
+    itemOf('Lina').querySelector('.delete-btn').click();
+    await answerDialog(true);
     expect(Object.keys(UserManager._players)).not.toContain('Lina');
     expect(document.querySelectorAll('#user-list .user-tile')).toHaveLength(2);
     // Le focus revient sur une tuile restante

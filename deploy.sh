@@ -197,8 +197,10 @@ if [[ -n "$PLAUSIBLE_DOMAIN" ]]; then
     sed -i.bak "s/{{PLAUSIBLE_DOMAIN}}/$PLAUSIBLE_DOMAIN/g" "$TEMP_DIR/index.html" && rm "$TEMP_DIR/index.html.bak"
     echo -e "${GREEN}   ✅ Domaine Plausible configuré${NC}"
 else
-    # Supprimer complètement les scripts Plausible si pas de domaine
-    sed -i.bak '/<!-- Analytics Plausible/,/^[[:space:]]*<\/script>/d' "$TEMP_DIR/index.html" && rm "$TEMP_DIR/index.html.bak"
+    # Pas de domaine : les blocs de Plausible partent, entre leurs marqueurs (index.html).
+    # L'ancienne règle allait jusqu'à la première ligne commençant par </script> : le bloc se
+    # ferme par « ></script> », et la suppression emportait le reste de la page (1 416 lignes)
+    sed -i.bak '/<!-- plausible:start -->/,/<!-- plausible:end -->/d' "$TEMP_DIR/index.html" && rm "$TEMP_DIR/index.html.bak"
     echo -e "${YELLOW}   ⚠️  Scripts Plausible supprimés (pas de domaine)${NC}"
 fi
 

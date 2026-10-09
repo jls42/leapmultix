@@ -1,11 +1,57 @@
 // multimiam-renderer.js - Gestion du rendu pour le jeu Pacman (ESM)
 // (c) LeapMultix - 2025
 
-import { getCanvasFont, readableCanvasFontSize } from './arcade-common.js';
+import { getCanvasFont, readableCanvasFontSize, getArcadeCanvasSize } from './arcade-common.js';
+import { mazeToScreen, transposeDirection } from './multimiam-layout.js';
+import { drawArcadeSprite, prefetchArcadeSprite } from './arcade-sprites.js';
 
 export default class PacmanRenderer {
   constructor(game) {
     this.game = game; // Référence à l'instance de PacmanGame
+  }
+
+  /**
+   * Coin d'une case du labyrinthe sur le canevas (labyrinthe transposé en portrait ; cases
+   * presque carrées, cellWidth × cellHeight).
+   * @param {number} x - Colonne dans le labyrinthe (décimale pendant un déplacement)
+   * @param {number} y - Rangée dans le labyrinthe
+   * @returns {{px: number, py: number}}
+   */
+  cellOrigin(x, y) {
+    const g = this.game;
+    const screen = mazeToScreen(x, y, g.transposed);
+    return { px: screen.x * g.cellWidth, py: screen.y * g.cellHeight };
+  }
+
+  /**
+   * Centre d'une case du labyrinthe sur le canevas.
+   * @param {number} x
+   * @param {number} y
+   * @returns {{px: number, py: number}}
+   */
+  cellCenter(x, y) {
+    const { px, py } = this.cellOrigin(x, y);
+    return { px: px + this.game.cellWidth / 2, py: py + this.game.cellHeight / 2 };
+  }
+
+  /** Direction vue à l'écran (le personnage regarde du côté où il va à l'écran) */
+  screenDirection(direction) {
+    return transposeDirection(direction, this.game.transposed);
+  }
+
+  /** Côté vers lequel regarde un personnage qui va dans cette direction */
+  facingOf(direction) {
+    return this.screenDirection(direction) === 'LEFT' ? 'left' : 'right';
+  }
+
+  /**
+   * Case d'un personnage centré sur ce point : un carré d'une fois et demie le côté court
+   * d'une case du labyrinthe (cellSize), l'image n'est jamais déformée
+   * @returns {{x: number, y: number, width: number, height: number}}
+   */
+  spriteBox(pixelX, pixelY) {
+    const size = this.game.cellSize * 1.5;
+    return { x: pixelX - size / 2, y: pixelY - size / 2, width: size, height: size };
   }
 
   // Méthode principale appelée à chaque frame
@@ -14,7 +60,8 @@ export default class PacmanRenderer {
     const ctx = g.ctx;
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, g.canvas.width, g.canvas.height);
+    const board = getArcadeCanvasSize(g.canvas);
+    ctx.clearRect(0, 0, board.width, board.height);
 
     this.drawLabyrinth();
 
@@ -32,32 +79,34 @@ export default class PacmanRenderer {
   drawLabyrinth() {
     const g = this.game;
     const ctx = g.ctx;
+    const wall = this.tileImage(g.wallTexture);
+    const path = this.tileImage(g.pathTexture);
 
-    // On ne remplit plus tout le fond en bleu, on va dessiner chaque case
+    // Chaque case : sa texture (mur, ou chemin sous les pastilles et les réponses), sinon
+    // sa couleur tant que la texture n'est pas arrivée
     for (let y = 0; y < g.rows; y++) {
       for (let x = 0; x < g.cols; x++) {
-        const cell = g.labyrinth[y][x];
-        const px = x * g.cellSize;
-        const py = y * g.cellSize;
-        if (cell === 1) {
-          // Mur
-          if (g.wallTexture && g.wallTexture.complete && g.wallTexture.naturalHeight !== 0) {
-            ctx.drawImage(g.wallTexture, px, py, g.cellSize, g.cellSize);
-          } else {
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(px, py, g.cellSize, g.cellSize);
-          }
+        const isWall = g.labyrinth.at(y).at(x) === 1;
+        const { px, py } = this.cellOrigin(x, y);
+        const texture = isWall ? wall : path;
+        if (texture) {
+          ctx.drawImage(texture, px, py, g.cellWidth, g.cellHeight);
         } else {
-          // Chemin, pastille, super pastille, réponse...
-          if (g.pathTexture && g.pathTexture.complete && g.pathTexture.naturalHeight !== 0) {
-            ctx.drawImage(g.pathTexture, px, py, g.cellSize, g.cellSize);
-          } else {
-            ctx.fillStyle = '#0000FF';
-            ctx.fillRect(px, py, g.cellSize, g.cellSize);
-          }
+          ctx.fillStyle = isWall ? '#000000' : '#0000FF';
+          ctx.fillRect(px, py, g.cellWidth, g.cellHeight);
         }
       }
     }
+  }
+
+  /**
+   * Image d'une texture de case, demandée une fois par image à la taille d'une case
+   * @returns {HTMLImageElement|null}
+   */
+  tileImage(texture) {
+    const g = this.game;
+    prefetchArcadeSprite(g.canvas, texture, g.cellWidth, g.cellHeight);
+    return texture?.image ?? null;
   }
 
   /* === RÉPONSES ================================= */
@@ -66,15 +115,14 @@ export default class PacmanRenderer {
     const ctx = g.ctx;
     if (!g.answerPositions || g.answerPositions.length === 0) return;
 
-    const isMobile = g.canvas.width < 500;
+    const isMobile = getArcadeCanvasSize(g.canvas).width < 500;
     // Nombres lisibles : au moins 16 px à l'écran, même quand les cases sont petites
     const baseSize = isMobile ? g.cellSize * 0.6 : Math.max(20, Math.min(28, g.cellSize * 0.5));
     const fontSize = readableCanvasFontSize(g.canvas, baseSize);
     ctx.font = getCanvasFont(fontSize);
 
     for (const ans of g.answerPositions) {
-      const x = (ans.x + 0.5) * g.cellSize;
-      const y = (ans.y + 0.5) * g.cellSize;
+      const { px: x, py: y } = this.cellCenter(ans.x, ans.y);
       const label = ans.value.toString();
 
       // Pastille à la taille du nombre (1 à 3 chiffres), jamais plus petite que la case
@@ -144,11 +192,8 @@ export default class PacmanRenderer {
   }
 
   getPacmanPixelCoordinates(x, y) {
-    const g = this.game;
-    return {
-      pixelX: (x + 0.5) * g.cellSize,
-      pixelY: (y + 0.5) * g.cellSize,
-    };
+    const { px, py } = this.cellCenter(x, y);
+    return { pixelX: px, pixelY: py };
   }
 
   shouldRenderPacman() {
@@ -176,26 +221,8 @@ export default class PacmanRenderer {
 
   drawAvatarSprite(pixelX, pixelY) {
     const g = this.game;
-    const leftImage = g.avatar?.image_left;
-    const rightImage = g.avatar?.image_right;
-
-    if (leftImage?.complete && rightImage?.complete) {
-      const imageToDraw = g.multimiam.direction === 'LEFT' ? leftImage : rightImage;
-      if (imageToDraw.naturalHeight === 0) {
-        return false;
-      }
-
-      const size = g.cellSize * 1.5;
-      const ctx = g.ctx;
-      ctx.save();
-      ctx.translate(pixelX, pixelY);
-      ctx.drawImage(imageToDraw, -size / 2, -size / 2, size, size);
-      ctx.restore();
-
-      return true;
-    }
-
-    return false;
+    const facing = this.facingOf(g.multimiam.direction);
+    return drawArcadeSprite(g.ctx, g.avatar?.sprite, this.spriteBox(pixelX, pixelY), { facing });
   }
 
   drawClassicPacman(px, py) {
@@ -205,7 +232,7 @@ export default class PacmanRenderer {
     ctx.beginPath();
 
     let start, end;
-    switch (g.multimiam.direction) {
+    switch (this.screenDirection(g.multimiam.direction)) {
       case 'LEFT':
         start = 1.2 * Math.PI;
         end = 0.8 * Math.PI;
@@ -266,24 +293,15 @@ export default class PacmanRenderer {
    * @param {number} pixelY - Coordonnée Y en pixels.
    */
   _drawSingleGhost(ghost, monster, pixelX, pixelY) {
-    const g = this.game;
-    const ctx = g.ctx;
-    const size = g.cellSize * 1.5;
-
-    const imageToDraw = ghost.direction === 'LEFT' ? monster?.image_left : monster?.image_right;
-
-    if (imageToDraw?.complete && imageToDraw.naturalHeight !== 0) {
-      ctx.save();
-      ctx.translate(pixelX, pixelY);
-      ctx.drawImage(imageToDraw, -size / 2, -size / 2, size, size);
-      ctx.restore();
-    } else {
-      // Fallback: dessiner un cercle rouge
-      ctx.fillStyle = 'red';
-      ctx.beginPath();
-      ctx.arc(pixelX, pixelY, size / 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    const ctx = this.game.ctx;
+    const box = this.spriteBox(pixelX, pixelY);
+    const facing = this.facingOf(ghost.direction);
+    if (drawArcadeSprite(ctx, monster?.sprite, box, { facing })) return;
+    // Repli tant que l'image n'est pas arrivée : un cercle rouge
+    ctx.fillStyle = 'red';
+    ctx.beginPath();
+    ctx.arc(pixelX, pixelY, box.width / 2, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   /**
@@ -299,10 +317,9 @@ export default class PacmanRenderer {
 
       const { x, y } = this._getInterpolatedGhostPosition(ghost, i);
 
-      const pixelX = (x + 0.5) * g.cellSize;
-      const pixelY = (y + 0.5) * g.cellSize;
+      const { px: pixelX, py: pixelY } = this.cellCenter(x, y);
 
-      const monster = g.monsters && g.monsters[i % g.monsters.length];
+      const monster = g.monsters?.at(i % g.monsters.length);
 
       this._drawSingleGhost(ghost, monster, pixelX, pixelY);
     }

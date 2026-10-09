@@ -97,7 +97,7 @@
   /* Voile posé sur l'illustration de fond pendant une partie */
   --color-scrim-game: oklch(96.5% 0.008 248deg / 0.8);
 
-  /* Voile sombre derrière une fenêtre (vidéo, vérification parentale, réglages) */
+  /* Voile sombre derrière une fenêtre (vidéo, réglages) */
   --color-scrim-modal: oklch(20% 0.02 250deg / 0.55);
 
   /* Ombres neutres teintées, jamais colorées */

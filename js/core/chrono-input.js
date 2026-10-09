@@ -9,7 +9,7 @@
  * @returns {'empty'|'prefix'|'correct'|'wrong'}
  */
 export function classifyTypedAnswer(typed, answer) {
-  const digits = String(typed ?? '').replace(/\D/g, '');
+  const digits = String(typed ?? '').replaceAll(/\D/g, '');
   const expected = String(answer);
   if (digits.length === 0) return 'empty';
   if (digits === expected) return 'correct';

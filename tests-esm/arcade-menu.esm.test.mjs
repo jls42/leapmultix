@@ -21,6 +21,7 @@ jest.unstable_mockModule('../js/arcade-message.js', () => ({ showArcadeMessage: 
 jest.unstable_mockModule('../js/game.js', () => ({ gameState: { avatar: 'fox' } }));
 
 const { ArcadeMode } = await import('../js/modes/ArcadeMode.js');
+const { isNoTimeLimit, setNoTimeLimit } = await import('../js/arcade-time.js');
 
 let mode;
 let screen;
@@ -119,8 +120,16 @@ describe('Menu Arcade', () => {
       expect(icon.getAttribute('aria-hidden')).toBe('true');
     });
     expect(items[0].textContent.trim()).toBe('Texte keyboard');
-    const snake = [...screen.querySelectorAll('#multisnake-arcade-card .arcade-control')];
-    expect(snake.map(li => li.dataset.input)).toEqual(['keyboard', 'touch']);
+  });
+
+  test('MultiSnake et MultiMiam : le clic de la souris dirige aussi, et l’aide le dit', () => {
+    for (const card of ['#multisnake-arcade-card', '#multimiam-arcade-card']) {
+      const lines = [...screen.querySelectorAll(`${card} .arcade-control`)];
+      expect([card, lines.map(li => li.dataset.input)]).toEqual([
+        card,
+        ['keyboard', 'mouse', 'touch'],
+      ]);
+    }
   });
 
   test('un clic dans les réglages ne referme pas la tuile, un clic sur le titre oui', () => {
@@ -134,5 +143,29 @@ describe('Menu Arcade', () => {
 
     mode.handleListClick({ target: card.querySelector('.game-title') });
     expect(card.classList.contains('collapsed')).toBe(true);
+  });
+
+  test('MultiMemory propose une partie sans limite de temps, gardée pour la suite', async () => {
+    const boxes = [...screen.querySelectorAll('.arcade-untimed-option input[type="checkbox"]')];
+    expect(boxes.map(box => box.closest('.arcade-game-card').dataset.game)).toEqual([
+      'multimemory',
+    ]);
+    const [box] = boxes;
+    expect(box.checked).toBe(false);
+    box.checked = true;
+    mode.handleListClick({ target: box });
+    expect(isNoTimeLimit('multimemory')).toBe(true);
+    // Le clic ne déplie pas la tuile, et le choix reste coché au retour dans le menu
+    const card = box.closest('.arcade-game-card');
+    expect(card.classList.contains('expanded')).toBe(false);
+    const remonte = new DOMParser().parseFromString(await mode.getCustomHTML(), 'text/html');
+    screen.replaceChildren(...remonte.body.childNodes);
+    expect(screen.querySelector('.arcade-untimed-option input').checked).toBe(true);
+    setNoTimeLimit('multimemory', false);
+  });
+
+  test('MultiMemory se joue aussi au clavier, et son aide le dit', () => {
+    const lines = [...screen.querySelectorAll('#multimemory-arcade-card .arcade-control')];
+    expect(lines.map(li => li.dataset.input)).toEqual(['keyboard', 'mouse', 'touch']);
   });
 });

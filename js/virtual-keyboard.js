@@ -11,8 +11,7 @@ export function createVirtualKeyboard(inputElement, container) {
     keyboardContainer.className = 'virtual-keyboard';
     container.appendChild(keyboardContainer);
   } else {
-    while (keyboardContainer.firstChild)
-      keyboardContainer.removeChild(keyboardContainer.firstChild);
+    while (keyboardContainer.firstChild) keyboardContainer.firstChild.remove();
   }
 
   const rows = [

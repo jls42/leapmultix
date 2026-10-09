@@ -2,11 +2,11 @@
 
 /**
  * Script d'analyse des commentaires LeapMultix
- * Identifie les commentaires obsolètes, les TODO, et les commentaires à nettoyer
+ * Identifie les commentaires obsolètes, les marqueurs de tâche et les commentaires à nettoyer
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const JS_DIR = './js';
 const ANALYSIS_OUTPUT = './analysis';
@@ -25,7 +25,7 @@ class CommentAnalyzer {
 
     for (const file of files) {
       const filePath = path.join(JS_DIR, file);
-      // eslint-disable-next-line -- filePath is constructed from JS_DIR and verified .js file
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is constructed from JS_DIR and verified .js file
       const content = fs.readFileSync(filePath, 'utf8');
       this.files.push({
         name: file,
@@ -77,7 +77,7 @@ class CommentAnalyzer {
             content: trimmed,
           };
 
-          // Chercher TODO/FIXME
+          // Chercher les marqueurs de tâche (todoPatterns)
           todoPatterns.forEach(pattern => {
             if (pattern.test(trimmed)) {
               this.todos.push({ ...lineInfo, type: pattern.source });
@@ -103,7 +103,8 @@ class CommentAnalyzer {
             this.unusualComments.push({ ...lineInfo, reason: 'Très long' });
           }
 
-          if (/={10,}|={5,}-{5,}|\*{10,}/.test(trimmed)) {
+          // Longueurs exactes : une suite plus longue contient la même, sans retour arrière coûteux
+          if (/={10}|={5}-{5}|\*{10}/.test(trimmed)) {
             this.unusualComments.push({ ...lineInfo, reason: 'Séparateur décoratif' });
           }
         }

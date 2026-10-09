@@ -37,6 +37,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { inSequence } from '../lib/in-sequence.cjs';
 import { buildCorpus } from './corpus.mjs';
 import { unknownOwnSaidTexts, unknownSaidWords, voiceSaidText } from './said-text.mjs';
 import {
@@ -247,15 +248,19 @@ function retryDelay(error, attempt, { delays, signal }) {
  * @param {{delays: number[], signal?: AbortSignal, sleep: (ms: number) => Promise<void>}} options
  */
 export async function withRetries(task, options) {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await task();
-    } catch (error) {
-      const delay = retryDelay(error, attempt, options);
-      if (delay === null) throw error;
-      await options.sleep(delay);
-    }
+  return tryFrom(0, task, options);
+}
+
+/** Essai numéro `attempt` ; après une erreur passagère, attente puis essai suivant */
+async function tryFrom(attempt, task, options) {
+  try {
+    return await task();
+  } catch (error) {
+    const delay = retryDelay(error, attempt, options);
+    if (delay === null) throw error;
+    await options.sleep(delay);
   }
+  return tryFrom(attempt + 1, task, options);
 }
 
 /**
@@ -263,14 +268,13 @@ export async function withRetries(task, options) {
  * est mis de côté (ecoute/avant/) pour la comparaison avant/après de la page d'écoute.
  */
 async function forgetKeys(paths, manifest, keys) {
-  for (const key of keys) {
+  await inSequence(keys, async key => {
     delete manifest.clips[key];
     await keepReplaced(paths, key);
     const raws = fs.existsSync(paths.rawDir) ? fs.readdirSync(paths.rawDir) : [];
-    for (const name of raws.filter(n => n.startsWith(`${key}-`))) {
-      await fsp.rm(path.join(paths.rawDir, name), { force: true });
-    }
-  }
+    const keyRaws = raws.filter(n => n.startsWith(`${key}-`));
+    await inSequence(keyRaws, name => fsp.rm(path.join(paths.rawDir, name), { force: true }));
+  });
 }
 
 function createState(options) {
@@ -498,12 +502,12 @@ async function workOn(phrase, total, ctx) {
   return true;
 }
 
+/** Travailleur de la génération : prend les phrases de la file une par une, jusqu'à un arrêt */
 async function worker(queue, ctx) {
-  while (!ctx.state.stop) {
-    if (stopIfInterrupted(ctx)) return;
-    const phrase = queue.shift();
-    if (!phrase || !(await workOn(phrase, queue.total, ctx))) return;
-  }
+  if (ctx.state.stop || stopIfInterrupted(ctx)) return;
+  const phrase = queue.shift();
+  if (!phrase || !(await workOn(phrase, queue.total, ctx))) return;
+  await worker(queue, ctx);
 }
 
 /**
@@ -645,6 +649,14 @@ async function generateLocked(opts, paths) {
   return finalSummary(summary, ctx);
 }
 
+/** Travailleur du retraitement : prend les clips de la file un par un, jusqu'à la vider */
+async function reprocessQueue(queue, context) {
+  const key = queue.shift();
+  if (!key) return;
+  await reprocessOne(key, context);
+  await reprocessQueue(queue, context);
+}
+
 /** Refait le clip d'une empreinte depuis son brut ; le réécrit seulement s'il change */
 async function reprocessOne(key, { opts, paths, manifest, voice, report }) {
   const entry = manifest.clips[key];
@@ -695,11 +707,10 @@ export async function reprocessClips(options) {
     const keys = opts.keys?.length ? opts.keys : Object.keys(manifest.clips);
     const report = { checked: 0, changed: 0, missingRaw: [], failed: [] };
     const queue = keys.filter(key => manifest.clips[key]);
-    const workers = Array.from({ length: Math.max(1, opts.concurrency ?? 4) }, async () => {
-      for (let key = queue.shift(); key; key = queue.shift()) {
-        await reprocessOne(key, { opts, paths, manifest, voice, report });
-      }
-    });
+    const context = { opts, paths, manifest, voice, report };
+    const workers = Array.from({ length: Math.max(1, opts.concurrency ?? 4) }, () =>
+      reprocessQueue(queue, context)
+    );
     await Promise.all(workers);
     await writeManifest(paths, manifest);
     return report;

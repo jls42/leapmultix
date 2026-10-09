@@ -9,16 +9,27 @@ import {
   updateWelcomeMessageUI,
   updateCoinDisplay,
 } from './utils-es6.js';
-import { getAvatarHeadSrc } from './main-helpers.js';
+import { HEAD_SIZES, setAvatarHead } from './avatar-heads.js';
+import { getCurrentLanguage } from './i18n-store.js';
 import Storage from './core/storage.js';
-import { sanitizeUsername } from './security-utils.js';
+import { checkUsername, normalizeUsername, USERNAME_MAX_LENGTH } from './security-utils.js';
 import { VideoManager } from './VideoManager.js';
 import { AudioManager } from './core/audio.js';
 import { createVirtualKeyboard } from './virtual-keyboard.js';
 import { goToSlide } from './slides.js';
 import { gameState, displayDailyChallenge } from './game.js';
+import { normalizeAdventureProgressByOperator } from './core/adventure-progress.js';
+import { normalizeModeStats, emptyModeStats, ARCADE_GAMES } from './core/mode-stats.js';
 import { eventBus } from './core/eventBus.js';
-import { normalizeChronoStats, emptyChronoStats } from './core/chrono-stats.js';
+import {
+  normalizeChronoStats,
+  normalizeChronoStatsByOperator,
+  emptyChronoStats,
+} from './core/chrono-stats.js';
+import { profileOperationStats } from './core/profile-operation-stats.js';
+import { TRASH_DAYS, isTrashExpired, loadTrash, saveTrash } from './core/players-trash.js';
+import { buildPlayersBackup, requestPersistentStorage } from './core/players-backup.js';
+import { confirmDialog } from './components/confirm-dialog.js';
 
 /**
  * Traduction avec texte de secours tant que la clé n'existe pas dans les fichiers de langue.
@@ -49,13 +60,14 @@ const DEFAULT_USER_DATA = Object.freeze({
   unlockedBadges: [],
   volume: 1,
   dailyChallengesCompleted: 0,
-  parentalLockEnabled: false,
   starsByTable: {},
   coins: 0,
   preferredOperator: '×',
 });
 
 const ensureArray = (value, fallback = []) => (Array.isArray(value) ? [...value] : [...fallback]);
+
+const isPlainObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 const ensureObject = (value, fallback = {}) =>
   value && typeof value === 'object' && !Array.isArray(value) ? { ...value } : { ...fallback };
@@ -73,12 +85,56 @@ const createDefaultUserData = (nickname = '') => ({
   preferredOperator: '×',
   nickname,
   chronoStats: emptyChronoStats(),
+  chronoStatsByOperator: normalizeChronoStatsByOperator(),
+  modeStats: emptyModeStats(),
+  operationStats: {},
 });
+
+/** Clé localStorage des 5 meilleurs scores d'un jeu d'Arcade, rangés sous le surnom (avant la v37) */
+const legacyArcadeKey = (game, nickname) =>
+  game === 'invasion' ? `arcadeScores_${nickname}` : `arcadeScores_${game}_${nickname}`;
+
+/** Surnom sous lequel arcade-scores.js rangeait les scores : le surnom affiché, sans espaces autour */
+const legacyArcadeOwner = (raw, currentUser) => String(raw.nickname || currentUser || '').trim();
+
+/**
+ * Les 5 meilleurs scores d'un jeu d'Arcade d'avant la v37, pour l'amorçage des compteurs
+ * @param {string} nickname
+ * @returns {(game: string) => number[]}
+ */
+const legacyArcadeReader = nickname => game => {
+  if (!nickname) return [];
+  const scores = Storage.get(legacyArcadeKey(game, nickname), []);
+  return Array.isArray(scores) ? scores : [];
+};
+
+/**
+ * Profil à emporter dans une sauvegarde : un profil jamais rouvert depuis l'arrivée des
+ * statistiques par profil emporte sa copie de celles de l'appareil
+ * @param {*} data
+ * @returns {*}
+ */
+const withOwnOperationStats = data =>
+  isPlainObject(data) && !Object.hasOwn(data, 'operationStats')
+    ? { ...data, operationStats: profileOperationStats(data) }
+    : data;
 
 const normalizeUserData = (rawData, currentUser) => {
   // raw.x vaut exactement rawData?.x, quelle que soit la valeur reçue
   const raw = rawData ?? {};
   const tablePreferences = ensureObject(raw.tablePreferences, DEFAULT_TABLE_PREFERENCES);
+  const chronoStats = normalizeChronoStats(raw.chronoStats);
+  const chronoStatsByOperator = normalizeChronoStatsByOperator(raw.chronoStatsByOperator);
+  const adventureProgressByOperator = normalizeAdventureProgressByOperator(
+    raw.adventureProgressByOperator,
+    raw.adventureProgress
+  );
+  // Compteurs du tableau de bord, amorcés une fois depuis l'existant déjà normalisé
+  // (core/mode-stats.js) : un classement que la normalisation écarte ne compte pas non plus
+  const modeStats = normalizeModeStats(
+    { ...raw, chronoStats, chronoStatsByOperator, adventureProgressByOperator },
+    legacyArcadeReader(legacyArcadeOwner(raw, currentUser))
+  );
 
   return {
     ...DEFAULT_USER_DATA,
@@ -94,11 +150,15 @@ const normalizeUserData = (rawData, currentUser) => {
     unlockedBadges: ensureArray(raw.unlockedBadges),
     volume: Number.isFinite(raw.volume) ? raw.volume : 1,
     dailyChallengesCompleted: ensureNumber(raw.dailyChallengesCompleted, 0),
-    parentalLockEnabled: raw.parentalLockEnabled === true,
     starsByTable: ensureObject(raw.starsByTable),
     coins: ensureNumber(raw.coins, 0),
     preferredOperator: raw.preferredOperator || '×',
-    chronoStats: normalizeChronoStats(raw.chronoStats),
+    chronoStats,
+    // Chrono hors multiplication : un champ à part, que le code d'avant recopie sans y toucher
+    chronoStatsByOperator,
+    // L'ancienne Aventure (× seule, avant décembre 2025) recopiée dans la multiplication
+    adventureProgressByOperator,
+    modeStats,
     tablePreferences: {
       ...DEFAULT_TABLE_PREFERENCES,
       ...tablePreferences,
@@ -109,12 +169,26 @@ const normalizeUserData = (rawData, currentUser) => {
 };
 
 /**
+ * Profil relu : champs normalisés, plus les calculs ratés de ce joueur seul (tirage du Quiz).
+ * Un profil d'avant ce champ part de la copie de la clé commune à l'appareil
+ * (core/profile-operation-stats.js).
+ * @param {Object|null|undefined} rawData
+ * @param {string} currentUser
+ * @returns {Object}
+ */
+const normalizeProfile = (rawData, currentUser) => ({
+  ...normalizeUserData(rawData, currentUser),
+  operationStats: profileOperationStats(rawData),
+});
+
+/**
  * Gestionnaire principal des utilisateurs
  */
 export const UserManager = {
   // État interne
   _currentUser: null,
   _players: {},
+  _persistenceRequested: false,
 
   /**
    * Initialiser le gestionnaire d'utilisateurs
@@ -122,6 +196,8 @@ export const UserManager = {
   init() {
     // Charger les joueurs depuis le stockage
     this._players = this.loadPlayers();
+    // Corbeille : les joueurs supprimés depuis plus de TRASH_DAYS jours sont effacés
+    this.purgeExpiredTrash();
 
     // Initialiser l'interface utilisateur
     this.initUI();
@@ -159,7 +235,7 @@ export const UserManager = {
       return createDefaultUserData(this._currentUser || '');
     }
 
-    const normalized = normalizeUserData(this._players[this._currentUser], this._currentUser);
+    const normalized = normalizeProfile(this._players[this._currentUser], this._currentUser);
     this._players[this._currentUser] = normalized;
     return normalized;
   },
@@ -204,13 +280,14 @@ export const UserManager = {
   /**
    * Mettre à jour directement les données de l'utilisateur actuel
    * @param {Object} updatedData - Données à fusionner
+   * @returns {boolean} Vrai si un joueur courant a reçu ces données
    */
   updateCurrentUserData(updatedData) {
     if (
       !this._currentUser ||
       !Object.prototype.hasOwnProperty.call(this._players, this._currentUser)
     )
-      return;
+      return false;
 
     this._players[this._currentUser] = {
       ...this._players[this._currentUser],
@@ -218,6 +295,7 @@ export const UserManager = {
     };
 
     this.savePlayers();
+    return true;
   },
 
   /**
@@ -250,8 +328,7 @@ export const UserManager = {
 
     const heroMascotImg = document.getElementById('hero-mascot-img');
     if (heroMascotImg) {
-      // Visage 128 px : la mascotte est affichée à 72 px au plus
-      heroMascotImg.src = getAvatarHeadSrc(avatar);
+      setAvatarHead(heroMascotImg, avatar, HEAD_SIZES.mascot);
       // Décorative : la bulle porte le message
       heroMascotImg.alt = '';
     }
@@ -287,9 +364,24 @@ export const UserManager = {
    * @private
    */
   _cleanupDefaultScores() {
-    localStorage.removeItem('arcadeScores_default');
-    localStorage.removeItem('arcadeScores_multisnake_default');
-    localStorage.removeItem('arcadeScores_multimiam_default');
+    this._removeLegacyArcadeScores(['default']);
+  },
+
+  /**
+   * Retire les clés d'Arcade d'avant la v37 (arcadeScores_<surnom>), pour ces surnoms
+   * @param {string[]} owners
+   * @private
+   */
+  _removeLegacyArcadeScores(owners) {
+    for (const owner of new Set(owners.filter(Boolean))) {
+      for (const game of ARCADE_GAMES) {
+        try {
+          localStorage.removeItem(legacyArcadeKey(game, owner));
+        } catch {
+          // Stockage indisponible : rien à effacer
+        }
+      }
+    }
   },
 
   /**
@@ -299,8 +391,10 @@ export const UserManager = {
    */
   selectUser(name) {
     const raw = typeof name === 'string' ? name : '';
-    const safe = sanitizeUsername(raw);
-    const key = Object.prototype.hasOwnProperty.call(this._players, raw) ? raw : safe;
+    // Clé exacte d'abord : les prénoms rangés par l'ancienne règle (« Léa B. ») restent valables
+    const key = Object.prototype.hasOwnProperty.call(this._players, raw)
+      ? raw
+      : normalizeUsername(raw);
 
     if (!Object.prototype.hasOwnProperty.call(this._players, key)) {
       console.error(`Utilisateur "${name}" non trouvé`);
@@ -331,10 +425,22 @@ export const UserManager = {
     }
 
     this._cleanupDefaultScores();
+    this._requestPersistenceOnce();
     void goToSlide(1);
     this.emitUserChanged(userData);
 
     return userData;
+  },
+
+  /**
+   * Une fois par séance, au premier joueur choisi : le navigateur est prié de garder les
+   * joueurs (Firefox peut poser la question, Chrome décide seul)
+   * @private
+   */
+  _requestPersistenceOnce() {
+    if (this._persistenceRequested) return;
+    this._persistenceRequested = true;
+    void requestPersistentStorage();
   },
 
   /**
@@ -344,50 +450,40 @@ export const UserManager = {
    * @returns {boolean} Succès de la création
    */
   createUser(name, avatar = 'fox') {
-    if (!name || typeof name !== 'string') {
-      console.error("Nom d'utilisateur invalide");
+    // Le prénom est gardé tel qu'il est écrit, ou refusé : jamais modifié en silence
+    const { name: key, problem } = checkUsername(name);
+    if (problem) {
+      console.error(`Nom d'utilisateur refusé (${problem})`);
       return false;
     }
 
-    const trimmedName = name.trim();
-    const sanitized = sanitizeUsername(trimmedName);
-    /**
-     * Fonction if
-     * @param {*} !trimmedName - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (!trimmedName) {
-      console.error("Le nom d'utilisateur ne peut pas être vide");
-      return false;
-    }
-
-    /**
-     * Fonction if
-     * @param {*} this._players[trimmedName] - Description du paramètre
-     * @returns {*} Description du retour
-     */
-    if (Object.prototype.hasOwnProperty.call(this._players, sanitized)) {
+    // Déjà dans la liste, ou dans la corbeille (d'où il se restaure)
+    if (this._nameTaken(key)) {
       console.error('Un utilisateur avec ce nom existe déjà');
       return false;
     }
 
     // Créer le nouvel utilisateur
-    Object.defineProperty(this._players, sanitized, {
+    Object.defineProperty(this._players, key, {
       value: {
         bestScore: 0,
         wrongAnswers: {},
         progressHistory: [],
         avatar: avatar,
-        nickname: sanitized,
+        nickname: key,
         theme: 'forest',
         colorTheme: 'default',
         unlockedAvatars: [avatar],
         unlockedBadges: [],
         volume: 1,
         dailyChallengesCompleted: 0,
-        parentalLockEnabled: false,
         starsByTable: {},
         coins: 0,
+        // Compteurs vierges : un nouveau profil ne reprend pas les anciens scores d'Arcade
+        // d'un homonyme supprimé (clés rangées sous le surnom avant la v37)
+        modeStats: emptyModeStats(),
+        // Ni les calculs ratés des autres joueurs de l'appareil
+        operationStats: {},
       },
       enumerable: true,
       configurable: true,
@@ -398,14 +494,10 @@ export const UserManager = {
     this.savePlayers();
 
     // 🎬 Jouer la vidéo d'introduction de l'avatar si VideoManager est disponible
-    if (
-      typeof VideoManager !== 'undefined' &&
-      VideoManager.CHARACTER_VIDEOS &&
-      VideoManager.CHARACTER_VIDEOS.has(avatar)
-    ) {
+    if (VideoManager?.CHARACTER_VIDEOS?.has(avatar)) {
       // Callback pour sélectionner l'utilisateur après la vidéo
       VideoManager.playCharacterIntro(avatar, () => {
-        this.selectUser(sanitized);
+        this.selectUser(key);
       });
     }
 
@@ -413,15 +505,25 @@ export const UserManager = {
   },
 
   /**
-   * Supprimer un utilisateur
+   * Supprimer un utilisateur : il part dans la corbeille avec toutes ses données (rien n'est
+   * effacé avant purgeExpiredTrash, TRASH_DAYS jours plus tard)
    * @param {string} name - Nom de l'utilisateur à supprimer
    * @returns {boolean} Succès de la suppression
    */
   deleteUser(name) {
-    const safe = sanitizeUsername(typeof name === 'string' ? name : '');
-    const key = Object.prototype.hasOwnProperty.call(this._players, name) ? name : safe;
+    const key = Object.prototype.hasOwnProperty.call(this._players, name)
+      ? name
+      : normalizeUsername(name);
     if (!Object.prototype.hasOwnProperty.call(this._players, key)) {
       console.error(`Utilisateur "${name}" non trouvé`);
+      return false;
+    }
+
+    const trash = loadTrash();
+    trash.push({ name: key, deletedAt: Date.now(), data: Reflect.get(this._players, key) });
+    // Une corbeille qui ne s'écrit pas : le profil reste, plutôt que d'être perdu
+    if (!saveTrash(trash)) {
+      console.error(`Corbeille indisponible : « ${key} » n'est pas supprimé`);
       return false;
     }
 
@@ -430,14 +532,127 @@ export const UserManager = {
     if (wasCurrentUser) {
       this._currentUser = null;
     }
-
-    if (Object.prototype.hasOwnProperty.call(this._players, key)) {
-      Reflect.deleteProperty(this._players, key);
-    }
+    Reflect.deleteProperty(this._players, key);
     this.savePlayers();
     // Plus de joueur courant : la barre du haut retire ce qui dépend d'un profil
     if (wasCurrentUser) this.emitUserChanged(null);
     return true;
+  },
+
+  /**
+   * Remet dans la liste, à l'identique, un joueur de la corbeille
+   * @param {{name: string, deletedAt: number}} entry - Entrée choisie (prénom et date)
+   * @returns {{ok: boolean, name: string, problem?: 'missing'|'exists'|'storage'}}
+   */
+  restoreFromTrash({ name, deletedAt }) {
+    const trash = loadTrash();
+    const index = trash.findIndex(entry => entry.name === name && entry.deletedAt === deletedAt);
+    if (index === -1) return { ok: false, name, problem: 'missing' };
+    // Un joueur de la liste porte ce prénom : il n'est pas écrasé
+    if (Object.prototype.hasOwnProperty.call(this._players, name)) {
+      return { ok: false, name, problem: 'exists' };
+    }
+    this._addPlayer(name, trash.at(index).data);
+    if (!this.savePlayers()) {
+      Reflect.deleteProperty(this._players, name);
+      return { ok: false, name, problem: 'storage' };
+    }
+    trash.splice(index, 1);
+    saveTrash(trash);
+    return { ok: true, name };
+  },
+
+  /**
+   * Efface pour de bon les joueurs supprimés depuis TRASH_DAYS jours, avec leurs anciens
+   * scores d'Arcade
+   * @param {number} [now]
+   * @returns {number} Nombre de joueurs effacés
+   */
+  purgeExpiredTrash(now = Date.now()) {
+    const trash = loadTrash();
+    const expired = trash.filter(entry => isTrashExpired(entry, now));
+    if (expired.length === 0) return 0;
+    const kept = trash.filter(entry => !isTrashExpired(entry, now));
+    saveTrash(kept);
+    // Effacement promis par la page Confidentialité : les anciens scores d'Arcade, rangés sous
+    // le surnom (et donc le prénom en clair), partent avec le profil, sauf ceux d'un autre
+    // profil qui porte le même nom, dans la liste ou dans la corbeille
+    const inUse = this._legacyOwnersInUse(kept);
+    const owners = expired.flatMap(entry => [
+      entry.name,
+      legacyArcadeOwner(entry.data ?? {}, entry.name),
+    ]);
+    this._removeLegacyArcadeScores(owners.filter(owner => !inUse.has(owner)));
+    return expired.length;
+  },
+
+  /**
+   * Prénoms et surnoms des joueurs de la liste et de la corbeille
+   * @param {Array<{name: string, data: Object}>} trash
+   * @returns {Set<string>}
+   * @private
+   */
+  _legacyOwnersInUse(trash) {
+    const profiles = [
+      ...Object.entries(this._players),
+      ...trash.map(entry => [entry.name, entry.data]),
+    ];
+    return new Set(profiles.flatMap(([name, data]) => [name, legacyArcadeOwner(data ?? {}, name)]));
+  },
+
+  /**
+   * Sauvegarde de tous les joueurs de la liste (pas la corbeille), pour un fichier
+   * @param {Date} [now]
+   * @returns {{format: string, version: number, exportedAt: string, players: Object}}
+   */
+  exportPlayers(now = new Date()) {
+    const players = Object.fromEntries(
+      Object.entries(this._players).map(([name, data]) => [name, withOwnOperationStats(data)])
+    );
+    return buildPlayersBackup(players, now);
+  },
+
+  /**
+   * Ajoute les joueurs d'une sauvegarde relue (core/players-backup.js). Un joueur déjà dans la
+   * liste n'est jamais écrasé : il est rendu dans « skipped ».
+   * @param {Array<[string, Object]>} entries - Prénom et profil, déjà vérifiés
+   * @returns {{added: string[], skipped: string[], error?: 'storage'}}
+   */
+  importPlayers(entries) {
+    const added = [];
+    const skipped = [];
+    for (const [name, data] of entries) {
+      if (Object.prototype.hasOwnProperty.call(this._players, name)) {
+        skipped.push(name);
+      } else {
+        // Venu d'ailleurs sans ses statistiques par calcul : il ne prend pas celles de l'appareil
+        const profile = Object.hasOwn(data, 'operationStats')
+          ? data
+          : { ...data, operationStats: {} };
+        this._addPlayer(name, profile);
+        added.push(name);
+      }
+    }
+    if (added.length > 0 && !this.savePlayers()) {
+      added.forEach(name => Reflect.deleteProperty(this._players, name));
+      return { added: [], skipped, error: 'storage' };
+    }
+    return { added, skipped };
+  },
+
+  /**
+   * Ajoute un joueur à la liste, sous sa clé (propriété propre, jamais héritée)
+   * @param {string} name
+   * @param {Object} data
+   * @private
+   */
+  _addPlayer(name, data) {
+    Object.defineProperty(this._players, name, {
+      value: data,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
   },
 
   /**
@@ -461,12 +676,14 @@ export const UserManager = {
 
   /**
    * Sauvegarder les joueurs dans le stockage
+   * @returns {boolean} Faux si le navigateur refuse d'écrire
    */
   savePlayers() {
     try {
-      Storage.set('players', this._players);
+      return Storage.set('players', this._players);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde des joueurs:', error);
+      return false;
     }
   },
 
@@ -488,24 +705,37 @@ export const UserManager = {
     const userListDiv = document.getElementById('user-list');
     if (!userListDiv) return;
 
-    while (userListDiv.firstChild) userListDiv.removeChild(userListDiv.firstChild);
-    const names = Object.keys(this._players);
+    while (userListDiv.firstChild) userListDiv.firstChild.remove();
+    const names = this.sortedPlayerNames();
 
     if (names.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'user-list-empty';
       empty.textContent = getTranslation('no_existing_users');
       userListDiv.appendChild(empty);
-      return;
+    } else {
+      // « Qui joue ? » : une tuile par joueur (visage de l'avatar + prénom).
+      // Les flèches du clavier passent d'une tuile à l'autre grâce à la navigation
+      // spatiale globale de keyboard-navigation.js : pas de gestionnaire local ici.
+      const list = document.createElement('ul');
+      list.className = 'user-tiles';
+      names.forEach(name => list.appendChild(this._createUserTile(name)));
+      userListDiv.appendChild(list);
     }
+    // Filtre et barre de « Qui joue ? » (components/playerTools.js)
+    eventBus.emit('playersChanged', { count: names.length });
+  },
 
-    // « Qui joue ? » : une tuile par joueur (visage de l'avatar + prénom).
-    // Les flèches du clavier passent d'une tuile à l'autre grâce à la navigation
-    // spatiale globale de keyboard-navigation.js : pas de gestionnaire local ici.
-    const list = document.createElement('ul');
-    list.className = 'user-tiles';
-    names.forEach(name => list.appendChild(this._createUserTile(name)));
-    userListDiv.appendChild(list);
+  /**
+   * Prénoms des joueurs dans l'ordre alphabétique de la langue du jeu ; un prénom de
+   * chiffres passe devant, « 2 » avant « 10 »
+   * @returns {string[]}
+   */
+  sortedPlayerNames() {
+    const collator = new Intl.Collator(getCurrentLanguage(), { numeric: true });
+    const names = Object.keys(this._players);
+    names.sort(collator.compare);
+    return names;
   },
 
   /**
@@ -518,13 +748,15 @@ export const UserManager = {
   _createUserTile(name) {
     const userContainer = document.createElement('li');
     userContainer.className = 'user-container';
+    // Prénom lu par le filtre de « Qui joue ? »
+    userContainer.dataset.player = name;
 
     const tile = document.createElement('button');
     tile.type = 'button';
     tile.className = 'user-tile';
     const face = document.createElement('img');
     face.className = 'user-tile-face';
-    face.src = getAvatarHeadSrc(this._players[name]?.avatar);
+    setAvatarHead(face, Reflect.get(this._players, name)?.avatar, HEAD_SIZES.tile);
     face.alt = '';
     face.width = 72;
     face.height = 72;
@@ -547,18 +779,37 @@ export const UserManager = {
     );
     deleteBtn.onclick = e => {
       e.stopPropagation();
-      const canConfirm =
-        typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-      if (canConfirm ? globalThis.confirm(getTranslation('confirm_delete_user', { name })) : true) {
-        this.deleteUser(name);
-        this.refreshUserList();
-        this._focusAfterProfileRemoval();
-      }
+      this._confirmProfileRemoval(name, deleteBtn).catch(error =>
+        console.error('Suppression du profil impossible', error)
+      );
     };
 
     userContainer.appendChild(tile);
     userContainer.appendChild(deleteBtn);
     return userContainer;
+  },
+
+  /**
+   * « Supprimer » : la fenêtre du jeu demande d'abord ; confirmé, le profil va dans la
+   * corbeille
+   * @param {string} name
+   * @param {HTMLElement} origin - Son bouton « Supprimer » : refusé, le focus y revient
+   * @returns {Promise<void>}
+   * @private
+   */
+  async _confirmProfileRemoval(name, origin) {
+    const confirmed = await confirmDialog({
+      title: getTranslation('confirm_delete_user', { name }),
+      message: getTranslation('confirm_delete_user_detail', { days: TRASH_DAYS }),
+      confirmLabel: getTranslation('delete_profile_dialog_confirm'),
+      cancelLabel: getTranslation('delete_profile_dialog_cancel'),
+      returnFocusTo: origin,
+    });
+    if (!confirmed || !this.deleteUser(name)) return;
+    this.refreshUserList();
+    this._focusAfterProfileRemoval();
+    // « Léa est dans la corbeille. » (components/playerTools.js)
+    eventBus.emit('playerTrashed', { name });
   },
 
   /**
@@ -704,28 +955,25 @@ export const UserManager = {
    * @private
    */
   _handleCreateUser(input, keyboardToggle) {
-    const newName = input.value.trim();
+    const check = checkUsername(input.value);
     const selectedRadio = document.querySelector('.creation-avatar-selector .avatar-radio:checked');
     const selectedAvatar = selectedRadio ? selectedRadio.value : 'fox';
 
-    // Un prénom fait seulement de caractères refusés deviendrait vide une fois nettoyé
-    if (!newName || !sanitizeUsername(newName)) {
-      this._showCreationMessage(translateOr('enter_valid_name_alert', 'Écris d’abord ton prénom.'));
+    const problem = check.problem || this._nameTaken(check.name);
+    if (problem) {
+      this._showCreationMessage(this._creationProblemMessage(problem, check));
       return;
     }
 
-    if (!this.createUser(newName, selectedAvatar)) {
-      this._showCreationMessage(
-        translateOr(
-          'user_already_exists_alert',
-          'Ce joueur existe déjà. Touche son prénom plus haut pour jouer.'
-        )
-      );
+    if (!this.createUser(check.name, selectedAvatar)) {
+      this._showCreationMessage(this._creationProblemMessage('exists', check));
       return;
     }
 
     input.value = '';
     this._clearCreationMessage();
+    // Un joueur de plus à garder : le navigateur est prié de ne pas vider le stockage
+    void requestPersistentStorage();
 
     // Cacher le clavier virtuel après création
     const keyboardContainer = document.getElementById(`virtual-keyboard-${input.id}`);
@@ -739,7 +987,55 @@ export const UserManager = {
     // 🎬 Ne sélectionner l'utilisateur que si aucune vidéo ne va être jouée
     // (createUser gère déjà la sélection via le callback vidéo)
     if (!VideoManager?.CHARACTER_VIDEOS?.has(selectedAvatar)) {
-      this.selectUser(newName);
+      this.selectUser(check.name);
+    }
+  },
+
+  /**
+   * Prénom déjà pris par un joueur de la liste, ou de la corbeille
+   * @param {string} name - Prénom rangé (checkUsername)
+   * @returns {'exists'|'trash'|null}
+   * @private
+   */
+  _nameTaken(name) {
+    if (Object.prototype.hasOwnProperty.call(this._players, name)) return 'exists';
+    return loadTrash().some(entry => entry.name === name) ? 'trash' : null;
+  },
+
+  /**
+   * Message sous le champ « Ton prénom » : ce qui empêche de créer ce joueur
+   * @param {string} problem - 'empty', 'chars', 'long', 'exists' ou 'trash'
+   * @param {{name: string, chars: string}} check - Prénom rangé et signes refusés
+   * @returns {string}
+   * @private
+   */
+  _creationProblemMessage(problem, { name, chars }) {
+    switch (problem) {
+      case 'chars':
+        return translateOr(
+          'name_bad_chars_alert',
+          `Ton prénom ne peut pas contenir «\u00a0${chars}\u00a0».`,
+          { chars }
+        );
+      case 'long':
+        return translateOr(
+          'name_too_long_alert',
+          `Ton prénom est trop long\u00a0: ${USERNAME_MAX_LENGTH}\u00a0caractères au plus.`,
+          { max: USERNAME_MAX_LENGTH }
+        );
+      case 'exists':
+        return translateOr(
+          'user_already_exists_alert',
+          'Ce joueur existe déjà. Touche son prénom plus haut pour jouer.'
+        );
+      case 'trash':
+        return translateOr(
+          'name_in_trash_alert',
+          `«\u00a0${name}\u00a0» est dans la corbeille, en haut de la liste.`,
+          { name }
+        );
+      default:
+        return translateOr('enter_valid_name_alert', 'Écris d’abord ton prénom.');
     }
   },
 

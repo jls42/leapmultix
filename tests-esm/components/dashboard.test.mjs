@@ -205,8 +205,12 @@ describe('Dashboard : Chrono parmi les modes classiques', () => {
       },
     });
     Dashboard.generateScoresSection();
-    const { row, last } = chronoRow();
-    expect(row).toBe(last);
+    const { row } = chronoRow();
+    // Chrono suit l'Aventure ; la Découverte et le Défi du jour viennent après lui (v37)
+    const titles = [...document.querySelectorAll('.classic-game-stats .score-row-title')].map(
+      title => title.textContent
+    );
+    expect(titles.indexOf('Chrono')).toBe(titles.indexOf('Aventure') + 1);
     expect(facts(row)).toEqual([
       ['Nombre de parties', '5'],
       ['Meilleur temps', '25,4\u00a0s'],

@@ -4,34 +4,19 @@
 import { pickRandom, shuffleInPlace } from './core/random.js';
 import { gameState } from './game.js';
 import { UserManager } from './userManager.js';
+import { spriteFor } from './arcade-sprites.js';
+import { avatarSpec } from './arcade-sprite-catalog.js';
 
 // Fonctions d'avatar et monstres
 
-// Fonction pour charger un avatar et ses deux directions (optimisé pour Pacman)
+/**
+ * Avatar du joueur dans MultiMiam : une seule image, sa source haute définition, tournée
+ * à l'écran du côté où il va (js/arcade-sprites.js la charge à la taille où elle s'affiche).
+ * @param {string} name - fox, panda, unicorn, dragon ou astronaut
+ * @returns {{name: string, sprite: import('./arcade-sprites.js').ArcadeSprite}}
+ */
 export function loadSingleAvatar(name) {
-  const imgRight = new Image();
-  const imgLeft = new Image();
-
-  const rightPath = `/assets/images/arcade/${name}_right_128x128.png`;
-  const leftPath = `/assets/images/arcade/${name}_left_128x128.png`;
-
-  imgRight.src = rightPath;
-  imgLeft.src = leftPath;
-
-  // Gérer le chargement et les erreurs pour une meilleure robustesse
-  imgRight.onload = () => (imgRight.loadSuccess = true);
-  imgLeft.onload = () => (imgLeft.loadSuccess = true);
-  imgRight.onerror = () => {
-    console.error(`Impossible de charger l'image droite : ${rightPath}`);
-    imgRight.loadFailed = true;
-  };
-  imgLeft.onerror = () => {
-    console.error(`Impossible de charger l'image gauche : ${leftPath}`);
-    imgLeft.loadFailed = true;
-  };
-
-  // Retourner un objet avec les deux images
-  return { name, image_right: imgRight, image_left: imgLeft };
+  return { name, sprite: spriteFor(avatarSpec(name)) };
 }
 
 // Fonction pour obtenir des avatars aléatoirement

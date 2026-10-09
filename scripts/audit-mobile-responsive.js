@@ -3,9 +3,9 @@
  * Analyse l'état actuel de l'expérience mobile et responsive de LeapMultix
  */
 
-import fs from 'fs';
-import path from 'path';
-import { pathToFileURL } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 class MobileResponsiveAuditor {
   constructor() {
@@ -55,10 +55,10 @@ class MobileResponsiveAuditor {
     const htmlFiles = ['index.html'];
 
     for (const file of htmlFiles) {
-      // eslint-disable-next-line -- file is from predefined htmlFiles array, not user input
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- file is from predefined htmlFiles array, not user input
       if (!fs.existsSync(file)) continue;
 
-      // eslint-disable-next-line -- file is from predefined htmlFiles array, not user input
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- file is from predefined htmlFiles array, not user input
       const content = fs.readFileSync(file, 'utf8');
       this.results.htmlFiles.push(file);
 
@@ -260,7 +260,7 @@ class MobileResponsiveAuditor {
 
     for (const file of cssFiles) {
       const filePath = path.join(cssDir, file);
-      // eslint-disable-next-line -- filePath is constructed from cssDir and verified .css file
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is constructed from cssDir and verified .css file
       const content = fs.readFileSync(filePath, 'utf8');
       this.results.cssFiles.push(file);
 
@@ -465,7 +465,7 @@ class MobileResponsiveAuditor {
 // Exécution si script appelé directement (Node context)
 if (
   typeof globalThis !== 'undefined' &&
-  typeof globalThis.process !== 'undefined' &&
+  globalThis.process !== undefined &&
   import.meta &&
   import.meta.url === pathToFileURL(path.resolve(globalThis.process.argv[1])).href
 ) {

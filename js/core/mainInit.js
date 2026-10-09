@@ -8,17 +8,18 @@ import Dashboard from '../components/dashboard.js';
 import { Customization } from '../components/customization.js';
 import { InfoBar } from '../components/infoBar.js';
 import UserManager from '../userManager.js';
+import { PlayerTools } from '../components/playerTools.js';
 import { initThemes, applyHighContrastMode, applyFontSize } from './theme.js';
-import { removeAvatarAfterCadenas } from './parental.js';
 import { refreshUserList } from './userUi.js';
 import {
   changeLanguage,
-  getTranslation,
   loadTranslations,
   updateBackgroundByAvatar,
   updateSeoHeroImage,
 } from '../utils-es6.js';
-import { getAvatarHeadSrc, pickRandomAvatarId } from '../main-helpers.js';
+import { pickRandomAvatarId } from '../main-helpers.js';
+import { HEAD_SIZES, setAvatarHead } from '../avatar-heads.js';
+import { attachImageFallbacks } from '../webp-images.js';
 import { VideoManager } from '../VideoManager.js';
 import { OperationSelector } from '../components/operationSelector.js';
 import { initModeAvailability } from '../components/operationModeAvailability.js';
@@ -59,38 +60,18 @@ function isActivableElement(el) {
   );
 }
 
-function handleParentalPopup() {
-  const parentalPopup = document.getElementById('parental-lock-popup');
-  // La fenêtre est masquée par la classe .hidden et affichée par .visible
-  if (
-    !parentalPopup ||
-    parentalPopup.classList.contains('hidden') ||
-    !parentalPopup.classList.contains('visible')
-  ) {
-    return false;
-  }
-
-  if (document.activeElement === document.getElementById('parental-submit')) {
-    document.getElementById('parental-submit')?.click();
-  }
-  return true; // Handled
-}
-
 function setupEnterKeyActivation() {
   document.addEventListener('keydown', e => {
     // keyboard-navigation.js active déjà les boutons (et appelle preventDefault) :
     // ne pas déclencher un second clic pour la même touche
     if (e.key !== 'Enter' || e.defaultPrevented) return;
 
-    if (handleParentalPopup()) return;
-
     const focusedElement = document.activeElement;
     // Boutons, liens et champs s'activent seuls avec Entrée : ne cliquer que les autres
     if (
       focusedElement &&
       !NATIVELY_ACTIVATED_TAGS.has(focusedElement.tagName) &&
-      isActivableElement(focusedElement) &&
-      !focusedElement.closest('#parental-lock-popup')
+      isActivableElement(focusedElement)
     ) {
       e.preventDefault();
       focusedElement.click();
@@ -107,6 +88,8 @@ function setupEnterKeyActivation() {
 function wireCreationAvatarSelector() {
   const creationAvatarSelector = document.querySelector('.creation-avatar-selector');
   if (!creationAvatarSelector) return;
+  // Têtes écrites dans la page (index.html) : sans leurs variantes, le PNG du dépôt
+  attachImageFallbacks(creationAvatarSelector);
   // Boutons radio natifs : le navigateur tient l'état coché, il reste l'aperçu
   creationAvatarSelector.addEventListener('change', e => {
     const selectedAvatarId = e.target?.value;
@@ -116,44 +99,10 @@ function wireCreationAvatarSelector() {
   });
 }
 
-function setupParentalPopup() {
-  const parentalPopup = document.getElementById('parental-lock-popup');
-  const parentalSubmitBtn = document.getElementById('parental-submit');
-  const parentalCancelBtn = document.getElementById('parental-cancel');
-  const parentalAnswerInput = document.getElementById('parental-answer');
-  if (!(parentalPopup && parentalSubmitBtn && parentalCancelBtn && parentalAnswerInput)) return;
-  parentalCancelBtn.addEventListener('click', () => {
-    parentalPopup.classList.remove('visible');
-    setTimeout(() => {
-      parentalPopup.style.display = 'none';
-    }, 300);
-  });
-  parentalSubmitBtn.addEventListener('click', () => {
-    const answer = Number.parseInt(parentalAnswerInput.value, 10);
-    const expectedAnswer = Number.parseInt(parentalAnswerInput.dataset.expectedAnswer, 10);
-    const errorEl = document.getElementById('parental-error');
-    if (answer === expectedAnswer) {
-      parentalPopup.classList.remove('visible');
-      setTimeout(() => {
-        parentalPopup.style.display = 'none';
-      }, 300);
-      if (parentalPopup.callbackOnSuccess) {
-        parentalPopup.callbackOnSuccess();
-        parentalPopup.callbackOnSuccess = null;
-      }
-    } else {
-      if (errorEl) errorEl.textContent = getTranslation('parental_incorrect_answer');
-      parentalAnswerInput.value = '';
-      parentalAnswerInput.focus();
-    }
-  });
-  parentalAnswerInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') parentalSubmitBtn.click();
-  });
-}
-
 function wirePersonalizationButton() {
-  const targets = document.querySelectorAll('[data-translate="personalization"], [data-slide="6"]');
+  // Boutons de la barre du haut (posés par TopBar.init, qui passe avant) ; leur libellé porte
+  // aussi data-translate="personalization" : le bouton seul ouvre l'écran, une seule fois
+  const targets = document.querySelectorAll('button[data-slide="6"]');
   for (const btn of targets) {
     if (btn._customizationWired) continue;
     btn.addEventListener('click', () => {
@@ -235,6 +184,13 @@ function initUserSystems() {
   } catch (error) {
     logInitWarning('Initialisation UserManager impossible', error);
     refreshUserList();
+  }
+
+  // Filtre, raccourci « Nouveau joueur » de « Qui joue ? » (poste de classe)
+  try {
+    PlayerTools.init();
+  } catch (error) {
+    logInitWarning('Outils de « Qui joue ? » indisponibles', error);
   }
 }
 
@@ -330,17 +286,8 @@ function wireUiHandlers() {
   setupHighContrastAndFontSize();
   setupEnterKeyActivation();
   wireCreationAvatarSelector();
-  setupParentalPopup();
   wirePersonalizationButton();
   watchSlideChanges();
-}
-
-function safeRemoveAvatarAfterCadenas() {
-  try {
-    removeAvatarAfterCadenas();
-  } catch (error) {
-    logInitWarning('Nettoyage avatar cadenas impossible', error);
-  }
 }
 
 /**
@@ -352,9 +299,8 @@ function updateHeroMascot(avatarId) {
     const heroMascotImg = document.getElementById('hero-mascot-img');
     if (!heroMascotImg) return;
 
-    // Visage 128 px (la mascotte est affichée à 72 px au plus) ; image décorative,
-    // la bulle porte le message
-    heroMascotImg.src = getAvatarHeadSrc(avatarId);
+    // Image décorative, la bulle porte le message
+    setAvatarHead(heroMascotImg, avatarId, HEAD_SIZES.mascot);
     heroMascotImg.alt = '';
   } catch (error) {
     logInitWarning('Mise à jour mascotte hero impossible', error);
@@ -382,7 +328,6 @@ async function runInit() {
   updateHeroMascot();
   wireUiHandlers();
   attachRecordedVoiceSetting();
-  safeRemoveAvatarAfterCadenas();
 }
 
 let initRequested = false;

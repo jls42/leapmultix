@@ -8,7 +8,8 @@ import { generateQuestion } from './questionGenerator.js';
 import { goToSlide } from './slides.js';
 import { gameState } from './game.js';
 import { getTranslation, cleanupGameResources, showArcadeMessage } from './utils-es6.js';
-import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
+import { spriteFor, drawArcadeSprite, prefetchArcadeSprite } from './arcade-sprites.js';
+import { textureSpec } from './arcade-sprite-catalog.js';
 import { setStartingMode } from './mode-orchestrator.js';
 import { InfoBar } from './components/infoBar.js';
 import {
@@ -19,22 +20,79 @@ import {
   isArcadeActive,
 } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
+import { noteArcadePlay } from './arcade-session.js';
 import { AudioManager } from './core/audio.js';
 import {
   showGameInstructions,
+  INSTRUCTIONS_MS,
   getCanvasFont,
   prepareArcadeStage,
   getArcadeCanvasBox,
   clientToCanvasPoint,
+  watchArcadeViewport,
+  sizeArcadeCanvas,
+  getArcadeCanvasSize,
+  canvasPixelScale,
 } from './arcade-common.js';
 import { getDifficultySettings } from './difficulty.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { UserState } from './core/userState.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
+import { isArcadePaused, isNoTimeLimit } from './arcade-time.js';
 // Dépend des helpers ESM (plus d'assignations window.*)
 
 const FULL_TABLE_SET = Array.from({ length: 10 }, (_, i) => i + 1);
+// Largeur de l'image arrivée d'une image d'Arcade (0 tant qu'elle n'est pas là)
+const imageWidth = sprite => sprite?.image?.naturalWidth ?? 0;
+
+// Clavier : la carte visée se déplace aux flèches ([colonnes, lignes]), se retourne à
+// Entrée ou à Espace
+const CURSOR_STEPS = new Map([
+  ['ArrowLeft', [-1, 0]],
+  ['ArrowRight', [1, 0]],
+  ['ArrowUp', [0, -1]],
+  ['ArrowDown', [0, 1]],
+]);
+const FLIP_KEYS = new Set(['Enter', ' ']);
+const KEYBOARD_HELP_KEY = 'arcade.controls.multimemory.keyboard';
+// Cadre de la carte visée au clavier : un trait sombre sous un trait blanc, visible sur le
+// fond violet comme sur les cartes bleues ou vertes
+const CURSOR_RING = { gap: 3, outer: 7, inner: 4, dark: '#1A1A2E', light: '#FFFFFF' };
+
+/**
+ * Texte réservé aux lecteurs d'écran, posé dans la zone de jeu
+ * @param {HTMLElement} parent
+ * @param {string} tag
+ * @param {string} text
+ * @returns {HTMLElement}
+ */
+function createHiddenText(parent, tag, text) {
+  const element = document.createElement(tag);
+  element.className = 'sr-only';
+  element.textContent = text;
+  parent?.appendChild(element);
+  return element;
+}
+
+/**
+ * Ce que le lecteur d'écran dit d'une carte visée au clavier : sa place dans la grille,
+ * puis ce qu'elle montre si elle est retournée ou déjà trouvée
+ * @param {{content: string, isFlipped: boolean, isMatched: boolean}} card
+ * @param {number} index - Rang de la carte dans la grille
+ * @param {number} cols - Colonnes de la grille
+ * @returns {string}
+ */
+export function describeCard(card, index, cols) {
+  const params = { row: Math.floor(index / cols) + 1, col: (index % cols) + 1 };
+  if (card.isMatched) {
+    return getTranslation('arcade.multiMemory.cardFound', { ...params, content: card.content });
+  }
+  if (card.isFlipped) {
+    return getTranslation('arcade.multiMemory.cardShown', { ...params, content: card.content });
+  }
+  return getTranslation('arcade.multiMemory.cardHidden', params);
+}
 
 const sanitizeTableList = list =>
   Array.isArray(list)
@@ -65,6 +123,135 @@ export function resolveMultimemoryTables(baseTables, exclusions) {
 
   // Cas extrême: exclusions couvrent tout; on retourne la base pour éviter un tableau vide
   return basePool;
+}
+
+// Proportions d'une carte (largeur / hauteur) : ni bande étroite, ni ruban
+const CARD_RATIO_MIN = 0.75;
+const CARD_RATIO_MAX = 4 / 3;
+// Colonnes essayées sur téléphone : toutes celles qui ne laissent pas de trou
+const MAX_MEMORY_COLUMNS = 8;
+
+/**
+ * Taille d'une carte dans une grille donnée : la place se partage entre les cartes et leurs
+ * écarts, puis la carte garde des proportions de carte.
+ * @param {number} cols
+ * @param {number} rows
+ * @param {{width: number, height: number}} box - Place du plateau (pixels)
+ * @param {number} margin - Écart entre les cartes et autour d'elles
+ * @returns {{width: number, height: number}}
+ */
+export function memoryCardSize(cols, rows, box, margin) {
+  let width = (box.width - margin * (cols + 1)) / cols;
+  let height = (box.height - margin * (rows + 1)) / rows;
+  width = Math.min(width, height * CARD_RATIO_MAX);
+  height = Math.min(height, width / CARD_RATIO_MIN);
+  return { width: Math.max(1, Math.floor(width)), height: Math.max(1, Math.floor(height)) };
+}
+
+/**
+ * Disposition des cartes qui donne les plus grandes cartes dans la place disponible
+ * (3 × 4 pour 12 cartes sur un téléphone en portrait, 6 × 2 sur un plateau bas et large).
+ * @param {number} count - Nombre de cartes
+ * @param {{width: number, height: number}} box
+ * @param {number} margin
+ * @param {number[]} [columns] - Colonnes permises (par défaut : toutes, sans trou)
+ * @returns {{cols: number, rows: number}}
+ */
+export function chooseMemoryGrid(count, box, margin, columns) {
+  const candidates =
+    columns ??
+    Array.from({ length: MAX_MEMORY_COLUMNS - 1 }, (_, i) => i + 2).filter(c => count % c === 0);
+  let best = null;
+  for (const cols of candidates) {
+    const rows = Math.ceil(count / cols);
+    const card = memoryCardSize(cols, rows, box, margin);
+    const area = card.width * card.height;
+    if (!best || area > best.area) best = { cols, rows, area };
+  }
+  return best ? { cols: best.cols, rows: best.rows } : { cols: 4, rows: Math.ceil(count / 4) };
+}
+
+/**
+ * Un calcul pour une paire : les tables du niveau en ×, ses nombres (facile, moyen,
+ * difficile) en +, − et ÷
+ * @param {{operator: string, level: string, tables: number[], excludedTables: number[]}} settings
+ *   level : niveau de l'Arcade (debutant, moyen, difficile)
+ * @returns {{num1: number, num2: number, operator: string, result: number}}
+ */
+export function drawMemoryCalculation({ operator, level, tables, excludedTables }) {
+  const isMultiplication = operator === '×';
+  const question = generateQuestion({
+    type: 'classic',
+    operator, // Support +, −, ×, ÷
+    difficulty: getDifficultySettings(level).questionDifficulty,
+    tables: isMultiplication ? tables : undefined,
+    excludeTables: isMultiplication ? excludedTables : [],
+    minNum: 1,
+    maxNum: 10,
+  });
+  return { num1: question.a, num2: question.b, operator, result: question.answer };
+}
+
+/** Opérations où l'ordre des nombres ne change rien : 3 × 4 et 4 × 3 sont le même calcul */
+const COMMUTATIVE_OPERATORS = new Set(['×', '+']);
+/** Tirages permis par paire : chaque niveau offre au moins 10 calculs, pour 8 paires au plus */
+const DRAWS_PER_PAIR = 100;
+
+/**
+ * Clé d'un calcul : deux paires de même clé poseraient le même calcul (dans un sens ou dans
+ * l'autre, pour × et +)
+ * @param {{num1: number, num2: number, operator: string}} calculation
+ * @returns {string}
+ */
+export function calculationKey({ num1, num2, operator }) {
+  const swap = COMMUTATIVE_OPERATORS.has(operator) && num1 > num2;
+  const [first, second] = swap ? [num2, num1] : [num1, num2];
+  return `${first} ${operator} ${second}`;
+}
+
+/**
+ * Calculs d'un plateau : jamais deux fois le même (ni 3 × 4 avec 4 × 3)
+ * @param {number} pairs - Nombre de paires voulu
+ * @param {Object} settings - Voir drawMemoryCalculation
+ * @returns {Array<{num1: number, num2: number, operator: string, result: number}>}
+ */
+export function drawMemoryCalculations(pairs, settings) {
+  const chosen = new Map();
+  for (let draw = 0; chosen.size < pairs && draw < pairs * DRAWS_PER_PAIR; draw++) {
+    const calculation = drawMemoryCalculation(settings);
+    const key = calculationKey(calculation);
+    if (!chosen.has(key)) chosen.set(key, calculation);
+  }
+  return [...chosen.values()];
+}
+
+/**
+ * Une carte, face cachée : le calcul (« 7 × 8 ») ou son résultat (« 56 »)
+ * @param {{num1: number, num2: number, operator: string, result: number}} calculation
+ * @param {number} pairId
+ * @param {'operation'|'result'} type
+ * @param {number} monsterIndex - Monstre dessiné au dos
+ * @returns {Object}
+ */
+function createMemoryCard(calculation, pairId, type, monsterIndex) {
+  const { num1, num2, operator, result } = calculation;
+  return {
+    id: pairId * 2 + (type === 'result' ? 1 : 0),
+    type,
+    content: type === 'operation' ? `${num1} ${operator} ${num2}` : `${result}`,
+    num1,
+    num2,
+    operator,
+    result,
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    isFlipped: false,
+    isMatched: false,
+    monsterIndex,
+    pairId,
+  };
 }
 
 /**
@@ -183,7 +370,7 @@ export function startMemoryArcade() {
 
   // Nettoyer l'écran jeu
   const gameScreen = document.getElementById('game');
-  while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
+  while (gameScreen.firstChild) gameScreen.firstChild.remove();
   const frag = InfoBar.createArcadeTemplateElement({
     mode: 'multimemory',
     canvasId: 'multimemory-canvas',
@@ -198,11 +385,10 @@ export function startMemoryArcade() {
     showScore: true, // Activer le score comme dans les autres jeux
   });
   gameScreen.appendChild(frag);
-  // Haut de page, zone de jeu sans hauteur imposée, consigne sous le plateau :
-  // les cartes se dimensionnent ensuite pour que l'ensemble tienne dans l'écran
+  // Haut de page, zone de jeu sans hauteur imposée : les cartes se dimensionnent ensuite
+  // pour que l'ensemble tienne dans l'écran
   const memoryCanvas = document.getElementById('multimemory-canvas');
   prepareArcadeStage(memoryCanvas);
-  showGameInstructions(memoryCanvas, getMemoryInstructions());
 
   // Utilisation des paramètres de difficulté (Cascade 2025)
   const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
@@ -211,8 +397,8 @@ export function startMemoryArcade() {
     typeof UserManager.getCurrentUser === 'function' ? UserManager.getCurrentUser() : null;
   const globalExclusions = TablePreferences.getActiveExclusions(currentUser);
   const tablesForGame = resolveMultimemoryTables(difficultySettings.tables, globalExclusions);
-  // Durée de la partie selon le niveau
-  startArcadeTimer(difficultySettings.timeSeconds);
+  // Durée de la partie selon le niveau, ou sans limite si le joueur l'a choisi
+  startArcadeTimer(memoryDuration(difficultySettings));
 
   // Forcer la mise à zéro du score via InfoBar
   try {
@@ -239,6 +425,7 @@ export function startMemoryArcade() {
     operator, // R4.3: Support multi-opérations (+, −, ×, ÷)
   });
   _memoryGameInstance.start();
+  showMemoryInstructions(memoryCanvas, _memoryGameInstance);
 
   try {
     setTimeout(() => setStartingMode(null), 0);
@@ -252,6 +439,31 @@ export function startMemoryArcade() {
   } catch {
     // Erreur ignorée (non-critique)
   }
+}
+
+/**
+ * Durée d'une partie : celle du niveau, ou sans limite (Infinity) si le joueur l'a choisi
+ * dans la tuile du jeu
+ * @param {{timeSeconds: number}} difficultySettings
+ * @returns {number}
+ */
+function memoryDuration(difficultySettings) {
+  return isNoTimeLimit('multimemory') ? Infinity : difficultySettings.timeSeconds;
+}
+
+/**
+ * Consigne posée sur les cartes, à l'endroit choisi par leur disposition
+ * @param {HTMLCanvasElement} canvas
+ * @param {MemoryGame} game - Partie lancée (disposition choisie)
+ */
+function showMemoryInstructions(canvas, game) {
+  showGameInstructions(
+    canvas,
+    getMemoryInstructions(),
+    'neutral',
+    INSTRUCTIONS_MS,
+    game.instructionPlacement()
+  );
 }
 
 // Consigne du jeu, selon l'appareil (doigt ou souris)
@@ -323,26 +535,16 @@ class MemoryGame {
     this.timers = [];
     this.animations = [];
 
-    // Images pour les cartes
-    this.cardBack = arcadeSpriteLoader.loadSpriteSync('chemin', 'ui');
-
-    // Sons
-    this.successSound = new Audio('assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav');
-    this.failureSound = new Audio('assets/sounds/mixkit-failure-arcade-alert-notification-240.wav');
+    // Dos des cartes (texture) ; chaque carte y montre un monstre (arcade.js)
+    this.cardBack = spriteFor(textureSpec('chemin.png'));
 
     // Chargement des monstres via ESM (plus de dépendance à window.monsterSprites)
     this.monsterImages = monsterSprites;
 
-    // Dimensions et layout
-    this.resizeCanvas();
-    // Stocker la fonction liée pour pouvoir la retirer plus tard
-    this.boundResizeCanvas = this.resizeCanvas.bind(this);
-    (typeof globalThis !== 'undefined'
-      ? globalThis
-      : typeof window !== 'undefined'
-        ? window
-        : undefined
-    )?.addEventListener?.('resize', this.boundResizeCanvas);
+    // Écart entre les cartes ; la disposition (colonnes, rangées) se choisit au lancement
+    this.margin = this.isMobile ? 6 : 10;
+    this.cols = 0;
+    this.rows = 0;
 
     // Événements
     this.setupEventListeners();
@@ -366,64 +568,53 @@ class MemoryGame {
     return shuffleInPlace(array);
   }
 
-  // Redimensionne le canvas pour s'adapter à l'écran
-  resizeCanvas() {
-    // Vérifier que le canvas existe toujours avant d'essayer d'y accéder
-    if (!this.canvas || !document.body.contains(this.canvas)) {
-      // Canvas supprimé, désactiver l'écouteur d'événement resize
-      (typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined
-      )?.removeEventListener?.('resize', this.boundResizeCanvas);
-      return;
-    }
-
-    const container = this.canvas.parentElement;
-    if (!container) return; // Protection supplémentaire
-
-    // Place réelle des cartes : sous le bandeau, avec la consigne et « Abandonner »
+  // Disposition des cartes, choisie au lancement pour toute la place (la consigne est posée
+  // dessus) : sur téléphone, celle qui donne les plus grandes cartes (3 × 4 en portrait) ;
+  // sur ordinateur, les 4 colonnes habituelles. Elle ne change plus ensuite : chaque carte
+  // garde sa place, que l'enfant mémorise.
+  layoutBoard() {
     const box = getArcadeCanvasBox(this.canvas);
-    const containerWidth = box.width;
-    const availableHeight = box.height;
+    const columns = this.isMobile ? undefined : [4];
+    ({ cols: this.cols, rows: this.rows } = chooseMemoryGrid(
+      this.cards.length,
+      box,
+      this.margin,
+      columns
+    ));
+  }
 
-    // Garder un ratio d'affichage correct
-    const aspectRatio = this.isMobile ? 0.75 : 1.33; // hauteur / largeur
+  // Où poser la consigne sur les cartes : entre deux rangées quand leur nombre est pair (3 × 4
+  // en portrait), sinon en bas ; elle ne cache ainsi ni les nombres ni le milieu des cartes
+  instructionPlacement() {
+    return this.rows % 2 === 0 ? 'middle' : 'bottom';
+  }
 
-    let canvasWidth = containerWidth;
-    let canvasHeight = canvasWidth * aspectRatio;
-    if (canvasHeight > availableHeight) {
-      canvasHeight = availableHeight;
-      canvasWidth = canvasHeight / aspectRatio;
-    }
-    canvasWidth = Math.floor(canvasWidth);
-    canvasHeight = Math.floor(canvasHeight);
+  // Taille des cartes pour la place actuelle (sous le bandeau, avec « Abandonner ») : à
+  // chaque changement d'écran, les cartes suivent sans changer de place
+  resizeCanvas() {
+    // Canevas retiré (fin de partie) ou disposition pas encore choisie : rien à dessiner
+    if (!this.canvas?.isConnected || !this.cols) return;
 
-    this.canvas.width = canvasWidth;
-    this.canvas.height = canvasHeight;
-    this.canvas.style.width = `${canvasWidth}px`;
-    this.canvas.style.height = `${canvasHeight}px`;
+    const card = memoryCardSize(this.cols, this.rows, getArcadeCanvasBox(this.canvas), this.margin);
+    // Affiché à sa taille, net à la densité de l'écran (js/arcade-common.js)
+    sizeArcadeCanvas(
+      this.canvas,
+      this.cols * card.width + this.margin * (this.cols + 1),
+      this.rows * card.height + this.margin * (this.rows + 1)
+    );
 
-    // Recalculer les dimensions des cartes
-    if (this.cards.length > 0) {
-      this.calculateCardDimensions();
-      this.positionCards();
-    }
-
-    // Redessiner le jeu
+    this.calculateCardDimensions();
+    this.positionCards();
     this.draw();
   }
 
   // Configure les écouteurs d'événements
   setupEventListeners() {
-    const self = this;
-
     // Gestionnaire de clic pour desktop
     this.boundHandleClick = e => {
       // Seulement pour les vrais clics (non tactiles)
       if (e.isTrusted && e.type === 'click') {
-        self.handleCardClick(e);
+        this.handleCardClick(e);
       }
     };
     this.canvas.addEventListener('click', this.boundHandleClick);
@@ -436,9 +627,9 @@ class MemoryGame {
       if (e.changedTouches && e.changedTouches.length > 0) {
         const touch = e.changedTouches[0];
         // Coordonnées écran -> cartes (cadre du canevas et réduction éventuelle compris)
-        const { x, y } = clientToCanvasPoint(self.canvas, touch.clientX, touch.clientY);
+        const { x, y } = clientToCanvasPoint(this.canvas, touch.clientX, touch.clientY);
 
-        self.handleDirectTouch(x, y);
+        this.handleDirectTouch(x, y);
       }
     };
 
@@ -455,11 +646,11 @@ class MemoryGame {
 
     // Suivi de la position de la souris pour desktop
     this.boundHandleMouseMove = e => {
-      self.lastMousePos = clientToCanvasPoint(self.canvas, e.clientX, e.clientY);
+      this.lastMousePos = clientToCanvasPoint(this.canvas, e.clientX, e.clientY);
 
       // Redessiner seulement si nous sommes en hover sur une carte (desktop uniquement)
-      if (!self.isMobile && self.getCardAtPosition(self.lastMousePos.x, self.lastMousePos.y)) {
-        self.draw();
+      if (!this.isMobile && this.getCardAtPosition(this.lastMousePos.x, this.lastMousePos.y)) {
+        this.draw();
       }
     };
 
@@ -468,110 +659,125 @@ class MemoryGame {
       this.canvas.addEventListener('mousemove', this.boundHandleMouseMove);
     }
 
-    // Redimensionnement
-    this.boundResizeCanvas = this.resizeCanvas.bind(this);
-    (typeof globalThis !== 'undefined'
-      ? globalThis
-      : typeof window !== 'undefined'
-        ? window
-        : undefined
-    )?.addEventListener?.('resize', this.boundResizeCanvas);
+    // L'écran change (rotation, plein écran) : les cartes suivent ; tant qu'aucune carte
+    // n'a été vue, leur disposition aussi
+    this._stopWatchingViewport = watchArcadeViewport(this.canvas, () => {
+      if (!this.cardsSeen) this.layoutBoard();
+      this.resizeCanvas();
+    });
+  }
+
+  // Clavier : flèches pour choisir une carte, Entrée ou Espace pour la retourner. Ce que la
+  // carte montre est annoncé aux lecteurs d'écran (région role="status", pas la voix du jeu)
+  setupKeyboard() {
+    this.cursorIndex = 0;
+    this.keyboardCursor = false;
+    const stage = this.canvas.parentElement;
+    this.liveRegion = createHiddenText(stage, 'p', '');
+    this.liveRegion.classList.add('multimemory-announcer');
+    this.liveRegion.setAttribute('role', 'status');
+    const help = createHiddenText(stage, 'span', getTranslation(KEYBOARD_HELP_KEY));
+    help.id = `${this.canvasId}-keyboard-help`;
+    help.dataset.translate = KEYBOARD_HELP_KEY;
+    this.canvas.setAttribute('aria-describedby', help.id);
+    this.boundHandleKeyDown = e => this.handleKeyDown(e);
+    this.canvas.addEventListener('keydown', this.boundHandleKeyDown);
+  }
+
+  // Touches du plateau (le canevas a le focus)
+  handleKeyDown(e) {
+    const step = CURSOR_STEPS.get(e.key);
+    if (step) {
+      e.preventDefault();
+      this.moveCursor(step);
+    } else if (FLIP_KEYS.has(e.key)) {
+      e.preventDefault();
+      this.keyboardCursor = true;
+      this.flipCardAtCursor();
+    }
+  }
+
+  // Déplace la carte visée dans la grille, sans en sortir
+  moveCursor([dx, dy]) {
+    this.keyboardCursor = true;
+    const cols = this.cols || 4;
+    const col = (this.cursorIndex % cols) + dx;
+    const row = Math.floor(this.cursorIndex / cols) + dy;
+    const next = row * cols + col;
+    if (col >= 0 && col < cols && row >= 0 && next < this.cards.length) this.cursorIndex = next;
+    this.announceCursor();
+    this.draw();
+  }
+
+  // Retourne la carte visée ; déjà visible, elle est annoncée de nouveau
+  flipCardAtCursor() {
+    const card = this.cards.at(this.cursorIndex);
+    if (card && !this.flipCard(card)) this.announceCursor();
+  }
+
+  // Annonce la carte visée : sa place, puis ce qu'elle montre si elle est visible
+  announceCursor() {
+    const card = this.cards.at(this.cursorIndex);
+    if (card) this.announce(describeCard(card, this.cursorIndex, this.cols || 4));
+  }
+
+  // Message lu par les lecteurs d'écran
+  announce(text) {
+    if (this.liveRegion) this.liveRegion.textContent = text;
+  }
+
+  // Le plateau prend le focus : le clavier joue tout de suite, sans faire défiler la page
+  focusBoard() {
+    try {
+      this.canvas.focus({ preventScroll: true });
+    } catch {
+      // Focus impossible : la souris et le doigt jouent toujours
+    }
   }
 
   // Initialise le jeu
   start() {
     this.createCards();
-    this.calculateCardDimensions();
-    this.positionCards();
+    this.layoutBoard();
     this.shuffleCards();
+    this.resizeCanvas();
+    this.setupKeyboard();
     this.draw();
+    this.focusBoard();
 
-    // Démarrer la boucle de jeu (la consigne est déjà affichée par le lanceur)
+    // Démarrer la boucle de jeu (le lanceur affiche ensuite la consigne)
     this.gameLoop();
   }
 
-  // Crée les cartes pour le jeu
+  // Crée les cartes pour le jeu : une carte calcul et une carte résultat par paire
   createCards() {
     // Forcer la réinitialisation du nombre de paires selon la difficulté actuelle
     // Cette ligne est ajoutée pour s'assurer que le bon nombre de paires est utilisé à chaque fois
     this.pairs = this.getPairsCount();
 
-    this.cards = [];
-    const selectedTables = this.tables.slice();
-    this.shuffleArray(selectedTables);
+    // Des calculs tous différents (R4.3 : +, −, ×, ÷)
+    const calculations = drawMemoryCalculations(this.pairs, {
+      operator: this.operator,
+      level: this.difficulty,
+      tables: this.tables,
+      excludedTables: this.excludedTables,
+    });
+    // La partie se gagne en trouvant toutes les paires posées
+    this.pairs = calculations.length;
 
-    // Préparer pool de monstres uniques
+    const monsterIndices = this.pickMonsterIndices(this.pairs * 2);
+    this.cards = calculations.flatMap((calculation, pairId) => [
+      createMemoryCard(calculation, pairId, 'operation', monsterIndices.pop()),
+      createMemoryCard(calculation, pairId, 'result', monsterIndices.pop()),
+    ]);
+  }
+
+  // Dos des cartes : des monstres tous différents, tant qu'il y en a assez
+  pickMonsterIndices(count) {
     const monsterCount = this.monsterImages.length;
-    const neededCards = this.pairs * 2;
-    let monsterIndices = Array.from({ length: monsterCount }, (_, i) => i);
-    this.shuffleArray(monsterIndices);
-    if (monsterIndices.length < neededCards) {
-      while (monsterIndices.length < neededCards) {
-        monsterIndices.push(randomInt(0, monsterCount - 1));
-      }
-    }
-    monsterIndices = monsterIndices.slice(0, neededCards);
-
-    // Créer et décorer les cartes
-    for (let i = 0; i < this.pairs; i++) {
-      if (i >= selectedTables.length) this.shuffleArray(selectedTables);
-
-      // Utiliser generateQuestion pour génération cohérente (R4.3: support multi-ops)
-      const questionData = generateQuestion({
-        type: 'classic',
-        operator: this.operator, // Support +, −, ×, ÷
-        difficulty: this.difficulty,
-        tables: this.operator === '×' ? this.tables : undefined,
-        excludeTables: this.operator === '×' ? this.excludedTables : [],
-        minNum: 1,
-        maxNum: 10,
-      });
-
-      const num1 = questionData.a;
-      const num2 = questionData.b;
-      const result = questionData.answer;
-      // Tirer des indices uniques
-
-      const monsterMul = monsterIndices.pop();
-
-      const monsterRes = monsterIndices.pop();
-      // Carte opération (R4.3: adapté pour +, −, ×, ÷)
-      this.cards.push({
-        id: i * 2,
-        type: 'operation',
-        content: `${num1} ${this.operator} ${num2}`,
-        num1,
-        num2,
-        operator: this.operator,
-        result,
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        isFlipped: false,
-        isMatched: false,
-        monsterIndex: monsterMul,
-        pairId: i,
-      });
-      // Carte résultat
-      this.cards.push({
-        id: i * 2 + 1,
-        type: 'result',
-        content: `${result}`,
-        num1,
-        num2,
-        operator: this.operator,
-        result,
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        isFlipped: false,
-        isMatched: false,
-        monsterIndex: monsterRes,
-        pairId: i,
-      });
-    }
+    const indices = this.shuffleArray(Array.from({ length: monsterCount }, (_, i) => i));
+    while (indices.length < count) indices.push(randomInt(0, monsterCount - 1));
+    return indices.slice(0, count);
   }
 
   // Fonction utilitaire pour compter les éléments uniques dans un tableau
@@ -579,24 +785,13 @@ class MemoryGame {
     return new Set(array).size;
   }
 
-  // Calcule les dimensions des cartes selon le nombre de paires
+  // Calcule les dimensions des cartes dans la disposition choisie (layoutBoard)
   calculateCardDimensions() {
-    const cardCount = this.cards.length;
-    // Fixed 4 columns, dynamic rows
-    const cols = 4;
-    const rows = Math.ceil(cardCount / cols);
-
-    // Ajouter une marge entre les cartes
-    const margin = this.isMobile ? 6 : 10;
-    const availableWidth = this.canvas.width - margin * (cols + 1);
-    const availableHeight = this.canvas.height - margin * (rows + 1);
-
-    this.cardWidth = availableWidth / cols;
-    this.cardHeight = availableHeight / rows;
-
-    this.cols = cols;
-    this.rows = rows;
-    this.margin = margin;
+    const board = getArcadeCanvasSize(this.canvas);
+    const availableWidth = board.width - this.margin * (this.cols + 1);
+    const availableHeight = board.height - this.margin * (this.rows + 1);
+    this.cardWidth = availableWidth / this.cols;
+    this.cardHeight = availableHeight / this.rows;
   }
 
   // Positionne les cartes sur la grille (centré) avec meilleure détection mobile
@@ -606,8 +801,9 @@ class MemoryGame {
     const gridHeight = this.rows * this.cardHeight + (this.rows - 1) * this.margin;
 
     // Calculer offset pour centrer la grille
-    const offsetX = Math.floor((this.canvas.width - gridWidth) / 2);
-    const offsetY = Math.floor((this.canvas.height - gridHeight) / 2);
+    const board = getArcadeCanvasSize(this.canvas);
+    const offsetX = Math.floor((board.width - gridWidth) / 2);
+    const offsetY = Math.floor((board.height - gridHeight) / 2);
 
     // Positionner chaque carte avec des coordonnées entières pour éviter les problèmes d'arrondi
     for (let i = 0; i < this.cards.length; i++) {
@@ -626,76 +822,56 @@ class MemoryGame {
     }
   }
 
-  // Mélange les cartes
+  // Mélange les cartes : leur ordre donne leur place dans la grille (positionCards)
   shuffleCards() {
     this.shuffleArray(this.cards);
-
-    // Repositionner les cartes mélangées
-    for (let i = 0; i < this.cards.length; i++) {
-      const col = i % this.cols;
-      const row = Math.floor(i / this.cols);
-
-      this.cards[i].x = this.margin + col * (this.cardWidth + this.margin);
-
-      this.cards[i].y = this.margin + row * (this.cardHeight + this.margin);
-    }
+    if (this.cardWidth) this.positionCards();
   }
 
   // Gère le clic sur une carte
   handleCardClick(e) {
     if (this.isGameOver || this.isProcessingMatch) return;
 
-    let x, y;
-
-    // Pour les événements tactiles, utiliser directement les coordonnées fournies
-    if (e.type === 'touchend') {
-      x = e.clientX;
-      y = e.clientY;
-    } else {
-      // Pour les clics de souris normaux
-      ({ x, y } = clientToCanvasPoint(this.canvas, e.clientX, e.clientY));
-    }
-
-    const clickedCard = this.getCardAtPosition(x, y);
-
-    if (clickedCard && !clickedCard.isFlipped && !clickedCard.isMatched) {
-      // Retourner la carte
-      clickedCard.isFlipped = true;
-      this.flippedCards.push(clickedCard);
-
-      // Vérifier si deux cartes sont retournées
-      if (this.flippedCards.length === 2) {
-        this.isProcessingMatch = true;
-        this.checkForMatch();
-      }
-
-      // Redessiner immédiatement
-      this.draw();
-    }
+    // Pour les événements tactiles, utiliser directement les coordonnées fournies ; pour les
+    // clics de souris, convertir en coordonnées du plateau
+    const { x, y } =
+      e.type === 'touchend'
+        ? { x: e.clientX, y: e.clientY }
+        : clientToCanvasPoint(this.canvas, e.clientX, e.clientY);
+    this.flipCardAt(x, y);
   }
 
   // Implémentation directe pour le tactile sur mobile
   handleDirectTouch(touchX, touchY) {
-    if (this.isGameOver || this.isProcessingMatch) return;
+    if (this.isGameOver || this.isProcessingMatch) return false;
+    return this.flipCardAt(touchX, touchY);
+  }
 
-    const clickedCard = this.getCardAtPosition(touchX, touchY);
+  // Retourne la carte touchée ou cliquée ; le clavier reprendra depuis elle
+  flipCardAt(x, y) {
+    const card = this.getCardAtPosition(x, y);
+    if (card) this.cursorIndex = this.cards.indexOf(card);
+    return this.flipCard(card);
+  }
 
-    if (clickedCard && !clickedCard.isFlipped && !clickedCard.isMatched) {
-      // Retourner la carte
-      clickedCard.isFlipped = true;
-      this.flippedCards.push(clickedCard);
+  // Retourne une carte (souris, doigt ou clavier) ; faux si elle ne peut pas l'être
+  flipCard(card) {
+    // En pause, le plateau est caché et rien ne se retourne
+    if (this.isGameOver || this.isProcessingMatch || isArcadePaused()) return false;
+    if (!card || card.isFlipped || card.isMatched) return false;
+    card.isFlipped = true;
+    this.flippedCards.push(card);
+    this.announce(card.content);
 
-      // Vérifier si deux cartes sont retournées
-      if (this.flippedCards.length === 2) {
-        this.isProcessingMatch = true;
-        this.checkForMatch();
-      }
-
-      // Redessiner immédiatement
-      this.draw();
-      return true;
+    // Vérifier si deux cartes sont retournées
+    if (this.flippedCards.length === 2) {
+      this.isProcessingMatch = true;
+      this.checkForMatch();
     }
-    return false;
+
+    // Redessiner immédiatement
+    this.draw();
+    return true;
   }
 
   // Récupère la carte à la position donnée avec une zone de tolérance pour le tactile
@@ -708,73 +884,64 @@ class MemoryGame {
   // Vérifie si les cartes retournées forment une paire
   checkForMatch() {
     const [card1, card2] = this.flippedCards;
+    // Deux cartes retournées : la partie est jouée (tableau de bord)
+    noteArcadePlay();
 
     // Attendre un peu pour montrer les deux cartes
-    const timer = setTimeout(() => {
-      // Vérifier si les deux cartes forment une paire valide
-      const isSameOrder = card1.table === card2.table && card1.multiplicand === card2.multiplicand;
-      const isSwapped = card1.table === card2.multiplicand && card1.multiplicand === card2.table;
-      if (
-        card1.result === card2.result &&
-        card1.type !== card2.type && // Une multiplication et un résultat
-        (isSameOrder || isSwapped)
-      ) {
-        // C'est une paire !
-        card1.isMatched = true;
-        card2.isMatched = true;
-        this.matchedPairs++;
-        this.score += 10;
-
-        // Mettre à jour l'affichage du score
-        try {
-          InfoBar.update({ score: this.score }, 'multimemory');
-        } catch {
-          // Erreur ignorée (non-critique)
-        }
-
-        // Jouer le son de succès si le son est activé
-        if (!this.successSound.paused) {
-          this.successSound.pause();
-          this.successSound.currentTime = 0;
-        }
-        // Vérifier si le son est activé globalement avant de jouer
-        if (!AudioManager.isMuted()) {
-          this.successSound.play().catch(() => {});
-        }
-
-        // Afficher un message de félicitations
-        showArcadeMessage('arcade.multiMemory.match', 'success', 1000);
-
-        // Vérifier si toutes les paires ont été trouvées
-        if (this.matchedPairs === this.pairs) {
-          this.gameWon();
-        }
-      } else {
-        // Pas une paire, retourner les cartes
-        card1.isFlipped = false;
-        card2.isFlipped = false;
-
-        // Jouer le son d'échec si le son est activé
-        if (!this.failureSound.paused) {
-          this.failureSound.pause();
-          this.failureSound.currentTime = 0;
-        }
-        // Vérifier si le son est activé globalement avant de jouer
-        if (!AudioManager.isMuted()) {
-          this.failureSound.play().catch(() => {});
-        }
-
-        // Pas une paire : une étape, pas une sanction (ton neutre, le texte encourage)
-        showArcadeMessage('arcade.multiMemory.mismatch', 'neutral', 1000);
-      }
-
-      // Réinitialiser pour le prochain tour
-      this.flippedCards = [];
-      this.isProcessingMatch = false;
-      this.draw();
-    }, 1000);
-
+    const timer = setTimeout(() => this.resolvePair(card1, card2), 1000);
     this.timers.push(timer);
+  }
+
+  // Une paire : le même résultat, sur une carte calcul et une carte résultat
+  resolvePair(card1, card2) {
+    if (card1.result === card2.result && card1.type !== card2.type) {
+      this.onPairFound(card1, card2);
+    } else {
+      this.onPairMissed(card1, card2);
+    }
+
+    // Réinitialiser pour le prochain tour
+    this.flippedCards = [];
+    this.isProcessingMatch = false;
+    this.draw();
+  }
+
+  // C'est une paire !
+  onPairFound(card1, card2) {
+    card1.isMatched = true;
+    card2.isMatched = true;
+    this.matchedPairs++;
+    this.score += 10;
+
+    // Mettre à jour l'affichage du score
+    try {
+      InfoBar.update({ score: this.score }, 'multimemory');
+    } catch {
+      // Erreur ignorée (non-critique)
+    }
+
+    // Sons du gestionnaire audio : ils suivent le volume choisi dans le jeu
+    AudioManager.playSound('good');
+    // Afficher un message de félicitations
+    showArcadeMessage('arcade.multiMemory.match', 'success', 1000);
+    this.announce(getTranslation('arcade.multiMemory.match'));
+
+    // Vérifier si toutes les paires ont été trouvées
+    if (this.matchedPairs === this.pairs) {
+      this.gameWon();
+    }
+  }
+
+  // Pas une paire, retourner les cartes
+  onPairMissed(card1, card2) {
+    card1.isFlipped = false;
+    card2.isFlipped = false;
+
+    // Son d'erreur adouci par le gestionnaire audio, comme dans tous les modes
+    AudioManager.playSound('bad');
+    // Pas une paire : une étape, pas une sanction (ton neutre, le texte encourage)
+    showArcadeMessage('arcade.multiMemory.mismatch', 'neutral', 1000);
+    this.announce(getTranslation('arcade.multiMemory.mismatch'));
   }
 
   // Le joueur a gagné en trouvant toutes les paires
@@ -859,8 +1026,10 @@ class MemoryGame {
 
   // Dessine le jeu
   draw() {
-    // Effacer le canvas
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.drawnSignature = this.boardSignature();
+    // Effacer le plateau (unités du jeu)
+    const board = getArcadeCanvasSize(this.canvas);
+    this.ctx.clearRect(0, 0, board.width, board.height);
 
     // Dessiner l'arrière-plan
     this.drawBackground();
@@ -869,17 +1038,54 @@ class MemoryGame {
     for (const card of this.cards) {
       this.drawCard(card);
     }
+
+    this.drawKeyboardCursor();
+  }
+
+  // La carte visée est-elle à montrer ? Plateau au clavier : focus venu du clavier, ou une
+  // touche du plateau déjà employée (jamais pour la souris ni le doigt)
+  isKeyboardCursorVisible() {
+    if (this.isGameOver || !this.canvas || document.activeElement !== this.canvas) return false;
+    if (this.keyboardCursor) return true;
+    try {
+      return this.canvas.matches(':focus-visible');
+    } catch {
+      return false;
+    }
+  }
+
+  // Cadre autour de la carte visée au clavier
+  drawKeyboardCursor() {
+    const card = this.cards.at(this.cursorIndex ?? 0);
+    if (!card || !this.isKeyboardCursorVisible()) return;
+    const { gap, outer, inner, dark, light } = CURSOR_RING;
+    this.ctx.save();
+    this.pathRoundedRect(
+      card.x - gap,
+      card.y - gap,
+      card.width + 2 * gap,
+      card.height + 2 * gap,
+      12
+    );
+    this.ctx.lineWidth = outer;
+    this.ctx.strokeStyle = dark;
+    this.ctx.stroke();
+    this.ctx.lineWidth = inner;
+    this.ctx.strokeStyle = light;
+    this.ctx.stroke();
+    this.ctx.restore();
   }
 
   // Dessine l'arrière-plan du jeu
   drawBackground() {
     // Dégradé de fond simple
-    const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+    const board = getArcadeCanvasSize(this.canvas);
+    const gradient = this.ctx.createLinearGradient(0, 0, 0, board.height);
     gradient.addColorStop(0, '#4A148C');
     gradient.addColorStop(1, '#7B1FA2');
 
     this.ctx.fillStyle = gradient;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillRect(0, 0, board.width, board.height);
   }
 
   // Dessine une carte
@@ -890,11 +1096,13 @@ class MemoryGame {
     this.ctx.save();
     this.ctx.globalAlpha = opacity;
 
-    // Effet d'ombre pour toutes les cartes
+    // Effet d'ombre pour toutes les cartes ; une ombre ne suit pas la transformation du
+    // contexte : à la densité de l'écran
+    const shadow = canvasPixelScale(this.canvas);
     this.ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    this.ctx.shadowBlur = 5;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
+    this.ctx.shadowBlur = 5 * shadow;
+    this.ctx.shadowOffsetX = 2 * shadow;
+    this.ctx.shadowOffsetY = 2 * shadow;
 
     // Forme arrondie
     this.pathRoundedRect(cardX, cardY, cardWidth, cardHeight, 10);
@@ -964,6 +1172,8 @@ class MemoryGame {
   }
 
   drawCardFront(card, cardX, cardY, cardWidth, cardHeight) {
+    // Une carte montrée : sa place compte désormais pour l'enfant, la disposition est fixée
+    this.cardsSeen = true;
     this.ctx.fillStyle = '#FFFFFF';
     let fontSize = Math.floor(card.type === 'operation' ? cardHeight / 3 : cardHeight / 2.5);
     this.ctx.font = getCanvasFont(fontSize);
@@ -976,39 +1186,77 @@ class MemoryGame {
     this.ctx.fillText(card.content, cardX + cardWidth / 2, cardY + cardHeight / 2);
   }
 
-  drawCardBack(card, cardX, cardY, cardWidth, cardHeight) {
-    if (
-      card.monsterIndex >= 0 &&
-      card.monsterIndex < this.monsterImages.length &&
-      this.monsterImages[card.monsterIndex].complete
-    ) {
-      if (this.cardBack.complete) {
-        this.ctx.drawImage(this.cardBack, cardX, cardY, cardWidth, cardHeight);
-      }
-      const monsterSize = Math.min(cardWidth, cardHeight) * 0.8;
-      const monsterX = cardX + (cardWidth - monsterSize) / 2;
-      const monsterY = cardY + (cardHeight - monsterSize) / 2;
+  /**
+   * Monstre dessiné au dos d'une carte
+   * @returns {import('./arcade-sprites.js').ArcadeSprite|undefined}
+   */
+  monsterOf(card) {
+    const index = card.monsterIndex;
+    return Number.isInteger(index) && index >= 0 ? this.monsterImages?.at(index) : undefined;
+  }
 
-      this.ctx.drawImage(
-        this.monsterImages[card.monsterIndex],
-        monsterX,
-        monsterY,
-        monsterSize,
-        monsterSize
-      );
-    } else {
-      this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.font = getCanvasFont(cardHeight / 5);
-      this.ctx.fillText('?', cardX + cardWidth / 2, cardY + cardHeight / 2);
+  // Dos d'une carte : la texture rognée à la carte, puis son monstre à ses proportions ; un
+  // « ? » tant que le monstre n'est pas arrivé
+  drawCardBack(card, cardX, cardY, cardWidth, cardHeight) {
+    const monster = this.monsterOf(card);
+    const size = Math.min(cardWidth, cardHeight) * 0.8;
+    prefetchArcadeSprite(this.canvas, monster, size, size);
+    if (!monster?.image) {
+      this.drawCardQuestionMark(cardX, cardY, cardWidth, cardHeight);
+      return;
     }
+    // L'ombre est celle de la carte : ni la texture ni le monstre n'en portent une à eux (à
+    // la densité de l'écran, une ombre floue par image coûtait deux tiers des images par seconde)
+    this.ctx.shadowColor = 'transparent';
+    const cardBox = { x: cardX, y: cardY, width: cardWidth, height: cardHeight };
+    drawArcadeSprite(this.ctx, this.cardBack, cardBox, { fit: 'cover' });
+    const monsterBox = {
+      x: cardX + (cardWidth - size) / 2,
+      y: cardY + (cardHeight - size) / 2,
+      width: size,
+      height: size,
+    };
+    drawArcadeSprite(this.ctx, monster, monsterBox);
+  }
+
+  drawCardQuestionMark(cardX, cardY, cardWidth, cardHeight) {
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.font = getCanvasFont(cardHeight / 5);
+    this.ctx.fillText('?', cardX + cardWidth / 2, cardY + cardHeight / 2);
+  }
+
+  /**
+   * Ce que montre le plateau : sa taille, chaque carte (place, état, animation, image
+   * arrivée), la carte survolée, la carte visée au clavier, la police chargée
+   * @returns {string}
+   */
+  boardSignature() {
+    const hovered = this.getCardAtPosition(this.lastMousePos.x, this.lastMousePos.y);
+    const cursor = this.isKeyboardCursorVisible() ? this.cursorIndex : -1;
+    const fonts = globalThis.document?.fonts?.status;
+    const board = [this.canvas.width, this.canvas.height, this.cards.indexOf(hovered), cursor];
+    const cards = this.cards.map(card => this.cardSignature(card));
+    return [...board, imageWidth(this.cardBack), fonts, ...cards].join('|');
+  }
+
+  cardSignature(card) {
+    const { x, y, width, height, isFlipped, isMatched, victoryScale, victoryOpacity } = card;
+    const shown = [x, y, width, height, isFlipped, isMatched, victoryScale, victoryOpacity];
+    return [...shown, imageWidth(this.monsterOf(card))].join(',');
+  }
+
+  // Redessine le plateau s'il a changé depuis le dernier dessin : à la densité de l'écran,
+  // seize cartes et leurs ombres redessinées à chaque image coûtaient des images par seconde
+  drawIfChanged() {
+    if (this.boardSignature() !== this.drawnSignature) this.draw();
   }
 
   // Boucle principale du jeu
   gameLoop() {
     if (!this.isGameOver && isArcadeActive()) {
-      this.draw();
+      this.drawIfChanged();
       this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
       this.animations.push(this.gameLoopId);
     }
@@ -1023,14 +1271,14 @@ class MemoryGame {
   }
 
   clearTimersAndAnimations() {
-    if (this.timers && this.timers.length) {
+    if (this.timers?.length) {
       for (const timer of this.timers) {
         clearTimeout(timer);
       }
       this.timers = [];
     }
 
-    if (this.animations && this.animations.length) {
+    if (this.animations?.length) {
       for (const animId of this.animations) {
         cancelAnimationFrame(animId);
       }
@@ -1043,47 +1291,21 @@ class MemoryGame {
       this.canvas.removeEventListener('click', this.boundHandleClick);
       this.canvas.removeEventListener('touchstart', this.boundHandleTouchStart);
       this.canvas.removeEventListener('touchend', this.boundHandleTouchEnd);
+      this.canvas.removeEventListener('keydown', this.boundHandleKeyDown);
 
       if (!this.isMobile && this.boundHandleMouseMove) {
         this.canvas.removeEventListener('mousemove', this.boundHandleMouseMove);
       }
     }
 
-    if (this.boundResizeCanvas) {
-      const globalObject =
-        typeof globalThis !== 'undefined'
-          ? globalThis
-          : typeof window !== 'undefined'
-            ? window
-            : undefined;
-      globalObject?.removeEventListener?.('resize', this.boundResizeCanvas);
-      this.boundResizeCanvas = null;
-    }
-  }
-
-  stopAudioResources() {
-    const stopSound = sound => {
-      if (sound) {
-        sound.pause();
-        sound.currentTime = 0;
-        sound.src = '';
-        return null;
-      }
-      return sound;
-    };
-
-    this.successSound = stopSound(this.successSound);
-    this.failureSound = stopSound(this.failureSound);
+    if (this._stopWatchingViewport) this._stopWatchingViewport();
   }
 
   releaseImageResources() {
-    if (this.cardBack) {
-      this.cardBack.src = '';
-      this.cardBack.onload = null;
-      this.cardBack = null;
-    }
+    // Images partagées entre les parties (js/arcade-sprites.js) : seule la référence part
+    this.cardBack = null;
 
-    if (this.monsterImages && this.monsterImages.length) {
+    if (this.monsterImages?.length) {
       this.monsterImages = null;
     }
   }
@@ -1101,11 +1323,10 @@ class MemoryGame {
     this.stopGameLoop();
     this.clearTimersAndAnimations();
     this.removeEventListeners();
-    this.stopAudioResources();
     this.releaseImageResources();
     this.clearGameData();
   }
 }
 
-// Export global pour compatibilité
-// ESM export uniquement (plus de bridge global)
+// ESM export uniquement (plus de bridge global) ; la classe sert aussi aux tests
+export { MemoryGame };

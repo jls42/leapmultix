@@ -1,11 +1,14 @@
 /**
- * Statistiques unifiées pour toutes les opérations arithmétiques
+ * Statistiques unifiées pour toutes les opérations arithmétiques, rangées dans le profil du
+ * joueur courant (champ operationStats, voir profile-operation-stats.js)
  *
  * Architecture R2 (migration automatique):
  * - Structure unique: operationStats avec clés "a×b", "a+b", "a−b"
  * - Migration automatique stats-migration.js convertit anciennes données au démarrage
  * - Plus de double-write (supprimé après R1)
  * - Wrappers de compatibilité conservés pour code legacy
+ * - Une statistique par profil : la clé localStorage commune n'est plus écrite (elle amorce
+ *   seulement les profils qui datent d'avant)
  *
  * Format des stats:
  * {
@@ -18,9 +21,21 @@
  */
 
 import Storage from './storage.js';
+import { UserState } from './userState.js';
+import {
+  DEVICE_OPERATION_STATS_KEY,
+  countOperationAnswer,
+  normalizeOperationStats,
+  operationKey,
+} from './profile-operation-stats.js';
 
-// Clé de stockage pour la nouvelle structure unifiée
-const OPERATION_STATS_KEY = 'operationStats';
+/**
+ * Statistiques du joueur courant (copie modifiable) ; sans joueur, des statistiques vides
+ * @returns {Object<string, Object>}
+ */
+function currentPlayerStats() {
+  return normalizeOperationStats(UserState.getCurrentUserData()?.operationStats);
+}
 
 /**
  * Enregistre le résultat d'une opération arithmétique
@@ -40,37 +55,14 @@ const OPERATION_STATS_KEY = 'operationStats';
  */
 export function recordOperationResult(operator, a, b, isCorrect) {
   try {
-    // Charger toutes les stats existantes
-    const all = Storage.get(OPERATION_STATS_KEY, {}) || {};
-
-    // Créer la clé unique: "3×5", "7+4", etc.
-    const key = `${a}${operator}${b}`;
-
-    // Initialiser si première tentative
-    if (!all[key]) {
-      all[key] = {
-        operator,
-        a,
-        b,
-        attempts: 0,
-        errors: 0,
-        lastAttempt: null,
-      };
-    }
-
-    // Mettre à jour les stats
-    all[key].attempts++;
-    if (!isCorrect) {
-      all[key].errors++;
-    }
-    all[key].lastAttempt = Date.now();
-
-    // Sauvegarder
-    const success = Storage.set(OPERATION_STATS_KEY, all);
+    const stats = currentPlayerStats();
+    const entry = countOperationAnswer(stats, { operator, a, b, isCorrect, now: Date.now() });
+    // Sans joueur courant, le profil n'est pas modifié : rien n'est compté
+    const success = UserState.updateUserData({ operationStats: stats }) === true;
 
     if (success) {
       console.log(
-        `📊 Stats enregistrées: ${key} (${all[key].attempts} tentatives, ${all[key].errors} erreurs)`
+        `📊 Stats enregistrées: ${operationKey(operator, a, b)} (${entry.attempts} tentatives, ${entry.errors} erreurs)`
       );
     }
 
@@ -94,30 +86,14 @@ export function recordOperationResult(operator, a, b, isCorrect) {
  * // => { operator: '×', a: 3, b: 5, attempts: 12, errors: 2, lastAttempt: 1732492800000 }
  */
 export function getOperationStats(operator, a, b) {
+  const empty = { operator, a, b, attempts: 0, errors: 0, lastAttempt: null };
   try {
-    const all = Storage.get(OPERATION_STATS_KEY, {}) || {};
-    const key = `${a}${operator}${b}`;
-
-    return (
-      all[key] || {
-        operator,
-        a,
-        b,
-        attempts: 0,
-        errors: 0,
-        lastAttempt: null,
-      }
-    );
+    const all = currentPlayerStats();
+    const key = operationKey(operator, a, b);
+    return Object.hasOwn(all, key) ? Reflect.get(all, key) : empty;
   } catch (err) {
     console.error('[operation-stats] Erreur lecture stats:', err);
-    return {
-      operator,
-      a,
-      b,
-      attempts: 0,
-      errors: 0,
-      lastAttempt: null,
-    };
+    return empty;
   }
 }
 
@@ -136,7 +112,7 @@ export function getOperationStats(operator, a, b) {
  */
 export function getAllOperationStats(operatorFilter = null) {
   try {
-    const all = Storage.get(OPERATION_STATS_KEY, {}) || {};
+    const all = currentPlayerStats();
 
     // Sans filtre: retourner tout
     if (!operatorFilter) {
@@ -241,24 +217,9 @@ export function recordMultiplicationResult(table, num, isCorrect) {
  * @returns {{ attempts: number, errors: number }}
  */
 export function getMultiplicationStats(table, num) {
-  // Priorité: nouvelle structure
-  const newStats = getOperationStats('×', table, num);
-  if (newStats.attempts > 0) {
-    return {
-      attempts: newStats.attempts,
-      errors: newStats.errors,
-    };
-  }
-
-  // Fallback: ancienne structure
-  try {
-    const old = Storage.loadMultiplicationStats() || {};
-    const key = `${table}x${num}`;
-    return old[key] || { attempts: 0, errors: 0 };
-  } catch (err) {
-    console.error('[operation-stats] Erreur lecture stats multiplication:', err);
-    return { attempts: 0, errors: 0 };
-  }
+  // L'ancienne structure, commune à l'appareil, est déjà recopiée dans chaque profil
+  const { attempts, errors } = getOperationStats('×', table, num);
+  return { attempts, errors };
 }
 
 // ========================================
@@ -285,7 +246,7 @@ export function getMultiplicationStats(table, num) {
 export function migrateMultiplicationStats() {
   try {
     const old = Storage.loadMultiplicationStats() || {};
-    const neu = Storage.get(OPERATION_STATS_KEY, {}) || {};
+    const neu = Storage.get(DEVICE_OPERATION_STATS_KEY, {}) || {};
 
     let migrated = 0;
     let skipped = 0;
@@ -330,7 +291,7 @@ export function migrateMultiplicationStats() {
     }
 
     // Sauvegarder
-    Storage.set(OPERATION_STATS_KEY, neu);
+    Storage.set(DEVICE_OPERATION_STATS_KEY, neu);
 
     const result = { migrated, skipped, total };
 

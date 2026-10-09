@@ -1,5 +1,11 @@
 import { describe, beforeEach, afterEach, test, expect, jest } from '@jest/globals';
 import { setTranslations } from '../../js/i18n-store.js';
+import {
+  answerDialog,
+  closeOpenDialog,
+  dialogLabels,
+  dialogTitle,
+} from '../helpers/confirm-dialog-helpers.mjs';
 
 const { Customization } = await import('../../js/components/customization.js');
 const { UserManager } = await import('../../js/userManager.js');
@@ -231,8 +237,36 @@ describe('Personnalisation : avatar du joueur', () => {
 
 describe('Personnalisation : « Vider le cache », repli à la main', () => {
   afterEach(() => {
+    closeOpenDialog();
     delete globalThis.caches;
     jest.restoreAllMocks();
+  });
+
+  test('« Vider le cache » demande d’abord, dans la fenêtre du jeu ; « Annuler » ne vide rien', async () => {
+    setTranslations({
+      clear_cache_confirm: 'Vider le cache et recharger ?',
+      clear_cache_dialog_cancel: 'Annuler',
+      clear_cache_dialog_confirm: 'Vider le cache',
+    });
+    const clear = jest.spyOn(Customization, '_tryModuleClear').mockResolvedValue();
+    jest.spyOn(Customization, '_notifyClearing').mockImplementation(() => {});
+
+    const button = document.createElement('button');
+    document.body.append(button);
+    const first = Customization.handleClearCacheClick(button);
+    expect(dialogTitle()).toBe('Vider le cache et recharger ?');
+    expect(dialogLabels()).toEqual(['Annuler', 'Vider le cache']);
+    await answerDialog(false);
+    await first;
+    expect(clear).not.toHaveBeenCalled();
+    // Refusé : le focus revient au bouton pressé
+    expect(document.activeElement).toBe(button);
+    button.remove();
+
+    const second = Customization.handleClearCacheClick();
+    await answerDialog(true);
+    await second;
+    expect(clear).toHaveBeenCalledTimes(1);
   });
 
   test('un nettoyage qui échoue est signalé : la page se recharge quand même, sans erreur perdue', async () => {

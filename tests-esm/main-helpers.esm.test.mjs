@@ -1,8 +1,18 @@
 /* eslint-env jest, node */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { readFileSync } from 'node:fs';
 
 const helpers = await import('../js/main-helpers.js');
 const { UserManager } = await import('../js/userManager.js');
+const { setTranslations } = await import('../js/i18n-store.js');
+
+const FR = JSON.parse(readFileSync(new URL('../assets/translations/fr.json', import.meta.url)));
+/** Boutique des avatars, telle qu'index.html la pose sous la grille */
+const SHOP = `<div id="avatar-shop" class="avatar-shop" hidden>
+  <p id="avatar-shop-intro" class="avatar-shop-intro"></p>
+  <div class="avatar-shop-list"></div>
+</div>`;
+const parse = markup => [...new DOMParser().parseFromString(markup, 'text/html').body.childNodes];
 
 const currentBackground = () => document.body.style.getPropertyValue('--current-bg-image-url');
 
@@ -62,42 +72,46 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
     UserManager._currentUser = null;
   });
 
-  test('getAvatarHeadSrc n’accepte que les avatars connus', () => {
-    expect(helpers.getAvatarHeadSrc('dragon')).toBe(
-      'assets/images/arcade/dragon_head_avatar_128x128.png'
-    );
-    expect(helpers.getAvatarHeadSrc('renard')).toBe(
-      'assets/images/arcade/fox_head_avatar_128x128.png'
-    );
-    expect(helpers.getAvatarHeadSrc('x" onerror="alert(1)')).toBe(
-      'assets/images/arcade/fox_head_avatar_128x128.png'
-    );
-    expect(helpers.getAvatarHeadSrc(undefined)).toBe(
-      'assets/images/arcade/fox_head_avatar_128x128.png'
-    );
+  test('normalizeAvatarId répond toujours à son ancienne adresse (main-helpers.js)', () => {
+    expect(helpers.normalizeAvatarId('licorne')).toBe('unicorn');
+    expect(helpers.normalizeAvatarId('x" onerror="alert(1)')).toBe('fox');
   });
 
-  test('images décoratives, nom visible, boutons radio natifs et cadenas sans émoji', () => {
+  test('grille et boutique : la tête de chaque avatar, en WebP à la taille de la grille', () => {
+    document.body.append(...parse(SHOP));
+    helpers.renderAvatarSelector('#avatar-choice');
+    const heads = [...document.querySelectorAll('#avatar-choice img, #avatar-shop img')];
+    expect(heads.map(img => img.dataset.fallback)).toEqual(
+      ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'].map(
+        avatar => `assets/images/arcade/${avatar}_head_avatar_128x128.png`
+      )
+    );
+    for (const img of heads) {
+      const avatar = /arcade\/([a-z]+)_head_avatar_128x128/.exec(img.dataset.fallback)[1];
+      expect(img.getAttribute('srcset')).toMatch(
+        new RegExp(`^assets/generated-images/arcade/${avatar}_head_avatar-128\\.webp 128w, `)
+      );
+      // css/theme-selector.css #slide6 .avatar-btn img
+      expect(img.getAttribute('sizes')).toBe('(max-width: 480px) 56px, 72px');
+    }
+  });
+
+  test('la grille ne propose que les avatars du joueur, en boutons radio natifs', () => {
     helpers.renderAvatarSelector('#avatar-choice');
 
     const tiles = [...document.querySelectorAll('#avatar-choice .avatar-btn')];
-    expect(tiles).toHaveLength(5);
+    expect(tiles.map(tile => tile.querySelector('.avatar-radio').value)).toEqual(['fox', 'panda']);
     for (const tile of tiles) {
       expect(tile.tagName).toBe('LABEL');
       expect(tile.querySelector('.avatar-radio').type).toBe('radio');
+      expect(tile.querySelector('.avatar-radio').disabled).toBe(false);
       expect(tile.querySelector('img').getAttribute('alt')).toBe('');
       expect(tile.querySelector('.avatar-label').textContent).not.toBe('');
-      expect(tile.textContent).not.toContain('🔒');
+      expect(tile.querySelector('.lock-icon')).toBeNull();
     }
     const radioOf = id => document.querySelector(`#avatar-choice .avatar-radio[value="${id}"]`);
     expect(radioOf('panda').checked).toBe(true);
     expect(radioOf('fox').checked).toBe(false);
-
-    const unicorn = radioOf('unicorn');
-    expect(unicorn.disabled).toBe(true);
-    const lock = unicorn.closest('.avatar-btn').querySelector('.lock-icon');
-    expect(lock?.getAttribute('aria-hidden')).toBe('true');
-    expect(lock?.querySelector('svg')).not.toBeNull();
 
     // Un seul avatar coché à la fois : c'est le groupe natif qui s'en charge
     radioOf('fox').click();
@@ -105,22 +119,73 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
     expect(radioOf('panda').checked).toBe(false);
   });
 
-  test('noms et infobulle de verrouillage suivent un changement de langue (data-translate)', () => {
+  test('les autres avatars passent dans la boutique, chacun avec son prix', () => {
+    setTranslations(FR);
+    document.body.append(...parse(SHOP));
     helpers.renderAvatarSelector('#avatar-choice');
 
-    const buttons = [...document.querySelectorAll('#avatar-choice .avatar-btn')];
-    for (const btn of buttons) {
+    const shop = document.getElementById('avatar-shop');
+    expect(shop.hidden).toBe(false);
+    const offers = [...shop.querySelectorAll('button.avatar-buy-btn')];
+    expect(offers.map(button => button.dataset.avatar)).toEqual(['unicorn', 'dragon', 'astronaut']);
+    for (const button of offers) {
+      expect(button.querySelector('.avatar-price').textContent).toBe('50\u00a0pièces');
+      expect(button.querySelector('.lock-icon svg')).not.toBeNull();
+    }
+    // Le groupe radio ne contient que des boutons radio (aria-required-children)
+    expect(document.querySelectorAll('#avatar-choice button')).toHaveLength(0);
+  });
+
+  test('les noms suivent un changement de langue (data-translate), grille et boutique', () => {
+    document.body.append(...parse(SHOP));
+    helpers.renderAvatarSelector('#avatar-choice');
+
+    for (const btn of document.querySelectorAll('#avatar-choice .avatar-btn')) {
       expect(btn.querySelector('.avatar-label').dataset.translate).toBe(
         btn.querySelector('.avatar-radio').value
       );
     }
-    const locked = buttons.filter(b => b.classList.contains('locked'));
-    expect(locked.length).toBeGreaterThan(0);
-    for (const btn of locked) {
-      expect(btn.dataset.translateTitle).toBe('avatar_locked_tooltip');
+    for (const btn of document.querySelectorAll('#avatar-shop .avatar-buy-btn')) {
+      expect(btn.querySelector('.avatar-label').dataset.translate).toBe(btn.dataset.avatar);
     }
-    const unlocked = buttons.find(b => !b.classList.contains('locked'));
-    expect(unlocked.hasAttribute('data-translate-title')).toBe(false);
+  });
+
+  test('tout débloqué : les cinq avatars dans la grille, plus de boutique', () => {
+    document.body.append(...parse(SHOP));
+    UserManager._players.Lina.unlockedAvatars = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
+    helpers.renderAvatarSelector('#avatar-choice');
+    expect(document.querySelectorAll('#avatar-choice .avatar-radio')).toHaveLength(5);
+    expect(document.getElementById('avatar-shop').hidden).toBe(true);
+    expect(document.querySelectorAll('#avatar-shop button')).toHaveLength(0);
+  });
+
+  test('l’avatar que l’enfant porte n’est jamais à acheter (profil hérité)', () => {
+    // Profils d'avant : l'avatar choisi à la création manque parfois dans unlockedAvatars
+    document.body.append(...parse(SHOP));
+    UserManager._players.Lina.unlockedAvatars = ['fox'];
+    helpers.renderAvatarSelector('#avatar-choice');
+    const panda = document.querySelector('#avatar-choice .avatar-radio[value="panda"]');
+    expect(panda.checked).toBe(true);
+    expect(document.querySelector('#avatar-shop [data-avatar="panda"]')).toBeNull();
+    // Le profil n'est pas réécrit : seul l'affichage change
+    expect(UserManager._players.Lina.unlockedAvatars).toEqual(['fox']);
+  });
+
+  test('la boutique suit la grille de la personnalisation, et ses textes disent le vrai', () => {
+    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    const page = new DOMParser().parseFromString(html, 'text/html');
+    const shop = page.querySelector('#slide6 .avatar-selector + #avatar-shop');
+    expect(shop?.hidden).toBe(true);
+    expect(shop.querySelector('#avatar-shop-intro')).not.toBeNull();
+    expect(shop.querySelector('.avatar-shop-list')).not.toBeNull();
+    for (const lang of ['fr', 'en', 'es']) {
+      const t = JSON.parse(
+        readFileSync(new URL(`../assets/translations/${lang}.json`, import.meta.url), 'utf8')
+      );
+      // Les pièces débloquent un avatar ; l'Aventure, elle, n'en débloque aucun
+      expect(t.avatar_shop_intro).toMatch(/pièces|coins|monedas/);
+      expect(t.avatar_shop_intro).not.toMatch(/Aventura|Adventure|Aventure/i);
+    }
   });
 
   test('la mascotte accueille le joueur en une ligne, avec son prénom', async () => {

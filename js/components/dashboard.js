@@ -11,22 +11,40 @@ import { UserState } from '../core/userState.js';
 import { eventBus } from '../core/eventBus.js';
 import { getAllBadges } from '../badges.js';
 import { VideoManager } from '../VideoManager.js';
-import {
-  getTranslation,
-  getWeakTables,
-  getArcadeScores,
-  getArcadeScoresSnake,
-  getArcadeScoresPacman,
-  getArcadeScoresMemory,
-} from '../utils-es6.js';
-import { setSafeContentWithImage, createSafeElement } from '../security-utils.js';
+import { getTranslation } from '../utils-es6.js';
+import { createSafeElement } from '../security-utils.js';
 import { ADVENTURE_LEVELS } from '../core/adventure-data.js';
-import { normalizeChronoStats, formatDuration } from '../core/chrono-stats.js';
+import {
+  normalizeChronoStats,
+  normalizeChronoStatsByOperator,
+  formatDuration,
+} from '../core/chrono-stats.js';
+import { adventureTotalsByOperator } from '../core/adventure-progress.js';
+import {
+  normalizeModeStats,
+  modeEntries,
+  answerTotals,
+  weakTablesFrom,
+  UNKNOWN_OPERATOR,
+  CHALLENGE_DIFFICULTIES,
+} from '../core/mode-stats.js';
 import { getCurrentLanguage } from '../i18n-store.js';
 import { createIcon } from './icons.js';
+import { createWebpImage } from '../webp-images.js';
+import { HEAD_SIZES, normalizeAvatarId, setAvatarHead } from '../avatar-heads.js';
 
 const MAX_STARS = 3;
 const TABLE_COUNT = 10;
+const OPERATORS = ['×', '+', '−', '÷'];
+// Nom de chaque opération, lu par les lecteurs d'écran à côté de son signe
+const OPERATOR_NAME_KEYS = Object.freeze({
+  '×': ['operation_multiplication', 'Multiplication'],
+  '+': ['operation_addition', 'Addition'],
+  '−': ['operation_subtraction', 'Soustraction'],
+  '÷': ['operation_division', 'Division'],
+});
+// La Découverte compte des tables de 1 à 10 en multiplication, trois niveaux ailleurs
+const DISCOVERY_LEVELS = new Set(['easy', 'medium', 'hard']);
 
 /**
  * Traduction avec repli lisible tant qu'une clé manque dans les fichiers de langue.
@@ -48,8 +66,68 @@ function tr(key, fallback, params = {}) {
 }
 
 /**
+ * Un nombre dans la langue du jeu : « 1 500 » en français, « 1,500 » en anglais. Un texte
+ * (un temps déjà mis en forme, « — ») reste tel quel.
+ * @param {string|number} value
+ * @returns {string}
+ */
+function formatValue(value) {
+  if (typeof value !== 'number') return String(value);
+  try {
+    return new Intl.NumberFormat(getCurrentLanguage() || 'fr').format(value);
+  } catch {
+    return String(value);
+  }
+}
+
+/**
+ * Une opération dans une valeur ventilée : son signe (son nom pour les lecteurs d'écran), ou
+ * « avant la mise à jour » pour des données enregistrées sans leur opération
+ * @param {string} operator
+ * @returns {HTMLSpanElement}
+ */
+function operatorLabel(operator) {
+  if (operator === UNKNOWN_OPERATOR) {
+    return createSafeElement('span', tr('dashboard_before_update', 'avant la mise à jour'), {
+      class: 'score-op is-legacy',
+    });
+  }
+  const [key, fallback] = OPERATOR_NAME_KEYS[operator] ?? [operator, operator];
+  const label = createSafeElement('span', '', { class: 'score-op' });
+  label.appendChild(createSafeElement('span', operator, { 'aria-hidden': 'true' }));
+  label.appendChild(createSafeElement('span', tr(key, fallback), { class: 'sr-only' }));
+  return label;
+}
+
+/**
+ * Remplit la valeur d'un fait : un nombre ou un texte ; ou, quand plusieurs opérations ont
+ * été jouées, « 15 (× 12 · + 3) » pour un compte, « × 230 · + 180 » pour un record (D8)
+ * @param {HTMLElement} dd
+ * @param {string|number|{total?: number, parts: Array<{operator: string, value: (string|number)}>}} value
+ */
+function fillValue(dd, value) {
+  if (!value || typeof value !== 'object' || !Array.isArray(value.parts)) {
+    dd.textContent = formatValue(value);
+    return;
+  }
+  const hasTotal = value.total !== undefined;
+  if (hasTotal) dd.append(`${formatValue(value.total)} (`);
+  value.parts.forEach((part, index) => {
+    // Espace insécable avant le point : une ligne ne commence jamais par « · »
+    if (index > 0) dd.append(' · ');
+    // Un signe et sa valeur ne se séparent pas d'une ligne à l'autre
+    const item = createSafeElement('span', '', {
+      class: part.operator === UNKNOWN_OPERATOR ? 'score-part is-legacy' : 'score-part',
+    });
+    item.append(operatorLabel(part.operator), ` ${formatValue(part.value)}`);
+    dd.append(item);
+  });
+  if (hasTotal) dd.append(')');
+}
+
+/**
  * Liste de définitions « libellé → valeur ».
- * @param {Array<{label: string, value: (string|number)}>} facts
+ * @param {Array<{label: string, value: *}>} facts
  * @param {string} className
  * @returns {HTMLDListElement}
  */
@@ -59,10 +137,50 @@ function buildFacts(facts, className) {
   for (const { label, value } of facts) {
     const row = document.createElement('div');
     row.appendChild(createSafeElement('dt', label));
-    row.appendChild(createSafeElement('dd', String(value)));
+    const dd = document.createElement('dd');
+    fillValue(dd, value);
+    row.appendChild(dd);
     list.appendChild(row);
   }
   return list;
+}
+
+/**
+ * Un compte, ventilé quand plusieurs opérations ont été jouées dans la rangée
+ * @param {Array<Object>} entries - Opérations de la rangée (chacune avec son `operator`)
+ * @param {(entry: Object) => number} pick
+ */
+function countValue(entries, pick) {
+  const parts = entries.map(entry => ({
+    operator: entry.operator,
+    value: Number(pick(entry)) || 0,
+  }));
+  const total = parts.reduce((sum, part) => sum + part.value, 0);
+  return parts.length > 1 ? { total, parts } : total;
+}
+
+/**
+ * Les records des opérations qui en ont un, chacun avec son signe dès que la rangée couvre
+ * plusieurs opérations ; « — » sans aucun record
+ * @param {Array<{operator: string, value: (string|number|null)}>} records
+ * @param {number} operatorCount - Opérations jouées dans la rangée
+ * @returns {string|number|{parts: Array<{operator: string, value: (string|number)}>}} La
+ *   valeur d'un fait, telle que fillValue l'affiche : le record seul, « — », ou le détail
+ */
+function recordsValue(records, operatorCount) {
+  const parts = records.filter(part => part.value !== null && part.value !== undefined);
+  if (parts.length === 0) return '—';
+  return operatorCount > 1 ? { parts } : parts[0].value;
+}
+
+/**
+ * Un record par opération jouée (celles qui en ont un)
+ * @param {Array<Object>} entries
+ * @param {(entry: Object) => (string|number|null)} pick
+ */
+function recordValue(entries, pick) {
+  const records = entries.map(entry => ({ operator: entry.operator, value: pick(entry) }));
+  return recordsValue(records, entries.length);
 }
 
 /**
@@ -78,62 +196,203 @@ function normalizeTableNumber(candidate) {
   return null;
 }
 
-/** Cumul du Quiz : questions posées et bonnes réponses. */
-function quizTotals(userData) {
-  const quiz = { total: 0, correct: 0 };
-  for (const entry of userData.quizStats?.history || []) {
-    quiz.total += Number(entry.total) || 0;
-    quiz.correct += Number(entry.correct) || 0;
-  }
-  return quiz;
+/** Faits du Quiz : questions et bonnes réponses, par opération jouée ; null sans réponse */
+function quizFacts(stats) {
+  const entries = modeEntries(stats, 'quiz').filter(entry => entry.questions > 0);
+  if (entries.length === 0) return null;
+  return [
+    { label: tr('stat_questions', 'Questions'), value: countValue(entries, e => e.questions) },
+    {
+      label: tr('stat_good_answers', 'Bonnes réponses'),
+      value: countValue(entries, e => e.correct),
+    },
+  ];
 }
 
-/** Cumul du Défi, toutes difficultés confondues. */
-function challengeTotals(userData) {
-  const challenge = { sessions: 0, best: 0 };
-  for (const st of Object.values(userData.challengeStats || {})) {
-    challenge.sessions += Number(st.totalPlayed) || 0;
-    challenge.best = Math.max(challenge.best, Number(st.bestScore) || 0);
+/** Meilleur score d'un Défi et sa difficulté : « 210 (Difficile) », ou null */
+function challengeBestText(entry) {
+  let best = null;
+  for (const difficulty of CHALLENGE_DIFFICULTIES) {
+    const score = Number(entry.best?.[difficulty]) || 0;
+    if (score > 0 && (best === null || score >= best.score)) best = { score, difficulty };
   }
-  return challenge;
+  if (!best) return null;
+  const level = tr(`difficulty_${best.difficulty}`, best.difficulty);
+  return `${formatValue(best.score)} (${level})`;
 }
 
-/** Cumul de l'Aventure : niveaux terminés et étoiles gagnées. */
-function adventureTotals(userData) {
-  const adventure = { levels: 0, stars: 0 };
-  for (const progress of Object.values(userData.adventureProgress || {})) {
-    if (progress.completed) adventure.levels++;
-    adventure.stars += progress.stars || 0;
-  }
-  return adventure;
+/** Faits du Défi : parties (commencées, abandons compris), meilleur score d'une partie finie */
+function challengeFacts(stats) {
+  const entries = modeEntries(stats, 'challenge').filter(
+    entry => entry.games > 0 || challengeBestText(entry) !== null
+  );
+  if (entries.length === 0) return null;
+  return [
+    {
+      label: tr('sessions_count_label', 'Nombre de parties'),
+      value: countValue(entries, e => e.games),
+    },
+    {
+      label: tr('best_score_label', 'Meilleur score'),
+      value: recordValue(entries, challengeBestText),
+    },
+  ];
 }
 
-/**
- * Cumul de Chrono, tous classements confondus (tables, façon de répondre), comme le
- * meilleur score du Défi toutes difficultés confondues : parties, meilleur temps,
- * calculs à revoir.
- */
-function chronoTotals(userData) {
-  const store = normalizeChronoStats(userData.chronoStats);
-  let sessions = 0;
+/** Faits de l'Aventure : niveaux terminés et étoiles, par opération (la vraie progression) */
+function adventureFacts(userData) {
+  const totals = adventureTotalsByOperator(userData.adventureProgressByOperator);
+  const entries = OPERATORS.filter(op => totals[op]).map(op => ({ operator: op, ...totals[op] }));
+  if (entries.length === 0) return null;
+  return [
+    {
+      label: tr('levels_completed_label', 'Niveaux complétés'),
+      value: countValue(entries, e => e.levels),
+    },
+    { label: tr('stars_label', 'Étoiles'), value: countValue(entries, e => e.stars) },
+  ];
+}
+
+/** Réserves de Chrono : × dans chronoStats, + − ÷ dans chronoStatsByOperator */
+function chronoStores(userData) {
+  return {
+    '×': normalizeChronoStats(userData.chronoStats),
+    ...normalizeChronoStatsByOperator(userData.chronoStatsByOperator),
+  };
+}
+
+/** Plus petit meilleur temps d'une réserve (tous ses classements, comme avant), ou null */
+function storeBestMs(store) {
   let bestMs = null;
   for (const bucket of store.buckets) {
-    sessions += bucket.count;
     const best = bucket.best[0]?.durationMs;
     if (best !== undefined && (bestMs === null || best < bestMs)) bestMs = best;
   }
-  return { sessions, bestMs, toReview: store.basket.length };
+  return bestMs;
 }
 
-/** Faits de la rangée Chrono, ou null s'il n'a jamais servi (« Aucun score ») */
-function chronoFacts({ sessions, bestMs, toReview }) {
+/**
+ * Faits de Chrono (D8) : une seule rangée ; parties et calculs à revoir de toutes les
+ * opérations, détaillés par opération jouée comme dans les autres modes, et un meilleur
+ * temps par opération. null s'il n'a jamais servi (« Aucun score »).
+ */
+function chronoFacts(userData, stats) {
+  const stores = chronoStores(userData);
+  const entries = modeEntries(stats, 'chrono');
+  const sessions = entries.reduce((sum, entry) => sum + entry.games, 0);
+  const toReview = OPERATORS.reduce((sum, op) => sum + (stores[op]?.basket.length ?? 0), 0);
   if (!sessions && !toReview) return null;
-  const best = bestMs === null ? '—' : formatDuration(bestMs, getCurrentLanguage());
+  const lang = getCurrentLanguage();
+  const times = OPERATORS.map(op => {
+    const ms = stores[op] ? storeBestMs(stores[op]) : null;
+    return { operator: op, value: ms === null ? null : formatDuration(ms, lang) };
+  });
+  // Opérations jouées : une partie comptée, un temps ou un calcul à revoir
+  const played = [...OPERATORS, UNKNOWN_OPERATOR]
+    .map(op => ({
+      operator: op,
+      games: entries.find(entry => entry.operator === op)?.games ?? 0,
+      toReview: stores[op]?.basket.length ?? 0,
+    }))
+    .filter(
+      count =>
+        count.games > 0 ||
+        count.toReview > 0 ||
+        times.some(time => time.operator === count.operator && time.value !== null)
+    );
   return [
-    { label: tr('sessions_count_label', 'Nombre de parties'), value: sessions },
-    { label: tr('best_time_label', 'Meilleur temps'), value: best },
-    { label: tr('facts_to_review_label', 'Calculs à revoir'), value: toReview },
+    {
+      label: tr('sessions_count_label', 'Nombre de parties'),
+      value: countValue(played, count => count.games),
+    },
+    { label: tr('best_time_label', 'Meilleur temps'), value: recordsValue(times, played.length) },
+    {
+      label: tr('facts_to_review_label', 'Calculs à revoir'),
+      value: countValue(played, count => count.toReview),
+    },
   ];
+}
+
+/**
+ * Ce qu'une clé de la Découverte a exploré : « 7 », une table de × ; « +:easy », un niveau.
+ * Null pour une clé que la Découverte ignore.
+ * @returns {{operator: string, item: (string|number)}|null}
+ */
+function discoveryItem(key) {
+  const [operator, level] = String(key).split(':');
+  if (level !== undefined) return DISCOVERY_LEVELS.has(level) ? { operator, item: level } : null;
+  const table = /^\d+$/.test(operator) ? Number(operator) : 0;
+  return table >= 1 && table <= TABLE_COUNT ? { operator: '×', item: table } : null;
+}
+
+/** Explorations de la Découverte, par opération : tables (×) ou niveaux (+ − ÷) */
+function discoveryExplored(userData) {
+  const explored = new Map(OPERATORS.map(op => [op, new Set()]));
+  for (const key of userData.discoveryProgress?.exploredTables ?? []) {
+    const found = discoveryItem(key);
+    if (found) explored.get(found.operator)?.add(found.item);
+  }
+  return explored;
+}
+
+/** Faits de la Découverte : « 2 tables sur 10 », « 1 niveau sur 3 », par opération */
+function discoveryFacts(userData) {
+  const explored = discoveryExplored(userData);
+  const parts = OPERATORS.filter(op => explored.get(op).size > 0).map(op => ({
+    operator: op,
+    value:
+      op === '×'
+        ? tr('discovery_tables_explored', '{n} tables sur 10', { n: explored.get(op).size })
+        : tr('discovery_levels_explored', '{n} niveaux sur 3', { n: explored.get(op).size }),
+  }));
+  if (parts.length === 0) return null;
+  return [
+    {
+      label: tr('discovery_explored_label', 'Déjà exploré'),
+      value: parts.length > 1 ? { parts } : parts[0].value,
+    },
+  ];
+}
+
+/** Faits du Défi du jour (multiplication seulement) : défis réussis ; null tant qu'aucun */
+function dailyFacts(userData) {
+  const done = Math.floor(Number(userData.dailyChallengesCompleted) || 0);
+  if (done <= 0) return null;
+  return [{ label: tr('daily_challenges_completed_label', 'Défis réussis'), value: done }];
+}
+
+/** Faits d'un jeu d'Arcade : parties (abandons compris), record et moyenne, par opération */
+function arcadeFacts(stats, game) {
+  const entries = modeEntries(stats, game).filter(entry => entry.games > 0);
+  if (entries.length === 0) return null;
+  return [
+    {
+      label: tr('sessions_count_label', 'Nombre de parties'),
+      value: countValue(entries, e => e.games),
+    },
+    { label: tr('best_score_label', 'Meilleur score'), value: recordValue(entries, e => e.best) },
+    {
+      label: tr('average_score_label', 'Score moyen'),
+      value: recordValue(entries, e => Math.round(e.total / e.games)),
+    },
+  ];
+}
+
+/** Rien de joué : ni réponse, ni partie, ni étoile, ni exploration, ni défi du jour */
+function isNewPlayer(userData, stats) {
+  if (answerTotals(stats).questions > 0) return false;
+  const anyGames = Object.values(stats.modes).some(byOperator =>
+    Object.values(byOperator).some(entry => (entry.games ?? 0) > 0)
+  );
+  if (anyGames || Number(userData.dailyChallengesCompleted) > 0) return false;
+  if (Object.keys(adventureTotalsByOperator(userData.adventureProgressByOperator)).length) {
+    return false;
+  }
+  if ([...starsMapFrom(userData.starsByTable).values()].some(Boolean)) return false;
+  const explored = discoveryExplored(userData);
+  if (OPERATORS.some(op => explored.get(op).size > 0)) return false;
+  const stores = chronoStores(userData);
+  return OPERATORS.every(op => (stores[op]?.basket.length ?? 0) === 0);
 }
 
 /** Étoiles enregistrées par table, en table de correspondance. */
@@ -163,13 +422,51 @@ function mergeAdventureStars(starsByTable, adventureProgress) {
   }
 }
 
-export const Dashboard = {
-  _computeStats(scores) {
-    const count = scores.length;
-    const sum = scores.reduce((acc, s) => acc + s, 0);
-    return { count, best: scores[0] || 0, avg: count ? Math.round(sum / count) : 0 };
-  },
+/** Compteurs du profil (amorcés depuis l'existant si la lecture du profil ne l'a pas fait) */
+function statsOf(userData) {
+  return normalizeModeStats(userData);
+}
 
+// Logo d'une rangée en WebP (js/webp-images.js) : 56 px affichés (css/progress-dashboard.css),
+// 168 pixels sur un écran de densité 3. Le 512 n'est jamais demandé pour 56 px, mais le
+// navigateur reprend celui que l'accueil ou le menu de l'Arcade ont déjà chargé (téléphone)
+const SCORE_LOGO = { widths: [128, 256, 512], src: 128, sizes: '56px' };
+
+/** Rangées des modes classiques, dans l'ordre affiché : logo, nom, faits du profil */
+const CLASSIC_ROWS = [
+  {
+    logo: 'logo_mode_quizz.png',
+    key: 'quiz_mode_title',
+    name: 'Quiz',
+    facts: (_userData, stats) => quizFacts(stats),
+  },
+  {
+    logo: 'logo_mode_defi.png',
+    key: 'challenge_mode_title',
+    name: 'Défi',
+    facts: (_userData, stats) => challengeFacts(stats),
+  },
+  {
+    logo: 'logo_mode_aventure.png',
+    key: 'adventure_mode_title',
+    name: 'Aventure',
+    facts: userData => adventureFacts(userData),
+  },
+  {
+    logo: 'logo_mode_chrono.png',
+    key: 'chrono_mode_title',
+    name: 'Chrono',
+    facts: (userData, stats) => chronoFacts(userData, stats),
+  },
+  {
+    logo: 'logo_mode_decouverte.png',
+    key: 'discovery_mode_title',
+    name: 'Découverte',
+    facts: userData => discoveryFacts(userData),
+  },
+];
+
+export const Dashboard = {
   /**
    * Initialiser le composant Dashboard
    */
@@ -213,7 +510,7 @@ export const Dashboard = {
    */
   replayCurrentUserVideo() {
     // Vérifier que VideoManager est disponible
-    if (typeof VideoManager === 'undefined') {
+    if (VideoManager === undefined) {
       console.error('VideoManager non disponible pour replay vidéo');
       return;
     }
@@ -229,37 +526,42 @@ export const Dashboard = {
   /**
    * Afficher le tableau de bord
    */
+  /** Total d'étoiles de l'en-tête, accordé au nombre */
+  showTotalStars() {
+    const totalStarsEl = document.getElementById('total-stars');
+    if (!totalStarsEl) return;
+    const total = this.calculateTotalStars();
+    totalStarsEl.textContent = formatValue(total);
+    // « 1 étoile au total », « 0 étoile » en français, « 0 stars » en anglais
+    const label = document.getElementById('total-stars-label');
+    if (label) label.textContent = tr('total_stars_label', 'étoiles au total', { count: total });
+    const summary = totalStarsEl.parentElement;
+    if (summary && !summary.querySelector(':scope > svg.icon')) {
+      const star = createIcon('star', { size: 20, className: 'star-icon is-filled' });
+      if (star) summary.prepend(star);
+    }
+  },
+
   show() {
     // Charger les données de l'utilisateur
     const userData = UserState.getCurrentUserData();
 
     // Mettre à jour l'avatar et le nom
-    const avatarEl = document.getElementById('dashboard-avatar');
-    setSafeContentWithImage(avatarEl, {
-      imageSrc: `assets/images/arcade/${userData.avatar || 'fox'}_head_avatar_128x128.png`,
-      imageAlt: getTranslation(userData.avatar || 'fox'),
-      width: '100',
-      height: '100',
-      imageClass: 'img-responsive',
-    });
+    this.showAvatar(userData.avatar);
     const nicknameEl = document.getElementById('dashboard-nickname');
     if (nicknameEl) nicknameEl.textContent = userData.nickname || '';
 
     // Calculer et afficher le nombre total d'étoiles
-    const totalStarsEl = document.getElementById('total-stars');
-    if (totalStarsEl) {
-      totalStarsEl.textContent = this.calculateTotalStars();
-      const summary = totalStarsEl.parentElement;
-      if (summary && !summary.querySelector(':scope > svg.icon')) {
-        const star = createIcon('star', { size: 20, className: 'star-icon is-filled' });
-        if (star) summary.prepend(star);
-      }
-    }
+    this.showTotalStars();
 
     this.initReplayVideoButton();
 
     // Générer la grille d'étoiles
     this.generateStarsGrid();
+
+    // Nouveau joueur : une phrase d'accueil plutôt qu'une page de zéros
+    const isNew = isNewPlayer(userData, statsOf(userData));
+    this.toggleWelcome(isNew);
 
     // Afficher les statistiques globales
     this.updateStats();
@@ -268,7 +570,47 @@ export const Dashboard = {
     this.showAchievements();
 
     // Scores et statistiques par mode
-    this.generateScoresSection();
+    if (isNew) document.getElementById('dashboard-scores-section')?.remove();
+    else this.generateScoresSection();
+  },
+
+  /**
+   * Tête de l'avatar du joueur, nommée pour un lecteur d'écran
+   * @param {string} [avatarId]
+   */
+  showAvatar(avatarId) {
+    const avatarEl = document.getElementById('dashboard-avatar');
+    if (!avatarEl) return;
+    const avatar = normalizeAvatarId(avatarId);
+    const img = createSafeElement('img', '', {
+      class: 'img-responsive',
+      width: '100',
+      height: '100',
+      alt: getTranslation(avatar),
+    });
+    setAvatarHead(img, avatar, HEAD_SIZES.dashboard);
+    avatarEl.replaceChildren(img);
+  },
+
+  /**
+   * Phrase d'accueil d'un joueur qui n'a encore rien joué, sous l'en-tête ; « Ton parcours »
+   * (que des zéros) et les scores se cachent jusqu'à la première partie.
+   * @param {boolean} isNew
+   */
+  toggleWelcome(isNew) {
+    const container = document.querySelector('.dashboard-container');
+    if (!container) return;
+    container.querySelector('.history-section')?.toggleAttribute('hidden', isNew);
+    container.querySelector('.dashboard-welcome')?.remove();
+    if (!isNew) return;
+    const welcome = createSafeElement(
+      'p',
+      tr('dashboard_welcome', 'Joue une partie : tes progrès s’afficheront ici.'),
+      { class: 'dashboard-welcome', 'data-translate': 'dashboard_welcome' }
+    );
+    const header = container.querySelector('.dashboard-header');
+    if (header) header.after(welcome);
+    else container.prepend(welcome);
   },
 
   /**
@@ -280,7 +622,8 @@ export const Dashboard = {
 
     const userData = UserState.getCurrentUserData();
     const starsByTable = this._getStarsByTable(userData);
-    const weakTables = getWeakTables();
+    // « À revoir » : les 20 dernières réponses de chaque table (Quiz, Défi, Aventure, Chrono)
+    const weakTables = weakTablesFrom(statsOf(userData));
 
     dashboardStars.setAttribute('role', 'list');
     const cells = [];
@@ -337,19 +680,20 @@ export const Dashboard = {
    */
   updateStats() {
     const userData = UserState.getCurrentUserData();
-    const history = userData.progressHistory || [];
+    // Toutes les réponses : Quiz, Défi, Aventure et Chrono (course et révision)
+    const totals = answerTotals(statsOf(userData));
     const rows = [
       {
         id: 'total-questions',
         key: 'stat_questions',
         fallback: 'Questions',
-        value: history.length,
+        value: totals.questions,
       },
       {
         id: 'correct-answers',
         key: 'stat_good_answers',
         fallback: 'Bonnes réponses',
-        value: history.filter(item => item.correct).length,
+        value: totals.correct,
       },
       {
         id: 'best-streak',
@@ -367,7 +711,7 @@ export const Dashboard = {
     // Sans conteneur de liste : mettre à jour les valeurs existantes
     for (const row of rows) {
       const el = document.getElementById(row.id);
-      if (el) el.textContent = String(row.value);
+      if (el) el.textContent = formatValue(row.value);
     }
   },
 
@@ -378,7 +722,7 @@ export const Dashboard = {
       const row = document.createElement('div');
       row.className = 'journey-row';
       row.appendChild(createSafeElement('dt', tr(key, fallback), { 'data-translate': key }));
-      row.appendChild(createSafeElement('dd', String(value), { id }));
+      row.appendChild(createSafeElement('dd', formatValue(value), { id }));
       list.appendChild(row);
     }
     return list;
@@ -440,25 +784,35 @@ export const Dashboard = {
    * Une rangée de score : logo du mode, nom, puis faits « libellé → valeur ».
    * @param {Object} spec
    * @param {string} spec.className - Classe historique de la rangée
-   * @param {string} spec.logo - Chemin du logo (décoratif : le nom est écrit)
+   * @param {string} spec.logo - PNG du logo dans assets/images/arcade, servi en WebP
+   *   (décoratif : le nom est écrit)
    * @param {string} spec.name - Nom du mode ou du jeu
    * @param {Array<{label: string, value: (string|number)}>|null} spec.facts - Faits, ou null si aucun score
    * @returns {HTMLLIElement}
    */
-  _buildScoreRow({ className, logo, name, facts }) {
+  _buildScoreRow({ className, logo, icon, name, facts }) {
     const row = document.createElement('li');
     row.className = `score-row ${className}`;
-    row.appendChild(
-      createSafeElement('img', '', {
-        src: logo,
-        alt: '',
-        class: 'score-logo',
-        width: '64',
-        height: '64',
-        loading: 'lazy',
-        decoding: 'async',
-      })
-    );
+    if (icon) {
+      // Pas de logo dessiné (Défi du jour) : une icône, décorative elle aussi
+      const box = createSafeElement('span', '', {
+        class: 'score-logo score-logo-icon',
+        'aria-hidden': 'true',
+      });
+      const svg = createIcon(icon, { size: 36 });
+      if (svg) box.appendChild(svg);
+      row.appendChild(box);
+    } else {
+      row.appendChild(
+        createWebpImage(logo, SCORE_LOGO, {
+          class: 'score-logo',
+          width: '64',
+          height: '64',
+          loading: 'lazy',
+          decoding: 'async',
+        })
+      );
+    }
     const body = document.createElement('div');
     body.className = 'score-row-body';
     body.appendChild(createSafeElement('p', name, { class: 'score-row-title' }));
@@ -471,108 +825,48 @@ export const Dashboard = {
     return row;
   },
 
-  _arcadeFacts(scores) {
-    if (!scores.length) return null;
-    const stats = this._computeStats(scores);
-    return [
-      { label: tr('sessions_count_label', 'Nombre de parties'), value: stats.count },
-      { label: tr('best_score_label', 'Meilleur score'), value: stats.best },
-      { label: tr('average_score_label', 'Score moyen'), value: stats.avg },
-    ];
-  },
-
-  _classicModeStats(userData) {
-    return {
-      quiz: quizTotals(userData),
-      challenge: challengeTotals(userData),
-      adventure: adventureTotals(userData),
-      chrono: chronoTotals(userData),
-    };
-  },
-
+  /**
+   * Modes classiques : les rangées d'avant (Quiz, Défi, Aventure, Chrono), puis la Découverte
+   * et le Défi du jour (seulement quand un défi a été réussi)
+   */
   _buildClassicRows(userData) {
-    const { quiz, challenge, adventure, chrono } = this._classicModeStats(userData);
-    return [
+    const stats = statsOf(userData);
+    const rows = CLASSIC_ROWS.map(row =>
       this._buildScoreRow({
         className: 'classic-game-stats',
-        logo: 'assets/images/arcade/logo_mode_quizz.png',
-        name: tr('quiz_mode_title', 'Quiz'),
-        facts: quiz.total
-          ? [
-              { label: tr('stat_questions', 'Questions'), value: quiz.total },
-              { label: tr('stat_good_answers', 'Bonnes réponses'), value: quiz.correct },
-            ]
-          : null,
-      }),
-      this._buildScoreRow({
-        className: 'classic-game-stats',
-        logo: 'assets/images/arcade/logo_mode_defi.png',
-        name: tr('challenge_mode_title', 'Défi'),
-        facts: challenge.sessions
-          ? [
-              { label: tr('sessions_count_label', 'Nombre de parties'), value: challenge.sessions },
-              { label: tr('best_score_label', 'Meilleur score'), value: challenge.best },
-            ]
-          : null,
-      }),
-      this._buildScoreRow({
-        className: 'classic-game-stats',
-        logo: 'assets/images/arcade/logo_mode_aventure.png',
-        name: tr('adventure_mode_title', 'Aventure'),
-        facts:
-          adventure.levels || adventure.stars
-            ? [
-                {
-                  label: tr('levels_completed_label', 'Niveaux complétés'),
-                  value: adventure.levels,
-                },
-                { label: tr('stars_label', 'Étoiles'), value: adventure.stars },
-              ]
-            : null,
-      }),
-      this._buildScoreRow({
-        className: 'classic-game-stats',
-        logo: 'assets/images/arcade/logo_mode_chrono.png',
-        name: tr('chrono_mode_title', 'Chrono'),
-        facts: chronoFacts(chrono),
-      }),
-    ];
+        logo: row.logo,
+        name: tr(row.key, row.name),
+        facts: row.facts(userData, stats),
+      })
+    );
+    const daily = dailyFacts(userData);
+    if (daily) {
+      rows.push(
+        this._buildScoreRow({
+          className: 'classic-game-stats daily-challenge-stats',
+          icon: 'calendar',
+          name: tr('daily_challenge_title', 'Défi du jour'),
+          facts: daily,
+        })
+      );
+    }
+    return rows;
   },
 
-  _buildArcadeRows() {
-    const read = getter => (typeof getter === 'function' ? getter() || [] : []);
+  _buildArcadeRows(userData) {
+    const stats = statsOf(userData);
     const games = [
-      {
-        logo: 'assets/images/arcade/logo_multiinvaders.png',
-        nameKey: 'arcade_invasion_title',
-        fallback: 'MultiInvaders',
-        scores: read(getArcadeScores),
-      },
-      {
-        logo: 'assets/images/arcade/logo_multimiam.png',
-        nameKey: 'arcade_pacman_title',
-        fallback: 'MultiMiam',
-        scores: read(getArcadeScoresPacman),
-      },
-      {
-        logo: 'assets/images/arcade/logo_multimemory.png',
-        nameKey: 'arcade.multiMemory.title',
-        fallback: 'MultiMemory',
-        scores: read(getArcadeScoresMemory),
-      },
-      {
-        logo: 'assets/images/arcade/logo_multisnake.png',
-        nameKey: 'arcade_snake_title',
-        fallback: 'MultiSnake',
-        scores: read(getArcadeScoresSnake),
-      },
+      ['invasion', 'logo_multiinvaders.png', 'arcade_invasion_title', 'MultiInvaders'],
+      ['multimiam', 'logo_multimiam.png', 'arcade_pacman_title', 'MultiMiam'],
+      ['multimemory', 'logo_multimemory.png', 'arcade.multiMemory.title', 'MultiMemory'],
+      ['multisnake', 'logo_multisnake.png', 'arcade_snake_title', 'MultiSnake'],
     ];
-    return games.map(game =>
+    return games.map(([game, logo, nameKey, fallback]) =>
       this._buildScoreRow({
         className: 'arcade-game-stats',
-        logo: game.logo,
-        name: tr(game.nameKey, game.fallback),
-        facts: this._arcadeFacts(game.scores),
+        logo,
+        name: tr(nameKey, fallback),
+        facts: arcadeFacts(stats, game),
       })
     );
   },
@@ -581,7 +875,7 @@ export const Dashboard = {
     const group = document.createElement('div');
     group.className = 'scores-subblock';
     group.appendChild(
-      createSafeElement('h4', tr(titleKey, titleFallback), {
+      createSafeElement('h3', tr(titleKey, titleFallback), {
         class: 'scores-subtitle',
         'data-translate': titleKey,
       })
@@ -606,7 +900,8 @@ export const Dashboard = {
     section.id = 'dashboard-scores-section';
     section.className = 'dashboard-scores-section';
     section.appendChild(
-      createSafeElement('h3', tr('dashboard_scores_title', 'Scores et statistiques'), {
+      createSafeElement('h2', tr('dashboard_scores_title', 'Scores et statistiques'), {
+        class: 'section-title',
         'data-translate': 'dashboard_scores_title',
       })
     );
@@ -627,7 +922,7 @@ export const Dashboard = {
         'arcade_games_title',
         'Mode Arcade',
         'arcade-games-grid',
-        this._buildArcadeRows()
+        this._buildArcadeRows(userData)
       )
     );
     section.appendChild(scoresBlock);
@@ -635,7 +930,7 @@ export const Dashboard = {
     // Placer la section AVANT les succès débloqués
     const achievementsSection = document.getElementById('achievements-list')?.parentElement;
     if (achievementsSection?.parentElement === dashboardContainer) {
-      dashboardContainer.insertBefore(section, achievementsSection);
+      achievementsSection.before(section);
     } else {
       dashboardContainer.appendChild(section);
     }
@@ -644,14 +939,29 @@ export const Dashboard = {
   /**
    * Calculer le nombre total d'étoiles
    */
+  /**
+   * Total d'étoiles : celles des tables de multiplication (calcul d'avant), plus celles des
+   * niveaux d'Aventure en addition, soustraction et division (comme le badge « Collectionneur
+   * d'étoiles »)
+   */
   calculateTotalStars() {
     const userData = UserState.getCurrentUserData();
     const starsByTable = this._getStarsByTable(userData);
-    return Object.values(starsByTable).reduce((sum, stars) => sum + stars, 0);
+    const multiplication = Object.values(starsByTable).reduce((sum, stars) => sum + stars, 0);
+    const totals = adventureTotalsByOperator(userData.adventureProgressByOperator);
+    const others = OPERATORS.filter(op => op !== '×').reduce(
+      (sum, op) => sum + (totals[op]?.stars ?? 0),
+      0
+    );
+    return multiplication + others;
   },
   _getStarsByTable(userData) {
     const starsByTable = starsMapFrom(userData.starsByTable);
-    mergeAdventureStars(starsByTable, userData.adventureProgress);
+    // Niveaux de multiplication seulement : ceux de + − ÷ n'ont pas de table (sinon le niveau 1
+    // d'addition irait sur la table 1). L'ancien format est déjà recopié dans '×'
+    const multiplication =
+      userData.adventureProgressByOperator?.['×'] ?? userData.adventureProgress;
+    mergeAdventureStars(starsByTable, multiplication);
     return Object.fromEntries(starsByTable);
   },
 };
@@ -661,7 +971,7 @@ try {
   eventBus.on('languageChanged', () => {
     try {
       const slide7 = document.getElementById('slide7');
-      if (slide7 && slide7.classList.contains('active-slide')) {
+      if (slide7?.classList.contains('active-slide')) {
         Dashboard.show();
       }
     } catch {

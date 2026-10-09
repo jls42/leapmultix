@@ -7,6 +7,7 @@ import { afterEach, describe, expect, jest, test } from '@jest/globals';
 
 // Le module installe ses écouteurs sur document dès l'import
 await import('../js/keyboard-navigation.js');
+const { Utils } = await import('../js/core/utils.js');
 
 /** Ajoute l'élément à la page, à l'abscisse donnée (jsdom ne calcule pas la mise en page) */
 function placer(element, left) {
@@ -34,8 +35,11 @@ function canevasDeJeu(left) {
   return placer(canvas, left);
 }
 
+/** Appui comme dans un navigateur : l'événement remonte et peut être annulé */
 function appuyer(key) {
-  document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+  document.activeElement.dispatchEvent(
+    new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+  );
 }
 
 describe('Navigation clavier globale', () => {
@@ -89,5 +93,27 @@ describe('Navigation clavier globale', () => {
     appuyer('ArrowRight');
 
     expect(document.activeElement).toBe(second);
+  });
+
+  test('une flèche déjà traitée par la grille des réponses ne repart pas vers la barre du haut', () => {
+    // Grille de deux réponses (navigation par flèches de GameMode), puis la barre du haut
+    // à droite : « Changer de joueur » est le voisin de droite de la seconde réponse
+    const grille = document.createElement('div');
+    document.body.appendChild(grille);
+    const reponses = [16, 20].map((valeur, i) => {
+      const option = bouton(String(valeur), i * 100);
+      option.className = 'option';
+      grille.appendChild(option);
+      return option;
+    });
+    bouton('Changer de joueur', 400);
+    Utils.addArrowKeyNavigation(grille, '.option', { autoFocus: false });
+    reponses[0].focus();
+
+    appuyer('ArrowRight');
+    expect(document.activeElement).toBe(reponses[1]);
+
+    appuyer('ArrowLeft');
+    expect(document.activeElement).toBe(reponses[0]);
   });
 });

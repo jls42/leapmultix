@@ -7,6 +7,20 @@
 
 import { accessibilityManager } from './accessibility.js';
 
+/** Écran d'un jeu d'Arcade : plateau, « Abandonner », voile de pause et bandeau */
+const ARCADE_GAME_SCREEN = '.arcade-game-ui, .arcade-mult-display';
+
+/**
+ * Pincer agrandit la page (WCAG 1.4.4), sauf sur l'écran d'un jeu d'Arcade : deux doigts
+ * posés en jouant ne doivent pas la zoomer par accident
+ * @param {TouchEvent} event - Mouvement à deux doigts ou plus
+ */
+function blockGamePinch(event) {
+  if (event.target instanceof Element && event.target.closest(ARCADE_GAME_SCREEN)) {
+    event.preventDefault();
+  }
+}
+
 export class TouchSupportManager {
   constructor() {
     this.touchStartX = undefined;
@@ -21,8 +35,7 @@ export class TouchSupportManager {
     // Améliorer navigation mobile
     this.initMobileNavigation();
 
-    // Support gestes pour jeux arcade
-    this.initArcadeTouchSupport();
+    // Les jeux d'arcade gèrent eux-mêmes leurs gestes (js/arcade-touch.js)
   }
 
   initTouchEvents() {
@@ -51,9 +64,9 @@ export class TouchSupportManager {
     document.addEventListener(
       'touchmove',
       e => {
-        // Empêcher zoom pinch dans jeux
+        // Deux doigts : pincer agrandit la page, sauf sur l'écran d'un jeu (blockGamePinch)
         if (e.touches.length > 1) {
-          e.preventDefault();
+          blockGamePinch(e);
           return;
         }
 
@@ -125,90 +138,10 @@ export class TouchSupportManager {
     // Swipes désactivés : navigation uniquement par boutons pour éviter les gestes accidentels
   }
 
-  initArcadeTouchSupport() {
-    // Support tactile pour jeux arcade
-    document.addEventListener('DOMContentLoaded', () => {
-      const arcadeCanvas = document.querySelector('.arcade-canvas');
-      if (!arcadeCanvas) return;
-
-      // Variables pour tracking touch
-      let touchStart = { x: 0, y: 0 };
-      let touchEnd = { x: 0, y: 0 };
-
-      arcadeCanvas.addEventListener('touchstart', e => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        touchStart = { x: touch.clientX, y: touch.clientY };
-      });
-
-      arcadeCanvas.addEventListener('touchmove', e => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        touchEnd = { x: touch.clientX, y: touch.clientY };
-
-        // Calculer direction en temps réel
-        const deltaX = touchEnd.x - touchStart.x;
-        const deltaY = touchEnd.y - touchStart.y;
-
-        // Simuler touches directionnelles
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          // Mouvement horizontal
-          if (deltaX > 10) {
-            this.simulateKeyPress('ArrowRight');
-          } else if (deltaX < -10) {
-            this.simulateKeyPress('ArrowLeft');
-          }
-        } else {
-          // Mouvement vertical
-          if (deltaY > 10) {
-            this.simulateKeyPress('ArrowDown');
-          } else if (deltaY < -10) {
-            this.simulateKeyPress('ArrowUp');
-          }
-        }
-      });
-
-      arcadeCanvas.addEventListener('touchend', e => {
-        e.preventDefault();
-
-        // Tap = tir/action
-        const deltaX = Math.abs(touchEnd.x - touchStart.x);
-        const deltaY = Math.abs(touchEnd.y - touchStart.y);
-
-        if (deltaX < 10 && deltaY < 10) {
-          // Tap simple = action/tir
-          this.simulateKeyPress(' '); // Espace
-        }
-      });
-    });
-  }
-
-  simulateKeyPress(key) {
-    // Simuler événement clavier pour jeux arcade
-    if (typeof KeyboardEvent === 'undefined') return;
-    const event = new KeyboardEvent('keydown', {
-      key: key,
-      code: key === ' ' ? 'Space' : key,
-      bubbles: true,
-    });
-    document.dispatchEvent(event);
-
-    // Relâcher après 100ms
-    setTimeout(() => {
-      if (typeof KeyboardEvent === 'undefined') return;
-      const eventUp = new KeyboardEvent('keyup', {
-        key: key,
-        code: key === ' ' ? 'Space' : key,
-        bubbles: true,
-      });
-      document.dispatchEvent(eventUp);
-    }, 100);
-  }
-
   // Optimiser performance tactile
   optimizeTouchPerformance() {
     // Désactiver sélection texte lors de touch
-    document.body.style.webkitUserSelect = 'none';
+    document.body.style.setProperty('-webkit-user-select', 'none');
     document.body.style.webkitTouchCallout = 'none';
 
     // Désactiver délai 300ms sur mobile

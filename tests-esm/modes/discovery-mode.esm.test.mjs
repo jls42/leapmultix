@@ -256,7 +256,7 @@ describe('ESM: Découverte, choix de la table ou du niveau', () => {
 
   test('l’écran des niveaux dit quelle opération on explore, sans émoji', () => {
     const frag = toFragment(createMode('−').getTableSelectionHTML());
-    expect(frag.querySelector('h2.discovery-lab-title').textContent).toBe(
+    expect(frag.querySelector('h1.discovery-lab-title').textContent).toBe(
       'Découvre la soustraction'
     );
     expect(frag.querySelector('.discovery-intro').textContent).toBe(
@@ -278,7 +278,7 @@ describe('ESM: Découverte, choix de la table ou du niveau', () => {
   test('sans titre dédié, l’écran des niveaux retombe sur le nom de l’opération', () => {
     lang = 'en';
     const frag = toFragment(createMode('−').getTableSelectionHTML());
-    expect(frag.querySelector('h2.discovery-lab-title').textContent).toBe('Subtraction');
+    expect(frag.querySelector('h1.discovery-lab-title').textContent).toBe('Subtraction');
   });
 
   test('« Déjà exploré » est propre à chaque opération ; les anciennes coches sans opération sont écartées', () => {
@@ -377,7 +377,7 @@ describe('ESM: Découverte, exploration', () => {
     mode.currentLevel = 'easy';
     mode.phase = 'exploration';
     const frag = toFragment(mode.getTableExplorationHTML());
-    const title = frag.querySelector('h2.discovery-lab-title');
+    const title = frag.querySelector('h1.discovery-lab-title');
     expect(title.textContent).toBe('Addition – Facile');
     expect(title.textContent).not.toMatch(/Laboratoire|Bienvenue/);
   });
@@ -465,15 +465,18 @@ describe('ESM: Découverte, exploration', () => {
     mode.currentTable = 7;
     let frag = toFragment(mode.getTableExplorationHTML());
     const img = frag.querySelector('.mnemonic-tip img.mnemonic-mascot');
-    expect(img.getAttribute('src')).toBe('assets/images/arcade/panda_head_avatar_128x128.png');
+    // Tête en WebP à sa taille (3.5rem), PNG de 128 px en repli
+    expect(img.getAttribute('srcset')).toMatch(/panda_head_avatar-512\.webp 512w$/);
+    expect(img.getAttribute('sizes')).toBe('3.5rem');
+    expect(img.dataset.fallback).toBe('assets/images/arcade/panda_head_avatar_128x128.png');
     expect(img.getAttribute('alt')).toBe('');
     expect(frag.textContent).not.toMatch(/🧙/u);
 
     userStore.current = { avatar: '../../evil' };
     frag = toFragment(mode.getTableExplorationHTML());
-    expect(frag.querySelector('.mnemonic-mascot').getAttribute('src')).toBe(
-      'assets/images/arcade/fox_head_avatar_128x128.png'
-    );
+    const fox = frag.querySelector('.mnemonic-mascot');
+    expect(fox.dataset.fallback).toBe('assets/images/arcade/fox_head_avatar_128x128.png');
+    expect(fox.getAttribute('srcset')).not.toMatch(/evil/);
   });
 
   test('l’indice ne coupe pas ses égalités en fin de ligne', () => {

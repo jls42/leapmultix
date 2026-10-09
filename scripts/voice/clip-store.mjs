@@ -25,6 +25,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { VOICE_KEY_SCHEMA } from '../../js/core/spoken-text.js';
+import { inSequence } from '../lib/in-sequence.cjs';
 import { ClipContentError } from './audio-process.mjs';
 
 export const PART = '.part';
@@ -151,12 +152,14 @@ function listDir(dir) {
  */
 export async function cleanLeftovers(paths, { dryRun = false } = {}) {
   const removed = [];
-  for (const dir of [paths.rawDir, paths.clipDir, path.dirname(paths.manifestFile)]) {
-    for (const name of listDir(dir).filter(n => n.endsWith(PART))) {
+  const dirs = [paths.rawDir, paths.clipDir, path.dirname(paths.manifestFile)];
+  await inSequence(dirs, async dir => {
+    const leftovers = listDir(dir).filter(n => n.endsWith(PART));
+    await inSequence(leftovers, async name => {
       removed.push(path.join(dir, name));
       if (!dryRun) await fsp.rm(path.join(dir, name), { force: true });
-    }
-  }
+    });
+  });
   return removed;
 }
 
@@ -177,22 +180,28 @@ function isAlive(pid) {
  */
 export async function acquireLock(paths, { pid = process.pid, alive = isAlive } = {}) {
   await fsp.mkdir(path.dirname(paths.lockFile), { recursive: true });
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const handle = await fsp.open(paths.lockFile, 'wx');
-      await handle.writeFile(`${pid}\n`);
-      await handle.close();
-      return { release: () => fsp.rm(paths.lockFile, { force: true }) };
-    } catch (error) {
-      if (error.code !== 'EEXIST') throw error;
-      const owner = Number((await fsp.readFile(paths.lockFile, 'utf8').catch(() => '')).trim());
-      if (owner && alive(owner)) {
-        throw new Error(`Une génération tourne déjà (processus ${owner}) : attendre sa fin`);
-      }
-      await fsp.rm(paths.lockFile, { force: true });
+  return tryLock(paths, { pid, alive }, 2);
+}
+
+/** Prise du verrou en `attempts` essais au plus : un verrou abandonné est retiré, puis repris */
+async function tryLock(paths, { pid, alive }, attempts) {
+  if (attempts === 0) throw new Error(`Verrou impossible à prendre : ${paths.lockFile}`);
+  try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou de la voix, chemin bâti par storePaths
+    const handle = await fsp.open(paths.lockFile, 'wx');
+    await handle.writeFile(`${pid}\n`);
+    await handle.close();
+    return { release: () => fsp.rm(paths.lockFile, { force: true }) };
+  } catch (error) {
+    if (error.code !== 'EEXIST') throw error;
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou de la voix, chemin bâti par storePaths
+    const owner = Number((await fsp.readFile(paths.lockFile, 'utf8').catch(() => '')).trim());
+    if (owner && alive(owner)) {
+      throw new Error(`Une génération tourne déjà (processus ${owner}) : attendre sa fin`);
     }
+    await fsp.rm(paths.lockFile, { force: true });
   }
-  throw new Error(`Verrou impossible à prendre : ${paths.lockFile}`);
+  return tryLock(paths, { pid, alive }, attempts - 1);
 }
 
 /**
@@ -204,13 +213,13 @@ export async function migrateLegacyRaw(paths, legacyRawDir = paths.legacyRawDir)
   if (legacyRawDir === paths.rawDir || !fs.existsSync(legacyRawDir)) return 0;
   await fsp.mkdir(paths.rawDir, { recursive: true });
   let moved = 0;
-  for (const name of listDir(legacyRawDir)) {
+  await inSequence(listDir(legacyRawDir), async name => {
     const target = path.join(paths.rawDir, name);
     if (!fs.existsSync(target)) {
       await fsp.rename(path.join(legacyRawDir, name), target);
       moved++;
     }
-  }
+  });
   if (!listDir(legacyRawDir).length) await fsp.rmdir(legacyRawDir);
   return moved;
 }
@@ -266,7 +275,7 @@ export async function writeManifest(paths, manifest) {
 
 /** Entrées du manifeste : sans fichier, retirées ; d'un autre texte dit, clip mis de côté */
 async function pruneEntries({ paths, manifest, phrasesByKey, said, keep, report }) {
-  for (const [key, entry] of Object.entries(manifest.clips)) {
+  await inSequence(Object.entries(manifest.clips), async ([key, entry]) => {
     const phrase = phrasesByKey.get(key);
     if (!fs.existsSync(clipFile(paths, key))) {
       report.dropped++;
@@ -276,7 +285,7 @@ async function pruneEntries({ paths, manifest, phrasesByKey, said, keep, report 
       await keep(key);
       delete manifest.clips[key];
     }
-  }
+  });
 }
 
 /** Clips complets sans entrée : repris s'ils sont valides, supprimés sinon (orphelins gardés) */
@@ -289,13 +298,15 @@ async function adoptUnlistedClips({
   remove,
   report,
 }) {
-  for (const name of listDir(paths.clipDir).filter(n => n.endsWith('.mp3'))) {
+  const clips = listDir(paths.clipDir).filter(n => n.endsWith('.mp3'));
+  await inSequence(clips, async name => {
     const key = name.slice(0, -'.mp3'.length);
-    if (manifest.clips[key]) continue;
+    // eslint-disable-next-line security/detect-object-injection -- clé tirée d'un nom de fichier du dossier des clips, lue seulement
+    if (manifest.clips[key]) return;
     const phrase = phrasesByKey.get(key);
     if (!phrase) {
       report.orphans++;
-      continue;
+      return;
     }
     // Seul un contenu jugé mauvais est rejeté ; une panne d'outil (ffprobe absent) arrête tout
     const entry = await inspect(clipFile(paths, key)).catch(error => {
@@ -314,19 +325,19 @@ async function adoptUnlistedClips({
       report.rejected++;
       await remove(clipFile(paths, key));
     }
-  }
+  });
 }
 
 /** Bruts d'un autre texte dit, ou d'une phrase sortie du corpus : supprimés */
 async function pruneStaleRaw({ paths, phrasesByKey, said, remove, report }) {
-  for (const name of listDir(paths.rawDir)) {
+  await inSequence(listDir(paths.rawDir), async name => {
     const parsed = rawKeyOf(name);
     const phrase = parsed && phrasesByKey.get(parsed.key);
     if (!phrase || parsed.hash !== saidHash(said(phrase.text))) {
       report.staleRaw++;
       await remove(path.join(paths.rawDir, name));
     }
-  }
+  });
 }
 
 /**

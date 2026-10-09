@@ -6,8 +6,8 @@
  * - Flattens translation JSON and compares to used keys/prefixes
  * - Writes report to assets/translations/unused_keys.txt
  */
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const translationsDir = path.join(root, 'assets', 'translations');
@@ -58,45 +58,33 @@ function readFileContent(file) {
   }
 }
 
+// Patterns whose second group is a translation key
+const KEY_PATTERNS = [
+  /data-translate(?:-title|-placeholder|-aria-label|-value)?\s*=\s*(["'])(.*?)\1/g, // data-translate attributes
+  /getTranslation\(\s*(['"])(.*?)\1\s*[),]/g, // direct calls
+  /showArcadeMessage\(\s*(["'])(.*?)\1/g, // arcade messages
+  // eslint-disable-next-line security/detect-unsafe-regex -- Regex for extracting i18n translation keys, controlled pattern not user input
+  /(["'])([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)\1/gi, // key-like strings
+];
+// Template call getTranslation(`prefix_${…}`): the prefix covers every key starting with it
+const TEMPLATE_CALL = /getTranslation\(\s*`([^`]+)`\s*[,)]/g;
+
+function addMatchedKeys(src, pattern, used) {
+  for (const m of src.matchAll(pattern)) {
+    if (m[2]) used.add(m[2]);
+  }
+}
+
+function addTemplatePrefixes(src, dynPrefixes) {
+  for (const m of src.matchAll(TEMPLATE_CALL)) {
+    const idx = m[1].indexOf('${');
+    if (idx > 0) dynPrefixes.add(m[1].slice(0, idx));
+  }
+}
+
 function extractKeysFromContent(src, used, dynPrefixes) {
-  const regexes = {
-    attr: /data-translate(?:-title|-placeholder|-aria-label|-value)?\s*=\s*(["'])(.*?)\1/g,
-    call: /getTranslation\(\s*(['"])(.*?)\1\s*[),]/g,
-    tmpl: /getTranslation\(\s*`([^`]+)`\s*(?:,|\))/g,
-    arcadeMsg: /showArcadeMessage\(\s*(["'])(.*?)\1/g,
-    // eslint-disable-next-line security/detect-unsafe-regex -- Regex for extracting i18n translation keys, controlled pattern not user input
-    keyLike: /(["'])([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)\1/gi,
-  };
-
-  // Extract direct attribute keys
-  for (const m of src.matchAll(regexes.attr)) {
-    if (m[2]) used.add(m[2]);
-  }
-
-  // Extract direct call keys
-  for (const m of src.matchAll(regexes.call)) {
-    if (m[2]) used.add(m[2]);
-  }
-
-  // Extract template prefixes
-  for (const m of src.matchAll(regexes.tmpl)) {
-    const inner = m[1];
-    const idx = inner.indexOf('${');
-    if (idx > 0) {
-      const prefix = inner.slice(0, idx);
-      if (prefix) dynPrefixes.add(prefix);
-    }
-  }
-
-  // Extract arcade message keys
-  for (const m of src.matchAll(regexes.arcadeMsg)) {
-    if (m[2]) used.add(m[2]);
-  }
-
-  // Extract key-like strings
-  for (const m of src.matchAll(regexes.keyLike)) {
-    if (m[2]) used.add(m[2]);
-  }
+  KEY_PATTERNS.forEach(pattern => addMatchedKeys(src, pattern, used));
+  addTemplatePrefixes(src, dynPrefixes);
 }
 
 function extractAvatarKeys(used) {
@@ -104,11 +92,11 @@ function extractAvatarKeys(used) {
   const src = readFileContent(path.join(root, 'js', 'main-helpers.js'));
   if (!src) return;
 
-  const m = src.match(avatarListRegex);
+  const m = avatarListRegex.exec(src);
   if (m) {
     const items = m[1].match(/['"]([a-zA-Z0-9_-]+)['"]/g) || [];
     for (const it of items) {
-      const id = it.replace(/(^['"])|(['"]$)/g, '');
+      const id = it.replaceAll(/(^['"])|(['"]$)/g, '');
       if (id) used.add(id);
     }
   }
@@ -121,7 +109,7 @@ function extractCharacterNames(files, used) {
     const src = readFileContent(file);
     if (!src) continue;
 
-    const renderAvatarMatch = src.match(/renderAvatarSelector[\s\S]*?getTranslation\(([^)]+)\)/);
+    const renderAvatarMatch = /renderAvatarSelector[\s\S]*?getTranslation\(([^)]+)\)/.exec(src);
     if (renderAvatarMatch) {
       avatarNames.forEach(name => used.add(name));
       break; // Only need to find this pattern once
@@ -153,17 +141,105 @@ function collectUsedKeys() {
   return { used, dynPrefixes };
 }
 
-function main() {
-  const langs = ['fr', 'en', 'es'];
+// Default keep/allowlist, merged with assets/translations/i18n-keep.json
+const KEEP_DEFAULTS = {
+  keys: [
+    'fox',
+    'panda',
+    'unicorn',
+    'dragon',
+    'astronaut',
+    'voice_toggle_on',
+    'voice_toggle_off',
+    'arcade_try_again',
+    'multimiam_new_ghost',
+  ],
+  prefixes: [
+    'character_intro_',
+    'mnemonic_',
+    'badge_',
+    'arcade.controls.',
+    'arcade.multiMemory.',
+    'arcade.multiMiam.',
+  ],
+  regexes: [
+    String.raw`^level_\d+_(name|desc)$`,
+    '^(discovery|quiz|challenge|adventure|arcade)_info_bar_label$',
+    '^(discovery|quiz|challenge|adventure|arcade)_mode$',
+    '^color_theme_.*$',
+    '^info_(score|lives|progress|streak|time|bonus)_label$',
+  ],
+};
+
+/** All keys of the translation files, flattened */
+function collectAllKeys() {
   const allKeys = new Set();
-  const perLangFlat = {};
-  for (const lang of langs) {
-    const fp = path.join(translationsDir, `${lang}.json`);
-    const flat = flatten(readJSON(fp));
-    perLangFlat[lang] = flat;
+  for (const lang of ['fr', 'en', 'es']) {
+    const flat = flatten(readJSON(path.join(translationsDir, `${lang}.json`)));
     Object.keys(flat).forEach(k => allKeys.add(k));
   }
+  return allKeys;
+}
 
+/** Quoted value of each `nameKey: 'value'` match */
+function quotedValues(matches) {
+  return matches.map(s => /['"]([^'"]+)['"]/.exec(s)?.[1]).filter(Boolean);
+}
+
+/** Name/desc keys declared in a mode configuration (nameKey, descKey) */
+function addModeConfigKeys(file, used) {
+  try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- file is AdventureMode.js or ArcadeMode.js, fixed paths under js/modes
+    const src = fs.readFileSync(file, 'utf8');
+    const nameKeys = src.match(/nameKey:\s*['"]([^'"]+)['"]/g) || [];
+    const descKeys = src.match(/descKey:\s*['"]([^'"]+)['"]/g) || [];
+    [...quotedValues(nameKeys), ...quotedValues(descKeys)].forEach(k => used.add(k));
+  } catch {
+    // Ignore if the mode file is not found or parsing fails
+  }
+}
+
+/**
+ * Keep/allowlist config of the repository (keys, prefixes, regexes), merged with the defaults
+ * @returns {{keys: string[], prefixes: string[], regexes: string[]}}
+ */
+function loadKeepConfig() {
+  try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- keepConfigPath is constructed from known paths
+    const loaded = JSON.parse(fs.readFileSync(keepConfigPath, 'utf8'));
+    // Merge with defaults to be safe
+    return {
+      keys: Array.from(new Set([...(loaded.keys || []), ...KEEP_DEFAULTS.keys])),
+      prefixes: Array.from(new Set([...(loaded.prefixes || []), ...KEEP_DEFAULTS.prefixes])),
+      regexes: Array.from(new Set([...(loaded.regexes || []), ...KEEP_DEFAULTS.regexes])),
+    };
+  } catch {
+    // Ignore if keep config file not found or parsing fails, use defaults
+    return KEEP_DEFAULTS;
+  }
+}
+
+/** Kept-key predicate: explicit key, prefix or regex of the keep config */
+function keepPredicate(keep) {
+  // eslint-disable-next-line security/detect-non-literal-regexp -- regexes are from configuration file, not user input
+  const keepRegexes = (keep.regexes || []).map(r => new RegExp(r));
+  return key =>
+    (keep.keys || []).includes(key) ||
+    (keep.prefixes || []).some(p => key.startsWith(p)) ||
+    keepRegexes.some(re => re.test(key));
+}
+
+/** Key quoted as is in the code, or starting with a template prefix */
+function isUsedKey(key, used, dynPrefixes) {
+  if (used.has(key)) return true;
+  for (const pfx of dynPrefixes) {
+    if (key.startsWith(pfx)) return true;
+  }
+  return false;
+}
+
+function main() {
+  const allKeys = collectAllKeys();
   const { used, dynPrefixes } = collectUsedKeys();
 
   // Hardcode dynamic mode-derived keys used via concatenation
@@ -173,94 +249,19 @@ function main() {
     used.add(`${m}_mode`);
   }
 
-  // Extract level name/desc keys from AdventureMode configuration
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is constructed from known root and fixed file path
-    const advSrc = fs.readFileSync(path.join(root, 'js', 'modes', 'AdventureMode.js'), 'utf8');
-    const nameKeys = advSrc.match(/nameKey:\s*['"]([^'"]+)['"]/g) || [];
-    const descKeys = advSrc.match(/descKey:\s*['"]([^'"]+)['"]/g) || [];
-    const pull = arr => arr.map(s => (s.match(/['"]([^'"]+)['"]/) || [])[1]).filter(Boolean);
-    [...pull(nameKeys), ...pull(descKeys)].forEach(k => used.add(k));
-  } catch {
-    // Ignore if AdventureMode.js file not found or parsing fails
-  }
-
-  // Extract name/desc keys from ArcadeMode availableGames
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is constructed from known root and fixed file path
-    const arcSrc = fs.readFileSync(path.join(root, 'js', 'modes', 'ArcadeMode.js'), 'utf8');
-    const nameKeys = arcSrc.match(/nameKey:\s*['"]([^'"]+)['"]/g) || [];
-    const descKeys = arcSrc.match(/descKey:\s*['"]([^'"]+)['"]/g) || [];
-    const pull = arr => arr.map(s => (s.match(/['"]([^'"]+)['"]/) || [])[1]).filter(Boolean);
-    [...pull(nameKeys), ...pull(descKeys)].forEach(k => used.add(k));
-  } catch {
-    // Ignore if ArcadeMode.js file not found or parsing fails
-  }
-
-  const isUsed = key => {
-    if (used.has(key)) return true;
-    for (const pfx of dynPrefixes) {
-      if (key.startsWith(pfx)) return true;
-    }
-    return false;
-  };
+  // Level name/desc keys from AdventureMode, game name/desc keys from ArcadeMode availableGames
+  addModeConfigKeys(path.join(root, 'js', 'modes', 'AdventureMode.js'), used);
+  addModeConfigKeys(path.join(root, 'js', 'modes', 'ArcadeMode.js'), used);
 
   // Apply keep/allowlist config (prefixes, regexes, explicit keys)
-  const keepDefaults = {
-    keys: [
-      'fox',
-      'panda',
-      'unicorn',
-      'dragon',
-      'astronaut',
-      'voice_toggle_on',
-      'voice_toggle_off',
-      'arcade_try_again',
-      'multimiam_new_ghost',
-    ],
-    prefixes: [
-      'character_intro_',
-      'mnemonic_',
-      'badge_',
-      'arcade.controls.',
-      'arcade.multiMemory.',
-      'arcade.multiMiam.',
-    ],
-    regexes: [
-      '^level_\\d+_(name|desc)$',
-      '^(discovery|quiz|challenge|adventure|arcade)_info_bar_label$',
-      '^(discovery|quiz|challenge|adventure|arcade)_mode$',
-      '^color_theme_.*$',
-      '^info_(score|lives|progress|streak|time|bonus)_label$',
-    ],
-  };
-  let keep = keepDefaults;
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- keepConfigPath is constructed from known paths
-    const loaded = JSON.parse(fs.readFileSync(keepConfigPath, 'utf8'));
-    // Merge with defaults to be safe
-    keep = {
-      keys: Array.from(new Set([...(loaded.keys || []), ...keepDefaults.keys])),
-      prefixes: Array.from(new Set([...(loaded.prefixes || []), ...keepDefaults.prefixes])),
-      regexes: Array.from(new Set([...(loaded.regexes || []), ...keepDefaults.regexes])),
-    };
-  } catch {
-    // Ignore if keep config file not found or parsing fails, use defaults
-  }
-  // eslint-disable-next-line security/detect-non-literal-regexp -- regexes are from configuration file, not user input
-  const keepRegexes = (keep.regexes || []).map(r => new RegExp(r));
-  const inKeep = key => {
-    if ((keep.keys || []).includes(key)) return true;
-    if ((keep.prefixes || []).some(p => key.startsWith(p))) return true;
-    if (keepRegexes.some(re => re.test(key))) return true;
-    return false;
-  };
+  const keep = loadKeepConfig();
+  const inKeep = keepPredicate(keep);
 
   // Treat explicit keep.keys as used to prevent deletion proposals
   (keep.keys || []).forEach(k => used.add(k));
 
   const unused = Array.from(allKeys)
-    .filter(k => !isUsed(k) && !inKeep(k))
+    .filter(k => !isUsedKey(k, used, dynPrefixes) && !inKeep(k))
     .sort((a, b) => a.localeCompare(b));
 
   const reportPath = path.join(translationsDir, 'unused_keys.txt');

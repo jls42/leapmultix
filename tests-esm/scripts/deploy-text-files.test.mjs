@@ -90,6 +90,78 @@ function deploy(env = {}) {
   return { result, calls };
 }
 
+/** index.html avec les deux blocs de Plausible, comme le vrai, et une page après eux */
+const INDEX_WITH_ANALYTICS = [
+  '<head>',
+  '    <!-- plausible:start -->',
+  '    <link rel="dns-prefetch" href="https://plausible.io" />',
+  '    <!-- plausible:end -->',
+  '    <link rel="stylesheet" href="css/main.css">',
+  '    <!-- plausible:start -->',
+  '    <!-- Analytics Plausible (remplacé par le script de déploiement) -->',
+  '    <script src="js/plausible-init.js"></script>',
+  '    <script',
+  '      defer',
+  '      data-domain="{{PLAUSIBLE_DOMAIN}}"',
+  '      src="https://plausible.io/js/script.js"',
+  '    ></script>',
+  '    <!-- plausible:end -->',
+  '  </head>',
+  '  <body>',
+  '    <main id="main-content">Le jeu</main>',
+  '    <script>',
+  '      window.reste = true;',
+  '    </script>',
+  '  </body>',
+  '',
+].join('\n');
+
+describe('deploy.sh : mesure d’audience', () => {
+  beforeEach(() => {
+    write('index.html', INDEX_WITH_ANALYTICS);
+  });
+
+  const deployedIndex = env => {
+    const keep = path.join(site, 'envoyé');
+    const { result } = deploy({ FAKE_AWS_KEEP: keep, ...env });
+    expect(result.status).toBe(0);
+    return fs.readFileSync(path.join(keep, 'index.html'), 'utf8');
+  };
+
+  test('sans domaine : seuls les blocs de Plausible partent, la page reste entière', () => {
+    const html = deployedIndex({});
+    expect(html).not.toMatch(/plausible/i);
+    expect(html).toContain('<main id="main-content">Le jeu</main>');
+    expect(html).toContain('window.reste = true;');
+    expect(html.split('\n')).toHaveLength(INDEX_WITH_ANALYTICS.split('\n').length - 12);
+  });
+
+  test('le vrai index.html : sans domaine, plus rien de Plausible, la page entière', () => {
+    const real = fs.readFileSync('index.html', 'utf8');
+    write('index.html', real);
+    const html = deployedIndex({});
+    // Le script, son initialisation, le domaine à remplir et les préconnexions partent ; les liens
+    // de la politique de confidentialité vers celle de Plausible restent
+    expect(html).not.toMatch(
+      /plausible\.io\/js|plausible-init|PLAUSIBLE_DOMAIN|href="https:\/\/plausible\.io"/
+    );
+    expect(html).toContain('https://plausible.io/data-policy');
+    expect(html).toContain('<main id="main-content"');
+    expect(html.trimEnd().endsWith('</html>')).toBe(true);
+    const marked = real.match(/<!-- plausible:start -->[\s\S]*?<!-- plausible:end -->\n/g);
+    expect(marked).toHaveLength(2);
+    // Chaque bloc trouvé finit par son saut de ligne : ses lignes sont celles avant ce saut
+    const removed = marked.reduce((sum, block) => sum + block.split('\n').length - 1, 0);
+    expect(html.split('\n')).toHaveLength(real.split('\n').length - removed);
+  });
+
+  test('avec un domaine : les blocs restent, le domaine est écrit', () => {
+    const html = deployedIndex({ PLAUSIBLE_DOMAIN: 'exemple.org' });
+    expect(html).toContain('data-domain="exemple.org"');
+    expect(html).toContain('<main id="main-content">Le jeu</main>');
+  });
+});
+
 describe('deploy.sh : fichiers modifiés à taille constante', () => {
   test('chaque fichier texte part d’office, avec son type ; les binaires restent à la synchronisation', () => {
     const { result, calls } = deploy();

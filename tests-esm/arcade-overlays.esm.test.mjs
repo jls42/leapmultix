@@ -161,6 +161,8 @@ describe('Points d’arcade : signe et ton', () => {
     const el = document.querySelector('.arcade-points');
     expect(el.textContent).toBe('−50');
     expect(el.classList.contains('arcade-points--loss')).toBe(true);
+    // Son d'erreur du jeu, au même niveau partout (js/core/audio.js) : aucun volume à part
+    expect(playSoundMock).toHaveBeenCalledWith('bad');
     jest.advanceTimersByTime(500);
     expect(el.classList.contains('is-leaving')).toBe(true);
     jest.advanceTimersByTime(400);
@@ -180,14 +182,14 @@ describe('Points d’arcade : signe et ton', () => {
     const canvas = document.querySelector('canvas');
     showArcadePenalty(75, canvas);
     expect(document.querySelector('.arcade-points').textContent).toBe('−75');
-    expect(playSoundMock).toHaveBeenCalledWith('bad', { volume: 0.4 });
+    expect(playSoundMock).toHaveBeenCalledWith('bad');
   });
 
   test('score déjà à zéro : pas de « −50 » trompeur, seulement le son', () => {
     const canvas = document.querySelector('canvas');
     showArcadePenalty(0, canvas);
     expect(document.querySelector('.arcade-points')).toBeNull();
-    expect(playSoundMock).toHaveBeenCalledWith('bad', { volume: 0.4 });
+    expect(playSoundMock).toHaveBeenCalledWith('bad');
   });
 });
 
@@ -242,7 +244,7 @@ describe('Zone de jeu : hauteur libre et place du canevas', () => {
     expect(stage.style.width).toBe('100%');
   });
 
-  test('la place du canevas tient dans l’écran, consigne et « Abandonner » déduits', () => {
+  test('la place du canevas tient dans l’écran : « Abandonner » déduit, la consigne posée dessus', () => {
     const canvas = renderStage();
     const instructions = showGameInstructions(canvas, 'Consigne');
     const stage = canvas.parentElement;
@@ -268,8 +270,9 @@ describe('Zone de jeu : hauteur libre et place du canevas', () => {
     globalThis.innerHeight = 800;
     try {
       const box = getArcadeCanvasBox(canvas);
-      // 800 − 200 (haut de la zone) − (42 + 12) − (48 + 12) − 12 (bas) − 4 (cadre)
-      expect(box.height).toBe(470);
+      // 800 − 200 (haut de la zone) − (48 + 12) − 12 (bas) − 4 (cadre) : la consigne,
+      // posée sur le plateau, ne prend pas de place
+      expect(box.height).toBe(524);
       expect(box.width).toBe(1196);
     } finally {
       globalThis.innerHeight = previousHeight;

@@ -200,8 +200,17 @@
 }
 
 /* === PARTIE : le nom du niveau et la scène de progression === */
-.adventure-level-header h3 {
-  margin-bottom: var(--space-3);
+.adventure-level-header h2 {
+  margin-bottom: var(--space-1);
+}
+
+/* But du niveau, sous son nom, pendant toute la partie */
+.adventure-level-goal {
+  max-width: 36rem;
+  margin: 0 auto var(--space-3);
+  color: var(--color-ink);
+  text-align: center;
+  text-wrap: pretty;
 }
 
 .adventure-scene {
@@ -249,9 +258,14 @@
   object-fit: contain;
 }
 
+/* Source tournée vers la gauche (renard, astronaute) : le personnage regarde le trésor */
+.adventure-character img.is-mirrored {
+  transform: scaleX(-1);
+}
+
 /* === ÉCRAN DE FIN : le trésor, la phrase, les étoiles ===
    Le titre (« Niveau terminé ») reste un cran sous la phrase principale. */
-.adventure-results > h2 {
+.adventure-results > h1 {
   margin: 0;
   font-size: var(--text-lg);
 }

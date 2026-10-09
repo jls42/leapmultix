@@ -7,6 +7,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { inSequence } = require('./lib/in-sequence.cjs');
 let sharp = null;
 
 try {
@@ -18,7 +19,10 @@ try {
 }
 
 const IMG_DIR = path.resolve('img');
-const QUALITY = Number.parseInt(process.env.BACKGROUND_QUALITY ?? '70', 10);
+// Qualité 85, couleurs sous-échantillonnées sans bavure (sharp YUV) : en qualité 70, les
+// dégradés du fond de l'avatar, visible derrière tous les écrans, se tachaient (33,9 à 36,5 dB
+// de la source, 36,7 à 38,8 en qualité 85 ; poids × 2,3 environ, un fond chargé par avatar)
+const QUALITY = Number.parseInt(process.env.BACKGROUND_QUALITY ?? '85', 10);
 
 function listBackgrounds() {
   return fs
@@ -34,14 +38,14 @@ async function convertAll() {
   const files = listBackgrounds();
   console.log(`🎨 Conversion de ${files.length} backgrounds en WebP (qualité ${QUALITY})...`);
 
-  for (const { input, output } of files) {
+  await inSequence(files, async ({ input, output }) => {
     try {
-      await sharp(input).webp({ quality: QUALITY, effort: 5 }).toFile(output);
+      await sharp(input).webp({ quality: QUALITY, smartSubsample: true, effort: 6 }).toFile(output);
       console.log(`✅ ${path.basename(output)}`);
     } catch (error) {
       console.warn(`⚠️  Impossible de convertir ${path.basename(input)}: ${error.message}`);
     }
-  }
+  });
 }
 
 convertAll().catch(error => {

@@ -8,6 +8,7 @@
  */
 
 import { GameMode, GOOD_SOUND_MS } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
 import { setGameMode } from '../mode-orchestrator.js';
 import { getTranslation, getWeakTables, showFeedback, playSound, speak } from '../utils-es6.js';
 import { setSafeFeedback } from '../security-utils.js';
@@ -24,6 +25,7 @@ import {
 } from '../ui-feedback.js';
 import { goToSlide } from '../slides.js';
 import { UserState } from '../core/userState.js';
+import { appendProgressHistory } from '../core/mode-stats.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { TablePreferences } from '../core/tablePreferences.js';
@@ -104,24 +106,32 @@ export class QuizMode extends GameMode {
   setupGameControls() {
     const abandonBtn = document.getElementById('quiz-abandon');
     if (abandonBtn) {
-      abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+      abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
     }
   }
 
   /**
-   * Demander confirmation d'abandon
+   * Demander confirmation d'abandon (game-exit.js) ; la partie a pu finir pendant la question
+   * @returns {Promise<void>}
    */
-  confirmAbandon() {
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_quiz'))) {
-      this.hideContinueButton();
-      this.finish();
-    }
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
+    this.hideContinueButton();
+    this.finish();
+  }
+
+  /** Partie en cours (game-exit.js) : de la première question à l'enregistrement du bilan */
+  isGameInProgress() {
+    return this.state.isActive && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_quiz');
+  }
+
+  /** Quitté par la barre du haut : le bilan s'enregistre comme pour « Abandonner » (finish) */
+  recordAbandon() {
+    this.saveResultsOnce();
   }
 
   /**
@@ -243,7 +253,7 @@ export class QuizMode extends GameMode {
    * Fallback pour l'affichage du feedback correct
    */
   _fallbackCorrectFeedback(message) {
-    if (typeof setSafeFeedback !== 'undefined') {
+    if (setSafeFeedback !== undefined) {
       setSafeFeedback(this.feedbackElement, message, 'success');
     } else {
       this.feedbackElement.textContent = message;
@@ -271,16 +281,14 @@ export class QuizMode extends GameMode {
   onAnswerSubmitted(isCorrect, userAnswer) {
     const { operator, a, b, table, num } = this.state.currentQuestion;
 
-    // Enregistrer dans l'historique utilisateur
+    // Enregistrer dans l'historique utilisateur (borné : les compteurs portent le reste)
     const userData = UserState.getCurrentUserData();
-    if (!userData.progressHistory) userData.progressHistory = [];
-
-    userData.progressHistory.push({
+    appendProgressHistory(userData, {
       question: `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
       mode: 'quiz',
-      operator, // NOUVEAU
+      operator,
       userAnswer: userAnswer,
       correctAnswer: this.state.currentQuestion.answer,
     });
@@ -288,8 +296,8 @@ export class QuizMode extends GameMode {
     // Sauvegarder immédiatement
     UserState.updateUserData(userData);
 
-    // Mettre à jour le défi quotidien (seulement pour multiplication)
-    if (operator === '×' && table !== undefined && num !== undefined) {
+    // Défi quotidien : une bonne réponse en multiplication, comme le Défi, l'Aventure et Chrono
+    if (isCorrect && operator === '×' && table !== undefined && num !== undefined) {
       updateDailyChallengeProgress(table, num);
     }
   }

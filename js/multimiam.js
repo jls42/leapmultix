@@ -5,7 +5,8 @@ import { loadSingleAvatar } from './arcade-utils.js';
 import { gameState } from './game.js';
 import { InfoBar } from './components/infoBar.js';
 import { getTranslation } from './utils-es6.js';
-import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
+import { spriteFor } from './arcade-sprites.js';
+import { MONSTER_COUNT, monsterSpec, textureSpec } from './arcade-sprite-catalog.js';
 import PacmanQuestions from './multimiam-questions.js';
 import PacmanRenderer from './multimiam-renderer.js';
 import { initPacmanEngine } from './multimiam-engine.js';
@@ -14,9 +15,12 @@ import { initPacmanControls } from './multimiam-controls.js';
 import { initPacmanUI } from './multimiam-ui.js';
 import { showArcadeGameOver } from './arcade.js';
 import { createArcadeToast, getArcadeText } from './arcade-message.js';
-import { getArcadeCanvasBox } from './arcade-common.js';
-import { recordOperationResult } from './core/operation-stats.js';
+import { getArcadeCanvasBox, watchArcadeViewport, renderArcadeCanvas } from './arcade-common.js';
 import { cleanupGameResources } from './game-cleanup.js';
+import { chooseMazeLayout, fitMazeCells } from './multimiam-layout.js';
+
+/** Un monstre différent pour chacun des cinq fantômes */
+const GHOST_MONSTERS = 5;
 
 /** Positions et couleurs de départ des fantômes */
 const INITIAL_GHOSTS = [
@@ -26,6 +30,14 @@ const INITIAL_GHOSTS = [
   { x: 9, y: 7, color: '#FFB852' }, // Orange (Clyde)
   { x: 10, y: 7, color: '#800080' }, // Violet (Sue)
 ];
+
+/** Premier avatar chargé portant ce nom, ou undefined */
+function findAvatarByName(avatars, name) {
+  for (const avatar of avatars) {
+    if (avatar.name === name) return avatar;
+  }
+  return undefined;
+}
 
 export class PacmanGame {
   constructor(
@@ -55,17 +67,14 @@ export class PacmanGame {
     this.ctx = this.canvas.getContext('2d');
     this.canvas.classList.add('multimiam-canvas');
 
-    // Les variables de monstres (this.monsters, this.monstersLoaded, this.totalMonsters)
-    // sont initialisées dans la méthode loadImages()
-
-    // Chargement des images d'avatars et de monstres
+    // Images de l'avatar, des monstres et du labyrinthe (loadImages)
     this.loadImages();
 
-    // Dimensions et grille
+    // Dimensions et grille (cases à l'écran : resizeCanvas)
     this.cellSize = 30;
     this.cols = 19;
     this.rows = 15;
-    this.resizeCanvas();
+    this.layoutBoard();
 
     // Labyrinthe (0 = vide, 1 = mur, 2 = pastille, 3 = super pastille)
     this.labyrinth = this.createLabyrinth();
@@ -125,13 +134,10 @@ export class PacmanGame {
 
     // Remplacer le nom du jeu dans l'UI
     this.gameTitle = getTranslation('multimiam_mode_title');
-
-    // Utiliser le logo MultiMiam
-    this.logoImg = arcadeSpriteLoader.loadSpriteSync('logo_multimiam_128x128', 'logo');
   }
 
-  // Place disponible pour le labyrinthe : sous le bandeau, avec la consigne et
-  // « Abandonner », sans faire défiler la page (voir js/arcade-common.js)
+  // Place disponible pour le labyrinthe : sous le bandeau, avec « Abandonner », sans faire
+  // défiler la page ; la consigne est posée dessus (voir js/arcade-common.js)
   calculateCanvasDimensions() {
     if (!this.canvas.parentElement) {
       return { width: 800, height: 600 };
@@ -140,11 +146,19 @@ export class PacmanGame {
     return { width: Math.floor(box.width), height: Math.floor(box.height) };
   }
 
-  // Appliquer les styles visuels au canvas : taille affichée = taille interne,
-  // pour que les clics et les touchers tombent sur la bonne case
-  applyCanvasStyles(width, height) {
+  // Appliquer les styles visuels au canvas : le labyrinthe à la taille de son dessin, et le
+  // plateau sur toute la hauteur disponible, jusqu'à « Abandonner », comme dans les autres
+  // jeux. Si les cases, plafonnées presque carrées, ne remplissent pas toute la hauteur (écran
+  // très allongé), le labyrinthe s'y centre entre deux bandes de mur (css/arcade.css) ; les
+  // clics et les touchers suivent (object-fit, converti par js/arcade-common.js).
+  applyCanvasStyles(width, height, boardHeight = height) {
+    const shownHeight = Math.max(height, boardHeight);
     this.canvas.style.width = width + 'px';
-    this.canvas.style.height = height + 'px';
+    this.canvas.style.height = shownHeight + 'px';
+    this.canvas.style.objectFit = 'contain';
+    // La texture des bandes continue les cases du labyrinthe
+    this.canvas.style.backgroundSize = `${this.cellWidth}px ${this.cellHeight}px`;
+    this.canvas.style.backgroundPosition = `0 ${(shownHeight - height) / 2}px`;
     this.canvas.style.boxSizing = 'content-box';
     this.canvas.style.padding = '0';
     this.canvas.style.display = 'block';
@@ -154,29 +168,59 @@ export class PacmanGame {
     this.canvas.style.borderRadius = 'var(--radius-md)';
   }
 
+  // Orientation pour la place disponible : celle qui remplit le mieux le plateau (transposé,
+  // 15 × 19, sur un téléphone en portrait)
+  chooseTransposed() {
+    if (!this.canvas.parentElement) return false;
+    return chooseMazeLayout(this.cols, this.rows, getArcadeCanvasBox(this.canvas)).transposed;
+  }
+
+  // Rien n'est encore joué : aucune réponse croquée ni vie perdue
+  isUnplayed() {
+    return this.score === 0 && this.lives === 3 && this.goodAnswersCount === 0;
+  }
+
+  // Orientation choisie au lancement. Ensuite, l'écran peut changer (rotation, plein
+  // écran) : les cases suivent ; l'orientation aussi tant que rien n'est joué, puis elle ne
+  // change plus (la partie reste la même).
+  layoutBoard() {
+    this.transposed = this.chooseTransposed();
+    this.resizeCanvas();
+    // Arrêtée en fin de partie, comme dans MultiSnake et MultiMemory : le nettoyage commun
+    // rend le canevas (this.canvas = null) avant que l'élément ne quitte la page
+    this._stopWatchingViewport = watchArcadeViewport(this.canvas, () => {
+      if (!this.canvas) return;
+      if (this.isUnplayed()) this.transposed = this.chooseTransposed();
+      this.resizeCanvas();
+      this.renderer?.draw();
+    });
+  }
+
   // Redimensionner le canvas pour s'adapter à l'écran
   resizeCanvas() {
     const dimensions = this.calculateCanvasDimensions();
+    // Colonnes et rangées à l'écran (échangées quand le labyrinthe est transposé)
+    const across = this.transposed ? this.rows : this.cols;
+    const down = this.transposed ? this.cols : this.rows;
 
-    this.canvas.width = dimensions.width;
-    this.canvas.height = dimensions.height;
+    // Cases qui remplissent la place, presque carrées (js/multimiam-layout.js) ; personnages,
+    // monstres et nombres se dessinent dans le carré de leur côté court, jamais déformés
+    ({ cellWidth: this.cellWidth, cellHeight: this.cellHeight } = fitMazeCells(
+      across,
+      down,
+      dimensions
+    ));
+    this.cellSize = Math.min(this.cellWidth, this.cellHeight);
 
-    // Calculer la taille des cellules
-    this.cellSize = Math.floor(
-      Math.min(this.canvas.width / this.cols, this.canvas.height / this.rows)
-    );
+    // Taille du dessin du labyrinthe, en unités du jeu
+    this.boardWidth = this.cellWidth * across;
+    this.boardHeight = this.cellHeight * down;
 
-    // Ajuster la taille du canvas pour qu'il corresponde exactement à la grille
-    const actualWidth = this.cellSize * this.cols;
-    const actualHeight = this.cellSize * this.rows;
-
-    // S'assurer que le canvas a la bonne taille pour afficher tout le labyrinthe
-    this.canvas.width = actualWidth;
-    this.canvas.height = actualHeight;
-
-    // IMPORTANT: Appliquer les styles CSS APRÈS avoir défini les dimensions internes
-    // pour éviter un décalage entre taille CSS et taille interne du canvas
-    this.applyCanvasStyles(actualWidth, actualHeight);
+    // Le labyrinthe entier en unités du jeu, net à la densité de l'écran ; l'élément prend
+    // ensuite la hauteur du plateau (bandes de mur éventuelles, object-fit) : les clics et
+    // les touchers se convertissent en unités du jeu (js/arcade-common.js)
+    renderArcadeCanvas(this.canvas, this.boardWidth, this.boardHeight);
+    this.applyCanvasStyles(this.boardWidth, this.boardHeight, dimensions.height);
   }
 
   /** Pacman au point de départ, à la taille de la grille actuelle */
@@ -266,30 +310,19 @@ export class PacmanGame {
   updatePlayerAvatar() {
     // Récupérer le nom de l'avatar ACTUEL depuis la variable globale gameState
     // Utiliser 'fox' comme fallback si gameState ou gameState.avatar n'est pas défini
-    const currentAvatarName =
-      typeof gameState !== 'undefined' && gameState.avatar ? gameState.avatar : 'fox';
+    const currentAvatarName = gameState?.avatar || 'fox';
 
-    // Utiliser la liste des avatars chargés
-    if (this.avatars) {
-      // Vérifier si l'avatar sélectionné doit être mis à jour
-      if (!this.selectedAvatar || this.selectedAvatar.name !== currentAvatarName) {
-        // Recherche directe par nom dans la liste des avatars
-        for (const avatar of this.avatars) {
-          if (avatar.name === currentAvatarName) {
-            this.selectedAvatar = avatar;
-            break;
-          }
-        }
-        // Si l'avatar demandé n'est pas trouvé dans la liste chargée, fallback?
-        // Pour l'instant, on garde l'ancien ou on n'en a pas si c'est le premier appel.
-        if (this.selectedAvatar && this.selectedAvatar.name !== currentAvatarName) {
-          console.warn(
-            `Avatar ${currentAvatarName} demandé mais non trouvé dans les images chargées.`
-          );
-          // Optionnel: assigner un avatar par défaut ici si aucun n'est sélectionné
-          // if (!this.selectedAvatar) this.selectedAvatar = this.avatars.find(a => a.name === 'fox');
-        }
-      }
+    // Utiliser la liste des avatars chargés, si l'avatar sélectionné doit être mis à jour
+    if (!this.avatars || this.selectedAvatar?.name === currentAvatarName) return;
+    // Recherche directe par nom dans la liste des avatars
+    const found = findAvatarByName(this.avatars, currentAvatarName);
+    if (found) this.selectedAvatar = found;
+    // Si l'avatar demandé n'est pas trouvé dans la liste chargée, fallback?
+    // Pour l'instant, on garde l'ancien ou on n'en a pas si c'est le premier appel.
+    if (this.selectedAvatar && this.selectedAvatar.name !== currentAvatarName) {
+      console.warn(`Avatar ${currentAvatarName} demandé mais non trouvé dans les images chargées.`);
+      // Optionnel: assigner un avatar par défaut ici si aucun n'est sélectionné
+      // if (!this.selectedAvatar) this.selectedAvatar = this.avatars.find(a => a.name === 'fox');
     }
   }
 
@@ -350,10 +383,12 @@ export class PacmanGame {
     }
   }
 
-  // Fin du jeu
+  // Fin du jeu, une seule fois : deux collisions dans la même image ne l'enregistrent pas deux fois
   endGame() {
+    if (this.gameOver) return;
     this.gameOver = true;
     this.running = false;
+    if (this._stopWatchingViewport) this._stopWatchingViewport();
 
     // Nettoyage centralisé (ESM)
     try {
@@ -424,105 +459,22 @@ export class PacmanGame {
     }
   }
 
-  // Chargement des images d'avatars et de monstres
+  // Images de l'avatar du joueur, des monstres et du labyrinthe : une source haute définition
+  // chacune (un personnage qui va à gauche est retourné au dessin), chargée à la taille où elle
+  // s'affiche (js/arcade-sprites.js)
   loadImages() {
-    // Charger l'avatar du joueur depuis gameState
-    const avatarName = gameState && gameState.avatar ? gameState.avatar : 'fox';
+    const avatarName = gameState?.avatar || 'fox';
     this.avatar = loadSingleAvatar(avatarName);
 
-    // Optimisation pour mobile : précharger et mettre en cache les monstres
-    this.monsters = [];
-    this.monstersLoaded = 0;
-    this.totalMonsters = 5; // Limité à 5 monstres (un pour chaque fantôme)
+    // Cinq monstres différents, tirés parmi les 155
+    const indices = Array.from({ length: MONSTER_COUNT }, (_, i) => i + 1);
+    shuffleInPlace(indices);
+    this.monsters = indices
+      .slice(0, GHOST_MONSTERS)
+      .map(id => ({ id, sprite: spriteFor(monsterSpec(id)) }));
 
-    // Force la limitation à 5 monstres maximum pour éviter les problèmes de mémoire
-
-    // Créer des images optimisées pour mobile
-
-    // Créer un tableau d'indices disponibles (1 à 43)
-    const availableIndices = [];
-    for (let i = 1; i <= 155; i++) {
-      availableIndices.push(i);
-    }
-
-    // Mélanger les indices disponibles
-    shuffleInPlace(availableIndices);
-
-    // Précharger les images avec des événements de chargement
-    for (let i = 0; i < this.totalMonsters; i++) {
-      // Prendre les premiers indices du tableau mélangé (garantit l'unicité)
-      const monsterIndex = availableIndices[i];
-
-      // Formatter le numéro avec zéro de remplissage (01, 02, etc.)
-      const formattedIndex = monsterIndex.toString().padStart(2, '0');
-
-      // Créer un objet monstre avec des images directionnelles
-      const monsterObj = {
-        id: monsterIndex,
-        image_left: arcadeSpriteLoader.loadSpriteSync(
-          `monstre${formattedIndex}_left_128x128`,
-          'monster'
-        ),
-        image_right: arcadeSpriteLoader.loadSpriteSync(
-          `monstre${formattedIndex}_right_128x128`,
-          'monster'
-        ),
-      };
-
-      // Événement quand les images sont chargées
-      let loadedCount = 0;
-      const onImageLoad = () => {
-        loadedCount++;
-        if (loadedCount === 2) {
-          // Attend que les deux images (gauche/droite) soient chargées
-          this.monstersLoaded++;
-          console.log(
-            `Monstre ${monsterIndex} chargé (${this.monstersLoaded}/${this.totalMonsters})`
-          );
-        }
-      };
-
-      monsterObj.image_left.onload = onImageLoad;
-      monsterObj.image_right.onload = onImageLoad;
-
-      // Ajout de l'objet monstre à la collection
-      this.monsters.push(monsterObj);
-    }
-
-    // Chargement des textures mur et chemin
-    this.wallTexture = new Image();
-    this.wallTexture.src = 'assets/images/arcade/mur_128x128.png';
-
-    this.pathTexture = new Image();
-    this.pathTexture.src = 'assets/images/arcade/chemin_128x128.png';
-  }
-
-  update() {
-    if (this.multimiam.isEatingDot) {
-      const eaten = this.multimiam.eatenDot; // assume set earlier
-      // Correct dot (should be pellet representing answer)
-      if (eaten.isCorrect) {
-        // Adaptive learning: record correct result
-        recordOperationResult(
-          this.operator,
-          this.currentOperation.num1,
-          this.currentOperation.num2,
-          true
-        );
-        this.score += eaten.points;
-      } else {
-        // Adaptive learning: record incorrect result
-        recordOperationResult(
-          this.operator,
-          this.currentOperation.num1,
-          this.currentOperation.num2,
-          false
-        );
-        this.lives -= eaten.penalty;
-      }
-      this.multimiam.isEatingDot = false;
-      this.multimiam.eatenDot = null;
-    }
+    this.wallTexture = spriteFor(textureSpec('mur.png'));
+    this.pathTexture = spriteFor(textureSpec('chemin.png'));
   }
 }
 

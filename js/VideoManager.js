@@ -158,7 +158,7 @@ export const VideoManager = {
     );
 
     // Détecter aussi la connexion lente
-    if (globalThis.navigator && globalThis.navigator.connection) {
+    if (globalThis.navigator?.connection) {
       const slowConnection = ['slow-2g', '2g', '3g'].includes(
         globalThis.navigator.connection.effectiveType
       );
@@ -334,9 +334,11 @@ export const VideoManager = {
       );
     }
 
-    // Événements vidéo
+    // Événements vidéo. Une source qui ne se charge pas (hors ligne, fichier absent) le dit
+    // à son élément <source>, jamais à la vidéo : écouté à la capture, sinon la fenêtre
+    // restait ouverte sur un cadre vide
     this._currentVideo.addEventListener('ended', () => this.onVideoEnded());
-    this._currentVideo.addEventListener('error', () => this.onVideoError());
+    this._currentVideo.addEventListener('error', () => this.onVideoError(), true);
     this._currentVideo.addEventListener('loadstart', () => this.onVideoLoadStart());
     this._currentVideo.addEventListener('canplay', () => this.onVideoCanPlay());
     this._currentVideo.addEventListener('timeupdate', () => this.updateProgress());
@@ -723,6 +725,8 @@ export const VideoManager = {
    * Erreur de lecture vidéo
    */
   onVideoError() {
+    // Fenêtre fermée : la source encore vide de la page qui s'ouvre, rien à faire
+    if (!this.isOpen()) return;
     console.error('❌ Erreur de lecture vidéo');
 
     if (this._sourceQueue.length) {

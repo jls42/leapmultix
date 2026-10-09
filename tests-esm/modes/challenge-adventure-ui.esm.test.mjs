@@ -9,6 +9,7 @@
  * un retour à la carte qui échoue est signalé.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
+import { answerDialog, closeOpenDialog } from '../helpers/confirm-dialog-helpers.mjs';
 
 const userStore = { preferredOperator: '×', progressHistory: [], adventureProgressByOperator: {} };
 jest.unstable_mockModule('../../js/core/userState.js', () => ({
@@ -84,6 +85,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  closeOpenDialog();
   jest.restoreAllMocks();
 });
 
@@ -166,6 +168,26 @@ describe('Aventure', () => {
     expect(tiles.some(t => EMOJI.test(t.textContent))).toBe(false);
   });
 
+  test('le but du niveau reste affiché sous son nom, sans message surgissant', async () => {
+    jest.useFakeTimers();
+    try {
+      store.setTranslations({ ...BASE_TRANSLATIONS, level_1_desc: 'Apprends la table de 1' });
+      const adventure = new AdventureMode();
+      await adventure.start();
+      await adventure.startLevel(1);
+      await jest.advanceTimersByTimeAsync(50);
+      const goal = document.querySelector('.adventure-level-header .adventure-level-goal');
+      expect(goal?.textContent).toBe('Apprends la table de 1');
+      // Il suit un changement de langue
+      expect(goal.dataset.translate).toBe('level_1_desc');
+      // Un message de 3 s, en bas de l'écran, cachait « Abandonner » sur téléphone
+      expect(document.querySelector('.message-popup')).toBeNull();
+      adventure.stop();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test('réussite : phrase principale, étoiles dessinées, trésor, sans émoji', () => {
     const adventure = new AdventureMode();
     adventure.gameScreen = document.getElementById('game');
@@ -176,7 +198,7 @@ describe('Aventure', () => {
     adventure.showLevelResults(true, 2);
 
     const results = document.querySelector('.adventure-results');
-    expect(results.querySelector('h2').textContent).toBe('Niveau terminé');
+    expect(results.querySelector('h1').textContent).toBe('Niveau terminé');
     expect(results.querySelector('.results-lead').textContent).toBe('9 bonnes réponses sur 10');
     const rating = results.querySelector('.reward-stars');
     expect(rating.getAttribute('aria-label')).toBe('2 étoiles sur 3');
@@ -194,7 +216,7 @@ describe('Aventure', () => {
     adventure.showLevelResults(false, 0);
 
     const results = document.querySelector('.adventure-results');
-    expect(results.querySelector('h2').textContent).toBe('Pas cette fois');
+    expect(results.querySelector('h1').textContent).toBe('Pas cette fois');
     expect(results.querySelector('.results-lead').textContent).toBe('1 bonne réponse sur 4');
     expect(results.querySelector('img.results-avatar')).not.toBeNull();
     expect(results.querySelector('.reward-stars')).toBeNull();
@@ -309,7 +331,7 @@ describe('Aventure : une erreur est une étape, jusqu’à la dernière question
 
     const results = document.querySelector('.adventure-results');
     expect(results).not.toBeNull();
-    expect(results.querySelector('h2').textContent).toBe('Niveau terminé');
+    expect(results.querySelector('h1').textContent).toBe('Niveau terminé');
     expect(results.querySelector('.results-lead').textContent).toBe('9 bonnes réponses sur 10');
     expect(results.querySelector('.reward-stars').getAttribute('aria-label')).toBe(
       '3 étoiles sur 3'
@@ -348,7 +370,7 @@ describe('Aventure : une erreur est une étape, jusqu’à la dernière question
     document.getElementById('adventure-continue-btn').click();
 
     const results = document.querySelector('.adventure-results');
-    expect(results.querySelector('h2').textContent).toBe('Pas cette fois');
+    expect(results.querySelector('h1').textContent).toBe('Pas cette fois');
     expect(userStore.adventureProgressByOperator['×']).toBeUndefined();
   });
 
@@ -391,10 +413,10 @@ describe('Aventure : carte des niveaux', () => {
     const failure = new Error('carte illisible');
     jest.spyOn(adventure, 'returnToLevelSelection').mockRejectedValue(failure);
     const handled = jest.spyOn(adventure, 'handleError').mockImplementation(() => {});
-    jest.spyOn(globalThis, 'confirm').mockReturnValue(true);
 
-    adventure.confirmAbandon();
-    await new Promise(r => setTimeout(r, 0));
+    const abandon = adventure.confirmAbandon();
+    await answerDialog(true);
+    await abandon;
     expect(handled).toHaveBeenCalledWith(failure);
   });
 
@@ -446,7 +468,7 @@ describe('Aventure : carte des niveaux', () => {
     userStore.preferredOperator = '+';
     const adventure = new AdventureMode();
     await adventure.start();
-    const title = document.querySelector('.adventure-container h2');
+    const title = document.querySelector('.adventure-container h1');
     expect(title.textContent).toBe('L’aventure des additions');
     expect(title.getAttribute('data-translate')).toBe('adventure_title_addition');
     expect(document.querySelector('.adventure-story-intro').textContent).toMatch(/trésors/);

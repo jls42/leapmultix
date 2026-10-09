@@ -218,6 +218,14 @@
   text-decoration-thickness: 3px;
 }
 
+/* « Garde au moins une table » : une indication calme sous les tables, à l'encre normale,
+   comme le prénom manquant */
+.table-settings-modal .table-settings-message {
+  margin: 0 0 var(--space-4);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
 /* === TABLES EXCLUES === */
 .table-settings-modal .exclusion-status {
   padding: var(--space-3) var(--space-4);

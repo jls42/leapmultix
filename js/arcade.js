@@ -19,13 +19,17 @@ import {
   resetArcadeScoresMemory,
 } from './utils-es6.js';
 import { cancelSpeech } from './speech.js';
-import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
+import { spriteFor } from './arcade-sprites.js';
+import { monsterSpec } from './arcade-sprite-catalog.js';
 // showArcadeMessage import not needed here
 import { gameState as globalGameState } from './game.js';
 import { AudioManager } from './core/audio.js';
 import { goToSlide } from './slides.js';
 import { setGameMode } from './mode-orchestrator.js';
 import { eventBus } from './core/eventBus.js';
+import { openArcadeSession, closeArcadeSession, arcadeGameOf } from './arcade-session.js';
+import { isArcadePaused, mountArcadePause, unmountArcadePause } from './arcade-time.js';
+import { confirmDialog } from './components/confirm-dialog.js';
 
 // =====================
 // Fonction de lancement du mode Snake (coordination équipe Snake)
@@ -102,6 +106,9 @@ function gameOverMessage(score) {
 }
 
 export function showArcadeGameOver(score, { persist = true } = {}) {
+  // La partie se ferme avant l'arrêt du jeu : sinon stopArcadeMode la compterait comme
+  // quittée. Une fin réaffichée (persist: false, après « Remettre à zéro ») ne compte pas
+  const played = persist ? closeArcadeSession() : null;
   // Arrêter le sous-jeu en même temps que le chronomètre : boucles, minuteries et
   // écouteurs (arcade:stop). Sinon, à la fin du temps, la partie continuait sans être
   // vue : messages sur l'écran de fin, second enregistrement du score, touches avalées.
@@ -109,9 +116,9 @@ export function showArcadeGameOver(score, { persist = true } = {}) {
   // L'écran de fin ne parle pas par-dessus la partie
   cancelSpeech();
 
-  // Historique des scores, par utilisateur et par mode
+  // Scores du profil : une partie jouée (au moins un coup) compte avec son score
   const mode = globalGameState?.gameMode ?? 'arcade';
-  if (persist) saveScoreForMode(mode, score);
+  if (played) saveScoreForMode(played.game, score, played.operator);
   const arcadeScores = getScoresForMode(mode);
   const { key: endMessageKey, text: endMessage, spoken } = gameOverMessage(score);
 
@@ -127,7 +134,7 @@ export function showArcadeGameOver(score, { persist = true } = {}) {
 function renderGameOverScreen({ mode, score, endMessageKey, endMessage, arcadeScores, persist }) {
   const gameScreen = document.getElementById('game');
   if (!gameScreen) return;
-  while (gameScreen.firstChild) gameScreen.removeChild(gameScreen.firstChild);
+  while (gameScreen.firstChild) gameScreen.firstChild.remove();
   const wrapper = buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScores);
   gameScreen.appendChild(wrapper);
   // Actions liées aux boutons de CET écran : un second affichage rapproché
@@ -139,7 +146,7 @@ function renderGameOverScreen({ mode, score, endMessageKey, endMessage, arcadeSc
 }
 
 function focusGameOverTitle(wrapper) {
-  const title = wrapper.querySelector('h2');
+  const title = wrapper.querySelector('h1');
   if (!title) return;
   title.setAttribute('tabindex', '-1');
   try {
@@ -196,21 +203,33 @@ function getGameTitle(mode) {
   return translated(key, fallback);
 }
 
-function confirmAndResetScores(mode, score) {
-  const canConfirm = typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-  // Seuls les scores de CE jeu sont effacés : la question le dit
-  const question = getTranslation('reset_scores_confirm', { game: getGameTitle(mode) });
-  if (canConfirm ? globalThis.confirm(question) : true) {
-    resetScoresForMode(mode);
-    // Même partie, même score affiché : seule la liste des meilleurs scores se vide
-    showArcadeGameOver(score, { persist: false });
-    // Le bouton de remise à zéro a disparu avec la liste : le focus va sur « Rejouer »
-    const retry = document.getElementById('arcade-retry-btn');
-    try {
-      retry?.focus({ preventScroll: true });
-    } catch {
-      retry?.focus();
-    }
+/**
+ * « Remettre à zéro » : les meilleurs scores de CE jeu et ses compteurs du tableau de bord
+ * (parties, score moyen), dans toutes les opérations, sont effacés ; la fenêtre du jeu le
+ * dit d'abord (la question en titre, ce qui sera effacé en texte)
+ * @param {string} mode
+ * @param {number} score
+ * @param {HTMLElement} origin - Le bouton pressé : refusé, le focus y revient
+ * @returns {Promise<void>}
+ */
+async function confirmAndResetScores(mode, score, origin) {
+  const confirmed = await confirmDialog({
+    title: getTranslation('reset_scores_confirm', { game: getGameTitle(mode) }),
+    message: getTranslation('reset_scores_confirm_detail'),
+    confirmLabel: getTranslation('reset_scores_dialog_confirm'),
+    cancelLabel: getTranslation('reset_scores_dialog_cancel'),
+    returnFocusTo: origin,
+  });
+  if (!confirmed) return;
+  resetScoresForMode(mode);
+  // Même partie, même score affiché : seule la liste des meilleurs scores se vide
+  showArcadeGameOver(score, { persist: false });
+  // Le bouton de remise à zéro a disparu avec la liste : le focus va sur « Rejouer »
+  const retry = document.getElementById('arcade-retry-btn');
+  try {
+    retry?.focus({ preventScroll: true });
+  } catch {
+    retry?.focus();
   }
 }
 
@@ -221,23 +240,33 @@ function bindGameOverActions(wrapper, mode, score) {
   const backBtn = wrapper.querySelector('#arcade-back-btn');
   backBtn?.addEventListener('click', () => returnToArcadeMenu(backBtn));
   wrapper.querySelector('#arcade-home-btn')?.addEventListener('click', () => goToSlide(1));
-  wrapper
-    .querySelector('#arcade-reset-btn')
-    ?.addEventListener('click', () => confirmAndResetScores(mode, score));
+  wrapper.querySelector('#arcade-reset-btn')?.addEventListener('click', event => {
+    confirmAndResetScores(mode, score, event.currentTarget).catch(error =>
+      console.error('Remise à zéro des scores impossible', error)
+    );
+  });
 }
 
 // --- Helpers (réduisent la complexité de showArcadeGameOver) ---
-function saveScoreForMode(mode, score) {
-  switch (mode) {
+function saveScoreForMode(mode, score, operator) {
+  switch (arcadeGameOf(mode)) {
     case 'multisnake':
-      return saveArcadeScoreSnake(score);
+      return saveArcadeScoreSnake(score, operator);
     case 'multimiam':
-      return saveArcadeScorePacman(score);
+      return saveArcadeScorePacman(score, operator);
     case 'multimemory':
-      return saveArcadeScoreMemory(score);
+      return saveArcadeScoreMemory(score, operator);
     default:
-      return saveArcadeScore(score);
+      return saveArcadeScore(score, 'invasion', operator);
   }
+}
+
+/** Score affiché par le jeu en cours (barre d'infos), comme le lit la fin du temps */
+function displayedArcadeScore() {
+  const scoreEl =
+    document.getElementById('arcade-info-score') || document.querySelector('[id$="-info-score"]');
+  const score = scoreEl ? Number.parseInt(scoreEl.textContent, 10) : 0;
+  return Number.isFinite(score) ? score : 0;
 }
 
 function getScoresForMode(mode) {
@@ -327,7 +356,7 @@ function buildTopScores(arcadeScores) {
   if (bestScores.length === 0) return null;
   const topWrap = document.createElement('section');
   topWrap.className = 'arcade-top-scores';
-  const title = document.createElement('h3');
+  const title = document.createElement('h2');
   title.dataset.translate = 'arcade_top_scores';
   title.textContent = translated('arcade_top_scores', 'Meilleurs scores');
   const ol = document.createElement('ol');
@@ -351,10 +380,12 @@ function buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScor
   const wrapper = document.createElement('div');
   wrapper.className = 'arcade-gameover content-card';
 
-  const h2 = document.createElement('h2');
-  h2.dataset.translate = 'game_over';
-  h2.textContent = translated('game_over', 'Fin de partie !');
-  wrapper.appendChild(h2);
+  // Titre de niveau 1 de l'écran de fin
+  const title = document.createElement('h1');
+  title.className = 'screen-title';
+  title.dataset.translate = 'game_over';
+  title.textContent = translated('game_over', 'Fin de partie !');
+  wrapper.appendChild(title);
 
   wrapper.appendChild(buildResultSentence(score, endMessageKey, endMessage));
 
@@ -388,37 +419,42 @@ function buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScor
   return wrapper;
 }
 
-export function stopArcadeMode() {
-  try {
-    console.debug('[Arcade] stopArcadeMode called');
-  } catch {
-    /* ignoré volontairement */
-  }
-  setArcadeActive(false);
-  // Arrêt de la boucle d'animation
-  // Les sous-jeux gèrent leurs propres boucles via ESM
-  // Suppression des listeners clavier
-  document.removeEventListener('keydown', arcadeKeyDown);
-  document.removeEventListener('keyup', arcadeKeyUp);
-  // Notifier les sous-jeux pour qu'ils retirent leurs écouteurs spécifiques
+/**
+ * Partie quittée (Accueil, autre écran) après au moins un coup : elle compte, avec le score
+ * affiché ; l'Arcade garde son score à l'abandon
+ */
+function saveQuittedArcadeGame() {
+  const quitted = closeArcadeSession();
+  if (quitted) saveScoreForMode(quitted.game, displayedArcadeScore(), quitted.operator);
+}
+
+/** Prévient les sous-jeux (bus d'événements) et la page (événement de la fenêtre) */
+function announceArcadeStop() {
   try {
     eventBus.emit('arcade:stop');
   } catch {
     /* ignoré volontairement */
   }
   try {
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root && typeof Event !== 'undefined') {
-      Root.dispatchEvent(new Event('arcade:stop'));
-    }
+    globalThis.dispatchEvent?.(new Event('arcade:stop'));
   } catch {
     /* ignoré volontairement */
   }
+}
+
+export function stopArcadeMode() {
+  try {
+    console.debug('[Arcade] stopArcadeMode called');
+  } catch {
+    /* ignoré volontairement */
+  }
+  saveQuittedArcadeGame();
+  setArcadeActive(false);
+  // Les sous-jeux gèrent leurs propres boucles ; l'Arcade retire ses écouteurs clavier, puis
+  // les sous-jeux retirent les leurs (arcade:stop)
+  document.removeEventListener('keydown', arcadeKeyDown);
+  document.removeEventListener('keyup', arcadeKeyUp);
+  announceArcadeStop();
   // Autres nettoyages éventuels (sons, etc.)
   try {
     AudioManager.stopAll();
@@ -430,45 +466,56 @@ export function stopArcadeMode() {
 
 // Plus d'export global: stopArcadeMode est importable depuis modes/ArcadeMode.js
 
-// --- ENNEMIS : monstres dédiés ---
-export const monsterSpriteNames = [];
-for (let i = 1; i <= 83; i++) {
-  const num = i.toString().padStart(2, '0');
-  monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
-}
-// Include newly added monsters 146–155
-for (let i = 146; i <= 155; i++) {
-  const num = i.toString().padStart(2, '0');
-  monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
-}
-export const monsterSprites = monsterSpriteNames.map(name => {
-  // Remove .png extension for sprite loader
-  const spriteName = name.replace(/\.png$/, '');
-  return arcadeSpriteLoader.loadSpriteSync(spriteName, 'monster');
-});
+// --- Monstres des cartes de MultiMemory (1 à 83, 146 à 155) : rien ne se charge à
+// l'ouverture de l'Arcade, chaque carte charge le sien à sa taille (js/arcade-sprites.js) ---
+const MEMORY_MONSTERS = [
+  ...Array.from({ length: 83 }, (_, i) => i + 1),
+  ...Array.from({ length: 10 }, (_, i) => i + 146),
+];
+export const monsterSprites = MEMORY_MONSTERS.map(number => spriteFor(monsterSpec(number)));
 
 // ===== Timer de l'Arcade (compte à rebours) =====
 let arcadeTimerIntervalId = null,
   arcadeTimerRemaining = 0;
+/**
+ * Lance le temps de la partie (et ouvre la partie pour le tableau de bord).
+ * @param {number} durationSeconds - Durée du niveau ; Infinity : partie sans limite de temps
+ */
 export function startArcadeTimer(durationSeconds) {
   stopArcadeTimer();
   setArcadeActive(true);
+  // Chaque jeu lance son minuteur une fois, au départ de la partie : la partie s'ouvre ici
+  openArcadeSession(globalGameState?.gameMode);
+  // Sans limite de temps (au choix dans MultiMemory) : ni compte à rebours, ni pause
+  if (!Number.isFinite(durationSeconds)) {
+    showUnlimitedTime();
+    return;
+  }
   arcadeTimerRemaining = durationSeconds;
   updateArcadeTimerDisplay();
-  arcadeTimerIntervalId = setInterval(() => {
-    arcadeTimerRemaining--;
-    if (arcadeTimerRemaining <= 0) {
-      stopArcadeTimer();
-      setArcadeActive(false);
-      const scoreEl =
-        document.getElementById('arcade-info-score') ||
-        document.querySelector('[id$="-info-score"]');
-      const finalScore = scoreEl ? Number.parseInt(scoreEl.textContent, 10) : 0;
-      showArcadeGameOver(Number.isFinite(finalScore) ? finalScore : 0);
-    } else {
-      updateArcadeTimerDisplay();
-    }
-  }, 1000);
+  mountArcadePause(document.getElementById('arcade-info-timer'));
+  arcadeTimerIntervalId = setInterval(tickArcadeTimer, 1000);
+}
+
+/** Une seconde de partie : en pause, le temps ne décompte plus ; à zéro, la fin */
+function tickArcadeTimer() {
+  if (isArcadePaused()) return;
+  arcadeTimerRemaining--;
+  if (arcadeTimerRemaining <= 0) {
+    stopArcadeTimer();
+    setArcadeActive(false);
+    showArcadeGameOver(displayedArcadeScore());
+  } else {
+    updateArcadeTimerDisplay();
+  }
+}
+
+/** Temps affiché d'une partie sans limite (retraduit avec la page) */
+function showUnlimitedTime() {
+  const el = document.getElementById('arcade-info-timer');
+  if (!el) return;
+  el.dataset.translate = 'arcade_no_time_limit_short';
+  el.textContent = translated('arcade_no_time_limit_short', 'Sans limite');
 }
 function updateArcadeTimerDisplay() {
   const m = Math.floor(arcadeTimerRemaining / 60);
@@ -486,6 +533,8 @@ export function stopArcadeTimer() {
     clearInterval(arcadeTimerIntervalId);
     arcadeTimerIntervalId = null;
   }
+  // La pause part avec le temps de la partie (bouton, voile, touche P)
+  unmountArcadePause();
 }
 // Plus de ponts globaux: utiliser les import ESM dans les sous-jeux
 

@@ -5,7 +5,7 @@
  */
 
 const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
+const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
 // Téléphone : les jeux reconnaissent un mobile à son agent utilisateur
@@ -20,13 +20,15 @@ const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
 const ARCADE_GAMES = ['invasion', 'multimiam', 'multimemory', 'multisnake'];
 
-// Dernière tête du serpent dessinée : son image dit la direction prise (tete_haut, tete_droite…)
+// Dernière tête du serpent dessinée : son image dit la direction prise (tete_haut, tete_droite…),
+// quelle que soit sa variante (« tete_haut-128.webp » se lit « tete_haut.png »)
 const SNAKE_HEAD_SPY_SOURCE =
   '(() => {' +
   '  const draw = CanvasRenderingContext2D.prototype.drawImage;' +
   '  CanvasRenderingContext2D.prototype.drawImage = function spy(image, ...rest) {' +
   "    const src = (image && image.src) || '';" +
-  "    if (src.includes('/tete_')) globalThis.__lastSnakeHead = src.split('/').pop();" +
+  "    const name = src.split('/').pop().replace(/-\\d+\\.webp$/, '.png');" +
+  "    if (src.includes('/tete_')) globalThis.__lastSnakeHead = name;" +
   '    return draw.call(this, image, ...rest);' +
   '  };' +
   '})();';
@@ -51,9 +53,10 @@ async function launchGame(page, game) {
   await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
 }
 
-/** Retour au menu Arcade : « Abandonner », puis « Retour au menu Arcade » */
+/** Retour au menu Arcade : « Abandonner », confirmé, puis « Retour au menu Arcade » */
 async function backToArcadeMenu(page) {
   await pressButton(page, '#game [id$="abandon-btn"]');
+  await answerGameDialog(page, true);
   await pressButton(page, '#arcade-back-btn');
 }
 

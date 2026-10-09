@@ -1,5 +1,12 @@
 /* eslint-env jest, node */
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  answerDialog,
+  closeOpenDialog,
+  dialogLabels,
+  dialogQuestion,
+  dialogTitle,
+} from './helpers/confirm-dialog-helpers.mjs';
 
 const saveArcadeScore = jest.fn();
 const resetArcadeScores = jest.fn();
@@ -44,6 +51,7 @@ jest.unstable_mockModule('../js/arcade-invasion.js', () => ({
 }));
 
 const arcade = await import('../js/arcade.js');
+const { openArcadeSession, noteArcadePlay } = await import('../js/arcade-session.js');
 const game = await import('../js/game.js');
 const { eventBus } = await import('../js/core/eventBus.js');
 
@@ -56,6 +64,13 @@ beforeEach(() => {
   speak.mockClear();
   voiceOn = false;
   game.gameState.gameMode = 'multiinvaders';
+  // Une partie ouverte et jouée (au moins un coup), comme après startArcadeTimer
+  openArcadeSession('multiinvaders');
+  noteArcadePlay();
+});
+
+afterEach(() => {
+  closeOpenDialog();
 });
 
 describe('Écran de fin d’arcade', () => {
@@ -73,6 +88,22 @@ describe('Écran de fin d’arcade', () => {
     expect(reset.className).toBe('btn btn-quiet btn-danger btn-sm');
     expect(reset.closest('.arcade-top-scores')).toBeTruthy();
     expect(saveArcadeScore).toHaveBeenCalledTimes(1);
+    expect(saveArcadeScore).toHaveBeenCalledWith(120, 'invasion', '×');
+  });
+
+  test('une partie lancée puis finie sans aucun coup ne compte pas', () => {
+    openArcadeSession('multiinvaders');
+    arcade.showArcadeGameOver(0);
+    expect(saveArcadeScore).not.toHaveBeenCalled();
+    expect(document.querySelector('.arcade-gameover')).toBeTruthy();
+  });
+
+  test('une partie jouée puis quittée (Accueil) compte une fois, avec le score affiché', () => {
+    document.body.innerHTML = '<div id="game"><span id="arcade-info-score">340</span></div>';
+    arcade.stopArcadeMode();
+    arcade.stopArcadeMode();
+    expect(saveArcadeScore).toHaveBeenCalledTimes(1);
+    expect(saveArcadeScore).toHaveBeenCalledWith(340, 'invasion', '×');
   });
 
   test('la voix félicite sans dire le score, qui reste affiché', () => {
@@ -89,18 +120,17 @@ describe('Écran de fin d’arcade', () => {
 
   test('les libellés passent par les traductions (plus de français codé en dur)', () => {
     arcade.showArcadeGameOver(0);
-    expect(document.querySelector('.arcade-gameover h2').textContent).toBe('game_over');
+    expect(document.querySelector('.arcade-gameover h1').textContent).toBe('game_over');
     expect(document.getElementById('arcade-retry-btn').textContent).toBe('retry_button');
     expect(document.querySelector('.arcade-final-score').textContent).toBe('arcade_try_again');
   });
 
-  test('remettre à zéro vide la liste sans réenregistrer de score ni changer le résultat', () => {
-    const confirmSpy = jest.fn(() => true);
-    globalThis.confirm = confirmSpy;
+  test('remettre à zéro vide la liste sans réenregistrer de score ni changer le résultat', async () => {
     arcade.showArcadeGameOver(120);
     storedScores = [];
     document.getElementById('arcade-reset-btn').click();
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(resetArcadeScores).not.toHaveBeenCalled();
+    await answerDialog(true);
     expect(resetArcadeScores).toHaveBeenCalledTimes(1);
     expect(saveArcadeScore).toHaveBeenCalledTimes(1);
     expect(document.querySelector('.arcade-final-score strong').textContent).toBe('120');
@@ -119,7 +149,7 @@ describe('Écran de fin d’arcade', () => {
 
   test('le focus va sur le titre de l’écran de fin, pas sur « Rejouer »', () => {
     arcade.showArcadeGameOver(40);
-    const title = document.querySelector('.arcade-gameover h2');
+    const title = document.querySelector('.arcade-gameover h1');
     expect(document.activeElement).toBe(title);
     expect(title.getAttribute('tabindex')).toBe('-1');
   });
@@ -135,13 +165,25 @@ describe('Écran de fin d’arcade', () => {
     expect(document.querySelector('.arcade-top-scores')).toBeNull();
   });
 
-  test('la confirmation nomme le jeu dont les scores seront effacés, puis le focus va sur « Rejouer »', () => {
-    const confirmSpy = jest.fn(() => true);
-    globalThis.confirm = confirmSpy;
+  test('la fenêtre du jeu nomme le jeu dont les scores seront effacés, puis le focus va sur « Rejouer »', async () => {
     arcade.showArcadeGameOver(120);
     document.getElementById('arcade-reset-btn').click();
-    expect(confirmSpy).toHaveBeenCalledWith('reset_scores_confirm|arcade_invasion_title');
+    expect(dialogTitle()).toBe('reset_scores_confirm|arcade_invasion_title');
+    expect(dialogQuestion()).toBe('reset_scores_confirm_detail');
+    expect(dialogLabels()).toEqual(['reset_scores_dialog_cancel', 'reset_scores_dialog_confirm']);
+    await answerDialog(true);
     expect(document.activeElement).toBe(document.getElementById('arcade-retry-btn'));
+  });
+
+  test('« Garder mes scores » : rien n’est effacé, le focus revient à « Remettre à zéro »', async () => {
+    arcade.showArcadeGameOver(120);
+    const reset = document.getElementById('arcade-reset-btn');
+    reset.focus();
+    reset.click();
+    await answerDialog(false);
+    expect(resetArcadeScores).not.toHaveBeenCalled();
+    expect(document.querySelector('.arcade-top-scores')).not.toBeNull();
+    expect(document.activeElement).toBe(reset);
   });
 
   test('deux affichages rapprochés ne doublent pas les actions', async () => {

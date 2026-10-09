@@ -53,15 +53,27 @@ function formatLivesLabel(lives, total) {
  * Libellé réservé aux lecteurs d'écran, retraduit avec la page (data-translate)
  * @param {string} key
  * @param {string} fallback
- * @returns {HTMLSpanElement}
+ * @param {string} [tag='span'] - Balise : h1 pour le titre de l'écran d'un jeu
+ * @returns {HTMLElement}
  */
-function createHiddenLabel(key, fallback) {
-  const label = document.createElement('span');
+function createHiddenLabel(key, fallback, tag = 'span') {
+  const label = document.createElement(tag);
   label.className = 'sr-only';
   label.dataset.translate = key;
   label.textContent = trLabel(key, fallback);
   return label;
 }
+
+/**
+ * Nom de chaque jeu d'Arcade : le titre de niveau 1 de son écran, réservé aux lecteurs
+ * d'écran (le plateau prend toute la place ; un titre visible le réduirait)
+ */
+const ARCADE_TITLES = new Map([
+  ['multiinvaders', ['arcade_invasion_title', 'MultiInvaders']],
+  ['multimiam', ['arcade_pacman_title', 'MultiMiam']],
+  ['multisnake', ['arcade_snake_title', 'MultiSnake']],
+  ['multimemory', ['arcade.multiMemory.title', 'MultiMemory']],
+]);
 
 export const InfoBar = {
   // DOM helpers for arcade template element
@@ -145,11 +157,13 @@ export const InfoBar = {
     bottom.appendChild(ph2);
     return bottom;
   },
-  _createGameUI(canvasId, abandonId, abandonLabel) {
+  _createGameUI(canvasId, abandonId, abandonLabel, abandonKey) {
     const gameUI = document.createElement('div');
     gameUI.className = 'arcade-game-ui';
     gameUI.setAttribute('role', 'region');
+    // Noms et libellés portent leur clé : ils suivent un changement de langue (i18n.js)
     gameUI.setAttribute('aria-label', trLabel('arcade_game_area_label', 'Zone de jeu'));
+    gameUI.dataset.translateAriaLabel = 'arcade_game_area_label';
     // Mise en page portée par css/arcade.css (.arcade-game-ui) ; le plateau est
     // dimensionné à la place disponible par js/arcade-common.js
     gameUI.style.width = '100%';
@@ -158,14 +172,20 @@ export const InfoBar = {
     canvas.id = canvasId;
     canvas.setAttribute('tabindex', '0');
     canvas.setAttribute('aria-label', trLabel('arcade_game_screen_label', 'Écran de jeu'));
+    canvas.dataset.translateAriaLabel = 'arcade_game_screen_label';
     canvas.style.width = '100%';
     canvas.style.height = '100%';
+    // Ses images, dessinées par le jeu, n'ont pas de version : js/cache-updater.js n'en ajoute
+    // pas à son fond (mur des bandes de MultiMiam), qui partait sinon une seconde fois
+    canvas.dataset.skipVersion = 'true';
 
     const abandon = document.createElement('button');
     abandon.className = 'btn btn-secondary';
     abandon.id = abandonId;
     abandon.setAttribute('aria-label', abandonLabel);
     abandon.textContent = abandonLabel;
+    abandon.dataset.translate = abandonKey;
+    abandon.dataset.translateAriaLabel = abandonKey;
 
     gameUI.appendChild(canvas);
     gameUI.appendChild(abandon);
@@ -469,12 +489,15 @@ export const InfoBar = {
       timerId = `${mode}-info-timer`,
       abandonId = 'arcade-abandon-btn',
       operationLabel = '',
-      abandonLabel = _getTranslation('abandon_arcade_button'),
+      abandonKey = 'abandon_arcade_button',
+      abandonLabel = _getTranslation(abandonKey),
       showLives = true,
       showScore = true,
     } = config;
 
     const frag = document.createDocumentFragment();
+    const title = ARCADE_TITLES.get(mode);
+    if (title) frag.appendChild(createHiddenLabel(...title, 'h1'));
 
     // Bandeau : aria-live est posé sur la question seule (voir _createTopRow)
     const display = document.createElement('div');
@@ -486,7 +509,7 @@ export const InfoBar = {
     display.appendChild(bottom);
 
     // Game UI container
-    const gameUI = this._createGameUI(canvasId, abandonId, abandonLabel);
+    const gameUI = this._createGameUI(canvasId, abandonId, abandonLabel, abandonKey);
 
     frag.appendChild(display);
     frag.appendChild(gameUI);

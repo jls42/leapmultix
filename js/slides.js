@@ -96,8 +96,7 @@ function showSlide(slideId) {
   const slides = document.querySelectorAll('.slide');
   slides.forEach(slide => {
     if (slide.id === slideId) {
-      slide.classList.add('active-slide');
-      slide.classList.add('slide-slide-in');
+      slide.classList.add('active-slide', 'slide-slide-in');
       setTimeout(() => {
         slide.classList.remove('slide-slide-in');
       }, 400);

@@ -1,42 +1,42 @@
 <details>
-<summary>هذا المستند متاح أيضاً بلغات أخرى</summary>
+<summary>يتوفر هذا المستند أيضًا بلغات أخرى</summary>
 
-- [English](./README.en.md)
-- [Español](./README.es.md)
-- [Português](./README.pt.md)
-- [Deutsch](./README.de.md)
-- [中文](./README.zh.md)
-- [हिन्दी](./README.hi.md)
+- [الإنجليزية](./README.en.md)
+- [الإسبانية](./README.es.md)
+- [البرتغالية](./README.pt.md)
+- [الألمانية](./README.de.md)
+- [الصينية](./README.zh.md)
+- [الهندية](./README.hi.md)
 - [العربية](./README.ar.md)
-- [Italiano](./README.it.md)
-- [Svenska](./README.sv.md)
-- [Polski](./README.pl.md)
-- [Nederlands](./README.nl.md)
-- [Română](./README.ro.md)
-- [日本語](./README.ja.md)
-- [한국어](./README.ko.md)
+- [الإيطالية](./README.it.md)
+- [السويدية](./README.sv.md)
+- [البولندية](./README.pl.md)
+- [الهولندية](./README.nl.md)
+- [الرومانية](./README.ro.md)
+- [اليابانية](./README.ja.md)
+- [الكورية](./README.ko.md)
 
 </details>
 
 # LeapMultix
 
-![CI](https://img.shields.io/github/actions/workflow/status/jls42/leapmultix/ci.yml?branch=main)
+![التكامل المستمر](https://img.shields.io/github/actions/workflow/status/jls42/leapmultix/ci.yml?branch=main)
 ![الترخيص: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
 
 [![CodeFactor](https://www.codefactor.io/repository/github/jls42/leapmultix/badge)](https://www.codefactor.io/repository/github/jls42/leapmultix)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![شارة Codacy](https://app.codacy.com/project/badge/Grade/fe7c2fbbea5e484889ac9b435c8d9956)](https://app.codacy.com/gh/jls42/leapmultix/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![حالة بوابة الجودة](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![تقييم الموثوقية](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![تقييم الأمان](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![تقييم قابلية الصيانة](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![الدَّين التقني](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![الأخطاء البرمجية](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![الثغرات الأمنية](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![مؤشرات سوء جودة الشيفرة](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![الأسطر المكررة (%)](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
+[![أسطر الشيفرة](https://sonarcloud.io/api/project_badges/measure?project=jls42_leapmultix&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=jls42_leapmultix)
 
 ## جدول المحتويات
 
@@ -44,23 +44,23 @@
 - [نظرة عامة](#-نظرة-عامة)
 - [الميزات](#-الميزات)
 - [البدء السريع](#-البدء-السريع)
-- [البنية المعمارية](#-البنية-المعمارية)
+- [البنية](#-البنية)
 - [أوضاع اللعب بالتفصيل](#-أوضاع-اللعب-بالتفصيل)
 - [التطوير](#-التطوير)
 - [التوافق](#-التوافق)
-- [الترجمة والتوطين](#-التوطين-والترجمة)
-- [الصوت المسجل](#-الصوت-المسجل)
+- [التوطين](#-التوطين)
+- [الصوت المسجل](#-صوت-مسجّل)
 - [تخزين البيانات](#-تخزين-البيانات)
 - [الإبلاغ عن مشكلة](#-الإبلاغ-عن-مشكلة)
 - [الترخيص](#-الترخيص)
 
 ## الوصف
 
-LeapMultix هو تطبيق ويب تعليمي تفاعلي موجه للأطفال من سن 6 إلى 12 عاماً لإتقان العمليات الحسابية الأربع: الضرب (×)، والجمع (+)، والطرح (−)، والقسمة (÷). يقدّم التطبيق **5 أوضاع للعب** و**4 ألعاب أركيد مصغرة** ضمن واجهة بديهية وسهلة الوصول ومتعددة اللغات.
+LeapMultix هو تطبيق ويب تعليمي تفاعلي مخصص للأطفال من سن 6 إلى 12 عامًا لإتقان العمليات الحسابية الأربع: الضرب (×)، والجمع (+)، والطرح (−)، والقسمة (÷). ويقدم **6 أوضاع لعب** و**4 ألعاب Arcade مصغرة** ضمن واجهة سهلة الاستخدام ومتاحة ومتعددة اللغات.
 
-**دعم العمليات المتعددة:** تدعم الأوضاع الخمسة جميع العمليات الأربع. يتم الاختيار من شاشة البداية ويسري على مسار اللعب بأكمله.
+**دعم العمليات المتعددة:** تقبل جميع الأوضاع العمليات الأربع. ويُختار نوع العملية من الشاشة الرئيسية ويُطبَّق طوال المسار.
 
-**تطوير:** Julien LS (contact@jls42.org)
+**طوّره:** Julien LS (contact@jls42.org)
 
 **الرابط المباشر:** https://leapmultix.jls42.org/
 
@@ -68,73 +68,77 @@ LeapMultix هو تطبيق ويب تعليمي تفاعلي موجه للأطف�
 
 ### الشاشات
 
-|                                                                                           |                                                                                                  |
-| :---------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------: |
-|            ![شاشة «من يلعب؟»: اختيار الملف الشخصي](docs/media/01-accueil.webp)            |           ![القائمة الرئيسية: اختيار العملية والأوضاع الخمسة](docs/media/02-menu.webp)           |
-|              **من يلعب؟** — ملف شخصي لكل طفل، مع صورته الرمزية ومستوى تقدمه.              |               **القائمة** — يتم اختيار العملية هنا، ثم تصبح الأوضاع الخمسة متاحة.                |
-|    ![وضع الاستكشاف: جدول الضرب للعدد 4 معروضاً بالنقاط](docs/media/03-decouverte.webp)    | ![وضع الاختبار: الإجابة الخاطئة باللون الأحمر والإجابة الصحيحة بالأخضر](docs/media/04-quiz.webp) |
-| **الاستكشاف** — تُعرض كل معادلة بالنقاط، أو القفزات، أو العد، مع تقديم حيلة خاصة بالجدول. |    **الاختبار** — يظل اختيار الطفل معروضاً بجوار الإجابة الصحيحة، مع شرح مفصل لطريقة الحساب.     |
-|          ![وضع التحدي: عد تنازلي وسلسلة إجابات متتالية](docs/media/05-defi.webp)          |  ![وضع المغامرة: خريطة المستويات العشرة مع قفل المستويات التالية](docs/media/06-aventure.webp)   |
-|   **التحدي** — سباق مع الوقت. عند حدوث خطأ، يتوقف المؤقت مؤقتاً لقراءة الإجابة الصحيحة.   |                 **المغامرة** — عشرة مستويات تُفتح واحداً تلو الآخر مقابل النجوم.                 |
-|            ![قائمة الأركيد: الألعاب المصغرة الأربع](docs/media/07-arcade.webp)            |         ![لوحة التحكم: النجوم لكل جدول والإحصائيات](docs/media/08-tableau-de-bord.webp)          |
-|          **الأركيد** — أربع ألعاب مصغرة مع إمكانية ضبط الصعوبة واختيار المركبة.           |              **لوحة التحكم** — نجوم لكل جدول، وجداول للمراجعة، والنتائج حسب الوضع.               |
-|  ![التخصيص: الصور الرمزية، السمات، وإمكانية الوصول](docs/media/09-personnalisation.webp)  |                                                                                                  |
-|    **التخصيص** — الصورة الرمزية، سمة الألوان، حجم النص، التباين العالي، والرمز الأبوي.    |                                                                                                  |
+|                                                                                                                        |                                                                                                        |
+| :--------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
+|                          ![شاشة «من يلعب؟»: اختيار الملف الشخصي](docs/media/01-accueil.webp)                           |                ![القائمة الرئيسية: اختيار العملية ووضع اللعب](docs/media/02-menu.webp)                 |
+|                               **من يلعب؟** — ملف شخصي لكل طفل، مع صورته الرمزية وتقدمه.                                |                            **القائمة** — تُختار العملية هنا، ثم وضع اللعب.                             |
+|                         ![وضع الاستكشاف: جدول 4 معروض بالنقاط](docs/media/03-decouverte.webp)                          |           ![وضع الاختبار: الإجابة الخاطئة بالأحمر والصحيحة بالأخضر](docs/media/04-quiz.webp)           |
+|                      **الاستكشاف** — تُعرض كل مساواة بالنقاط أو القفزات أو العد، مع حيلة الجدول.                       | **الاختبار** — يظل اختيار الطفل ظاهرًا بجوار الإجابة الصحيحة، ويشرح التوضيح العملية الحسابية بالتفصيل. |
+|                         ![وضع التحدي: العد التنازلي والسلسلة الحالية](docs/media/05-defi.webp)                         |     ![وضع المغامرة: خريطة المستويات العشرة، والمستويات التالية مقفلة](docs/media/06-aventure.webp)     |
+|                **التحدي** — سباق مع الزمن. عند الخطأ، يتوقف المؤقت مؤقتًا لإتاحة قراءة الإجابة الصحيحة.                |                         **المغامرة** — عشرة مستويات تُفتح تباعًا مقابل النجوم.                         |
+|                   ![وضع السباق الزمني: سباق في الطرح، مع المؤقت والتقدم](docs/media/14-chrono.webp)                    |                   ![قائمة Arcade: الألعاب المصغرة الأربع](docs/media/07-arcade.webp)                   |
+| **السباق الزمني** — عشر إجابات صحيحة في سباق مع الزمن ضمن العملية المختارة؛ وتُضاف المسائل الخاطئة إلى قائمة للمراجعة. |                     **Arcade** — أربع ألعاب مصغرة، مع ضبط الصعوبة واختيار المركبة.                     |
+| ![لوحة المعلومات: الجولات والأرقام القياسية والإجابات لكل وضع، مفصلة حسب العملية](docs/media/08-tableau-de-bord.webp)  |         ![التخصيص: الصور الرمزية والسمات وإمكانية الوصول](docs/media/09-personnalisation.webp)         |
+|  **لوحة المعلومات** — الجولات والأرقام القياسية لكل وضع، مفصلة حسب العملية؛ والنجوم وجداول الضرب التي ينبغي مراجعتها.  |          **التخصيص** — صور رمزية تُفتح بالقطع النقدية، وسمات لونية، وحجم النص، وتباين مرتفع.           |
 
-### ألعاب الأركيد المصغرة
+### ألعاب Arcade المصغرة
 
-أربع ألعاب تطرح نفس السؤال — المعروض فوق منطقة اللعب، إلى جانب الوقت المتبقي والمحاولات — ولكن تتطلب كل منها حركة مختلفة في كل مرة.
+أربع ألعاب تطرح السؤال نفسه — المعروض فوق منطقة
+اللعب، مع الوقت المتبقي وعدد المحاولات — لكنها تتطلب في كل مرة حركة
+مختلفة.
 
-|                                                                                                        |                                                                                          |
-| :----------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------: |
-|        ![MultiInvaders: وحوش تحمل أرقاماً ومركبة أسفل الشاشة](docs/media/10-multiinvaders.webp)        | ![MultiMiam: متاهة تحتوي على كريات تحمل الإجابات المحتملة](docs/media/11-multimiam.webp) |
-| **MultiInvaders** — إطلاق النار على الإجابات الخاطئة والإبقاء على الصحيحة: فهي تخفي صديقاً يجب تحريره. |        **MultiMiam** — التنقل في المتاهة لالتقاط النتيجة الصحيحة مع تفادي الوحوش.        |
-| ![MultiMemory: شبكة بطاقات، تظهر بطاقتان مقلوبتان عملية حسابية ورقماً](docs/media/12-multimemory.webp) |      ![MultiSnake: ثعبان وتفاحات مرقمة في مرج أخضر](docs/media/13-multisnake.webp)       |
-|           **MultiMemory** — تذكر واسترجاع البطاقة التي تحمل نتيجة العملية الحسابية المكشوفة.           |     **MultiSnake** — النمو عن طريق التهام الأرقام الصحيحة وتجنب جميع الأرقام الأخرى.     |
+|                                                                                                          |                                                                                 |
+| :------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------: |
+|       ![MultiInvaders: وحوش تحمل أرقامًا ومركبة في أسفل الشاشة](docs/media/10-multiinvaders.webp)        | ![MultiMiam: متاهة تحمل حباتها الإجابات المحتملة](docs/media/11-multimiam.webp) |
+|     **MultiInvaders** — أطلق النار على الإجابات الخاطئة واترك الصحيحة: فهي تخفي صديقًا ينبغي تحريره.     |    **MultiMiam** — تنقّل في المتاهة لالتقاط النتيجة الصحيحة مع تجنب الوحوش.     |
+| ![MultiMemory: شبكة بطاقات، بطاقتان مقلوبتان تعرضان عملية حسابية ورقمًا](docs/media/12-multimemory.webp) |     ![MultiSnake: أفعى وتفاحات مرقمة في مرج](docs/media/13-multisnake.webp)     |
+|                **MultiMemory** — تذكّر البطاقة التي تحمل نتيجة العملية الحسابية المكشوفة.                |        **MultiSnake** — انمُ بابتلاع الأرقام الصحيحة وتجنب سائر الأرقام.        |
 
 ## ✨ الميزات
 
 ### 🎮 أوضاع اللعب
 
-- **وضع الاستكشاف**: استكشاف بصري وتفاعلي مخصص لكل عملية
-- **وضع الاختبار**: أسئلة متعددة الخيارات مع دعم العمليات الأربع (×، +، −، ÷) وتقدم تكيّفي
-- **وضع التحدي**: سباق مع الوقت مع العمليات الأربع (×، +، −، ÷) ومستويات صعوبة مختلفة
+- **وضع الاستكشاف**: استكشاف مرئي وتفاعلي ملائم لكل عملية
+- **وضع الاختبار**: أسئلة متعددة الخيارات تدعم العمليات الأربع (×، +، −، ÷) مع تقدم تكيفي
+- **وضع التحدي**: سباق مع الزمن باستخدام العمليات الأربع (×، +، −، ÷) ومستويات صعوبة مختلفة
 - **وضع المغامرة**: تقدم قصصي عبر المستويات مع دعم العمليات الأربع
+- **وضع السباق الزمني**: 10 إجابات صحيحة في سباق مع مؤقت لا يتوقف لتحطيم أفضل وقت، باستخدام العمليات الأربع (×، +، −، ÷)
 
-### 🕹️ ألعاب الأركيد المصغرة
+### 🕹️ ألعاب Arcade المصغرة
 
-- **MultiInvaders**: لعبة Space Invaders تعليمية - تدمير الإجابات الخاطئة
-- **MultiMiam**: لعبة Pac-Man حسابية - جمع الإجابات الصحيحة
-- **MultiMemory**: لعبة ذاكرة - مطابقة العمليات بالنتائج
-- **MultiSnake**: لعبة Snake تعليمية - النمو من خلال التهام الأرقام الصحيحة
+- **MultiInvaders**: لعبة Space Invaders تعليمية - دمّر الإجابات الخاطئة
+- **MultiMiam**: لعبة Pac-Man رياضية - اجمع الإجابات الصحيحة
+- **MultiMemory**: لعبة ذاكرة - طابق العمليات مع النتائج
+- **MultiSnake**: لعبة Snake تعليمية - انمُ عبر أكل الأرقام الصحيحة
 
 ### ➕ دعم العمليات المتعددة
 
-يوفّر LeapMultix تدريباً شاملاً على العمليات الحسابية الأربع في **جميع الأوضاع**:
+يوفر LeapMultix تدريبًا متكاملًا على العمليات الحسابية الأربع في **جميع الأوضاع**:
 
-| الوضع     | ×   | +   | −   | ÷   |
-| --------- | --- | --- | --- | --- |
-| الاختبار  | ✅  | ✅  | ✅  | ✅  |
-| التحدي    | ✅  | ✅  | ✅  | ✅  |
-| الاستكشاف | ✅  | ✅  | ✅  | ✅  |
-| المغامرة  | ✅  | ✅  | ✅  | ✅  |
-| الأركيد   | ✅  | ✅  | ✅  | ✅  |
+| الوضع         | ×   | +   | −   | ÷   |
+| ------------- | --- | --- | --- | --- |
+| الاختبار      | ✅  | ✅  | ✅  | ✅  |
+| التحدي        | ✅  | ✅  | ✅  | ✅  |
+| الاستكشاف     | ✅  | ✅  | ✅  | ✅  |
+| المغامرة      | ✅  | ✅  | ✅  | ✅  |
+| السباق الزمني | ✅  | ✅  | ✅  | ✅  |
+| Arcade        | ✅  | ✅  | ✅  | ✅  |
 
 ### 🌍 الميزات العامة
 
-- **تعدد المستخدمين**: إدارة ملفات شخصية فردية مع حفظ التقدم
-- **متعدد اللغات**: دعم للغات الفرنسية والإنجليزية والإسبانية
-- **التخصيص**: صور رمزية، سمات ألوان، وخلفيات
-- **إمكانية الوصول**: التنقل عبر لوحة المفاتيح، دعم اللمس، والتوافق مع معايير WCAG 2.1 AA
-- **الصوت المسجل**: يستطيع اللعب قراءة الأسئلة وعبارات التشجيع بصوت تركيبي مسجل مسبقاً، مع الرجوع التلقائي إلى صوت الجهاز في حال عدم توفره. الأصوات ليست مضمنة في هذا المستودع: يقدّم موقع leapmultix.jls42.org صوت Lucie بالفرنسية، وSulafat بالإنجليزية والإسبانية، ومع خياري Sulafat وMarie بالفرنسية، وJane بالإنجليزية (انظر [الصوت المسجل](#-الصوت-المسجل))
+- **تعدد المستخدمين**: ملف شخصي لكل طفل مع تقدمه؛ وعلى حاسوب الفصل تُرتَّب الأسماء الأولى، ويظهر مرشح ابتداءً من 10 لاعبين، وتتوفر سلة محذوفات لمدة 30 يومًا وإمكانية حفظ اللاعبين في ملف
+- **متعدد اللغات**: دعم الفرنسية والإنجليزية والإسبانية
+- **التخصيص**: صور رمزية (تُختار الأولى بحرية، وتُفتح البقية بالقطع النقدية المكتسبة أثناء اللعب، 50 قطعة لكل منها)، وسمات لونية، وخلفيات
+- **إمكانية الوصول**: تنقل كامل بلوحة المفاتيح، ودعم اللمس، وإيقاف مؤقت في Arcade، وضبط حجم النص والتباين المرتفع؛ جرى التحقق منها باستخدام axe-core من دون انتهاكات للمستويين A أو AA من WCAG في الشاشات المختبرة
+- **الصوت المسجل**: تستطيع اللعبة قراءة الأسئلة والعبارات التشجيعية بصوت اصطناعي مسجل مسبقًا، مع الرجوع تلقائيًا إلى صوت الجهاز. الأصوات غير موجودة في هذا المستودع: يقدم الموقع leapmultix.jls42.org صوت Lucie بالفرنسية، وصوت Sulafat بالإنجليزية والإسبانية، كما يتيح الاختيار بين Sulafat وMarie للفرنسية، وصوت Jane للإنجليزية (راجع [الصوت المسجل](#-صوت-مسجّل))
 - **متجاوب مع الأجهزة المحمولة**: واجهة محسّنة للأجهزة اللوحية والهواتف الذكية
-- **نظام التقدم**: نقاط، شارات، وتحديات يومية
+- **نظام التقدم**: لوحة معلومات لكل ملف شخصي (الجولات والأرقام القياسية والجداول التي ينبغي مراجعتها، مفصلة حسب العملية)، وشارات، وتحديات يومية، وقطع نقدية (في السباق الزمني والمغامرة والتحدي وتحدي اليوم)
 
 ## 🚀 البدء السريع
 
 ### المتطلبات الأساسية
 
-- Node.js (الإصدار 16 أو أعلى)
+- Node.js (الإصدار 16 أو أحدث)
 - متصفح ويب حديث
 
 ### التثبيت
@@ -156,7 +160,7 @@ python3 -m http.server 8000
 # L'application sera accessible sur http://localhost:8000
 ```
 
-### البرامج النصية المتاحة
+### النصوص البرمجية المتاحة
 
 ```bash
 # Développement
@@ -176,7 +180,7 @@ npm run test:integration # Tests d'intégration
 npm run test:storage   # Tests du système de stockage
 npm run test:esm       # Tests ESM (dossiers tests-esm/, Jest vm-modules)
 npm run test:verbose   # Tests avec sortie détaillée
-npm run test:pwa-offline # Test offline PWA (nécessite Puppeteer), après `npm run serve`
+npm run test:pwa-offline # Hors ligne de bout en bout (Puppeteer, serveur intégré)
 
 # Analyse et maintenance
 npm run analyze:jsdoc  # Analyse de la documentation
@@ -218,11 +222,13 @@ npm run voice:publish      # Publier les clips et l'index de la langue
 npm run voice:check-online # Vérifier les clips servis en ligne
 ```
 
-## 🧱 البنية المعمارية
+## 🧱 البنية
 
-### هيكل الملفات
+### بنية الملفات
 
-تتوزع وحدات JavaScript **بشكل مسطح داخل `js/`**، باستثناء ثلاثة مجلدات: `core/` و`components/` و`modes/`. وبذلك فإن اسم الملف هو ما يحدد تصنيفه (`arcade-*`، `multimiam-*`، `i18n*`...).
+وحدات JavaScript **موجودة مباشرة داخل `js/`**، باستثناء ثلاثة مجلدات:
+`core/` و`components/` و`modes/`. لذلك، يحمل اسم الملف نفسه دلالة
+التجميع (`arcade-*`، و`multimiam-*`، و`i18n*`…).
 
 ```
 leapmultix/
@@ -237,10 +243,15 @@ leapmultix/
 │   ├── core/               # Socle applicatif
 │   │   ├── GameMode.js, GameModeManager.js   # Classe de base des modes
 │   │   ├── storage.js, userState.js          # Persistance et session
-│   │   ├── audio.js, theme.js, parental.js   # Son, thèmes, contrôle parental
+│   │   ├── audio.js, theme.js                # Son, thèmes
 │   │   ├── eventBus.js, mainInit.js          # Événements, amorçage DOM
 │   │   ├── adventure-data.js                 # Niveaux du mode Aventure
 │   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
+│   │   ├── chrono-stats.js, chrono-questions.js, chrono-input.js   # Mode Chrono
+│   │   ├── mode-stats.js, adventure-progress.js   # Compteurs du tableau de bord
+│   │   ├── profile-operation-stats.js        # Statistiques par calcul, rangées dans le profil
+│   │   ├── players-trash.js, players-backup.js   # Corbeille et sauvegarde des joueurs
+│   │   ├── avatar-shop.js                    # Avatars débloqués avec les pièces (prix, achat)
 │   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
 │   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
 │   │   └── operations/                       # Une classe par opération
@@ -249,11 +260,15 @@ leapmultix/
 │   ├── components/         # Composants d'interface
 │   │   ├── topBar.js, infoBar.js, dashboard.js, customization.js
 │   │   ├── operationSelector.js, operationModeAvailability.js
+│   │   ├── playerTools.js  # « Qui joue ? » sur un poste de classe : filtre, corbeille, sauvegarde
+│   │   ├── loadErrorNotice.js   # Avis d'un jeu qui n'a pas pu s'ouvrir (hors ligne…)
+│   │   ├── confirm-dialog.js, avatarShop.js   # Fenêtre de confirmation du jeu, boutique d'avatars
 │   │   └── icons.js, tableSettingsModal.js
-│   ├── modes/              # Les cinq modes de jeu
+│   ├── modes/              # Les six modes de jeu
 │   │   ├── DiscoveryMode.js, QuizMode.js, ChallengeMode.js
-│   │   └── AdventureMode.js, ArcadeMode.js
-│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux
+│   │   └── AdventureMode.js, ChronoMode.js, ArcadeMode.js
+│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux (temps et pause :
+│   │                       #   arcade-time.js ; plein écran : arcade-fullscreen.js)
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
 │   ├── i18n.js, i18n-store.js                # Internationalisation
@@ -261,6 +276,7 @@ leapmultix/
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
 │   ├── voice-clips.js      # Lecteur de la voix enregistrée (repli : speech.js)
 │   ├── slides.js, mode-orchestrator.js, lazy-loader.js, game-cleanup.js
+│   ├── game-exit.js        # Une seule règle pour quitter une partie en cours
 │   ├── VideoManager.js, responsive-image-loader.js
 │   ├── userManager.js, main-helpers.js, utils-es6.js, questionGenerator.js
 │   └── main-es6.js, main.js, bootstrap.js, game.js   # Points d'entrée
@@ -273,6 +289,7 @@ leapmultix/
 ├── tests/__tests__/        # Tests Jest (jsdom, et bout-en-bout via Puppeteer)
 ├── tests-esm/              # Tests Jest en modules ES (.mjs)
 ├── scripts/                # Génération d'assets, i18n, rapports
+│   ├── precache-list.mjs   # Liste de préchargement hors ligne de sw.js (npm run precache:update)
 │   └── voice/              # Voix enregistrée : corpus, génération, écoute, publication
 ├── docs/media/             # Captures et animations du README
 └── dist/                   # Build de production (généré)
@@ -280,82 +297,110 @@ leapmultix/
 
 ### البنية التقنية
 
-**وحدات ES6 حديثة**: يعتمد المشروع بنية نمطية قائمة على فئات ES6 وعمليات استيراد/تصدير أصلية.
+**وحدات ES6 حديثة**: يستخدم المشروع بنية معيارية تضم فئات ES6 وعمليات استيراد وتصدير أصلية.
 
-**مكونات قابلة لإعادة الاستخدام**: واجهة مبنية بمكونات واجهة مستخدم مركزية (TopBar، وInfoBar، وDashboard، وCustomization).
+**مكونات قابلة لإعادة الاستخدام**: واجهة مبنية بمكونات UI مركزية (TopBar وInfoBar وDashboard وCustomization).
 
-**التحميل الكسول (Lazy Loading)**: تحميل ذكي للوحدات عند الطلب عبر `lazy-loader.js` لتحسين الأداء المبدئي.
+**Lazy Loading**: تحميل ذكي للوحدات عند الطلب عبر `lazy-loader.js` لتحسين الأداء الأولي.
 
-**نظام تخزين موحد**: واجهة برمجة تطبيقات (API) مركزية لحفظ بيانات المستخدم عبر LocalStorage مع بدائل احتياطية.
+**نظام تخزين موحد**: API مركزية لحفظ بيانات المستخدم عبر LocalStorage مع حلول احتياطية.
 
-**إدارة صوتية مركزية**: تحكم بالصوت مع دعم متعدد اللغات وتفضيلات خاصة بكل مستخدم.
+**إدارة صوت مركزية**: التحكم في الصوت مع دعم تعدد اللغات وتفضيلات خاصة بكل مستخدم.
 
-**ناقل الأحداث (Event Bus)**: تواصل قائم على الأحداث غير المترابطة بإحكام بين المكونات من أجل بنية قابلة للصيانة.
+**Event Bus**: تواصل قائم على الأحداث وغير مترابط بين المكونات لضمان بنية سهلة الصيانة.
 
-**التنقل عبر الشرائح**: نظام تنقل يعتمد على شرائح مرقمة (slide0، وslide1، إلخ) باستخدام `goToSlide()`.
+**التنقل عبر الشرائح**: نظام تنقل يستند إلى شرائح مرقمة (slide0 وslide1 وما إلى ذلك) باستخدام `goToSlide()`.
 
-**الأمان**: حماية من هجمات XSS وتعقيم للبيانات عبر `security-utils.js` لكافة عمليات معالجة شجرة DOM.
+**الأمان**: حماية من XSS وتنقية عبر `security-utils.js` لجميع عمليات معالجة DOM.
 
 ## 🎯 أوضاع اللعب بالتفصيل
 
 ### وضع الاستكشاف
 
-واجهة استكشاف بصري لجداول الضرب تشمل:
+واجهة استكشاف مرئية ملائمة لكل عملية، وتوفر:
 
-- تمثيل مرئي تفاعلي لعمليات الضرب
-- رسوم متحركة ووسائل مساعدة للتذكر
-- سحب وإفلات تعليمي
-- تقدم حر بحسب كل جدول
+- عرضًا تفاعليًا لعمليات الضرب
+- رسومًا متحركة ووسائل مساعدة على التذكر
+- سحبًا وإفلاتًا تعليميًا
+- تقدمًا حرًا حسب الجدول
 
 ### وضع الاختبار
 
-أسئلة اختيار من متعدد تشمل:
+أسئلة متعددة الخيارات، مع:
 
 - 10 أسئلة في كل جلسة
-- تقدم تكيّفي بحسب معدل النجاح
+- تقدم تكيفي بحسب الإجابات الصحيحة
 - لوحة أرقام افتراضية
-- نظام التتابع (سلسلة الإجابات الصحيحة المتتالية)
+- نظام سلسلة من الإجابات الصحيحة
 
 ### وضع التحدي
 
-سباق مع الوقت يشمل:
+سباق مع الزمن، مع:
 
 - 3 مستويات صعوبة (مبتدئ، متوسط، صعب)
 - وقت إضافي للإجابات الصحيحة
-- نظام المحاولات (القلوب)
-- قائمة بأعلى النتائج
+- نظام محاولات
+- ترتيب لأفضل النتائج
 
 ### وضع المغامرة
 
-تقدم قصصي يشمل:
+تقدم قصصي، مع:
 
-- 10 مستويات ذات طابع خاص قابلة للفتح
-- خريطة تفاعلية مع عرض مرئي لمستوى التقدم
-- قصة غامرة مع شخصيات
-- نظام النجوم والمكافآت
+- 10 مستويات ذات موضوعات مختلفة قابلة للفتح
+- خريطة تفاعلية تعرض التقدم بصريًا
+- قصة غامرة بشخصيات
+- نظام للنجوم والمكافآت
 
-### ألعاب الأركيد المصغرة
+### وضع السباق الزمني
 
-تقدّم كل لعبة مصغرة:
+عشر إجابات صحيحة بأسرع ما يمكن، في سباق مع مؤقت لا يتوقف:
 
-- اختيار الصعوبة والتخصيص
-- نظام للمحاولات والنتائج
-- عناصر تحكم باللمس ولوحة المفاتيح
-- لوحات تصنيف فردية لكل مستخدم
+- العمليات الأربع: جداول الضرب (المضبوطة في إعدادات الجداول)، وجميع
+  جداول الجمع (7 + k)، والطرح ((7 + k) − 7)، والقسمة ((7 × k) ÷ 7)
+- الإجابة بالاختيار أو بلوحة الأرقام، بالنقر أو بلوحة المفاتيح
+- أفضل الأوقات ومتوسط الوقت ومنحنى الجولات الأخيرة، حسب العملية
+- «مسائلي التي ينبغي مراجعتها»: قائمة لكل عملية، تُراجع في الاتجاهين (6 × 7 و7 × 6،
+  و15 − 7 و15 − 8)
+
+### لوحة المعلومات
+
+ما لعبه الطفل فعليًا، ملفًا شخصيًا تلو الآخر:
+
+- نجوم المغامرة وجداول الضرب التي ينبغي مراجعتها (آخر 20 إجابة لكل جدول)
+- الأسئلة والإجابات الصحيحة في الاختبار والتحدي والمغامرة والسباق الزمني
+- الجولات والأرقام القياسية لكل وضع ولكل لعبة مصغرة، بما في ذلك الجولات المتروكة، ومفصلة حسب العملية
+  بمجرد أن يتدرب الطفل على أكثر من عملية
+
+### ألعاب Arcade المصغرة
+
+تقدم كل لعبة مصغرة:
+
+- ثلاثة مستويات صعوبة في العمليات الأربع
+- نظام محاولات ونتيجة
+- عناصر تحكم بالفأرة ولوحة المفاتيح والإصبع، موضحة في بطاقة اللعبة
+- إيقافًا مؤقتًا: زر بجوار الوقت أو المفتاح P؛ وتتوقف اللعبة مؤقتًا أيضًا عندما تكون علامة التبويب
+  مخفية، ولا تستأنف أبدًا من تلقاء نفسها
+- MultiMemory: جولة بلا حد زمني، حسب الاختيار
+- لوحة تستغل المساحة المتاحة (أطول من عرضها على هاتف في الوضع الرأسي) ووضع ملء الشاشة،
+  على الحاسوب والهاتف، بما في ذلك عند تدوير الهاتف (باستثناء iPhone، إذ لا يسمح
+  متصفحه بذلك)
+- أفضل نتائج كل لاعب؛ ويوضح خيار «إعادة التعيين» كل ما سيمحوه
 
 ## 🔧 التطوير
 
 ### سير عمل التطوير
 
-**لا تقم بالإيداع (commit) مباشرة في فرع main.** يعتمد المشروع على العمل باستخدام فروع الميزات.
+**لا تلتزم بالتغييرات مباشرةً على main أبدًا.** يعمل المشروع عبر فروع
+الميزات.
 
-**1. أنشئ فرعاً جديداً**، `feat/` لإضافة ميزة، أو `fix/` لإصلاح خطأ:
+**1. أنشئ فرعًا**، باستخدام `feat/` لميزة أو `fix/` لإصلاح:
 
 ```bash
 git checkout -b feat/nom-de-la-fonctionnalite
 ```
 
-**2. قم بالتطوير والتحقق.** يأتي التنسيق أولاً: سيرفض نظام التكامل المستمر (CI) التغييرات قبل حتى تشغيل الاختبارات.
+**2. طوّر وتحقق.** يأتي التنسيق أولًا: ترفضه CI
+حتى قبل تشغيل الاختبارات.
 
 ```bash
 npm run format:check  # TOUJOURS en premier : la CI refuse un code non formaté
@@ -365,7 +410,7 @@ npm run test          # Tests
 npm run test:coverage # Couverture
 ```
 
-**3. قم بتنفيذ الإيداع (commit) على الفرع**، ثم ارفعه:
+**3. التزم بالتغييرات على الفرع**، ثم ادفعه:
 
 ```bash
 git add .
@@ -373,32 +418,33 @@ git commit -m "feat: description de la fonctionnalité"
 git push -u origin feat/nom-de-la-fonctionnalite
 ```
 
-**4. افتح طلب سحب (Pull Request)** وانتظر اكتمال التحليلات: verify وCodacy وCodeFactor وSonarCloud. يتم تصحيح الأخطاء حتى تصبح المؤشرات كلها خضراء قبل الدمج.
+**4. افتح pull request** وانتظر التحليلات: verify وCodacy
+وCodeFactor وSonarCloud. أصلح المشكلات حتى تصبح جميع النتائج خضراء قبل الدمج.
 
-**أسلوب رسائل الإيداع**: رسائل موجزة بصيغة الأمر (مثال: "Fix arcade init errors"، و"Refactor cache updater")
+**أسلوب رسائل الالتزام**: رسائل موجزة بصيغة الأمر (مثل: "Fix arcade init errors" و"Refactor cache updater")
 
-**معيار الجودة (Quality gate)**: التأكد من اجتياز `npm run lint` و`npm test` و`npm run test:coverage` بنجاح قبل كل عملية إيداع
+**بوابة الجودة**: تأكد من نجاح `npm run lint` و`npm test` و`npm run test:coverage` قبل كل التزام
 
 ### بنية المكونات
 
-**GameMode (الفئة الأساسية)**: ترث جميع الأوضاع من فئة مشتركة ذات دوال قياسية.
+**GameMode (الفئة الأساسية)**: ترث جميع الأوضاع من فئة مشتركة ذات أساليب موحدة.
 
 **GameModeManager**: تنسيق مركزي لتشغيل الأوضاع وإدارتها.
 
-**مكونات واجهة المستخدم (UI)**: توفر TopBar وInfoBar وDashboard وCustomization واجهة متناسقة.
+**مكونات UI**: توفر TopBar وInfoBar وDashboard وCustomization واجهة متسقة.
 
-**التحميل الكسول (Lazy Loading)**: يتم تحميل الوحدات عند الطلب لتحسين الأداء الأولي.
+**Lazy Loading**: تُحمَّل الوحدات عند الطلب لتحسين الأداء الأولي.
 
-**ناقل الأحداث (Event Bus)**: تواصل غير مقترن بين المكونات عبر نظام الأحداث.
+**Event Bus**: تواصل غير مترابط بين المكونات عبر نظام الأحداث.
 
 ### الاختبارات
 
-يتضمن المشروع مجموعة اختبارات شاملة:
+يتضمن المشروع حزمة اختبارات شاملة:
 
-- اختبارات الوحدة للوحدات الأساسية
-- اختبارات التكامل للمكونات
-- اختبارات أوضاع اللعب
-- تغطية آلية للكود
+- اختبارات وحدات للوحدات الأساسية
+- اختبارات تكامل للمكونات
+- اختبارات لأوضاع اللعب
+- تغطية آلية للشيفرة
 
 ```bash
 npm test              # Tous les tests (CJS)
@@ -408,67 +454,79 @@ npm test:coverage     # Rapport de couverture
 npm run test:esm      # Tests ESM (ex: components/dashboard) via vm-modules
 ```
 
-### بناء الإنتاج
+### إصدار الإنتاج
 
-- **Rollup**: تجميع `js/main-es6.js` بتنسيق ESM مع تقسيم الكود (code-splitting) وتوليد خرائط المصدر (sourcemaps)
-- **Terser**: تقليص حجم الكود تلقائياً لتحسين الأداء
-- **ما بعد البناء (Post-build)**: نسخ `css/` و`assets/`، والأيقونات المفضلة (`favicon.ico`، و`favicon.png`، و`favicon.svg`)، و`sw.js`، وإعادة كتابة `dist/index.html` للإشارة إلى ملف الإدخال ذي التجزئة المشفرة (مثل: `main-es6-*.js`)
-- **المجلد النهائي**: `dist/` جاهز للاستضافة الثابتة
+- **Rollup**: يجمع `js/main-es6.js` بصيغة ESM مع تقسيم الشيفرة وخرائط المصدر
+- **Terser**: تصغير آلي للتحسين
+- **Post-build**: نسخ `css/` و`assets/`، وأيقونات المواقع المفضلة (`favicon.ico` و`favicon.png` و`favicon.svg`)، و`sw.js`، وإعادة كتابة `dist/index.html` للإشارة إلى ملف الإدخال ذي الاسم المجزأ (مثل: `main-es6-*.js`)
+- **المجلد النهائي**: `dist/` جاهز للتقديم بصورة ثابتة
 
 ```bash
 npm run build      # génère dist/
 npm run serve:dist # sert dist/ (port 5000)
 ```
 
-### التكامل المستمر (CI)
+### التكامل المستمر
 
-**GitHub Actions**: `.github/workflows/ci.yml`، يتم تشغيله عند كل دفع (push) إلى `main` ومع كل طلب سحب (pull request).
+**GitHub Actions**: ‏`.github/workflows/ci.yml`، يُشغَّل عند كل عملية دفع إلى
+`main` وعند كل طلب سحب.
 
 **`verify`** — بوابة الجودة الإلزامية:
 
-- `npm ci` ثم `npm run verify` (ESLint، واختبارات Jest، والتغطية)
-- `npm run format:check` (Prettier)
+- ‏`npm ci` ثم `npm run verify` ‏(ESLint، اختبارات Jest، التغطية)
+- ‏`npm run format:check` ‏(Prettier)
 
-**`seo-report`** — بعد `verify`: فحص وتدقيق Lighthouse للموقع المباشر لمتابعة مقاييس تحسين محركات البحث (SEO) بمرور الوقت.
+**`seo-report`** — بعد `verify`: تدقيق Lighthouse للموقع المنشور، من أجل
+تتبّع مقاييس SEO بمرور الوقت.
 
-**التحليلات الخارجية** المرتبطة بطلبات السحب: Codacy وCodeFactor وSonarCloud. تشترط بوابة SonarCloud الحصول على تصنيف A في الموثوقية والأمان وقابلية الصيانة للكود الجديد.
+**تحليلات خارجية** مرتبطة بطلبات السحب: Codacy وCodeFactor و
+SonarCloud. تشترط بوابة SonarCloud الحصول على التقدير A في الموثوقية والأمان
+وقابلية الصيانة للكود الجديد.
 
-**النشر**: يقوم `./deploy.sh` بمزامنة الموقع مع S3 وإبطال التخزين المؤقت في CloudFront. كما يعيد البرنامج النصي توليد الصور المتجاوبة غير الموجودة في مستودع Git عند الحاجة.
+**النشر**: يقوم `./deploy.sh` بمزامنة الموقع مع S3 وإبطال ذاكرة التخزين المؤقت
+لـCloudFront. يعيد السكربت عند الحاجة إنشاء الصور المتجاوبة غير الموجودة في git.
 
-### تطبيق الويب التقدمي (PWA)
+### ‏PWA ‏(Progressive Web App)
 
-LeapMultix هو تطبيق ويب تقدمي (PWA) متكامل يدعم العمل دون اتصال بالإنترنت وقابل للتثبيت.
+LeapMultix هو تطبيق PWA متكامل يدعم العمل دون اتصال بالإنترنت ويمكن تثبيته.
 
-**Service Worker** (`sw.js`):
+**Service Worker** ‏(`sw.js`):
 
-- التصفح: الأولوية للشبكة (Network-first) مع بديل دون اتصال بالإنترنت إلى `offline.html`
-- الصور: الأولوية للتخزين المؤقت (Cache-first) لتحسين الأداء
-- الترجمات: استراتيجية Stale-while-revalidate للتحديث في الخلفية
-- JS/CSS: الأولوية للشبكة (Network-first) لتقديم أحدث إصدار دائماً
+- التثبيت: تحميل مسبق لكل ما تتطلبه اللعبة، من قائمة ينشئها
+  `scripts/precache-list.mjs` من الكود (`npm run precache:update`، وتتحقق منها الاختبارات): بعد
+  الزيارة الأولى، تعمل الأوضاع الستة وألعاب Arcade الأربع دون اتصال
+- التنقل: Network-first مع مهلة 4 ثوانٍ: بعد انقضائها (شبكة لا تستجيب: شبكة Wi-Fi المدرسة، بوابة الدخول المقيدة) أو عند انقطاع الاتصال، تُستخدم صفحة اللعبة المخزنة مؤقتًا (`offline.html` فقط لصفحة لم يسبق حفظها)
+- الصور: Cache-first؛ وعند انقطاع الاتصال، يُستخدم حجم آخر من الصورة المتحركة نفسها أو خلفية أخرى للصورة الرمزية نفسها
+- الترجمات: Stale-while-revalidate للتحديث في الخلفية
+- ‏JS/CSS: ملفات هذا الإصدار (العناوين التي تحمل `?v=`، أي عناوين الموقع المنشور) تأتي أولًا من نسختها المحمّلة مسبقًا، وهي من الإصدار نفسه بحكم التصميم: يتجاهل الخادم `?v=` وكان سيقدّم بعد النشر إصدارًا آخر لولا ذلك. أما الملفات الأخرى (من دون `?v=` أثناء التطوير): Network-first مع المهلة نفسها البالغة 4 ثوانٍ قبل الانتقال إلى نسخة هذا الإصدار
+- الأصوات والخطوط: Cache-first، مع تقديم نطاقات البايتات (مشغّل الصوت في Safari)
 - إدارة تلقائية للإصدارات عبر `cache-updater.js`
 
-**Manifest** (`manifest.json`):
+**ملف Manifest** ‏(`manifest.json`):
 
 - أيقونات SVG وPNG لجميع الأجهزة
-- إمكانية التثبيت على الهواتف المحمولة (إضافة إلى الشاشة الرئيسية)
-- تهيئة مستقلة (standalone) لتوفير تجربة مماثلة للتطبيقات الأصلية
+- إمكانية التثبيت على الأجهزة المحمولة (Add to Home Screen)
+- إعداد standalone لتجربة شبيهة بالتطبيقات
 - دعم السمات والألوان
 
-**اختبار وضع عدم الاتصال محلياً.** شغّل الخادم، ثم افتح `http://localhost:8080` (أو المنفذ المعروض):
+**اختبار وضع عدم الاتصال محليًا.** شغّل الخادم، ثم افتح
+`http://localhost:8080` (أو المنفذ المعروض):
 
 ```bash
 npm run serve
 ```
 
-يدوياً: اقطع الاتصال بالشبكة من أدوات المطور (تبويب الشبكة - Network، وضع عدم الاتصال - Offline)، ثم حدّث الصفحة. يجب أن يظهر `offline.html`.
+يدويًا: اترك الصفحة مفتوحة مدة تكفي لتسجيل Service Worker للعبة، ثم أوقف
+الخادم (أو اقطع اتصال الجهاز بالشبكة)، وبعد ذلك حدّث الصفحة. يجب أن
+تظهر اللعبة وأن يعمل كل وضع.
 
-تلقائياً، باستخدام Puppeteer:
+تلقائيًا، باستخدام Puppeteer:
 
 ```bash
 npm run test:pwa-offline
 ```
 
-**برامج نصية لإدارة Service Worker**:
+**سكربتات إدارة Service Worker**:
 
 ```bash
 npm run sw:disable  # Désactiver le service worker
@@ -479,48 +537,50 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 **أدوات جودة الكود**:
 
-- **ESLint**: إعداد حديث باستخدام flat config (`eslint.config.js`)، ودعم ES2022
+- **ESLint**: إعداد حديث باستخدام flat config ‏(`eslint.config.js`)، مع دعم ES2022
 - **Prettier**: تنسيق تلقائي للكود (`.prettierrc`)
-- **Stylelint**: التحقق من صحة CSS (`.stylelintrc.json`)
+- **Stylelint**: التحقق من صحة CSS ‏(`.stylelintrc.json`)
 - **JSDoc**: توثيق تلقائي للدوال مع تحليل التغطية
 
-**قواعد برمجية هامة**:
+**قواعد الكود المهمة**:
 
 - حذف المتغيرات والمعاملات غير المستخدمة (`no-unused-vars`)
-- استخدام معالجة محددة للأخطاء (تجنب كتل catch الفارغة)
-- تجنب `innerHTML` واستخدام دوال `security-utils.js` بدلاً منها
-- الحفاظ على تعقيد إدراكي أقل من 15 للدوال
+- استخدام معالجة محددة للأخطاء (من دون كتل catch فارغة)
+- تجنّب `innerHTML` لصالح دوال `security-utils.js`
+- إبقاء التعقيد الإدراكي للدوال أقل من 15
 - استخراج الدوال المعقدة إلى دوال مساعدة أصغر
 
 **الأمان**:
 
-- **الحماية من هجمات XSS**: استخدام دوال `security-utils.js`:
-  - `appendSanitizedHTML()` بدلاً من `innerHTML`
-  - `createSafeElement()` لإنشاء عناصر آمنة
-  - `setSafeMessage()` للمحتوى النصي
-- **البرمجيات النصية الخارجية**: السمة `crossorigin="anonymous"` إلزامية
-- **التحقق من المدخلات**: تطهير (sanitize) البيانات الخارجية دائماً
-- **سياسة أمان المحتوى (Content Security Policy)**: ترويسات CSP لتقييد مصادر البرمجيات النصية
+- **الحماية من XSS**: استخدام دوال `security-utils.js`:
+  - ‏`appendSanitizedHTML()` بدلًا من `innerHTML`
+  - ‏`createSafeElement()` لإنشاء عناصر آمنة
+  - ‏`setSafeMessage()` للمحتوى النصي
+- **السكربتات الخارجية**: السمة `crossorigin="anonymous"` إلزامية
+- **التحقق من المدخلات**: تنقية البيانات الخارجية دائمًا
+- **Content Security Policy**: ترويسات CSP لتقييد مصادر السكربتات
 
 **إمكانية الوصول**:
 
-- التوافق مع معايير WCAG 2.1 AA
-- تنقل كامل عبر لوحة المفاتيح
-- أدوار ARIA وتسميات ملائمة
-- تباين ألوان متوافق مع المعايير
+- استهداف المستوى AA من WCAG 2.1، والتحقق منه باستخدام axe-core: لا انتهاكات من المستوى A أو AA ولا
+  انتهاكات لأفضل الممارسات
+- تنقل كامل بلوحة المفاتيح
+- أدوار ARIA وأسماء قابلة للوصول
+- التحقق من التباين باستخدام axe-core
 
 **الأداء**:
 
-- التحميل الكسول (Lazy loading) للوحدات عبر `lazy-loader.js`
-- تحسينات CSS وأصول متجاوبة
-- مشغّل خدمة (Service Worker) للتخزين المؤقت الذكي
-- تقسيم الكود (Code splitting) والتصغير (minification) في بيئة الإنتاج
+- التحميل الكسول للوحدات عبر `lazy-loader.js`
+- تحسينات CSS وموارد متجاوبة
+- ‏Service Worker للتخزين المؤقت الذكي
+- تقسيم الكود وتصغيره في بيئة الإنتاج
 
 ## 📱 التوافق
 
 ### المتصفحات المدعومة
 
-تعتمد الواجهة على `oklch()` للألوان وعلى `:has()` للحالات السياقية، مما يحدد الحد الأدنى للمتطلبات:
+تعتمد الواجهة على `oklch()` للألوان وعلى `:has()` للحالات
+السياقية، ما يحدد الحد الأدنى التالي:
 
 - Chrome / Chromium 111+
 - Edge 111+
@@ -529,20 +589,29 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 ### الأجهزة
 
-- **الحواسيب المكتبية**: تحكم كامل عبر الفأرة ولوحة المفاتيح
-- **الأجهزة اللوحية**: واجهة لمسية محسّنة
-- **الهواتف الذكية**: تصميم متجاوب ومتكيف
+- **الحواسيب المكتبية**: تحكم بلوحة المفاتيح والفأرة
+- **الأجهزة اللوحية**: واجهة محسّنة للمس
+- **الهواتف الذكية**: تصميم متجاوب ومتكيّف
 
 ### إمكانية الوصول
 
-- تنقل كامل عبر لوحة المفاتيح (Tab، الأسهم، Échap)
-- أدوار ARIA وتسميات لقارئات الشاشة
-- تباين ألوان متوافق مع المعايير
-- دعم التقنيات المساعدة
+- تنقل كامل بلوحة المفاتيح: Tab، والأسهم داخل شبكات الإجابات وبطاقات
+  MultiMemory، وEnter، وEscape؛ ورابط «الانتقال إلى أوضاع اللعب» أعلى الصفحة الرئيسية
+- قاعدة واحدة فقط لمغادرة لعبة: يطرح «الاستسلام» أو Escape أو أحد أزرار الشريط العلوي
+  السؤال نفسه، وتستمر اللعبة إذا رفض الطفل
+- قارئات الشاشة: كل إجابة مرتبطة بسؤالها، ويوجد عنوان واحد من المستوى الأول في كل شاشة، كما
+  يُعلَن عن الرسائل
+- يمكن تكبير الصفحة بالأصابع (خارج ألعاب Arcade)؛ مع حجم للنص، وتباين عالٍ،
+  وحركات مخفّضة، وخط للقراءة مشتق من Andika ومصمم للقراء
+  المبتدئين
+- ‏Arcade: إيقاف مؤقت (بزر أو بالمفتاح P أو عند إخفاء علامة التبويب)؛ وإمكانية اختيار MultiMemory بلا حد زمني
+- جرى التحقق باستخدام axe-core ‏(WCAG من 2.0 إلى 2.2، والمستويان A وAA، وأفضل الممارسات): لا
+  انتهاكات في 41 شاشة بعرض الحاسوب و40 شاشة بعرض الهاتف (390 px)، بما
+  يشمل سمة الليل والتباين العالي
 
-## 🌍 التوطين والترجمة
+## 🌍 التوطين
 
-دعم كامل للغات متعددة:
+دعم كامل لعدة لغات:
 
 - **الفرنسية** (اللغة الافتراضية)
 - **الإنجليزية**
@@ -562,24 +631,24 @@ npm run sw:fix      # Corriger les problèmes de cache
 }
 ```
 
-### برمجيات إدارة تدويل التطبيق (i18n)
+### سكربتات إدارة i18n
 
 **`npm run i18n:verify`** - التحقق من اتساق مفاتيح الترجمة
 
 **`npm run i18n:unused`** - سرد مفاتيح الترجمة غير المستخدمة
 
-**`npm run i18n:compare`** - مقارنة ملفات الترجمة مع fr.json (الملف المرجعي)
+**`npm run i18n:compare`** - مقارنة ملفات الترجمة مع fr.json (المرجع)
 
-تضمن هذه البرمجية النصية (`scripts/compare-translations.cjs`) مزامنة جميع ملفات اللغات:
+يضمن هذا السكربت (`scripts/compare-translations.cjs`) مزامنة جميع ملفات اللغات:
 
 **الميزات:**
 
-- كشف المفاتيح المفقودة (الموجودة في fr.json ولكنها غائبة في اللغات الأخرى)
-- كشف المفاتيح الإضافية (الموجودة في اللغات الأخرى ولكنها غير موجودة في fr.json)
+- اكتشاف المفاتيح المفقودة (الموجودة في fr.json والغائبة عن اللغات الأخرى)
+- اكتشاف المفاتيح الإضافية (الموجودة في اللغات الأخرى وغير الموجودة في fr.json)
 - تحديد القيم الفارغة (`""`، `null`، `undefined`، `[]`)
 - التحقق من اتساق الأنواع (string مقابل array)
-- تسطيح هياكل JSON المتداخلة إلى تنسيق مفصول بنقاط (مثل: `arcade.multiMemory.title`)
-- إنشاء تقرير مفصل في موجه الأوامر (console)
+- تسطيح بُنى JSON المتداخلة باستخدام ترميز النقاط (مثال: `arcade.multiMemory.title`)
+- إنشاء تقرير مفصل في وحدة التحكم
 - حفظ تقرير JSON في `docs/translations-comparison-report.json`
 
 **مثال على المخرجات:**
@@ -609,27 +678,27 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 **تغطية الترجمات:**
 
-- واجهة المستخدم بالكامل
+- واجهة المستخدم كاملة
 - تعليمات الألعاب
-- رسائل الأخطاء والملاحظات التقييمية
+- رسائل الخطأ والملاحظات
 - الأوصاف والمساعدة السياقية
-- المحتوى السردي لنمط المغامرة
+- المحتوى السردي لوضع المغامرة
 - تسميات إمكانية الوصول وARIA
 
-## 🔊 الصوت المسجل
+## 🔊 صوت مسجّل
 
-تقوم اللعبة بقراءة الأسئلة وعبارات التشجيع والشروحات بصوت عالٍ. وهي تنطق مجموعة محدودة فقط من العبارات، حوالي 7400 عبارة لكل لغة؛ وبالتالي يمكن تسجيلها مرة واحدة نهائياً، دون الحاجة إلى استدعاء أي خدمة تحويل نص إلى كلام أثناء اللعب. وفي حال غياب المقاطع الصوتية، تقرأ اللعبة بالصوت المدمج في الجهاز.
+تقرأ اللعبة الأسئلة وعبارات التشجيع والتفسيرات بصوت مرتفع. ولا تنطق سوى مجموعة محدودة من العبارات، نحو 7,400 عبارة لكل لغة: لذلك يمكن تسجيلها مرة واحدة نهائيًا، وعندئذ لا تستدعي أي لعبة خدمة توليد صوت. ومن دون المقاطع، تقرأ اللعبة بصوت الجهاز.
 
-### في هذا المستودع: التطبيق بدون الأصوات
+### في هذا المستودع: التطبيق من دون الأصوات
 
-يحتوي الكود على إمكانية تشغيل مقاطع مسجلة مسبقاً، ويتضمن سلسلة الأدوات التي تقوم بإنشائها. المقاطع الصوتية ليست موجودة هنا، ولا مفاتيح مزودي الخدمة؛ وأي تفريع (fork) أو تثبيت محلي سيعمل بالصوت المدمج في الجهاز.
+يستطيع الكود تشغيل مقاطع مسجّلة مسبقًا، ويتضمن سلسلة الأدوات التي تنشئها. لا توجد المقاطع فيه، وكذلك مفاتيح مزوّدي الخدمات: إذ يقرأ أي fork أو تثبيت محلي بصوت الجهاز.
 
-- **الرجوع التلقائي** إلى صوت الجهاز، عبارة بعبارة: في حال غياب المقطع أو حدوث خطأ، أو رفض المتصفح للتشغيل، أو عدم بدء المقطع خلال 1.5 ثانية، أو العمل دون اتصال بالإنترنت مع عدم وجود المقطع في الذاكرة المؤقتة.
-- **الإعدادات**: يتيح زر الصوت في الشريط العلوي تفعيل القراءة أو كتمها؛ ويحدد خيار «صوت مسجل» (إمكانية الوصول وعناصر التحكم) الاختيار بين الصوت المسجل وصوت الجهاز. ولا يظهر هذا الخيار إلا في اللغات التي تم نشر صوت لها.
-- **العمل دون اتصال بالإنترنت**: تظل المقاطع التي تم الاستماع إليها مسبقاً محفوظة في التخزين المؤقت (service worker).
-- **أين تبحث اللعبة عن المقاطع الصوتية**: في الوسم `<meta name="leapmultix-voice-base">`، وهو فارغ في المستودع. عملية النشر في بيئة الإنتاج وحدها هي من يكتب فيه `/voice/`.
+- **رجوع تلقائي** إلى صوت الجهاز، عبارةً تلو الأخرى: عند غياب المقطع أو حدوث خطأ فيه، أو رفض المتصفح التشغيل، أو عدم بدء المقطع خلال 1.5 s، أو عند انقطاع الاتصال مع عدم وجود المقطع في ذاكرة التخزين المؤقت.
+- **الإعدادات**: يفعّل زر الصوت في الشريط العلوي القراءة أو يوقفها؛ ويتيح مربع «صوت مسجّل» (إمكانية الوصول وعناصر التحكم) الاختيار بين الصوت المسجّل وصوت الجهاز. ولا يظهر إلا في اللغات التي نُشر لها صوت.
+- **دون اتصال**: تبقى المقاطع التي سبق الاستماع إليها في ذاكرة التخزين المؤقت (Service Worker).
+- **مكان بحث اللعبة عن المقاطع**: في الوسم `<meta name="leapmultix-voice-base">`، وهو فارغ في المستودع. وحده نشر بيئة الإنتاج يكتب فيه `/voice/`.
 
-باستخدام مقاطعك الصوتية الخاصة على جهازك (المُنشأة بواسطة سلسلة الأدوات الموضحة أدناه، والموضوعة بجانب اللعبة في `../leapmultix-voices`)، يتيح المعامل `?voix=local` لخادم التطوير قراءتها:
+عند وجود مقاطعك الخاصة على الجهاز (المُنشأة عبر السلسلة أدناه والموضوعة إلى جانب اللعبة في `../leapmultix-voices`)، يجعلها المعامل `?voix=local` قابلة للتشغيل عبر خادم التطوير:
 
 ```bash
 npm run voice:publish -- local --lang fr --audience all --default-on   # relie voice/ (ignoré par git) aux clips
@@ -641,26 +710,26 @@ npm run serve
 
 ### على leapmultix.jls42.org: أصوات الاستضافة
 
-يقدم الموقع الذي يوفره المؤلف أصوات توليف مسجلة:
+يقدّم الموقع الذي يوفره المؤلف أصواتًا اصطناعية مسجّلة:
 
-- بالفرنسية، **Lucie**، تم إنشاؤها عبر ElevenLabs (نموذج Eleven v3)؛
-- بالإنجليزية البريطانية والإسبانية القشتالية، **Sulafat**، تم إنشاؤها عبر Google Cloud Text-to-Speech (صوت Chirp 3 HD)؛
-- بحسب اختيار اللاعب، **Sulafat** بالفرنسية، للحفاظ على نفس الصوت في اللغات الثلاث؛
-- بحسب اختيار اللاعب أيضاً، **Marie** بالفرنسية و**Jane** بالإنجليزية، تم إنشاؤهما عبر Mistral AI (Voxtral TTS).
+- بالفرنسية، **Lucie**، أُنشئت باستخدام ElevenLabs ‏(النموذج Eleven v3)؛
+- بالإنجليزية البريطانية والإسبانية الإسبانية، **Sulafat**، أُنشئت باستخدام Google Cloud Text-to-Speech ‏(الصوت Chirp 3 HD)؛
+- وبحسب اختيار اللاعب، **Sulafat** بالفرنسية، للحفاظ على الصوت نفسه في اللغات الثلاث؛
+- وبحسب اختيار اللاعب أيضًا، **Marie** بالفرنسية و**Jane** بالإنجليزية، أُنشئتا باستخدام Mistral AI ‏(Voxtral TTS).
 
-توجد المقاطع الصوتية في مستودع خاص وحاوية S3 مخصصة، يتم توفيرها عبر CloudFront على `/voice/*`. ويتم توليدها مرة واحدة فقط: أثناء اللعب، لا يتم إرسال أي شيء إلى هذه الخدمات. في الإعدادات، تتيح قائمة «الصوت» اختيار أصوات اللغة عند توفر أكثر من صوت، وتوضح الملاحظة اسم الخدمة المستخدمة للصوت المستمع إليه.
+توجد المقاطع في مستودع خاص وفي bucket مخصص على S3، يقدمه CloudFront عبر `/voice/*`. تُنشأ مرة واحدة: أثناء اللعب، لا يُرسل شيء إلى هذه الخدمات. في الإعدادات، تعرض قائمة «الصوت» أصوات اللغة عندما يتوفر لها أكثر من صوت، ويذكر التنويه الخدمة التي أنشأت الصوت المسموع.
 
-### توليد المقاطع الصوتية
+### إنشاء المقاطع
 
-سلسلة الأدوات مبرمجة في `scripts/voice/` وتعمل على جهاز المالك، ولا تعمل أبداً في بيئة التكامل المستمر (CI) العامة. مفاتيح مزودي الخدمة (ElevenLabs لـ Lucie، وGoogle Cloud Text-to-Speech لـ Sulafat، وMistral لـ Marie وJane) تظل في ملف `.env` خارج المستودع، ويتم تمريرها عبر `node --env-file`: لا يتم إدخال أي مفتاح في git. وتتولى مهارة Claude Code [`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) تنفيذ الإجراء خطوة بخطوة (البوابات، الموافقات، الاستئناف)؛ والتفاصيل متوفرة في [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
+توجد سكربتات السلسلة في `scripts/voice/` وتعمل على جهاز المالك، ولا تعمل مطلقًا ضمن CI العامة. تبقى مفاتيح المزوّدين (ElevenLabs لـLucie، وGoogle Cloud Text-to-Speech لـSulafat، وMistral لـMarie وJane) في ملف `.env` خارج المستودع، ويُمرّر عبر `node --env-file`: لا يدخل أي مفتاح إلى git. يشرح skill الخاص بـClaude Code ‏[`generating-voice-clips`](.claude/skills/generating-voice-clips/SKILL.md) الإجراء خطوة بخطوة (البوابات، والموافقات، والاستئناف)؛ وتوجد التفاصيل في [`docs/voix-enregistree.md`](docs/voix-enregistree.md).
 
-1. **تقدير** العبارات المتبقية وعدد الأحرف المدفوعة (Eleven v3: حوالي 0.53 رصيد لكل حرف؛ Chirp 3 HD: 30 دولاراً لكل مليون حرف، مع تقديم أول مليون حرف مجاناً كل شهر؛ Voxtral TTS: 16 دولاراً لكل مليون حرف).
-2. **التوليد**. تؤدي إعادة تشغيل الأمر نفسه إلى استئناف ما ينقص. وعند نفاد الرصيد، يتوقف السكربت بشكل سليم (الرمز 3) دون ترك أي ملف مكتوب جزئياً. ويضع `--max-total-chars` حداً أقصى للإنفاق التراكمي للإصدار: حيث يتم تسجيل كل استجابة مدفوعة بمجرد استلامها في سجل يظل محفوظاً حتى عند التوقف المفاجئ. وفي Google وMistral اللذين لا يقدمان رصيداً قابلاً للقراءة، تعد هذه الحماية الوحيدة.
-3. **الفحص**: التأكد من أن كل عبارة لها مقطعها وأن كل ملف MP3 صالح. بعد ذلك، يقوم Whisper بنسخ كل مقطع صوتياً محلياً، ويكشف الفحص عن الأرقام التي أُسيء فهمها والمُدد الزمنية غير الطبيعية. يجمع `voice:review` بين Whisper وهذا الفحص وصفحة الاستماع في أمر واحد.
-4. **الاستماع** على صفحة الاستماع (`voice:listen`) إلى المقاطع التي تم الإبلاغ عنها وعينة من صيغ التأنيث («une fois 7»)، والتي لا يميزها Whisper. يحتوي كل مقطع على مربع اختيار «لإعادة التسجيل»، والذي يضيفه إلى قائمة المقاطع المستبعدة.
-5. **إعادة توليد** المقاطع المستبعدة (`--redo`) وإعادة تشغيل Whisper، ثم مقارنة كل مقطع قبل وبعد على صفحة ثانية. والمقطع الذي يظل نطقه غير دقيق بعد محاولتين أو ثلاث يُخصص له نص إلزامي في `SAID_OVERRIDES` (`scripts/voice/said-text.mjs`)، مثل كتابة الرقم بالحروف كاملة.
-6. **نشر** المقاطع، والتحقق من استجابتها عبر الإنترنت، ثم نشر فهرس اللغة، للمختبرين أولاً (`?voix=test`).
-7. **إتاحة** الصوت للجميع، ثم تفعيله افتراضياً. يقوم قاطع الدائرة (`voice:publish -- remove`) بإزالة اللغة من الفهرس: لتعود اللعبة إلى الصوت المدمج في الجهاز.
+1. **تقدير** العبارات المتبقية وعدد الأحرف المدفوعة (Eleven v3: نحو 0.53 رصيد لكل حرف؛ Chirp 3 HD: ‏30 $ لكل مليون حرف، مع إتاحة المليون الأول من كل شهر مجانًا؛ Voxtral TTS: ‏16 $ لكل مليون).
+2. **الإنشاء**. يؤدي تشغيل الأمر نفسه مجددًا إلى استكمال ما ينقص. عند نفاد الأرصدة، يتوقف السكربت بصورة سليمة (الرمز 3) من دون ترك ملف مكتوب جزئيًا. يضع `--max-total-chars` حدًا أقصى للإنفاق التراكمي للإصدار: تُسجّل كل استجابة مدفوعة فور استلامها في سجل يظل محفوظًا حتى بعد التوقف المفاجئ. ولدى Google وMistral، اللتين لا تعرضان رصيدًا يمكن قراءته، تكون هذه الحماية الوحيدة.
+3. **التحقق**: لكل عبارة مقطع خاص بها، وكل ملف MP3 صالح. ينسخ Whisper بعد ذلك كل مقطع محليًا، ويشير الفحص إلى الأرقام التي أسيء فهمها والمدد غير الطبيعية. يجمع `voice:review` بين Whisper وهذا الفحص وصفحة الاستماع في أمر واحد.
+4. **الاستماع** في صفحة الاستماع (`voice:listen`) إلى المقاطع المشار إليها وإلى عينة من الصيغ المؤنثة («واحد في 7»)، التي لا يميزها Whisper. لكل مقطع مربع «إعادة الإنشاء» يضيفه إلى قائمة المقاطع المستبعدة.
+5. **إعادة إنشاء** المقاطع المستبعدة (`--redo`) وتشغيل Whisper مجددًا، ثم مقارنة كل مقطع قبل التعديل وبعده في صفحة ثانية. يُمنح المقطع الذي يظل منطوقًا بصورة خاطئة بعد محاولتين أو ثلاث نصًا مفروضًا في `SAID_OVERRIDES` ‏(`scripts/voice/said-text.mjs`)، مثل كتابة العدد بالحروف.
+6. **نشر** المقاطع، والتحقق من استجابتها عبر الإنترنت، ثم نشر فهرس اللغة، أولًا للمختبرين (`?voix=test`).
+7. **إتاحة** الصوت للجميع، ثم تفعيله افتراضيًا. يزيل مفتاح الإيقاف الطارئ (`voice:publish -- remove`) لغةً من الفهرس، فتعود اللعبة إلى صوت الجهاز.
 
 ```bash
 # 1. Estimer (sans frais)
@@ -683,43 +752,48 @@ npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> -
 npm run voice:publish -- index --lang fr --bucket <bucket> --distribution <id> --audience all --default-on
 ```
 
-### قاعدة: أي عبارة منطوقة يتم تعديلها يعاد تسجيلها قبل النشر في بيئة الإنتاج
+### القاعدة: تُعاد عملية تسجيل أي عبارة منطوقة معدّلة قبل النشر في بيئة الإنتاج
 
-تأتي أي عبارة منطوقة من ملفات الترجمة (`assets/translations/{fr,en,es}.json`) وتُعد جزءاً من متن النصوص (corpus). وبالتالي، فإن تغيير عبارة منطوقة يؤدي إلى إفشال اختبار قفل المتن (`scripts/voice/corpus.lock.json`). وبالنسبة لأي لغة يتوفر لها صوت مسجل، يتم حينئذٍ توليد مقاطع العبارات المعنية وفحصها والاستماع إليها، ثم نشرها **قبل** دمج التعديلات. أخيراً، يتم تحديث القفل (`npm run voice:corpus:lock`). وبدون هذه المقاطع، تُقرأ العبارة المعدلة باستخدام الصوت المدمج في الجهاز.
+تأتي كل عبارة منطوقة من الترجمات (`assets/translations/{fr,en,es}.json`) وتُعد جزءًا من المتن. لذلك يؤدي تغيير عبارة منطوقة إلى فشل اختبار قفل المتن (`scripts/voice/corpus.lock.json`). بالنسبة إلى لغة يتوفر لها صوت مسجّل، تُنشأ عندئذ مقاطع العبارات المتأثرة، ويُتحقق منها ويُستمع إليها، ثم تُنشر **قبل** الدمج. وأخيرًا، يُحدَّث القفل (`npm run voice:corpus:lock`). ومن دون هذه المقاطع، تُقرأ العبارة المعدّلة بصوت الجهاز.
 
 ## 📊 تخزين البيانات
 
 ### بيانات المستخدم
 
 - الملفات الشخصية والتفضيلات
-- التقدم المحرز في كل نمط لعب
-- النتائج والإحصائيات الخاصة بألعاب الأركيد
+- التقدم حسب وضع اللعب
+- نتائج وإحصاءات ألعاب Arcade
 - إعدادات التخصيص
 
 ### الميزات التقنية
 
-- تخزين محلي (localStorage) مع حلول بديلة (fallbacks)
-- عزل البيانات لكل مستخدم
-- حفظ تلقائي للتقدم
-- ترحيل تلقائي للبيانات القديمة
+- تخزين محلي (localStorage) مع وسائل رجوع احتياطية؛ ويُطلب من المتصفح عدم حذفه
+  تلقائيًا (`navigator.storage.persist()`)
+- سلة محذوفات للاعبين المحذوفين: الاحتفاظ بجميع بياناتهم لمدة 30 يومًا، مع الاستعادة من
+  «من يلعب؟»
+- حفظ اللاعبين في ملف JSON، واستعادتهم على هذا الجهاز أو جهاز آخر (لا يُستبدل مطلقًا
+  أي لاعب موجود بالفعل)
+- تنظيم بيانات اللعب حسب الملف الشخصي، بما فيها الإحصاءات الخاصة بكل عملية حسابية: على جهاز مشترك، لا تؤثر أخطاء لاعب في الأسئلة المقدمة للاعب آخر
+- حفظ التقدم تلقائيًا
+- ترحيل البيانات القديمة تلقائيًا
 
 ## 🐛 الإبلاغ عن مشكلة
 
-يمكن الإبلاغ عن المشكلات عبر GitHub Issues. يُرجى تضمين ما يلي:
+يمكن الإبلاغ عن المشكلات عبر GitHub issues. يُرجى تضمين:
 
-- وصف تفصيلي للمشكلة
-- خطوات إعادة إنتاجها
-- نوع المتصفح وإصداره
-- لقطات شاشة إن كانت مفيدة
+- وصف مفصل للمشكلة
+- خطوات إعادة حدوثها
+- المتصفح وإصداره
+- لقطات شاشة إن كانت ذات صلة
 
 ## 💝 دعم المشروع
 
-**[☕ تقديم تبرع عبر PayPal](https://paypal.me/jls)**
+**[☕ التبرع عبر PayPal](https://paypal.me/jls)**
 
 ## 📄 الترخيص
 
-هذا المشروع مرخص بموجب رخصة AGPL v3. راجع ملف `LICENSE` لمزيد من التفاصيل.
+هذا المشروع مرخّص بموجب AGPL v3. راجع الملف `LICENSE` لمزيد من التفاصيل.
 
 ---
 
-_LeapMultix — تطبيق تعليمي مفتوح المصدر لتعلم العمليات الحسابية الأربع_
+_LeapMultix — تطبيق تعليمي حر لتعلّم العمليات الحسابية الأربع_

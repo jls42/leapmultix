@@ -3,13 +3,21 @@ import { UserState } from './core/userState.js';
 import { getTranslation } from './utils-es6.js';
 import { gameState } from './game.js';
 import Storage from './core/storage.js';
-import { createIcon } from './components/icons.js';
+import { renderAvatarShop } from './components/avatarShop.js';
 import { pickRandom } from './core/random.js';
+import {
+  AVATAR_IDS,
+  DEFAULT_AVATAR,
+  HEAD_SIZES,
+  normalizeAvatarId,
+  resolveAvatarAlias,
+  setAvatarHead,
+} from './avatar-heads.js';
 
-const AVATAR_LIST = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
-// Anciennes valeurs françaises encore présentes dans certains profils enregistrés
-const AVATAR_ALIASES = { renard: 'fox', licorne: 'unicorn', astronaute: 'astronaut' };
-const DEFAULT_AVATAR = 'fox';
+// Ancienne adresse de la liste blanche des avatars (js/avatar-heads.js) : un module qui
+// l'importe encore d'ici la trouve toujours
+export { normalizeAvatarId } from './avatar-heads.js';
+
 const HERO_IMAGE_BY_LANG = {
   fr: 'assets/social/leapmultix-social-card.webp',
   en: 'assets/social/leapmultix-social-card.webp',
@@ -20,37 +28,6 @@ const HERO_DEFAULT_LANG = 'fr';
 const WELCOME_FALLBACK = 'Salut {nickname} ! On joue à quoi aujourd’hui ?';
 
 const isMissingTranslation = value => typeof value !== 'string' || /^\[.*\]$/.test(value);
-
-/**
- * Ramène un identifiant d'avatar (éventuellement ancien ou inconnu) à un avatar connu.
- * @param {string} [avatarId]
- * @returns {string} Identifiant de la liste AVATAR_LIST (renard par défaut)
- */
-export function normalizeAvatarId(avatarId) {
-  const resolved = AVATAR_ALIASES[avatarId] || avatarId;
-  return AVATAR_LIST.includes(resolved) ? resolved : DEFAULT_AVATAR;
-}
-
-/**
- * Chemin du visage (128×128) d'un avatar. L'identifiant est filtré par une liste
- * blanche : une valeur inattendue venant du stockage ne peut pas composer une URL.
- * @param {string} [avatarId]
- * @returns {string}
- */
-export function getAvatarHeadSrc(avatarId) {
-  return `assets/images/arcade/${normalizeAvatarId(avatarId)}_head_avatar_128x128.png`;
-}
-
-// Cadenas des avatars verrouillés : icône partagée (components/icons.js), pas d'émoji.
-// Le conteneur .lock-icon est celui que la personnalisation sait déjà décorer.
-function createLockIcon() {
-  const lock = document.createElement('span');
-  lock.className = 'lock-icon';
-  lock.setAttribute('aria-hidden', 'true');
-  const icon = createIcon('lock', { size: 18 });
-  if (icon) lock.appendChild(icon);
-  return lock;
-}
 
 function resolveAvatarSelector(target) {
   if (!target) {
@@ -67,6 +44,44 @@ function resolveAvatarSelector(target) {
   return target;
 }
 
+/**
+ * Un avatar du joueur : un <label> qui habille un bouton radio natif. Le navigateur gère le
+ * clavier (flèches, Espace), l'état coché et l'annonce « option 2 sur 5 ».
+ * @param {string} avatarName
+ * @param {boolean} checked - L'avatar porté
+ * @returns {HTMLLabelElement}
+ */
+function avatarChoice(avatarName, checked) {
+  const btn = document.createElement('label');
+  btn.className = 'avatar-btn';
+  const radio = document.createElement('input');
+  radio.type = 'radio';
+  radio.className = 'avatar-radio';
+  radio.name = 'customization-avatar';
+  radio.value = avatarName;
+  radio.checked = checked;
+  const labelRaw = getTranslation(avatarName);
+  const img = document.createElement('img');
+  setAvatarHead(img, avatarName, HEAD_SIZES.choice);
+  img.width = 100;
+  img.height = 100;
+  // Le nom visible donne déjà le nom accessible du bouton
+  img.alt = '';
+  const span = document.createElement('span');
+  span.className = 'avatar-label';
+  // Un changement de langue réécrit le nom sans régénérer le sélecteur (i18n.js)
+  span.dataset.translate = avatarName;
+  span.textContent = isMissingTranslation(labelRaw) ? avatarName : labelRaw;
+  btn.append(radio, img, ' ', span);
+  return btn;
+}
+
+/**
+ * Avatars de la personnalisation : ceux du joueur dans le groupe de boutons radio, qui ne
+ * propose ainsi que des choix possibles ; les autres s'achètent avec les pièces, juste en
+ * dessous (components/avatarShop.js).
+ * @param {HTMLElement|string} [target] - Conteneur du groupe (par défaut, celui affiché)
+ */
 export function renderAvatarSelector(target) {
   const avatarSelector = resolveAvatarSelector(target);
   if (!avatarSelector) return;
@@ -74,48 +89,16 @@ export function renderAvatarSelector(target) {
   const userData = UserState.getCurrentUserData();
   const unlocked = userData.unlockedAvatars || ['fox'];
   const current = normalizeAvatarId(userData.avatar);
-  const lockTipRaw = getTranslation('avatar_locked_tooltip');
-  const lockTip = isMissingTranslation(lockTipRaw) ? 'Avatar verrouillé' : lockTipRaw;
 
-  while (avatarSelector.firstChild) avatarSelector.removeChild(avatarSelector.firstChild);
-  AVATAR_LIST.forEach(avatarName => {
-    const isUnlocked = unlocked.includes(avatarName);
-    // Un <label> qui habille un bouton radio natif : le navigateur gère le clavier
-    // (flèches, Espace), l'état coché et l'annonce « option 2 sur 5 »
-    const btn = document.createElement('label');
-    btn.className = 'avatar-btn' + (isUnlocked ? '' : ' locked');
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.className = 'avatar-radio';
-    radio.name = 'customization-avatar';
-    radio.value = avatarName;
-    radio.checked = avatarName === current;
-    radio.disabled = !isUnlocked;
-    btn.appendChild(radio);
-    const labelRaw = getTranslation(avatarName);
-    const label = isMissingTranslation(labelRaw) ? avatarName : labelRaw;
-    const img = document.createElement('img');
-    img.src = getAvatarHeadSrc(avatarName);
-    img.width = 100;
-    img.height = 100;
-    // Le nom visible donne déjà le nom accessible du bouton
-    img.alt = '';
-    const span = document.createElement('span');
-    span.className = 'avatar-label';
-    // Un changement de langue réécrit le nom sans régénérer le sélecteur (i18n.js)
-    span.dataset.translate = avatarName;
-    span.textContent = label;
-    btn.appendChild(img);
-    btn.appendChild(document.createTextNode(' '));
-    btn.appendChild(span);
-    if (!isUnlocked) {
-      btn.appendChild(document.createTextNode(' '));
-      btn.appendChild(createLockIcon());
-      btn.title = lockTip;
-      btn.dataset.translateTitle = 'avatar_locked_tooltip';
-    }
-    avatarSelector.appendChild(btn);
-  });
+  // L'avatar porté n'est jamais verrouillé : un profil d'avant peut l'avoir hors de la liste
+  const isLocked = avatarName => avatarName !== current && !unlocked.includes(avatarName);
+
+  avatarSelector.replaceChildren(
+    ...AVATAR_IDS.filter(avatarName => !isLocked(avatarName)).map(avatarName =>
+      avatarChoice(avatarName, avatarName === current)
+    )
+  );
+  renderAvatarShop(AVATAR_IDS.filter(isLocked));
 }
 
 /**
@@ -134,7 +117,7 @@ export async function updateWelcomeMessageUI() {
       welcomeText = WELCOME_FALLBACK.replace('{nickname}', nickname);
     }
     // Sans prénom, « Salut {nickname} ! » laisserait deux espaces consécutives
-    welcomeMsgElement.textContent = String(welcomeText).replace(/\s{2,}/g, ' ');
+    welcomeMsgElement.textContent = String(welcomeText).replaceAll(/\s{2,}/g, ' ');
   } else {
     const welcomeNicknameSpan = document.getElementById('welcome-nickname');
     if (welcomeNicknameSpan) {
@@ -144,7 +127,7 @@ export async function updateWelcomeMessageUI() {
 }
 
 export function pickRandomAvatarId() {
-  const list = AVATAR_LIST;
+  const list = AVATAR_IDS;
   if (!Array.isArray(list) || list.length === 0) return 'fox';
   return pickRandom(list);
 }
@@ -225,7 +208,7 @@ function chooseImageNumber(avatarKey, available) {
 export function updateBackgroundByAvatar(avatarId) {
   const requested =
     avatarId || gameState?.avatar || UserState.getCurrentUserData()?.avatar || DEFAULT_AVATAR;
-  const resolved = AVATAR_ALIASES[requested] || requested;
+  const resolved = resolveAvatarAlias(requested);
 
   let available = avatarAvailableImages[resolved];
   let effective = resolved;

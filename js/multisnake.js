@@ -10,15 +10,24 @@ import {
   getArcadeCanvasBox,
   readableCanvasFontSize,
   canvasToClientPoint,
+  watchArcadeViewport,
+  sizeArcadeCanvas,
+  getArcadeCanvasSize,
 } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
 import { recordOperationResult } from './core/operation-stats.js';
+import { noteArcadePlay } from './arcade-session.js';
 import { showArcadeGameOver } from './arcade.js';
 import { cleanupGameResources } from './game-cleanup.js';
 import { InfoBar } from './components/infoBar.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
+import { getDifficultySettings } from './difficulty.js';
+import { plausibleWrongAnswers } from './core/GameMode.js';
+import { isArcadePaused } from './arcade-time.js';
+import { spriteFor, drawArcadeSprite } from './arcade-sprites.js';
+import { snakePartSpec, textureSpec } from './arcade-sprite-catalog.js';
 // UserState removed - unused import
 
 // Direction donnée par chaque glissement du doigt
@@ -30,6 +39,122 @@ const SWIPE_VECTORS = {
 };
 // Rayon (pixels CSS) autour de la tête où un toucher n'indique aucune direction
 const TAP_DEAD_ZONE_PX = 30;
+// Direction donnée par chaque flèche du clavier
+const ARROW_DIRECTIONS = new Map([
+  ['ArrowUp', { x: 0, y: -1 }],
+  ['ArrowDown', { x: 0, y: 1 }],
+  ['ArrowLeft', { x: -1, y: 0 }],
+  ['ArrowRight', { x: 1, y: 0 }],
+]);
+// Plateau de téléphone : des cases d'environ 30 px (le doigt, le nombre de la pomme), de 8 à
+// 16 sur le petit côté et jusqu'à 22 sur le grand : plus haut que large en portrait
+const MOBILE_CELL_PX = 30;
+const MOBILE_GRID_MIN = 8;
+const MOBILE_GRID_SHORT_MAX = 16;
+const MOBILE_GRID_LONG_MAX = 22;
+// Plus petite case quand l'écran rétrécit en pleine partie (la grille, elle, ne change pas)
+const MIN_CELL_PX = 8;
+
+/**
+ * Case après un pas, d'un bord à l'autre du plateau.
+ * @param {number} cell - Colonne ou rangée visée (un pas au-delà du plateau au plus)
+ * @param {number} size - Colonnes ou rangées du plateau
+ * @returns {number}
+ */
+function wrapCell(cell, size) {
+  if (cell < 0) return size - 1;
+  if (cell >= size) return 0;
+  return cell;
+}
+
+/**
+ * Écart entre deux segments voisins sur un axe : au-delà de la moitié du plateau, ils se
+ * touchent par le bord opposé.
+ * @param {number} delta - Écart de cases
+ * @param {number} size - Cases sur cet axe
+ * @returns {number} −1, 0 ou 1
+ */
+function wrappedStep(delta, size) {
+  if (Math.abs(delta) > size / 2) return delta < 0 ? 1 : -1;
+  return Math.round(delta);
+}
+
+// Virages du corps : image de chaque paire de directions (haut, droite, bas, gauche), dans
+// un sens ou dans l'autre
+const BODY_CURVES = [
+  [
+    'haut-droite',
+    [
+      [0, -1],
+      [1, 0],
+    ],
+  ],
+  [
+    'droite-bas',
+    [
+      [1, 0],
+      [0, 1],
+    ],
+  ],
+  [
+    'bas-gauche',
+    [
+      [0, 1],
+      [-1, 0],
+    ],
+  ],
+  [
+    'gauche-haut',
+    [
+      [-1, 0],
+      [0, -1],
+    ],
+  ],
+];
+
+function sameDirection(direction, [x, y]) {
+  return direction.x === x && direction.y === y;
+}
+
+/**
+ * Grille du plateau sur téléphone, choisie au lancement pour la place disponible :
+ * plus haute que large en portrait, plus large que haute en paysage.
+ * @param {{width: number, height: number}} box - Place du plateau (pixels CSS)
+ * @returns {{cols: number, rows: number}}
+ */
+export function chooseMobileSnakeGrid(box) {
+  const portrait = box.height >= box.width;
+  const cells = (size, max) =>
+    Math.max(MOBILE_GRID_MIN, Math.min(max, Math.floor(size / MOBILE_CELL_PX)));
+  return {
+    cols: cells(box.width, portrait ? MOBILE_GRID_SHORT_MAX : MOBILE_GRID_LONG_MAX),
+    rows: cells(box.height, portrait ? MOBILE_GRID_LONG_MAX : MOBILE_GRID_SHORT_MAX),
+  };
+}
+
+/**
+ * Tables retirées par le joueur (réglage global des tables), multiplication seulement
+ * @returns {number[]}
+ */
+function excludedTablesOfCurrentUser() {
+  const currentUser = UserManager.getCurrentUser();
+  return TablePreferences.isGlobalEnabled(currentUser)
+    ? TablePreferences.getActiveExclusions(currentUser)
+    : [];
+}
+
+/**
+ * Questions d'une partie : les tables du niveau en ×, ses nombres (facile, moyen, difficile)
+ * en +, − et ÷
+ * @param {{tables?: number[], difficulty?: string}} options - difficulty : niveau de l'Arcade
+ * @returns {{tables: number[], questionDifficulty: string}}
+ */
+function questionSettingsOf(options) {
+  return {
+    tables: Array.isArray(options.tables) ? options.tables : [],
+    questionDifficulty: getDifficultySettings(options.difficulty).questionDifficulty,
+  };
+}
 
 class SnakeGame {
   constructor(canvasId, mode = 'operation', options = {}) {
@@ -43,8 +168,8 @@ class SnakeGame {
       globalThis.navigator?.userAgent || ''
     );
 
-    // Liste des tables autorisées (difficulté)
-    this.tables = Array.isArray(options.tables) ? options.tables : [];
+    // Questions du niveau : tables (×) et nombres (+, −, ÷)
+    Object.assign(this, questionSettingsOf(options));
 
     // Éléments du jeu
     this.canvas = document.getElementById(canvasId);
@@ -86,6 +211,36 @@ class SnakeGame {
     this.currentOperation = null;
 
     // Initialiser le serpent avant tout (évite les erreurs de undefined)
+    this.setInitialSnake();
+
+    // La consigne se pose sur le plateau sans lui prendre de place : il garde sa taille
+    // quand elle part
+    this.showInstructions();
+
+    // Grille choisie une fois pour toutes, puis taille des cases pour la place actuelle
+    this.layoutBoard();
+    this.resizeCanvas();
+
+    // Suivi des écouteurs pour nettoyage propre
+    this.eventListeners = [];
+
+    // Initialiser les contrôles
+    this.initControls();
+
+    // L'écran change (rotation, plein écran) : les cases suivent, et la grille aussi tant
+    // que rien n'est joué
+    this._onResize = () => {
+      if (this._disposed) return;
+      if (!this.relayoutUnplayedBoard()) this.resizeCanvas();
+      this.draw();
+    };
+    this._stopWatchingViewport = watchArcadeViewport(this.canvas, this._onResize);
+
+    this.loadSnakeImages();
+  }
+
+  // Serpent de départ au milieu de la grille de base, tourné vers la droite
+  setInitialSnake() {
     const startX = Math.floor(this.baseCols / 2);
     const startY = Math.floor(this.baseRows / 2);
     this.snake = [
@@ -97,34 +252,11 @@ class SnakeGame {
     // Direction initiale
     this.direction = { x: 1, y: 0 };
     this.nextDirection = { x: 1, y: 0 };
+  }
 
-    // La consigne s'affiche sous le plateau avant le calcul de sa place : l'ensemble
-    // tient dans l'écran sans défilement
-    this.showInstructions();
-
-    // Appliquer le redimensionnement du canvas
-    this.resizeCanvas();
-
-    // Suivi des écouteurs pour nettoyage propre
-    this.eventListeners = [];
-
-    // Initialiser les contrôles
-    this.initControls();
-
-    // Redimensionnement
-    this._onResize = () => {
-      if (this._disposed) return;
-      this.resizeCanvas();
-      this.draw();
-    };
-    globalThis.addEventListener?.('resize', this._onResize);
-    this.eventListeners.push({
-      element: globalThis,
-      type: 'resize',
-      callback: this._onResize,
-      options: false,
-    });
-
+  // Images du serpent (tête, corps, virages et queue dans chaque direction), du logo, de
+  // l'herbe et des pommes
+  loadSnakeImages() {
     // Mapping des sprites pour chaque direction disponible
     this.multisnakeSprites = {
       head: {
@@ -139,12 +271,12 @@ class SnakeGame {
         '0,-1': this.loadSprite('corps_milieu_queue_bas_tete_haut.png'), // corps vertical (haut)
         '0,1': this.loadSprite('corps_milieu_queue_bas_tete_haut.png'), // corps vertical (bas)
       },
-      bodyCurves: {
-        'haut-droite': this.loadSprite('corps_courbe_droite_bas.png'),
-        'droite-bas': this.loadSprite('corps_courbe_haut_droite.png'),
-        'bas-gauche': this.loadSprite('corps_courbe_gauche_haut.png'),
-        'gauche-haut': this.loadSprite('corps_courbe_bas_gauche.png'),
-      },
+      bodyCurves: new Map([
+        ['haut-droite', this.loadSprite('corps_courbe_droite_bas.png')],
+        ['droite-bas', this.loadSprite('corps_courbe_haut_droite.png')],
+        ['bas-gauche', this.loadSprite('corps_courbe_gauche_haut.png')],
+        ['gauche-haut', this.loadSprite('corps_courbe_bas_gauche.png')],
+      ]),
       tail: {
         '1,0': this.loadSprite('queue_fin_droite.png'), // queue tournée vers la droite (serpent va à droite)
         '-1,0': this.loadSprite('queue_fin_gauche.png'), // queue tournée vers la gauche (serpent va à gauche)
@@ -153,18 +285,49 @@ class SnakeGame {
       },
     };
 
-    // Ajout d'une propriété pour le logo du jeu
-    this.logoImg = new Image();
-    this.logoImg.src = 'assets/images/arcade/logo_multimiam_128x128.png';
-    // Chargement de la texture d'herbe
-    this.grassTexture = new Image();
-    this.grassTexture.src = 'assets/images/arcade/herbe.png';
-    // Texture pour fond réponses (snake_apple)
-    this.appleTexture = new Image();
-    this.appleTexture.src = 'assets/images/arcade/snake_apple_128x128.png';
+    // Herbe du plateau et pommes des réponses
+    this.grassTexture = spriteFor(textureSpec('herbe.png'));
+    this.appleTexture = spriteFor(textureSpec('snake_apple.png'));
   }
 
-  // Redimensionner le canvas
+  // Grille du plateau, choisie au lancement pour toute la place : sur téléphone, plus haute
+  // que large en portrait ; sur ordinateur, 14 × 11. Elle ne change plus pendant la partie
+  // (le serpent et les pommes y restent).
+  layoutBoard() {
+    if (!this.isMobile) {
+      this.cols = this.baseCols;
+      this.rows = this.baseRows;
+      return;
+    }
+    const box = getArcadeCanvasBox(this.canvas);
+    ({ cols: this.cols, rows: this.rows } = chooseMobileSnakeGrid(box));
+  }
+
+  // Rien n'est encore joué : aucune pomme mangée, aucune vie perdue
+  isUnplayed() {
+    const allApples = this.numberPositions.length === this.answers.length;
+    return this.score === 0 && this.lives === 3 && this.multisnake.length === 2 && allApples;
+  }
+
+  /**
+   * Plein écran juste après le lancement, téléphone tourné avant de jouer : tant que rien
+   * n'est joué, la grille se refait pour la nouvelle place (le serpent repart du milieu, les
+   * pommes se replacent, le calcul reste). L'enfant ne perd rien.
+   * @returns {boolean} Vrai si la grille a changé
+   */
+  relayoutUnplayedBoard() {
+    if (!this.isUnplayed()) return false;
+    const { cols, rows } = this;
+    this.layoutBoard();
+    if (this.cols === cols && this.rows === rows) return false;
+    this.resizeCanvas();
+    this.initializeSnakePosition();
+    this.placeNumbers();
+    return true;
+  }
+
+  // Taille des cases pour la place actuelle (sous le bandeau, avec « Abandonner ») : à
+  // chaque changement d'écran, seul l'affichage suit
   resizeCanvas() {
     // Éviter tout traitement après nettoyage
     if (this._disposed) return;
@@ -181,49 +344,15 @@ class SnakeGame {
       return;
     }
 
-    // Place réelle du plateau : sous le bandeau, avec la consigne et « Abandonner »
     const box = getArcadeCanvasBox(this.canvas);
-    const containerWidth = Math.max(200, box.width);
-    const containerHeight = Math.max(200, box.height);
-
-    // Adapter la grille à la taille du canvas
-    if (this.isMobile) {
-      this.cols = Math.max(8, Math.min(16, Math.floor(containerWidth / 30)));
-      this.rows = Math.max(8, Math.min(16, Math.floor(containerHeight / 30)));
-    } else {
-      this.cols = this.baseCols;
-      this.rows = this.baseRows;
-    }
-
     this.cellSize = Math.max(
-      20,
-      Math.floor(Math.min(containerWidth / this.cols, containerHeight / this.rows))
+      MIN_CELL_PX,
+      Math.floor(Math.min(box.width / this.cols, box.height / this.rows))
     );
 
-    // Ajuster la taille du canvas pour qu'elle corresponde exactement à la grille
-    this.canvas.width = this.cols * this.cellSize;
-    this.canvas.height = this.rows * this.cellSize;
-
-    // Force aspect-ratio carré pour éviter déformation sur mobile
-    if (this.isMobile) {
-      const size = Math.min(this.canvas.width, this.canvas.height);
-      this.canvas.width = size;
-      this.canvas.height = size;
-      // Recalculer les dimensions de grille pour le canvas carré
-      this.cols = Math.floor(size / this.cellSize);
-      this.rows = Math.floor(size / this.cellSize);
-      this.cellSize = Math.floor(size / Math.max(this.cols, this.rows));
-
-      this.canvas.style.width = size + 'px';
-      this.canvas.style.height = size + 'px';
-      // Assurer image-rendering pixel-perfect
-      this.canvas.style.imageRendering = 'pixelated';
-      this.canvas.style.imageRendering = '-moz-crisp-edges';
-      this.canvas.style.imageRendering = 'crisp-edges';
-    } else {
-      this.canvas.style.width = this.canvas.width + 'px';
-      this.canvas.style.height = this.canvas.height + 'px';
-    }
+    // Le canevas correspond exactement à la grille, affiché à sa taille, net à la densité
+    // de l'écran : les touchers se convertissent en unités du jeu (js/arcade-common.js)
+    sizeArcadeCanvas(this.canvas, this.cols * this.cellSize, this.rows * this.cellSize);
 
     this.canvas.style.display = 'block';
     this.canvas.style.margin = '0 auto';
@@ -232,7 +361,7 @@ class SnakeGame {
     this.canvas.style.boxSizing = 'content-box';
 
     console.log(
-      `Snake: Canvas redimensionné: ${this.canvas.width}x${this.canvas.height}, grille: ${this.cols}x${this.rows}, cellule: ${this.cellSize}px`
+      `Snake: plateau ${this.cols * this.cellSize}x${this.rows * this.cellSize} (interne ${this.canvas.width}x${this.canvas.height}), grille: ${this.cols}x${this.rows}, cellule: ${this.cellSize}px`
     );
   }
 
@@ -311,40 +440,20 @@ class SnakeGame {
     if (!this.steer(primary)) this.steer(secondary);
   }
 
-  // Gérer les touches du clavier
+  // Gérer les touches du clavier : une flèche oriente le serpent (jamais en demi-tour),
+  // Espace relance une partie finie
   handleKeyDown(e) {
-    switch (e.key) {
-      case 'ArrowUp':
-        e.preventDefault(); // Empêcher le scroll de la page
-        if (this.direction.y !== 1) {
-          this.nextDirection = { x: 0, y: -1 };
-        }
-        break;
-      case 'ArrowDown':
-        e.preventDefault(); // Empêcher le scroll de la page
-        if (this.direction.y !== -1) {
-          this.nextDirection = { x: 0, y: 1 };
-        }
-        break;
-      case 'ArrowLeft':
-        e.preventDefault(); // Empêcher le scroll de la page
-        if (this.direction.x !== 1) {
-          this.nextDirection = { x: -1, y: 0 };
-        }
-        break;
-      case 'ArrowRight':
-        e.preventDefault(); // Empêcher le scroll de la page
-        if (this.direction.x !== -1) {
-          this.nextDirection = { x: 1, y: 0 };
-        }
-        break;
-      case ' ':
-        e.preventDefault(); // Empêcher le scroll de la page
-        if (this.gameOver) {
-          this.start();
-        }
-        break;
+    const arrow = ARROW_DIRECTIONS.get(e.key);
+    if (arrow) {
+      e.preventDefault(); // Empêcher le scroll de la page
+      if (arrow.x !== -this.direction.x || arrow.y !== -this.direction.y) {
+        this.nextDirection = { ...arrow };
+      }
+      return;
     }
+    if (e.key !== ' ') return;
+    e.preventDefault(); // Empêcher le scroll de la page
+    if (this.gameOver) this.start();
   }
 
   // Démarrer le jeu
@@ -464,53 +573,35 @@ class SnakeGame {
         this.canvas.focus({ preventScroll: true });
 
         // Fallback: forcer le scroll à 0 si preventScroll n'a pas fonctionné
-        if (window.scrollY !== scrollBefore && window.scrollY !== 0) {
-          window.scrollTo({ top: 0, behavior: 'instant' });
-        }
+        if (window.scrollY !== scrollBefore) this.scrollBackToTop();
       }
     } catch {
-      try {
-        if (this.canvas) {
-          this.canvas.focus();
-          // Forcer scroll à 0 même en cas d'erreur
-          if (window.scrollY !== 0) {
-            window.scrollTo({ top: 0, behavior: 'instant' });
-          }
-        }
-      } catch {
-        /* no-op */
-      }
+      this.focusCanvasPlainly();
     }
+  }
+
+  // Repli quand preventScroll n'est pas accepté : focus simple, puis haut de page
+  focusCanvasPlainly() {
+    try {
+      if (!this.canvas) return;
+      this.canvas.focus();
+      // Forcer scroll à 0 même en cas d'erreur
+      this.scrollBackToTop();
+    } catch {
+      /* no-op */
+    }
+  }
+
+  // La page revient en haut si elle a défilé
+  scrollBackToTop() {
+    if (window.scrollY !== 0) window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   // Générer une opération mathématique
   generateOperation() {
     try {
-      // Appliquer l'exclusion globale de tables
-      const currentUser = UserManager.getCurrentUser();
-      const excluded = TablePreferences.isGlobalEnabled(currentUser)
-        ? TablePreferences.getActiveExclusions(currentUser)
-        : [];
-
       // Utiliser generateQuestion pour cohérence avec le système centralisé (R4.4: multi-ops)
-      const questionData = generateQuestion({
-        type: 'classic',
-        operator: this.operator, // Support +, −, ×, ÷
-        difficulty: 'medium',
-        excludeTables: this.operator === '×' ? excluded : [],
-        tables:
-          this.operator === '×' && Array.isArray(this.tables) && this.tables.length > 0
-            ? this.tables
-            : undefined,
-        forceTable:
-          this.operator === '×' && this.mode === 'table' && this.tableNumber
-            ? this.tableNumber
-            : null,
-        minTable: 1,
-        maxTable: 10,
-        minNum: 1,
-        maxNum: 10,
-      });
+      const questionData = generateQuestion(this.questionOptions());
 
       this.currentOperation = {
         num1: questionData.a,
@@ -528,16 +619,34 @@ class SnakeGame {
     }
   }
 
-  // Générer les réponses
-  generateAnswers(correctResult) {
-    const answers = [
-      { value: correctResult, isCorrect: true },
-      { value: correctResult + 1, isCorrect: false },
-      { value: correctResult - 1, isCorrect: false },
-      { value: correctResult + 10, isCorrect: false },
-    ];
+  // Options de la question : en ×, les tables du niveau, sans les tables retirées par le
+  // joueur ; en +, − et ÷, les nombres du niveau
+  questionOptions() {
+    const isMultiplication = this.operator === '×';
+    return {
+      type: 'classic',
+      operator: this.operator, // Support +, −, ×, ÷
+      difficulty: this.questionDifficulty,
+      excludeTables: isMultiplication ? excludedTablesOfCurrentUser() : [],
+      tables: isMultiplication && this.tables.length > 0 ? this.tables : undefined,
+      forceTable:
+        isMultiplication && this.mode === 'table' && this.tableNumber ? this.tableNumber : null,
+      minTable: 1,
+      maxTable: 10,
+      minNum: 1,
+      maxNum: 10,
+    };
+  }
 
-    return shuffleInPlace(answers);
+  // Bonne réponse et trois leurres, ceux des autres modes : des erreurs d'enfant plausibles
+  // (un de plus ou de moins, une table à côté…), jamais négatifs ni égaux à la bonne
+  // réponse. Avant, les leurres valaient c + 1, c − 1 et c + 10 : la bonne réponse était
+  // toujours le milieu de trois nombres qui se suivent, et « −1 » sortait pour un résultat nul.
+  generateAnswers(correctResult) {
+    const { num1, num2 } = this.currentOperation ?? {};
+    const question = { answer: correctResult, operator: this.operator, a: num1, b: num2 };
+    const decoys = plausibleWrongAnswers(question, 3).map(value => ({ value, isCorrect: false }));
+    return shuffleInPlace([{ value: correctResult, isCorrect: true }, ...decoys]);
   }
 
   // Placer les nombres sur la grille
@@ -590,6 +699,18 @@ class SnakeGame {
     const deltaTime = timestamp - this.lastUpdateTime;
     this.lastUpdateTime = timestamp;
 
+    // En pause (Arcade), le serpent ne bouge plus : le temps de la pause ne compte pas
+    if (!isArcadePaused()) this.advance(deltaTime);
+
+    // Dessiner le jeu avec l'animation
+    this.draw();
+
+    // Continuer la boucle
+    this.animationId = requestAnimationFrame(time => this.gameLoop(time));
+  }
+
+  // Fait avancer le serpent du temps écoulé, d'une case à chaque intervalle
+  advance(deltaTime) {
     // Mettre à jour le temps écoulé depuis le dernier mouvement
     this.moveTime += deltaTime;
 
@@ -611,12 +732,6 @@ class SnakeGame {
       this.moveTime = 0;
       this.animationProgress = 0;
     }
-
-    // Dessiner le jeu avec l'animation
-    this.draw();
-
-    // Continuer la boucle
-    this.animationId = requestAnimationFrame(time => this.gameLoop(time));
   }
 
   // Mettre à jour la logique du jeu (sans dessiner)
@@ -625,86 +740,16 @@ class SnakeGame {
 
     // Mettre à jour la direction
     this.direction = this.nextDirection;
-
-    // Obtenir la position de la tête
-
-    const head = { ...this.multisnake[0] };
-
-    // Déplacer la tête dans la direction actuelle
-    head.x += this.direction.x;
-    head.y += this.direction.y;
-
-    // Vérifier les collisions avec les bords
-    if (head.x < 0) {
-      head.x = this.cols - 1;
-    } else if (head.x >= this.cols) {
-      head.x = 0;
-    }
-    if (head.y < 0) {
-      head.y = this.rows - 1;
-    } else if (head.y >= this.rows) {
-      head.y = 0;
-    }
+    const head = this.nextHeadPosition();
 
     // Vérifier les collisions avec le serpent
-    for (const segment of this.multisnake) {
-      if (head.x === segment.x && head.y === segment.y) {
-        this.loseLife();
-        return;
-      }
+    if (this.hitsItself(head)) {
+      this.loseLife();
+      return;
     }
 
-    // Vérifier les collisions avec les nombres
-    let numberEaten = false;
-
-    for (let i = 0; i < this.numberPositions.length; i++) {
-      const pos = this.numberPositions[i];
-
-      if (head.x === pos.x && head.y === pos.y) {
-        numberEaten = true;
-
-        if (pos.isCorrect) {
-          recordOperationResult(
-            this.operator,
-            this.currentOperation.num1,
-            this.currentOperation.num2,
-            true
-          );
-          // bonne réponse mangée
-          this.score += 100;
-          // Affichage du gain de points, au-dessus de la pomme mangée
-          showArcadePoints(100, this.canvas, this.cellPoint(pos));
-          // Augmenter la vitesse
-          this.moveInterval = Math.max(this.minSpeed, this.moveInterval - this.speedIncrement);
-
-          // Faire grandir le serpent
-          this.multisnake.unshift(head);
-
-          // Générer une nouvelle opération
-          this.generateOperation();
-          this.placeNumbers();
-        } else {
-          recordOperationResult(
-            this.operator,
-            this.currentOperation.num1,
-            this.currentOperation.num2,
-            false
-          );
-          // Mauvaise réponse : on perd 50 points (au plus ce qu'on a) mais pas de vie,
-          // et on retire la bulle ; la pastille montre ce qui a vraiment été retiré
-          const removed = Math.min(this.score, 50);
-          this.score -= removed;
-          showArcadePenalty(removed, this.canvas, this.cellPoint(pos));
-          this.numberPositions.splice(i, 1);
-          // On continue le déplacement normal du serpent (pas de break ni return)
-        }
-
-        break;
-      }
-    }
-
-    if (!numberEaten) {
-      // Déplacer le serpent
+    // Une pomme mangée occupe ce pas ; sinon le serpent avance, la queue suit
+    if (!this.eatAppleAt(head)) {
       this.multisnake.unshift(head);
       this.multisnake.pop();
     }
@@ -713,9 +758,73 @@ class SnakeGame {
     this.updateScoreDisplay();
   }
 
+  // Case suivante de la tête, dans la direction actuelle, d'un bord à l'autre du plateau
+  nextHeadPosition() {
+    const head = this.multisnake[0];
+    return {
+      x: wrapCell(head.x + this.direction.x, this.cols),
+      y: wrapCell(head.y + this.direction.y, this.rows),
+    };
+  }
+
+  // La tête arrive-t-elle sur le corps ?
+  hitsItself(head) {
+    return this.multisnake.some(segment => head.x === segment.x && head.y === segment.y);
+  }
+
+  /**
+   * Pomme sous la tête : la bonne fait grandir le serpent et pose un autre calcul ; une
+   * mauvaise retire des points et disparaît, et le serpent reste sur place ce pas-là.
+   * @param {{x: number, y: number}} head
+   * @returns {boolean} Vrai si une pomme est mangée
+   */
+  eatAppleAt(head) {
+    const index = this.numberPositions.findIndex(pos => head.x === pos.x && head.y === pos.y);
+    if (index === -1) return false;
+    const pos = this.numberPositions.at(index);
+    // Une bulle mangée : la partie est jouée (tableau de bord)
+    noteArcadePlay();
+    if (pos.isCorrect) this.eatGoodApple(head, pos);
+    else this.eatWrongApple(index, pos);
+    return true;
+  }
+
+  // Bonne réponse : 100 points, le serpent grandit et accélère, un autre calcul
+  eatGoodApple(head, pos) {
+    this.recordAnswer(true);
+    this.score += 100;
+    // Affichage du gain de points, au-dessus de la pomme mangée
+    showArcadePoints(100, this.canvas, this.cellPoint(pos));
+    // Augmenter la vitesse
+    this.moveInterval = Math.max(this.minSpeed, this.moveInterval - this.speedIncrement);
+    // Faire grandir le serpent
+    this.multisnake.unshift(head);
+    // Générer une nouvelle opération
+    this.generateOperation();
+    this.placeNumbers();
+  }
+
+  // Mauvaise réponse : on perd 50 points (au plus ce qu'on a) mais pas de vie, et on
+  // retire la bulle ; la pastille montre ce qui a vraiment été retiré
+  eatWrongApple(index, pos) {
+    this.recordAnswer(false);
+    const removed = Math.min(this.score, 50);
+    this.score -= removed;
+    showArcadePenalty(removed, this.canvas, this.cellPoint(pos));
+    this.numberPositions.splice(index, 1);
+  }
+
+  // Calcul en cours compté juste ou faux dans les statistiques
+  recordAnswer(correct) {
+    const { num1, num2 } = this.currentOperation;
+    recordOperationResult(this.operator, num1, num2, correct);
+  }
+
   // Méthode centralisée pour nettoyer toutes les ressources du jeu
   cleanup() {
     this._disposed = true;
+    // Posé par le constructeur ; un second appel ne fait rien
+    this._stopWatchingViewport();
     // S'assurer que le jeu est arrêté
     this.gameOver = true;
 
@@ -802,14 +911,20 @@ class SnakeGame {
   // Dessiner le jeu
   draw() {
     if (!this.ctx || !this.canvas) return;
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const { width, height } = getArcadeCanvasSize(this.canvas);
+    this.ctx.clearRect(0, 0, width, height);
 
-    // Dessiner le fond herbe en plein écran (pas de répétition)
-    if (this.grassTexture && this.grassTexture.complete && this.grassTexture.naturalHeight !== 0) {
-      this.ctx.drawImage(this.grassTexture, 0, 0, this.canvas.width, this.canvas.height);
-    } else {
+    // L'herbe couvre tout le plateau, à ses proportions (rognée aux bords)
+    if (
+      !drawArcadeSprite(
+        this.ctx,
+        this.grassTexture,
+        { x: 0, y: 0, width, height },
+        { fit: 'cover' }
+      )
+    ) {
       this.ctx.fillStyle = '#000000';
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(0, 0, width, height);
     }
 
     // Dessiner les nombres
@@ -836,16 +951,9 @@ class SnakeGame {
       // Décalages pour centrer numéros : pomme un peu plus haut, texte un peu plus bas
       const appleOffsetY = -size * 0.05;
       const textOffsetY = size * 0.05;
-      if (this.appleTexture.complete && this.appleTexture.naturalWidth) {
-        // Dessiner la pomme légèrement vers le haut
-        this.ctx.drawImage(
-          this.appleTexture,
-          x - size / 2,
-          y - size / 2 + appleOffsetY,
-          size,
-          size
-        );
-      } else {
+      // La pomme, légèrement vers le haut ; un rond bleu tant que son image n'est pas arrivée
+      const apple = { x: x - size / 2, y: y - size / 2 + appleOffsetY, width: size, height: size };
+      if (!drawArcadeSprite(this.ctx, this.appleTexture, apple)) {
         this.ctx.beginPath();
         const radius = size / 2;
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -876,79 +984,61 @@ class SnakeGame {
   // Dessiner le serpent avec animation fluide
   drawSnake() {
     // Si pas de positions précédentes ou animation terminée, dessiner directement
-    if (
-      this.animationProgress >= 1 ||
-      this.lastPositions.length === 0 ||
-      this.lastPositions.length !== this.multisnake.length
-    ) {
+    if (!this.isBetweenCells()) {
       this.drawSnakeAtPositions(this.multisnake);
       return;
     }
 
-    // Créer un tableau de positions interpolées pour l'animation
-    const interpolatedSnake = [];
-
-    for (let i = 0; i < this.multisnake.length; i++) {
-      const current = this.multisnake[i];
-
-      const last = this.lastPositions[i];
-      // Détecter si on a traversé un bord (téléportation)
-      const dx = current.x - last.x;
-      const dy = current.y - last.y;
-      const teleportX = Math.abs(dx) > 1;
-      const teleportY = Math.abs(dy) > 1;
-      // Calculer la position interpolée en gérant le wrap-around
-      let newX;
-      if (teleportX) {
-        const shiftX = this.direction.x > 0 ? this.cols : -this.cols;
-        const extendedX = current.x + shiftX;
-        newX = last.x + (extendedX - last.x) * this.animationProgress;
-        newX = ((newX % this.cols) + this.cols) % this.cols;
-      } else {
-        newX = last.x + dx * this.animationProgress;
-      }
-      let newY;
-      if (teleportY) {
-        const shiftY = this.direction.y > 0 ? this.rows : -this.rows;
-        const extendedY = current.y + shiftY;
-        newY = last.y + (extendedY - last.y) * this.animationProgress;
-        newY = ((newY % this.rows) + this.rows) % this.rows;
-      } else {
-        newY = last.y + dy * this.animationProgress;
-      }
-      interpolatedSnake.push({ x: newX, y: newY });
-    }
+    // Positions interpolées pour l'animation
+    const interpolatedSnake = this.multisnake.map((current, i) => {
+      const last = this.lastPositions.at(i);
+      return {
+        x: this.interpolateCell(last.x, current.x, this.direction.x, this.cols),
+        y: this.interpolateCell(last.y, current.y, this.direction.y, this.rows),
+      };
+    });
 
     // Dessiner le serpent avec les positions interpolées
     this.drawSnakeAtPositions(interpolatedSnake);
   }
 
+  // Entre deux cases : animation en cours et position précédente de chaque segment connue
+  isBetweenCells() {
+    const known = this.lastPositions.length;
+    return this.animationProgress < 1 && known !== 0 && known === this.multisnake.length;
+  }
+
+  /**
+   * Position d'un segment sur un axe pendant l'animation. Un bord franchi (téléportation) :
+   * le segment glisse hors du plateau et revient de l'autre côté.
+   * @param {number} last - Case précédente
+   * @param {number} current - Case actuelle
+   * @param {number} step - Direction sur cet axe (−1, 0, 1)
+   * @param {number} size - Cases sur cet axe
+   * @returns {number}
+   */
+  interpolateCell(last, current, step, size) {
+    const delta = current - last;
+    if (Math.abs(delta) <= 1) return last + delta * this.animationProgress;
+    const extended = current + (step > 0 ? size : -size);
+    const position = last + (extended - last) * this.animationProgress;
+    return ((position % size) + size) % size;
+  }
+
   // Dessiner le serpent à des positions spécifiques
   calculateSegmentDirections(prev, segment, next) {
-    const dirIn = {
-      x: Math.round(next.x - segment.x),
-      y: Math.round(next.y - segment.y),
+    return {
+      dirIn: this.directionToward(segment, next),
+      dirOut: this.directionToward(segment, prev),
     };
-    const dirOut = {
-      x: Math.round(prev.x - segment.x),
-      y: Math.round(prev.y - segment.y),
+  }
+
+  // Direction d'un segment vers son voisin, par le bord opposé quand il l'a franchi
+  directionToward(segment, neighbour) {
+    return {
+      x: wrappedStep(neighbour.x - segment.x, this.cols),
+      y: wrappedStep(neighbour.y - segment.y, this.rows),
     };
-
-    // Gérer les cas spéciaux de téléportation pour les directions
-    if (Math.abs(next.x - segment.x) > this.cols / 2) {
-      dirIn.x = next.x < segment.x ? 1 : -1;
-    }
-    if (Math.abs(prev.x - segment.x) > this.cols / 2) {
-      dirOut.x = prev.x < segment.x ? 1 : -1;
-    }
-    if (Math.abs(next.y - segment.y) > this.rows / 2) {
-      dirIn.y = next.y < segment.y ? 1 : -1;
-    }
-    if (Math.abs(prev.y - segment.y) > this.rows / 2) {
-      dirOut.y = prev.y < segment.y ? 1 : -1;
-    }
-
-    return { dirIn, dirOut };
   }
 
   normalizeDirection(direction) {
@@ -965,33 +1055,28 @@ class SnakeGame {
     const x = segment.x * this.cellSize;
     const y = segment.y * this.cellSize;
 
-    if (curveKey && this.multisnakeSprites.bodyCurves[curveKey]) {
-      this.ctx.drawImage(
-        this.multisnakeSprites.bodyCurves[curveKey],
-        x,
-        y,
-        this.cellSize,
-        this.cellSize
-      );
+    const curve = this.multisnakeSprites.bodyCurves.get(curveKey);
+    if (curve) {
+      this.drawCellSprite(curve, x, y);
     } else {
       const bodyKey = `${dirIn.x},${dirIn.y}`;
 
       const bodySprite = this.multisnakeSprites.body[bodyKey] || this.multisnakeSprites.body['1,0'];
-      this.ctx.drawImage(bodySprite, x, y, this.cellSize, this.cellSize);
+      this.drawCellSprite(bodySprite, x, y);
     }
+  }
+
+  // Morceau du serpent : il remplit sa case pour se raccorder à ses voisins
+  drawCellSprite(sprite, x, y) {
+    const cell = { x, y, width: this.cellSize, height: this.cellSize };
+    drawArcadeSprite(this.ctx, sprite, cell, { fit: 'fill' });
   }
 
   drawSnakeHead(head) {
     const dirKey = `${this.direction.x},${this.direction.y}`;
 
     const headSprite = this.multisnakeSprites.head[dirKey] || this.multisnakeSprites.body['1,0'];
-    this.ctx.drawImage(
-      headSprite,
-      head.x * this.cellSize,
-      head.y * this.cellSize,
-      this.cellSize,
-      this.cellSize
-    );
+    this.drawCellSprite(headSprite, head.x * this.cellSize, head.y * this.cellSize);
   }
 
   calculateTailDirection(tail, beforeTail) {
@@ -1025,13 +1110,7 @@ class SnakeGame {
     const tailKey = `${tailDir.x},${tailDir.y}`;
 
     const tailSprite = this.multisnakeSprites.tail[tailKey] || this.multisnakeSprites.tail['1,0'];
-    this.ctx.drawImage(
-      tailSprite,
-      tail.x * this.cellSize,
-      tail.y * this.cellSize,
-      this.cellSize,
-      this.cellSize
-    );
+    this.drawCellSprite(tailSprite, tail.x * this.cellSize, tail.y * this.cellSize);
   }
 
   drawSnakeAtPositions(multisnakePositions) {
@@ -1082,65 +1161,19 @@ class SnakeGame {
     return { x: (cell.x + 0.5) * this.cellSize, y: cell.y * this.cellSize };
   }
 
-  // Méthode utilitaire pour charger une image
+  // Morceau du serpent (« tete_droite.png ») : sa variante se charge à la taille d'une case
   loadSprite(filename) {
-    const img = new Image();
-    img.src = 'assets/images/arcade/' + filename;
-    return img;
+    return spriteFor(snakePartSpec(filename));
   }
 
   // Fonction utilitaire pour détecter la clé de courbe, peu importe le sens
   getCurveKey(dirIn, dirOut) {
-    const mapping = {
-      'haut-droite': [
-        [
-          { x: 0, y: -1 },
-          { x: 1, y: 0 },
-        ], // haut puis droite
-        [
-          { x: 1, y: 0 },
-          { x: 0, y: -1 },
-        ], // droite puis haut
-      ],
-      'droite-bas': [
-        [
-          { x: 1, y: 0 },
-          { x: 0, y: 1 },
-        ],
-        [
-          { x: 0, y: 1 },
-          { x: 1, y: 0 },
-        ],
-      ],
-      'bas-gauche': [
-        [
-          { x: 0, y: 1 },
-          { x: -1, y: 0 },
-        ],
-        [
-          { x: -1, y: 0 },
-          { x: 0, y: 1 },
-        ],
-      ],
-      'gauche-haut': [
-        [
-          { x: -1, y: 0 },
-          { x: 0, y: -1 },
-        ],
-        [
-          { x: 0, y: -1 },
-          { x: -1, y: 0 },
-        ],
-      ],
-    };
-    for (const key in mapping) {
-      for (const [a, b] of mapping[key]) {
-        if (dirIn.x === a.x && dirIn.y === a.y && dirOut.x === b.x && dirOut.y === b.y) {
-          return key;
-        }
-      }
-    }
-    return null;
+    const curve = BODY_CURVES.find(
+      ([, [a, b]]) =>
+        (sameDirection(dirIn, a) && sameDirection(dirOut, b)) ||
+        (sameDirection(dirIn, b) && sameDirection(dirOut, a))
+    );
+    return curve ? curve[0] : null;
   }
 }
 

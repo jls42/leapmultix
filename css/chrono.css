@@ -26,7 +26,7 @@
   padding-top: var(--space-2);
 }
 
-.chrono-input-mode h3 {
+.chrono-input-mode h2 {
   margin: 0;
 }
 
@@ -54,6 +54,7 @@
   align-self: stretch;
 }
 
+.chrono-block h2,
 .chrono-block h3 {
   margin: 0;
 }
@@ -318,10 +319,16 @@
   content: '';
 }
 
-.chrono-basket-remove:hover,
 .chrono-basket-remove:focus-visible {
   color: var(--color-danger-ink);
   background: var(--color-danger-tint);
+}
+
+@media (hover: hover) {
+  .chrono-basket-remove:hover {
+    color: var(--color-danger-ink);
+    background: var(--color-danger-tint);
+  }
 }
 
 .trash-icon {

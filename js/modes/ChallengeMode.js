@@ -7,6 +7,7 @@
  */
 
 import { GameMode, GOOD_SOUND_MS } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
 import {
   getTranslation,
   showCoinGainAnimation,
@@ -29,6 +30,7 @@ import {
 } from '../ui-feedback.js';
 import { goToSlide } from '../slides.js';
 import { UserState } from '../core/userState.js';
+import { appendProgressHistory, recordChallengeBest } from '../core/mode-stats.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { TablePreferences } from '../core/tablePreferences.js';
@@ -50,6 +52,9 @@ export class ChallengeMode extends GameMode {
       autoProgress: true,
       showScore: true,
       initialTime: 60, // Temps par défaut (modifié selon difficulté)
+      // Après une erreur, la bonne réponse reste 5 s au moins, le temps de la lire même voix
+      // coupée ; le décompte est arrêté pendant ce temps (onWrongAnswerPause)
+      wrongAnswerDelay: 5000,
     });
 
     // État spécifique au Challenge
@@ -79,7 +84,7 @@ export class ChallengeMode extends GameMode {
                     <p data-translate="challenge_intro">${getTranslation('challenge_intro')}</p>
 
                     <div class="difficulty-selector" role="group" aria-labelledby="challenge-difficulty-title">
-                        <h3 id="challenge-difficulty-title" data-translate="choose_difficulty">${getTranslation('choose_difficulty')}</h3>
+                        <h2 class="section-title" id="challenge-difficulty-title" data-translate="choose_difficulty">${getTranslation('choose_difficulty')}</h2>
                         <div class="difficulty-options">
                             <button type="button" class="difficulty-btn" data-difficulty="easy" data-translate="challenge_easy">${getTranslation('challenge_easy')}</button>
                             <button type="button" class="difficulty-btn" data-difficulty="medium" data-translate="challenge_medium">${getTranslation('challenge_medium')}</button>
@@ -116,6 +121,12 @@ export class ChallengeMode extends GameMode {
   resetState() {
     super.resetState();
     this.sessionBestStreak = 0;
+    this._abandoned = false;
+  }
+
+  /** Le Défi compte ses parties au tableau de bord, dès la première réponse */
+  countsGames() {
+    return true;
   }
 
   /**
@@ -149,7 +160,7 @@ export class ChallengeMode extends GameMode {
   setupGameControls() {
     const abandonBtn = document.getElementById('challenge-abandon');
     if (abandonBtn) {
-      abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+      abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
     }
   }
 
@@ -236,18 +247,46 @@ export class ChallengeMode extends GameMode {
   }
 
   /**
-   * Demander confirmation d'abandon
+   * Demander confirmation d'abandon (game-exit.js) ; la partie a pu finir pendant la question
+   * @returns {Promise<void>}
    */
-  confirmAbandon() {
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_challenge'))) {
-      this.finish();
-    }
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
+    this.recordAbandon();
+    this.finish();
+  }
+
+  /** Le décompte attend la réponse à la question de sortie : la lire ne coûte pas de temps */
+  beforeAsking() {
+    this._askingToLeave = true;
+    if (this.timerInterval) this._countdownHeld = true;
+    this.onWrongAnswerPause();
+  }
+
+  /**
+   * Partie continuée : le décompte repart s'il tournait, ou si l'explication d'une erreur
+   * s'est finie pendant la question
+   * @param {boolean} leaving
+   */
+  afterAsking(leaving) {
+    this._askingToLeave = false;
+    if (this._countdownHeld && !leaving) this.onWrongAnswerResume();
+    this._countdownHeld = false;
+  }
+
+  /** Partie en cours (game-exit.js) : la difficulté choisie, jusqu'à l'enregistrement */
+  isGameInProgress() {
+    return this.state.isActive && this.phase === 'playing' && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_challenge');
+  }
+
+  /** Un défi abandonné reste compté, mais son score n'est pas un record */
+  recordAbandon() {
+    this._abandoned = true;
+    this.saveResultsOnce();
   }
 
   /**
@@ -347,17 +386,15 @@ export class ChallengeMode extends GameMode {
       }
     }
 
-    // Enregistrer dans l'historique utilisateur
+    // Enregistrer dans l'historique utilisateur (borné : les compteurs portent le reste)
     const userData = UserState.getCurrentUserData();
-    if (!userData.progressHistory) userData.progressHistory = [];
-
-    userData.progressHistory.push({
+    appendProgressHistory(userData, {
       question: `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
       mode: 'challenge',
       difficulty: this.difficulty,
-      operator, // NOUVEAU
+      operator,
       userAnswer: userAnswer,
       correctAnswer: this.state.currentQuestion.answer,
     });
@@ -455,12 +492,23 @@ export class ChallengeMode extends GameMode {
       showFeedback(this.feedbackElement.id, message, type, speakIt);
     } catch {
       // Fallback sécurisé sans innerHTML
-      if (typeof setSafeFeedback !== 'undefined') {
+      if (setSafeFeedback !== undefined) {
         setSafeFeedback(this.feedbackElement, message, type);
       } else {
         this.feedbackElement.textContent = message;
         this.feedbackElement.className = `feedback-${type}`;
       }
+    }
+  }
+
+  /** Tableau de bord : le meilleur score d'un défi terminé, dans sa difficulté et son opération */
+  recordDashboardBest(userData) {
+    if (!this._abandoned && this.state.questionCount > 0) {
+      recordChallengeBest(userData, {
+        operator: this._statsOperator ?? '×',
+        difficulty: this.difficulty,
+        score: this.state.score,
+      });
     }
   }
 
@@ -509,6 +557,8 @@ export class ChallengeMode extends GameMode {
 
     // Mettre à jour la meilleure série globale
     userData.bestStreak = Math.max(userData.bestStreak || 0, this.state.streak);
+
+    this.recordDashboardBest(userData);
 
     // Sauvegarder AVANT les badges : checkAndUnlockBadge enregistre sa propre copie des
     // données ; réécrire ensuite cette copie-ci effacerait le badge tout juste gagné
@@ -634,8 +684,12 @@ export class ChallengeMode extends GameMode {
     this.timerInterval = null;
   }
 
-  /** Question suivante après une erreur : le décompte repart */
+  /** Question suivante après une erreur : le décompte repart, sauf pendant la question de sortie */
   onWrongAnswerResume() {
+    if (this._askingToLeave) {
+      this._countdownHeld = true;
+      return;
+    }
     if (this.state.isActive && this.state.timeLeft > 0 && !this.timerInterval) this.startTimer();
   }
 

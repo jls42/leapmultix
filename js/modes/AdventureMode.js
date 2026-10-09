@@ -14,8 +14,9 @@
  */
 
 import { GameMode } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
 import { getAdventureLevelsByOperator } from '../core/adventure-data.js';
-import { createSafeImage, createSafeElement } from '../security-utils.js';
+import { createSafeElement } from '../security-utils.js';
 import {
   getTranslation,
   showCoinGainAnimation,
@@ -42,15 +43,26 @@ import {
   scrollToScreenTop,
 } from '../ui-feedback.js';
 import { UserState } from '../core/userState.js';
+import { appendProgressHistory } from '../core/mode-stats.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { chance, randomInt } from '../core/random.js';
+import { accessibilityManager } from '../accessibility.js';
+import { attachImageFallbacks, createWebpImage, webpImageAttributes } from '../webp-images.js';
+import { HEAD_SIZES, normalizeAvatarId, setAvatarHead } from '../avatar-heads.js';
+import { avatarSpec } from '../arcade-sprite-catalog.js';
 
 /** Nom des opérations dans les clés de traduction propres à une opération */
 const OPERATION_NAMES = { '+': 'addition', '−': 'subtraction', '÷': 'division' };
 
 /** Étoiles au total pour le badge « Collectionneur d'étoiles » (badge_star_collector_desc) */
 const STAR_COLLECTOR_THRESHOLD = 10;
+
+// Cadeaux et personnage de la scène en WebP (js/webp-images.js), à leur taille affichée
+// (css/adventure.css) : 72 px dans la scène, 56 sur un écran de 480 px au plus ; 112 px sur
+// l'écran de fin, 336 pixels sur un écran de densité 3
+const SCENE_IMAGE = { widths: [128, 256], src: 128, sizes: '(max-width: 480px) 56px, 72px' };
+const RESULTS_GIFT = { widths: [128, 256, 512], src: 256, sizes: '112px' };
 
 /**
  * La clé existe-t-elle dans la langue active ?
@@ -111,6 +123,19 @@ export class AdventureMode extends GameMode {
   resetState() {
     super.resetState();
     this.sessionBestStreak = 0;
+    this._levelStars = null;
+  }
+
+  /**
+   * Niveau réussi (dernière question atteinte, vies restantes) : sa progression et ses badges
+   * s'enregistrent dès la dernière réponse (GameMode.saveResultsOnce), avant l'animation du
+   * trésor ; quitter pendant celle-ci ne perd plus le niveau. Un échec n'enregistre rien.
+   */
+  saveResults() {
+    if (!this.currentLevel || this.state.lives <= 0) return;
+    this._levelStars = this.calculateStars();
+    this.saveAdventureProgress(this._levelStars);
+    this.checkForNewRewards();
   }
 
   /**
@@ -158,25 +183,36 @@ export class AdventureMode extends GameMode {
                             </div>
                         </div>
                     </div>
-                    <h2 data-translate="${titleKey}">${getTranslation(titleKey)}</h2>
+                    <h1 class="screen-title" data-translate="${titleKey}">${getTranslation(titleKey)}</h1>
                     <p class="adventure-story-intro" data-translate="${introKey}">${getTranslation(introKey)}</p>
-                    <h3 data-translate="adventure_choose_destination">${getTranslation('adventure_choose_destination')}</h3>
+                    <h2 class="section-title" data-translate="adventure_choose_destination">${getTranslation('adventure_choose_destination')}</h2>
                     <div class="adventure-levels" id="adventure-levels"></div>
                 </div>
             `;
-    } else {
-      // Phase de jeu : nom du niveau, scène de progression, puis « Abandonner »
-      // (replacé après la zone de réponse dans initializeUI)
-      return `
+    }
+    return this.getLevelHTML();
+  }
+
+  /**
+   * Phase de jeu : nom et but du niveau, scène de progression, puis « Abandonner »
+   * (replacé après la zone de réponse dans initializeUI)
+   * @returns {string}
+   */
+  getLevelHTML() {
+    // Nommé hors du gabarit : la liste hors ligne (scripts/precache-list.mjs) lit les noms
+    // d'images du code, pas ceux écrits dans un ${…}
+    const closedGift = webpImageAttributes('cadeau_ferme.png', SCENE_IMAGE);
+    return `
                 <div class="adventure-level-header">
-                    <h3 data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h3>
+                    <h2 class="section-title" data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h2>
+                    <p class="adventure-level-goal" data-translate="${this.currentLevel.descKey}">${getTranslation(this.currentLevel.descKey)}</p>
                 </div>
 
                 <div class="adventure-scene" role="img" aria-label="${getTranslation('adventure_scene_label')}" data-translate-aria-label="adventure_scene_label">
                     <div class="adventure-character" id="adventure-character">${this.getPlayerAvatar()}</div>
                     <div class="adventure-path" id="adventure-path"></div>
                     <div class="adventure-treasure" id="adventure-treasure">
-                        <img src="assets/images/arcade/cadeau_ferme.png" alt="" width="72" height="72">
+                        <img ${closedGift} alt="" width="72" height="72">
                     </div>
                 </div>
 
@@ -184,7 +220,6 @@ export class AdventureMode extends GameMode {
                     <button id="adventure-abandon" type="button" class="btn btn-quiet btn-danger" data-translate="abandon_adventure_button">${getTranslation('abandon_adventure_button')}</button>
                 </div>
             `;
-    }
   }
 
   /**
@@ -237,11 +272,17 @@ export class AdventureMode extends GameMode {
 
       this.setupLevelSelection();
     } else {
-      // Phase de jeu - utiliser l'interface parent
-      await super.initializeUI();
-      this.placeActionsAfterAnswers('.adventure-controls');
-      this.setupGameControls();
+      await this.initializeLevelUI();
     }
+  }
+
+  /** Phase de jeu : l'interface du parent, le cadeau de la scène, puis les commandes */
+  async initializeLevelUI() {
+    await super.initializeUI();
+    // Cadeau de la scène en WebP, produit au déploiement : sans lui, le PNG d'origine
+    attachImageFallbacks(this.gameScreen);
+    this.placeActionsAfterAnswers('.adventure-controls');
+    this.setupGameControls();
   }
 
   /**
@@ -254,8 +295,9 @@ export class AdventureMode extends GameMode {
     const nameEl = document.getElementById('adventure-name');
     if (nameEl) {
       const data = UserState.getCurrentUserData?.() || {};
-      nameEl.textContent =
-        data.nickname && data.nickname.trim() ? data.nickname : gameState?.nickname || 'Joueur';
+      // || '' plutôt que ?. : un surnom 0 ou false (profil abîmé) mène au repli sans erreur, comme avant
+      const nickname = data.nickname || '';
+      nameEl.textContent = nickname.trim() ? nickname : gameState?.nickname || 'Joueur';
     }
 
     // Une étoile dessinée devant le total (récompense, jamais du texte coloré)
@@ -305,7 +347,7 @@ export class AdventureMode extends GameMode {
   setupGameControls() {
     const abandonBtn = document.getElementById('adventure-abandon');
     if (abandonBtn) {
-      abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+      abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
     }
   }
 
@@ -343,8 +385,9 @@ export class AdventureMode extends GameMode {
     // Revenir en haut (la barre du haut reste visible) sans animation imposée
     scrollToScreenTop(this.gameScreen);
 
-    // Afficher le dialogue de début de niveau (non bloquant)
-    showMessage(getTranslation(this.currentLevel.descKey));
+    // Le but du niveau reste affiché sous son nom (un message de 3 s cachait « Abandonner »
+    // sur téléphone) ; les lecteurs d'écran l'entendent une fois, comme avant
+    accessibilityManager.announce(getTranslation(this.currentLevel.descKey));
 
     // Marquer actif (resetState() l'a mis à false) puis générer la première question immédiatement
     this.state.isActive = true;
@@ -352,18 +395,21 @@ export class AdventureMode extends GameMode {
   }
 
   /**
-   * Demander confirmation d'abandon
+   * Demander confirmation d'abandon (game-exit.js) ; le niveau a pu finir pendant la question
+   * @returns {Promise<void>}
    */
-  confirmAbandon() {
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_adventure'))) {
-      this.returnToLevelSelection().catch(error => this.handleError(error));
-    }
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
+    await this.returnToLevelSelection().catch(error => this.handleError(error));
+  }
+
+  /** Partie en cours (game-exit.js) : un niveau, de sa première question à sa dernière réponse */
+  isGameInProgress() {
+    return this.state.isActive && this.phase === 'playing' && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_adventure');
   }
 
   /**
@@ -603,34 +649,23 @@ export class AdventureMode extends GameMode {
     this.phase = 'ending';
     this.state.isActive = false;
 
-    // Le personnage rejoint le trésor, qui s'ouvre
+    // Le personnage rejoint le trésor, qui s'ouvre : une nouvelle image (changer le seul src
+    // ne suffirait pas, le navigateur garderait la variante du srcset)
     this.moveAdventureCharacter(true);
-    const treasure = document.getElementById('adventure-treasure');
-    if (treasure) {
-      const img = treasure.querySelector('img');
-      if (img) {
-        img.src = 'assets/images/arcade/cadeau_ouvert.png';
-      } else {
-        treasure.textContent = '';
-        const safeImg = createSafeImage('assets/images/arcade/cadeau_ouvert.png', '', {
-          width: '72',
-          height: '72',
-        });
-        treasure.appendChild(safeImg);
-      }
-    }
+    document
+      .getElementById('adventure-treasure')
+      ?.replaceChildren(
+        createWebpImage('cadeau_ouvert.png', SCENE_IMAGE, { width: '72', height: '72' })
+      );
 
     this.addTimer(() => {
       // La partie a pu être quittée entre-temps
       if (!this.currentLevel) return;
       console.log(`🏆 Niveau ${this.currentLevel.id} terminé avec succès !`);
 
-      // Calculer les étoiles (basé sur le score/performance)
-      const stars = this.calculateStars();
-
-      // Sauvegarder la progression, puis les badges qu'elle débloque
-      this.saveAdventureProgress(stars);
-      this.checkForNewRewards();
+      // Progression et badges déjà enregistrés à la dernière réponse (saveResults)
+      this.saveResultsOnce();
+      const stars = this._levelStars ?? this.calculateStars();
 
       // Afficher les résultats
       this.showLevelResults(true, stars);
@@ -761,7 +796,7 @@ export class AdventureMode extends GameMode {
     }
 
     const title = createSafeElement(
-      'h2',
+      'h1',
       getTranslation(success ? 'level_completed' : 'level_failed'),
       { id: 'adventure-results-title' }
     );
@@ -786,7 +821,7 @@ export class AdventureMode extends GameMode {
       const messageEl = wrapper.querySelector('.results-message');
       wrapper.insertBefore(createStarRating(stars), messageEl);
       wrapper.insertBefore(
-        createSafeImage('assets/images/arcade/cadeau_ouvert.png', '', {
+        createWebpImage('cadeau_ouvert.png', RESULTS_GIFT, {
           width: '112',
           height: '112',
           class: 'results-treasure',
@@ -865,14 +900,13 @@ export class AdventureMode extends GameMode {
    */
   recordProgressHistory(isCorrect, userAnswer) {
     const userData = UserState.getCurrentUserData();
-    if (!userData.progressHistory) userData.progressHistory = [];
-
     const question = this.state.currentQuestion;
     const a = question.a ?? question.table;
     const b = question.b ?? question.num;
     const operator = question.operator || this.operator;
 
-    userData.progressHistory.push({
+    // Historique borné : les compteurs du tableau de bord portent le reste
+    appendProgressHistory(userData, {
       question: `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
@@ -892,10 +926,10 @@ export class AdventureMode extends GameMode {
    * @returns {Object}
    */
   getOperatorProgress() {
+    // L'ancien format (multiplication seule) est déjà recopié dans la multiplication à la
+    // lecture du profil (core/adventure-progress.js) : une autre opération ne le reprend pas
     const userData = UserState.getCurrentUserData();
-    return (
-      userData.adventureProgressByOperator?.[this.operator] || userData.adventureProgress || {}
-    );
+    return userData.adventureProgressByOperator?.[this.operator] || {};
   }
 
   /**
@@ -1091,22 +1125,29 @@ export class AdventureMode extends GameMode {
   updateAdventureAvatar() {
     const avatarEl = document.getElementById('adventure-avatar');
     if (avatarEl && gameState?.avatar) {
-      avatarEl.textContent = '';
-      const img = createSafeImage(
-        `assets/images/arcade/${gameState.avatar}_head_avatar_128x128.png`,
-        getTranslation(gameState.avatar),
-        { width: '88', height: '88' }
-      );
-      avatarEl.appendChild(img);
+      const avatar = normalizeAvatarId(gameState.avatar);
+      const img = createSafeElement('img', '', {
+        width: '88',
+        height: '88',
+        alt: getTranslation(avatar),
+      });
+      setAvatarHead(img, avatar, HEAD_SIZES.adventureMap);
+      avatarEl.replaceChildren(img);
     }
   }
 
   /**
-   * Obtenir l'avatar du joueur
+   * Personnage de la scène : la source haute définition du catalogue des images d'Arcade, à sa
+   * taille affichée, son petit PNG en repli. Le renard et l'astronaute y regardent à gauche :
+   * retournés (css/adventure.css), ils marchent vers le trésor comme les autres.
+   * @returns {string}
    */
   getPlayerAvatar() {
-    const avatar = gameState?.avatar || 'fox';
-    return `<img src="assets/images/arcade/${avatar}_right_128x128.png" width="72" height="72" alt="${getTranslation(avatar)}" />`;
+    const avatar = normalizeAvatarId(gameState?.avatar);
+    const sprite = avatarSpec(avatar);
+    const image = webpImageAttributes(sprite.fallbacks.at(0), SCENE_IMAGE, sprite.source);
+    const facing = sprite.facing === 'left' ? ' class="is-mirrored"' : '';
+    return `<img ${image}${facing} width="72" height="72" alt="${getTranslation(avatar)}" />`;
   }
 
   /**
@@ -1115,11 +1156,9 @@ export class AdventureMode extends GameMode {
    */
   getAllLevelProgress() {
     const userData = UserState.getCurrentUserData();
+    // L'ancien format est déjà dans la multiplication (core/adventure-progress.js)
     const byOperator = userData.adventureProgressByOperator || {};
-    const sources = Object.values(byOperator);
-    // Ancien format (multiplication seule), s'il n'a pas encore été migré
-    if (!byOperator['×'] && userData.adventureProgress) sources.push(userData.adventureProgress);
-    return sources.flatMap(progress => Object.values(progress || {}));
+    return Object.values(byOperator).flatMap(progress => Object.values(progress || {}));
   }
 
   /**

@@ -61,8 +61,9 @@ describe('UserManager : profils des joueurs', () => {
         nickname: 'Zoé',
         unlockedAvatars: ['panda'],
         unlockedBadges: [],
-        parentalLockEnabled: false,
       });
+      // Code parental retiré (v37) : un profil neuf n'a plus ce champ
+      expect(storedPlayers()['Zoé']).not.toHaveProperty('parentalLockEnabled');
     });
   });
 
@@ -153,7 +154,6 @@ describe('UserManager : profils des joueurs', () => {
         progressHistory: [],
         unlockedAvatars: ['fox'],
         unlockedBadges: [],
-        parentalLockEnabled: false,
         preferredOperator: '×',
         tablePreferences: { globalExclusions: [], globalEnabled: false },
       });
@@ -189,6 +189,45 @@ describe('UserManager : profils des joueurs', () => {
     test('refuse un joueur inconnu', () => {
       expect(UserManager.deleteUser('Personne')).toBe(false);
     });
+
+    test('ses anciens scores d’Arcade, rangés sous son surnom, partent avec lui à la purge', () => {
+      UserManager.createUser('Zoé', 'panda');
+      UserManager.createUser('Léo', 'fox');
+      UserManager._players['Zoé'].nickname = 'Zozo';
+      const hers = [
+        'arcadeScores_Zoé',
+        'arcadeScores_Zozo',
+        'arcadeScores_multimiam_Zozo',
+        'arcadeScores_multimemory_Zoé',
+        'arcadeScores_multisnake_Zozo',
+      ];
+      for (const key of [...hers, 'arcadeScores_Léo']) localStorage.setItem(key, '[100]');
+      UserManager.deleteUser('Zoé');
+      // Corbeille : rien n'est effacé avant la purge, 30 jours plus tard
+      for (const key of hers) expect([key, localStorage.getItem(key)]).toEqual([key, '[100]']);
+      UserManager.purgeExpiredTrash(Date.now() + 31 * 24 * 60 * 60 * 1000);
+      for (const key of hers) expect([key, localStorage.getItem(key)]).toEqual([key, null]);
+      expect(localStorage.getItem('arcadeScores_Léo')).toBe('[100]');
+      localStorage.clear();
+    });
+  });
+
+  describe('compteurs du tableau de bord', () => {
+    test('un profil neuf ne reprend pas les scores d’un homonyme supprimé autrefois', () => {
+      localStorage.setItem('arcadeScores_Zoé', '[900, 500]');
+      UserManager.createUser('Zoé', 'panda');
+      UserManager._currentUser = 'Zoé';
+      expect(UserManager.getCurrentUserData().modeStats).toMatchObject({ v: 1, modes: {} });
+      localStorage.clear();
+    });
+
+    test('choisir un joueur purge aussi la clé « default » de MultiMemory', () => {
+      localStorage.setItem('arcadeScores_multimemory_default', '[10]');
+      localStorage.setItem('arcadeScores_default', '[10]');
+      UserManager._cleanupDefaultScores();
+      expect(localStorage.getItem('arcadeScores_multimemory_default')).toBeNull();
+      expect(localStorage.getItem('arcadeScores_default')).toBeNull();
+    });
   });
 
   describe('stockage abîmé', () => {
@@ -211,5 +250,25 @@ describe('UserManager : profils des joueurs', () => {
       expect(UserManager.createUser('Zoé', 'panda')).toBe(true);
       expect(UserManager.getAllPlayers()).toHaveProperty('Zoé');
     });
+  });
+});
+
+describe('UserManager : surnom partagé', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('effacer un profil garde les anciens scores d’un autre profil au même surnom', () => {
+    jest.spyOn(VideoManager, 'playCharacterIntro').mockImplementation(() => {});
+    UserManager._players = {};
+    UserManager.createUser('Zoé', 'panda');
+    UserManager.createUser('Zoé2', 'fox');
+    UserManager._players['Zoé2'].nickname = 'Zoé';
+    localStorage.setItem('arcadeScores_Zoé', '[300]');
+    UserManager.deleteUser('Zoé');
+    UserManager.purgeExpiredTrash(Date.now() + 31 * 24 * 60 * 60 * 1000);
+    expect(localStorage.getItem('playersTrash')).toBe('[]');
+    expect(localStorage.getItem('arcadeScores_Zoé')).toBe('[300]');
+    localStorage.clear();
   });
 });

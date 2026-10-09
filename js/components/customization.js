@@ -12,16 +12,15 @@ import {
   updateWelcomeMessageUI,
   updateBackgroundByAvatar,
 } from '../utils-es6.js';
-import { getAvatarHeadSrc, normalizeAvatarId } from '../main-helpers.js';
-import { saveParentalLockEnabled } from '../storage.js';
+import { HEAD_SIZES, normalizeAvatarId, setAvatarHead } from '../avatar-heads.js';
 import { createVirtualKeyboard } from '../virtual-keyboard.js';
 import { singleActivation } from '../ui-feedback.js';
 import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
-import { createIcon } from './icons.js';
+import { confirmDialog } from './confirm-dialog.js';
+import { keepWornAvatar } from '../core/avatar-shop.js';
 
 /** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
-const SLIDE6_AVATARS = '#slide6 .avatar-selector .avatar-btn';
 const SLIDE6_AVATAR_RADIOS = '#slide6 .avatar-selector .avatar-radio';
 
 /** Libellés accessibles des trois boutons « A » (taille du texte) */
@@ -82,6 +81,8 @@ export const Customization = {
     // Noms des avatars et infobulles : data-translate (main-helpers.js) ;
     // le texte alternatif de l'avatar actuel suit ici la nouvelle langue.
     eventBus.on('languageChanged', () => this._updateCurrentAvatarAlt());
+    // Avatar acheté avec les pièces (components/avatarShop.js) : l'enfant le porte aussitôt
+    eventBus.on('avatarUnlocked', event => this._wearUnlockedAvatar(event.detail?.avatar));
   },
 
   /** Texte alternatif de « Avatar actuel » : le nom du personnage, dans la langue affichée */
@@ -204,20 +205,6 @@ export const Customization = {
   },
 
   /**
-   * Si le cadenas d'un avatar verrouillé est encore un émoji dans un <span>, il est
-   * redessiné en SVG ; un cadenas déjà en SVG est laissé tel quel.
-   */
-  _upgradeAvatarLocks() {
-    for (const btn of document.querySelectorAll(SLIDE6_AVATARS)) {
-      const lock = btn.querySelector('.lock-icon');
-      if (lock && !(lock instanceof SVGElement) && !lock.querySelector('svg')) {
-        const icon = createIcon('lock', { size: 20 });
-        if (icon) lock.replaceChildren(icon);
-      }
-    }
-  },
-
-  /**
    * Afficher l'écran de personnalisation
    */
   show() {
@@ -236,29 +223,22 @@ export const Customization = {
     const heroMascotImg = document.getElementById('hero-mascot-img');
     const current = gameState.avatar || 'fox';
     if (currentImg) {
-      currentImg.src = getAvatarHeadSrc(current);
+      setAvatarHead(currentImg, current, HEAD_SIZES.current);
       currentImg.alt = tr(current, current);
     }
-    // Mascotte de l'accueil : visage 128 px, décoratif (la bulle porte le message)
+    // Mascotte de l'accueil : décorative (la bulle porte le message)
     if (heroMascotImg) {
-      heroMascotImg.src = getAvatarHeadSrc(current);
+      setAvatarHead(heroMascotImg, current, HEAD_SIZES.mascot);
       heroMascotImg.alt = '';
     }
     for (const radio of document.querySelectorAll(SLIDE6_AVATAR_RADIOS)) {
       radio.checked = radio.value === current;
     }
-    this._upgradeAvatarLocks();
 
     // Mettre à jour le champ de surnom
     const nicknameInput = document.getElementById('nickname-input');
     if (nicknameInput) {
       nicknameInput.value = gameState.nickname;
-    }
-
-    // Tâche 5.1: Mettre à jour l'état de la checkbox du code parental
-    const parentalLockToggle = document.getElementById('parental-lock-toggle');
-    if (parentalLockToggle) {
-      parentalLockToggle.checked = userData.parentalLockEnabled === true;
     }
 
     // Contrôles statiques (idempotent) puis écouteurs
@@ -282,6 +262,22 @@ export const Customization = {
   },
 
   /**
+   * Avatar qui vient d'être acheté : l'enfant le porte. Il rejoint la grille, coché, et son
+   * bouton radio prend le focus, puisque le bouton de la boutique a disparu.
+   * @param {string} [avatarName]
+   * @private
+   */
+  _wearUnlockedAvatar(avatarName) {
+    if (!avatarName) return;
+    this._applyAvatarChoice(avatarName);
+    renderAvatarSelector('#slide6 .avatar-selector');
+    const radio = [...document.querySelectorAll(SLIDE6_AVATAR_RADIOS)].find(
+      choice => choice.value === avatarName
+    );
+    if (radio) radio.focus();
+  },
+
+  /**
    * Applique un avatar : aperçu, mascotte, monde illustré, profil et tuile « Qui joue ? ».
    * @param {string} avatarName
    * @private
@@ -292,17 +288,21 @@ export const Customization = {
 
     const currentImg = document.getElementById('current-avatar-img');
     if (currentImg) {
-      currentImg.src = getAvatarHeadSrc(avatarName);
+      setAvatarHead(currentImg, avatarName, HEAD_SIZES.current);
       currentImg.alt = tr(avatarName, avatarName);
     }
-    // Mascotte de l'accueil : visage 128 px, décoratif
+    // Mascotte de l'accueil : décorative
     const heroMascotImg = document.getElementById('hero-mascot-img');
     if (heroMascotImg) {
-      heroMascotImg.src = getAvatarHeadSrc(avatarName);
+      setAvatarHead(heroMascotImg, avatarName, HEAD_SIZES.mascot);
       heroMascotImg.alt = '';
     }
 
     const userData = UserState.getCurrentUserData();
+    // Celui qu'il portait reste à l'enfant (profil d'avant les pièces) ; gameState aussi,
+    // qu'« Enregistrer » réécrit dans le profil
+    keepWornAvatar(userData, normalizeAvatarId(userData.avatar));
+    gameState.unlockedAvatars = [...userData.unlockedAvatars];
     userData.avatar = avatarName;
     UserState.updateUserData(userData);
     // « Qui joue ? » montre le visage de l'avatar : la tuile suit le nouveau choix
@@ -394,14 +394,19 @@ export const Customization = {
     if (clearBtn && !clearBtn.dataset.listenerAttached) {
       clearBtn.addEventListener('click', () => {
         // handleClearCacheClick rattrape ses erreurs : son repli vide les caches à la main
-        void this.handleClearCacheClick();
+        void this.handleClearCacheClick(clearBtn);
       });
       clearBtn.dataset.listenerAttached = 'true';
     }
   },
 
-  async handleClearCacheClick() {
-    if (!this._confirmClear()) return;
+  /**
+   * « Vider le cache », après la fenêtre du jeu
+   * @param {HTMLElement} [origin] - Le bouton pressé : refusé, le focus y revient
+   * @returns {Promise<void>}
+   */
+  async handleClearCacheClick(origin) {
+    if (!(await this._confirmClear(origin))) return;
     this._notifyClearing();
     try {
       await this._tryModuleClear();
@@ -410,11 +415,18 @@ export const Customization = {
     }
   },
 
-  _confirmClear() {
-    const msg = getTranslation('clear_cache_confirm') || 'Vider le cache et recharger ?';
-    const canConfirm =
-      typeof globalThis !== 'undefined' && typeof globalThis.confirm === 'function';
-    return canConfirm ? globalThis.confirm(msg) : true;
+  /**
+   * La fenêtre du jeu demande d'abord : vider le cache recharge la page
+   * @param {HTMLElement} [origin] - Où rendre le focus si l'enfant refuse
+   * @returns {Promise<boolean>} true si confirmé
+   */
+  _confirmClear(origin) {
+    return confirmDialog({
+      title: getTranslation('clear_cache_confirm') || 'Vider le cache et recharger ?',
+      confirmLabel: getTranslation('clear_cache_dialog_confirm') || 'Vider le cache',
+      cancelLabel: getTranslation('clear_cache_dialog_cancel') || 'Annuler',
+      returnFocusTo: origin,
+    });
   },
 
   _notifyClearing() {
@@ -452,8 +464,8 @@ export const Customization = {
           .finally(() => globalThis.location?.reload())
           // Un cache resté en place n'empêche pas le rechargement, demandé juste avant
           .catch(error => console.warn('Nettoyage du cache incomplet', error));
-      } else {
-        if (globalThis.location) globalThis.location.reload();
+      } else if (globalThis.location) {
+        globalThis.location.reload();
       }
     } catch {
       if (globalThis.location) globalThis.location.reload();
@@ -508,15 +520,7 @@ export const Customization = {
     userData.theme = gameState.theme;
     userData.unlockedAvatars = gameState.unlockedAvatars;
 
-    // Tâche 5.1: Sauvegarder l'état du code parental
-    const parentalLockToggle = document.getElementById('parental-lock-toggle');
-    if (parentalLockToggle) {
-      userData.parentalLockEnabled = parentalLockToggle.checked;
-      // Appeler saveParentalLockEnabled pour sauvegarder spécifiquement cette donnée
-      saveParentalLockEnabled(parentalLockToggle.checked);
-    }
-
-    UserState.updateUserData(userData); // Sauvegarde l'objet players entier (qui inclut maintenant parentalLockEnabled)
+    UserState.updateUserData(userData);
 
     showMessage(getTranslation('customization_saved'));
   },

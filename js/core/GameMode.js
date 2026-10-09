@@ -21,8 +21,10 @@ import {
   addArrowKeyNavigation as _addArrowKeyNavigation,
 } from '../utils-es6.js';
 import { recordOperationResult } from './operation-stats.js';
+import { recordModeAnswer, ANSWER_MODES } from './mode-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
+import { setActiveMode, clearActiveMode } from '../game-exit.js';
 import { cancelSpeech, preloadSpeech, whenSpeechEnds } from '../speech.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
@@ -38,7 +40,7 @@ import {
   preferredScrollBehavior,
   keepNumbersTogether,
 } from '../ui-feedback.js';
-import { chance, shuffleInPlace } from './random.js';
+import { chance, randomInt, shuffleInPlace } from './random.js';
 
 // ======================================
 // ÉNONCÉS DE PROBLÈMES
@@ -424,18 +426,20 @@ function isUsableWrongAnswer(value, bounds, taken) {
 }
 
 /**
- * Complète la liste avec des voisins de plus en plus lointains, quand le
- * réservoir de distracteurs ne suffit pas.
- * @param {number[]} chosen - Modifiée sur place
- * @param {number} count
+ * Mauvaises réponses d'un côté de la bonne (direction -1 : en dessous, 1 : au-dessus) : celles du
+ * réservoir, mélangées, puis des voisins de plus en plus lointains quand il n'en a pas assez.
+ * @param {number[]} pool - Réservoir déjà filtré
  * @param {{correct: number, min: number, max: number}} bounds
+ * @param {number} direction
+ * @returns {number[]}
  */
-function fillWithNeighbours(chosen, count, bounds) {
-  for (let offset = 3; chosen.length < count && offset < 50; offset++) {
-    for (const value of [bounds.correct + offset, bounds.correct - offset]) {
-      if (chosen.length < count && isUsableWrongAnswer(value, bounds, chosen)) chosen.push(value);
-    }
+function wrongAnswersOnSide(pool, bounds, direction) {
+  const side = shuffle(pool.filter(value => Math.sign(value - bounds.correct) === direction));
+  for (let offset = 3; offset < 50; offset++) {
+    const value = bounds.correct + direction * offset;
+    if (isUsableWrongAnswer(value, bounds, side)) side.push(value);
   }
+  return side;
 }
 
 export function plausibleWrongAnswers(question, count = 3) {
@@ -447,9 +451,15 @@ export function plausibleWrongAnswers(question, count = 3) {
   for (const value of wrongAnswerPool(question, correct)) {
     if (isUsableWrongAnswer(value, bounds, pool)) pool.push(value);
   }
-  const chosen = shuffle(pool).slice(0, count);
-  fillWithNeighbours(chosen, count, bounds);
-  return chosen;
+  const below = wrongAnswersOnSide(pool, bounds, -1);
+  const above = wrongAnswersOnSide(pool, bounds, 1);
+  // La place de la bonne réponse est tirée au sort : autant de leurres en dessous qu'il en faut.
+  // Pris au hasard dans un réservoir symétrique, ils la laissaient presque toujours au milieu,
+  // jamais la plus grande ni la plus petite : un indice qu'un enfant apprend vite.
+  const wanted = Math.min(randomInt(0, count), below.length);
+  const fromAbove = Math.min(count - wanted, above.length);
+  const fromBelow = Math.min(count - fromAbove, below.length);
+  return [...below.slice(0, fromBelow), ...above.slice(0, fromAbove)];
 }
 
 /**
@@ -474,6 +484,11 @@ export const GOOD_SOUND_MS = 200;
  * phrase d'après son texte)
  */
 export const EXPLANATION_WAIT_MAX_MS = 6000;
+
+/** Table d'une question pour « À revoir » au tableau de bord : en multiplication seulement */
+function reviewTableOf(question, operator) {
+  return operator === '×' ? (question.table ?? question.a) : null;
+}
 
 export class GameMode {
   /**
@@ -537,6 +552,8 @@ export class GameMode {
       // couperait l'annonce du nouveau s'il arrivait après elle
       await goToSlide(4);
       gameState.gameMode = this.modeName;
+      // Règle de sortie (game-exit.js) : ce mode dit si une partie est en cours
+      setActiveMode(this);
 
       // Réinitialiser l'état
       this.resetState();
@@ -568,6 +585,7 @@ export class GameMode {
    */
   stop() {
     this.state.isActive = false;
+    clearActiveMode(this);
 
     // Arrêter la voix et les sons en cours
     cancelSpeech();
@@ -599,6 +617,10 @@ export class GameMode {
     this._continuePending = false;
     this._holdProgress = false;
     this._queueNextQuestionSpeech = false;
+    // Tableau de bord : la partie compte dès sa première réponse ; son bilan s'enregistre une fois
+    this._statsGameCounted = false;
+    this._statsOperator = null;
+    this._resultsSaved = false;
 
     gameState.streak = 0;
   }
@@ -678,7 +700,9 @@ export class GameMode {
     container.setAttribute('aria-label', getTranslation(titleKey));
     container.dataset.translateAriaLabel = titleKey;
 
-    const title = document.createElement('h2');
+    // Titre de niveau 1 de l'écran de jeu (un par écran), à la taille d'un titre de carte
+    const title = document.createElement('h1');
+    title.className = 'screen-title';
     title.dataset.translate = titleKey;
     title.textContent = getTranslation(titleKey);
     container.appendChild(title);
@@ -904,6 +928,11 @@ export class GameMode {
       }
       button.dataset.value = option.value;
       button.textContent = option.display;
+      // Lecteur d'écran : la réponse qui reçoit le focus est lue avec sa question, sans
+      // annonce de plus par-dessus la voix du jeu
+      if (this.questionElement?.id) {
+        button.setAttribute('aria-describedby', this.questionElement.id);
+      }
       button.onclick = () => this.handleAnswer(option.value);
 
       // Ajouter support clavier
@@ -951,6 +980,10 @@ export class GameMode {
     // Logique spécifique
     this.onAnswerSubmitted(isCorrect, userAnswer);
 
+    // Partie jouée jusqu'au bout : son bilan s'enregistre tout de suite, l'écran de fin
+    // peut attendre. Quitter pendant l'animation (Accueil, changement de joueur) ne la perd plus
+    if (!this.shouldContinue()) this.saveResultsOnce();
+
     // Progression automatique, sauf si l'explication attend l'enfant ou si la fin
     // du niveau est déjà programmée
     if (this.config.autoProgress && !this._continuePending && !this._holdProgress) {
@@ -973,6 +1006,8 @@ export class GameMode {
         // Ignore gameState update errors
       }
 
+      // Meilleure série du tableau de bord, tous modes à questions confondus (Chrono compris,
+      // comme pour « Questions » : hasStreaks ne règle que la barre d'infos)
       try {
         const userData = UserState.getCurrentUserData();
         const currentBest = Number(userData.bestStreak) || 0;
@@ -1224,8 +1259,8 @@ export class GameMode {
   finish() {
     this.state.isActive = false;
 
-    // Sauvegarder les résultats
-    this.saveResults();
+    // Sauvegarder les résultats (déjà fait à la dernière réponse si la partie est allée au bout)
+    this.saveResultsOnce();
 
     // Nettoyer les ressources avant d'afficher les résultats
     this.cleanup();
@@ -1435,6 +1470,53 @@ export class GameMode {
     } catch {
       /* no-op: stats optional */
     }
+
+    this.recordAnswerStats(isCorrect);
+  }
+
+  /**
+   * Compteurs du tableau de bord (core/mode-stats.js) : la réponse, dans son mode et son
+   * opération, et la fenêtre « À revoir » de sa table en multiplication. La première réponse
+   * d'une partie la compte, même si elle est ensuite abandonnée.
+   * @param {boolean} isCorrect
+   */
+  recordAnswerStats(isCorrect) {
+    if (!ANSWER_MODES.includes(this.modeName)) return;
+    const question = this.state.currentQuestion;
+    const operator = question.operator || '×';
+    const startsGame = this.countsGames() && !this._statsGameCounted;
+    if (startsGame) {
+      this._statsGameCounted = true;
+      this._statsOperator = operator;
+    }
+    try {
+      const userData = UserState.getCurrentUserData();
+      recordModeAnswer(userData, {
+        mode: this.modeName,
+        operator,
+        table: reviewTableOf(question, operator),
+        isCorrect,
+        startsGame,
+      });
+      UserState.updateUserData(userData);
+    } catch {
+      /* no-op: statistiques facultatives, le jeu continue */
+    }
+  }
+
+  /**
+   * Le mode compte-t-il ses parties au tableau de bord ? (Défi, course Chrono)
+   * @returns {boolean}
+   */
+  countsGames() {
+    return false;
+  }
+
+  /** Enregistre le bilan de la partie une seule fois : à la dernière réponse, sinon à la fin */
+  saveResultsOnce() {
+    if (this._resultsSaved) return;
+    this._resultsSaved = true;
+    this.saveResults();
   }
 
   /**

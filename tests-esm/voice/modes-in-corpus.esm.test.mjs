@@ -41,6 +41,9 @@ const { AdventureMode } = await import('../../js/modes/AdventureMode.js');
 const { DiscoveryMode } = await import('../../js/modes/DiscoveryMode.js');
 const { ChronoMode } = await import('../../js/modes/ChronoMode.js');
 const { buildCorpus } = await import('../../scripts/voice/corpus.mjs');
+const { chronoTables, chronoFact, otherFactDirection } = await import(
+  '../../js/core/chrono-questions.js'
+);
 const { normalizeSpokenText } = await import('../../js/core/spoken-text.js');
 
 const LANGS = ['fr', 'en', 'es'];
@@ -216,51 +219,67 @@ describe.each(LANGS)('%s : les phrases des modes sont toutes dans le corpus', la
     adventure.stop();
   });
 
-  test('Chrono (×) : parties en tapant, en choisissant, puis une révision', async () => {
-    userStore.preferredOperator = '×';
-    userStore.chronoStats = undefined;
-    for (const inputMode of ['keypad', 'mcq']) {
-      const chrono = new ChronoMode();
-      await chrono.start();
-      chrono.setInputMode(inputMode);
-      await chrono.beginSession(false);
-      playQuestions(chrono);
-      chrono.stop();
-    }
-    userStore.chronoStats = {
-      basket: [
-        { a: 7, b: 8, due: 2 },
-        { a: 9, b: 6, due: 1 },
-      ],
-    };
-    const revision = new ChronoMode();
-    await revision.start();
-    await revision.beginSession(true);
-    playQuestions(revision, 10);
-    revision.stop();
-    expectAllInCorpus();
-  });
+  // Une ligne de la liste à revoir dans chaque opération, pour la révision des deux sens
+  const CHRONO_BASKETS = {
+    '×': [
+      { a: 7, b: 8, due: 2 },
+      { a: 9, b: 6, due: 1 },
+    ],
+    '+': [{ a: 8, b: 7, due: 2 }],
+    '−': [{ a: 15, b: 7, due: 2 }],
+    '÷': [
+      { a: 56, b: 7, due: 2 },
+      { a: 7, b: 7, due: 1 },
+    ],
+  };
 
-  // Chrono ne pose que des calculs 1–10 × 1–10 (tirage, révision, liste bornée) : on vérifie
-  // les cent, pas un échantillon tiré au hasard
-  test('Chrono : chacune des 100 questions qu’il peut dire est enregistrée', () => {
+  test.each(OPERATORS)(
+    'Chrono (%s) : parties en tapant, en choisissant, puis une révision',
+    async op => {
+      userStore.preferredOperator = op;
+      userStore.chronoStats = undefined;
+      userStore.chronoStatsByOperator = undefined;
+      for (const inputMode of ['keypad', 'mcq']) {
+        const chrono = new ChronoMode();
+        await chrono.start();
+        chrono.setInputMode(inputMode);
+        await chrono.beginSession(false);
+        playQuestions(chrono);
+        chrono.stop();
+      }
+      if (op === '×') userStore.chronoStats = { basket: CHRONO_BASKETS[op] };
+      else userStore.chronoStatsByOperator = { [op]: { basket: CHRONO_BASKETS[op] } };
+      const revision = new ChronoMode();
+      await revision.start();
+      await revision.beginSession(true);
+      playQuestions(revision, 10);
+      revision.stop();
+      expectAllInCorpus();
+    }
+  );
+
+  // Chrono ne pose que les calculs de sa grille et l'autre sens de leur famille (tirage,
+  // révision, liste bornée) : on les vérifie tous, pas un échantillon tiré au hasard
+  test.each(OPERATORS)('Chrono (%s) : chaque question qu’il peut dire est enregistrée', op => {
+    userStore.preferredOperator = op;
     const chrono = new ChronoMode();
     const missing = [];
-    for (let a = 1; a <= 10; a++) {
-      for (let b = 1; b <= 10; b++) {
-        chrono.state.currentQuestion = {
-          question: `${a} × ${b} = ?`,
-          answer: a * b,
-          type: 'classic',
-          operator: '×',
-          a,
-          b,
-        };
-        const said = normalizeSpokenText(chrono.spokenQuestionText());
-        if (!corpus.has(said)) missing.push(said);
+    let asked = 0;
+    for (const n of chronoTables(op)) {
+      for (let k = 1; k <= 10; k++) {
+        const fact = chronoFact(op, n, k);
+        const other = otherFactDirection(op, fact.a, fact.b);
+        for (const { a, b } of other ? [fact, other] : [fact]) {
+          chrono.state.currentQuestion = chrono.buildQuestion(a, b);
+          const said = normalizeSpokenText(chrono.spokenQuestionText());
+          asked += 1;
+          if (!corpus.has(said)) missing.push(said);
+        }
       }
     }
     expect(missing).toEqual([]);
+    // × : 100 calculs et leurs inverses ; ÷ : 90 calculs, sans autre sens pour un quotient 1
+    expect(asked).toBeGreaterThanOrEqual(op === '÷' ? 150 : 180);
   });
 
   test.each(OPERATORS)('Découverte, %s : tables, niveaux et égalités dites', async op => {

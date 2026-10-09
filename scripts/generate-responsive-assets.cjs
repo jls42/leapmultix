@@ -5,14 +5,16 @@
  * Garde les originaux PNG, génère WebP optimisés par taille d'écran
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const { inSequence } = require('./lib/in-sequence.cjs');
 let sharp = null;
 
 try {
   // sharp fournit la conversion WebP + resize avec support alpha
   sharp = require('sharp');
-} catch (error) {
+} catch {
   // La dépendance n'est peut-être pas installée dans l'environnement courant
   console.warn('⚠️  Module "sharp" introuvable. Activera le mode fallback.');
 }
@@ -22,23 +24,65 @@ const ASSETS_DIST = './dist/assets/images'; // Build optimisés pour futur build
 const PUBLIC_ASSETS_DIR = './assets/generated-images'; // Compatible deploy.sh actuel
 const REPORT_FILE = './analysis/responsive-assets-report.json';
 
+// Réglages WebP. Les sources sont des dessins aux contours nets : en qualité 75 à 80, les
+// contours sombres bavaient et les aplats se tachaient (mesuré dans Chrome, dessin au canevas
+// comme dans les jeux : 36,6 à 37,8 dB de la réduction parfaite de la source).
+// - 64 et 128 (préchargés pour le hors ligne, petits écrans) : qualité 90, couleurs
+//   sous-échantillonnées sans bavure (sharp YUV) ; poids × 1,2 environ ;
+// - 256, 512 et 1024 (tablettes, écrans denses et grands, chargés à la demande) : quasi sans
+//   perte, niveau 40 : 39 à 42,5 dB, autant que le niveau 80 pour un cinquième de poids en moins.
+const SMALL_WEBP = { quality: 90, alphaQuality: 100, smartSubsample: true, effort: 6 };
+const NEAR_LOSSLESS_WEBP = { nearLossless: true, quality: 40, effort: 6 };
+
 // Configuration des résolutions cibles
 const RESOLUTION_TARGETS = {
-  // Format: suffix -> {width, quality, description}
-  64: { width: 64, quality: 85, desc: 'Icons/thumbnails' },
-  128: { width: 128, quality: 85, desc: 'Mobile small' },
-  256: { width: 256, quality: 80, desc: 'Mobile/tablet' },
-  512: { width: 512, quality: 80, desc: 'Desktop standard' },
-  1024: { width: 1024, quality: 75, desc: 'High-DPI/4K' },
+  // Format: suffix -> {width, webp (réglages de sharp), description}
+  64: { width: 64, webp: SMALL_WEBP, desc: 'Icons/thumbnails' },
+  128: { width: 128, webp: SMALL_WEBP, desc: 'Mobile small' },
+  256: { width: 256, webp: NEAR_LOSSLESS_WEBP, desc: 'Mobile/tablet' },
+  512: { width: 512, webp: NEAR_LOSSLESS_WEBP, desc: 'Desktop standard' },
+  1024: { width: 1024, webp: NEAR_LOSSLESS_WEBP, desc: 'High-DPI/4K' },
 };
 
 // Patterns spéciaux par type d'asset
 const ASSET_PATTERNS = {
   monsters: /monstre\d+/i,
-  logos: /logo_mode/i,
+  // Logos des modes (accueil, tableau de bord) et des jeux (menu de l'Arcade), cadeaux de
+  // l'Aventure, têtes des avatars (leur source de 1024 px) : affichés de 40 à 144 px,
+  // jusqu'à 512 pour un écran de densité 3
+  illustrations: /logo_(?:mode|multi)|cadeau_|(?:_head_avatar\.png$)/i,
   ui: /button|icon|arrow/i,
   backgrounds: /background|bg_/i,
 };
+
+// Catalogue des images des jeux d'Arcade (module ES lu par import dynamique)
+const ARCADE_CATALOG = path.resolve(__dirname, '../js/arcade-sprite-catalog.js');
+// Une image d'Arcade demandée au-delà de 256 px (fusées, personnages, textures) : dessinée en
+// grand sur un écran dense, sa source reçoit toutes les résolutions, 512 et 1024 compris
+const SMALL_SET_MAX_WIDTH = 256;
+
+/** Chemin d'une source relatif à assets/images, avec des « / » (« arcade/fox.png ») */
+function sourceKey(sourceFile) {
+  return path.relative(ASSETS_SOURCE, sourceFile).split(path.sep).join('/');
+}
+
+/** Fins de ligne : le « . » d'une expression régulière ne les traverse pas */
+const LINE_BREAKS = ['\n', '\r', '\u2028', '\u2029'];
+
+/**
+ * Base et largeur d'une variante « <base>-<largeur>.webp », comme le faisait
+ * /(.+)-(\d+)\.webp$/, sans ses retours arrière : le suffixe d'abord, puis la base devant
+ * lui, depuis la dernière fin de ligne (que « . » ne traverse pas)
+ * @param {string} relativePath
+ * @returns {{baseName: string, resolution: string} | null}
+ */
+function variantOf(relativePath) {
+  const suffix = /-(\d+)\.webp$/.exec(relativePath);
+  if (!suffix) return null;
+  const head = relativePath.slice(0, suffix.index);
+  const baseName = head.slice(Math.max(...LINE_BREAKS.map(mark => head.lastIndexOf(mark))) + 1);
+  return baseName ? { baseName, resolution: suffix[1] } : null;
+}
 
 class ResponsiveAssetGenerator {
   constructor() {
@@ -57,6 +101,19 @@ class ResponsiveAssetGenerator {
     Object.keys(RESOLUTION_TARGETS).forEach(res => {
       this.report.resolutions[res] = 0;
     });
+
+    // Sources haute définition des jeux d'Arcade (loadArcadeSources)
+    this.arcadeHdSources = new Set();
+  }
+
+  /**
+   * Sources que les jeux d'Arcade peuvent demander au-delà de 256 px, d'après leur
+   * catalogue (js/arcade-sprite-catalog.js) : seules elles reçoivent 512 et 1024.
+   */
+  async loadArcadeSources() {
+    const catalog = await import(pathToFileURL(ARCADE_CATALOG).href);
+    const large = catalog.arcadeSpriteSpecs().filter(spec => spec.maxWidth > SMALL_SET_MAX_WIDTH);
+    this.arcadeHdSources = new Set(large.map(spec => `arcade/${spec.source}.png`));
   }
 
   async generate() {
@@ -70,6 +127,7 @@ class ResponsiveAssetGenerator {
         return;
       }
 
+      await this.loadArcadeSources();
       await this.scanAndProcess();
       await this.generateImageMap();
       await this.syncToPublicDir();
@@ -135,8 +193,7 @@ class ResponsiveAssetGenerator {
 
     console.log(`📊 Trouvé ${sourceFiles.length} fichiers PNG sources`);
 
-    for (let i = 0; i < sourceFiles.length; i++) {
-      const sourceFile = sourceFiles[i];
+    await inSequence(sourceFiles, async (sourceFile, i) => {
       try {
         await this.processFile(sourceFile);
 
@@ -150,7 +207,7 @@ class ResponsiveAssetGenerator {
           error: error.message,
         });
       }
-    }
+    });
   }
 
   findSourceFiles() {
@@ -202,11 +259,11 @@ class ResponsiveAssetGenerator {
     // Déterminer quelles résolutions générer
     const targetResolutions = this.getTargetResolutions(sourceFile, dimensions);
 
-    for (const [suffix, config] of Object.entries(targetResolutions)) {
+    await inSequence(Object.entries(targetResolutions), async ([suffix, config]) => {
       await this.generateResolution(sourceFile, destDir, baseName, suffix, config);
       this.report.resolutions[suffix]++;
       this.report.generatedFiles++;
-    }
+    });
   }
 
   async getImageDimensions(filePath) {
@@ -219,7 +276,7 @@ class ResponsiveAssetGenerator {
         width: metadata.width || 1024,
         height: metadata.height || 1024,
       };
-    } catch (error) {
+    } catch {
       console.warn(`⚠️  Impossible de lire dimensions: ${filePath}`);
       return { width: 1024, height: 1024 };
     }
@@ -230,15 +287,16 @@ class ResponsiveAssetGenerator {
     const targets = {};
 
     // Stratégie par type d'asset
-    if (ASSET_PATTERNS.monsters.test(filename)) {
-      // Monstres: toutes les résolutions
-      Object.entries(RESOLUTION_TARGETS).forEach(([suffix, config]) => {
-        if (config.width <= originalDimensions.width) {
-          targets[suffix] = config;
-        }
-      });
-    } else if (ASSET_PATTERNS.logos.test(filename)) {
-      // Logos: résolutions moyennes
+    if (ASSET_PATTERNS.monsters.test(filename) || this.arcadeHdSources.has(sourceKey(sourceFile))) {
+      // Monstres, et sources haute définition des jeux d'Arcade (js/arcade-sprite-catalog.js) :
+      // toutes les résolutions, pour une image nette en grand écran comme sur un téléphone
+      return Object.fromEntries(
+        Object.entries(RESOLUTION_TARGETS).filter(
+          ([, config]) => config.width <= originalDimensions.width
+        )
+      );
+    } else if (ASSET_PATTERNS.illustrations.test(filename)) {
+      // Logos, cadeaux et têtes : résolutions moyennes
       ['128', '256', '512'].forEach(suffix => {
         if (RESOLUTION_TARGETS[suffix].width <= originalDimensions.width) {
           targets[suffix] = RESOLUTION_TARGETS[suffix];
@@ -273,11 +331,7 @@ class ResponsiveAssetGenerator {
 
       await sharp(sourceFile)
         .resize({ width: config.width, withoutEnlargement: true })
-        .webp({
-          quality: config.quality,
-          alphaQuality: 100,
-          effort: 5,
-        })
+        .webp(config.webp)
         .toFile(webpFile);
 
       const stats = fs.statSync(webpFile);
@@ -295,11 +349,10 @@ class ResponsiveAssetGenerator {
 
       webpFiles.forEach(webpFile => {
         const relativePath = path.relative(ASSETS_DIST, webpFile);
-        const match = relativePath.match(/(.+)-(\d+)\.webp$/);
+        const match = variantOf(relativePath);
 
         if (match) {
-          const baseName = match[1];
-          const resolution = match[2];
+          const { baseName, resolution } = match;
 
           if (!imageMap[baseName]) {
             imageMap[baseName] = {

@@ -131,6 +131,21 @@ h4 {
   font-size: var(--text-md);
 }
 
+/* Titre d'un écran : son h1 (un par écran, pour les lecteurs d'écran) garde la taille d'un
+   titre de carte */
+.screen-title {
+  font-size: var(--text-xl);
+}
+
+/* Sous ce titre, les sections montent d'un niveau (h2, puis h3) et gardent leur taille */
+.section-title {
+  font-size: var(--text-lg);
+}
+
+.subsection-title {
+  font-size: var(--text-md);
+}
+
 p {
   margin-bottom: 0.75em;
   text-wrap: pretty;
@@ -173,6 +188,34 @@ a {
 .keyboard-navigation :focus {
   outline: 3px solid var(--color-focus) !important;
   outline-offset: 3px !important;
+}
+
+/* === LIEN D'ÉVITEMENT : sur l'accueil seulement, premier arrêt de tabulation, visible
+   quand il a le focus. Il mène au titre des modes, sans repasser par la barre du haut. === */
+.skip-link {
+  display: none;
+}
+
+body:has(#slide1.active-slide) .skip-link {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  z-index: var(--z-tooltip);
+  display: block;
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-on-action);
+  text-decoration: none;
+  background: var(--color-action);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transform: translateY(calc(-100% - 2 * var(--space-2)));
+}
+
+body:has(#slide1.active-slide) .skip-link:focus {
+  transform: none;
 }
 
 /* === SLIDES === */
@@ -255,8 +298,10 @@ a {
     background-color var(--dur-base) var(--ease-out);
 }
 
-.btn:hover {
-  background: var(--color-action-hover);
+@media (hover: hover) {
+  .btn:hover {
+    background: var(--color-action-hover);
+  }
 }
 
 .btn:active {
@@ -281,8 +326,10 @@ a {
     0 var(--key-edge) 0 var(--color-border-strong);
 }
 
-.btn-secondary:hover {
-  background: var(--color-action-tint);
+@media (hover: hover) {
+  .btn-secondary:hover {
+    background: var(--color-action-tint);
+  }
 }
 
 .btn-secondary:active {
@@ -299,8 +346,10 @@ a {
   text-underline-offset: 0.2em;
 }
 
-.btn-quiet:hover {
-  background: var(--color-action-tint);
+@media (hover: hover) {
+  .btn-quiet:hover {
+    background: var(--color-action-tint);
+  }
 }
 
 .btn-quiet:active {
@@ -353,8 +402,10 @@ a {
     border-color var(--dur-base) var(--ease-out);
 }
 
-.avatar-btn:hover {
-  border-color: var(--color-action);
+@media (hover: hover) {
+  .avatar-btn:hover {
+    border-color: var(--color-action);
+  }
 }
 
 .avatar-btn:active {
@@ -385,28 +436,6 @@ a {
   outline-offset: 3px;
 }
 
-/* Verrouillé : posé à plat (pas de tranche, on ne peut pas l'enfoncer), nom à l'encre
-   atténuée (toujours lisible : c'est lui qui dit quel personnage on débloquera),
-   seul le visage est estompé. Le cadenas est un élément du bouton (.lock-icon). */
-.avatar-btn.locked {
-  position: relative;
-  overflow: hidden;
-  color: var(--color-ink-muted);
-  background: var(--color-surface-sunken);
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-.avatar-btn.locked img {
-  opacity: 0.6;
-  filter: grayscale(1);
-}
-
-.avatar-btn.locked:hover {
-  border-color: var(--color-border);
-  transform: none;
-}
-
 /* === LIENS ET PAGES D'INFORMATION (À propos, mentions légales, confidentialité) === */
 .inline-link {
   padding: 0;
@@ -421,8 +450,10 @@ a {
   transition: color var(--dur-fast) var(--ease-out);
 }
 
-.inline-link:hover {
-  color: var(--color-action-hover);
+@media (hover: hover) {
+  .inline-link:hover {
+    color: var(--color-action-hover);
+  }
 }
 
 /* Pages pour adultes : texte aligné à gauche, 70 caractères par ligne au plus
@@ -461,9 +492,9 @@ a {
   border-bottom: 1px solid var(--color-border);
 }
 
-.legal-header h2,
-.privacy-header h2,
-.faq-header h2 {
+.legal-header h1,
+.privacy-header h1,
+.faq-header h1 {
   margin-bottom: var(--space-2);
 }
 
@@ -501,7 +532,7 @@ a {
   border-top: 0;
 }
 
-.faq-item h3 {
+.faq-item h2 {
   margin-bottom: var(--space-2);
   font-size: var(--text-md);
 }
@@ -521,9 +552,9 @@ a {
   margin: 0;
 }
 
-.about-section h3,
-.legal-section h3,
-.privacy-section h3 {
+.about-section h2,
+.legal-section h2,
+.privacy-section h2 {
   margin-bottom: var(--space-3);
   font-size: var(--text-lg);
 }
@@ -543,9 +574,11 @@ a {
   transition: color var(--dur-fast) var(--ease-out);
 }
 
-.legal-section a[href^='http']:hover,
-.legal-section a[href^='mailto:']:hover {
-  color: var(--color-action-hover);
+@media (hover: hover) {
+  .legal-section a[href^='http']:hover,
+  .legal-section a[href^='mailto:']:hover {
+    color: var(--color-action-hover);
+  }
 }
 
 .about-section ul,
@@ -639,8 +672,10 @@ a {
     box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.keyboard-key:hover {
-  background-color: var(--color-action-tint);
+@media (hover: hover) {
+  .keyboard-key:hover {
+    background-color: var(--color-action-tint);
+  }
 }
 
 .keyboard-key:active {
@@ -691,10 +726,12 @@ a {
   cursor: pointer;
 }
 
-.card-base--clickable:hover {
-  border-color: var(--color-action);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .card-base--clickable:hover {
+    border-color: var(--color-action);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
 }
 
 /* === NOTIFICATIONS : toasts (messages et badges) ===
@@ -726,6 +763,9 @@ a {
   bottom: var(--space-5);
   bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
   left: 50%;
+  /* Placé à mi-largeur, il ne disposait que de la moitié de l'écran : sur téléphone, trois
+     lignes étroites qui couvraient d'autant plus le bas de l'écran */
+  inline-size: max-content;
   z-index: var(--z-toast);
   opacity: 0;
   transform: translate(-50%, 12px);
@@ -740,6 +780,13 @@ a {
 .message-popup.active {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+/* Une commande sous sa place (« Abandonner » au téléphone) : le message se pose plus haut,
+   là où il n'en cache aucune (js/ui-feedback.js) */
+.message-popup.is-raised {
+  top: var(--message-top);
+  bottom: auto;
 }
 
 .badge-notification {
@@ -814,6 +861,37 @@ body:has(> .message-popup) > .toast-stack {
   color: var(--color-ink);
 }
 
+/* Avis d'un jeu qui n'a pas pu s'ouvrir (js/components/loadErrorNotice.js) : en bas comme
+   les toasts, mais il reste affiché jusqu'à « D'accord » ou jusqu'au jeu suivant */
+.load-error-notice {
+  position: fixed;
+  bottom: var(--space-5);
+  bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+  justify-content: center;
+  inline-size: min(90vw, 36rem);
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-action);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transform: translateX(-50%);
+}
+
+.load-error-message {
+  flex: 1 1 16rem;
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+}
+
 @keyframes badge-fade-in-out {
   0% {
     opacity: 0;
@@ -830,86 +908,6 @@ body:has(> .message-popup) > .toast-stack {
     opacity: 0;
     transform: translate(-50%, 12px);
   }
-}
-
-/* === FENÊTRES (vérification parentale) === */
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-modal);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--color-scrim-modal);
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity var(--dur-base) var(--ease-out),
-    visibility 0s var(--dur-base);
-}
-
-.popup-overlay.visible {
-  opacity: 1;
-  visibility: visible;
-  transition:
-    opacity var(--dur-base) var(--ease-out),
-    visibility 0s 0s;
-}
-
-.popup-content {
-  width: 90%;
-  max-width: 400px;
-  padding: var(--space-6);
-  text-align: center;
-  color: var(--color-ink);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  transform: scale(0.96);
-  transition: transform var(--dur-base) var(--ease-out);
-}
-
-.popup-overlay.visible .popup-content {
-  transform: scale(1);
-}
-
-.popup-content h3 {
-  margin-top: 0;
-}
-
-.parental-question {
-  margin: var(--space-4) 0;
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--color-ink);
-}
-
-#parental-answer {
-  width: 9rem;
-  margin-bottom: var(--space-2);
-  padding: var(--space-2);
-  font-size: var(--text-lg);
-  text-align: center;
-  color: var(--color-ink);
-  background-color: var(--color-surface);
-  border: 2px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-}
-
-.error-message {
-  min-height: 1.2em;
-  margin-top: -5px;
-  margin-bottom: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--color-danger-ink);
-}
-
-.popup-buttons {
-  display: flex;
-  justify-content: space-around;
-  margin-top: var(--space-4);
 }
 
 /* === RETOURS DE RÉPONSE : sobres, jamais de secousse === */
@@ -942,6 +940,67 @@ body:has(> .message-popup) > .toast-stack {
   fill: var(--color-reward);
   stroke: var(--color-reward-edge);
   stroke-width: 1.5;
+}
+
+/* === FENÊTRE DE CONFIRMATION (js/components/confirm-dialog.js) ===
+   Une question, ce qu'elle implique, puis le bouton sans risque, en touche principale et
+   avec le focus, et l'action, secondaire. Le voile couvre la page et le jeu ; en plein
+   écran, la fenêtre se pose dans la partie affichée, dont elle ne prend pas le texte centré. */
+.confirm-dialog-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.confirm-dialog-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-scrim-modal);
+}
+
+.confirm-dialog {
+  position: relative;
+  max-inline-size: 30rem;
+  max-block-size: 100%;
+  overflow-y: auto;
+  padding: var(--space-5);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--color-ink);
+  text-align: start;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.confirm-dialog-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--color-ink-heading);
+  text-wrap: balance;
+}
+
+.confirm-dialog-message {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* Sur un téléphone, les deux boutons passent l'un sous l'autre, chacun sur toute la largeur */
+.confirm-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+.confirm-dialog-actions .btn {
+  flex: 1 1 auto;
+  margin: 0;
 }
 
 /* === TRANSITIONS DE SLIDES === */

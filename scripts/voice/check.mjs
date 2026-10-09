@@ -17,6 +17,7 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { inSequence } from '../lib/in-sequence.cjs';
 import { buildCorpus } from './corpus.mjs';
 import { voiceSaidText } from './said-text.mjs';
 import { clipProblem, probeClip } from './audio-process.mjs';
@@ -58,12 +59,12 @@ function missingReport(missing, lang, voice) {
 async function probeEntries(entries, paths, probe) {
   const invalid = [];
   const changed = [];
-  for (const [key, entry] of entries) {
+  await inSequence(entries, async ([key, entry]) => {
     const file = clipFile(paths, key);
     const problem = clipProblem(await probe(file).catch(() => ({ codec: '' })));
     if (problem) invalid.push({ key, text: entry.text, problem });
     if (sha256(await fsp.readFile(file)) !== entry.sha256) changed.push({ key, text: entry.text });
-  }
+  });
   return { invalid, changed };
 }
 
