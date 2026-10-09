@@ -607,7 +607,7 @@ kontextabhängigen Zuständen auf `:has()`, wodurch folgende Mindestversionen ge
   Leseanfänger entworfen wurde
 - Arcade: Pause (Schaltfläche, Taste P oder ausgeblendeter Tab); MultiMemory wahlweise ohne Zeitbegrenzung
 - Geprüft mit axe-core (WCAG 2.0 bis 2.2, Stufen A und AA sowie bewährte Praktiken): keine
-  Verstöße auf 40 Bildschirmen in Desktopbreite und 39 in Smartphonebreite (390 px), einschließlich
+  Verstöße auf 41 Bildschirmen in Desktopbreite und 40 in Smartphonebreite (390 px), einschließlich
   Nacht-Theme und hohem Kontrast
 
 ## 🌍 Lokalisierung

@@ -587,7 +587,7 @@ Interface colors के लिए `oklch()` और contextual states के ल�
 - Screen readers: प्रत्येक उत्तर अपने प्रश्न से जुड़ा है, प्रत्येक screen पर एक level 1 heading है और messages की घोषणा की जाती है
 - पृष्ठ को उँगलियों से zoom किया जा सकता है (Arcade खेलों को छोड़कर); text size, high contrast, reduced animations और शुरुआती पाठकों के लिए बनाई गई Andika से व्युत्पन्न reading font
 - Arcade: pause (button, P key या छिपा हुआ tab); MultiMemory में इच्छानुसार कोई time limit नहीं
-- axe-core से जाँचा गया (WCAG 2.0 से 2.2, स्तर A और AA तथा best practices): desktop width वाली 40 screens और phone width (390 px) वाली 39 screens पर कोई उल्लंघन नहीं, जिसमें Night theme और high contrast शामिल हैं
+- axe-core से जाँचा गया (WCAG 2.0 से 2.2, स्तर A और AA तथा best practices): desktop width वाली 41 screens और phone width (390 px) वाली 40 screens पर कोई उल्लंघन नहीं, जिसमें Night theme और high contrast शामिल हैं
 
 ## 🌍 स्थानीयकरण
 

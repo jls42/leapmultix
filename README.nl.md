@@ -608,7 +608,7 @@ contextuele toestanden, waarmee de minimumvereisten worden bepaald:
   lezers
 - Arcade: pauze (knop, P-toets of verborgen tabblad); MultiMemory desgewenst zonder tijdslimiet
 - Gecontroleerd met axe-core (WCAG 2.0 tot 2.2, niveaus A en AA en best practices): geen
-  schendingen op 40 schermen met desktopbreedte en 39 met telefoonbreedte (390 px), inclusief het thema
+  schendingen op 41 schermen met desktopbreedte en 40 met telefoonbreedte (390 px), inclusief het thema
   Nacht en hoog contrast
 
 ## 🌍 Lokalisatie

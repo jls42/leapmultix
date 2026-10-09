@@ -605,7 +605,7 @@ stanów kontekstowych, co określa minimalne wersje:
   zaprojektowany dla początkujących czytelników
 - Arcade: pauza (przycisk, klawisz P lub ukrycie karty); opcjonalnie MultiMemory bez limitu czasu
 - Kontrola za pomocą axe-core (WCAG od 2.0 do 2.2, poziomy A i AA oraz dobre praktyki): brak
-  naruszeń na 40 ekranach w szerokości komputerowej i 39 w szerokości telefonu (390 px), również
+  naruszeń na 41 ekranach w szerokości komputerowej i 40 w szerokości telefonu (390 px), również
   z motywem Noc i wysokim kontrastem
 
 ## 🌍 Lokalizacja
