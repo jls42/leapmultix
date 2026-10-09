@@ -5,8 +5,83 @@
  * Phase 9.1 - Documentation du Code
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
+
+// Débuts de fonction reconnus, essayés dans cet ordre : le premier qui convient donne le nom
+const FUNCTION_PATTERNS = [
+  /^\s*function\s+(\w+)/, // function nom
+  /^\s*(\w+)\s*[:=]\s*function/, // nom = function, nom: function
+  /^\s*(\w+)\s*\(.*\)\s*\{/, // nom(…) {
+  /^\s*(\w+)\s*:\s*\(.*\)\s*=>/, // nom: (…) =>
+];
+const CLASS_METHOD_REGEX = /^\s*(\w+)\s*\([^)]*\)\s*\{/;
+const JSDOC_START_REGEX = /^\s*\/\*\*/;
+
+/**
+ * Nom de la fonction déclarée sur cette ligne
+ * @param {string} line
+ * @returns {string|null} null si la ligne ne déclare pas de fonction
+ */
+function declaredFunctionName(line) {
+  for (const pattern of FUNCTION_PATTERNS) {
+    const match = pattern.exec(line);
+    if (match) return match[1];
+  }
+  const method = CLASS_METHOD_REGEX.exec(line);
+  return method ? method[1] : null;
+}
+
+/**
+ * Compte une fonction trouvée ligne `index` ; les fonctions privées (_nom) et les constructeurs
+ * ne comptent pas
+ * @param {object} fileInfo
+ * @param {{name: string|null, index: number, isDocumented: boolean}} found
+ */
+function recordFunction(fileInfo, { name, index, isDocumented }) {
+  if (!name || name.startsWith('_') || name === 'constructor') return;
+  fileInfo.totalFunctions++;
+  if (isDocumented) {
+    fileInfo.documentedFunctions++;
+  } else {
+    fileInfo.undocumentedFunctions.push({ name, line: index + 1 });
+  }
+}
+
+/**
+ * Parcourt les lignes : une fonction est documentée si un bloc JSDoc se ferme dans les 3 lignes
+ * qui la précèdent
+ * @param {string[]} lines
+ * @param {object} fileInfo
+ */
+function scanFunctions(lines, fileInfo) {
+  let isInJSDoc = false;
+  let lastJSDocLine = -1;
+  lines.forEach((line, index) => {
+    // Détecter début/fin JSDoc
+    if (JSDOC_START_REGEX.test(line)) {
+      isInJSDoc = true;
+    } else if (isInJSDoc) {
+      if (line.includes('*/')) {
+        isInJSDoc = false;
+        lastJSDocLine = index;
+      }
+    } else {
+      const isDocumented = lastJSDocLine >= 0 && index - lastJSDocLine <= 3;
+      recordFunction(fileInfo, { name: declaredFunctionName(line), index, isDocumented });
+    }
+  });
+}
+
+/**
+ * Part des fonctions documentées, en % ; sans fonction, 100 si le module est documenté
+ * @param {{totalFunctions: number, documentedFunctions: number, hasModuleDoc: boolean}} fileInfo
+ * @returns {number}
+ */
+function documentationQuality({ totalFunctions, documentedFunctions, hasModuleDoc }) {
+  if (totalFunctions > 0) return Math.round((documentedFunctions / totalFunctions) * 100);
+  return hasModuleDoc ? 100 : 0;
+}
 
 class JSDocAnalyzer {
   constructor() {
@@ -62,73 +137,22 @@ class JSDocAnalyzer {
       totalFunctions: 0,
       documentedFunctions: 0,
       undocumentedFunctions: [],
-      hasModuleDoc: false,
+      // Documentation de module : un bloc JSDoc dans les 10 premières lignes
+      hasModuleDoc:
+        content.includes('/**') && lines.slice(0, 10).some(line => line.includes('/**')),
       quality: 0,
     };
 
-    // Vérifier si le fichier a une documentation de module
-    if (content.includes('/**') && lines.slice(0, 10).some(line => line.includes('/**'))) {
-      fileInfo.hasModuleDoc = true;
-    }
+    scanFunctions(lines, fileInfo);
+    fileInfo.quality = documentationQuality(fileInfo);
+    this.recordFile(fileInfo);
+  }
 
-    // Trouver toutes les fonctions
-    const functionRegex =
-      /^\s*(function\s+(\w+)|(\w+)\s*[:=]\s*function|(\w+)\s*\(\s*.*?\s*\)\s*\{|(\w+)\s*:\s*\(\s*.*?\s*\)\s*=>)/;
-    const classMethodRegex = /^\s*(\w+)\s*\([^)]*\)\s*\{/;
-    const jsdocRegex = /^\s*\/\*\*/;
-
-    let isInJSDoc = false;
-    let lastJSDocLine = -1;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // Détecter début/fin JSDoc
-      if (jsdocRegex.test(line)) {
-        isInJSDoc = true;
-        continue;
-      }
-      if (isInJSDoc && line.includes('*/')) {
-        isInJSDoc = false;
-        lastJSDocLine = i;
-        continue;
-      }
-      if (isInJSDoc) continue;
-
-      // Détecter fonctions
-      const funcMatch = line.match(functionRegex);
-      const methodMatch = line.match(classMethodRegex);
-
-      if (funcMatch || methodMatch) {
-        const functionName = funcMatch
-          ? funcMatch[2] || funcMatch[3] || funcMatch[4] || funcMatch[5]
-          : methodMatch[1];
-
-        if (functionName && !functionName.startsWith('_') && functionName !== 'constructor') {
-          fileInfo.totalFunctions++;
-
-          // Vérifier si documentée (JSDoc dans les 3 lignes précédentes)
-          const isDocumented = lastJSDocLine >= 0 && i - lastJSDocLine <= 3;
-
-          if (isDocumented) {
-            fileInfo.documentedFunctions++;
-          } else {
-            fileInfo.undocumentedFunctions.push({
-              name: functionName,
-              line: i + 1,
-            });
-          }
-        }
-      }
-    }
-
-    // Calculer qualité
-    if (fileInfo.totalFunctions > 0) {
-      fileInfo.quality = Math.round((fileInfo.documentedFunctions / fileInfo.totalFunctions) * 100);
-    } else {
-      fileInfo.quality = fileInfo.hasModuleDoc ? 100 : 0;
-    }
-
+  /**
+   * Ajouter un fichier analysé aux statistiques du projet
+   * @param {object} fileInfo
+   */
+  recordFile(fileInfo) {
     this.stats.totalFiles++;
     this.stats.totalFunctions += fileInfo.totalFunctions;
     this.stats.documentedFunctions += fileInfo.documentedFunctions;

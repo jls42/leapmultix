@@ -32,6 +32,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { inSequence } from '../lib/in-sequence.cjs';
 import { buildCorpus } from './corpus.mjs';
 import { hasAgreement, saidText, voiceSaidText } from './said-text.mjs';
 import { checkAudioTools, processClip, probeClip } from './audio-process.mjs';
@@ -492,14 +493,15 @@ export async function synthesizeBench(plan, options) {
     log,
   } = options;
   let made = 0;
-  for (const { bench, todo } of plan.filter(step => step.todo.length)) {
+  const steps = plan.filter(step => step.todo.length);
+  await inSequence(steps, async ({ bench, todo }) => {
     try {
       made += await synthesizeVoice(bench, todo, { paths, open, audio, retry });
     } catch (error) {
       throw new Error(`${bench.name} : ${error.message}`, { cause: error });
     }
     log?.(`${bench.name} : ${todo.length} clips`);
-  }
+  });
   return made;
 }
 
@@ -507,10 +509,10 @@ export async function synthesizeBench(plan, options) {
 async function synthesizeVoice(bench, todo, { paths, open, audio, retry }) {
   const manifest = readBenchManifest(paths, bench.slug);
   const provider = todo.some(item => !item.paid) ? await open(bench.voice) : null;
-  for (const item of todo) {
+  await inSequence(todo, async item => {
     if (!item.paid) await buyRaw(item, { bench, provider, paths, retry });
     await finishClip(item, { bench, paths, manifest, audio });
-  }
+  });
   return todo.length;
 }
 
@@ -524,7 +526,8 @@ async function synthesizeVoice(bench, todo, { paths, open, audio, retry }) {
  */
 export async function copyReferences(voices, phrases, { paths, voicesRepo, lang }) {
   let copied = 0;
-  for (const bench of voices.filter(voice => voice.kind === 'reference')) {
+  const references = voices.filter(voice => voice.kind === 'reference');
+  await inSequence(references, async bench => {
     try {
       copied += await copyReference(bench, phrases, { paths, voicesRepo, lang });
     } catch (error) {
@@ -532,7 +535,7 @@ export async function copyReferences(voices, phrases, { paths, voicesRepo, lang 
         cause: error,
       });
     }
-  }
+  });
   return copied;
 }
 
@@ -540,15 +543,15 @@ async function copyReference(bench, phrases, { paths, voicesRepo, lang }) {
   const { version } = bench.voice;
   const published = readJson(path.join(voicesRepo, 'manifests', lang, `${version}.json`), {});
   const manifest = { clips: {} };
-  for (const phrase of phrases) {
+  await inSequence(phrases, async phrase => {
     const from = path.join(voicesRepo, 'clips', lang, version, `${phrase.key}.mp3`);
     const entry = published.clips?.[phrase.key];
-    if (!entry || !exists(from)) continue;
+    if (!entry || !exists(from)) return;
     const to = path.join(paths.outDir, clipPath(bench.slug, phrase.key));
     await makeParent(to);
     await fsp.copyFile(from, to);
     manifest.clips[phrase.key] = { ...entry, sha256: await fileSha(to) };
-  }
+  });
   const file = manifestFile(paths, bench.slug);
   await makeParent(file);
   await writeFileAtomic(file, JSON.stringify(manifest, null, 2));

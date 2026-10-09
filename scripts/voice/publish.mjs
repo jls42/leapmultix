@@ -54,6 +54,7 @@ import {
   pathOption,
   valueOption,
 } from './cli-options.mjs';
+import { inSequence } from '../lib/in-sequence.cjs';
 import { readManifest, storePaths } from './clip-store.mjs';
 import { buildCorpus } from './corpus.mjs';
 import { DEFAULT_OUT, loadVoice, loadVoiceVersion } from './generate.mjs';
@@ -231,14 +232,14 @@ function requireClips(manifest, paths) {
 async function localClips(paths, manifest) {
   const clips = [];
   const mismatches = [];
-  for (const [key, entry] of Object.entries(manifest.clips)) {
+  await inSequence(Object.entries(manifest.clips), async ([key, entry]) => {
     const file = path.join(paths.clipDir, `${key}.mp3`);
     const data = await fsp.readFile(file).catch(() => null);
     if (!data) mismatches.push(`${key} (fichier absent)`);
     else if (data.length !== entry.bytes || hash('sha256', data) !== entry.sha256) {
       mismatches.push(`${key} (contenu différent du manifeste)`);
     } else clips.push({ key, file, md5: hash('md5', data) });
-  }
+  });
   if (mismatches.length) {
     throw new Error(
       `${mismatches.length} clips ne correspondent pas au manifeste : ` +
@@ -292,9 +293,9 @@ async function publishClips(ctx) {
   // Dossier d'envoi : des liens vers les seuls clips manquants
   const staging = await fsp.mkdtemp(path.join(os.tmpdir(), 'voice-upload-'));
   try {
-    for (const clip of plan.toUpload) {
+    await inSequence(plan.toUpload, async clip => {
       await fsp.symlink(clip.file, path.join(staging, `${clip.key}.mp3`));
-    }
+    });
     await run([
       's3',
       'cp',

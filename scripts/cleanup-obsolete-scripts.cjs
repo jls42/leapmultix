@@ -3,7 +3,7 @@
  * Clean up obsolete migration/phase scripts
  */
 
-const fs = require('fs');
+const fs = require('node:fs');
 
 // Scripts de migration/phase clairement obsolètes
 const OBSOLETE_SCRIPTS = [

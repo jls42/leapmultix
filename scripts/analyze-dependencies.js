@@ -5,11 +5,43 @@
  * Analyse les fonctions globales et leurs utilisations
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const JS_DIR = './js';
 const ANALYSIS_OUTPUT = './analysis';
+
+// Définitions de premier niveau : `function nom`, ou `const|let|var nom = function` ou `= (…) =>`
+const FUNCTION_DECLARATION = /^function\s+(\w+)/gm;
+const FUNCTION_EXPRESSION = /^(?:const|let|var)\s+(\w+)\s*=\s*(?:function|\(.*?\)\s*=>)/gm;
+
+/**
+ * Première définition de fonction à partir de `from` : la plus à gauche des deux formes, comme
+ * l'expression unique qu'elles remplacent (S5843). La recherche suivante repart de sa fin.
+ * @param {string} content
+ * @param {number} from
+ * @returns {RegExpExecArray|null}
+ */
+function nextFunctionDefinition(content, from) {
+  FUNCTION_DECLARATION.lastIndex = from;
+  FUNCTION_EXPRESSION.lastIndex = from;
+  const declaration = FUNCTION_DECLARATION.exec(content);
+  const expression = FUNCTION_EXPRESSION.exec(content);
+  if (!declaration) return expression;
+  if (!expression) return declaration;
+  return expression.index < declaration.index ? expression : declaration;
+}
+
+/**
+ * Fichiers du plus long au plus court, en liste Markdown. Le tri reste fait sur place (S4043 :
+ * dans une instruction à part), au même moment qu'avant : après l'écriture du rapport JSON.
+ * @param {{name: string, lines: number}[]} files
+ * @returns {string}
+ */
+function filesBySizeMarkdown(files) {
+  files.sort((a, b) => b.lines - a.lines);
+  return files.map(f => `- **${f.name}**: ${f.lines} lignes`).join('\n');
+}
 
 // Créer le dossier d'analyse s'il n'existe pas
 if (!fs.existsSync(ANALYSIS_OUTPUT)) {
@@ -31,7 +63,7 @@ class DependencyAnalyzer {
 
     for (const file of files) {
       const filePath = path.join(JS_DIR, file);
-      // eslint-disable-next-line -- filePath is constructed from JS_DIR and verified .js file
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is constructed from JS_DIR and verified .js file
       const content = fs.readFileSync(filePath, 'utf8');
 
       this.files.push({
@@ -47,13 +79,13 @@ class DependencyAnalyzer {
 
   // Extraire les fonctions globales
   extractGlobalFunctions() {
-    const functionRegex =
-      /^(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:function|\(.*?\)\s*=>))/gm;
-
     for (const file of this.files) {
-      let match;
-      while ((match = functionRegex.exec(file.content)) !== null) {
-        const funcName = match[1] || match[2];
+      for (
+        let match = nextFunctionDefinition(file.content, 0);
+        match !== null;
+        match = nextFunctionDefinition(file.content, match.index + match[0].length)
+      ) {
+        const funcName = match[1];
         if (funcName) {
           if (!this.globalFunctions.has(funcName)) {
             this.globalFunctions.set(funcName, []);
@@ -98,8 +130,8 @@ class DependencyAnalyzer {
       this.functionUsages.set(funcName, []);
 
       for (const file of this.files) {
-        // eslint-disable-next-line -- funcName is from controlled function analysis, not user input
-        const usageRegex = new RegExp(`\\b${funcName}\\s*\\(`, 'g');
+        // eslint-disable-next-line security/detect-non-literal-regexp -- funcName is from controlled function analysis, not user input
+        const usageRegex = new RegExp(String.raw`\b${funcName}\s*\(`, 'g');
         let match;
         while ((match = usageRegex.exec(file.content)) !== null) {
           this.functionUsages.get(funcName).push({
@@ -117,8 +149,8 @@ class DependencyAnalyzer {
       this.variableUsages.set(varName, []);
 
       for (const file of this.files) {
-        // eslint-disable-next-line -- varName is from controlled variable analysis, not user input
-        const usageRegex = new RegExp(`\\b${varName}\\b`, 'g');
+        // eslint-disable-next-line security/detect-non-literal-regexp -- varName is from controlled variable analysis, not user input
+        const usageRegex = new RegExp(String.raw`\b${varName}\b`, 'g');
         let match;
         while ((match = usageRegex.exec(file.content)) !== null) {
           this.variableUsages.get(varName).push({
@@ -213,10 +245,7 @@ ${deadCode.deadFunctions.map(f => `- \`${f}\``).join('\n')}
 ${deadCode.deadVariables.map(v => `- \`${v}\``).join('\n')}
 
 ## Fichiers par taille
-${report.files
-  .sort((a, b) => b.lines - a.lines)
-  .map(f => `- **${f.name}**: ${f.lines} lignes`)
-  .join('\n')}
+${filesBySizeMarkdown(report.files)}
 
 ---
 *Généré le ${new Date().toISOString()}*

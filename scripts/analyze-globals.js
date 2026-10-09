@@ -2,13 +2,13 @@
 /**
  * Analyze global usage (window.*) per file and window assignments.
  */
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const ROOT = path.resolve(process.cwd(), 'js');
 
 function listJsFiles(dir) {
-  // eslint-disable-next-line -- dir is from controlled directory traversal starting from ROOT
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- dir is from controlled directory traversal starting from ROOT
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const files = [];
   for (const e of entries) {
@@ -21,10 +21,10 @@ function listJsFiles(dir) {
 
 const stats = [];
 for (const file of listJsFiles(ROOT)) {
-  // eslint-disable-next-line -- file is from controlled directory traversal starting from ROOT
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- file is from controlled directory traversal starting from ROOT
   const src = fs.readFileSync(file, 'utf8');
   const windowUses = (src.match(/\bwindow\./g) || []).length;
-  const windowAssigns = (src.match(/\bwindow\.[A-Za-z0-9_]+\s*=\s*/g) || []).length;
+  const windowAssigns = (src.match(/\bwindow\.\w+\s*=\s*/g) || []).length;
   if (windowUses || windowAssigns) {
     stats.push({ file: path.relative(process.cwd(), file), windowUses, windowAssigns });
   }

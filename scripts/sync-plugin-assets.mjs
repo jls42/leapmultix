@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { inSequence } from './lib/in-sequence.cjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,9 +39,7 @@ async function main() {
   }
 
   const profileJobs = await buildProfileJobs(options);
-  for (const job of profileJobs) {
-    await runJob(job, manifestEntries);
-  }
+  await inSequence(profileJobs, job => runJob(job, manifestEntries));
 
   if (!options['skip-individual']) {
     await syncIndividualComponents(manifestEntries, options);
@@ -217,17 +216,15 @@ async function writeMarketplaceManifests(entries) {
     ),
   ];
 
-  for (const target of targets) {
-    // eslint-disable-next-line no-await-in-loop -- sequential for clarity
+  await inSequence(targets, async target => {
     await ensureDir(target);
     const manifestPath = ensurePathWithinRepo(
       path.join(target, 'marketplace.json'),
       'marketplace manifest'
     );
-    // eslint-disable-next-line no-await-in-loop -- sequential write is fine
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- manifestPath sanitized via ensurePathWithinRepo
     await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  }
+  });
 }
 
 async function buildManualJob(opts) {
@@ -403,25 +400,23 @@ async function syncIndividualComponents(manifestEntries, opts) {
   };
 
   try {
-    for (const [section, config] of Object.entries(componentConfigs)) {
+    await inSequence(Object.entries(componentConfigs), async ([section, config]) => {
       if (!includeAll && !requestedSet.has(section)) {
-        continue;
+        return;
       }
 
       try {
         const items = await config.listItems();
         if (items.length === 0) {
-          continue;
+          return;
         }
 
         console.log(`\nSyncing individual ${section}`);
-        for (const item of items) {
-          await syncSinglePlugin(item, section, config, manifestEntries);
-        }
+        await inSequence(items, item => syncSinglePlugin(item, section, config, manifestEntries));
       } catch (error) {
         throw new Error(`Failed to sync ${section} components: ${error.message}`);
       }
-    }
+    });
   } catch (error) {
     throw new Error(`Failed to sync individual components: ${error.message}`);
   }

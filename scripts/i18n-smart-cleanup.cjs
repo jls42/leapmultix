@@ -5,8 +5,8 @@
  * Fix F-I18N-01: Conservative cleanup avoiding false positives
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 console.log('🧹 Smart i18n cleanup - Conservative approach');
 

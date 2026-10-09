@@ -2,9 +2,10 @@
  * - Copies CSS and assets to dist/
  * - Rewrites index.html script to hashed Rollup entry
  */
-const fs = require('fs');
+const fs = require('node:fs');
 const fsp = fs.promises;
-const path = require('path');
+const path = require('node:path');
+const { inSequence } = require('./lib/in-sequence.cjs');
 
 async function ensureDir(p) {
   await fsp.mkdir(p, { recursive: true });
@@ -13,12 +14,12 @@ async function ensureDir(p) {
 async function copyDir(src, dest) {
   await ensureDir(dest);
   const entries = await fsp.readdir(src, { withFileTypes: true });
-  for (const e of entries) {
+  await inSequence(entries, async e => {
     const s = path.join(src, e.name);
     const d = path.join(dest, e.name);
     if (e.isDirectory()) await copyDir(s, d);
     else await fsp.copyFile(s, d);
-  }
+  });
 }
 
 async function run() {
@@ -50,17 +51,25 @@ async function run() {
   const assetsSrc = path.join(root, 'assets');
   const cssDest = path.join(dist, 'css');
   const assetsDest = path.join(dist, 'assets');
+  // Copies au mieux : une erreur (dossier ou fichier absent, comme favicon.svg) laisse de côté
+  // le reste de cet élément sans arrêter le build
   try {
     await copyDir(cssSrc, cssDest);
-  } catch (e) {}
+  } catch {
+    // Copie au mieux (ci-dessus)
+  }
   try {
     await copyDir(assetsSrc, assetsDest);
-  } catch (e) {}
-  for (const file of ['favicon.ico', 'favicon.png', 'favicon.svg', 'sw.js']) {
+  } catch {
+    // Copie au mieux (ci-dessus)
+  }
+  await inSequence(['favicon.ico', 'favicon.png', 'favicon.svg', 'sw.js'], async file => {
     try {
       await fsp.copyFile(path.join(root, file), path.join(dist, file));
-    } catch (e) {}
-  }
+    } catch {
+      // Copie au mieux (ci-dessus)
+    }
+  });
 
   console.log(`[postbuild] Packed dist with entry ${criticalEntry}`);
 }

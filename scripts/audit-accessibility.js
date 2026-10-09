@@ -3,9 +3,15 @@
  * Analyse l'état actuel de l'accessibilité de LeapMultix
  */
 
-import fs from 'fs';
-import path from 'path';
-import { pathToFileURL } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+/** Pastille d'un score : bon (80 et plus), moyen (60 et plus), insuffisant */
+function scoreStatus(score) {
+  if (score >= 80) return '✅';
+  return score >= 60 ? '⚠️' : '❌';
+}
 
 class AccessibilityAuditor {
   constructor() {
@@ -27,7 +33,7 @@ class AccessibilityAuditor {
 
   // Analyser les fichiers HTML
   analyzeHTML(filePath) {
-    // eslint-disable-next-line -- filePath is from controlled HTML file analysis
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is from controlled HTML file analysis
     const content = fs.readFileSync(filePath, 'utf8');
     const fileName = path.basename(filePath);
 
@@ -263,8 +269,8 @@ class AccessibilityAuditor {
       score -= 20;
     }
 
-    // Vérifier les couleurs uniquement (sans autre indication)
-    const colorOnlyRules = content.match(/color:\s*[^;]*;(?![^}]*border|background)/g);
+    // Vérifier les couleurs uniquement (sans autre indication) ; [^;]* couvre déjà les espaces
+    const colorOnlyRules = content.match(/color:[^;]*;(?![^}]*border|background)/g);
     if (colorOnlyRules && colorOnlyRules.length > 5) {
       issues.push('Information transmise uniquement par la couleur');
       score -= 15;
@@ -287,9 +293,9 @@ class AccessibilityAuditor {
       score -= 20;
     }
 
-    // Vérifier les unités fixes
-    const fixedUnits = (content.match(/\d+px/g) || []).length;
-    const relativeUnits = (content.match(/\d+(em|rem|%|vw|vh)/g) || []).length;
+    // Vérifier les unités fixes (un nombre se lit à partir de son premier chiffre)
+    const fixedUnits = (content.match(/(?<!\d)\d+px/g) || []).length;
+    const relativeUnits = (content.match(/(?<!\d)\d+(em|rem|%|vw|vh)/g) || []).length;
 
     if (fixedUnits > relativeUnits * 2) {
       issues.push("Usage excessif d'unités fixes (px)");
@@ -432,8 +438,7 @@ class AccessibilityAuditor {
     // Afficher scores
     console.log("🎯 SCORES D'ACCESSIBILITÉ :");
     Object.entries(this.results.accessibility).forEach(([category, data]) => {
-      const status = data.score >= 80 ? '✅' : data.score >= 60 ? '⚠️' : '❌';
-      console.log(`${status} ${category}: ${data.score}/100`);
+      console.log(`${scoreStatus(data.score)} ${category}: ${data.score}/100`);
     });
 
     // Score global
@@ -454,7 +459,7 @@ class AccessibilityAuditor {
 
   calculateCategoryScores() {
     // HTML Sémantique
-    const semanticScores = this.results.htmlFiles.map(f => (f.semantic || {}).score || 0);
+    const semanticScores = this.results.htmlFiles.map(f => f.semantic?.score || 0);
     this.results.accessibility.semanticHTML.score =
       semanticScores.length > 0
         ? Math.round(semanticScores.reduce((a, b) => a + b, 0) / semanticScores.length)
@@ -524,13 +529,9 @@ class AccessibilityAuditor {
 
   saveReport(globalScore) {
     const reportPath = 'analysis/accessibility-audit.json';
-    const htmlCount =
-      // eslint-disable-next-line security/detect-object-injection
-      this.results.htmlFiles && this.results.htmlFiles.length ? this.results.htmlFiles.length : 0;
-    const cssCount =
-      this.results.cssFiles && this.results.cssFiles.length ? this.results.cssFiles.length : 0;
-    const jsCount =
-      this.results.jsFiles && this.results.jsFiles.length ? this.results.jsFiles.length : 0;
+    const htmlCount = this.results.htmlFiles?.length ? this.results.htmlFiles.length : 0;
+    const cssCount = this.results.cssFiles?.length ? this.results.cssFiles.length : 0;
+    const jsCount = this.results.jsFiles?.length ? this.results.jsFiles.length : 0;
     const summary = {
       date: new Date().toISOString(),
       globalScore: Math.round(globalScore),
@@ -569,7 +570,7 @@ class AccessibilityAuditor {
     // Analyser fichiers HTML
     const htmlFiles = ['index.html'];
     htmlFiles.forEach(file => {
-      // eslint-disable-next-line -- file is from predefined htmlFiles array
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- file is from predefined htmlFiles array
       if (fs.existsSync(file)) {
         this.analyzeHTML(file);
       }

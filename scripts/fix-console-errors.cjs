@@ -6,8 +6,7 @@
  * 3. Add missing level names and descriptions
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
 
 console.log('🔧 Correction des erreurs console...');
 
