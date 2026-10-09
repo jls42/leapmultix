@@ -448,7 +448,6 @@ const PRECACHE_IMAGES = [
   '/assets/images/arcade/herbe.png',
   '/assets/images/arcade/licorne_vaisseau_2_256x256.png',
   '/assets/images/arcade/licorne_vaisseau_256x256.png',
-  '/assets/images/arcade/logo_mode_arcade.png',
   '/assets/images/arcade/logo_mode_aventure.png',
   '/assets/images/arcade/logo_mode_chrono.png',
   '/assets/images/arcade/logo_mode_decouverte.png',

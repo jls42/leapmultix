@@ -30,14 +30,18 @@ const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory'];
 // textes et tirs de MultiInvaders (bord gauche de la balle, là où elle est visée)
 const CLIENT_SPY_SOURCE = `(() => {
   const proto = CanvasRenderingContext2D.prototype;
+  // Dessin centré dans l'élément (object-fit: contain : bandes de mur de MultiMiam)
   const toClient = (ctx, x, y) => {
     const t = ctx.getTransform();
-    const rect = ctx.canvas.getBoundingClientRect();
-    const border = parseFloat(getComputedStyle(ctx.canvas).borderLeftWidth) || 0;
-    const toCss = ctx.canvas.clientWidth / ctx.canvas.width;
+    const canvas = ctx.canvas;
+    const rect = canvas.getBoundingClientRect();
+    const border = parseFloat(getComputedStyle(canvas).borderLeftWidth) || 0;
+    const toCss = Math.min(canvas.clientWidth / canvas.width, canvas.clientHeight / canvas.height);
+    const left = rect.left + border + (canvas.clientWidth - canvas.width * toCss) / 2;
+    const top = rect.top + border + (canvas.clientHeight - canvas.height * toCss) / 2;
     return {
-      x: rect.left + border + (t.a * x + t.c * y + t.e) * toCss,
-      y: rect.top + border + (t.b * x + t.d * y + t.f) * toCss,
+      x: left + (t.a * x + t.c * y + t.e) * toCss,
+      y: top + (t.b * x + t.d * y + t.f) * toCss,
     };
   };
   const draws = (globalThis.__client = { images: [], texts: [], shots: [] });
@@ -53,6 +57,7 @@ const CLIENT_SPY_SOURCE = `(() => {
         canvas: this.canvas.id,
         x: (a.x + b.x) / 2,
         y: (a.y + b.y) / 2,
+        w: Math.abs(b.x - a.x),
         gx: rest[0] + rest[2] / 2,
         gy: rest[1] + rest[3] / 2,
       });
@@ -262,6 +267,49 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
         head.y
       );
       expect((await turned.jsonValue()).src).toBe('tete_haut.png');
+    },
+    40000
+  );
+
+  // Le personnage part vers la case touchée : en portrait, au-dessus de lui, dans un plateau
+  // plus haut que le labyrinthe (bandes de mur, object-fit) ; sur ordinateur en plein écran, à
+  // sa gauche. Il allait vers le bas (portrait, labyrinthe tourné) ou vers la droite.
+  const AVATAR = /^(?:fox|panda|unicorn|dragon|astronaut)[-_.]/;
+  test.each([
+    ['téléphone, densité 3, en portrait', PHONE_3, { x: 0, y: -1 }, false],
+    ['ordinateur, densité 2, plein écran', DESKTOP_2, { x: -1, y: 0 }, true],
+  ])(
+    '%s : MultiMiam part vers la case touchée',
+    async (_name, viewport, toward, fullscreen) => {
+      await openArcade(viewport);
+      await launchGame(page, 'multimiam');
+      if (fullscreen) await pressButton(page, '.arcade-fullscreen-btn');
+      await pause(1500);
+      const start = await page.evaluate(
+        source => globalThis.__client.images.filter(d => new RegExp(source).test(d.src)).at(-1),
+        AVATAR.source
+      );
+      // Le personnage occupe une case et demie : 1,6 case plus loin, dans le labyrinthe
+      const cell = start.w / 1.5;
+      await pointAt(page, viewport, {
+        x: start.x + toward.x * 1.6 * cell,
+        y: start.y + toward.y * 1.6 * cell,
+      });
+      const moved = await page.waitForFunction(
+        (source, from, step, half) => {
+          const last = globalThis.__client.images
+            .filter(d => new RegExp(source).test(d.src))
+            .at(-1);
+          const gone = (last.x - from.x) * step.x + (last.y - from.y) * step.y;
+          return gone > half;
+        },
+        { timeout: 4000 },
+        AVATAR.source,
+        start,
+        toward,
+        cell / 2
+      );
+      expect(await moved.jsonValue()).toBe(true);
     },
     40000
   );

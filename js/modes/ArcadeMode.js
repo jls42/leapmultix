@@ -19,6 +19,29 @@ import {
   showLoadErrorNotice,
 } from '../components/loadErrorNotice.js';
 import { UNTIMED_GAMES, isNoTimeLimit, setNoTimeLimit } from '../arcade-time.js';
+import { spaceshipSpec } from '../arcade-sprite-catalog.js';
+
+// Images du menu en WebP, à la taille où elles s'affichent × la densité de l'écran : le
+// navigateur choisit la variante (srcset, sizes)
+const GENERATED_ARCADE_DIR = 'assets/generated-images/arcade';
+// Logos des jeux : 144 px affichés, 120 sur un écran de 480 px au plus (css/arcade.css)
+const LOGO_IMAGE = { widths: [128, 256, 512], src: 256, sizes: '(max-width: 480px) 120px, 144px' };
+// Fusées à choisir : vignette ronde de 84 px, 70 px de dessin (marge et bord déduits)
+const THUMB_IMAGE = { widths: [128, 256], src: 128, sizes: '70px' };
+
+/**
+ * Attributs d'une image du menu servie en WebP (variantes de npm run assets:generate), avec
+ * le PNG du dépôt en repli (attachImageFallbacks : développement et CI, sans variantes)
+ * @param {string} source - Nom de la source dans assets/images/arcade, sans extension
+ * @param {{widths: number[], src: number, sizes: string}} image
+ * @param {string} fallback - PNG du dépôt (assets/images/arcade)
+ * @returns {string}
+ */
+function webpImageAttributes(source, image, fallback) {
+  const url = width => `${GENERATED_ARCADE_DIR}/${source}-${width}.webp`;
+  const srcset = image.widths.map(width => `${url(width)} ${width}w`).join(', ');
+  return `src="${url(image.src)}" srcset="${srcset}" sizes="${image.sizes}" data-fallback="assets/images/arcade/${fallback}"`;
+}
 
 /* Icônes des lignes « Commandes » : des SVG au trait (couleur du texte), décoratifs,
    le mot « Clavier », « Souris » ou « Tactile » étant écrit juste après. */
@@ -246,8 +269,8 @@ export class ArcadeMode extends GameMode {
         game => `
             <div id="${this.getCardId(game.id)}" class="arcade-game-card collapsed" data-game="${game.id}">
                 <div class="game-thumb">
-                    <img src="assets/images/arcade/${game.logo}" alt=""
-                         class="arcade-logo" onerror="this.src='assets/images/arcade/logo_mode_arcade.png';this.onerror=null;">
+                    <img ${webpImageAttributes(game.logo.replace(/\.png$/, ''), LOGO_IMAGE, game.logo)}
+                         width="144" height="144" alt="" class="arcade-logo">
                 </div>
 
                 <h2 class="game-title">
@@ -389,9 +412,8 @@ export class ArcadeMode extends GameMode {
                                    ${idx === checkedIndex ? 'checked' : ''}
                                    data-action="arcade-set-spaceship" data-game="${gameId}"
                                    data-value="${valueOf(variant)}">
-                            <img class="spaceship-thumb" src="assets/images/arcade/${variant.file}"
-                                 alt=""
-                                 onerror="this.src='assets/images/arcade/${variant.fallback}';this.onerror=null;">
+                            <img class="spaceship-thumb" alt=""
+                                 ${webpImageAttributes(spaceshipSpec(valueOf(variant)).source, THUMB_IMAGE, variant.file)}>
                             <span class="spaceship-label">${variant.name}</span>
                         </label>
                     `
@@ -448,7 +470,24 @@ export class ArcadeMode extends GameMode {
       contentCard.classList.add('arcade-wide');
     }
 
+    this.attachImageFallbacks();
     this.attachArcadeListEvents();
+  }
+
+  /**
+   * Logos et fusées du menu en WebP, produits au déploiement : sans eux (développement, CI),
+   * le PNG d'origine. Le nettoyage du gabarit retire les attributs onerror : l'écouteur se
+   * pose ici, une seule fois par image (un PNG en échec ne relance rien).
+   */
+  attachImageFallbacks() {
+    for (const img of this.gameScreen?.querySelectorAll('img[data-fallback]') ?? []) {
+      const useFallback = () => {
+        img.removeAttribute('srcset');
+        img.setAttribute('src', img.dataset.fallback);
+      };
+      if (img.complete && img.naturalWidth === 0) useFallback();
+      else img.addEventListener('error', useFallback, { once: true });
+    }
   }
 
   attachArcadeListEvents() {
