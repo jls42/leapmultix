@@ -118,8 +118,17 @@ function stageLayout(page) {
       ? document.elementFromPoint(shown.left + shown.width / 2, shown.top + shown.height / 2)
       : null;
     const abandon = document.querySelector('#game [id$="abandon-btn"]');
+    // Part du plateau couverte par le dessin du jeu (object-fit: contain), cadre exclu
+    const canvas = document.querySelector('#game canvas');
+    const style = getComputedStyle(canvas);
+    const frame = side => Number.parseFloat(style[`border${side}Width`]) || 0;
+    const shownWidth = canvas.getBoundingClientRect().width - frame('Left') - frame('Right');
+    const shownHeight = canvas.getBoundingClientRect().height - frame('Top') - frame('Bottom');
+    const scale = Math.min(shownWidth / canvas.width, shownHeight / canvas.height);
+    const drawnShare = (canvas.width * scale * canvas.height * scale) / (shownWidth * shownHeight);
     return {
-      board: box(document.querySelector('#game canvas')),
+      board: box(canvas),
+      drawnShare,
       abandon: box(abandon),
       note: shown,
       underNote: touched?.tagName ?? null,
@@ -156,10 +165,14 @@ const overlaps = (a, b) =>
 /** Marge du bas de l'écran sous « Abandonner », au plus (px) : au-delà, il n'est plus en bas */
 const ABANDON_BOTTOM_GAP_MAX = 40;
 
+/** Part du plateau que couvre le dessin du jeu, au moins : les cases entières laissent un reste */
+const DRAWN_SHARE_MIN = 0.95;
+
 /**
  * Ce que montre la consigne affichée, dans les termes de l'écran attendu (spot) : dans le
- * plateau ou à côté, ce que le doigt touche en son milieu, sa place annoncée, et
- * « Abandonner » en bas de l'écran quand l'écran le demande
+ * plateau ou à côté, ce que le doigt touche en son milieu, sa place annoncée,
+ * « Abandonner » en bas de l'écran quand l'écran le demande, et le dessin du jeu qui
+ * couvre le plateau
  */
 function noteSpot(during, spot) {
   const seen = {
@@ -171,6 +184,7 @@ function noteSpot(during, spot) {
   if ('abandonAtBottom' in spot) {
     seen.abandonAtBottom = during.emptyBelow < ABANDON_BOTTOM_GAP_MAX;
   }
+  if ('drawingFillsBoard' in spot) seen.drawingFillsBoard = during.drawnShare >= DRAWN_SHARE_MIN;
   return seen;
 }
 
@@ -276,17 +290,19 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   // Dans les deux cas, elle laisse passer le doigt (au plateau, ou à la zone de jeu à côté).
   // Les quatre jeux sur chaque écran : chacun pose sa consigne à sa place (MultiMemory sur
   // ordinateur a trois rangées, consigne en bas), et chacun a montré le défaut sur ordinateur.
-  // Sous le plateau, « Abandonner » reste en bas de l'écran dès le lancement : tous les
-  // plateaux prennent la hauteur, MultiMiam compris (avant : 346 px vides sous le bouton dans
-  // MultiMemory, puis 139 px dans MultiMiam en portrait).
+  // Sous le plateau, « Abandonner » reste en bas de l'écran dès le lancement, et le dessin du
+  // jeu couvre le plateau (à une case près) : tous les plateaux prennent la place, MultiMiam
+  // compris (avant : 346 px vides sous le bouton dans MultiMemory, puis un labyrinthe de
+  // 360 × 456 entre deux bandes de mur de 57 px dans MultiMiam en portrait).
   const ON_BOARD = {
     inside: true,
     overlaps: true,
     touched: 'CANVAS',
     placedAsSaid: true,
     abandonAtBottom: true,
+    drawingFillsBoard: true,
   };
-  const BESIDE_BOARD = { inside: false, overlaps: false, touched: 'DIV' };
+  const BESIDE_BOARD = { inside: false, overlaps: false, touched: 'DIV', drawingFillsBoard: true };
   test.each([
     ['téléphone en portrait', PORTRAIT, true, ON_BOARD, ARCADE_GAMES],
     ['téléphone tourné', LANDSCAPE, true, BESIDE_BOARD, ARCADE_GAMES],

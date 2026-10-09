@@ -1,7 +1,7 @@
 // multimiam-controls.js - Gestion des contrôles clavier / tactile pour Pacman (ESM)
 // (c) LeapMultix - 2025
 
-import { clientToCanvasPoint } from './arcade-common.js';
+import { getCanvasContentRect } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
 import { mazeToScreen, transposeDirection } from './multimiam-layout.js';
 import { isKeyFromButton, toggleArcadePause } from './arcade-time.js';
@@ -101,19 +101,29 @@ export function initPacmanControls(game) {
   }
 
   // ================= Toucher ou clic sur le labyrinthe =================
-  // Le personnage part vers le point visé : l'axe dominant d'abord, l'autre s'il est bloqué
+  // Point visé, en pixels du dessin du labyrinthe. Mesuré à l'écran (cadre, éventuelles
+  // bandes et réduction du canevas compris), sans passer par canvas.width : la densité du
+  // canevas peut le rendre plus grand que le dessin.
+  function boardPoint(clientX, clientY) {
+    const shown = getCanvasContentRect(game.canvas);
+    return {
+      x: ((clientX - shown.left) * game.boardWidth) / shown.width,
+      y: ((clientY - shown.top) * game.boardHeight) / shown.height,
+    };
+  }
+
+  // Le personnage part vers le point visé : l'axe dominant à l'écran d'abord, l'autre s'il
+  // est bloqué (directions à l'écran, puis dans le labyrinthe s'il est dessiné transposé)
   function steerTowards(clientX, clientY) {
-    // Coordonnées écran -> jeu (cadre et éventuelle réduction du canevas compris), puis
-    // dans le labyrinthe s'il est dessiné transposé
-    const onCanvas = clientToCanvasPoint(game.canvas, clientX, clientY);
-    const point = mazeToScreen(onCanvas.x, onCanvas.y, game.transposed);
+    const point = boardPoint(clientX, clientY);
     const { x, y } = game.multimiam;
 
-    // Direction vue depuis le centre de la case du personnage (pas du canevas)
+    // Écart au centre de la case du personnage, à l'écran (cases cellWidth × cellHeight)
+    const at = mazeToScreen(x, y, game.transposed);
     const [primary, secondary] = directionsToward(
-      point.x - (x + 0.5) * game.cellSize,
-      point.y - (y + 0.5) * game.cellSize
-    );
+      point.x - (at.x + 0.5) * game.cellWidth,
+      point.y - (at.y + 0.5) * game.cellHeight
+    ).map(direction => transposeDirection(direction, game.transposed));
     const open = [primary, secondary].find(dir =>
       game.canMove(x + CELL_STEPS[dir].dx, y + CELL_STEPS[dir].dy)
     );

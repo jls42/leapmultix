@@ -11,7 +11,8 @@ export default class PacmanRenderer {
   }
 
   /**
-   * Coin d'une case du labyrinthe sur le canevas (labyrinthe transposé en portrait).
+   * Coin d'une case du labyrinthe sur le canevas (labyrinthe transposé en portrait ; cases
+   * presque carrées, cellWidth × cellHeight).
    * @param {number} x - Colonne dans le labyrinthe (décimale pendant un déplacement)
    * @param {number} y - Rangée dans le labyrinthe
    * @returns {{px: number, py: number}}
@@ -19,7 +20,7 @@ export default class PacmanRenderer {
   cellOrigin(x, y) {
     const g = this.game;
     const screen = mazeToScreen(x, y, g.transposed);
-    return { px: screen.x * g.cellSize, py: screen.y * g.cellSize };
+    return { px: screen.x * g.cellWidth, py: screen.y * g.cellHeight };
   }
 
   /**
@@ -30,8 +31,7 @@ export default class PacmanRenderer {
    */
   cellCenter(x, y) {
     const { px, py } = this.cellOrigin(x, y);
-    const half = this.game.cellSize / 2;
-    return { px: px + half, py: py + half };
+    return { px: px + this.game.cellWidth / 2, py: py + this.game.cellHeight / 2 };
   }
 
   /** Direction vue à l'écran (le personnage regarde du côté où il va à l'écran) */
@@ -45,7 +45,8 @@ export default class PacmanRenderer {
   }
 
   /**
-   * Case d'un personnage centré sur ce point : une fois et demie une case du labyrinthe
+   * Case d'un personnage centré sur ce point : un carré d'une fois et demie le côté court
+   * d'une case du labyrinthe (cellSize), l'image n'est jamais déformée
    * @returns {{x: number, y: number, width: number, height: number}}
    */
   spriteBox(pixelX, pixelY) {
@@ -88,10 +89,10 @@ export default class PacmanRenderer {
         const { px, py } = this.cellOrigin(x, y);
         const texture = isWall ? wall : path;
         if (texture) {
-          ctx.drawImage(texture, px, py, g.cellSize, g.cellSize);
+          ctx.drawImage(texture, px, py, g.cellWidth, g.cellHeight);
         } else {
           ctx.fillStyle = isWall ? '#000000' : '#0000FF';
-          ctx.fillRect(px, py, g.cellSize, g.cellSize);
+          ctx.fillRect(px, py, g.cellWidth, g.cellHeight);
         }
       }
     }
@@ -103,7 +104,7 @@ export default class PacmanRenderer {
    */
   tileImage(texture) {
     const g = this.game;
-    prefetchArcadeSprite(g.canvas, texture, g.cellSize, g.cellSize);
+    prefetchArcadeSprite(g.canvas, texture, g.cellWidth, g.cellHeight);
     return texture?.image ?? null;
   }
 

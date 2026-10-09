@@ -17,7 +17,7 @@ import { showArcadeGameOver } from './arcade.js';
 import { createArcadeToast, getArcadeText } from './arcade-message.js';
 import { getArcadeCanvasBox, watchArcadeViewport } from './arcade-common.js';
 import { cleanupGameResources } from './game-cleanup.js';
-import { shouldTransposeMaze } from './multimiam-layout.js';
+import { chooseMazeLayout, fitMazeCells } from './multimiam-layout.js';
 
 /** Un monstre différent pour chacun des cinq fantômes */
 const GHOST_MONSTERS = 5;
@@ -62,7 +62,7 @@ export class PacmanGame {
     // Images de l'avatar, des monstres et du labyrinthe (loadImages)
     this.loadImages();
 
-    // Dimensions et grille
+    // Dimensions et grille (cases à l'écran : resizeCanvas)
     this.cellSize = 30;
     this.cols = 19;
     this.rows = 15;
@@ -138,18 +138,18 @@ export class PacmanGame {
     return { width: Math.floor(box.width), height: Math.floor(box.height) };
   }
 
-  // Appliquer les styles visuels au canvas : le labyrinthe à sa taille interne (cases
-  // carrées), et le plateau sur toute la hauteur disponible, jusqu'à « Abandonner », comme
-  // dans les autres jeux. Plus large que la place (téléphone en portrait), le labyrinthe s'y
-  // centre entre deux bandes de mur (css/arcade.css) ; les clics et les touchers suivent
-  // (object-fit, converti par js/arcade-common.js).
+  // Appliquer les styles visuels au canvas : le labyrinthe à la taille de son dessin, et le
+  // plateau sur toute la hauteur disponible, jusqu'à « Abandonner », comme dans les autres
+  // jeux. Si les cases, plafonnées presque carrées, ne remplissent pas toute la hauteur (écran
+  // très allongé), le labyrinthe s'y centre entre deux bandes de mur (css/arcade.css) ; les
+  // clics et les touchers suivent (object-fit, lu par js/multimiam-controls.js).
   applyCanvasStyles(width, height, boardHeight = height) {
     const shownHeight = Math.max(height, boardHeight);
     this.canvas.style.width = width + 'px';
     this.canvas.style.height = shownHeight + 'px';
     this.canvas.style.objectFit = 'contain';
     // La texture des bandes continue les cases du labyrinthe
-    this.canvas.style.backgroundSize = `${this.cellSize}px ${this.cellSize}px`;
+    this.canvas.style.backgroundSize = `${this.cellWidth}px ${this.cellHeight}px`;
     this.canvas.style.backgroundPosition = `0 ${(shownHeight - height) / 2}px`;
     this.canvas.style.boxSizing = 'content-box';
     this.canvas.style.padding = '0';
@@ -160,12 +160,11 @@ export class PacmanGame {
     this.canvas.style.borderRadius = 'var(--radius-md)';
   }
 
-  // Orientation pour la place disponible : transposé (15 × 19) si le labyrinthe y gagne de
-  // plus grandes cases (téléphone en portrait)
+  // Orientation pour la place disponible : celle qui remplit le mieux le plateau (transposé,
+  // 15 × 19, sur un téléphone en portrait)
   chooseTransposed() {
     if (!this.canvas.parentElement) return false;
-    const box = getArcadeCanvasBox(this.canvas);
-    return shouldTransposeMaze(this.cols, this.rows, box);
+    return chooseMazeLayout(this.cols, this.rows, getArcadeCanvasBox(this.canvas)).transposed;
   }
 
   // Rien n'est encore joué : aucune réponse croquée ni vie perdue
@@ -196,23 +195,24 @@ export class PacmanGame {
     const across = this.transposed ? this.rows : this.cols;
     const down = this.transposed ? this.cols : this.rows;
 
-    // Calculer la taille des cellules
-    this.cellSize = Math.max(
-      1,
-      Math.floor(Math.min(dimensions.width / across, dimensions.height / down))
-    );
+    // Cases qui remplissent la place, presque carrées (js/multimiam-layout.js) ; personnages,
+    // monstres et nombres se dessinent dans le carré de leur côté court, jamais déformés
+    ({ cellWidth: this.cellWidth, cellHeight: this.cellHeight } = fitMazeCells(
+      across,
+      down,
+      dimensions
+    ));
+    this.cellSize = Math.min(this.cellWidth, this.cellHeight);
 
-    // Ajuster la taille du canvas pour qu'il corresponde exactement à la grille
-    const actualWidth = this.cellSize * across;
-    const actualHeight = this.cellSize * down;
-
-    // S'assurer que le canvas a la bonne taille pour afficher tout le labyrinthe
-    this.canvas.width = actualWidth;
-    this.canvas.height = actualHeight;
+    // Taille du dessin du labyrinthe (pixels du jeu), que suit le canevas
+    this.boardWidth = this.cellWidth * across;
+    this.boardHeight = this.cellHeight * down;
+    this.canvas.width = this.boardWidth;
+    this.canvas.height = this.boardHeight;
 
     // IMPORTANT: Appliquer les styles CSS APRÈS avoir défini les dimensions internes
     // pour éviter un décalage entre taille CSS et taille interne du canvas
-    this.applyCanvasStyles(actualWidth, actualHeight, dimensions.height);
+    this.applyCanvasStyles(this.boardWidth, this.boardHeight, dimensions.height);
   }
 
   /** Pacman au point de départ, à la taille de la grille actuelle */

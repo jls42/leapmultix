@@ -1,8 +1,10 @@
 /**
- * Plateau de MultiMiam : en portrait, le labyrinthe 19 × 15 se dessine transposé (15 × 19)
- * pour de plus grandes cases ; ses données et ses règles ne changent pas. Le dessin, le
- * doigt, la souris et les flèches suivent : un glissement vers le haut fait monter le
- * personnage à l'écran, un toucher à sa gauche l'envoie à gauche.
+ * Plateau de MultiMiam : en portrait, le labyrinthe 19 × 15 se dessine transposé (15 × 19),
+ * avec des cases presque carrées (au plus 1,25 fois plus hautes que larges, ou l'inverse)
+ * qui remplissent le plateau jusqu'à « Abandonner » ; ses données et ses règles ne changent
+ * pas. Le dessin, le doigt, la souris et les flèches suivent : un glissement vers le haut
+ * fait monter le personnage à l'écran, un toucher sur la case voisine l'y envoie, et les
+ * personnages restent dans un carré, jamais déformés.
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import {
@@ -39,7 +41,7 @@ jest.unstable_mockModule('../js/core/tablePreferences.js', () => ({
   TablePreferences: { isGlobalEnabled: () => false, getActiveExclusions: () => [] },
 }));
 
-const { shouldTransposeMaze, mazeToScreen, transposeDirection } = await import(
+const { chooseMazeLayout, fitMazeCells, mazeToScreen, transposeDirection } = await import(
   '../js/multimiam-layout.js'
 );
 const { initPacmanControls } = await import('../js/multimiam-controls.js');
@@ -55,11 +57,45 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-describe('Orientation du labyrinthe', () => {
-  test('transposé quand il y gagne de plus grandes cases (téléphone en portrait)', () => {
-    expect(shouldTransposeMaze(19, 15, { width: 363, height: 555 })).toBe(true);
-    expect(shouldTransposeMaze(19, 15, { width: 1234, height: 469 })).toBe(false);
-    expect(shouldTransposeMaze(19, 15, { width: 620, height: 260 })).toBe(false);
+describe('Orientation et cases du labyrinthe', () => {
+  test('téléphone en portrait : transposé, cases de 24 × 30 qui remplissent 360 × 571', () => {
+    expect(chooseMazeLayout(19, 15, { width: 360, height: 571 })).toEqual({
+      transposed: true,
+      cellWidth: 24,
+      cellHeight: 30,
+    });
+  });
+
+  test('ordinateur et téléphone tourné : droit, cases plus larges que hautes', () => {
+    expect(chooseMazeLayout(19, 15, { width: 1234, height: 546 })).toEqual({
+      transposed: false,
+      cellWidth: 45,
+      cellHeight: 36,
+    });
+    expect(chooseMazeLayout(19, 15, { width: 620, height: 260 })).toEqual({
+      transposed: false,
+      cellWidth: 21,
+      cellHeight: 17,
+    });
+  });
+
+  test('une case reste presque carrée (rapport de 1,25 au plus) et le labyrinthe tient', () => {
+    const faults = [];
+    for (let width = 200; width <= 1400; width += 37) {
+      for (let height = 160; height <= 900; height += 29) {
+        for (const [across, down] of [
+          [19, 15],
+          [15, 19],
+        ]) {
+          const { cellWidth, cellHeight } = fitMazeCells(across, down, { width, height });
+          const stretch = Math.max(cellWidth, cellHeight) / Math.min(cellWidth, cellHeight);
+          const fits = across * cellWidth <= width && down * cellHeight <= height;
+          if (stretch > 1.25 || !fits)
+            faults.push({ width, height, across, cellWidth, cellHeight });
+        }
+      }
+    }
+    expect(faults).toEqual([]);
   });
 
   test('case du labyrinthe ↔ case à l’écran : lignes et colonnes échangées', () => {
@@ -103,6 +139,10 @@ describe('Labyrinthe transposé : le doigt et les flèches suivent l’écran', 
     game = {
       canvas,
       cellSize: CELL,
+      cellWidth: CELL,
+      cellHeight: CELL,
+      boardWidth: 300,
+      boardHeight: 380,
       transposed: true,
       gameOver: false,
       multimiam: { x: 7, y: 5, direction: 'RIGHT', nextDirection: 'RIGHT', isMoving: true },
@@ -134,8 +174,26 @@ describe('Labyrinthe transposé : le doigt et les flèches suivent l’écran', 
 
 describe('Labyrinthe transposé : le dessin suit', () => {
   test('le personnage est dessiné à la case transposée', () => {
-    const renderer = new PacmanRenderer({ cellSize: CELL, transposed: true });
+    const renderer = new PacmanRenderer({
+      cellSize: CELL,
+      cellWidth: CELL,
+      cellHeight: CELL,
+      transposed: true,
+    });
     expect(renderer.getPacmanPixelCoordinates(2, 1)).toEqual({ pixelX: 30, pixelY: 50 });
+  });
+
+  test('cases de 24 × 30 : centre de la case, et personnage dans un carré, jamais déformé', () => {
+    const renderer = new PacmanRenderer({
+      cellSize: 24,
+      cellWidth: 24,
+      cellHeight: 30,
+      transposed: true,
+    });
+    // Case (2, 1) du labyrinthe : colonne 1, rangée 2 à l'écran
+    expect(renderer.getPacmanPixelCoordinates(2, 1)).toEqual({ pixelX: 36, pixelY: 75 });
+    const box = renderer.spriteBox(36, 75);
+    expect([box.width, box.height]).toEqual([36, 36]);
   });
 });
 
@@ -153,33 +211,22 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
     game.pause();
   });
 
-  test('le plateau va jusqu’à « Abandonner », le labyrinthe centré dedans, à cases carrées', () => {
-    // 844 − 175 − 48 − 4 (cadre) : toute la hauteur, comme les autres jeux ; le labyrinthe,
-    // limité par la largeur (15 cases), garde sa taille et se centre entre deux bandes de mur
+  test('le plateau va jusqu’à « Abandonner » et le labyrinthe grandit : cases plus hautes que larges', () => {
+    // 844 − 175 − 48 − 4 (cadre) : toute la hauteur, comme les autres jeux
     expect(game.canvas.style.height).toBe('617px');
-    expect(game.canvas.style.width).toBe(`${game.canvas.width}px`);
-    expect(game.canvas.height).toBe(19 * game.cellSize);
-    expect(game.canvas.style.objectFit).toBe('contain');
+    // 15 cases de large sur 359 px : 23 px ; en hauteur, la case s'allonge jusqu'à 1,25 fois
+    expect([game.cellWidth, game.cellHeight]).toEqual([23, 28]);
+    expect([game.canvas.width, game.canvas.height]).toEqual([15 * 23, 19 * 28]);
+    expect(game.cellSize).toBe(23);
   });
 
-  test('un toucher juste à droite du personnage, à l’écran, l’envoie à droite : bandes comptées', () => {
-    // Murs ignorés : seul compte le point visé
-    game.canMove = () => true;
-    const cell = game.cellSize;
-    const at = mazeToScreen(game.multimiam.x, game.multimiam.y, game.transposed);
-    // Bande de mur au-dessus du labyrinthe, puis la case à droite du personnage
-    const band = (Number.parseFloat(game.canvas.style.height) - game.canvas.height) / 2;
-    tap(game.canvas, { x: (at.x + 1.5) * cell, y: 175 + band + (at.y + 0.5) * cell });
-    expect(transposeDirection(game.multimiam.nextDirection, game.transposed)).toBe('RIGHT');
-  });
-
-  test('le labyrinthe se dessine en 15 colonnes sur 19 rangées, plus grandes cases', () => {
+  test('le labyrinthe se dessine en 15 colonnes sur 19 rangées', () => {
     expect(game.transposed).toBe(true);
     expect([game.cols, game.rows]).toEqual([19, 15]);
-    expect(game.canvas.width).toBe(15 * game.cellSize);
-    expect(game.canvas.height).toBe(19 * game.cellSize);
-    // Non transposé, 363 px pour 19 colonnes ne donnaient que des cases de 19 px
-    expect(game.cellSize).toBeGreaterThan(19);
+    expect(game.canvas.width).toBe(15 * game.cellWidth);
+    expect(game.canvas.height).toBe(19 * game.cellHeight);
+    // Non transposé, 359 px pour 19 colonnes ne donnaient que des cases de 18 px
+    expect(game.cellWidth).toBeGreaterThan(18);
   });
 
   /** Téléphone tourné : écran bas et large */
@@ -199,7 +246,7 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
   test('rien n’est encore joué : le labyrinthe suit le téléphone tourné', () => {
     rotate();
     expect(game.transposed).toBe(false);
-    expect(game.canvas.width).toBe(19 * game.cellSize);
+    expect(game.canvas.width).toBe(19 * game.cellWidth);
   });
 
   test('le téléphone tourné en pleine partie : le dessin suit, la partie reste', () => {
@@ -214,6 +261,54 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
   });
 });
 
+describe('MultiMiam sur un téléphone de 390 × 844, place mesurée dans Chrome (360 × 571)', () => {
+  let game;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();
+    restorers.push(useAndroidUserAgent());
+    // 364 px de zone (360 + cadre) ; 798 − 175 − 48 − 4 = 571 px de haut
+    restorers.push(simulateArcadeScreen({ width: 364, height: 798 }));
+    renderArcadeStage('multimiam-canvas');
+    game = new PacmanGame('multimiam-canvas', 2, 'operation', null, 0, '×');
+    game.start();
+    game.pause();
+  });
+
+  test('cases de 24 × 30 : le labyrinthe remplit tout le plateau, sans bande', () => {
+    expect([game.cellWidth, game.cellHeight]).toEqual([24, 30]);
+    expect([game.canvas.width, game.canvas.height]).toEqual([360, 570]);
+    expect(game.canvas.style.height).toBe('571px');
+  });
+
+  test('un toucher sur une case voisine, à l’écran, y envoie le personnage', () => {
+    // Murs ignorés : seul compte le point visé ; zone de jeu en haut à 175 px. Personnage
+    // loin du coin, en bas du plateau : une erreur sur la hauteur des cases s'y verrait
+    game.canMove = () => true;
+    Object.assign(game.multimiam, { x: 12, y: 7 });
+    const band = (Number.parseFloat(game.canvas.style.height) - game.canvas.height) / 2;
+    const screenPoint = (sx, sy) => ({
+      x: sx * game.cellWidth,
+      y: 175 + band + sy * game.cellHeight,
+    });
+    const aimed = [
+      [1, 0, 'RIGHT'],
+      [-1, 0, 'LEFT'],
+      [0, 1, 'DOWN'],
+      [0, -1, 'UP'],
+      // Une case à droite, 0,9 case plus bas : 24 px contre 27 px, le bas l'emporte à l'écran
+      [1, 0.9, 'DOWN'],
+    ];
+    for (const [dx, dy, expected] of aimed) {
+      const at = mazeToScreen(game.multimiam.x, game.multimiam.y, game.transposed);
+      tap(game.canvas, screenPoint(at.x + 0.5 + dx, at.y + 0.5 + dy));
+      const onScreen = transposeDirection(game.multimiam.nextDirection, game.transposed);
+      expect({ dx, dy, onScreen }).toEqual({ dx, dy, onScreen: expected });
+    }
+  });
+});
+
 describe('MultiMiam sur ordinateur, la consigne posée sur le labyrinthe', () => {
   test('le plateau va jusqu’à « Abandonner », comme les autres jeux', () => {
     jest.useFakeTimers();
@@ -224,9 +319,10 @@ describe('MultiMiam sur ordinateur, la consigne posée sur le labyrinthe', () =>
     game.start();
     game.pause();
     // 800 − 202 − 48 − 4 (cadre) : le labyrinthe (15 rangées de cases entières) y tient à
-    // moins d'une case près
+    // moins d'une case près, ses cases un peu plus larges que hautes
     expect(game.canvas.style.height).toBe('546px');
-    expect(546 - game.canvas.height).toBeLessThan(game.cellSize);
+    expect(546 - game.canvas.height).toBeLessThan(game.cellHeight);
+    expect(game.cellWidth).toBeGreaterThan(game.cellHeight);
   });
 
   test('la consigne qui part ne change rien : même labyrinthe à 1 s et à 7 s', () => {
@@ -240,7 +336,7 @@ describe('MultiMiam sur ordinateur, la consigne posée sur le labyrinthe', () =>
     game.start();
     game.pause();
     const labyrinthe = () => ({
-      cellSize: game.cellSize,
+      cells: [game.cellWidth, game.cellHeight],
       internal: [canvas.width, canvas.height],
       shown: [canvas.style.width, canvas.style.height],
     });
@@ -253,9 +349,11 @@ describe('MultiMiam sur ordinateur, la consigne posée sur le labyrinthe', () =>
 });
 
 describe('Labyrinthe transposé : la pastille de points se pose sur la bonne case', () => {
-  test('les points gagnés apparaissent au-dessus de la réponse croquée, à l’écran', async () => {
+  /** Partie où le personnage vient de croquer la bonne réponse, en (3, 1) du labyrinthe */
+  async function answerEatenWith(cells) {
     const { showArcadePoints } = await import('../js/utils-es6.js');
     const { initPacmanEngine } = await import('../js/multimiam-engine.js');
+    showArcadePoints.mockClear();
     const canvas = document.createElement('canvas');
     const game = {
       operator: '×',
@@ -267,7 +365,7 @@ describe('Labyrinthe transposé : la pastille de points se pose sur la bonne cas
         [0, 0, 0, 0],
       ],
       canvas,
-      cellSize: CELL,
+      ...cells,
       transposed: true,
       score: 0,
       goodAnswersCount: 0,
@@ -277,6 +375,25 @@ describe('Labyrinthe transposé : la pastille de points se pose sur la bonne cas
     };
     initPacmanEngine(game);
     game.checkAnswerCollision();
+    return { showArcadePoints, canvas };
+  }
+
+  test('cases de 20 × 25 : la pastille se pose au-dessus de la case croquée, à l’écran', async () => {
+    const { showArcadePoints, canvas } = await answerEatenWith({
+      cellSize: 20,
+      cellWidth: 20,
+      cellHeight: 25,
+    });
+    // Case (3, 1) du labyrinthe : colonne 1, rangée 3 à l'écran
+    expect(showArcadePoints).toHaveBeenCalledWith(100, canvas, { x: 1.5 * 20, y: 3 * 25 });
+  });
+
+  test('les points gagnés apparaissent au-dessus de la réponse croquée, à l’écran', async () => {
+    const { showArcadePoints, canvas } = await answerEatenWith({
+      cellSize: CELL,
+      cellWidth: CELL,
+      cellHeight: CELL,
+    });
     // Case (3, 1) du labyrinthe : colonne 1, rangée 3 à l'écran
     expect(showArcadePoints).toHaveBeenCalledWith(100, canvas, { x: 1.5 * CELL, y: 3 * CELL });
   });

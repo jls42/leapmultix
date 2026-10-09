@@ -100,7 +100,7 @@ function stepGhosts(ctx, now) {
 function cellPoint(ctx, cell) {
   // Case vue à l'écran : le labyrinthe est dessiné transposé en portrait
   const screen = mazeToScreen(cell.x, cell.y, ctx.transposed);
-  return { x: (screen.x + 0.5) * ctx.cellSize, y: screen.y * ctx.cellSize };
+  return { x: (screen.x + 0.5) * ctx.cellWidth, y: screen.y * ctx.cellHeight };
 }
 
 /**
