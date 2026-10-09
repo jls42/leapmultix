@@ -47,7 +47,7 @@ const { chooseMazeLayout, fitMazeCells, mazeToScreen, transposeDirection } = awa
 const { initPacmanControls } = await import('../js/multimiam-controls.js');
 const { default: PacmanRenderer } = await import('../js/multimiam-renderer.js');
 const { PacmanGame } = await import('../js/multimiam.js');
-const { showGameInstructions } = await import('../js/arcade-common.js');
+const { showGameInstructions, getArcadeCanvasSize } = await import('../js/arcade-common.js');
 
 const CELL = 20;
 const restorers = [];
@@ -214,7 +214,8 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
     expect(game.canvas.style.height).toBe('617px');
     // 15 cases de large sur 359 px : 23 px ; en hauteur, la case s'allonge jusqu'à 1,25 fois
     expect([game.cellWidth, game.cellHeight]).toEqual([23, 28]);
-    expect([game.canvas.width, game.canvas.height]).toEqual([15 * 23, 19 * 28]);
+    // Taille du dessin en unités du jeu (la taille interne suit la densité de l'écran)
+    expect(getArcadeCanvasSize(game.canvas)).toEqual({ width: 15 * 23, height: 19 * 28 });
     expect(game.cellSize).toBe(23);
   });
 
@@ -245,8 +246,10 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
   test('le labyrinthe se dessine en 15 colonnes sur 19 rangées', () => {
     expect(game.transposed).toBe(true);
     expect([game.cols, game.rows]).toEqual([19, 15]);
-    expect(game.canvas.width).toBe(15 * game.cellWidth);
-    expect(game.canvas.height).toBe(19 * game.cellHeight);
+    expect(getArcadeCanvasSize(game.canvas)).toEqual({
+      width: 15 * game.cellWidth,
+      height: 19 * game.cellHeight,
+    });
     // Non transposé, 359 px pour 19 colonnes ne donnaient que des cases de 18 px
     expect(game.cellWidth).toBeGreaterThan(18);
   });
@@ -268,7 +271,7 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
   test('rien n’est encore joué : le labyrinthe suit le téléphone tourné', () => {
     rotate();
     expect(game.transposed).toBe(false);
-    expect(game.canvas.width).toBe(19 * game.cellWidth);
+    expect(getArcadeCanvasSize(game.canvas).width).toBe(19 * game.cellWidth);
   });
 
   test('le téléphone tourné en pleine partie : le dessin suit, la partie reste', () => {
@@ -279,7 +282,7 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
     rotate();
     expect(game.transposed).toBe(true);
     expect({ x: game.multimiam.x, y: game.multimiam.y }).toEqual(before);
-    expect(game.canvas.height).toBeLessThanOrEqual(220);
+    expect(getArcadeCanvasSize(game.canvas).height).toBeLessThanOrEqual(220);
   });
 });
 
@@ -300,7 +303,7 @@ describe('MultiMiam sur un téléphone de 390 × 844, place mesurée dans Chrome
 
   test('cases de 24 × 30 : le labyrinthe remplit tout le plateau, sans bande', () => {
     expect([game.cellWidth, game.cellHeight]).toEqual([24, 30]);
-    expect([game.canvas.width, game.canvas.height]).toEqual([360, 570]);
+    expect(getArcadeCanvasSize(game.canvas)).toEqual({ width: 360, height: 570 });
     expect(game.canvas.style.height).toBe('571px');
   });
 
@@ -309,7 +312,7 @@ describe('MultiMiam sur un téléphone de 390 × 844, place mesurée dans Chrome
     // loin du coin, en bas du plateau : une erreur sur la hauteur des cases s'y verrait
     game.canMove = () => true;
     Object.assign(game.multimiam, { x: 12, y: 7 });
-    const band = (Number.parseFloat(game.canvas.style.height) - game.canvas.height) / 2;
+    const band = (Number.parseFloat(game.canvas.style.height) - game.boardHeight) / 2;
     const screenPoint = (sx, sy) => ({
       x: sx * game.cellWidth,
       y: 175 + band + sy * game.cellHeight,
@@ -343,7 +346,7 @@ describe('MultiMiam sur ordinateur, la consigne posée sur le labyrinthe', () =>
     // 800 − 202 − 48 − 4 (cadre) : le labyrinthe (15 rangées de cases entières) y tient à
     // moins d'une case près, ses cases un peu plus larges que hautes
     expect(game.canvas.style.height).toBe('546px');
-    expect(546 - game.canvas.height).toBeLessThan(game.cellHeight);
+    expect(546 - game.boardHeight).toBeLessThan(game.cellHeight);
     expect(game.cellWidth).toBeGreaterThan(game.cellHeight);
   });
 
