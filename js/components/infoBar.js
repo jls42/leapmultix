@@ -175,6 +175,9 @@ export const InfoBar = {
     canvas.dataset.translateAriaLabel = 'arcade_game_screen_label';
     canvas.style.width = '100%';
     canvas.style.height = '100%';
+    // Ses images, dessinées par le jeu, n'ont pas de version : js/cache-updater.js n'en ajoute
+    // pas à son fond (mur des bandes de MultiMiam), qui partait sinon une seconde fois
+    canvas.dataset.skipVersion = 'true';
 
     const abandon = document.createElement('button');
     abandon.className = 'btn btn-secondary';

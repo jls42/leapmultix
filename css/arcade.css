@@ -691,10 +691,13 @@
 
 /* MultiMiam : quand le labyrinthe est plus large que la place (téléphone en portrait), le
    plateau prend quand même toute la hauteur ; les bandes autour du labyrinthe sont du même
-   mur (js/multimiam.js pose la texture, adresse versionnée, et l'aligne sur ses cases). Noir,
-   comme le mur de repli du dessin, tant que l'image n'est pas chargée. */
+   mur (js/multimiam.js aligne la texture sur ses cases). Noir, comme le mur de repli du
+   dessin, tant que l'image n'est pas chargée. Comme les images dessinées, ce fond garde son
+   adresse sans version (data-skip-version du canevas, js/components/infoBar.js) : les deux
+   murs changent ensemble, et il ne se télécharge qu'une fois. */
 #multimiam-canvas {
   background-color: #000;
+  background-image: url('../assets/images/arcade/mur_128x128.png');
   background-repeat: repeat;
 }
 

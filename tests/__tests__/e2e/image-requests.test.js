@@ -1,17 +1,26 @@
 /**
- * Tests E2E - Chaque image ne se télécharge qu'une fois. js/cache-updater.js met la version
- * du jeu (?v=) dans l'adresse des images insérées : la prod les sert 30 jours sans les
- * revérifier, et une image changée sous le même nom resterait sinon l'ancienne. Mais une image
- * dont le chargement a déjà commencé repart alors une seconde fois, à sa nouvelle adresse.
+ * Tests E2E - Aucune image demandée sous deux adresses. js/cache-updater.js ajoute la version
+ * du jeu (?v=) à l'adresse des images insérées, mais une image déjà en chargement repartait
+ * alors une seconde fois, à sa nouvelle adresse (deux entrées de cache, deux téléchargements).
  * Mesuré avant : le mur des bandes de MultiMiam (fond de css/arcade.css, 15,6 Ko).
+ * La même adresse redemandée n'est pas un doublon : servie par le cache, ou, sans variantes
+ * générées (CI), variante en 404 retentée à chaque affichage puis PNG de repli.
  * Premier passage, sans service worker : rien ne vient d'un cache.
  * @jest-environment node
  */
 
+const fs = require('node:fs');
+const path = require('node:path');
 const puppeteer = require('puppeteer');
 const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
+const ROOT = path.resolve(__dirname, '../../..');
+// Variantes WebP du générateur (npm run assets:generate) : absentes en CI, où les jeux
+// passent à leurs PNG ; sur un poste qui les a, le passage sans elles se vérifie aussi
+const GENERATED = fs.existsSync(
+  path.join(ROOT, 'assets/generated-images/arcade/logo_multimiam-512.webp')
+);
 const PHONE = { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
@@ -39,31 +48,50 @@ async function playAndLeave(page, game) {
 }
 
 /**
- * Les requêtes d'images de la page, comptées par fichier (sans paramètres) à partir de
- * start() : chaque requête compte, pas seulement chaque adresse
+ * Les adresses d'images demandées par la page, rangées par fichier (chemin sans paramètres),
+ * à partir de start()
  * @param {import('puppeteer').Page} page
  */
-async function countImageRequests(page) {
+async function watchImageRequests(page) {
   const cdp = await page.createCDPSession();
   await cdp.send('Network.enable');
-  const counts = new Map();
+  const addresses = new Map();
   let recording = false;
   cdp.on('Network.requestWillBeSent', ({ type, request }) => {
     if (!recording || type !== 'Image' || request.url.startsWith('data:')) return;
-    const { pathname } = new URL(request.url);
-    counts.set(pathname, (counts.get(pathname) ?? 0) + 1);
+    const url = new URL(request.url);
+    if (!addresses.has(url.pathname)) addresses.set(url.pathname, new Set());
+    addresses.get(url.pathname).add(`${url.pathname}${url.search}`);
   });
   return {
     start: () => {
       recording = true;
     },
-    requestedTwice: () =>
-      [...counts].filter(([, count]) => count > 1).map(([file, count]) => `${file} ×${count}`),
-    files: () => counts.size,
+    /** Fichiers demandés sous plus d'une adresse, avec ces adresses */
+    underSeveralAddresses: () =>
+      [...addresses.values()].filter(urls => urls.size > 1).map(urls => [...urls].join(' + ')),
+    files: () => addresses.size,
   };
 }
 
-describe('Images téléchargées une seule fois (E2E)', () => {
+/** Plus aucune variante générée, dès la première page : le cas de la CI */
+async function withoutVariants(page) {
+  await page.setRequestInterception(true);
+  page.on('request', request => {
+    if (request.url().includes('/assets/generated-images/')) {
+      request.respond({ status: 404, contentType: 'text/plain', body: 'absent' });
+    } else {
+      request.continue();
+    }
+  });
+}
+
+const RUNS = [
+  ['tel que servi', false],
+  ['sans variantes générées (comme en CI)', true],
+];
+
+describe('Aucune image demandée sous deux adresses (E2E)', () => {
   let browser;
   let page;
   let server;
@@ -86,19 +114,27 @@ describe('Images téléchargées une seule fois (E2E)', () => {
     page = null;
   });
 
-  test('menu de l’Arcade et ses quatre jeux : aucune image demandée deux fois', async () => {
-    page = await browser.newPage();
-    await page.setBypassServiceWorker(true);
-    await page.setUserAgent(ANDROID_USER_AGENT);
-    await page.setViewport(PHONE);
-    const requests = await countImageRequests(page);
-    await page.goto(server.url, server.gotoOptions);
-    await createUserAndSkipIntro(page);
-    requests.start();
-    await pressButton(page, '.mode-btn[data-mode="arcade"]');
-    for (const game of ARCADE_GAMES) await playAndLeave(page, game);
+  // Sans variantes sur le poste (CI), le premier passage est déjà celui-là
+  const runs = RUNS.filter(([, forced]) => GENERATED || !forced);
 
-    expect(requests.files()).toBeGreaterThan(20);
-    expect(requests.requestedTwice()).toEqual([]);
-  }, 90000);
+  test.each(runs)(
+    'menu de l’Arcade et ses quatre jeux, %s',
+    async (_label, forced) => {
+      page = await browser.newPage();
+      await page.setBypassServiceWorker(true);
+      await page.setUserAgent(ANDROID_USER_AGENT);
+      await page.setViewport(PHONE);
+      if (forced) await withoutVariants(page);
+      const requests = await watchImageRequests(page);
+      await page.goto(server.url, server.gotoOptions);
+      await createUserAndSkipIntro(page);
+      requests.start();
+      await pressButton(page, '.mode-btn[data-mode="arcade"]');
+      for (const game of ARCADE_GAMES) await playAndLeave(page, game);
+
+      expect(requests.files()).toBeGreaterThan(20);
+      expect(requests.underSeveralAddresses()).toEqual([]);
+    },
+    90000
+  );
 });
