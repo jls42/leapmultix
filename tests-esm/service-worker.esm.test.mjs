@@ -169,7 +169,11 @@ function loadWorker(network) {
   return worker;
 }
 
-async function request(worker, url, { destination = '', mode = 'cors', headers = {} } = {}) {
+async function request(
+  worker,
+  url,
+  { destination = '', mode = 'cors', headers = {}, signal = { aborted: false } } = {}
+) {
   const waits = [];
   let response;
   worker.listeners.fetch({
@@ -179,6 +183,7 @@ async function request(worker, url, { destination = '', mode = 'cors', headers =
       mode,
       destination,
       headers: new FakeHeaders(headers),
+      signal,
     },
     respondWith: promise => (response = promise),
     waitUntil: promise => waits.push(promise),
@@ -610,6 +615,24 @@ describe('Service worker : images hors ligne', () => {
     for (const url of ['/img/background_zebre_002.webp', '/assets/social/inconnue.webp']) {
       expect((await request(worker, url, { destination: 'image' })).type).toBe('error');
     }
+  });
+});
+
+describe('Service worker : image abandonnée par la page', () => {
+  test('rechargée pendant son chargement : réponse vide, jamais une erreur', async () => {
+    // Firefox signale dans la console chaque réponse en erreur du service worker, même pour
+    // une image que la page qui se recharge n'attend plus
+    const signal = { aborted: false };
+    const worker = loadWorker(async () => {
+      signal.aborted = true;
+      throw new DOMException('The operation was aborted.', 'AbortError');
+    });
+    const url = '/assets/generated-images/arcade/logo_multimiam-256.webp';
+    const response = await request(worker, url, { destination: 'image', signal });
+    expect({ type: response.type, status: response.status }).toEqual({
+      type: 'basic',
+      status: 204,
+    });
   });
 });
 
