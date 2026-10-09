@@ -23,6 +23,7 @@ import {
   spokenQuestion,
 } from './core/spoken-text.js';
 import { createPathIcon } from './components/icons.js';
+import { HEAD_SIZES, setAvatarHead } from './avatar-heads.js';
 
 /** Durée d'affichage d'un message, puis de sa disparition (ms) */
 const MESSAGE_DURATION = 3000;
@@ -408,7 +409,7 @@ export function createAvatarPortrait(avatar, size = 96) {
   if (typeof avatar !== 'string' || !/^[a-z]+$/.test(avatar)) return null;
   const img = document.createElement('img');
   img.className = 'results-avatar';
-  img.src = `assets/images/arcade/${avatar}_head_avatar_128x128.png`;
+  setAvatarHead(img, avatar, HEAD_SIZES.results);
   img.alt = '';
   img.width = size;
   img.height = size;

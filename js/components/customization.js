@@ -12,7 +12,7 @@ import {
   updateWelcomeMessageUI,
   updateBackgroundByAvatar,
 } from '../utils-es6.js';
-import { getAvatarHeadSrc, normalizeAvatarId } from '../main-helpers.js';
+import { HEAD_SIZES, normalizeAvatarId, setAvatarHead } from '../avatar-heads.js';
 import { createVirtualKeyboard } from '../virtual-keyboard.js';
 import { singleActivation } from '../ui-feedback.js';
 import { eventBus } from '../core/eventBus.js';
@@ -222,12 +222,12 @@ export const Customization = {
     const heroMascotImg = document.getElementById('hero-mascot-img');
     const current = gameState.avatar || 'fox';
     if (currentImg) {
-      currentImg.src = getAvatarHeadSrc(current);
+      setAvatarHead(currentImg, current, HEAD_SIZES.current);
       currentImg.alt = tr(current, current);
     }
-    // Mascotte de l'accueil : visage 128 px, décoratif (la bulle porte le message)
+    // Mascotte de l'accueil : décorative (la bulle porte le message)
     if (heroMascotImg) {
-      heroMascotImg.src = getAvatarHeadSrc(current);
+      setAvatarHead(heroMascotImg, current, HEAD_SIZES.mascot);
       heroMascotImg.alt = '';
     }
     for (const radio of document.querySelectorAll(SLIDE6_AVATAR_RADIOS)) {
@@ -287,13 +287,13 @@ export const Customization = {
 
     const currentImg = document.getElementById('current-avatar-img');
     if (currentImg) {
-      currentImg.src = getAvatarHeadSrc(avatarName);
+      setAvatarHead(currentImg, avatarName, HEAD_SIZES.current);
       currentImg.alt = tr(avatarName, avatarName);
     }
-    // Mascotte de l'accueil : visage 128 px, décoratif
+    // Mascotte de l'accueil : décorative
     const heroMascotImg = document.getElementById('hero-mascot-img');
     if (heroMascotImg) {
-      heroMascotImg.src = getAvatarHeadSrc(avatarName);
+      setAvatarHead(heroMascotImg, avatarName, HEAD_SIZES.mascot);
       heroMascotImg.alt = '';
     }
 

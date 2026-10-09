@@ -17,7 +17,7 @@ import {
 } from '../core/players-backup.js';
 import { getCurrentLanguage } from '../i18n-store.js';
 import { getTranslation } from '../i18n.js';
-import { getAvatarHeadSrc } from '../main-helpers.js';
+import { HEAD_SIZES, setAvatarHead } from '../avatar-heads.js';
 import { normalizeUsername } from '../security-utils.js';
 import { createTrashIcon, preferredScrollBehavior } from '../ui-feedback.js';
 
@@ -75,7 +75,7 @@ function trashItem(entry) {
   item.className = 'trash-entry';
   const face = document.createElement('img');
   face.className = 'trash-entry-face';
-  face.src = getAvatarHeadSrc(entry.data?.avatar);
+  setAvatarHead(face, entry.data?.avatar, HEAD_SIZES.trash);
   face.alt = '';
   face.width = 40;
   face.height = 40;

@@ -465,15 +465,18 @@ describe('ESM: Découverte, exploration', () => {
     mode.currentTable = 7;
     let frag = toFragment(mode.getTableExplorationHTML());
     const img = frag.querySelector('.mnemonic-tip img.mnemonic-mascot');
-    expect(img.getAttribute('src')).toBe('assets/images/arcade/panda_head_avatar_128x128.png');
+    // Tête en WebP à sa taille (3.5rem), PNG de 128 px en repli
+    expect(img.getAttribute('srcset')).toMatch(/panda_head_avatar-512\.webp 512w$/);
+    expect(img.getAttribute('sizes')).toBe('3.5rem');
+    expect(img.dataset.fallback).toBe('assets/images/arcade/panda_head_avatar_128x128.png');
     expect(img.getAttribute('alt')).toBe('');
     expect(frag.textContent).not.toMatch(/🧙/u);
 
     userStore.current = { avatar: '../../evil' };
     frag = toFragment(mode.getTableExplorationHTML());
-    expect(frag.querySelector('.mnemonic-mascot').getAttribute('src')).toBe(
-      'assets/images/arcade/fox_head_avatar_128x128.png'
-    );
+    const fox = frag.querySelector('.mnemonic-mascot');
+    expect(fox.dataset.fallback).toBe('assets/images/arcade/fox_head_avatar_128x128.png');
+    expect(fox.getAttribute('srcset')).not.toMatch(/evil/);
   });
 
   test('l’indice ne coupe pas ses égalités en fin de ligne', () => {

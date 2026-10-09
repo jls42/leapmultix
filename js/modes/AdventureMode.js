@@ -16,7 +16,7 @@
 import { GameMode } from '../core/GameMode.js';
 import { askToLeave } from '../game-exit.js';
 import { getAdventureLevelsByOperator } from '../core/adventure-data.js';
-import { createSafeImage, createSafeElement } from '../security-utils.js';
+import { createSafeElement } from '../security-utils.js';
 import {
   getTranslation,
   showCoinGainAnimation,
@@ -49,6 +49,7 @@ import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { chance, randomInt } from '../core/random.js';
 import { accessibilityManager } from '../accessibility.js';
 import { attachImageFallbacks, createWebpImage, webpImageAttributes } from '../webp-images.js';
+import { HEAD_SIZES, normalizeAvatarId, setAvatarHead } from '../avatar-heads.js';
 
 /** Nom des opérations dans les clés de traduction propres à une opération */
 const OPERATION_NAMES = { '+': 'addition', '−': 'subtraction', '÷': 'division' };
@@ -1122,13 +1123,14 @@ export class AdventureMode extends GameMode {
   updateAdventureAvatar() {
     const avatarEl = document.getElementById('adventure-avatar');
     if (avatarEl && gameState?.avatar) {
-      avatarEl.textContent = '';
-      const img = createSafeImage(
-        `assets/images/arcade/${gameState.avatar}_head_avatar_128x128.png`,
-        getTranslation(gameState.avatar),
-        { width: '88', height: '88' }
-      );
-      avatarEl.appendChild(img);
+      const avatar = normalizeAvatarId(gameState.avatar);
+      const img = createSafeElement('img', '', {
+        width: '88',
+        height: '88',
+        alt: getTranslation(avatar),
+      });
+      setAvatarHead(img, avatar, HEAD_SIZES.adventureMap);
+      avatarEl.replaceChildren(img);
     }
   }
 

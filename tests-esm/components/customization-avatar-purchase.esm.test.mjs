@@ -12,12 +12,17 @@ const { Customization } = await import('../../js/components/customization.js');
 const { renderAvatarSelector } = await import('../../js/main-helpers.js');
 const { UserManager } = await import('../../js/userManager.js');
 const { gameState } = await import('../../js/game.js');
+const { HEAD_SIZES, avatarHeadAttributes } = await import('../../js/avatar-heads.js');
 
 const FR = JSON.parse(readFileSync(new URL('../../assets/translations/fr.json', import.meta.url)));
+// Mascotte et avatar actuel comme dans index.html : le renard, déjà en srcset
 const SLIDE6 = `
   <span class="coin-count">0</span>
+  <img id="hero-mascot-img" ${avatarHeadAttributes('fox', HEAD_SIZES.mascot)} alt="" />
   <section id="slide6" class="slide">
-    <div class="current-avatar"><img id="current-avatar-img" src="" alt="" /></div>
+    <div class="current-avatar">
+      <img id="current-avatar-img" ${avatarHeadAttributes('fox', HEAD_SIZES.current)} alt="" />
+    </div>
     <div class="avatar-selector" role="radiogroup"></div>
     <div id="avatar-shop" class="avatar-shop" hidden>
       <p id="avatar-shop-intro" class="avatar-shop-intro"></p>
@@ -72,9 +77,13 @@ describe('Personnalisation : avatar acheté avec les pièces', () => {
     const dragon = radios().find(radio => radio.value === 'dragon');
     expect(dragon.checked).toBe(true);
     expect(document.activeElement).toBe(dragon);
-    expect(document.getElementById('current-avatar-img').getAttribute('src')).toContain(
-      'dragon_head'
-    );
+    // Avec un srcset, c'est lui que le navigateur lit : un src seul changé laisserait le renard
+    for (const id of ['current-avatar-img', 'hero-mascot-img']) {
+      const img = document.getElementById(id);
+      expect([id, img.getAttribute('srcset')]).toEqual([id, expect.stringMatching(/dragon/)]);
+      expect(img.getAttribute('srcset')).not.toMatch(/fox/);
+      expect(img.dataset.fallback).toBe('assets/images/arcade/dragon_head_avatar_128x128.png');
+    }
     expect(gameState.avatar).toBe('dragon');
     expect(stored()).toMatchObject({
       avatar: 'dragon',

@@ -17,7 +17,9 @@ import {
   updateBackgroundByAvatar,
   updateSeoHeroImage,
 } from '../utils-es6.js';
-import { getAvatarHeadSrc, pickRandomAvatarId } from '../main-helpers.js';
+import { pickRandomAvatarId } from '../main-helpers.js';
+import { HEAD_SIZES, setAvatarHead } from '../avatar-heads.js';
+import { attachImageFallbacks } from '../webp-images.js';
 import { VideoManager } from '../VideoManager.js';
 import { OperationSelector } from '../components/operationSelector.js';
 import { initModeAvailability } from '../components/operationModeAvailability.js';
@@ -86,6 +88,8 @@ function setupEnterKeyActivation() {
 function wireCreationAvatarSelector() {
   const creationAvatarSelector = document.querySelector('.creation-avatar-selector');
   if (!creationAvatarSelector) return;
+  // Têtes écrites dans la page (index.html) : sans leurs variantes, le PNG du dépôt
+  attachImageFallbacks(creationAvatarSelector);
   // Boutons radio natifs : le navigateur tient l'état coché, il reste l'aperçu
   creationAvatarSelector.addEventListener('change', e => {
     const selectedAvatarId = e.target?.value;
@@ -295,9 +299,8 @@ function updateHeroMascot(avatarId) {
     const heroMascotImg = document.getElementById('hero-mascot-img');
     if (!heroMascotImg) return;
 
-    // Visage 128 px (la mascotte est affichée à 72 px au plus) ; image décorative,
-    // la bulle porte le message
-    heroMascotImg.src = getAvatarHeadSrc(avatarId);
+    // Image décorative, la bulle porte le message
+    setAvatarHead(heroMascotImg, avatarId, HEAD_SIZES.mascot);
     heroMascotImg.alt = '';
   } catch (error) {
     logInitWarning('Mise à jour mascotte hero impossible', error);
