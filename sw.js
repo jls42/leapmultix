@@ -724,9 +724,9 @@ function keptVariants(resolutions) {
     width: Number(width),
     file,
   }));
-  const kept = variants.filter(({ width }) => width <= PRECACHE_MAX_WIDTH);
-  if (kept.length > 0 || variants.length === 0) return kept.map(({ file }) => file);
-  return [variants.reduce((smallest, v) => (v.width < smallest.width ? v : smallest)).file];
+  const smallest = Math.min(...variants.map(({ width }) => width));
+  const limit = Math.max(PRECACHE_MAX_WIDTH, smallest);
+  return variants.filter(({ width }) => width <= limit).map(({ file }) => file);
 }
 
 /** Adresses à garder pour une image : ses variantes WebP, sinon elle-même */
