@@ -62,6 +62,22 @@ function loadRuntimeUsage(arg) {
   return { runtimeUsed, runtimeNote: `Runtime set loaded: ${runtimeUsed.size} entries.` };
 }
 
+/**
+ * Assets dont le nom de fichier apparaît dans au moins un fichier de code.
+ * @param {string[]} assetFiles
+ * @param {Map<string, string>} codeCache contenu des fichiers de code, par chemin
+ * @returns {Set<string>}
+ */
+function findStaticallyUsed(assetFiles, codeCache) {
+  const sources = [...codeCache.values()];
+  return new Set(
+    assetFiles.filter(af => {
+      const name = path.basename(af);
+      return sources.some(src => src.includes(name));
+    })
+  );
+}
+
 function main() {
   const { runtimeUsed, runtimeNote } = loadRuntimeUsage(process.argv[2]);
 
@@ -76,21 +92,7 @@ function main() {
     }
   }
 
-  const staticUsed = new Set();
-  const staticRefs = {};
-  for (const af of assetFiles) {
-    const name = path.basename(af);
-    let hit = false;
-    for (const [cf, src] of codeCache) {
-      if (src.includes(name)) {
-        hit = true;
-        (staticRefs[af] ||= []).push(cf);
-        if (staticRefs[af].length >= 5) break;
-      }
-    }
-    if (hit) staticUsed.add(af);
-  }
-
+  const staticUsed = findStaticallyUsed(assetFiles, codeCache);
   const staticSuspects = assetFiles.filter(p => !staticUsed.has(p));
   const runtimeUsedInAssets = Array.from(runtimeUsed).filter(p => p.startsWith('assets/'));
   const runtimeSet = new Set(runtimeUsedInAssets);
