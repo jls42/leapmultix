@@ -8,6 +8,7 @@
 
 import { GameMode } from '../core/GameMode.js';
 import { askToLeave } from '../game-exit.js';
+import { confirmDialog } from '../components/confirm-dialog.js';
 import {
   getTranslation,
   playSound,
@@ -714,14 +715,29 @@ export class ChronoMode extends GameMode {
         }
       });
     });
-    document.getElementById('chrono-basket-clear')?.addEventListener('click', () => {
-      // Toute la liste part d'un coup, sans retour : on demande d'abord
-      if (!globalThis.confirm?.(getTranslation('confirm_clear_chrono_basket'))) return;
-      const { userData, store } = loadChronoStore(this.operator);
-      emptyBasket(store);
-      persistChronoStore(userData);
-      this.screenTask(this.rebuildSetup(addRowFocusTarget));
+    document.getElementById('chrono-basket-clear')?.addEventListener('click', event => {
+      this.screenTask(this.confirmClearBasket(event.currentTarget));
     });
+  }
+
+  /**
+   * « Tout effacer » : toute la liste part d'un coup, sans retour, donc la fenêtre du jeu
+   * demande d'abord ; effacée, le focus revient à la ligne d'ajout
+   * @param {HTMLElement} origin - « Tout effacer » : refusé, le focus y revient
+   * @returns {Promise<void>}
+   */
+  async confirmClearBasket(origin) {
+    const confirmed = await confirmDialog({
+      title: getTranslation('confirm_clear_chrono_basket'),
+      confirmLabel: getTranslation('chrono_basket_dialog_confirm'),
+      cancelLabel: getTranslation('chrono_basket_dialog_cancel'),
+      returnFocusTo: origin,
+    });
+    if (!confirmed) return;
+    const { userData, store } = loadChronoStore(this.operator);
+    emptyBasket(store);
+    persistChronoStore(userData);
+    await this.rebuildSetup(addRowFocusTarget);
   }
 
   /**
