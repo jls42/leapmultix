@@ -137,20 +137,19 @@
     status.textContent = 'Stockage partagé indisponible : choix gardé dans ce navigateur.';
   };
   const claude = window.claude;
+  /** Stockage partagé : le choix déjà enregistré y est relu, les suivants y seront écrits */
+  async function connect() {
+    const found = await claude.use('db');
+    if (!found) {
+      unavailable();
+      return;
+    }
+    db = found;
+    const snap = await db.doc(form.dataset.doc).get();
+    if (snap.exists) apply(snap.data());
+    status.textContent = 'Choix partagé avec Claude.';
+  }
   if (claude && typeof claude.use === 'function') {
-    claude
-      .use('db')
-      .then(found => {
-        if (!found) return unavailable();
-        db = found;
-        return db
-          .doc(form.dataset.doc)
-          .get()
-          .then(snap => {
-            if (snap.exists) apply(snap.data());
-            status.textContent = 'Choix partagé avec Claude.';
-          });
-      })
-      .catch(unavailable);
+    connect().catch(unavailable);
   }
 })();
