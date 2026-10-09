@@ -508,7 +508,7 @@ describe('Génération des clips', () => {
     expect(summary.stale).toBe(1);
     expect(summary.staleRaw).toBe(1);
     // Le brut de l'ancien texte dit est supprimé, pas seulement compté
-    expect(fs.existsSync(rawFile(paths(), PHRASES[0].key, old))).toBe(false);
+    expect(allFiles(paths().rawDir)).not.toContain(rawFile(paths(), PHRASES[0].key, old));
     expect(summary.generated).toBe(1);
     expect(manifest().clips[PHRASES[0].key].said).toBe('Combien font une fois 7 ?');
     // L'ancien clip est mis de côté pour la comparaison avant/après de la page d'écoute
