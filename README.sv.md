@@ -607,7 +607,7 @@ kontextuella tillstånd, vilket anger minimikraven:
   nybörjarläsare
 - Arcade: paus (knapp, P-tangenten eller dold flik); valfri avsaknad av tidsgräns i MultiMemory
 - Kontrollerat med axe-core (WCAG 2.0 till 2.2, nivå A och AA samt god praxis): inga
-  överträdelser på 40 vyer i datorbredd och 39 i telefonbredd (390 px), inklusive temat
+  överträdelser på 41 vyer i datorbredd och 40 i telefonbredd (390 px), inklusive temat
   Natt och hög kontrast
 
 ## 🌍 Lokalisering

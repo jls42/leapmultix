@@ -607,7 +607,7 @@ stati contestuali, stabilendo così i requisiti minimi:
   principianti
 - Arcade: pausa (pulsante, tasto P o scheda nascosta); MultiMemory senza limite di tempo, a scelta
 - Verificata con axe-core (WCAG da 2.0 a 2.2, livelli A e AA e buone pratiche): nessuna
-  violazione su 40 schermate in larghezza desktop e 39 in larghezza telefono (390 px), inclusi il tema
+  violazione su 41 schermate in larghezza desktop e 40 in larghezza telefono (390 px), inclusi il tema
   Notte e il contrasto elevato
 
 ## 🌍 Localizzazione

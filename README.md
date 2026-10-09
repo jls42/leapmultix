@@ -607,7 +607,7 @@ L'interface s'appuie sur `oklch()` pour les couleurs et sur `:has()` pour les
   débutants
 - Arcade : pause (bouton, touche P, ou onglet masqué) ; MultiMemory sans limite de temps au choix
 - Contrôlée avec axe-core (WCAG 2.0 à 2.2, niveaux A et AA, et bonnes pratiques) : aucune
-  violation sur 40 écrans en largeur d'ordinateur et 39 en largeur de téléphone (390 px), thème
+  violation sur 41 écrans en largeur d'ordinateur et 40 en largeur de téléphone (390 px), thème
   Nuit et contraste élevé compris
 
 ## 🌍 Localisation

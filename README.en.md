@@ -607,7 +607,7 @@ contextual states, which sets the minimum versions:
   readers
 - Arcade: pause (button, P key, or hidden tab); optional untimed MultiMemory mode
 - Checked with axe-core (WCAG 2.0 through 2.2, Levels A and AA, and best practices): no
-  violations across 40 desktop-width screens and 39 phone-width screens (390 px), including
+  violations across 41 desktop-width screens and 40 phone-width screens (390 px), including
   Night theme and high contrast
 
 ## 🌍 Localization

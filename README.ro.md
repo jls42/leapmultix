@@ -607,7 +607,7 @@ stările contextuale, ceea ce stabilește versiunile minime:
   începători
 - Arcade: pauză (buton, tasta P sau filă ascunsă); MultiMemory fără limită de timp, la alegere
 - Verificată cu axe-core (WCAG 2.0 până la 2.2, nivelurile A și AA și bune practici): nicio
-  încălcare pe 40 de ecrane la lățime de computer și 39 la lățime de telefon (390 px), inclusiv cu tema
+  încălcare pe 41 de ecrane la lățime de computer și 40 la lățime de telefon (390 px), inclusiv cu tema
   Noapte și contrast ridicat
 
 ## 🌍 Localizare

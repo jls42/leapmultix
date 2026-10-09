@@ -607,7 +607,7 @@ estados contextuais, o que define os requisitos mínimos:
   principiantes
 - Arcade: pausa (botão, tecla P ou separador oculto); MultiMemory sem limite de tempo, opcionalmente
 - Verificada com axe-core (WCAG 2.0 a 2.2, níveis A e AA e boas práticas): nenhuma
-  violação em 40 ecrãs com largura de computador e 39 com largura de telemóvel (390 px), incluindo o tema
+  violação em 41 ecrãs com largura de computador e 40 com largura de telemóvel (390 px), incluindo o tema
   Noite e o contraste elevado
 
 ## 🌍 Localização
