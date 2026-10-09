@@ -319,10 +319,16 @@
   content: '';
 }
 
-.chrono-basket-remove:hover,
 .chrono-basket-remove:focus-visible {
   color: var(--color-danger-ink);
   background: var(--color-danger-tint);
+}
+
+@media (hover: hover) {
+  .chrono-basket-remove:hover {
+    color: var(--color-danger-ink);
+    background: var(--color-danger-tint);
+  }
 }
 
 .trash-icon {

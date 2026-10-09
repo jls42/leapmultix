@@ -47,8 +47,10 @@
   transition: border-color var(--dur-fast) var(--ease-out);
 }
 
-#user-filter-input:hover {
-  border-color: var(--color-action);
+@media (hover: hover) {
+  #user-filter-input:hover {
+    border-color: var(--color-action);
+  }
 }
 
 .user-list-actions {
@@ -250,8 +252,10 @@
   font-size: var(--text-sm);
 }
 
-.user-container .delete-btn:hover {
-  background-color: var(--color-danger-tint);
+@media (hover: hover) {
+  .user-container .delete-btn:hover {
+    background-color: var(--color-danger-tint);
+  }
 }
 
 /* Aucun joueur pour l'instant */
