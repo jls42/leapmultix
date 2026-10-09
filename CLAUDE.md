@@ -1,541 +1,92 @@
-# AI Assistant Guide
+# Guide du dépôt LeapMultix
 
-This file provides guidance for AI coding assistants working with this repository.
+Jeu de calcul mental pour enfants de 6 à 12 ans : modules ES servis tels quels (pas de bundler),
+textes en français, anglais et espagnol. Ce guide reste court : les détails sont dans les fichiers
+cités par leur chemin, à lire quand le sujet se présente (aucun n'est importé). Les règles de
+`.claude/rules/` se chargent d'elles-mêmes quand on touche leurs fichiers.
 
-## Development Commands
+## Commandes
 
-Run all commands from the root directory:
+Depuis la racine (catalogue complet : `docs/guide/commandes.md`) :
 
 ```bash
-npm install          # Setup dependencies
-npm run serve        # Start development server (static preview)
-npm test            # Run all tests
-npm run test:watch  # Run tests in watch mode
-npm run test:coverage # Run tests with coverage report
-npm run test:core   # Run core functionality tests only
-npm run lint        # Run ESLint
-npm run lint:fix    # Fix ESLint issues automatically
-npm run format      # Format code with Prettier
-npm run verify      # Run lint + test + test:esm + coverage (quality gate)
+npm install              # dépendances
+npm run serve            # serveur de développement
+npm test                 # Jest (tests/, dont les tests de bout en bout dans Chrome)
+npm run test:esm         # tests ESM (tests-esm/, sur les vrais modules)
+npm run verify           # lint + test + test:esm + couverture : la porte qualité
+npm run format:check     # Prettier (npm run format pour corriger)
+npm run lint             # ESLint sur js/** (les scripts : npx eslint <fichiers>)
+npx stylelint "css/**/*.css"
+npm run i18n:compare     # en et es synchronisés avec fr
+npm run precache:update  # liste de préchargement hors ligne de sw.js
+npm run assets:generate  # variantes WebP des images (assets/generated-images, non versionné)
+npm run voice:corpus     # phrases lues à voix haute, par langue
 ```
 
-### Testing Commands
-
-- `npm run test:integration` - Integration tests
-- `npm run test:storage` - Storage-specific tests
-- `npm run test:esm` - ES module tests (.mjs files)
-- `npm run test:verbose` - Detailed test output
-
-### Analysis and Maintenance Commands
-
-- `npm run analyze:dependencies` - Check dependency usage
-- `npm run dead-code` - Detect unused code
-- `npm run analyze:globals` - Analyze global variables
-- `npm run i18n:verify` - Verify internationalization keys
-- `npm run i18n:unused` - Generate unused i18n keys report
-- `npm run i18n:compare` - Compare translation files (en.json, es.json) with fr.json reference
-- `npm run analyze:assets` - Asset analysis and optimization
-- `npm run analyze:jsdoc` - Analyze JSDoc coverage
-- `npm run improve:jsdoc` - Improve JSDoc coverage
-- `npm run verify:cleanup` - Run dead code and globals analysis
-
-### Build and Asset Management
-
-- `npm run build` - Build production bundle with Rollup
-- `npm run serve:dist` - Serve production build from dist/
-- `npm run assets:generate` - Generate responsive image assets
-- `npm run assets:generate` - Generate responsive image assets (obligatoire dès qu'un PNG est ajouté/modifié afin de rafraîchir `assets/generated-images/` avant `deploy.sh`)
-- `npm run assets:backgrounds` - Convert `img/background_*.png` en WebP (à lancer si tu ajoutes/modifies un fond animé)
-- `npm run assets:analyze` - Analyze responsive asset usage
-- `npm run assets:diff` - Compare asset changes
-
-### Audit and Quality Checks
-
-- `npm run audit:accessibility` - Accessibility audit
-- `npm run audit:mobile` - Mobile responsive audit
-- `npm run test:pwa-offline` - Offline end to end (first visit, network cut, reload, every mode and arcade game)
-
-### Service Worker Management
-
-- `npm run sw:disable` - Disable service worker
-- `npm run sw:fix` - Fix service worker issues
-- `npm run precache:update` - Rewrite the offline precache list in `sw.js` (`scripts/precache-list.mjs`)
-- In local development the modes (`lazy-loader.js`) and the optional styles carry `?v=APP_VERSION`: once the service worker is installed, they come from its precache, so a change shows only after the service worker updates (DevTools, Application: « Update on reload » or « Bypass for network »)
-
-**Hors ligne : la liste de préchargement suit le code.** Le service worker garde à
-l'installation tout ce que le jeu charge (modules, styles, polices, sons, traductions, images
-nommées dans le code), pour que chaque mode démarre hors ligne après une première visite. Un
-module, un son, une image ou une feuille de style ajouté : `npm run precache:update`, sinon
-`tests-esm/scripts/precache-list.test.mjs` échoue. La version de `sw.js` et `APP_VERSION`
-montent ensemble (test du même fichier).
-
-### Code Quality and Formatting
-
-**CRITICAL WORKFLOW**: Before ANY commit, ALWAYS run these commands in order:
-
-1. `npm run format:check` - Check if code formatting is correct
-2. If formatting issues found: `npm run format` - Format code with Prettier (auto-fix)
-3. `npm run lint` - Run ESLint to check code quality
-4. `npm run lint:fix` - Fix ESLint issues automatically (if needed)
-
-**MANDATORY COMMANDS**:
-
-- `npm run format:check` - **ALWAYS run first** to check formatting
-- `npm run format` - Format code with Prettier (auto-fix) - **ONLY if format:check fails**
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues automatically
-
-**Note**: CI/CD will fail if code is not properly formatted. The format:check command will show exactly which files need formatting. Never commit without running format:check first.
-
-#### Coding Standards and Best Practices
-
-**JavaScript/TypeScript Rules:**
-
-- Remove unused variables and parameters (no-unused-vars)
-- Use specific error handling instead of empty catch blocks
-- Avoid innerHTML in favor of security-utils functions
-- Keep cognitive complexity under 15 for functions
-- Extract complex functions into smaller helper methods
-- Draw every random value from `core/random.js` (`randomInt`, `chance`, `pickRandom`, `shuffleInPlace`): ESLint rejects `Math.random`
-- Use `security-utils.js` functions for safe DOM manipulation:
-  - `appendSanitizedHTML()` instead of innerHTML
-  - `createSafeElement()` for safe element creation
-  - `setSafeMessage()` for text content
-
-**CSS Rules:**
-
-- Use modern color function notation: `rgb(255 255 255 / 0.9)` instead of `rgba(255, 255, 255, 0.9)`
-- Prefer `rgb` over `rgba` alias notation
-
-**Security Guidelines:**
-
-- Always sanitize HTML content using security-utils
-- Add crossorigin="anonymous" to external scripts
-- Consider integrity hashes for external resources (update when versions change)
-- Never use innerHTML with user-controlled data
-- Validate all external inputs
-
-**External Script Integrity Guidelines:**
-
-- **Use integrity hashes for:** Static libraries (React, jQuery, etc.) with fixed versions
-- **Skip integrity hashes for:** Dynamic analytics/tracking scripts (Plausible, Google Analytics)
-- **Rationale:** Analytics scripts update frequently; integrity hashes break functionality when providers update
-- **Alternative security:** Use Content Security Policy (CSP) headers to restrict script sources
-
-### Static Code Analysis - Handling False Positives
-
-**Codacy/SonarCloud** use **ESLint** to analyze JavaScript/TypeScript. Use ESLint syntax to ignore false positives:
-
-#### 1. Ignore a **single line**
-
-```js
-// eslint-disable-next-line no-console -- Debug output for development
-console.log('debug');
-
-// eslint-disable-line no-console -- Temporary logging
-console.log('debug');
-```
-
-#### 2. Ignore a **code block**
-
-```js
-/* eslint-disable no-console */
-console.log('debug');
-console.log('another log');
-/* eslint-enable no-console */
-```
-
-#### 3. Ignore **entire file**
-
-Add at the top of the file:
-
-```js
-/* eslint-disable */
-```
-
-#### Common False Positives to Challenge
-
-**HTML/XSS Warnings:**
-
-- When using `appendSanitizedHTML()` from security-utils: Already sanitized, safe to use
-- When using `getTranslation()` output: Internal content, not user input
-- When clearing with `innerHTML = ''`: Safe operation, no injection risk
-
-**Security/Integrity Warnings:**
-
-- Analytics scripts without integrity: Auto-updating scripts would break with integrity hashes
-- Script loading from trusted CDNs: Document why integrity is omitted
-
-**Examples of proper suppression:**
-
-**JavaScript (Codacy/SonarCloud):**
-
-```js
-// Multiple rules for comprehensive coverage
-// eslint-disable-next-line security/detect-object-injection, sonarjs/no-unsafe-string-usage -- False positive: getTranslation returns safe internal content
-const html = getTranslation('key');
-
-// eslint-disable-next-line security/detect-unsafe-regex, sonarjs/no-html-injection -- Safe: using appendSanitizedHTML for proper sanitization
-appendSanitizedHTML(element, html);
-
-// eslint-disable-next-line no-restricted-properties -- Safe: clearing with empty string
-element.innerHTML = '';
-```
-
-**HTML (SonarCloud):**
-
-```html
-<!-- Document reasoning in comment block -->
-<!--
-Suppressing static analysis warnings:
-sonarjs:S5725 - External scripts without integrity is acceptable for analytics services that auto-update
--->
-<!-- eslint-disable-next-line sonarjs/no-script-without-integrity -- Analytics script auto-updates, integrity would break functionality -->
-<script src="https://leapmultix.jls42.org/js/analytics.js"></script>
-```
-
-#### Best Practices for Suppression
-
-1. **Always add justification** with `--` explaining why it's safe
-2. **Be specific** about the rule being disabled when possible
-3. **Challenge warnings** before disabling - ensure they're actually false positives
-4. **Use narrowest scope** - prefer single line over blocks over files
-5. **Document patterns** in this file for team consistency
-
-#### Important Notes
-
-- ESLint comments are recognized by Codacy/SonarCloud
-- Some "Code patterns" (Codacy UI-specific) may not respect inline annotations - disable them in **Repository → Code patterns**
-- Ensure tools use your ESLint config (`.eslintrc.js`, `eslint.config.js`) to respect your inline exclusions
-- Regular review of suppressions during code review to prevent abuse
-
-## Architecture Overview
-
-### Core Structure
-
-- **`index.html`** - Main entry point with slide-based navigation system
-- **`js/main.js`** - Primary application bootstrap and user management
-- **`js/bootstrap.js`** - ES module event handler setup, replaces inline onclick handlers
-- **`js/game.js`** - Core game state management and daily challenges
-
-### Module Organization
-
-#### Core System (`js/core/`)
-
-- `GameMode.js` / `GameModeManager.js` - Abstract game mode system
-- `userState.js` - User session and preference management
-- `storage.js` - LocalStorage abstraction layer
-- `audio.js` - Audio manager with volume controls
-- `eventBus.js` - Event-driven communication between components
-- `mainInit.js` - DOM-ready initialization logic
-- `theme.js` - Theme and color customization system
-- `userUi.js` - User interface utilities
-- `adventure-data.js` - Adventure mode data structures
-- `mult-stats.js` - Multiplication statistics tracking
-- `challenge-stats.js` - Challenge mode statistics
-- `chrono-stats.js` - Chrono mode statistics, one store per operation (× in `chronoStats`, + − ÷ in `chronoStatsByOperator`): times per table set and answer mode, review list of missed facts
-- `chrono-questions.js` - Chrono grids per operation (n × k, n + k, (n + k) − n, (n × k) ÷ n), draw weighted toward the harder facts, and revision queue (both members of a fact family, no repeat in a row while another fact is left: a list of one fact with no other order, such as 7 × 7, repeats it)
-- `mode-stats.js` - Dashboard counters per mode and per operation (`modeStats`): answers, games started (first answer, abandons included), records of finished games, 20-answer window per × table for « À revoir »; seeded once from older profiles, never deleting anything
-- `adventure-progress.js` - Adventure progress per operation; the pre-December-2025 format is copied into × (best of each level), never deleted
-- `profile-operation-stats.js` - Per-calculation stats stored in each profile (`operationStats`, read by the Quiz draw); a profile from before this field starts from a copy of the device-wide `operationStats` key, which is never written again nor deleted
-- `players-trash.js` - Trash of deleted players (`playersTrash`): a deleted profile waits 30 days with all its data, restorable from « Qui joue ? », then is erased at the next launch with its old Arcade scores
-- `players-backup.js` - Players backup file (JSON `leapmultix-players`, version 1): export, checked import that never overwrites a player already there, `navigator.storage.persist()`
-- `avatar-shop.js` - Avatars unlocked with coins (`AVATAR_PRICE` = 50): balance, missing coins, purchase on the profile (no storage access: the caller saves)
-- `chrono-input.js` - Chrono typed-answer check (validates as soon as the answer is right or can no longer be)
-- `daily-challenge.js` - Daily challenge management
-- `utils.js` - Core utility functions (canonical source)
-- `random.js` - Single source of randomness (Web Crypto): `randomInt`, `chance`, `pickRandom`, `shuffleInPlace`
-
-#### Game Modes (`js/modes/`)
-
-- `QuizMode.js` - Basic multiplication quiz
-- `ChallengeMode.js` - Timed challenges with scoring
-- `DiscoveryMode.js` - Learning-focused exploration mode
-- `AdventureMode.js` - Story-driven progression
-- `ChronoMode.js` - Timed series of 10 correct answers, in the operation chosen on the home screen, with a review list of missed facts per operation
-- `ArcadeMode.js` - Mini-games collection (Multimiam, Multisnake, etc.)
-
-#### UI Components (`js/components/`)
-
-- `topBar.js` - Navigation and user controls
-- `dashboard.js` - Progress tracking and statistics
-- `customization.js` - Avatar, theme, and personalization
-- `infoBar.js` - Game status information display
-- `playerTools.js` - « Qui joue ? » on a classroom device: name filter from 10 players, « Nouveau joueur » shortcut, trash, backup buttons (tiles sorted by `UserManager.refreshUserList`, which emits `playersChanged`)
-- `confirm-dialog.js` - The game's confirmation window instead of `window.confirm` (alertdialog, focus on the safe button, Escape = cancel, page inert during the question, follows fullscreen); `emphasis: 'confirm'` for a non-destructive action; `returnFocus(origin)` gives the focus back to the opener, or to the ☰ button when the phone menu holding it has closed (also used by `tableSettingsModal.js`)
-- `avatarShop.js` - Avatars to unlock under the player's own in Personalisation: one button per locked avatar with its price; purchase through `confirm-dialog.js`, then the `avatarUnlocked` event lets `customization.js` put it on
-
-#### Specialized Modules
-
-**Navigation and Slides:**
-
-- `slides.js` - Slide-based navigation system (goToSlide, showSlide)
-- `keyboard-navigation.js` - Keyboard navigation support
-
-**Arcade Games:**
-
-- `arcade.js` - Main arcade mode orchestrator
-- `arcade-invasion.js` - Space Invaders-style game (31 KB)
-- `arcade-multimemory.js` - Memory matching game (31 KB)
-- `arcade-multimiam.js` - Multimiam arcade integration
-- `arcade-multisnake.js` - Snake game integration
-- `arcade-common.js`, `arcade-utils.js` - Shared arcade utilities
-- `arcade-touch.js` - Gestes tactiles communs à MultiSnake et MultiMiam (glisser, toucher tolérant)
-- `arcade-sprite-catalog.js` - Every image the four games draw: its high-definition source (1024 px for most), largest WebP variant, small PNG fallbacks and facing side; read by `scripts/generate-responsive-assets.cjs` (512 and 1024 variants for these sources only) and `scripts/precache-list.mjs` (one offline variant each)
-- Arcade canvases at the device pixel ratio (`arcade-common.js`): games draw in game units (board size), the backing store follows the displayed size × `devicePixelRatio` (capped at 3, 4096 px per side) with a context transform. Read board sizes with `getArcadeCanvasSize()`, never `canvas.width`; convert pointers with `clientToCanvasPoint()`; size boards with `sizeArcadeCanvas()` (element = drawing), `renderArcadeCanvas()` (the game sets the element size itself: MultiMiam's maze fills the board with near-square cells, at most 1.25:1, chosen by `js/multimiam-layout.js`; only the remainder beyond that cap is padded with wall bands, centred by object-fit) or `fitArcadeCanvas()` (MultiInvaders: fixed game size shown in the available space); multiply `shadowBlur`/`shadowOffset` by `canvasPixelScale()` (shadows ignore the transform)
-- `arcade-sprites.js` - Arcade images loaded at their on-screen size (drawn size × canvas display scale × device pixel ratio, capped at 3), upgraded when the board grows, drawn at their proportions (`drawArcadeSprite`: contain, cover for textures, fill for snake tiles; mirrored to face the other way)
-- `arcade-message.js`, `arcade-points.js` - Arcade UI components
-- `arcade-scores.js`, `arcade-session.js` - Arcade scores stored in the player profile; a game counts from its first move, abandon included
-- `arcade-time.js` - Arcade time: pause (button next to the time, P key, hidden tab; never resumes on its own) and MultiMemory's no-time-limit option, kept on the device like the difficulty; the games read `isArcadePaused()` at each step
-
-**Multimiam (Decomposed Architecture):**
-
-- `multimiam.js` - Main Multimiam game controller
-- `multimiam-engine.js` - Game engine and logic (15 KB)
-- `multimiam-renderer.js` - Rendering system (9 KB)
-- `multimiam-controls.js` - Input handling (7 KB)
-- `multimiam-questions.js` - Question generation (6 KB)
-- `multimiam-ui.js` - UI elements
-- `multisnake.js` - Snake game implementation (38 KB)
-
-**User Interface and Feedback:**
-
-- `uiUtils.js` - UI utility functions
-- `ui-feedback.js` - User feedback mechanisms
-- `touch-support.js` - Touch and mobile support (7 KB)
-- `virtual-keyboard.js` - Virtual keyboard implementation
-- `coin-display.js`, `coin-effects.js` - Coin/currency system
-- `notifications.js` - Notification system
-- `badges.js` - Achievement badges system
-
-**Video and Media:**
-
-- `VideoManager.js` - Video playback management (12 KB)
-- `responsive-image-loader.js` - Responsive image loading (9 KB)
-- `webp-images.js` - Screen illustrations (Arcade menu logos and ships, dashboard logos, Adventure gifts) served as WebP at their displayed size × device pixel ratio (`srcset`, `sizes`), with the repository PNG as fallback until `npm run assets:generate` has produced the variants: `createWebpImage`, `webpImageAttributes` for templates, `attachImageFallbacks` once a template is shown (the sanitizer strips `onerror`). Keep the PNG file name as a literal outside `${…}`: `scripts/precache-list.mjs` finds the images to keep offline by their names in the code
-- `avatar-heads.js` - Every avatar head on screen (« Qui joue ? » tiles, form and trash, home mascot, Personalisation, dashboard, Adventure map, Discovery tip, end screens) goes through `setAvatarHead(img, id, HEAD_SIZES.<place>)`, or `avatarHeadAttributes()` in a template: WebP 128/256/512 from the 1024 px source at the size the CSS gives it, the 128 px PNG as fallback; it rewrites srcset, sizes, src and fallback together (with a srcset, changing `src` alone no longer changes the picture). The heads written in `index.html` carry the same attributes (test). Also the avatar whitelist (`AVATAR_IDS`, `normalizeAvatarId`, old French names)
-
-**Game Orchestration:**
-
-- `mode-orchestrator.js` - Mode switching orchestration
-- `lazy-loader.js` - Dynamic module loading (10 KB)
-- `game-cleanup.js` - Game state cleanup utilities
-
-**Utilities:**
-
-- `utils-es6.js` - Main utilities aggregator (5 KB)
-- `core/utils.js` - Core utility functions (canonical source, 10 KB)
-- `main-helpers.js` - Main application helpers
-- `helpers.js` - Legacy helper functions
-- `stats-utils.js` - Statistics utilities
-- `difficulty.js` - Difficulty level management
-- `questionGenerator.js` - Question generation system
-
-**Storage and State:**
-
-- `storage.js` - Legacy storage wrapper
-- `userManager.js` - Multi-user profile management (19 KB)
-
-**Internationalization:**
-
-- `i18n.js` - Internationalization system
-- `i18n-store.js` - Translation storage
-
-#### Translation File Management
-
-The project includes scripts to maintain translation files synchronization:
-
-**`scripts/compare-translations.cjs`** - Compare translation files with fr.json reference
-
-This script ensures all language files (en.json, es.json) are synchronized with fr.json:
-
-**Features:**
-
-- Flattens nested JSON structures to dot notation (e.g., `arcade.multiMemory.title`)
-- Detects missing keys (present in fr.json but absent in other languages)
-- Detects extra keys (present in other languages but not in fr.json)
-- Identifies empty values (`""`, `null`, `undefined`, `[]`)
-- Checks type consistency (string vs array mismatches)
-- Generates detailed console report
-- Saves JSON report to `docs/translations-comparison-report.json`
-
-**Usage:**
-
-```bash
-npm run i18n:compare
-```
-
-**Output Example:**
-
-```
-🔍 Analyse comparative des fichiers de traduction
-
-📚 Langue de référence: fr.json
-✅ fr.json: 335 clés
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 Analyse de en.json
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 Total de clés: 335
-✅ Aucune clé manquante
-✅ Aucune clé supplémentaire
-✅ Aucune valeur vide
-
-📊 RÉSUMÉ FINAL
-  fr.json: 335 clés
-  en.json: 335 clés
-  es.json: 335 clés
-
-✅ Tous les fichiers de traduction sont parfaitement synchronisés !
-```
-
-**Other i18n scripts:**
-
-- `npm run i18n:verify` - Verify translation keys consistency
-- `npm run i18n:unused` - Generate unused translation keys report
-- `scripts/cleanup-i18n-keys.cjs` - Remove unused keys from all translation files
-
-**Accord au pluriel :** un message s'accorde avec la syntaxe ICU, lue par
-`js/core/message-format.js` pour `translate()` comme pour les énoncés des modes :
-`{n, plural, one {# boîte} other {# boîtes}}` (règles de la langue, `#` vaut le nombre).
-Les paramètres d'un message doivent être les mêmes dans les trois langues
-(`tests-esm/i18n-placeholders.esm.test.mjs`).
-
-#### Phrases parlées : corpus et verrou
-
-**Règle, sans exception : une phrase dite modifiée se réenregistre avant sa mise en prod.**
-Chaque phrase que le jeu lit à voix haute a son clip MP3 dans chaque voix de sa langue
-(voix par défaut : Lucie en français, Sulafat en anglais et en espagnol ; d'autres au choix du
-joueur), retrouvé par l'empreinte du texte exact. Toucher ce texte
-(traduction fr/en/es, gabarit, forme d'une question, plage d'opérandes, nouvelle phrase) le
-prive de clip : le jeu la lit alors avec la voix de l'appareil, sans erreur ni alerte. Donc,
-dans la même PR que le changement de texte :
-
-1. le test du verrou échoue exprès : c'est le rappel ;
-2. générer les clips manquants avec le skill `generating-voice-clips` (payant : estimation
-   `--dry-run` d'abord, accord du propriétaire), contrôler (Whisper, `voice:check`, refaits
-   tant que Whisper doute), faire écouter ce qu'il n'a pas validé et un échantillon
-   d'accords (page d'écoute : `npm run voice:listen`) ;
-3. publier les nouveaux clips (`voice:publish clips`, puis `voice:check-online`) **avant**
-   de fusionner, puis `npm run voice:corpus:lock`.
-
-Un clip qui reste mal dit après plusieurs essais reçoit un texte dit imposé
-(`SAID_OVERRIDES` de `scripts/voice/said-text.mjs`, par exemple un nombre en toutes
-lettres) : la phrase affichée et l'empreinte du clip ne changent pas.
-
-Tout ce que le jeu lit à voix haute est énuméré par `scripts/voice/corpus.mjs`, à partir
-du code du jeu (opérations, formateur, formes parlées de `js/core/spoken-text.js`, données
-des modes). `scripts/voice/corpus.lock.json` garde, par langue, le nombre de phrases et
-leur empreinte.
-
-- Changer une phrase parlée fait échouer `tests-esm/voice/corpus.esm.test.mjs` : clips
-  d'abord (ci-dessus), verrou ensuite.
-- Un nouvel appel à `speak()` fait échouer `tests-esm/voice/speak-inventory.esm.test.mjs` :
-  ajouter sa phrase au corpus, puis mettre l'inventaire à jour.
-- `tests-esm/voice/modes-in-corpus.esm.test.mjs` fait jouer les vrais modes dans les trois
-  langues et exige que chaque phrase dite soit dans le corpus.
-- `npm run voice:corpus` résume le corpus ; `--list fr` en donne les phrases.
-
-**Security and Error Handling:**
-
-- `security-utils.js` - Security utilities (XSS protection, sanitization); `checkUsername()` keeps a player name as typed (letters of any script and their accents, digits, apostrophes, hyphen, period, underscore, space) and refuses the rest, quoting the refused signs
-- `error-handlers.js` - Global error handling
-- `logger.js` - Logging system
-
-**Accessibility and Input:**
-
-- `accessibility.js` - Accessibility features
-- `game-exit.js` - Single exit rule during a game: Escape, « Abandonner » and the top-bar screens (Home, About, Dashboard, Customization, Change player) ask the mode's own confirmation; confirmed, the game is recorded as an abandon, then the screen opens. Outside a game, nothing changes
-- `speech.js` - Single speech queue (see `docs/voix-enregistree.md`): `speak(text, {priority, queue})`,
-  `cancelSpeech()`, pluggable engine (`setSpeechEngine`); never call `speechSynthesis` directly
-
-**Integration and Analytics:**
-
-- `plausible-init.js` - Plausible analytics initialization
-- `cache-updater.js` - Cache management and version control (10 KB)
-- `imports.js` - Module import utilities
-
-### Module Import Patterns
-
-**Preferred imports:**
-
-```javascript
-import { utils } from './utils-es6.js'; // Main utilities aggregator
-import Storage from './core/storage.js'; // Core services
-import { TopBar } from './components/topBar.js'; // UI components
-```
-
-**Deprecated patterns (avoid):**
-
-- `./utils.js` - Use `utils-es6.js` or `core/utils.js` instead
-- Direct mode imports - Use lazy loading via `lazy-loader.js`
-- Legacy uiHandlers, domUtils, helpers modules
-
-### Key Conventions
-
-- **ES Modules**: All code uses `import/export` syntax (type: "module")
-- **Naming**: camelCase for functions/variables, PascalCase for classes
-- **Event System**: Components communicate via `eventBus` rather than direct coupling
-- **Lazy Loading**: Game modes are dynamically loaded via `lazy-loader.js` to improve initial page load
-- **Slide Navigation**: UI uses numbered slides (slide0, slide1, etc.) with `goToSlide()` from `slides.js`
-
-### Game State Management
-
-The application maintains state through:
-
-- **`gameState`** object (in `game.js`) - Current session state
-- **`UserState`** class - Persistent user preferences and progress
-- **LocalStorage** - Via `Storage` abstraction for data persistence
-- **Event Bus** - For reactive state updates across components
-
-### Testing Architecture
-
-- **Framework**: Jest with jsdom environment
-- **Configuration**: `jest.config.cjs`
-- **Location**: `tests/__tests__/` with `*.test.js` naming
-- **Coverage**: Reports to `coverage/` directory, includes all `js/**/*.js` files
-- **ESM Tests**: Separate `tests-esm/` directory for `.mjs` files; tests that load the real modules belong here
-
-### Build and Quality Tools
-
-- **ESLint**: Modern flat config (`eslint.config.js`) with ES2022 support
-- **Prettier**: Code formatting (`.prettierrc`)
-- **Stylelint**: CSS linting (`.stylelintrc.json`)
-- **Jest**: Testing with jsdom for DOM simulation
-- **No bundler**: Direct ES module loading in browsers
-
-### Plugin/Marketplace File Management
-
-When modifying skills or agents that exist in both `.claude/` (local) and `leapmultix-marketplace/` (distribution):
-
-1. **Edit once, copy after** - Edit the local version first, then copy to marketplace
-2. **Use cp, not duplicate edits** - Saves tokens and prevents drift
-
-```bash
-# Skills: local → marketplace
-cp .claude/skills/<skill-name>/SKILL.md \
-   leapmultix-marketplace/<skill-name>/skills/<skill-name>/SKILL.md
-
-# Agents: local → marketplace
-cp .claude/agents/<agent-name>.md \
-   leapmultix-marketplace/<agent-name>/agents/<agent-name>.md
-```
-
-3. **Verify sync** after changes: `diff <local> <marketplace>`
-
-### Commit and Quality Guidelines
-
-- **Commit workflow**: **ALWAYS use the `helping-with-commits` skill** to propose commits. Never commit directly - wait for user validation before committing.
-  - **Exception, boucle de correction d'une PR** : les commits qui ne font que corriger les retours des analyseurs d'une PR déjà autorisée ne se revalident pas un par un. L'autorisation initiale court jusqu'au vert complet.
-- **Branch workflow**: **NEVER commit directly to main**. Always create a feature branch first
-  - Create branch: `git checkout -b feat/your-feature-name`
-  - Commit on branch: `git commit -m "Your message"`
-  - Push and create PR: `git push -u origin feat/your-feature-name`
-- **Commit style**: Concise, imperative mood (e.g., "Fix arcade init errors", "Refactor cache updater")
-- **Quality gate**: Ensure `npm run lint`, `npm test`, and `npm run test:coverage` pass before commits
-- **Security**: Do not commit secrets, API keys, or Terraform state files
-- **Commit messages**: Do not mention AI tools or assistants in commit messages or PR descriptions
+Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run lint`, puis
+`npm run verify`. La CI échoue sur un fichier mal formaté.
+
+## Règles de code
+
+- Variables et paramètres inutilisés retirés ; un `catch` dit pourquoi il ignore une erreur.
+- Complexité cognitive sous 15 ; Lizard (Codacy) : complexité ≤ 8, ≤ 50 lignes et ≤ 8 paramètres
+  par fonction. Une fonction trop complexe se découpe en fonctions nommées.
+- Tout tirage au hasard passe par `js/core/random.js` (`randomInt`, `chance`, `pickRandom`,
+  `shuffleInPlace`) : ESLint refuse `Math.random`.
+- Toute entrée extérieure se valide. DOM : jamais d'`innerHTML` avec une donnée ; `security-utils.js` (`appendSanitizedHTML`,
+  `createSafeElement`, `setSafeMessage`). Pas d'accès `objet[variable]` (Codacy) : `Map`,
+  `Object.entries` / `Object.fromEntries`, `Reflect.deleteProperty`, `.at(i)`.
+- Scripts Node : `node:fs`, `node:path`… ; des tâches asynchrones en série passent par
+  `scripts/lib/in-sequence.cjs` plutôt que par un `await` dans une boucle.
+- CSS : notation moderne `rgb(255 255 255 / 0.9)`, jamais `rgba(...)`.
+- Scripts externes : `crossorigin="anonymous"` ; empreinte d'intégrité pour une bibliothèque figée,
+  pas pour Plausible, qui change : la CSP restreint les sources.
+- Faux positif d'un analyseur : suppression ESLint en ligne, au plus près, raison écrite après
+  `--` (syntaxe et exemples : `docs/guide/analyse-statique.md`).
+
+## Architecture
+
+- `index.html` : point d'entrée, écrans numérotés (`slide0`, `slide1`…, `goToSlide()` de
+  `js/slides.js`) ; `js/main.js` démarre le jeu ; `js/bootstrap.js` branche les événements (aucun
+  `onclick` dans le HTML) ; `js/game.js` garde l'état de la partie (`gameState`).
+- `js/core/` : services (`Storage`, `UserState`, `eventBus`, audio, statistiques) ; `js/modes/` :
+  les six modes ; `js/components/` : l'interface ; Arcade : `js/arcade-*.js`, `js/multimiam*.js`,
+  `js/multisnake.js`.
+- Conventions : modules ES, camelCase et PascalCase, composants reliés par `eventBus`, modes chargés
+  à la demande par `js/lazy-loader.js` ; importer `utils-es6.js` ou `core/utils.js`, jamais
+  `./utils.js`.
+- Tests : Jest et jsdom (`jest.config.cjs`) dans `tests/__tests__/*.test.js` ; un test qui charge
+  les vrais modules va dans `tests-esm/*.test.mjs`.
+- Carte complète des modules : `.claude/rules/architecture.md`.
+
+## Données, textes, pages et images
+
+- Un profil déjà enregistré se lit à l'identique : une nouvelle donnée s'ajoute sans rien effacer.
+- Textes en fr, en et es ensemble, pluriels ICU (`{n, plural, one {# boîte} other {# boîtes}}`),
+  mêmes paramètres dans les trois langues : `.claude/rules/traductions.md`.
+- **Une phrase lue à voix haute modifiée se réenregistre avant sa mise en prod** : clips de chaque
+  voix, payants, accord du propriétaire. `tests-esm/voice/corpus.esm.test.mjs` échoue exprès pour
+  le rappeler. Marche à suivre : `.claude/rules/phrases-parlees.md`.
+- **Pages juridiques** (`#slide9` mentions légales, `#slide10` politique de confidentialité, dans
+  `index.html`) : un texte modifié change sa date de révision, clé `legal_last_updated` ou
+  `privacy_last_updated` en fr, en et es, et la date écrite dans `index.html`. Le verrou
+  `tests-esm/legal-pages.lock.json` l'exige (`tests-esm/legal-pages.esm.test.mjs`).
+- Images : sources haute définition, variantes WebP produites par `npm run assets:generate` ;
+  réglages et pièges : `.claude/rules/images.md`.
+- Hors ligne : un module, un son, une image ou une feuille de style ajouté demande
+  `npm run precache:update` (sinon `tests-esm/scripts/precache-list.test.mjs` échoue) ; service
+  worker et déploiement : `.claude/rules/deploiement.md`.
+
+## Commits et PR
+
+- Proposer chaque commit avec le skill `helping-with-commits` et attendre l'accord. Exception : les
+  commits qui ne font que corriger les retours des analyseurs d'une PR déjà autorisée.
+- Jamais de commit sur `main` : une branche (`feat/…`, `fix/…`), poussée, puis une PR. Le
+  propriétaire fusionne lui-même.
+- Messages au format Conventional Commits, en français, à l'impératif, concis ; aucun outil d'IA
+  nommé dans un commit ni dans une PR ; aucun secret.
+- Skills et agents copiés dans `leapmultix-marketplace/` : `.claude/rules/marketplace.md`.
 
 ### Retours de PR : boucle obligatoire, jusqu'au vert
 
@@ -568,7 +119,7 @@ portant sur zéro fichier ; vingt-trois tests audio au vert qui n'exécutaient
 pas une ligne du module ; des `.sort()` sans comparateur qui plaçaient tout un
 dépôt en note D de fiabilité.
 
-#### Lire les analyseurs par leur API, pas au voyant
+### Lire les analyseurs par leur API, pas au voyant
 
 Un contrôle vert ne dit pas qu'il n'y a rien : la Quality Gate SonarCloud ne
 juge que le **nouveau code**. Le 24/09/2026, elle était verte alors que `main`
@@ -589,7 +140,7 @@ curl -s "https://sonarcloud.io/api/measures/component?component=jls42_leapmultix
 
 Une note globale de `main` qui n'est pas à A se traite comme une remontée de PR.
 
-### Vérifier : mesuré, jamais supposé
+## Vérifier : mesuré, jamais supposé
 
 L'utilisateur est le dernier maillon. Quand on lui annonce que c'est bon, ça doit
 l'être vraiment. Donc, avant toute annonce de résultat :
@@ -610,62 +161,21 @@ l'être vraiment. Donc, avant toute annonce de résultat :
   détecter : s'il reste vert, c'est de la couverture fantôme, et le corriger
   passe avant tout le reste.
 
-### Deployment
+## Déploiement
 
-- **GitHub**: Source code repository with CI/CD via GitHub Actions
-- **Static hosting**: Application designed for static file serving
+Un push sur `main` déploie le site après le job `verify` (`.github/workflows/ci.yml` : jeton OIDC,
+images régénérées, puis `deploy.sh`). À savoir avant d'y toucher, détails dans
+`.claude/rules/deploiement.md` :
 
-#### Déploiement automatique
-
-Un push sur `main` déploie le site, mais seulement si le job `verify` est passé :
-le job `deploy` de `.github/workflows/ci.yml` s'authentifie auprès d'AWS par jeton
-OIDC (aucune clé stockée), régénère les images, puis appelle `deploy.sh`.
-
-Deux points à connaître avant d'y toucher :
-
-- **`assets/generated-images/` n'est pas versionné** (3100+ fichiers). Le job le
-  reconstruit par `npm run assets:generate` avant la synchronisation. Sans cette
-  étape, `aws s3 sync --delete` effacerait toutes les images du site : mesuré,
-  3145 suppressions. Un garde-fou refuse de déployer si la génération est
-  incomplète.
-- **Le rôle IAM n'accepte que `refs/heads/main`.** Le dépôt étant public, c'est
-  cette condition qui empêche la pull request d'un inconnu d'obtenir les droits
-  de déploiement. Il est défini dans le dépôt d'infrastructure
-  (`leapmultix-infra`, fichier `github-oidc.tf`).
-- **`aws s3 sync --size-only` ne voit pas un fichier modifié à taille égale** : une
-  version (« v19 » → « v20 »), une date, un mot de même longueur (« ElevenLabs » →
-  « Mistral AI » dans `en.json`, resté ancien en ligne le 26/09/2026). `deploy.sh`
-  renvoie donc d'office **tous les fichiers texte** du site (`.html`, `.js`, `.css`,
-  `.json`, `.xml`, `.txt`) ; seuls les binaires (images, sons, vidéos, polices) s'en
-  tiennent à la taille. Une nouvelle sorte de fichier texte s'ajoute à sa liste
-  d'extensions, et au test `tests-esm/scripts/deploy-text-files.test.mjs`.
-- **Chaque adresse de module porte la version** (`scripts/version-module-urls.mjs`,
-  appelé par `deploy.sh` sur la copie à envoyer) : les modules s'importent sans
-  version et CloudFront les donne au navigateur pour une semaine, qu'il ressert sans
-  consulter le service worker. Sans ce versionnage, un joueur déjà venu mélangeait
-  anciens et nouveaux modules après un déploiement (export absent : le mode ne
-  démarre pas, constaté le 25/09/2026 en v22). **Monter `APP_VERSION` à chaque mise
-  en prod** : c'est elle qui change toutes les adresses. C'est aussi elle qui renouvelle
-  la copie du service worker : un module ou un style de sa version (`?v=<version>`) est
-  servi par son préchargement avant le réseau, si bien qu'un déploiement sans montée de
-  version laisse aux joueurs déjà venus leurs anciens modules jusqu'à la suivante
-  (`sw.js` et `APP_VERSION` montent ensemble, un test l'exige).
-
-Après chaque fusion, vérifier en ligne que la prod sert la version fusionnée.
-Le déploiement attend la fin de `verify` : compter 5 à 20 minutes.
+- **Monter `APP_VERSION` à chaque mise en prod** (avec la `VERSION` de `sw.js`, un test l'exige) :
+  elle change l'adresse de chaque module et renouvelle la copie du service worker, qui sert les
+  modules de sa version avant le réseau.
+- `assets/generated-images/` n'est pas versionné : la CI le reconstruit avant d'envoyer.
+- Après chaque fusion, vérifier que la prod sert la version fusionnée (5 à 20 minutes) :
 
 ```bash
-# Le run de la fusion : attendre que verify et Déploiement soient terminés
 gh api "repos/jls42/leapmultix/actions/runs?head_sha=$(git rev-parse origin/main)" \
   --jq '.workflow_runs[] | "\(.status) \(.conclusion)"'
-# La version servie doit être celle du dépôt
 curl -s -H 'Cache-Control: no-cache' https://leapmultix.jls42.org/sw.js | grep -m1 'const VERSION'
 git show origin/main:sw.js | grep -m1 'const VERSION'
 ```
-
-Variables de dépôt attendues (Settings > Secrets and variables > Actions) :
-`AWS_DEPLOY_ROLE_ARN`, `S3_BUCKET`, `CLOUDFRONT_DISTRIB`, `PLAUSIBLE_DOMAIN`, `VOICE_BASE`
-(`/voice/` : adresse des clips de la voix enregistrée, voir `docs/voix-enregistree.md`).
-
-Déploiement manuel toujours possible : `./deploy.sh` en local (lit `deploy.config`),
-ou l'onglet Actions avec l'option `dry_run` pour simuler sans rien écrire.
