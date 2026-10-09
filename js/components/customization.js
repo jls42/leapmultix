@@ -17,10 +17,8 @@ import { createVirtualKeyboard } from '../virtual-keyboard.js';
 import { singleActivation } from '../ui-feedback.js';
 import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
-import { createIcon } from './icons.js';
 
 /** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
-const SLIDE6_AVATARS = '#slide6 .avatar-selector .avatar-btn';
 const SLIDE6_AVATAR_RADIOS = '#slide6 .avatar-selector .avatar-radio';
 
 /** Libellés accessibles des trois boutons « A » (taille du texte) */
@@ -81,6 +79,8 @@ export const Customization = {
     // Noms des avatars et infobulles : data-translate (main-helpers.js) ;
     // le texte alternatif de l'avatar actuel suit ici la nouvelle langue.
     eventBus.on('languageChanged', () => this._updateCurrentAvatarAlt());
+    // Avatar acheté avec les pièces (components/avatarShop.js) : l'enfant le porte aussitôt
+    eventBus.on('avatarUnlocked', event => this._wearUnlockedAvatar(event.detail?.avatar));
   },
 
   /** Texte alternatif de « Avatar actuel » : le nom du personnage, dans la langue affichée */
@@ -203,20 +203,6 @@ export const Customization = {
   },
 
   /**
-   * Si le cadenas d'un avatar verrouillé est encore un émoji dans un <span>, il est
-   * redessiné en SVG ; un cadenas déjà en SVG est laissé tel quel.
-   */
-  _upgradeAvatarLocks() {
-    for (const btn of document.querySelectorAll(SLIDE6_AVATARS)) {
-      const lock = btn.querySelector('.lock-icon');
-      if (lock && !(lock instanceof SVGElement) && !lock.querySelector('svg')) {
-        const icon = createIcon('lock', { size: 20 });
-        if (icon) lock.replaceChildren(icon);
-      }
-    }
-  },
-
-  /**
    * Afficher l'écran de personnalisation
    */
   show() {
@@ -246,7 +232,6 @@ export const Customization = {
     for (const radio of document.querySelectorAll(SLIDE6_AVATAR_RADIOS)) {
       radio.checked = radio.value === current;
     }
-    this._upgradeAvatarLocks();
 
     // Mettre à jour le champ de surnom
     const nicknameInput = document.getElementById('nickname-input');
@@ -272,6 +257,22 @@ export const Customization = {
       const avatarName = event.target?.value;
       if (avatarName) this._applyAvatarChoice(avatarName);
     });
+  },
+
+  /**
+   * Avatar qui vient d'être acheté : l'enfant le porte. Il rejoint la grille, coché, et son
+   * bouton radio prend le focus, puisque le bouton de la boutique a disparu.
+   * @param {string} [avatarName]
+   * @private
+   */
+  _wearUnlockedAvatar(avatarName) {
+    if (!avatarName) return;
+    this._applyAvatarChoice(avatarName);
+    renderAvatarSelector('#slide6 .avatar-selector');
+    const radio = [...document.querySelectorAll(SLIDE6_AVATAR_RADIOS)].find(
+      choice => choice.value === avatarName
+    );
+    if (radio) radio.focus();
   },
 
   /**

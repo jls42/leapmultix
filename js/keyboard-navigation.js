@@ -147,8 +147,16 @@ class KeyboardNavigation {
     return true;
   }
 
+  /** Touche à laisser passer : hors mode clavier, déjà traitée, ou gardée par l'élément actif */
+  ignoresKey(event) {
+    // Touche déjà traitée (grille des réponses qui gère ses flèches, bouton qui s'active) :
+    // repartir du nouvel élément envoyait le focus dans la barre du haut
+    if (event.defaultPrevented) return true;
+    return !this.isKeyboardMode || activeElementOwnsKey(event.key);
+  }
+
   handleGlobalKeydown(event) {
-    if (!this.isKeyboardMode || activeElementOwnsKey(event.key)) return;
+    if (this.ignoresKey(event)) return;
 
     switch (event.key) {
       case 'Enter':

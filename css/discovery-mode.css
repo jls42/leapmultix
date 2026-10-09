@@ -16,7 +16,7 @@
 }
 
 /* Un écran qui a son propre titre (table, opération) remplace « Mode Découverte » */
-.discovery-container:has(.discovery-lab-title) > h2 {
+.discovery-container:has(.discovery-lab-title) > h1:not(.discovery-lab-title) {
   display: none;
 }
 
@@ -436,7 +436,7 @@
   height: 3.5rem;
 }
 
-.mnemonic-tip h3 {
+.mnemonic-tip h2 {
   margin-bottom: var(--space-1);
   font-size: var(--text-md);
   color: var(--color-warning-ink);

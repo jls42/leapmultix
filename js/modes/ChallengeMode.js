@@ -7,6 +7,7 @@
  */
 
 import { GameMode, GOOD_SOUND_MS } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
 import {
   getTranslation,
   showCoinGainAnimation,
@@ -51,6 +52,9 @@ export class ChallengeMode extends GameMode {
       autoProgress: true,
       showScore: true,
       initialTime: 60, // Temps par défaut (modifié selon difficulté)
+      // Après une erreur, la bonne réponse reste 5 s au moins, le temps de la lire même voix
+      // coupée ; le décompte est arrêté pendant ce temps (onWrongAnswerPause)
+      wrongAnswerDelay: 5000,
     });
 
     // État spécifique au Challenge
@@ -80,7 +84,7 @@ export class ChallengeMode extends GameMode {
                     <p data-translate="challenge_intro">${getTranslation('challenge_intro')}</p>
 
                     <div class="difficulty-selector" role="group" aria-labelledby="challenge-difficulty-title">
-                        <h3 id="challenge-difficulty-title" data-translate="choose_difficulty">${getTranslation('choose_difficulty')}</h3>
+                        <h2 class="section-title" id="challenge-difficulty-title" data-translate="choose_difficulty">${getTranslation('choose_difficulty')}</h2>
                         <div class="difficulty-options">
                             <button type="button" class="difficulty-btn" data-difficulty="easy" data-translate="challenge_easy">${getTranslation('challenge_easy')}</button>
                             <button type="button" class="difficulty-btn" data-difficulty="medium" data-translate="challenge_medium">${getTranslation('challenge_medium')}</button>
@@ -156,7 +160,7 @@ export class ChallengeMode extends GameMode {
   setupGameControls() {
     const abandonBtn = document.getElementById('challenge-abandon');
     if (abandonBtn) {
-      abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+      abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
     }
   }
 
@@ -243,20 +247,46 @@ export class ChallengeMode extends GameMode {
   }
 
   /**
-   * Demander confirmation d'abandon
+   * Demander confirmation d'abandon (game-exit.js) ; la partie a pu finir pendant la question
+   * @returns {Promise<void>}
    */
-  confirmAbandon() {
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root?.confirm && Root.confirm(getTranslation('confirm_abandon_challenge'))) {
-      // Un défi abandonné reste compté, mais son score n'est pas un record
-      this._abandoned = true;
-      this.finish();
-    }
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
+    this.recordAbandon();
+    this.finish();
+  }
+
+  /** Le décompte attend la réponse à la question de sortie : la lire ne coûte pas de temps */
+  beforeAsking() {
+    this._askingToLeave = true;
+    if (this.timerInterval) this._countdownHeld = true;
+    this.onWrongAnswerPause();
+  }
+
+  /**
+   * Partie continuée : le décompte repart s'il tournait, ou si l'explication d'une erreur
+   * s'est finie pendant la question
+   * @param {boolean} leaving
+   */
+  afterAsking(leaving) {
+    this._askingToLeave = false;
+    if (this._countdownHeld && !leaving) this.onWrongAnswerResume();
+    this._countdownHeld = false;
+  }
+
+  /** Partie en cours (game-exit.js) : la difficulté choisie, jusqu'à l'enregistrement */
+  isGameInProgress() {
+    return this.state.isActive && this.phase === 'playing' && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_challenge');
+  }
+
+  /** Un défi abandonné reste compté, mais son score n'est pas un record */
+  recordAbandon() {
+    this._abandoned = true;
+    this.saveResultsOnce();
   }
 
   /**
@@ -654,8 +684,12 @@ export class ChallengeMode extends GameMode {
     this.timerInterval = null;
   }
 
-  /** Question suivante après une erreur : le décompte repart */
+  /** Question suivante après une erreur : le décompte repart, sauf pendant la question de sortie */
   onWrongAnswerResume() {
+    if (this._askingToLeave) {
+      this._countdownHeld = true;
+      return;
+    }
     if (this.state.isActive && this.state.timeLeft > 0 && !this.timerInterval) this.startTimer();
   }
 

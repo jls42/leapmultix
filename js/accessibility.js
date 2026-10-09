@@ -2,6 +2,9 @@
  * Module d'accessibilité centralisé
  * Fournit des fonctions pour améliorer l'accessibilité de LeapMultix
  */
+import { pressAbandon } from './game-exit.js';
+// Traductions lues dans le magasin seul : les annonces suivent la langue du jeu
+import { translate } from './i18n-store.js';
 
 export class AccessibilityManager {
   constructor() {
@@ -48,12 +51,13 @@ export class AccessibilityManager {
       // Touche déjà traitée ailleurs (fenêtre, navigation clavier) : ne rien refaire
       if (e.defaultPrevented) return;
 
-      // Échap pour fermer/retour, sauf si une fenêtre ouverte le gère elle-même
-      if (e.key === 'Escape' && !this.isDialogOpen()) {
+      // Échap pour fermer/retour, sauf si une fenêtre ouverte le gère elle-même. Pendant une
+      // partie, Échap presse son « Abandonner » : même confirmation, même suite (game-exit.js)
+      if (e.key === 'Escape' && !this.isDialogOpen() && !pressAbandon()) {
         import('./slides.js')
           .then(m => m.goToSlide(0))
           .catch(error => console.error('Retour au menu principal impossible', error));
-        this.announce('Retour au menu principal');
+        this.announce(translate('a11y_back_to_players'));
       }
 
       // Entrée : un <button> natif s'active déjà seul (et keyboard-navigation.js
@@ -73,7 +77,7 @@ export class AccessibilityManager {
   // Certaines restent dans le DOM une fois fermées : seule la visibilité réelle compte.
   isDialogOpen() {
     const candidates = document.querySelectorAll(
-      'dialog[open], [role="dialog"], .top-bar-nav.is-open'
+      'dialog[open], [role="dialog"], [role="alertdialog"], .top-bar-nav.is-open'
     );
     return Array.from(candidates).some(el =>
       typeof el.checkVisibility === 'function'
@@ -132,24 +136,17 @@ export class AccessibilityManager {
             } catch {
               /* ignoré volontairement */
             }
-            this.announce('Son activé/désactivé');
+            // L'annonce dit l'état du son après le changement
+            this.announce(translate(AudioManager.isMuted() ? 'a11y_sound_off' : 'a11y_sound_on'));
           })
           .catch(error => console.error('Réglage du son impossible', error));
       }
     });
   }
 
-  // Afficher l'aide accessibilité
+  // Afficher l'aide accessibilité, dans la langue du jeu
   showHelp() {
-    const helpMessage = `Raccourcis clavier LeapMultix:
-- Échap: Retour au menu
-- Tab/Shift+Tab: Navigation
-- Entrée: Activer bouton
-- Flèches: Navigation dans les groupes
-- Ctrl+M: Activer/désactiver le son
-- Ctrl+H: Cette aide`;
-
-    this.alert(helpMessage);
+    this.alert(translate('a11y_shortcuts_help'));
   }
 
   // Améliorer le focus sur un élément

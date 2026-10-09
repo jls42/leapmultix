@@ -239,6 +239,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `profile-operation-stats.js` - Per-calculation stats stored in each profile (`operationStats`, read by the Quiz draw); a profile from before this field starts from a copy of the device-wide `operationStats` key, which is never written again nor deleted
 - `players-trash.js` - Trash of deleted players (`playersTrash`): a deleted profile waits 30 days with all its data, restorable from « Qui joue ? », then is erased at the next launch with its old Arcade scores
 - `players-backup.js` - Players backup file (JSON `leapmultix-players`, version 1): export, checked import that never overwrites a player already there, `navigator.storage.persist()`
+- `avatar-shop.js` - Avatars unlocked with coins (`AVATAR_PRICE` = 50): balance, missing coins, purchase on the profile (no storage access: the caller saves)
 - `chrono-input.js` - Chrono typed-answer check (validates as soon as the answer is right or can no longer be)
 - `daily-challenge.js` - Daily challenge management
 - `utils.js` - Core utility functions (canonical source)
@@ -260,6 +261,8 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `customization.js` - Avatar, theme, and personalization
 - `infoBar.js` - Game status information display
 - `playerTools.js` - « Qui joue ? » on a classroom device: name filter from 10 players, « Nouveau joueur » shortcut, trash, backup buttons (tiles sorted by `UserManager.refreshUserList`, which emits `playersChanged`)
+- `confirm-dialog.js` - The game's confirmation window instead of `window.confirm` (alertdialog, focus on the safe button, Escape = cancel, page inert during the question, follows fullscreen); `emphasis: 'confirm'` for a non-destructive action
+- `avatarShop.js` - Avatars to unlock under the player's own in Personalisation: one button per locked avatar with its price; purchase through `confirm-dialog.js`, then the `avatarUnlocked` event lets `customization.js` put it on
 
 #### Specialized Modules
 
@@ -437,6 +440,7 @@ leur empreinte.
 **Accessibility and Input:**
 
 - `accessibility.js` - Accessibility features
+- `game-exit.js` - Single exit rule during a game: Escape, « Abandonner » and the top-bar screens (Home, About, Dashboard, Customization, Change player) ask the mode's own confirmation; confirmed, the game is recorded as an abandon, then the screen opens. Outside a game, nothing changes
 - `speech.js` - Single speech queue (see `docs/voix-enregistree.md`): `speak(text, {priority, queue})`,
   `cancelSpeech()`, pluggable engine (`setSpeechEngine`); never call `speechSynthesis` directly
 

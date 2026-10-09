@@ -7,6 +7,7 @@
  */
 
 import { GameMode } from '../core/GameMode.js';
+import { askToLeave } from '../game-exit.js';
 import {
   getTranslation,
   playSound,
@@ -78,7 +79,6 @@ import {
 } from '../core/chrono-stats.js';
 
 const FEEDBACK_MS = 800;
-const BAD_SOUND_VOLUME = 0.35;
 const ALL_TABLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 // Ajout à la main d’un calcul : en multiplication et en addition seulement (deux nombres de
 // 1 à 10) ; en soustraction et en division, seules les erreurs remplissent la liste
@@ -239,17 +239,23 @@ function createSetupBlock(name, titleKey) {
   const section = document.createElement('section');
   section.className = `chrono-block ${name}`;
   section.setAttribute('aria-labelledby', `${name}-title`);
-  const title = translatedElement('h3', titleKey);
+  const title = translatedElement('h2', titleKey, 'section-title');
   title.id = `${name}-title`;
   section.appendChild(title);
   return section;
 }
 
-/** Une section de l’écran de fin ou de « Mes temps » : son titre, sous un filet */
-function createResultsSection(titleKey) {
+/**
+ * Une section de l’écran de fin ou de « Mes temps » : son titre, sous un filet
+ * @param {string} titleKey
+ * @param {string} [headingTag='h3'] - h3 sous le titre d’un panneau (« Mes temps ») ; h2
+ *   sur l’écran de fin, dont le titre est le h1 de l’écran
+ * @returns {HTMLElement}
+ */
+function createResultsSection(titleKey, headingTag = 'h3') {
   const section = document.createElement('section');
   section.className = 'chrono-block';
-  section.appendChild(translatedElement('h3', titleKey));
+  section.appendChild(translatedElement(headingTag, titleKey));
   return section;
 }
 
@@ -399,15 +405,28 @@ export class ChronoMode extends GameMode {
 
   setupGameControls() {
     const abandonBtn = document.getElementById('chrono-abandon');
-    if (abandonBtn) abandonBtn.onclick = singleActivation(() => this.confirmAbandon());
+    if (abandonBtn) abandonBtn.onclick = singleActivation(() => void this.confirmAbandon());
   }
 
-  confirmAbandon() {
-    if (!globalThis.confirm?.(getTranslation('confirm_abandon_chrono'))) return;
+  /**
+   * Demander confirmation d'abandon (game-exit.js)
+   * @returns {Promise<void>}
+   */
+  async confirmAbandon() {
+    if (!(await askToLeave(this)) || !this.state.isActive) return;
     // stop() annule la question suivante et la fin : l'abandon n'enregistre rien (une course
     // finie l'est déjà, dès sa dernière réponse)
     this.stop();
     void goToSlide(1);
+  }
+
+  /** Partie en cours (game-exit.js) : une course ou une révision, jusqu'à sa dernière réponse */
+  isGameInProgress() {
+    return this.state.isActive && this.phase === 'playing' && !this._resultsSaved;
+  }
+
+  abandonQuestion() {
+    return getTranslation('confirm_abandon_chrono');
   }
 
   /**
@@ -457,7 +476,7 @@ export class ChronoMode extends GameMode {
     group.className = 'chrono-input-mode';
     group.setAttribute('role', 'group');
     group.setAttribute('aria-labelledby', 'chrono-input-title');
-    const title = translatedElement('h3', 'chrono_input_legend');
+    const title = translatedElement('h2', 'chrono_input_legend', 'section-title');
     title.id = 'chrono-input-title';
     group.appendChild(title);
     const row = document.createElement('div');
@@ -1084,6 +1103,8 @@ export class ChronoMode extends GameMode {
     const grid = document.createElement('div');
     grid.className = 'chrono-keys';
     const keys = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'back', 0];
+    // Lecteur d'écran : un chiffre qui reçoit le focus est lu avec la question
+    const questionId = this.questionElement?.id;
     keys.forEach(key => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -1095,6 +1116,7 @@ export class ChronoMode extends GameMode {
       } else {
         btn.textContent = String(key);
         btn.dataset.key = String(key);
+        if (questionId) btn.setAttribute('aria-describedby', questionId);
       }
       btn.addEventListener('click', event => {
         // Clic à la souris ou au doigt (detail > 0) : la touche rend le focus, pour qu'Entrée
@@ -1248,7 +1270,8 @@ export class ChronoMode extends GameMode {
       playSound('good');
       return;
     }
-    playSound('bad', { volume: BAD_SOUND_VOLUME });
+    // Son d'erreur adouci par le gestionnaire audio, comme dans tous les modes
+    playSound('bad');
   }
 
   scheduleNextQuestion() {
@@ -1351,7 +1374,7 @@ export class ChronoMode extends GameMode {
         ...this.resultsMessages(result, lang),
       })
     );
-    container.appendChild(this.buildFactsTable(result.facts));
+    container.appendChild(this.buildFactsTable(result.facts, 'h2'));
     container.appendChild(this.buildSessionActions(result));
     return container;
   }
@@ -1424,10 +1447,11 @@ export class ChronoMode extends GameMode {
     const container = document.createElement('section');
     container.className = 'results-container content-card game-results chrono-results';
     container.setAttribute('aria-label', getTranslation('chrono_stats_title'));
-    container.appendChild(translatedElement('h2', 'chrono_stats_title'));
+    // Titre de niveau 1 de l’écran, sections en h2
+    container.appendChild(translatedElement('h1', 'chrono_stats_title', 'screen-title'));
     this.appendBucketSummary(container, result);
-    container.appendChild(this.buildRanking(result.ranking));
-    container.appendChild(this.buildCurve(result.curve, result.averageMs));
+    container.appendChild(this.buildRanking(result.ranking, 'h2'));
+    container.appendChild(this.buildCurve(result.curve, result.averageMs, 'h2'));
     container.appendChild(
       createResultsActions([
         {
@@ -1446,9 +1470,14 @@ export class ChronoMode extends GameMode {
     return container;
   }
 
-  buildFactsTable(facts) {
+  /**
+   * Calculs de la partie
+   * @param {Array} facts
+   * @param {string} [headingTag] - Niveau du titre (voir createResultsSection)
+   */
+  buildFactsTable(facts, headingTag) {
     const lang = getCurrentLanguage();
-    const wrap = createResultsSection('chrono_facts_title');
+    const wrap = createResultsSection('chrono_facts_title', headingTag);
     const list = document.createElement('ol');
     list.className = 'chrono-facts';
     facts.forEach(fact => {
@@ -1478,10 +1507,14 @@ export class ChronoMode extends GameMode {
     return wrap;
   }
 
-  /** Les 10 meilleurs temps, avec leur date, dans la langue du jeu */
-  buildRanking(sessions) {
+  /**
+   * Les 10 meilleurs temps, avec leur date, dans la langue du jeu
+   * @param {Array} sessions
+   * @param {string} [headingTag] - Niveau du titre (voir createResultsSection)
+   */
+  buildRanking(sessions, headingTag) {
     const lang = getCurrentLanguage();
-    const wrap = createResultsSection('chrono_ranking_title');
+    const wrap = createResultsSection('chrono_ranking_title', headingTag);
     const list = document.createElement('ol');
     list.className = 'chrono-ranking';
     sessions.forEach(session => {
@@ -1494,8 +1527,14 @@ export class ChronoMode extends GameMode {
     return wrap;
   }
 
-  buildCurve(sessions, averageMs) {
-    const wrap = createResultsSection('chrono_curve_title');
+  /**
+   * Courbe des temps
+   * @param {Array} sessions
+   * @param {number|null} averageMs
+   * @param {string} [headingTag] - Niveau du titre (voir createResultsSection)
+   */
+  buildCurve(sessions, averageMs, headingTag) {
+    const wrap = createResultsSection('chrono_curve_title', headingTag);
     wrap.appendChild(this.drawCurve(sessions, averageMs));
     return wrap;
   }

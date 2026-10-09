@@ -261,6 +261,22 @@ describe('Défi : l’explication d’une erreur est dite en entier', () => {
     challenge.stop();
   }, 10000);
 
+  test('sans voix, l’explication reste au moins 5 s : le temps de la lire', async () => {
+    localStorage.setItem('voiceEnabled', 'false');
+    const challenge = await wrongAnswer();
+    const next = jest.spyOn(challenge, 'generateQuestion');
+    await wait(4900);
+    expect(next).not.toHaveBeenCalled();
+    expect(document.getElementById('challenge-feedback').textContent).toContain(
+      'La bonne réponse est 8.'
+    );
+    // Le décompte reste arrêté pendant la lecture
+    expect(challenge.timerInterval).toBeNull();
+    await wait(250);
+    expect(next).toHaveBeenCalledTimes(1);
+    challenge.stop();
+  }, 10000);
+
   test('quitter le Défi pendant l’explication : aucune question ne repart', async () => {
     const challenge = await wrongAnswer();
     const next = jest.spyOn(challenge, 'generateQuestion');

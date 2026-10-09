@@ -528,7 +528,7 @@ body:has(.chrono-container) {
 }
 
 /* Titre du mode et valeurs de la barre d'infos */
-.game-content-area > .content-card > [class$='-container'] > h2,
+.game-content-area > .content-card > [class$='-container'] > h1,
 .game-info-bar .info-value {
   color: var(--accent, var(--color-ink-heading));
 }

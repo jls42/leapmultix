@@ -144,7 +144,7 @@ function renderGameOverScreen({ mode, score, endMessageKey, endMessage, arcadeSc
 }
 
 function focusGameOverTitle(wrapper) {
-  const title = wrapper.querySelector('h2');
+  const title = wrapper.querySelector('h1');
   if (!title) return;
   title.setAttribute('tabindex', '-1');
   try {
@@ -341,7 +341,7 @@ function buildTopScores(arcadeScores) {
   if (bestScores.length === 0) return null;
   const topWrap = document.createElement('section');
   topWrap.className = 'arcade-top-scores';
-  const title = document.createElement('h3');
+  const title = document.createElement('h2');
   title.dataset.translate = 'arcade_top_scores';
   title.textContent = translated('arcade_top_scores', 'Meilleurs scores');
   const ol = document.createElement('ol');
@@ -365,10 +365,12 @@ function buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScor
   const wrapper = document.createElement('div');
   wrapper.className = 'arcade-gameover content-card';
 
-  const h2 = document.createElement('h2');
-  h2.dataset.translate = 'game_over';
-  h2.textContent = translated('game_over', 'Fin de partie !');
-  wrapper.appendChild(h2);
+  // Titre de niveau 1 de l'écran de fin
+  const title = document.createElement('h1');
+  title.className = 'screen-title';
+  title.dataset.translate = 'game_over';
+  title.textContent = translated('game_over', 'Fin de partie !');
+  wrapper.appendChild(title);
 
   wrapper.appendChild(buildResultSentence(score, endMessageKey, endMessage));
 

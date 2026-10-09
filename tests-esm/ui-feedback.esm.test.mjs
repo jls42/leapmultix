@@ -6,9 +6,8 @@
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
-const { showMessage, preferredScrollBehavior, keepNumbersTogether } = await import(
-  '../js/ui-feedback.js'
-);
+const { showMessage, preferredScrollBehavior, keepNumbersTogether, createResultsSummary } =
+  await import('../js/ui-feedback.js');
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -66,5 +65,15 @@ describe('Défilement et typographie', () => {
     expect(keepNumbersTogether('Une semaine = 7 jours')).toBe(
       'Une semaine\u00a0=\u00a07\u00a0jours'
     );
+  });
+});
+
+describe('Écran de fin', () => {
+  test('la phrase principale est le titre de niveau 1 de l’écran ; un écran titré la garde en texte', () => {
+    const lead = createResultsSummary({ lead: '7 bonnes réponses sur 10' }).firstChild;
+    expect(lead.tagName).toBe('H1');
+    expect(lead.className).toBe('results-lead');
+    // L'Aventure a son propre titre (« Niveau terminé ») : la phrase y reste un paragraphe
+    expect(createResultsSummary({ lead: 'x', leadTag: 'p' }).firstChild.tagName).toBe('P');
   });
 });

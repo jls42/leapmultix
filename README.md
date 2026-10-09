@@ -68,18 +68,18 @@ LeapMultix est une application web éducative interactive destinée aux enfants 
 
 ### Les écrans
 
-|                                                                                                                                  |                                                                                                                |
-| :------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------: |
-|                              ![Écran « Qui joue ? » : choix du profil](docs/media/01-accueil.webp)                               |              ![Menu principal : choix de l'opération et du mode de jeu](docs/media/02-menu.webp)               |
-|                            **Qui joue ?** — un profil par enfant, avec son avatar et sa progression.                             |                         **Le menu** — l'opération se choisit ici, puis le mode de jeu.                         |
-|                       ![Mode Découverte : la table de 4 montrée en points](docs/media/03-decouverte.webp)                        |             ![Mode Quiz : réponse fausse en rouge, bonne réponse en vert](docs/media/04-quiz.webp)             |
-|             **Découverte** — chaque égalité se montre en points, en bonds ou en comptage, avec l'astuce de la table.             | **Quiz** — le choix de l'enfant reste affiché à côté de la bonne réponse, et l'explication détaille le calcul. |
-|                            ![Mode Défi : compte à rebours et série en cours](docs/media/05-defi.webp)                            |        ![Mode Aventure : carte des dix niveaux, les suivants verrouillés](docs/media/06-aventure.webp)         |
-|          **Défi** — course contre la montre. Sur une erreur, le chronomètre se fige le temps de lire la bonne réponse.           |                **Aventure** — dix niveaux qui s'ouvrent l'un après l'autre, contre des étoiles.                |
-|             ![Mode Chrono : une course en soustraction, le chronomètre et la progression](docs/media/14-chrono.webp)             |                        ![Menu Arcade : les quatre mini-jeux](docs/media/07-arcade.webp)                        |
-|  **Chrono** — dix bonnes réponses contre la montre, dans l'opération choisie ; les calculs ratés vont dans une liste à revoir.   |               **Arcade** — quatre mini-jeux, avec réglage de la difficulté et choix du vaisseau.               |
-|  ![Tableau de bord : parties, records et réponses de chaque mode, détaillés par opération](docs/media/08-tableau-de-bord.webp)   |           ![Personnalisation : avatars, thèmes, accessibilité](docs/media/09-personnalisation.webp)            |
-| **Tableau de bord** — parties et records de chaque mode, détaillés par opération ; étoiles et tables à revoir en multiplication. |              **Personnalisation** — avatar, thème de couleurs, taille du texte, contraste élevé.               |
+|                                                                                                                                  |                                                                                                                  |
+| :------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------: |
+|                              ![Écran « Qui joue ? » : choix du profil](docs/media/01-accueil.webp)                               |               ![Menu principal : choix de l'opération et du mode de jeu](docs/media/02-menu.webp)                |
+|                            **Qui joue ?** — un profil par enfant, avec son avatar et sa progression.                             |                          **Le menu** — l'opération se choisit ici, puis le mode de jeu.                          |
+|                       ![Mode Découverte : la table de 4 montrée en points](docs/media/03-decouverte.webp)                        |              ![Mode Quiz : réponse fausse en rouge, bonne réponse en vert](docs/media/04-quiz.webp)              |
+|             **Découverte** — chaque égalité se montre en points, en bonds ou en comptage, avec l'astuce de la table.             |  **Quiz** — le choix de l'enfant reste affiché à côté de la bonne réponse, et l'explication détaille le calcul.  |
+|                            ![Mode Défi : compte à rebours et série en cours](docs/media/05-defi.webp)                            |         ![Mode Aventure : carte des dix niveaux, les suivants verrouillés](docs/media/06-aventure.webp)          |
+|          **Défi** — course contre la montre. Sur une erreur, le chronomètre se fige le temps de lire la bonne réponse.           |                 **Aventure** — dix niveaux qui s'ouvrent l'un après l'autre, contre des étoiles.                 |
+|             ![Mode Chrono : une course en soustraction, le chronomètre et la progression](docs/media/14-chrono.webp)             |                         ![Menu Arcade : les quatre mini-jeux](docs/media/07-arcade.webp)                         |
+|  **Chrono** — dix bonnes réponses contre la montre, dans l'opération choisie ; les calculs ratés vont dans une liste à revoir.   |                **Arcade** — quatre mini-jeux, avec réglage de la difficulté et choix du vaisseau.                |
+|  ![Tableau de bord : parties, records et réponses de chaque mode, détaillés par opération](docs/media/08-tableau-de-bord.webp)   |            ![Personnalisation : avatars, thèmes, accessibilité](docs/media/09-personnalisation.webp)             |
+| **Tableau de bord** — parties et records de chaque mode, détaillés par opération ; étoiles et tables à revoir en multiplication. | **Personnalisation** — avatars à débloquer avec les pièces, thème de couleurs, taille du texte, contraste élevé. |
 
 ### Les mini-jeux d'arcade
 
@@ -126,13 +126,13 @@ LeapMultix offre un entraînement complet aux 4 opérations arithmétiques dans 
 
 ### 🌍 Fonctionnalités Transversales
 
-- **Multi-utilisateurs** : Gestion de profils individuels avec progression sauvegardée
+- **Multi-utilisateurs** : un profil par enfant, avec sa progression ; sur un poste de classe, prénoms triés, filtre dès 10 joueurs, corbeille de 30 jours et sauvegarde des joueurs dans un fichier
 - **Multilingue** : Support français, anglais et espagnol
-- **Personnalisation** : Avatars, thèmes de couleur, arrière-plans
-- **Accessibilité** : Navigation clavier, support tactile, conformité WCAG 2.1 AA
+- **Personnalisation** : avatars (le premier au choix, les autres débloqués avec les pièces gagnées en jouant, 50 pièces chacun), thèmes de couleur, arrière-plans
+- **Accessibilité** : navigation complète au clavier, support tactile, pause dans l'Arcade, taille du texte et contraste élevé ; contrôlée avec axe-core, sans violation WCAG de niveau A ou AA sur les écrans parcourus
 - **Voix enregistrée** : le jeu sait lire questions et encouragements avec une voix de synthèse pré-enregistrée, avec repli automatique sur la voix de l'appareil. Les voix ne sont pas dans ce dépôt : le site leapmultix.jls42.org sert Lucie en français, Sulafat en anglais et en espagnol, et au choix Sulafat et Marie en français, Jane en anglais (voir [Voix enregistrée](#-voix-enregistrée))
 - **Mobile responsive** : Interface optimisée pour tablettes et smartphones
-- **Système de progression** : tableau de bord par profil (parties, records et tables à revoir, détaillés par opération), badges, défis quotidiens
+- **Système de progression** : tableau de bord par profil (parties, records et tables à revoir, détaillés par opération), badges, défis quotidiens, pièces (en Chrono, en Aventure, en Défi et au Défi du jour)
 
 ## 🚀 Démarrage rapide
 
@@ -249,6 +249,9 @@ leapmultix/
 │   │   ├── mult-stats.js, challenge-stats.js, operation-stats.js
 │   │   ├── chrono-stats.js, chrono-questions.js, chrono-input.js   # Mode Chrono
 │   │   ├── mode-stats.js, adventure-progress.js   # Compteurs du tableau de bord
+│   │   ├── profile-operation-stats.js        # Statistiques par calcul, rangées dans le profil
+│   │   ├── players-trash.js, players-backup.js   # Corbeille et sauvegarde des joueurs
+│   │   ├── avatar-shop.js                    # Avatars débloqués avec les pièces (prix, achat)
 │   │   ├── daily-challenge.js, tablePreferences.js, stats-migration.js
 │   │   ├── userUi.js, utils.js               # Utilitaires (source canonique)
 │   │   └── operations/                       # Une classe par opération
@@ -257,11 +260,15 @@ leapmultix/
 │   ├── components/         # Composants d'interface
 │   │   ├── topBar.js, infoBar.js, dashboard.js, customization.js
 │   │   ├── operationSelector.js, operationModeAvailability.js
+│   │   ├── playerTools.js  # « Qui joue ? » sur un poste de classe : filtre, corbeille, sauvegarde
+│   │   ├── loadErrorNotice.js   # Avis d'un jeu qui n'a pas pu s'ouvrir (hors ligne…)
+│   │   ├── confirm-dialog.js, avatarShop.js   # Fenêtre de confirmation du jeu, boutique d'avatars
 │   │   └── icons.js, tableSettingsModal.js
 │   ├── modes/              # Les six modes de jeu
 │   │   ├── DiscoveryMode.js, QuizMode.js, ChallengeMode.js
 │   │   └── AdventureMode.js, ChronoMode.js, ArcadeMode.js
-│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux
+│   ├── arcade*.js          # Orchestrateur et briques communes des mini-jeux (temps et pause :
+│   │                       #   arcade-time.js ; plein écran : arcade-fullscreen.js)
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
 │   ├── i18n.js, i18n-store.js                # Internationalisation
@@ -269,6 +276,7 @@ leapmultix/
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
 │   ├── voice-clips.js      # Lecteur de la voix enregistrée (repli : speech.js)
 │   ├── slides.js, mode-orchestrator.js, lazy-loader.js, game-cleanup.js
+│   ├── game-exit.js        # Une seule règle pour quitter une partie en cours
 │   ├── VideoManager.js, responsive-image-loader.js
 │   ├── userManager.js, main-helpers.js, utils-es6.js, questionGenerator.js
 │   └── main-es6.js, main.js, bootstrap.js, game.js   # Points d'entrée
@@ -281,6 +289,7 @@ leapmultix/
 ├── tests/__tests__/        # Tests Jest (jsdom, et bout-en-bout via Puppeteer)
 ├── tests-esm/              # Tests Jest en modules ES (.mjs)
 ├── scripts/                # Génération d'assets, i18n, rapports
+│   ├── precache-list.mjs   # Liste de préchargement hors ligne de sw.js (npm run precache:update)
 │   └── voice/              # Voix enregistrée : corpus, génération, écoute, publication
 ├── docs/media/             # Captures et animations du README
 └── dist/                   # Build de production (généré)
@@ -366,10 +375,16 @@ Ce que l'enfant a vraiment joué, profil par profil :
 
 Chaque mini-jeu propose :
 
-- Choix de difficulté et personnalisation
+- Trois niveaux de difficulté, dans les quatre opérations
 - Système de vies et score
-- Contrôles clavier et tactile
-- Classements individuels par utilisateur
+- Commandes à la souris, au clavier et au doigt, décrites sur la fiche du jeu
+- Pause : bouton à côté du temps ou touche P ; le jeu se met aussi en pause quand l'onglet est
+  masqué, et ne reprend jamais seul
+- MultiMemory : une partie sans limite de temps, au choix
+- Plateau à la place disponible (plus haut que large sur un téléphone en portrait) et plein écran,
+  sur ordinateur comme sur téléphone, téléphone tourné compris (sauf sur iPhone, dont le navigateur
+  ne le permet pas)
+- Meilleurs scores de chaque joueur ; « Remettre à zéro » dit tout ce qu'il efface
 
 ## 🔧 Développement
 
@@ -548,10 +563,11 @@ npm run sw:fix      # Corriger les problèmes de cache
 
 **Accessibilité** :
 
-- Conformité WCAG 2.1 AA
+- Objectif WCAG 2.1 niveau AA, contrôlé avec axe-core : aucune violation de niveau A ou AA, ni de
+  bonne pratique
 - Navigation clavier complète
-- Rôles ARIA et labels appropriés
-- Contrastes de couleur conformes
+- Rôles ARIA et noms accessibles
+- Contrastes vérifiés par axe-core
 
 **Performance** :
 
@@ -580,10 +596,19 @@ L'interface s'appuie sur `oklch()` pour les couleurs et sur `:has()` pour les
 
 ### Accessibilité
 
-- Navigation clavier complète (Tab, flèches, Échap)
-- Rôles ARIA et labels pour lecteurs d'écran
-- Contrastes de couleur conformes
-- Support des technologies d'assistance
+- Navigation complète au clavier : Tab, flèches dans les grilles de réponses et les cartes de
+  MultiMemory, Entrée, Échap ; lien « Aller aux modes de jeu » en haut de l'accueil
+- Une seule règle pour quitter une partie : « Abandonner », Échap ou un bouton de la barre du haut
+  posent la même question, et la partie continue si l'enfant refuse
+- Lecteurs d'écran : chaque réponse est reliée à sa question, un titre de niveau 1 par écran, les
+  messages sont annoncés
+- La page se laisse agrandir au doigt (hors des jeux d'Arcade) ; taille du texte, contraste élevé,
+  animations réduites, et une police de lecture dérivée d'Andika, dessinée pour les lecteurs
+  débutants
+- Arcade : pause (bouton, touche P, ou onglet masqué) ; MultiMemory sans limite de temps au choix
+- Contrôlée avec axe-core (WCAG 2.0 à 2.2, niveaux A et AA, et bonnes pratiques) : aucune
+  violation sur 40 écrans en largeur d'ordinateur et 39 en largeur de téléphone (390 px), thème
+  Nuit et contraste élevé compris
 
 ## 🌍 Localisation
 
@@ -743,7 +768,12 @@ Toute phrase dite vient des traductions (`assets/translations/{fr,en,es}.json`) 
 
 ### Fonctionnalités techniques
 
-- Stockage local (localStorage) avec fallbacks
+- Stockage local (localStorage) avec fallbacks ; le navigateur est prié de ne pas l'effacer de
+  lui-même (`navigator.storage.persist()`)
+- Corbeille des joueurs supprimés : 30 jours avec toutes leurs données, restauration depuis
+  « Qui joue ? »
+- Sauvegarde des joueurs dans un fichier JSON, reprise sur cet appareil ou sur un autre (un joueur
+  déjà présent n'est jamais écrasé)
 - Données de jeu rangées par profil, statistiques par calcul comprises : sur un poste partagé, les erreurs d'un joueur n'orientent pas les questions d'un autre
 - Sauvegarde automatique de la progression
 - Migration automatique des données anciennes

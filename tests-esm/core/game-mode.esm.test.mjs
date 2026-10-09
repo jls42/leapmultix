@@ -306,3 +306,45 @@ describe('Réponses proposées plausibles', () => {
     expect(options.filter(v => v === q.answer)).toHaveLength(1);
   });
 });
+
+describe('Lecteurs d’écran : chaque réponse est reliée à sa question', () => {
+  test('le focus sur une réponse fait lire la question affichée (aria-describedby)', () => {
+    const container = document.createElement('div');
+    document.body.replaceChildren(container);
+    const mode = new GameMode('quiz');
+    mode._createGameElements({ container });
+    mode.state.isActive = true;
+    for (const [a, b] of [
+      [7, 8],
+      [6, 9],
+    ]) {
+      mode.state.currentQuestion = {
+        question: `${a} × ${b} = ?`,
+        answer: a * b,
+        type: 'mcq',
+        operator: '×',
+        a,
+        b,
+      };
+      mode.displayQuestion();
+      const options = [...container.querySelectorAll('.option')];
+      expect(options).toHaveLength(4);
+      for (const option of options) {
+        const description = document.getElementById(option.getAttribute('aria-describedby'));
+        expect(description?.textContent).toBe(`${a} × ${b} = ?`);
+      }
+    }
+    mode.stop();
+  });
+});
+
+describe('Titre de l’écran de jeu', () => {
+  test('le nom du mode est le titre de niveau 1 de l’écran, à la taille d’un titre de carte', () => {
+    const mode = new GameMode('quiz');
+    const { container } = mode._createMainContainer();
+    const title = container.querySelector('h1');
+    expect(title?.dataset.translate).toBe('quiz_mode');
+    expect(title.classList.contains('screen-title')).toBe(true);
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
+  });
+});

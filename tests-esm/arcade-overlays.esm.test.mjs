@@ -161,6 +161,8 @@ describe('Points d’arcade : signe et ton', () => {
     const el = document.querySelector('.arcade-points');
     expect(el.textContent).toBe('−50');
     expect(el.classList.contains('arcade-points--loss')).toBe(true);
+    // Son d'erreur du jeu, au même niveau partout (js/core/audio.js) : aucun volume à part
+    expect(playSoundMock).toHaveBeenCalledWith('bad');
     jest.advanceTimersByTime(500);
     expect(el.classList.contains('is-leaving')).toBe(true);
     jest.advanceTimersByTime(400);
@@ -180,14 +182,14 @@ describe('Points d’arcade : signe et ton', () => {
     const canvas = document.querySelector('canvas');
     showArcadePenalty(75, canvas);
     expect(document.querySelector('.arcade-points').textContent).toBe('−75');
-    expect(playSoundMock).toHaveBeenCalledWith('bad', { volume: 0.4 });
+    expect(playSoundMock).toHaveBeenCalledWith('bad');
   });
 
   test('score déjà à zéro : pas de « −50 » trompeur, seulement le son', () => {
     const canvas = document.querySelector('canvas');
     showArcadePenalty(0, canvas);
     expect(document.querySelector('.arcade-points')).toBeNull();
-    expect(playSoundMock).toHaveBeenCalledWith('bad', { volume: 0.4 });
+    expect(playSoundMock).toHaveBeenCalledWith('bad');
   });
 });
 

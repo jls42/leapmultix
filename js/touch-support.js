@@ -7,6 +7,20 @@
 
 import { accessibilityManager } from './accessibility.js';
 
+/** Écran d'un jeu d'Arcade : plateau, « Abandonner », voile de pause et bandeau */
+const ARCADE_GAME_SCREEN = '.arcade-game-ui, .arcade-mult-display';
+
+/**
+ * Pincer agrandit la page (WCAG 1.4.4), sauf sur l'écran d'un jeu d'Arcade : deux doigts
+ * posés en jouant ne doivent pas la zoomer par accident
+ * @param {TouchEvent} event - Mouvement à deux doigts ou plus
+ */
+function blockGamePinch(event) {
+  if (event.target instanceof Element && event.target.closest(ARCADE_GAME_SCREEN)) {
+    event.preventDefault();
+  }
+}
+
 export class TouchSupportManager {
   constructor() {
     this.touchStartX = undefined;
@@ -50,9 +64,9 @@ export class TouchSupportManager {
     document.addEventListener(
       'touchmove',
       e => {
-        // Empêcher zoom pinch dans jeux
+        // Deux doigts : pincer agrandit la page, sauf sur l'écran d'un jeu (blockGamePinch)
         if (e.touches.length > 1) {
-          e.preventDefault();
+          blockGamePinch(e);
           return;
         }
 

@@ -8,7 +8,7 @@
  */
 
 const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
+const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
 const PORTRAIT = { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
@@ -62,7 +62,9 @@ async function launchGame(page, game) {
 }
 
 async function backToArcadeMenu(page) {
+  // « Abandonner » demande confirmation (règle de sortie, js/game-exit.js)
   await pressButton(page, '#game [id$="abandon-btn"]');
+  await answerGameDialog(page, true);
   await pressButton(page, '#arcade-back-btn');
 }
 
