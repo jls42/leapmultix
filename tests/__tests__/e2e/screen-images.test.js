@@ -5,6 +5,8 @@
  * 1024 px ; sans variantes (développement, CI), chaque image passe à son PNG et s'affiche.
  * Avant : PNG de 1,5 à 2,3 Mo, 17,5 Mo pour le tableau de bord, 6,2 Mo pour un niveau
  * d'Aventure.
+ * Les têtes des avatars aussi (js/avatar-heads.js), de « Qui joue ? » à l'écran d'échec de
+ * l'Aventure : avant, le PNG de 128 px partout (0,44 à 0,89 de la netteté voulue).
  * @jest-environment node
  */
 
@@ -13,6 +15,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const puppeteer = require('puppeteer');
 const { startStaticServer } = require('../../utils/static-server.cjs');
+const { answerGameDialog } = require('../../utils/game-session.cjs');
 
 const ROOT = path.resolve(__dirname, '../../..');
 // Sans les variantes du générateur actuel (CI : npm run assets:generate ne tourne qu'au
@@ -92,6 +95,34 @@ function shownImages(page, selector) {
 /** Moins de pixels servis qu'à l'écran (2 % d'arrondi admis) */
 const isBlurry = image => image.served < image.needed * 0.98;
 
+/** Têtes de « Qui joue ? » : tuiles des joueurs et formulaire « Nouveau joueur » */
+const SLIDE0_HEADS = '#slide0 .user-tile-face, #slide0 .creation-avatar-selector img';
+/** Personnalisation : avatar actuel, avatars du joueur et boutique */
+const SLIDE6_HEADS = '#current-avatar-img, #slide6 .avatar-btn img';
+const HEAD_VARIANT = /^\/assets\/generated-images\/arcade\/[a-z]+_head_avatar-\d+\.webp$/;
+const HEAD_PNG = /^\/assets\/images\/arcade\/[a-z]+_head_avatar_128x128\.png$/;
+
+/**
+ * Ce qui ne va pas dans des têtes : pas la variante attendue, pas chargée, floue
+ * @param {Array<Object>} heads - shownImages
+ * @param {RegExp} [expected] - Adresse attendue (variante WebP, ou PNG sans variantes)
+ */
+function headProblems(heads, expected = HEAD_VARIANT) {
+  return {
+    count: heads.length > 0,
+    unexpected: heads.filter(img => !expected.test(img.src)),
+    broken: heads.filter(img => !img.loaded),
+    blurry: expected === HEAD_VARIANT ? heads.filter(isBlurry) : [],
+  };
+}
+const HEADS_OK = { count: true, unexpected: [], broken: [], blurry: [] };
+
+/** Avatar que montrent des têtes, lu dans l'adresse affichée (currentSrc) */
+const avatarsOf = heads => heads.map(img => /\/([a-z]+)_head_avatar/.exec(img.src)?.[1]);
+
+/** Têtes qui suivent l'avatar porté : mascotte, avatar actuel, tuile de Zoé */
+const WORN_HEADS = '#hero-mascot-img, #current-avatar-img, [data-player="Zoé"] .user-tile-face';
+
 describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
   let browser;
   let page;
@@ -122,7 +153,17 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
    * @param {{withoutVariants?: boolean}} [options] - aucune variante servie, dès la première
    *   page (comme avant npm run assets:generate) : rien ne vient d'une image déjà chargée
    */
-  async function openAsZoe(viewport, { withoutVariants = false } = {}) {
+  async function openAsZoe(viewport, options) {
+    await openGame(viewport, options);
+    await chooseZoe();
+  }
+
+  /**
+   * « Qui joue ? » affiché avec les joueurs de l'instantané, avant tout choix
+   * @param {Object} viewport
+   * @param {{withoutVariants?: boolean}} [options]
+   */
+  async function openGame(viewport, { withoutVariants = false } = {}) {
     page = await browser.newPage();
     await page.setBypassServiceWorker(true);
     if (viewport.isMobile) await page.setUserAgent(ANDROID_USER_AGENT);
@@ -146,12 +187,67 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
     }, snapshot);
     await page.reload(server.gotoOptions);
     await page.waitForSelector('.user-container .user-tile', { visible: true, timeout: 10000 });
+  }
+
+  async function chooseZoe() {
     await page.evaluate(() =>
       [...document.querySelectorAll('.user-container .user-tile')]
         .find(tile => tile.textContent.includes('Zoé'))
         .click()
     );
     await page.waitForSelector('.mode-btn[data-mode="quiz"]', { visible: true, timeout: 10000 });
+  }
+
+  /** Les images d'un sélecteur, une fois toutes chargées ou en échec */
+  async function settledImages(selector) {
+    await page.waitForFunction(
+      sel => {
+        const images = [...document.querySelectorAll(sel)];
+        return images.length > 0 && images.every(img => img.complete);
+      },
+      { timeout: 15000 },
+      selector
+    );
+    // Un repli vers le PNG relance le chargement : le laisser aboutir
+    await pause(300);
+    await page.waitForFunction(
+      sel => [...document.querySelectorAll(sel)].every(img => img.complete),
+      { timeout: 15000 },
+      selector
+    );
+    return shownImages(page, selector);
+  }
+
+  /** Personnalisation ouverte (avatar actuel, grille, boutique) */
+  async function openPersonalization() {
+    await pressShown(page, '.top-bar .personalization-btn');
+    await page.waitForFunction(
+      () => getComputedStyle(document.getElementById('slide6')).display !== 'none',
+      { timeout: 10000 }
+    );
+  }
+
+  /** Réponses fausses jusqu'à l'écran d'échec du niveau */
+  async function loseLevel() {
+    for (let turn = 0; turn < 12; turn++) {
+      if (await page.$('.adventure-results')) break;
+      const question = await page.$eval('#adventure-question', el => el.textContent);
+      const [, a, b] = /(\d+)\s*×\s*(\d+)/.exec(question) ?? [];
+      const wrong = await page.$$eval(
+        '#adventure-options .option[data-value]',
+        (options, right) => options.map(o => o.dataset.value).find(v => v !== String(right)),
+        a * b
+      );
+      if (wrong)
+        await page.$eval(`#adventure-options .option[data-value="${wrong}"]`, o => o.click());
+      await pause(400);
+      const next = await page.$('#adventure-continue-btn');
+      if (next && (await next.evaluate(el => el.getClientRects().length > 0))) {
+        await next.evaluate(el => el.click());
+      }
+      await nextScreen(question);
+    }
+    await page.waitForSelector('.adventure-results .results-avatar', { timeout: 15000 });
   }
 
   /** Tableau de bord ouvert, chaque rangée passée à l'écran (logos chargés à l'approche) */
@@ -268,13 +364,95 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
     );
   });
 
+  describeGenerated('Têtes des avatars en WebP, aussi nettes qu’à l’écran', () => {
+    test.each(SCREENS)(
+      '%s : « Qui joue ? », accueil et Personnalisation',
+      async (_name, viewport) => {
+        await openGame(viewport);
+        const slide0 = await settledImages(SLIDE0_HEADS);
+        // Trois tuiles (Zoé, Léa, Tom) et les cinq avatars du formulaire
+        expect(slide0).toHaveLength(8);
+        expect(headProblems(slide0)).toEqual(HEADS_OK);
+        await chooseZoe();
+        const mascot = await settledImages('#hero-mascot-img');
+        expect({ problems: headProblems(mascot), avatars: avatarsOf(mascot) }).toEqual({
+          problems: HEADS_OK,
+          avatars: ['panda'],
+        });
+        await openPersonalization();
+        const slide6 = await settledImages(SLIDE6_HEADS);
+        // Avatar actuel, puis les cinq avatars : ceux de Zoé et ceux de la boutique
+        expect(slide6).toHaveLength(6);
+        expect(headProblems(slide6)).toEqual(HEADS_OK);
+        expect(avatarsOf(slide6)).toEqual([
+          'panda',
+          'fox',
+          'panda',
+          'unicorn',
+          'dragon',
+          'astronaut',
+        ]);
+      },
+      60000
+    );
+
+    test.each(SCREENS)(
+      '%s : acheter puis choisir un avatar change toutes les têtes qui le montrent',
+      async (_name, viewport) => {
+        await openAsZoe(viewport);
+        await openPersonalization();
+        await page.$eval('#avatar-shop [data-avatar="dragon"]', button => button.click());
+        await answerGameDialog(page, true);
+        // L'avatar acheté est porté aussitôt : mascotte, avatar actuel, tuile de « Qui joue ? »
+        expect(avatarsOf(await settledImages(WORN_HEADS))).toEqual(['dragon', 'dragon', 'dragon']);
+        await page.$eval('#slide6 .avatar-radio[value="fox"]', radio => radio.click());
+        const worn = await settledImages(WORN_HEADS);
+        expect({ problems: headProblems(worn), avatars: avatarsOf(worn) }).toEqual({
+          problems: HEADS_OK,
+          avatars: ['fox', 'fox', 'fox'],
+        });
+      },
+      60000
+    );
+
+    test.each(SCREENS)(
+      '%s : tableau de bord, carte de l’Aventure et écran d’échec',
+      async (_name, viewport) => {
+        await openAsZoe(viewport);
+        await pressShown(page, '.top-bar .dashboard-btn');
+        const dashboard = await settledImages('#dashboard-avatar img');
+        expect([headProblems(dashboard), avatarsOf(dashboard)]).toEqual([HEADS_OK, ['panda']]);
+        await pressShown(page, '.home-btn');
+        await pressShown(page, '.mode-btn[data-mode="adventure"]');
+        await page.waitForSelector('.level-card[data-level="1"]', {
+          visible: true,
+          timeout: 10000,
+        });
+        const map = await settledImages('#adventure-avatar img');
+        expect([headProblems(map), avatarsOf(map)]).toEqual([HEADS_OK, ['panda']]);
+        await page.$eval('.level-card[data-level="1"]', card => card.click());
+        await page.waitForSelector('#adventure-options .option', { visible: true, timeout: 10000 });
+        await loseLevel();
+        const results = await settledImages('.results-avatar');
+        expect([headProblems(results), avatarsOf(results)]).toEqual([HEADS_OK, ['panda']]);
+      },
+      90000
+    );
+  });
+
   test('sans variantes (développement, CI) : chaque image passe à son PNG et s’affiche', async () => {
-    await openAsZoe({ width: 1280, height: 800, deviceScaleFactor: 1 }, { withoutVariants: true });
+    await openGame({ width: 1280, height: 800, deviceScaleFactor: 1 }, { withoutVariants: true });
+    expect(headProblems(await settledImages(SLIDE0_HEADS), HEAD_PNG)).toEqual(HEADS_OK);
+    await chooseZoe();
+    expect(headProblems(await settledImages('#hero-mascot-img'), HEAD_PNG)).toEqual(HEADS_OK);
+    await openPersonalization();
+    expect(headProblems(await settledImages(SLIDE6_HEADS), HEAD_PNG)).toEqual(HEADS_OK);
     const logos = await openDashboard();
     expect(logos.filter(img => !img.loaded || !img.src.endsWith('.png'))).toEqual([]);
+    expect(headProblems(await settledImages('#dashboard-avatar img'), HEAD_PNG)).toEqual(HEADS_OK);
     await pressShown(page, '.home-btn');
     await startFirstAdventureLevel();
     const [closed] = await shownImages(page, '#adventure-treasure img');
     expect(closed).toMatchObject({ src: '/assets/images/arcade/cadeau_ferme.png', loaded: true });
-  }, 60000);
+  }, 90000);
 });
