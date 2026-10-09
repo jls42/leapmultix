@@ -261,7 +261,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 - `customization.js` - Avatar, theme, and personalization
 - `infoBar.js` - Game status information display
 - `playerTools.js` - « Qui joue ? » on a classroom device: name filter from 10 players, « Nouveau joueur » shortcut, trash, backup buttons (tiles sorted by `UserManager.refreshUserList`, which emits `playersChanged`)
-- `confirm-dialog.js` - The game's confirmation window instead of `window.confirm` (alertdialog, focus on the safe button, Escape = cancel, page inert during the question, follows fullscreen); `emphasis: 'confirm'` for a non-destructive action
+- `confirm-dialog.js` - The game's confirmation window instead of `window.confirm` (alertdialog, focus on the safe button, Escape = cancel, page inert during the question, follows fullscreen); `emphasis: 'confirm'` for a non-destructive action; `returnFocus(origin)` gives the focus back to the opener, or to the ☰ button when the phone menu holding it has closed (also used by `tableSettingsModal.js`)
 - `avatarShop.js` - Avatars to unlock under the player's own in Personalisation: one button per locked avatar with its price; purchase through `confirm-dialog.js`, then the `avatarUnlocked` event lets `customization.js` put it on
 
 #### Specialized Modules

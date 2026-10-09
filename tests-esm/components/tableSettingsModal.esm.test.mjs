@@ -97,6 +97,40 @@ describe('Fenêtre des tables', () => {
   });
 });
 
+describe('Fenêtre des tables : le focus revient en se fermant', () => {
+  const escape = () =>
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    );
+
+  test('au bouton qui l’a ouverte', () => {
+    open();
+    expect(document.activeElement.closest('#table-settings-modal')).not.toBeNull();
+    escape();
+    expect(document.activeElement).toBe(document.getElementById('opener'));
+  });
+
+  test('au téléphone, menu ☰ refermé par un toucher dans la fenêtre : au bouton ☰', () => {
+    const bar = document.createElement('div');
+    bar.className = 'top-bar';
+    const burger = document.createElement('button');
+    burger.className = 'burger-menu-btn';
+    const nav = document.createElement('div');
+    nav.className = 'top-bar-nav';
+    const opener = document.getElementById('opener');
+    nav.appendChild(opener);
+    bar.append(burger, nav);
+    document.body.appendChild(bar);
+    opener.focus();
+    open();
+    tableButton(7).click();
+    // Le menu s'est refermé (toucher hors de la barre) : le bouton d'origine est caché
+    opener.checkVisibility = () => false;
+    escape();
+    expect(document.activeElement).toBe(burger);
+  });
+});
+
 describe('Fenêtre des tables : au moins une table reste jouée', () => {
   const FR = JSON.parse(
     readFileSync(new URL('../../assets/translations/fr.json', import.meta.url), 'utf8')

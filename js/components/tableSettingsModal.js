@@ -16,6 +16,7 @@ import { getTranslation } from '../utils-es6.js';
 import { createSafeElement } from '../security-utils.js';
 import { singleActivation } from '../ui-feedback.js';
 import { createPathIcon } from './icons.js';
+import { returnFocus } from './confirm-dialog.js';
 import eventBus from '../core/eventBus.js';
 
 const TITLE_ID = 'table-settings-title';
@@ -365,10 +366,8 @@ export const TableSettingsModal = {
       }
       // Réactiver le scroll de la page
       document.body.style.overflow = '';
-      // Rendre le focus au bouton qui a ouvert la fenêtre
-      if (this.returnFocusTo && document.contains(this.returnFocusTo)) {
-        this.returnFocusTo.focus({ preventScroll: true });
-      }
+      // Rendre le focus au bouton qui a ouvert la fenêtre (au bouton ☰ si son menu s'est refermé)
+      returnFocus(this.returnFocusTo);
       this.returnFocusTo = null;
     }
   },

@@ -724,7 +724,11 @@ export const TopBar = {
       for (const nav of document.querySelectorAll('.top-bar-nav.is-open')) {
         const topBar = nav.closest('.top-bar');
         if (topBar && !topBar.contains(event.target)) {
+          // Une fenêtre ouverte depuis ce menu vient d'y rendre le focus (clic sur l'un de ses
+          // boutons) : il passe au bouton ☰, sinon il se perdrait avec le menu caché
+          const focusInMenu = nav.contains(document.activeElement);
           this.setMenuOpen(topBar, false);
+          if (focusInMenu) topBar.querySelector('.burger-menu-btn')?.focus({ preventScroll: true });
         }
       }
     });

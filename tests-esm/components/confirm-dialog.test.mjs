@@ -76,6 +76,35 @@ describe('fenêtre de confirmation du jeu', () => {
     expect(document.activeElement).toBe(origin);
   });
 
+  test('ouverte depuis le menu ☰ refermé entre-temps : le focus va au bouton ☰, pas à la page', async () => {
+    // Au téléphone, un toucher dans la fenêtre referme le menu de la barre (toucher hors du
+    // menu) : son bouton d'origine, caché, ne prend plus le focus
+    const bar = document.createElement('div');
+    bar.className = 'top-bar';
+    const burger = document.createElement('button');
+    burger.className = 'burger-menu-btn';
+    const nav = document.createElement('div');
+    nav.className = 'top-bar-nav';
+    const home = document.createElement('button');
+    nav.appendChild(home);
+    bar.append(burger, nav);
+    page.replaceChildren(bar);
+    home.focus();
+    const answer = confirmDialog(OPTIONS);
+    home.checkVisibility = () => false;
+    button('cancel').click();
+    await expect(answer).resolves.toBe(false);
+    expect(document.activeElement).toBe(burger);
+
+    // Bouton d'origine toujours affiché : le focus y revient
+    home.focus();
+    const again = confirmDialog(OPTIONS);
+    home.checkVisibility = () => true;
+    key('Escape');
+    await expect(again).resolves.toBe(false);
+    expect(document.activeElement).toBe(home);
+  });
+
   test('Tab et Maj+Tab restent dans la fenêtre', () => {
     void confirmDialog(OPTIONS);
     key('Tab');

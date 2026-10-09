@@ -373,6 +373,33 @@ describe('TopBar : sans joueur choisi et touche Échap', () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
+  test('toucher hors de la barre : le menu se ferme, le focus reste où il est', () => {
+    TopBar.attachOutsideClickWatcher();
+    const bar = document.querySelector('#slide1 .top-bar');
+    const elsewhere = document.createElement('button');
+    document.querySelector('#slide1').appendChild(elsewhere);
+    TopBar.setMenuOpen(bar, true);
+    elsewhere.focus();
+    elsewhere.click();
+    expect(bar.querySelector('.top-bar-nav').classList.contains('is-open')).toBe(false);
+    expect(document.activeElement).toBe(elsewhere);
+  });
+
+  test('une fenêtre ouverte depuis le menu y rend le focus en se fermant : il passe au bouton ☰', () => {
+    // Clic sur « Fermer » (ou une réponse) : la fenêtre rend d'abord le focus à son bouton
+    // d'origine, dans le menu ; le même clic, hors de la barre, referme ensuite le menu
+    TopBar.attachOutsideClickWatcher();
+    const bar = document.querySelector('#slide1 .top-bar');
+    const opener = bar.querySelector('.top-bar-nav .lang-btn');
+    const closeButton = document.createElement('button');
+    closeButton.addEventListener('click', () => opener.focus());
+    document.body.appendChild(closeButton);
+    TopBar.setMenuOpen(bar, true);
+    closeButton.click();
+    expect(bar.querySelector('.top-bar-nav').classList.contains('is-open')).toBe(false);
+    expect(document.activeElement).toBe(bar.querySelector('.burger-menu-btn'));
+  });
+
   test('closeAllMenus referme les menus de toutes les barres', () => {
     const bars = [...document.querySelectorAll('.top-bar')];
     for (const bar of bars) TopBar.setMenuOpen(bar, true);

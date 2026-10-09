@@ -151,6 +151,20 @@ function handleKey(event) {
 }
 
 /**
+ * Rend le focus à l'élément qui avait ouvert une fenêtre. Au téléphone, le menu ☰ qui le
+ * contenait a pu se refermer entre-temps (un toucher dans la fenêtre compte comme un toucher
+ * hors du menu) : l'élément caché ne prend pas le focus, qui se perdrait sur la page ; il va
+ * alors au bouton ☰ de sa barre.
+ * @param {Element|null} origin
+ */
+export function returnFocus(origin) {
+  if (!origin?.isConnected) return;
+  const hidden = typeof origin.checkVisibility === 'function' && !origin.checkVisibility();
+  const menuButton = hidden ? origin.closest('.top-bar')?.querySelector('.burger-menu-btn') : null;
+  (menuButton ?? origin).focus?.({ preventScroll: true });
+}
+
+/**
  * Ferme la fenêtre, rétablit la page et rend la réponse
  * @param {boolean} confirmed
  */
@@ -162,7 +176,7 @@ function close(confirmed) {
   document.removeEventListener('fullscreenchange', followFullscreen);
   layer.remove();
   for (const el of inerted) el.removeAttribute('inert');
-  if (origin?.isConnected) origin.focus?.({ preventScroll: true });
+  returnFocus(origin);
   resolve(confirmed);
 }
 
