@@ -1273,14 +1273,14 @@ class MemoryGame {
   }
 
   clearTimersAndAnimations() {
-    if (this.timers && this.timers.length) {
+    if (this.timers?.length) {
       for (const timer of this.timers) {
         clearTimeout(timer);
       }
       this.timers = [];
     }
 
-    if (this.animations && this.animations.length) {
+    if (this.animations?.length) {
       for (const animId of this.animations) {
         cancelAnimationFrame(animId);
       }
@@ -1307,7 +1307,7 @@ class MemoryGame {
     // Images partagées entre les parties (js/arcade-sprites.js) : seule la référence part
     this.cardBack = null;
 
-    if (this.monsterImages && this.monsterImages.length) {
+    if (this.monsterImages?.length) {
       this.monsterImages = null;
     }
   }

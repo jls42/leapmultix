@@ -231,7 +231,7 @@ export function setSafeContentWithImage(element, config) {
  * @returns {DocumentFragment}
  */
 function parseHtmlToDocument(html) {
-  const Parser = globalThis && globalThis.DOMParser ? globalThis.DOMParser : undefined;
+  const Parser = globalThis.DOMParser;
   if (typeof Parser !== 'function') return null;
   try {
     const parser = new Parser();

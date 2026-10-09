@@ -319,7 +319,7 @@ export default class PacmanRenderer {
 
       const { px: pixelX, py: pixelY } = this.cellCenter(x, y);
 
-      const monster = g.monsters && g.monsters[i % g.monsters.length];
+      const monster = g.monsters?.at(i % g.monsters.length);
 
       this._drawSingleGhost(ghost, monster, pixelX, pixelY);
     }

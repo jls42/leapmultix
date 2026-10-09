@@ -135,8 +135,7 @@ const DAILY_CHALLENGE_REWARD = 10; // Nombre de pièces en récompense
 
 // Vérifie l'état du défi et le réinitialise si nécessaire
 function checkDailyChallengeStatus() {
-  if (!UserManager.getCurrentUser || !UserManager.getCurrentUser())
-    return { status: 'unavailable' };
+  if (!UserManager.getCurrentUser?.()) return { status: 'unavailable' };
 
   const challengeData = loadDailyChallengeData();
   const today = getCurrentDateString();
@@ -159,7 +158,7 @@ function checkDailyChallengeStatus() {
 // Met à jour la progression du défi après une bonne réponse
 // Correction: Ajouter le paramètre multiplicand
 function updateDailyChallengeProgress(answeredTable, answeredMultiplicand) {
-  if (!UserManager.getCurrentUser || !UserManager.getCurrentUser()) return;
+  if (!UserManager.getCurrentUser?.()) return;
 
   const challengeStatus = checkDailyChallengeStatus();
   const dailyTable = Number.parseInt(challengeStatus.table); // Assurer que c'est un nombre
@@ -207,7 +206,7 @@ function updateDailyChallengeProgress(answeredTable, answeredMultiplicand) {
 
 // Marque le défi comme complété et donne la récompense
 function completeDailyChallenge(challengeData) {
-  if (!UserManager.getCurrentUser || !UserManager.getCurrentUser()) return;
+  if (!UserManager.getCurrentUser?.()) return;
 
   challengeData.completedDate = getCurrentDateString();
   challengeData.progress = DAILY_CHALLENGE_GOAL; // Assurer que la progression est au max

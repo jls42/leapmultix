@@ -142,7 +142,7 @@ class KeyboardNavigation {
     if (activeSlide && !activeSlide.contains(element)) {
       // Sauf si c'est dans la top-bar qui est globale
       const topBar = document.querySelector('.top-bar');
-      return topBar && topBar.contains(element);
+      return Boolean(topBar?.contains(element));
     }
     return true;
   }

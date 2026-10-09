@@ -43,7 +43,7 @@ function onSpaceKey(game, event) {
  * @param {PacmanGame} game Instance du jeu
  */
 export function initPacmanControls(game) {
-  if (!game || !game.canvas) {
+  if (!game?.canvas) {
     console.error('initPacmanControls : instance de jeu invalide');
     return;
   }

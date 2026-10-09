@@ -121,12 +121,9 @@ export class LazyLoader {
           /* ignoré volontairement */
         }
         try {
-          (typeof globalThis !== 'undefined'
-            ? globalThis
-            : typeof window !== 'undefined'
-              ? window
-              : undefined
-          )?.dispatchEvent?.(new CustomEvent('moduleLoaded', { detail: { moduleId, config } }));
+          globalThis.dispatchEvent?.(
+            new CustomEvent('moduleLoaded', { detail: { moduleId, config } })
+          );
         } catch {
           /* ignoré volontairement */
         }
@@ -237,12 +234,7 @@ export class LazyLoader {
   smartPreload() {
     // Précharger les jeux après 2 secondes si l'utilisateur navigue
     setTimeout(() => {
-      const loc =
-        typeof globalThis !== 'undefined'
-          ? globalThis.location
-          : typeof window !== 'undefined'
-            ? window.location
-            : null;
+      const loc = globalThis.location;
       if (loc && (loc.hash === '' || loc.hash === '#slide1')) {
         this.preloadModule('games');
       }

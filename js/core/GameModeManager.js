@@ -310,7 +310,7 @@ export class GameModeManager {
    */
   async preloadMode(modeName) {
     const config = this.modeConfig[modeName];
-    if (!config || config.type !== 'refactored' || this.modes.has(modeName)) {
+    if (config?.type !== 'refactored' || this.modes.has(modeName)) {
       return;
     }
 
@@ -433,12 +433,7 @@ const gameModeManager = new GameModeManager();
 
 // Nettoyage automatique lors du déchargement de la page (ESM context)
 try {
-  (typeof globalThis !== 'undefined'
-    ? globalThis
-    : typeof window !== 'undefined'
-      ? window
-      : undefined
-  )?.addEventListener?.('beforeunload', () => {
+  globalThis.addEventListener?.('beforeunload', () => {
     gameModeManager.cleanup();
   });
 } catch {

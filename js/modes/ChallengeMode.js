@@ -492,7 +492,7 @@ export class ChallengeMode extends GameMode {
       showFeedback(this.feedbackElement.id, message, type, speakIt);
     } catch {
       // Fallback sécurisé sans innerHTML
-      if (typeof setSafeFeedback !== 'undefined') {
+      if (setSafeFeedback !== undefined) {
         setSafeFeedback(this.feedbackElement, message, type);
       } else {
         this.feedbackElement.textContent = message;

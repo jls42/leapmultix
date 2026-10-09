@@ -93,8 +93,7 @@ export async function loadIntoStore(lang) {
 
 // Sync with legacy window store when language changes via legacy path or EventBus
 try {
-  const g =
-    typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : null;
+  const g = globalThis;
   if (g) {
     // Initial sync if legacy i18n already loaded
     if (g.i18nReady && g.currentTranslations && Object.keys(g.currentTranslations).length) {

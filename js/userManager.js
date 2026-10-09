@@ -494,11 +494,7 @@ export const UserManager = {
     this.savePlayers();
 
     // 🎬 Jouer la vidéo d'introduction de l'avatar si VideoManager est disponible
-    if (
-      typeof VideoManager !== 'undefined' &&
-      VideoManager.CHARACTER_VIDEOS &&
-      VideoManager.CHARACTER_VIDEOS.has(avatar)
-    ) {
+    if (VideoManager?.CHARACTER_VIDEOS?.has(avatar)) {
       // Callback pour sélectionner l'utilisateur après la vidéo
       VideoManager.playCharacterIntro(avatar, () => {
         this.selectUser(key);

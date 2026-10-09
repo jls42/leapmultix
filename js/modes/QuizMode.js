@@ -253,7 +253,7 @@ export class QuizMode extends GameMode {
    * Fallback pour l'affichage du feedback correct
    */
   _fallbackCorrectFeedback(message) {
-    if (typeof setSafeFeedback !== 'undefined') {
+    if (setSafeFeedback !== undefined) {
       setSafeFeedback(this.feedbackElement, message, 'success');
     } else {
       this.feedbackElement.textContent = message;

@@ -510,7 +510,7 @@ export const Dashboard = {
    */
   replayCurrentUserVideo() {
     // Vérifier que VideoManager est disponible
-    if (typeof VideoManager === 'undefined') {
+    if (VideoManager === undefined) {
       console.error('VideoManager non disponible pour replay vidéo');
       return;
     }
@@ -971,7 +971,7 @@ try {
   eventBus.on('languageChanged', () => {
     try {
       const slide7 = document.getElementById('slide7');
-      if (slide7 && slide7.classList.contains('active-slide')) {
+      if (slide7?.classList.contains('active-slide')) {
         Dashboard.show();
       }
     } catch {

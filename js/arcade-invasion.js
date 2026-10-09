@@ -89,12 +89,7 @@ function initializeInvadersGame() {
     // Erreur ignorée (non-critique)
   }
 
-  const Root =
-    typeof globalThis !== 'undefined'
-      ? globalThis
-      : typeof window !== 'undefined'
-        ? window
-        : undefined;
+  const Root = globalThis;
 
   if (Root?.invadersGame) {
     cleanupGameResources(Root.invadersGame, {
@@ -614,7 +609,7 @@ export function startMultiplicationInvasion() {
     // Met à jour la question dans la structure responsive (score/question centrée)
     const questionSpan = document.querySelector('.arcade-mobile-top .arcade-question');
     if (questionSpan) {
-      if (currentProblem && currentProblem.a !== undefined && currentProblem.b !== undefined) {
+      if (currentProblem?.a !== undefined && currentProblem.b !== undefined) {
         questionSpan.textContent = `${currentProblem.a} ${operator} ${currentProblem.b} = ?`;
       } else {
         questionSpan.textContent = '';

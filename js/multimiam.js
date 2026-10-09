@@ -302,8 +302,7 @@ export class PacmanGame {
   updatePlayerAvatar() {
     // Récupérer le nom de l'avatar ACTUEL depuis la variable globale gameState
     // Utiliser 'fox' comme fallback si gameState ou gameState.avatar n'est pas défini
-    const currentAvatarName =
-      typeof gameState !== 'undefined' && gameState.avatar ? gameState.avatar : 'fox';
+    const currentAvatarName = gameState?.avatar || 'fox';
 
     // Utiliser la liste des avatars chargés
     if (this.avatars) {
@@ -466,7 +465,7 @@ export class PacmanGame {
   // chacune (un personnage qui va à gauche est retourné au dessin), chargée à la taille où elle
   // s'affiche (js/arcade-sprites.js)
   loadImages() {
-    const avatarName = gameState && gameState.avatar ? gameState.avatar : 'fox';
+    const avatarName = gameState?.avatar || 'fox';
     this.avatar = loadSingleAvatar(avatarName);
 
     // Cinq monstres différents, tirés parmi les 155

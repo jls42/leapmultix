@@ -127,7 +127,7 @@ export function startPacmanArcade() {
   attachAbandonHandler();
 
   // Initialisation du jeu
-  if (typeof PacmanGame !== 'undefined') {
+  if (PacmanGame !== undefined) {
     console.log('Initialisation du jeu MultiMiam');
     // Conversion du niveau de difficulté texte en valeur numérique pour PacmanGame (Cascade 2025)
     const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
@@ -146,8 +146,7 @@ export function startPacmanArcade() {
     const operator = userData.preferredOperator || '×';
 
     // Récupérer l'avatar courant
-    const playerAvatar =
-      typeof gameState !== 'undefined' && gameState.avatar ? gameState.avatar : 'fox';
+    const playerAvatar = gameState?.avatar || 'fox';
     console.log('Avatar du joueur:', playerAvatar);
     console.log(
       'MultiMiam lancé avec niveau:',
