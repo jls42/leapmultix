@@ -47,6 +47,9 @@ describe('MultiSnake en pause', () => {
   test('le serpent ne bouge plus, et repart d’où il était à la reprise', () => {
     const game = new SnakeGame(canvas.id, 'operation', { operator: '×' });
     game.start();
+    // Sans pommes : une pomme devant la tête la garde sur place ce pas-là (règle du jeu), et
+    // leur place tirée au hasard faisait échouer ce test une fois sur vingt (92 sur 2 000)
+    game.numberPositions = [];
     game.gameLoop(1000);
     const head = { ...game.snake[0] };
     pause.pauseArcade();
