@@ -141,6 +141,8 @@ describe('pointeur et nombres en unités du jeu, à toute densité', () => {
     const game = {
       canvas,
       cellSize: 20,
+      cellWidth: 20,
+      cellHeight: 20,
       gameOver: false,
       multimiam: { x: 7, y: 7, direction: 'RIGHT', nextDirection: 'RIGHT', isMoving: true },
       canMove: () => true,

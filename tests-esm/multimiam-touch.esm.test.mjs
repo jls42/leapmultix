@@ -28,6 +28,8 @@ beforeEach(() => {
   game = {
     canvas,
     cellSize: CELL,
+    cellWidth: CELL,
+    cellHeight: CELL,
     gameOver: false,
     multimiam: { x: 7, y: 7, direction: 'RIGHT', nextDirection: 'RIGHT', isMoving: true },
     canMove: () => true,

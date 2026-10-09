@@ -34,7 +34,12 @@ const SCREENS = [
 ];
 const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory'];
 // Morceaux du serpent : chacun remplit sa case pour se raccorder aux voisins
-const TILE = /\/(?:tete|corps|queue)_[a-z_]+[-.]/;
+const SNAKE_TILE = /\/(?:tete|corps|queue)_[a-z_]+[-.]/;
+// Mur et couloirs de MultiMiam : ils suivent ses cases, presque carrées (au plus 1,25 fois plus
+// hautes que larges ou l'inverse : MAX_CELL_STRETCH de js/multimiam-layout.js). Ailleurs (dos
+// des cartes de MultiMemory), les mêmes textures ne se déforment pas.
+const MAZE_TILE = /\/(?:mur|chemin)[-._]/;
+const MAX_CELL_STRETCH = 1.25;
 // Plus grande variante produite : une image plus grande à l'écran ne peut pas mieux faire
 const LARGEST_VARIANT = 1024;
 
@@ -122,12 +127,25 @@ async function settledSprites(page) {
   return page.evaluate(() => [...globalThis.__sprites.values()]);
 }
 
-/** Image déformée : rapport largeur / hauteur dessiné différent de celui de l'image (> 3 %) */
-function isDistorted({ natural, drawn }) {
-  const drawnRatio = drawn[0] / drawn[1];
-  const naturalRatio = natural[0] / natural[1];
-  return Math.abs(drawnRatio / naturalRatio - 1) > 0.03;
+/** Rapport largeur / hauteur dessiné sur celui de l'image (1 : mêmes proportions) */
+function stretchOf({ natural, drawn }) {
+  return drawn[0] / drawn[1] / (natural[0] / natural[1]);
 }
+
+/**
+ * Image déformée dans ce jeu : proportions dessinées différentes de celles de l'image (> 3 %),
+ * sauf les morceaux du serpent, qui remplissent leur case, et le labyrinthe de MultiMiam, qui
+ * s'étire au plus de MAX_CELL_STRETCH
+ */
+function isDistortedIn(game, sprite) {
+  if (game === 'multisnake' && SNAKE_TILE.test(sprite.src)) return false;
+  const stretch = stretchOf(sprite);
+  const allowed = game === 'multimiam' && MAZE_TILE.test(sprite.src) ? MAX_CELL_STRETCH : 1;
+  return Math.max(stretch, 1 / stretch) > allowed * 1.03;
+}
+
+/** Image déformée, sans exception : proportions dessinées différentes de celles de l'image */
+const isDistorted = sprite => isDistortedIn('', sprite);
 
 /** Image floue : moins de pixels que sur l'écran (au plus grand de ses variantes près) */
 function isBlurry({ natural, screen }) {
@@ -191,7 +209,7 @@ describe('Images des jeux d’Arcade (E2E)', () => {
         const sprites = byGame[game];
         // Chaque jeu dessine ses images (fusée, monstres, personnages, serpent, cartes)
         expect({ game, drawn: sprites.length > 0 }).toEqual({ game, drawn: true });
-        const distorted = sprites.filter(s => !TILE.test(s.src) && isDistorted(s));
+        const distorted = sprites.filter(s => isDistortedIn(game, s));
         expect({ game, distorted }).toEqual({ game, distorted: [] });
         if (!GENERATED) continue;
         expect({ game, blurry: sprites.filter(isBlurry) }).toEqual({ game, blurry: [] });

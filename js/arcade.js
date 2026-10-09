@@ -419,41 +419,42 @@ function buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScor
   return wrapper;
 }
 
-export function stopArcadeMode() {
-  try {
-    console.debug('[Arcade] stopArcadeMode called');
-  } catch {
-    /* ignoré volontairement */
-  }
-  // Partie quittée (Accueil, autre écran) après au moins un coup : elle compte, avec le score
-  // affiché ; l'Arcade garde son score à l'abandon
+/**
+ * Partie quittée (Accueil, autre écran) après au moins un coup : elle compte, avec le score
+ * affiché ; l'Arcade garde son score à l'abandon
+ */
+function saveQuittedArcadeGame() {
   const quitted = closeArcadeSession();
   if (quitted) saveScoreForMode(quitted.game, displayedArcadeScore(), quitted.operator);
-  setArcadeActive(false);
-  // Arrêt de la boucle d'animation
-  // Les sous-jeux gèrent leurs propres boucles via ESM
-  // Suppression des listeners clavier
-  document.removeEventListener('keydown', arcadeKeyDown);
-  document.removeEventListener('keyup', arcadeKeyUp);
-  // Notifier les sous-jeux pour qu'ils retirent leurs écouteurs spécifiques
+}
+
+/** Prévient les sous-jeux (bus d'événements) et la page (événement de la fenêtre) */
+function announceArcadeStop() {
   try {
     eventBus.emit('arcade:stop');
   } catch {
     /* ignoré volontairement */
   }
   try {
-    const Root =
-      typeof globalThis !== 'undefined'
-        ? globalThis
-        : typeof window !== 'undefined'
-          ? window
-          : undefined;
-    if (Root && typeof Event !== 'undefined') {
-      Root.dispatchEvent(new Event('arcade:stop'));
-    }
+    globalThis.dispatchEvent?.(new Event('arcade:stop'));
   } catch {
     /* ignoré volontairement */
   }
+}
+
+export function stopArcadeMode() {
+  try {
+    console.debug('[Arcade] stopArcadeMode called');
+  } catch {
+    /* ignoré volontairement */
+  }
+  saveQuittedArcadeGame();
+  setArcadeActive(false);
+  // Les sous-jeux gèrent leurs propres boucles ; l'Arcade retire ses écouteurs clavier, puis
+  // les sous-jeux retirent les leurs (arcade:stop)
+  document.removeEventListener('keydown', arcadeKeyDown);
+  document.removeEventListener('keyup', arcadeKeyUp);
+  announceArcadeStop();
   // Autres nettoyages éventuels (sons, etc.)
   try {
     AudioManager.stopAll();
