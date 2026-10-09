@@ -43,8 +43,8 @@ afterEach(() => {
   // Reset des mocks (compatible ESM sans global jest)
   try {
     if (typeof jest !== 'undefined' && jest.clearAllMocks) jest.clearAllMocks();
-  } catch (e) {
-    void e;
+  } catch {
+    // Tests ESM sans jest global : rien à réinitialiser
   }
 });
 /* eslint-env jest, node */
