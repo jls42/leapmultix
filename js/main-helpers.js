@@ -16,7 +16,7 @@ import {
 
 // Ancienne adresse de la liste blanche des avatars (js/avatar-heads.js) : un module qui
 // l'importe encore d'ici la trouve toujours
-export { normalizeAvatarId };
+export { normalizeAvatarId } from './avatar-heads.js';
 
 const HERO_IMAGE_BY_LANG = {
   fr: 'assets/social/leapmultix-social-card.webp',
