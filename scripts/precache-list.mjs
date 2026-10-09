@@ -22,8 +22,9 @@
 //
 // Deux listes : « core », des fichiers du dépôt, tous gardés ou aucun ; « images », les
 // images d'assets/images (une famille chacune : à l'installation, le service worker garde
-// les variantes WebP que liste assets/generated-images/image-map.json, produites au
-// déploiement, ou l'original sans elles) et les images générées que nomme la page.
+// les variantes WebP de 256 px au plus que liste assets/generated-images/image-map.json,
+// produites au déploiement, ou l'original sans elles) et les images générées que nomme la
+// page, toutes tailles.
 //
 // Usage : node scripts/precache-list.mjs            résumé et taille
 //         node scripts/precache-list.mjs --write    réécrit la liste dans sw.js

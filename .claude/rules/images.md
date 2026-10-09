@@ -22,6 +22,10 @@ paths:
   dessins bavaient (mesuré le 09/10/2026, dessin au canevas comme dans les jeux : 36,6 à 37,8 dB
   de la réduction parfaite de la source, contre 39 à 42,5) : ne pas les baisser sans mesure.
 - Fonds : `npm run assets:backgrounds` (WebP versionnés à côté des PNG), qualité 85 avec sharp YUV.
+- Hors ligne : à l'installation, le service worker garde les variantes de 256 px au plus de
+  chaque image (`PRECACHE_MAX_WIDTH` de `sw.js`) ; les grandes viennent à la demande. Sans ce
+  plafond, une première visite téléchargeait 13,2 Mo au lieu de 9,3 (mesuré le 09/10/2026).
+  Peser ce que télécharge l'installation, variantes comprises, pas les PNG de la liste.
 - La prod sert les images 30 jours sans les revérifier (`immutable`) et les variantes n'ont pas de
   `?v=` : une image qui change de contenu change de nom.
 - Arcade : chaque image passe par `js/arcade-sprite-catalog.js` (source, plus grande variante,

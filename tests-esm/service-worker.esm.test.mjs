@@ -403,11 +403,11 @@ const variant = (original, size) =>
 
 const ORIGINAL = /^\/assets\/images\/(.+)\.png$/;
 
-/** Carte des images du déploiement : deux variantes par original */
-function imageMap(originals) {
+/** Carte des images du déploiement : les mêmes largeurs de variantes pour chaque original */
+function imageMap(originals, widths) {
   const entries = originals.map(url => {
     const base = ORIGINAL.exec(url)[1];
-    const resolutions = { 64: `${base}-64.webp`, 128: `${base}-128.webp` };
+    const resolutions = Object.fromEntries(widths.map(width => [width, `${base}-${width}.webp`]));
     return [base, { original: `${base}.png`, resolutions }];
   });
   return JSON.stringify(Object.fromEntries(entries));
@@ -416,9 +416,10 @@ function imageMap(originals) {
 /**
  * Site simulé : chaque fichier existe ; les images générées et leur carte sont celles du
  * déploiement, ou (map: false) absentes : un serveur de développement répond alors la page.
- * missing : chemins qui répondent 404.
+ * missing : chemins qui répondent 404 ; widths : largeurs des variantes de la carte (par
+ * défaut, celles d'une source de 1024 px).
  */
-function siteNetwork({ map = true, missing = [] } = {}) {
+function siteNetwork({ map = true, missing = [], widths = [64, 128, 256, 512, 1024] } = {}) {
   const state = { online: true, originals: [], respond: null };
   const absent = new Set(missing);
   const network = url => {
@@ -430,7 +431,7 @@ function siteNetwork({ map = true, missing = [] } = {}) {
     if (!pathname.startsWith('/assets/generated-images/')) return siteFile(url);
     if (!map) return siteFile(`${ORIGIN}/index.html`);
     if (!pathname.endsWith('/image-map.json')) return siteFile(url);
-    return new FakeResponse(imageMap(state.originals), {
+    return new FakeResponse(imageMap(state.originals, widths), {
       headers: { 'Content-Type': 'application/json' },
     });
   };
@@ -453,7 +454,7 @@ const offlineEntries = async worker =>
   (await worker.caches.open(constant(worker, 'OFFLINE_CACHE'))).entries;
 
 describe('Service worker : préchargement', () => {
-  test('tout le code, puis les variantes WebP de chaque image, jamais depuis le cache HTTP', async () => {
+  test('tout le code, puis les variantes WebP de chaque image jusqu’à 256 px, jamais depuis le cache HTTP', async () => {
     const { worker, originals } = await installedOffline();
     const entries = await offlineEntries(worker);
     const core = precacheList(worker, 'PRECACHE_CORE');
@@ -461,9 +462,27 @@ describe('Service worker : préchargement', () => {
     expect(core.filter(url => !entries.has(`${ORIGIN}${url}`))).toEqual([]);
     expect(originals.length).toBeGreaterThan(10);
     expect(originals.filter(url => entries.has(`${ORIGIN}${url}`))).toEqual([]);
-    const variants = originals.flatMap(url => [variant(url, 64), variant(url, 128)]);
-    expect(variants.filter(url => !entries.has(`${ORIGIN}${url}`))).toEqual([]);
+    const kept = originals.flatMap(url => [64, 128, 256].map(width => variant(url, width)));
+    expect(kept.filter(url => !entries.has(`${ORIGIN}${url}`))).toEqual([]);
+    // Les grandes (écrans à haute densité) se chargent à la demande : toutes gardées, une
+    // première visite téléchargeait 5,2 Mo d'images de plus (mesuré le 09/10/2026). Restent
+    // celles que la liste nomme elle-même (logos de l'accueil, têtes d'avatar).
+    const named = new Set(precacheList(worker, 'PRECACHE_IMAGES'));
+    const large = originals
+      .flatMap(url => [512, 1024].map(width => variant(url, width)))
+      .filter(url => !named.has(url));
+    expect(large.length).toBeGreaterThan(100);
+    expect(large.filter(url => entries.has(`${ORIGIN}${url}`))).toEqual([]);
     expect(worker.requests.filter(r => r.cache !== 'reload')).toEqual([]);
+  });
+
+  test('aucune variante de 256 px au plus : la plus petite, jamais l’original haute définition', async () => {
+    const { worker, originals } = await installedOffline({ widths: [512, 1024] });
+    const entries = await offlineEntries(worker);
+    const [original] = originals;
+    expect(entries.has(`${ORIGIN}${variant(original, 512)}`)).toBe(true);
+    expect(entries.has(`${ORIGIN}${variant(original, 1024)}`)).toBe(false);
+    expect(entries.has(`${ORIGIN}${original}`)).toBe(false);
   });
 
   test('sans carte des images (développement) : les originaux, jamais une page à leur place', async () => {
@@ -597,14 +616,25 @@ describe('Service worker : images hors ligne', () => {
     const { worker, originals } = await installedOffline();
     const [original] = originals;
     const response = await request(worker, `${original}?v=v37`, { destination: 'image' });
-    expect(await response.text()).toBe(`contenu de ${variant(original, 128)}`);
+    expect(await response.text()).toBe(`contenu de ${variant(original, 256)}`);
   });
 
   test('une taille jamais gardée : une autre taille du même sprite', async () => {
     const { worker, originals } = await installedOffline();
     const [original] = originals;
-    const response = await request(worker, variant(original, 256), { destination: 'image' });
-    expect(await response.text()).toBe(`contenu de ${variant(original, 128)}`);
+    const response = await request(worker, variant(original, 1024), { destination: 'image' });
+    expect(await response.text()).toBe(`contenu de ${variant(original, 256)}`);
+  });
+
+  test('une grande variante vue en ligne : gardée, puis servie telle quelle hors ligne', async () => {
+    const { worker, site, originals } = await installedOffline();
+    const large = variant(originals[0], 1024);
+    site.state.online = true;
+    const online = await request(worker, large, { destination: 'image' });
+    expect(await online.text()).toBe(`contenu de ${large}`);
+    site.state.online = false;
+    const offline = await request(worker, large, { destination: 'image' });
+    expect(await offline.text()).toBe(`contenu de ${large}`);
   });
 
   test('un fond tiré au hasard, jamais gardé : un fond gardé du même avatar', async () => {

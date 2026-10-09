@@ -30,10 +30,16 @@ const SHELL_URL = '/index.html';
 const SHELL_PATHS = new Set(['/', SHELL_URL]);
 
 // Variantes WebP des images, produites au déploiement (npm run assets:generate) : la carte
-// dit lesquelles garder pour chaque original de PRECACHE_IMAGES
+// dit lesquelles garder pour chaque original de PRECACHE_IMAGES, jusqu'à 256 px de large.
+// Les grandes (écrans à haute densité, quasi sans perte) se chargent à la demande et restent
+// dans RUNTIME_CACHE : toutes gardées, une première visite téléchargeait 5,2 Mo d'images de
+// plus (mesuré le 09/10/2026). Hors ligne, une taille jamais vue prend la plus grande de sa
+// famille. Une image générée que la liste nomme elle-même (logos de l'accueil, têtes
+// d'avatar) reste gardée.
 const IMAGE_MAP_URL = '/assets/generated-images/image-map.json';
 const ORIGINAL_IMAGE = /^\/assets\/images\/(.+)\.png$/;
 const GENERATED_IMAGES = '/assets/generated-images/';
+const PRECACHE_MAX_WIDTH = 256;
 
 // Familles d'images interchangeables hors ligne : un sprite et ses tailles (arcade/x.png,
 // arcade/x-128.webp), les fonds illustrés d'un même avatar (le jeu en tire un au hasard)
@@ -703,8 +709,24 @@ async function imageVariants(cache) {
   }
   await cache.put(IMAGE_MAP_URL, response);
   return new Map(
-    Object.entries(map).map(([base, entry]) => [base, Object.values(entry?.resolutions || {})])
+    Object.entries(map).map(([base, entry]) => [base, keptVariants(entry?.resolutions || {})])
   );
+}
+
+/**
+ * Variantes d'un original gardées à l'installation : celles de PRECACHE_MAX_WIDTH au plus,
+ * sinon la plus petite (jamais un original sans copie)
+ * @param {Object<string, string>} resolutions - Largeur → fichier, d'après la carte
+ * @returns {string[]}
+ */
+function keptVariants(resolutions) {
+  const variants = Object.entries(resolutions).map(([width, file]) => ({
+    width: Number(width),
+    file,
+  }));
+  const kept = variants.filter(({ width }) => width <= PRECACHE_MAX_WIDTH);
+  if (kept.length > 0 || variants.length === 0) return kept.map(({ file }) => file);
+  return [variants.reduce((smallest, v) => (v.width < smallest.width ? v : smallest)).file];
 }
 
 /** Adresses à garder pour une image : ses variantes WebP, sinon elle-même */
