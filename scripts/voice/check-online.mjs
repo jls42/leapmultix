@@ -76,10 +76,17 @@ export function positiveInteger(value, option) {
 
 async function pool(items, concurrency, task) {
   const queue = [...items];
-  const workers = Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
-    while (queue.length) await task(queue.shift());
-  });
+  const workers = Array.from({ length: Math.min(concurrency, queue.length) }, () =>
+    drain(queue, task)
+  );
   await Promise.all(workers);
+}
+
+/** Travailleur du pool : traite la file un élément à la fois, jusqu'à la vider */
+async function drain(queue, task) {
+  if (!queue.length) return;
+  await task(queue.shift());
+  await drain(queue, task);
 }
 
 /**
