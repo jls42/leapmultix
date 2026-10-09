@@ -8,7 +8,7 @@
  * d'abord, purge par version et plafond), route des traductions, et le hors ligne
  * (préchargement, page du jeu, modules, sons par plages, images d'une même famille).
  */
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect, afterEach, jest } from '@jest/globals';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
@@ -162,6 +162,8 @@ function loadWorker(network) {
     Headers: FakeHeaders,
     URL,
     console,
+    // Passé par une fonction : les minuteries simulées de Jest s'appliquent aussi au worker
+    setTimeout: (callback, ms) => setTimeout(callback, ms),
   };
   vm.createContext(context);
   vm.runInContext(SOURCE, context);
@@ -417,9 +419,11 @@ function imageMap(originals) {
  * missing : chemins qui répondent 404.
  */
 function siteNetwork({ map = true, missing = [] } = {}) {
-  const state = { online: true, originals: [] };
+  const state = { online: true, originals: [], respond: null };
   const absent = new Set(missing);
   const network = url => {
+    // Réseau réglé par le test après l'installation (muet, lent…)
+    if (state.respond) return state.respond(url);
     if (!state.online) throw new TypeError('Failed to fetch');
     const { pathname } = new URL(url);
     if (absent.has(pathname)) return new FakeResponse('', { status: 404 });
@@ -656,5 +660,116 @@ describe('Service worker : réseau', () => {
     const response = await request(worker, 'https://ailleurs.example/page', { mode: 'navigate' });
     expect(response.type).toBe('error');
     expect(worker.fetches).toEqual([]);
+  });
+});
+
+/** Requête lancée sans attendre ses prolongations (un réseau muet ne les finit jamais) */
+function startRequest(worker, url, { destination = '', mode = 'cors' } = {}) {
+  let response;
+  worker.listeners.fetch({
+    request: {
+      url: new URL(url, ORIGIN).href,
+      method: 'GET',
+      mode,
+      destination,
+      headers: new FakeHeaders({}),
+      signal: { aborted: false },
+    },
+    respondWith: promise => (response = promise),
+    waitUntil: () => {},
+  });
+  const state = { done: false };
+  response.then(() => (state.done = true));
+  return { response, state };
+}
+
+/** Réponse du réseau que le test fait arriver quand il veut */
+function later(body) {
+  let answer;
+  const promise = new Promise(resolve => (answer = () => resolve(siteFile(`${ORIGIN}${body}`))));
+  return { promise, answer };
+}
+
+const silent = () => new Promise(() => {});
+
+describe('Service worker : réseau qui ne répond pas (wifi d’école, portail captif)', () => {
+  afterEach(() => jest.useRealTimers());
+
+  /** Installé, puis le réseau réglé par respond ; minuteries simulées */
+  async function installedWith(respond) {
+    const installed = await installedOffline();
+    installed.site.state.respond = respond;
+    installed.timeout = constant(installed.worker, 'NETWORK_TIMEOUT_MS');
+    jest.useFakeTimers();
+    return installed;
+  }
+
+  test('la page du jeu passé le délai, pas avant ; la requête réseau reste en cours', async () => {
+    const { worker, timeout } = await installedWith(silent);
+    const { response, state } = startRequest(worker, '/', { mode: 'navigate' });
+    await jest.advanceTimersByTimeAsync(timeout - 100);
+    expect(state.done).toBe(false);
+    await jest.advanceTimersByTimeAsync(200);
+    expect(await (await response).text()).toBe('contenu de /index.html');
+    expect(worker.fetches.at(-1)).toBe(`${ORIGIN}/`);
+  });
+
+  test('un module de cette version : sa copie préchargée passé le délai', async () => {
+    const { worker, timeout } = await installedWith(silent);
+    const version = constant(worker, 'VERSION');
+    const url = `/js/modes/QuizMode.js?v=${version}`;
+    const { response } = startRequest(worker, url, { destination: 'script' });
+    await jest.advanceTimersByTimeAsync(timeout + 100);
+    expect(await (await response).text()).toBe('contenu de /js/modes/QuizMode.js');
+  });
+
+  test('un module d’une autre version : pas de copie, on attend le réseau', async () => {
+    const reply = later('/js/modes/QuizMode.js');
+    const { worker, timeout } = await installedWith(() => reply.promise);
+    const { response, state } = startRequest(worker, '/js/modes/QuizMode.js?v=v1', {
+      destination: 'script',
+    });
+    await jest.advanceTimersByTimeAsync(timeout * 3);
+    expect(state.done).toBe(false);
+    reply.answer();
+    expect(await (await response).text()).toBe('contenu de /js/modes/QuizMode.js');
+  });
+
+  test('un réseau lent qui répond avant le délai l’emporte, et rafraîchit le cache', async () => {
+    const reply = later('/js/core/GameMode.js');
+    const { worker, timeout } = await installedWith(() => reply.promise);
+    const url = '/js/core/GameMode.js?v=frais';
+    const { response } = startRequest(worker, url, { destination: 'script' });
+    await jest.advanceTimersByTimeAsync(timeout - 500);
+    reply.answer();
+    expect((await response).body).toBe('contenu de /js/core/GameMode.js');
+    await jest.advanceTimersByTimeAsync(0);
+    const runtime = await worker.caches.open(constant(worker, 'RUNTIME_CACHE'));
+    expect(runtime.entries.has(`${ORIGIN}${url}`)).toBe(true);
+  });
+
+  test('après un délai dépassé, la suite sans attendre ; une réponse du réseau rend la main', async () => {
+    const reply = later('/js/game.js');
+    let answering = false;
+    const { worker, timeout } = await installedWith(() => (answering ? reply.promise : silent()));
+    const version = constant(worker, 'VERSION');
+    const first = startRequest(worker, `/js/game.js?v=${version}`, { destination: 'script' });
+    await jest.advanceTimersByTimeAsync(timeout + 100);
+    expect(first.state.done).toBe(true);
+    // Le réseau est tenu pour muet : le module suivant n'attend pas le délai
+    const next = startRequest(worker, `/js/slides.js?v=${version}`, { destination: 'script' });
+    await jest.advanceTimersByTimeAsync(10);
+    expect(await (await next.response).text()).toBe('contenu de /js/slides.js');
+    // Le réseau répond de nouveau : il redevient prioritaire
+    answering = true;
+    const third = startRequest(worker, `/js/game.js?v=${version}`, { destination: 'script' });
+    reply.answer();
+    await jest.advanceTimersByTimeAsync(10);
+    expect(third.state.done).toBe(true);
+    // Muet de nouveau : le module suivant attend le réseau, jusqu'au délai
+    answering = false;
+    const fourth = startRequest(worker, `/js/slides.js?v=${version}`, { destination: 'script' });
+    await jest.advanceTimersByTimeAsync(10);
+    expect(fourth.state.done).toBe(false);
   });
 });

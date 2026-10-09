@@ -3,12 +3,14 @@
 // - Install: precache what the game asks for (list below, produced by
 //   scripts/precache-list.mjs), so that every mode and arcade game starts offline after a
 //   first visit
-// - Navigation: network-first; offline, the cached game page (offline.html only for a page
+// - Navigation: network-first, but never endlessly: past NETWORK_TIMEOUT_MS (a network that
+//   does not answer), the cached game page; offline, the same (offline.html only for a page
 //   never cached)
 // - Images: cache-first; offline, another image of the same family (other size of a sprite,
 //   other background of the same avatar)
 // - Translations JSON: stale-while-revalidate
-// - JS/CSS: network-first with cache fallback (updates take precedence)
+// - JS/CSS: network-first (updates take precedence); past NETWORK_TIMEOUT_MS or offline, the
+//   copy kept by this version
 // - Sounds, fonts and other precached files: cache-first (byte ranges served)
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
@@ -37,6 +39,19 @@ const SIZE_SUFFIX = /-(\d+)$/;
 const BACKGROUND_FAMILY = /^\/img\/background_([a-z]+)_\d+\.(?:png|webp)$/;
 
 const TRANSLATIONS = /^\/assets\/translations\/[^/]+\.json$/;
+
+// Réseau qui ne répond pas (wifi d'école sans Internet, portail captif, filtre qui retient) :
+// passé ce délai, la page et les modules viennent de la copie gardée par cette version, et
+// la requête réseau continue. Mesuré sur 3G bridée qui répond (150 ms, 1,6 Mbit/s), visite de
+// retour : navigation 1,1 s, modules 2,2 s au plus (médiane 0,8 s). 4 s laisse près de deux
+// fois cette marge sans faire attendre l'enfant plus qu'il ne faut.
+const NETWORK_TIMEOUT_MS = 4000;
+const TIMED_OUT = Symbol('délai dépassé');
+
+// Un délai dépassé : le réseau est tenu pour muet, et les requêtes suivantes prennent la copie
+// tout de suite (sinon chaque étage d'imports attendrait le délai à son tour). La première
+// réponse du réseau, quelle qu'elle soit, lui rend la priorité.
+let networkMute = false;
 const BYTE_RANGE = /^bytes=(\d*)-(\d*)$/;
 
 // Voix enregistrée (docs/voix-enregistree.md). Les clips sont immuables : un cache à part,
@@ -967,16 +982,63 @@ async function translationResponse(event) {
   return cached || (await fetchPromise) || Response.error();
 }
 
+const afterDelay = ms => new Promise(resolve => setTimeout(() => resolve(TIMED_OUT), ms));
+
+/** Le réseau a répondu : il redevient prioritaire */
+function networkAnswered(response) {
+  networkMute = false;
+  return response;
+}
+
+/**
+ * Le réseau d'abord, mais pas sans fin. Passé NETWORK_TIMEOUT_MS (aussitôt si le réseau est
+ * déjà tenu pour muet), la copie gardée par cette version sert la requête ; sans copie, on
+ * attend le réseau. La requête réseau n'est jamais abandonnée : elle continue, et ce qui suit
+ * sa réponse (mise en cache) se fait à son arrivée. Un réseau en échec (hors ligne) passe
+ * aussitôt au repli.
+ * @param {FetchEvent} event
+ * @param {Promise<Response>} network - Requête déjà partie
+ * @param {() => Promise<Response|undefined>} keptCopy - Copie servie au délai
+ * @param {() => Promise<Response|undefined>} [offlineCopy] - Repli quand le réseau échoue
+ * @returns {Promise<Response>}
+ */
+async function networkWithDeadline(event, network, keptCopy, offlineCopy = keptCopy) {
+  const settled = network.then(networkAnswered, () => null);
+  event.waitUntil(settled);
+  const deadline = networkMute ? TIMED_OUT : afterDelay(NETWORK_TIMEOUT_MS);
+  const first = await Promise.race([settled, deadline]);
+  if (first !== TIMED_OUT) return first || (await offlineCopy()) || Response.error();
+  networkMute = true;
+  return copyThenNetwork(settled, keptCopy, offlineCopy);
+}
+
+/** Délai dépassé : la copie ; sans elle, le réseau quand il répondra, sinon le repli */
+async function copyThenNetwork(settled, keptCopy, offlineCopy) {
+  return (await keptCopy()) || (await settled) || (await offlineCopy()) || Response.error();
+}
+
+/**
+ * Copie gardée par cette version : le préchargement d'abord (sa version, par construction),
+ * puis ce qui a servi en ligne. Une adresse d'une autre version (?v=) n'a que sa copie
+ * exacte : jamais un module d'une version à la place d'une autre.
+ * @param {Request} request
+ * @returns {Promise<Response|undefined>}
+ */
+async function versionCopy(request) {
+  const url = new URL(request.url);
+  if (!isOwnVersion(url)) return cachedCopy(request);
+  const precached = await (await caches.open(OFFLINE_CACHE)).match(url.pathname);
+  return precached || cachedResponse(request);
+}
+
 async function networkFirst(event) {
   const { request } = event;
   const cache = await caches.open(RUNTIME_CACHE);
-  try {
-    const net = await fromNetwork(request, { cache: 'no-store' });
+  const network = fromNetwork(request, { cache: 'no-store' }).then(net => {
     if (net.ok) event.waitUntil(cache.put(request, net.clone()));
     return net;
-  } catch {
-    return (await cachedResponse(request)) || Response.error();
-  }
+  });
+  return networkWithDeadline(event, network, () => versionCopy(request));
 }
 
 /**
@@ -1025,23 +1087,38 @@ async function precachedResponse(request) {
 }
 
 /**
- * Hors ligne : la page du jeu pour l'adresse du site, une page gardée, sinon offline.html
+ * Page gardée par cette version : la page du jeu pour l'adresse du site, sinon la page
+ * elle-même si elle a été gardée
+ * @param {Request} request
+ * @returns {Promise<Response|undefined>}
+ */
+async function keptPage(request) {
+  const cache = await caches.open(OFFLINE_CACHE);
+  const { pathname } = new URL(request.url);
+  return cache.match(SHELL_PATHS.has(pathname) ? SHELL_URL : pathname);
+}
+
+/**
+ * Hors ligne : la page gardée, sinon offline.html
  * @param {Request} request
  * @returns {Promise<Response|undefined>}
  */
 async function offlinePage(request) {
-  const cache = await caches.open(OFFLINE_CACHE);
-  const { pathname } = new URL(request.url);
-  const page = SHELL_PATHS.has(pathname) ? SHELL_URL : pathname;
-  return (await cache.match(page)) || cache.match(OFFLINE_URL);
+  const kept = await keptPage(request);
+  return kept || (await caches.open(OFFLINE_CACHE)).match(OFFLINE_URL);
 }
 
-async function navigationResponse(request) {
-  try {
-    return await fromNetwork(request);
-  } catch {
-    return (await offlinePage(request)) || Response.error();
-  }
+/**
+ * Navigation : le réseau, la page gardée passé le délai, offline.html hors ligne pour une page
+ * jamais gardée. La page du réseau n'est jamais mise en cache : la page servie hors ligne
+ * reste celle que le préchargement a gardée avec ses modules (même version).
+ * @param {FetchEvent} event
+ * @returns {Promise<Response>}
+ */
+function navigationResponse(event) {
+  const { request } = event;
+  const kept = () => keptPage(request);
+  return networkWithDeadline(event, fromNetwork(request), kept, () => offlinePage(request));
 }
 
 /**
@@ -1068,7 +1145,7 @@ function assetResponse(event, pathname) {
 function routeRequest(event) {
   const { request } = event;
   if (request.method !== 'GET') return null;
-  if (request.mode === 'navigate') return navigationResponse(request);
+  if (request.mode === 'navigate') return navigationResponse(event);
   if (!sameOrigin(request.url)) return null;
   const { pathname } = new URL(request.url);
   if (pathname === VOICE_INDEX) return voiceIndex(event);
