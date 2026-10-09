@@ -92,6 +92,75 @@ function getInstructions() {
   );
 }
 
+// Conversion de la difficulté textuelle en valeur numérique pour PacmanGame
+// Débutant = 1, Moyen = 2, Difficile = 3
+function pacmanDifficultyValue(difficulty) {
+  let difficultyValue = 2; // Défaut = moyen
+  if (difficulty === 'debutant') difficultyValue = 1;
+  if (difficulty === 'difficile') difficultyValue = 3;
+  return difficultyValue;
+}
+
+/** Réglages de la partie, lus dans cet ordre : niveau, table ou opération, opérateur, avatar */
+function readPacmanSettings() {
+  // Conversion du niveau de difficulté texte en valeur numérique pour PacmanGame (Cascade 2025)
+  const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
+  const difficultyValue = pacmanDifficultyValue(gameState.difficulty);
+
+  const tableNumber = gameState.tableNumber || null;
+  const mode = tableNumber ? 'table' : 'operation';
+
+  // Récupérer l'opérateur sélectionné (support multi-opérations)
+  const userData = UserState.getCurrentUserData();
+  const operator = userData.preferredOperator || '×';
+
+  // Récupérer l'avatar courant
+  const playerAvatar = gameState?.avatar || 'fox';
+  return { difficultySettings, difficultyValue, tableNumber, mode, operator, playerAvatar };
+}
+
+/** Crée la partie avec les réglages du joueur, la démarre et la relie au bouton Accueil */
+function launchPacmanGame() {
+  console.log('Initialisation du jeu MultiMiam');
+  const { difficultySettings, difficultyValue, tableNumber, mode, operator, playerAvatar } =
+    readPacmanSettings();
+  console.log('Avatar du joueur:', playerAvatar);
+  console.log(
+    'MultiMiam lancé avec niveau:',
+    gameState.difficulty,
+    '(valeur:',
+    difficultyValue,
+    '), opérateur:',
+    operator
+  );
+
+  // Passage des paramètres au constructeur PacmanGame (avec operator pour multi-ops)
+  _pacmanGame = new PacmanGame('multimiam-canvas', difficultyValue, mode, tableNumber, 0, operator);
+
+  // Ajout des paramètres de difficulté avancés
+  _pacmanGame.difficultySettings = difficultySettings;
+  _pacmanGame.tables = difficultySettings.tables;
+  _pacmanGame.distractorDistance = difficultySettings.distractorDistance;
+  // Appliquer l'avatar personnalisé via arcadeUtils
+  _pacmanGame.avatar = loadSingleAvatar(playerAvatar);
+  _pacmanGame.start();
+
+  try {
+    setTimeout(() => setStartingMode(null), 0);
+  } catch {
+    // Opération asynchrone non-critique
+    // Erreur ignorée (non-critique)
+  }
+
+  // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup sans game over
+  try {
+    eventBus.on('arcade:stop', cleanupPacmanGame, { once: true });
+  } catch {
+    // Enregistrement d'événement non-critique
+    // Erreur ignorée (non-critique)
+  }
+}
+
 export function startPacmanArcade() {
   // Couper toute instance arcade éventuellement active
   try {
@@ -128,67 +197,7 @@ export function startPacmanArcade() {
 
   // Initialisation du jeu
   if (PacmanGame !== undefined) {
-    console.log('Initialisation du jeu MultiMiam');
-    // Conversion du niveau de difficulté texte en valeur numérique pour PacmanGame (Cascade 2025)
-    const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
-
-    // Conversion de la difficulté textuelle en valeur numérique pour PacmanGame
-    // Débutant = 1, Moyen = 2, Difficile = 3
-    let difficultyValue = 2; // Défaut = moyen
-    if (gameState.difficulty === 'debutant') difficultyValue = 1;
-    if (gameState.difficulty === 'difficile') difficultyValue = 3;
-
-    const tableNumber = gameState.tableNumber || null;
-    const mode = tableNumber ? 'table' : 'operation';
-
-    // Récupérer l'opérateur sélectionné (support multi-opérations)
-    const userData = UserState.getCurrentUserData();
-    const operator = userData.preferredOperator || '×';
-
-    // Récupérer l'avatar courant
-    const playerAvatar = gameState?.avatar || 'fox';
-    console.log('Avatar du joueur:', playerAvatar);
-    console.log(
-      'MultiMiam lancé avec niveau:',
-      gameState.difficulty,
-      '(valeur:',
-      difficultyValue,
-      '), opérateur:',
-      operator
-    );
-
-    // Passage des paramètres au constructeur PacmanGame (avec operator pour multi-ops)
-    _pacmanGame = new PacmanGame(
-      'multimiam-canvas',
-      difficultyValue,
-      mode,
-      tableNumber,
-      0,
-      operator
-    );
-
-    // Ajout des paramètres de difficulté avancés
-    _pacmanGame.difficultySettings = difficultySettings;
-    _pacmanGame.tables = difficultySettings.tables;
-    _pacmanGame.distractorDistance = difficultySettings.distractorDistance;
-    // Appliquer l'avatar personnalisé via arcadeUtils
-    _pacmanGame.avatar = loadSingleAvatar(playerAvatar);
-    _pacmanGame.start();
-
-    try {
-      setTimeout(() => setStartingMode(null), 0);
-    } catch {
-      // Opération asynchrone non-critique
-      // Erreur ignorée (non-critique)
-    }
-
-    // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup sans game over
-    try {
-      eventBus.on('arcade:stop', cleanupPacmanGame, { once: true });
-    } catch {
-      // Enregistrement d'événement non-critique
-      // Erreur ignorée (non-critique)
-    }
+    launchPacmanGame();
   } else {
     console.error('Erreur: MultiMiam non défini');
   }
