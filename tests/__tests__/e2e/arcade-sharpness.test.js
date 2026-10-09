@@ -12,7 +12,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
+const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
 // Sans images générées (CI : npm run assets:generate ne tourne qu'au déploiement), les jeux
@@ -99,7 +99,9 @@ async function launchGame(page, game) {
 }
 
 async function backToArcadeMenu(page) {
+  // « Abandonner » demande confirmation (js/game-exit.js)
   await pressButton(page, '#game [id$="abandon-btn"]');
+  await answerGameDialog(page, true);
   await pressButton(page, '#arcade-back-btn');
 }
 
