@@ -6,7 +6,6 @@
  */
 
 const fs = require('node:fs');
-const path = require('node:path');
 
 class JSDocImprover {
   constructor() {
@@ -150,10 +149,16 @@ class JSDocImprover {
    * @returns {string|null}
    */
   extractFunctionName(line) {
-    const patterns = [/function\s+(\w+)/, /(\w+)\s*[:=]\s*function/, /(\w+)\s*\(/, /(\w+)\s*:/];
+    // \b : un nom se cherche à partir du début d'un mot (même résultat, sans retour arrière coûteux)
+    const patterns = [
+      /function\s+(\w+)/,
+      /\b(\w+)\s*[:=]\s*function/,
+      /\b(\w+)\s*\(/,
+      /\b(\w+)\s*:/,
+    ];
 
     for (const pattern of patterns) {
-      const match = line.match(pattern);
+      const match = pattern.exec(line);
       if (match) return match[1];
     }
     return null;
@@ -168,9 +173,9 @@ class JSDocImprover {
   generateJSDoc(functionName, functionLine) {
     const jsDoc = ['    /**', `     * ${this.generateDescription(functionName)}`];
 
-    // Détecter paramètres basiques
-    const paramMatch = functionLine.match(/\(([^)]+)\)/);
-    if (paramMatch && paramMatch[1].trim()) {
+    // Détecter paramètres basiques : première parenthèse non vide (une paire vide « () » est sautée)
+    const paramMatch = /^(?:[^(]|\(\))*\(([^)]+)\)/.exec(functionLine);
+    if (paramMatch?.[1].trim()) {
       const params = paramMatch[1]
         .split(',')
         .map(p => p.trim().split(/\s+/)[0])
@@ -261,9 +266,9 @@ if (require.main === module) {
   const improver = new JSDocImprover();
 
   // Vérifier arguments ligne de commande
-  const args = process.argv.slice(2);
+  const args = new Set(process.argv.slice(2));
 
-  if (args.includes('--extended') || args.includes('-e')) {
+  if (args.has('--extended') || args.has('-e')) {
     improver.improveExtended();
   } else {
     improver.improveCore();
