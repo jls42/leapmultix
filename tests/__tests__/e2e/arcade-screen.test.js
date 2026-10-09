@@ -252,8 +252,8 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   // Le plateau garde sa taille du premier au dernier instant : la consigne, posée dessus
   // (à côté sur un téléphone tourné), ne lui prend pas de place et part sans rien déplacer.
   // Dans les deux cas, elle laisse passer le doigt (au plateau, ou à la zone de jeu à côté).
-  // En portrait, les quatre jeux : chacun pose sa consigne à sa place. Ailleurs, la mise en
-  // page est commune à tous ; MultiMemory sur ordinateur a trois rangées, consigne en bas.
+  // Les quatre jeux sur chaque écran : chacun pose sa consigne à sa place (MultiMemory sur
+  // ordinateur a trois rangées, consigne en bas), et chacun a montré le défaut sur ordinateur.
   // Sous le plateau, « Abandonner » reste en bas de l'écran dès le lancement : tous les
   // plateaux prennent la hauteur, MultiMiam compris (avant : 346 px vides sous le bouton dans
   // MultiMemory, puis 139 px dans MultiMiam en portrait).
@@ -267,8 +267,8 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   const BESIDE_BOARD = { inside: false, overlaps: false, touched: 'DIV' };
   test.each([
     ['téléphone en portrait', PORTRAIT, true, ON_BOARD, ARCADE_GAMES],
-    ['téléphone tourné', LANDSCAPE, true, BESIDE_BOARD, ['multisnake']],
-    ['ordinateur', DESKTOP, false, ON_BOARD, ['multimemory', 'multisnake']],
+    ['téléphone tourné', LANDSCAPE, true, BESIDE_BOARD, ARCADE_GAMES],
+    ['ordinateur', DESKTOP, false, ON_BOARD, ARCADE_GAMES],
   ])(
     '%s : la consigne part sans rien déplacer, ni le plateau ni « Abandonner »',
     async (_screen, viewport, phone, spot, games) => {
