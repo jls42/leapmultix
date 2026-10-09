@@ -27,7 +27,11 @@ paths:
   plafond, une première visite téléchargeait 13,2 Mo au lieu de 9,3 (mesuré le 09/10/2026).
   Peser ce que télécharge l'installation, variantes comprises, pas les PNG de la liste.
 - La prod sert les images 30 jours sans les revérifier (`immutable`) et les variantes n'ont pas de
-  `?v=` : une image qui change de contenu change de nom.
+  `?v=`. Une image qui change de contenu sous le même nom : le service worker de la nouvelle
+  version recharge celles qu'il précharge, mais un joueur déjà venu peut revoir l'ancienne version
+  des autres (fonds de l'avatar hors préchargement…) jusqu'à 30 jours. Ce fut le cas des images
+  réencodées le 09/10/2026 (effet seulement visuel) ; pour un changement qui doit se voir tout de
+  suite, changer le nom.
 - Arcade : chaque image passe par `js/arcade-sprite-catalog.js` (source, plus grande variante,
   repli PNG) ; illustrations des écrans : `js/webp-images.js` ; têtes d'avatar :
   `js/avatar-heads.js` (`setAvatarHead`, jamais `img.src` seul quand l'image a un `srcset`).
