@@ -18,6 +18,14 @@ import { createArcadeToast, getArcadeText } from './arcade-message.js';
 import { getArcadeCanvasBox, watchArcadeViewport, renderArcadeCanvas } from './arcade-common.js';
 import { cleanupGameResources } from './game-cleanup.js';
 import { chooseMazeLayout, fitMazeCells } from './multimiam-layout.js';
+import { VERSION_PARAM } from './cache-updater.js';
+
+/**
+ * Mur des bandes autour du labyrinthe, fond du plateau : posé avec la version du jeu dans son
+ * adresse, comme js/cache-updater.js le veut pour les images, il ne se télécharge qu'une fois
+ * (en fond de css/arcade.css, il partait sans version puis repartait une fois versionné)
+ */
+const WALL_BACKGROUND = `url("assets/images/arcade/mur_128x128.png?${VERSION_PARAM}")`;
 
 /** Un monstre différent pour chacun des cinq fantômes */
 const GHOST_MONSTERS = 5;
@@ -141,14 +149,17 @@ export class PacmanGame {
   // Appliquer les styles visuels au canvas : le labyrinthe à la taille de son dessin, et le
   // plateau sur toute la hauteur disponible, jusqu'à « Abandonner », comme dans les autres
   // jeux. Si les cases, plafonnées presque carrées, ne remplissent pas toute la hauteur (écran
-  // très allongé), le labyrinthe s'y centre entre deux bandes de mur (css/arcade.css) ; les
+  // très allongé), le labyrinthe s'y centre entre deux bandes de mur (WALL_BACKGROUND) ; les
   // clics et les touchers suivent (object-fit, converti par js/arcade-common.js).
   applyCanvasStyles(width, height, boardHeight = height) {
     const shownHeight = Math.max(height, boardHeight);
     this.canvas.style.width = width + 'px';
     this.canvas.style.height = shownHeight + 'px';
     this.canvas.style.objectFit = 'contain';
-    // La texture des bandes continue les cases du labyrinthe
+    // La texture des bandes continue les cases du labyrinthe ; son adresse est déjà
+    // versionnée, js/cache-updater.js n'y touche pas
+    this.canvas.dataset.skipVersion = 'true';
+    this.canvas.style.backgroundImage = WALL_BACKGROUND;
     this.canvas.style.backgroundSize = `${this.cellWidth}px ${this.cellHeight}px`;
     this.canvas.style.backgroundPosition = `0 ${(shownHeight - height) / 2}px`;
     this.canvas.style.boxSizing = 'content-box';
