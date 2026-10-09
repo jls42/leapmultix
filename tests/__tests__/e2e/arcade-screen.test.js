@@ -152,6 +152,27 @@ const overlaps = (a, b) =>
   a.top < b.top + b.height &&
   b.top < a.top + a.height;
 
+/** Marge du bas de l'écran sous « Abandonner », au plus (px) : au-delà, il n'est plus en bas */
+const ABANDON_BOTTOM_GAP_MAX = 40;
+
+/**
+ * Ce que montre la consigne affichée, dans les termes de l'écran attendu (spot) : dans le
+ * plateau ou à côté, ce que le doigt touche en son milieu, sa place annoncée, et
+ * « Abandonner » en bas de l'écran quand l'écran le demande
+ */
+function noteSpot(during, spot) {
+  const seen = {
+    inside: isInside(during.note, during.board),
+    overlaps: overlaps(during.note, during.board),
+    touched: during.underNote,
+  };
+  if ('placedAsSaid' in spot) seen.placedAsSaid = placedAsSaid(during.note, during.board);
+  if ('abandonAtBottom' in spot) {
+    seen.abandonAtBottom = during.emptyBelow < ABANDON_BOTTOM_GAP_MAX;
+  }
+  return seen;
+}
+
 /** Point de la fenêtre où s'affiche un point interne du canevas */
 function toScreen(page, canvasId, x, y) {
   return page.evaluate(
@@ -288,14 +309,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
           game,
           onAbandon: false,
         });
-        expect({
-          game,
-          inside: isInside(during.note, during.board),
-          overlaps: overlaps(during.note, during.board),
-          touched: during.underNote,
-          ...('placedAsSaid' in spot && { placedAsSaid: placedAsSaid(during.note, during.board) }),
-          ...('abandonAtBottom' in spot && { abandonAtBottom: during.emptyBelow < 40 }),
-        }).toEqual({ game, ...spot });
+        expect({ game, ...noteSpot(during, spot) }).toEqual({ game, ...spot });
         await page.waitForFunction(
           () => document.querySelector('#game .game-instructions')?.hidden,
           { timeout: 10000 }
