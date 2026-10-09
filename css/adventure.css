@@ -258,6 +258,11 @@
   object-fit: contain;
 }
 
+/* Source tournée vers la gauche (renard, astronaute) : le personnage regarde le trésor */
+.adventure-character img.is-mirrored {
+  transform: scaleX(-1);
+}
+
 /* === ÉCRAN DE FIN : le trésor, la phrase, les étoiles ===
    Le titre (« Niveau terminé ») reste un cran sous la phrase principale. */
 .adventure-results > h1 {

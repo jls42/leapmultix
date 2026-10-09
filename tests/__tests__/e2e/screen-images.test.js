@@ -432,6 +432,13 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
         expect([headProblems(map), avatarsOf(map)]).toEqual([HEADS_OK, ['panda']]);
         await page.$eval('.level-card[data-level="1"]', card => card.click());
         await page.waitForSelector('#adventure-options .option', { visible: true, timeout: 10000 });
+        // Le personnage de la scène : sa source haute définition (catalogue des images d'Arcade)
+        const [character] = await settledImages('#adventure-character img');
+        expect(character.src).toMatch(/^\/assets\/generated-images\/arcade\/panda-\d+\.webp$/);
+        expect({ loaded: character.loaded, blurry: isBlurry(character) }).toEqual({
+          loaded: true,
+          blurry: false,
+        });
         await loseLevel();
         const results = await settledImages('.results-avatar');
         expect([headProblems(results), avatarsOf(results)]).toEqual([HEADS_OK, ['panda']]);
@@ -454,5 +461,10 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
     await startFirstAdventureLevel();
     const [closed] = await shownImages(page, '#adventure-treasure img');
     expect(closed).toMatchObject({ src: '/assets/images/arcade/cadeau_ferme.png', loaded: true });
+    const [character] = await settledImages('#adventure-character img');
+    expect(character).toMatchObject({
+      src: '/assets/images/arcade/panda_right_128x128.png',
+      loaded: true,
+    });
   }, 90000);
 });
