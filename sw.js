@@ -9,8 +9,11 @@
 // - Images: cache-first; offline, another image of the same family (other size of a sprite,
 //   other background of the same avatar)
 // - Translations JSON: stale-while-revalidate
-// - JS/CSS: network-first (updates take precedence); past NETWORK_TIMEOUT_MS or offline, the
-//   copy kept by this version
+// - JS/CSS of this version (?v=<VERSION>, every address of a deployed site): the precached
+//   copy first, then the exact runtime copy, then the network, never cached under that
+//   address (the server ignores ?v=: after a deploy it would serve another version there)
+// - Other JS/CSS (no ?v= in development, or another version): network-first; past
+//   NETWORK_TIMEOUT_MS or offline, the copy kept by this version
 // - Sounds, fonts and other precached files: cache-first (byte ranges served)
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
@@ -1003,12 +1006,20 @@ function networkAnswered(response) {
  * @returns {Promise<Response>}
  */
 async function networkWithDeadline(event, network, keptCopy, offlineCopy = keptCopy) {
-  const settled = network.then(networkAnswered, () => null);
+  const state = { answered: false };
+  const settled = network.then(
+    response => {
+      state.answered = true;
+      return networkAnswered(response);
+    },
+    () => null
+  );
   event.waitUntil(settled);
   const deadline = networkMute ? TIMED_OUT : afterDelay(NETWORK_TIMEOUT_MS);
   const first = await Promise.race([settled, deadline]);
   if (first !== TIMED_OUT) return first || (await offlineCopy()) || Response.error();
-  networkMute = true;
+  // Muet, sauf si sa réponse vient d'arriver : elle a déjà rendu la main au réseau
+  if (!state.answered) networkMute = true;
   return copyThenNetwork(settled, keptCopy, offlineCopy);
 }
 
@@ -1039,6 +1050,37 @@ async function networkFirst(event) {
     return net;
   });
   return networkWithDeadline(event, network, () => versionCopy(request));
+}
+
+/** L'adresse porte la version de ce service worker (?v=v37) : elle désigne ses fichiers */
+function isThisVersion(url) {
+  return url.searchParams.get('v')?.replace(/^v=/, '') === VERSION;
+}
+
+/**
+ * Module ou style de cette version (?v=<VERSION>, toutes les adresses d'un site déployé) :
+ * sa copie préchargée d'abord, puis sa copie exacte du cache d'exécution, puis le réseau.
+ * Le serveur ignore ?v= : après un déploiement, il servirait sous cette adresse le contenu
+ * d'une autre version, et la page mêlerait les deux (incident de la v22). Sa réponse n'est
+ * donc jamais mise en cache sous une adresse de cette version.
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+async function thisVersionFile(request) {
+  const kept = await versionCopy(request);
+  return kept || fromNetwork(request, { cache: 'no-store' });
+}
+
+/**
+ * JS et CSS : ceux de cette version depuis leur copie (thisVersionFile), les autres (sans
+ * ?v= en développement, ou d'une autre version) par le réseau d'abord, avec délai
+ * @param {FetchEvent} event
+ * @returns {Promise<Response>}
+ */
+function moduleResponse(event) {
+  const { request } = event;
+  if (isThisVersion(new URL(request.url))) return thisVersionFile(request);
+  return networkFirst(event);
 }
 
 /**
@@ -1131,7 +1173,7 @@ function assetResponse(event, pathname) {
   const { destination } = event.request;
   if (destination === 'image') return imageResponse(event);
   if (TRANSLATIONS.test(pathname)) return translationResponse(event);
-  if (destination === 'script' || destination === 'style') return networkFirst(event);
+  if (destination === 'script' || destination === 'style') return moduleResponse(event);
   // Vidéos : jamais préchargées, lues par plages ; le navigateur s'en charge seul
   if (destination === 'video') return null;
   return precachedResponse(event.request);

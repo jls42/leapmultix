@@ -714,12 +714,13 @@ describe('Service worker : réseau qui ne répond pas (wifi d’école, portail 
     expect(worker.fetches.at(-1)).toBe(`${ORIGIN}/`);
   });
 
-  test('un module de cette version : sa copie préchargée passé le délai', async () => {
-    const { worker, timeout } = await installedWith(silent);
+  test('un module de cette version : sa copie préchargée, sans attendre le réseau muet', async () => {
+    const { worker } = await installedWith(silent);
     const version = constant(worker, 'VERSION');
     const url = `/js/modes/QuizMode.js?v=${version}`;
-    const { response } = startRequest(worker, url, { destination: 'script' });
-    await jest.advanceTimersByTimeAsync(timeout + 100);
+    const { response, state } = startRequest(worker, url, { destination: 'script' });
+    await jest.advanceTimersByTimeAsync(10);
+    expect(state.done).toBe(true);
     expect(await (await response).text()).toBe('contenu de /js/modes/QuizMode.js');
   });
 
@@ -748,27 +749,62 @@ describe('Service worker : réseau qui ne répond pas (wifi d’école, portail 
     expect(runtime.entries.has(`${ORIGIN}${url}`)).toBe(true);
   });
 
+  test('déploiement puis réseau moyen : un module de cette version ne vient jamais d’une autre', async () => {
+    // Service worker v37 : la page gardée passé le délai, puis le réseau se met à répondre
+    // avec le contenu déployé depuis (le serveur ignore ?v= et sert la v38 sous l'adresse v37)
+    let answering = false;
+    const v38 = url =>
+      new FakeResponse(`v38 ${new URL(url).pathname}`, {
+        headers: { 'Content-Type': 'text/javascript' },
+      });
+    // Un réseau moyen : chaque réponse met 50 ms
+    const respond = url =>
+      answering ? new Promise(resolve => setTimeout(() => resolve(v38(url)), 50)) : silent();
+    const { worker, timeout } = await installedWith(respond);
+    const version = constant(worker, 'VERSION');
+    const page = startRequest(worker, '/', { mode: 'navigate' });
+    await jest.advanceTimersByTimeAsync(timeout + 100);
+    expect(await (await page.response).text()).toBe('contenu de /index.html');
+    answering = true;
+    const served = [];
+    for (const path of ['/js/game.js', '/js/slides.js', '/css/arcade.css']) {
+      const destination = path.endsWith('.css') ? 'style' : 'script';
+      const { response } = startRequest(worker, `${path}?v=${version}`, { destination });
+      await jest.advanceTimersByTimeAsync(100);
+      served.push(await (await response).text());
+    }
+    expect(served).toEqual([
+      'contenu de /js/game.js',
+      'contenu de /js/slides.js',
+      'contenu de /css/arcade.css',
+    ]);
+    // Rien du réseau n'est gardé sous une adresse de cette version
+    const runtime = await worker.caches.open(constant(worker, 'RUNTIME_CACHE'));
+    expect([...runtime.entries.keys()].filter(key => key.includes(`?v=${version}`))).toEqual([]);
+  });
+
   test('après un délai dépassé, la suite sans attendre ; une réponse du réseau rend la main', async () => {
+    // Adresses sans ?v= (développement) : réseau d'abord, avec délai. Celles de cette version
+    // (site déployé) ne passent pas par là : elles viennent toujours de leur copie.
     const reply = later('/js/game.js');
     let answering = false;
     const { worker, timeout } = await installedWith(() => (answering ? reply.promise : silent()));
-    const version = constant(worker, 'VERSION');
-    const first = startRequest(worker, `/js/game.js?v=${version}`, { destination: 'script' });
+    const first = startRequest(worker, '/js/game.js', { destination: 'script' });
     await jest.advanceTimersByTimeAsync(timeout + 100);
     expect(first.state.done).toBe(true);
     // Le réseau est tenu pour muet : le module suivant n'attend pas le délai
-    const next = startRequest(worker, `/js/slides.js?v=${version}`, { destination: 'script' });
+    const next = startRequest(worker, '/js/slides.js', { destination: 'script' });
     await jest.advanceTimersByTimeAsync(10);
     expect(await (await next.response).text()).toBe('contenu de /js/slides.js');
     // Le réseau répond de nouveau : il redevient prioritaire
     answering = true;
-    const third = startRequest(worker, `/js/game.js?v=${version}`, { destination: 'script' });
+    const third = startRequest(worker, '/js/game.js', { destination: 'script' });
     reply.answer();
     await jest.advanceTimersByTimeAsync(10);
     expect(third.state.done).toBe(true);
     // Muet de nouveau : le module suivant attend le réseau, jusqu'au délai
     answering = false;
-    const fourth = startRequest(worker, `/js/slides.js?v=${version}`, { destination: 'script' });
+    const fourth = startRequest(worker, '/js/slides.js', { destination: 'script' });
     await jest.advanceTimersByTimeAsync(10);
     expect(fourth.state.done).toBe(false);
   });
