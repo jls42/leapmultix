@@ -634,6 +634,13 @@
     flex: none;
   }
 
+  /* Les cases vides qui centrent le calcul sur deux rangées (téléphone en portrait)
+     n'ont rien à centrer sur une seule : elles prenaient sa place au calcul, écrit alors
+     un signe par ligne, et le bandeau trop haut recouvrait le plateau */
+  .arcade-mult-display .arcade-placeholder {
+    display: none;
+  }
+
   .arcade-game-ui {
     --arcade-stage-flow: row;
 

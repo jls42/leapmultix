@@ -13,6 +13,14 @@ const { startStaticServer } = require('../../utils/static-server.cjs');
 
 const PORTRAIT = { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
 const LANDSCAPE = { width: 844, height: 390, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
+// Téléphone tourné, barres du navigateur affichées (iPhone 13 : 750 × 342 utiles)
+const SHORT_LANDSCAPE = {
+  width: 750,
+  height: 342,
+  deviceScaleFactor: 3,
+  isMobile: true,
+  hasTouch: true,
+};
 const DESKTOP = { width: 1280, height: 800, deviceScaleFactor: 1 };
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
@@ -277,6 +285,37 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
       const { board, overflow } = await screenState(page);
       expect({ game, ...overflow }).toEqual({ game, x: 0, y: 0 });
       expect({ game, wide: board.width > board.height }).toEqual({ game, wide: true });
+      await backToArcadeMenu(page);
+    }
+  }, 90000);
+
+  // Les cases vides qui centrent le calcul sur deux rangées (portrait) prenaient sa place sur la
+  // ligne unique du téléphone tourné : le calcul s'écrivait un signe par ligne, et le bandeau,
+  // trois fois plus haut, recouvrait le haut du plateau et d'« Abandonner »
+  test('téléphone tourné, barres du navigateur affichées : bandeau sur une ligne, au-dessus du plateau', async () => {
+    await openArcade(SHORT_LANDSCAPE);
+    for (const game of ARCADE_GAMES) {
+      await launchGame(page, game);
+      await settle(page);
+      const layout = await page.evaluate(() => {
+        const bar = document.querySelector('#arcade-mult-display').getBoundingClientRect();
+        const range = document.createRange();
+        range.selectNodeContents(document.querySelector('#arcade-mult-display .arcade-question'));
+        const lines = new Set([...range.getClientRects()].map(rect => Math.round(rect.top))).size;
+        const top = selector => document.querySelector(selector).getBoundingClientRect().top;
+        // MultiMemory n'écrit pas de calcul dans le bandeau : aucune ligne
+        return {
+          questionOnOneLine: lines <= 1,
+          barAboveBoard: bar.bottom <= top('#game canvas'),
+          barAboveAbandon: bar.bottom <= top('#game [id$="abandon-btn"]'),
+        };
+      });
+      expect({ game, ...layout }).toEqual({
+        game,
+        questionOnOneLine: true,
+        barAboveBoard: true,
+        barAboveAbandon: true,
+      });
       await backToArcadeMenu(page);
     }
   }, 90000);
