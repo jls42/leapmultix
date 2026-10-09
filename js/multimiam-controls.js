@@ -1,7 +1,7 @@
 // multimiam-controls.js - Gestion des contrôles clavier / tactile pour Pacman (ESM)
 // (c) LeapMultix - 2025
 
-import { getCanvasContentRect } from './arcade-common.js';
+import { clientToCanvasPoint } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
 import { mazeToScreen, transposeDirection } from './multimiam-layout.js';
 import { isKeyFromButton, toggleArcadePause } from './arcade-time.js';
@@ -101,21 +101,12 @@ export function initPacmanControls(game) {
   }
 
   // ================= Toucher ou clic sur le labyrinthe =================
-  // Point visé, en pixels du dessin du labyrinthe. Mesuré à l'écran (cadre, éventuelles
-  // bandes et réduction du canevas compris), sans passer par canvas.width : la densité du
-  // canevas peut le rendre plus grand que le dessin.
-  function boardPoint(clientX, clientY) {
-    const shown = getCanvasContentRect(game.canvas);
-    return {
-      x: ((clientX - shown.left) * game.boardWidth) / shown.width,
-      y: ((clientY - shown.top) * game.boardHeight) / shown.height,
-    };
-  }
-
   // Le personnage part vers le point visé : l'axe dominant à l'écran d'abord, l'autre s'il
   // est bloqué (directions à l'écran, puis dans le labyrinthe s'il est dessiné transposé)
   function steerTowards(clientX, clientY) {
-    const point = boardPoint(clientX, clientY);
+    // Point visé en unités du jeu : cadre, bandes de mur, réduction et densité du canevas
+    // compris (js/arcade-common.js)
+    const point = clientToCanvasPoint(game.canvas, clientX, clientY);
     const { x, y } = game.multimiam;
 
     // Écart au centre de la case du personnage, à l'écran (cases cellWidth × cellHeight)
