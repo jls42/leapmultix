@@ -482,10 +482,10 @@ LeapMultix 是一款完整的 PWA，支持离线使用和安装。
 **Service Worker**（`sw.js`）：
 
 - 安装：预加载游戏所需的所有内容，其列表由 `scripts/precache-list.mjs` 从代码生成（`npm run precache:update`，并由测试验证）：首次访问后，6 种模式和 4 款 Arcade 游戏都可离线启动
-- 导航：Network-first；离线时使用缓存中的游戏页面（仅从未缓存过页面时使用 `offline.html`）
+- 导航：Network-first，并设有 4 秒时限：超过时限（网络无响应：学校 Wi-Fi、强制门户）或离线时，使用缓存中的游戏页面（仅从未缓存过页面时使用 `offline.html`）
 - 图片：Cache-first；离线时使用同一 sprite 的其他尺寸，或同一头像的其他背景
 - 翻译：使用 Stale-while-revalidate 在后台更新
-- JS/CSS：Network-first，以始终提供最新版本，并保留离线缓存
+- JS/CSS：本版本的文件（带 `?v=` 的地址，即已部署站点的地址）优先使用其预加载副本，按设计与本版本一致：服务器会忽略 `?v=`，否则部署后可能返回其他版本。其他文件（开发时没有 `?v=`）：Network-first，切换到本版本副本前同样等待 4 秒
 - 声音和字体：Cache-first，并支持提供字节范围（Safari 音频播放器）
 - 通过 `cache-updater.js` 自动管理版本
 

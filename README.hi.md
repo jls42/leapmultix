@@ -487,10 +487,10 @@ LeapMultix पूर्ण PWA है, जिसमें offline समर्�
 **Service Worker** (`sw.js`):
 
 - स्थापना: खेल के लिए आवश्यक हर चीज़ को पहले से लोड करना; सूची `scripts/precache-list.mjs` द्वारा code से बनाई जाती है (`npm run precache:update`, परीक्षणों द्वारा सत्यापित): पहली बार आने के बाद सभी 6 modes और 4 Arcade खेल offline शुरू होते हैं
-- नेविगेशन: Network-first; offline होने पर cache में मौजूद खेल का पृष्ठ (कभी cache न किए गए पृष्ठ के लिए केवल `offline.html`)
+- नेविगेशन: Network-first, 4 सेकंड की समय-सीमा के साथ: इसके बाद (जवाब न देने वाला network: स्कूल का Wi-Fi, captive portal) या offline होने पर cache में मौजूद खेल का पृष्ठ (कभी cache न किए गए पृष्ठ के लिए केवल `offline.html`)
 - Images: Cache-first; offline होने पर उसी sprite का कोई अन्य आकार या उसी avatar की कोई अन्य पृष्ठभूमि
 - अनुवाद: पृष्ठभूमि में अद्यतन के लिए Stale-while-revalidate
-- JS/CSS: हमेशा नवीनतम version उपलब्ध कराने के लिए Network-first, offline cache के साथ
+- JS/CSS: इस version की files (`?v=` वाले पते, यानी deploy की गई site के पते) पहले अपनी precache की गई copy से आती हैं, जो बनावट से ही उसी version की होती है: server `?v=` को अनदेखा करता है और deploy के बाद अन्यथा कोई दूसरा version दे सकता है। बाकी files (development में `?v=` के बिना): Network-first, इस version की copy पर जाने से पहले वही 4 सेकंड की समय-सीमा
 - ध्वनियाँ और fonts: Cache-first, byte ranges उपलब्ध कराई जाती हैं (Safari audio player)
 - `cache-updater.js` के माध्यम से स्वचालित version प्रबंधन
 

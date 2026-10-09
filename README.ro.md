@@ -495,11 +495,10 @@ LeapMultix este o PWA completă, cu funcționare offline și posibilitate de ins
 - Instalare: preîncărcarea tuturor resurselor necesare jocului, pe baza unei liste generate din cod
   de `scripts/precache-list.mjs` (`npm run precache:update`, verificată prin teste): după
   o primă vizită, cele 6 moduri și cele 4 jocuri Arcade pornesc offline
-- Navigare: Network-first; offline, pagina jocului din cache (`offline.html` doar
-  pentru o pagină care nu a fost salvată niciodată)
+- Navigare: Network-first, cu un termen de 4 s: după acest termen (o rețea care nu răspunde: wifi-ul școlii, portal captiv) sau offline, pagina jocului din cache (`offline.html` doar pentru o pagină care nu a fost salvată niciodată)
 - Imagini: Cache-first; offline, o altă dimensiune a aceluiași sprite sau un alt fundal al aceluiași avatar
 - Traduceri: Stale-while-revalidate pentru actualizare în fundal
-- JS/CSS: Network-first pentru a furniza întotdeauna cea mai recentă versiune, cu cache offline
+- JS/CSS: cele din această versiune (adrese cu `?v=`, cele ale unui site publicat) vin mai întâi din copia lor preîncărcată, de aceeași versiune prin construcție: serverul ignoră `?v=` și, după o publicare, ar servi altfel o altă versiune. Celelalte (fără `?v=` în dezvoltare): Network-first, cu același termen de 4 s înaintea copiei acestei versiuni
 - Sunete și fonturi: Cache-first, cu servirea intervalelor de octeți (playerul audio din Safari)
 - Gestionare automată a versiunilor prin `cache-updater.js`
 
