@@ -39,7 +39,7 @@ const ASSET_PATTERNS = {
   // Logos des modes (accueil, tableau de bord) et des jeux (menu de l'Arcade), cadeaux de
   // l'Aventure, têtes des avatars (leur source de 1024 px) : affichés de 40 à 144 px,
   // jusqu'à 512 pour un écran de densité 3
-  illustrations: /logo_(?:mode|multi)|cadeau_|_head_avatar\.png$/i,
+  illustrations: /logo_(?:mode|multi)|cadeau_|(?:_head_avatar\.png$)/i,
   ui: /button|icon|arrow/i,
   backgrounds: /background|bg_/i,
 };
