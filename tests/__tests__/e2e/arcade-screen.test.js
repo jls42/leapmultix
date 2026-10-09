@@ -156,6 +156,27 @@ const overlaps = (a, b) =>
   a.top < b.top + b.height &&
   b.top < a.top + a.height;
 
+/** Marge du bas de l'écran sous « Abandonner », au plus (px) : au-delà, il n'est plus en bas */
+const ABANDON_BOTTOM_GAP_MAX = 40;
+
+/**
+ * Ce que montre la consigne affichée, dans les termes de l'écran attendu (spot) : dans le
+ * plateau ou à côté, ce que le doigt touche en son milieu, sa place annoncée, et
+ * « Abandonner » en bas de l'écran quand l'écran le demande
+ */
+function noteSpot(during, spot) {
+  const seen = {
+    inside: isInside(during.note, during.board),
+    overlaps: overlaps(during.note, during.board),
+    touched: during.underNote,
+  };
+  if ('placedAsSaid' in spot) seen.placedAsSaid = placedAsSaid(during.note, during.board);
+  if ('abandonAtBottom' in spot) {
+    seen.abandonAtBottom = during.emptyBelow < ABANDON_BOTTOM_GAP_MAX;
+  }
+  return seen;
+}
+
 /**
  * Point de la fenêtre où s'affiche un point du jeu, sur le canevas d'un dessin relevé par
  * l'espion : son canevas et sa transformation t (échelle et décalage vers les pixels internes)
@@ -263,8 +284,8 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   // Le plateau garde sa taille du premier au dernier instant : la consigne, posée dessus
   // (à côté sur un téléphone tourné), ne lui prend pas de place et part sans rien déplacer.
   // Dans les deux cas, elle laisse passer le doigt (au plateau, ou à la zone de jeu à côté).
-  // En portrait, les quatre jeux : chacun pose sa consigne à sa place. Ailleurs, la mise en
-  // page est commune à tous ; MultiMemory sur ordinateur a trois rangées, consigne en bas.
+  // Les quatre jeux sur chaque écran : chacun pose sa consigne à sa place (MultiMemory sur
+  // ordinateur a trois rangées, consigne en bas), et chacun a montré le défaut sur ordinateur.
   // Sous le plateau, « Abandonner » reste en bas de l'écran dès le lancement : tous les
   // plateaux prennent la hauteur, MultiMiam compris (avant : 346 px vides sous le bouton dans
   // MultiMemory, puis 139 px dans MultiMiam en portrait).
@@ -278,8 +299,8 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   const BESIDE_BOARD = { inside: false, overlaps: false, touched: 'DIV' };
   test.each([
     ['téléphone en portrait', PORTRAIT, true, ON_BOARD, ARCADE_GAMES],
-    ['téléphone tourné', LANDSCAPE, true, BESIDE_BOARD, ['multisnake']],
-    ['ordinateur', DESKTOP, false, ON_BOARD, ['multimemory', 'multisnake']],
+    ['téléphone tourné', LANDSCAPE, true, BESIDE_BOARD, ARCADE_GAMES],
+    ['ordinateur', DESKTOP, false, ON_BOARD, ARCADE_GAMES],
   ])(
     '%s : la consigne part sans rien déplacer, ni le plateau ni « Abandonner »',
     async (_screen, viewport, phone, spot, games) => {
@@ -299,14 +320,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
           game,
           onAbandon: false,
         });
-        expect({
-          game,
-          inside: isInside(during.note, during.board),
-          overlaps: overlaps(during.note, during.board),
-          touched: during.underNote,
-          ...('placedAsSaid' in spot && { placedAsSaid: placedAsSaid(during.note, during.board) }),
-          ...('abandonAtBottom' in spot && { abandonAtBottom: during.emptyBelow < 40 }),
-        }).toEqual({ game, ...spot });
+        expect({ game, ...noteSpot(during, spot) }).toEqual({ game, ...spot });
         await page.waitForFunction(
           () => document.querySelector('#game .game-instructions')?.hidden,
           { timeout: 10000 }
