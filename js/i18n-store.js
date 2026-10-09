@@ -94,31 +94,29 @@ export async function loadIntoStore(lang) {
 // Sync with legacy window store when language changes via legacy path or EventBus
 try {
   const g = globalThis;
-  if (g) {
-    // Initial sync if legacy i18n already loaded
-    if (g.i18nReady && g.currentTranslations && Object.keys(g.currentTranslations).length) {
-      setTranslations(g.currentTranslations);
-      try {
-        setCurrentLanguage(
-          g.loadLanguage ? g.loadLanguage() : localStorage.getItem('language') || 'fr'
-        );
-      } catch {
-        setCurrentLanguage('fr');
-      }
-      setReady(true);
+  // Initial sync if legacy i18n already loaded
+  if (g.i18nReady && g.currentTranslations && Object.keys(g.currentTranslations).length) {
+    setTranslations(g.currentTranslations);
+    try {
+      setCurrentLanguage(
+        g.loadLanguage ? g.loadLanguage() : localStorage.getItem('language') || 'fr'
+      );
+    } catch {
+      setCurrentLanguage('fr');
     }
-    // Keep in sync on languageChanged
-    g.addEventListener?.('languageChanged', e => {
-      try {
-        if (g.currentTranslations) setTranslations(g.currentTranslations);
-        const lang = e?.detail?.lang || (g.loadLanguage ? g.loadLanguage() : null);
-        if (lang) setCurrentLanguage(lang);
-        setReady(true);
-      } catch {
-        /* ignoré volontairement */
-      }
-    });
+    setReady(true);
   }
+  // Keep in sync on languageChanged
+  g.addEventListener?.('languageChanged', e => {
+    try {
+      if (g.currentTranslations) setTranslations(g.currentTranslations);
+      const lang = e?.detail?.lang || (g.loadLanguage ? g.loadLanguage() : null);
+      if (lang) setCurrentLanguage(lang);
+      setReady(true);
+    } catch {
+      /* ignoré volontairement */
+    }
+  });
 } catch {
   /* ignoré volontairement */
 }

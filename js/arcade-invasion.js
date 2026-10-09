@@ -91,7 +91,7 @@ function initializeInvadersGame() {
 
   const Root = globalThis;
 
-  if (Root?.invadersGame) {
+  if (Root.invadersGame) {
     cleanupGameResources(Root.invadersGame, {
       cleanAnimations: true,
       cleanEvents: true,
