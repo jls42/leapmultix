@@ -64,6 +64,18 @@ describe('variantes des images d’Arcade produites par le générateur', () => 
     expect(absent).toEqual([]);
   });
 
+  test('logos des jeux au menu de l’Arcade : 128, 256 et 512, comme ceux de l’accueil', () => {
+    // Affichés à 144 px (120 sur téléphone) : 512 sur un écran de densité 2 ou 3
+    for (const game of ['multiinvaders', 'multimiam', 'multimemory', 'multisnake']) {
+      const file = `assets/images/arcade/logo_${game}.png`;
+      expect(Object.keys(generator.getTargetResolutions(file, pngSize(file)))).toEqual([
+        '128',
+        '256',
+        '512',
+      ]);
+    }
+  });
+
   test('la variante gardée hors ligne fait partie des variantes de chaque image', () => {
     expect(specs.filter(spec => spec.maxWidth < OFFLINE_VARIANT_WIDTH)).toEqual([]);
   });
@@ -71,8 +83,8 @@ describe('variantes des images d’Arcade produites par le générateur', () => 
   test('les autres images gardent leurs tailles (rien de plus à générer ni à déployer)', () => {
     const sizes = file => Object.keys(generator.getTargetResolutions(file, pngSize(file)));
     expect(sizes('assets/images/arcade/monstre05_right_128x128.png')).toEqual(['64', '128']);
-    // Sources de 1024 px que les jeux ne dessinent pas (aventure, menu, en-tête)
-    for (const other of ['cadeau_ouvert', 'logo_multimiam', 'fox_head_avatar', 'serpent1_droite']) {
+    // Sources de 1024 px que les jeux ne dessinent pas (aventure, en-tête)
+    for (const other of ['cadeau_ouvert', 'fox_head_avatar', 'serpent1_droite']) {
       expect(sizes(`assets/images/arcade/${other}.png`)).toEqual(['64', '128', '256']);
     }
     expect(sizes('assets/images/arcade/logo_mode_quizz.png')).toEqual(['128', '256', '512']);

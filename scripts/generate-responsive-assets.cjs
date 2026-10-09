@@ -36,7 +36,8 @@ const RESOLUTION_TARGETS = {
 // Patterns spéciaux par type d'asset
 const ASSET_PATTERNS = {
   monsters: /monstre\d+/i,
-  logos: /logo_mode/i,
+  // Logos des modes (accueil) et des jeux (menu de l'Arcade), affichés de 120 à 144 px
+  logos: /logo_(?:mode|multi)/i,
   ui: /button|icon|arrow/i,
   backgrounds: /background|bg_/i,
 };

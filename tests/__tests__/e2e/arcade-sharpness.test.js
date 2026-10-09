@@ -202,6 +202,48 @@ describe('Images des jeux d’Arcade (E2E)', () => {
     120000
   );
 
+  describeGenerated('Menu de l’Arcade', () => {
+    // Logos des jeux et fusées de la tuile ouverte : la variante WebP que choisit le
+    // navigateur (srcset, sizes), au moins aussi grande que l'image à l'écran
+    test.each([SCREENS[1], SCREENS[2]])(
+      '%s : logos et fusées nets, en WebP',
+      async (_name, viewport) => {
+        await openArcade(viewport);
+        await pressButton(page, '.arcade-game-card[data-game="invasion"] .arcade-game-toggle');
+        const shown = 'img.arcade-logo, .expanded img.spaceship-thumb';
+        await page.waitForFunction(
+          selector =>
+            [...document.querySelectorAll(selector)].every(
+              img => img.complete && img.naturalWidth > 0
+            ),
+          { timeout: 8000 },
+          shown
+        );
+        const images = await page.evaluate(selector => {
+          const contentWidth = img => {
+            const style = getComputedStyle(img);
+            return img.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+          };
+          // Avec srcset, naturalWidth est corrigé de la densité de la variante choisie : sa
+          // vraie largeur est dans son nom (« -512.webp »)
+          const variantWidth = img => Number(/-(\d+)\.webp$/.exec(img.currentSrc)?.[1] ?? 0);
+          return [...document.querySelectorAll(selector)].map(img => ({
+            src: new URL(img.currentSrc).pathname,
+            natural: [
+              variantWidth(img),
+              (variantWidth(img) * img.naturalHeight) / img.naturalWidth,
+            ],
+            screen: [contentWidth(img) * devicePixelRatio, contentWidth(img) * devicePixelRatio],
+          }));
+        }, shown);
+        expect(images).toHaveLength(6);
+        expect(images.filter(img => !img.src.endsWith('.webp'))).toEqual([]);
+        expect(images.filter(isBlurry)).toEqual([]);
+      },
+      40000
+    );
+  });
+
   describeGenerated('MultiInvaders, ordinateur de densité 2', () => {
     test('la fusée et l’ami caché sont nets et à leurs proportions', async () => {
       await openArcade(SCREENS[1][1]);
