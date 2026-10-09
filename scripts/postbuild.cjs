@@ -2,9 +2,9 @@
  * - Copies CSS and assets to dist/
  * - Rewrites index.html script to hashed Rollup entry
  */
-const fs = require('fs');
+const fs = require('node:fs');
 const fsp = fs.promises;
-const path = require('path');
+const path = require('node:path');
 
 async function ensureDir(p) {
   await fsp.mkdir(p, { recursive: true });

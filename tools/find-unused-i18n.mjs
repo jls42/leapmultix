@@ -6,8 +6,8 @@
  * - Flattens translation JSON and compares to used keys/prefixes
  * - Writes report to assets/translations/unused_keys.txt
  */
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const translationsDir = path.join(root, 'assets', 'translations');

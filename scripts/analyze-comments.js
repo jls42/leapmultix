@@ -5,8 +5,8 @@
  * Identifie les commentaires obsolètes, les TODO, et les commentaires à nettoyer
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const JS_DIR = './js';
 const ANALYSIS_OUTPUT = './analysis';

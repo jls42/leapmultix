@@ -5,8 +5,8 @@
  * Vérifie des fonctions spécifiques suspectes
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const JS_DIR = './js';
 

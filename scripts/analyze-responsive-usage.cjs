@@ -5,8 +5,8 @@
  * Vérifie l'implémentation et identifie les optimisations possibles
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 /** Répertoires sans intérêt pour l'analyse, et qui la noieraient sous le bruit */
 const IGNORES = new Set(['node_modules', 'coverage', 'dist', 'analysis', '.git', 'backups']);

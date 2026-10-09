@@ -2,8 +2,8 @@
 /**
  * Analyze global usage (window.*) per file and window assignments.
  */
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const ROOT = path.resolve(process.cwd(), 'js');
 

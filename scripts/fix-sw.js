@@ -5,7 +5,7 @@
  * Améliore la gestion d'erreur et la stratégie de cache
  */
 
-import fs from 'fs';
+import fs from 'node:fs';
 
 const SW_FILE = './sw.js';
 

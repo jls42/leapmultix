@@ -5,7 +5,7 @@
  * Les erreurs de fetch du SW peuvent interférer avec le développement
  */
 
-import fs from 'fs';
+import fs from 'node:fs';
 // path import removed as it's unused
 
 const SW_FILE = './sw.js';
