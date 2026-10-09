@@ -1,6 +1,7 @@
 const http = require('node:http');
 const path = require('node:path');
 const fs = require('node:fs/promises');
+const { inSequence } = require('../../scripts/lib/in-sequence.cjs');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -93,13 +94,17 @@ function createSlowLink({ latencyMs, bytesPerSecond }) {
       const end = res.end.bind(res);
       res.end = data => {
         const body = data ? Buffer.from(data) : Buffer.alloc(0);
+        const chunks = [];
+        for (let offset = 0; offset < body.length; offset += SLOW_CHUNK) {
+          chunks.push(body.subarray(offset, offset + SLOW_CHUNK));
+        }
         void (async () => {
           await pause(latencyMs);
-          for (let offset = 0; offset < body.length; offset += SLOW_CHUNK) {
-            const chunk = body.subarray(offset, offset + SLOW_CHUNK);
+          // Un morceau réserve le lien quand le précédent est passé, jamais tous d'avance
+          await inSequence(chunks, async chunk => {
             await take(chunk.length);
             write(chunk);
-          }
+          });
           end();
         })();
         return res;
