@@ -72,6 +72,11 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
     UserManager._currentUser = null;
   });
 
+  test('normalizeAvatarId répond toujours à son ancienne adresse (main-helpers.js)', () => {
+    expect(helpers.normalizeAvatarId('licorne')).toBe('unicorn');
+    expect(helpers.normalizeAvatarId('x" onerror="alert(1)')).toBe('fox');
+  });
+
   test('grille et boutique : la tête de chaque avatar, en WebP à la taille de la grille', () => {
     document.body.append(...parse(SHOP));
     helpers.renderAvatarSelector('#avatar-choice');
