@@ -31,6 +31,14 @@ const INITIAL_GHOSTS = [
   { x: 10, y: 7, color: '#800080' }, // Violet (Sue)
 ];
 
+/** Premier avatar chargé portant ce nom, ou undefined */
+function findAvatarByName(avatars, name) {
+  for (const avatar of avatars) {
+    if (avatar.name === name) return avatar;
+  }
+  return undefined;
+}
+
 export class PacmanGame {
   constructor(
     canvasId,
@@ -304,27 +312,17 @@ export class PacmanGame {
     // Utiliser 'fox' comme fallback si gameState ou gameState.avatar n'est pas défini
     const currentAvatarName = gameState?.avatar || 'fox';
 
-    // Utiliser la liste des avatars chargés
-    if (this.avatars) {
-      // Vérifier si l'avatar sélectionné doit être mis à jour
-      if (!this.selectedAvatar || this.selectedAvatar.name !== currentAvatarName) {
-        // Recherche directe par nom dans la liste des avatars
-        for (const avatar of this.avatars) {
-          if (avatar.name === currentAvatarName) {
-            this.selectedAvatar = avatar;
-            break;
-          }
-        }
-        // Si l'avatar demandé n'est pas trouvé dans la liste chargée, fallback?
-        // Pour l'instant, on garde l'ancien ou on n'en a pas si c'est le premier appel.
-        if (this.selectedAvatar && this.selectedAvatar.name !== currentAvatarName) {
-          console.warn(
-            `Avatar ${currentAvatarName} demandé mais non trouvé dans les images chargées.`
-          );
-          // Optionnel: assigner un avatar par défaut ici si aucun n'est sélectionné
-          // if (!this.selectedAvatar) this.selectedAvatar = this.avatars.find(a => a.name === 'fox');
-        }
-      }
+    // Utiliser la liste des avatars chargés, si l'avatar sélectionné doit être mis à jour
+    if (!this.avatars || this.selectedAvatar?.name === currentAvatarName) return;
+    // Recherche directe par nom dans la liste des avatars
+    const found = findAvatarByName(this.avatars, currentAvatarName);
+    if (found) this.selectedAvatar = found;
+    // Si l'avatar demandé n'est pas trouvé dans la liste chargée, fallback?
+    // Pour l'instant, on garde l'ancien ou on n'en a pas si c'est le premier appel.
+    if (this.selectedAvatar && this.selectedAvatar.name !== currentAvatarName) {
+      console.warn(`Avatar ${currentAvatarName} demandé mais non trouvé dans les images chargées.`);
+      // Optionnel: assigner un avatar par défaut ici si aucun n'est sélectionné
+      // if (!this.selectedAvatar) this.selectedAvatar = this.avatars.find(a => a.name === 'fox');
     }
   }
 
