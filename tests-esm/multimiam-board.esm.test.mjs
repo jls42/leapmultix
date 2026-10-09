@@ -218,6 +218,30 @@ describe('MultiMiam sur un téléphone de 390 × 844', () => {
     expect(game.cellSize).toBe(23);
   });
 
+  test('un toucher sur une case voisine, bandes de mur comprises, y envoie le personnage', () => {
+    // Murs ignorés ; personnage en bas du plateau ; zone de jeu en haut à 175 px
+    game.canMove = () => true;
+    Object.assign(game.multimiam, { x: 12, y: 7 });
+    // Le labyrinthe (19 × 28 px) laisse une bande de mur en haut et en bas du plateau
+    const band = (Number.parseFloat(game.canvas.style.height) - game.boardHeight) / 2;
+    expect(band).toBeGreaterThan(30);
+    const aimed = [
+      [1, 0, 'RIGHT'],
+      [-1, 0, 'LEFT'],
+      [0, 1, 'DOWN'],
+      [0, -1, 'UP'],
+    ];
+    for (const [dx, dy, expected] of aimed) {
+      const at = mazeToScreen(game.multimiam.x, game.multimiam.y, game.transposed);
+      tap(game.canvas, {
+        x: (at.x + 0.5 + dx) * game.cellWidth,
+        y: 175 + band + (at.y + 0.5 + dy) * game.cellHeight,
+      });
+      const onScreen = transposeDirection(game.multimiam.nextDirection, game.transposed);
+      expect({ dx, dy, onScreen }).toEqual({ dx, dy, onScreen: expected });
+    }
+  });
+
   test('le labyrinthe se dessine en 15 colonnes sur 19 rangées', () => {
     expect(game.transposed).toBe(true);
     expect([game.cols, game.rows]).toEqual([19, 15]);
