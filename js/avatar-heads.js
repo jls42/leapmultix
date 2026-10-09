@@ -24,7 +24,7 @@ const AVATAR_ALIASES = new Map([
 ]);
 
 /**
- * Identifiant actuel d'un ancien nom français ; tout autre valeur, telle quelle
+ * Identifiant actuel d'un ancien nom français ; toute autre valeur, telle quelle
  * @param {string} [avatarId]
  * @returns {string|undefined}
  */
