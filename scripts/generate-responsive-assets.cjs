@@ -5,9 +5,9 @@
  * Garde les originaux PNG, génère WebP optimisés par taille d'écran
  */
 
-const fs = require('fs');
-const path = require('path');
-const { pathToFileURL } = require('url');
+const fs = require('node:fs');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 let sharp = null;
 
 try {
