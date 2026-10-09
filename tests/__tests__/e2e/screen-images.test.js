@@ -234,7 +234,11 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
         const logos = await openDashboard();
         expect(logos).toHaveLength(9);
         const notWebp = logos.filter(img => !img.src.startsWith('/assets/generated-images/'));
-        expect({ notWebp, blurry: logos.filter(isBlurry) }).toEqual({ notWebp: [], blurry: [] });
+        expect({
+          notWebp,
+          broken: logos.filter(img => !img.loaded),
+          blurry: logos.filter(isBlurry),
+        }).toEqual({ notWebp: [], broken: [], blurry: [] });
       },
       60000
     );
@@ -246,13 +250,19 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
         await startFirstAdventureLevel();
         const [closed] = await shownImages(page, '#adventure-treasure img');
         expect(closed.src).toMatch(/^\/assets\/generated-images\/arcade\/cadeau_ferme-\d+\.webp$/);
-        expect({ blurry: isBlurry(closed) }).toEqual({ blurry: false });
+        expect({ loaded: closed.loaded, blurry: isBlurry(closed) }).toEqual({
+          loaded: true,
+          blurry: false,
+        });
         await winLevel();
         const [treasure] = await shownImages(page, '.results-treasure');
         expect(treasure.src).toMatch(
           /^\/assets\/generated-images\/arcade\/cadeau_ouvert-\d+\.webp$/
         );
-        expect({ treasure, blurry: isBlurry(treasure) }).toEqual({ treasure, blurry: false });
+        expect({ loaded: treasure.loaded, blurry: isBlurry(treasure) }).toEqual({
+          loaded: true,
+          blurry: false,
+        });
       },
       90000
     );
