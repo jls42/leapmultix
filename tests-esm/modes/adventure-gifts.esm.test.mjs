@@ -5,6 +5,8 @@
  * est réussi, puis le trésor de l'écran de fin (112 px, 336 pixels à la densité 3). Sans
  * variantes (développement, CI), le PNG du dépôt prend le relais.
  * Avant : les PNG de 1024 px (1,5 et 1,6 Mo) pour ces 72 et 112 px.
+ * Le personnage de la scène vient aussi de sa source haute définition (catalogue des images
+ * d'Arcade) ; avant, le PNG de 128 px (0,89 de la netteté voulue en densité 2, 0,76 en densité 3).
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 import { existsSync } from 'node:fs';
@@ -32,6 +34,7 @@ jest.unstable_mockModule('../../js/badges.js', () => ({
 const store = await import('../../js/i18n-store.js');
 const { AudioManager } = await import('../../js/core/audio.js');
 const { AdventureMode } = await import('../../js/modes/AdventureMode.js');
+const { gameState } = await import('../../js/game.js');
 
 const GENERATED = 'assets/generated-images/arcade/';
 const SCENE_SIZES = '(max-width: 480px) 56px, 72px';
@@ -155,6 +158,50 @@ describe('Cadeaux de l’Aventure à la taille affichée', () => {
     treasure.dispatchEvent(new Event('error'));
     expect(treasure.hasAttribute('srcset')).toBe(false);
     expect(treasure.getAttribute('src')).toBe('assets/images/arcade/cadeau_ouvert.png');
+    adventure.stop();
+  });
+});
+
+describe('Personnage de la scène : la source haute définition du catalogue', () => {
+  const character = () => document.querySelector('#adventure-character img');
+
+  test.each([
+    ['fox', 'fox_left_128x128.png', true],
+    ['astronaut', 'astronaut_left_128x128.png', true],
+    ['panda', 'panda_right_128x128.png', false],
+    ['dragon', 'dragon_right_128x128.png', false],
+  ])('%s : WebP de sa source de 1024 px, repli %s', async (avatar, fallback, mirrored) => {
+    gameState.avatar = avatar;
+    const adventure = await startFirstLevel();
+    const img = character();
+    expect(candidates(img)).toEqual([
+      `${GENERATED}${avatar}-128.webp 128w`,
+      `${GENERATED}${avatar}-256.webp 256w`,
+    ]);
+    expect(img.getAttribute('sizes')).toBe(SCENE_SIZES);
+    expect(img.dataset.fallback).toBe(`assets/images/arcade/${fallback}`);
+    expect(existsSync(img.dataset.fallback)).toBe(true);
+    // Le renard et l'astronaute regardent à gauche dans leur source (et leur repli) : retournés,
+    // ils marchent vers le trésor comme les autres
+    expect(img.classList.contains('is-mirrored')).toBe(mirrored);
+    adventure.stop();
+  });
+
+  test('sans variantes : le petit PNG du même côté, toujours retourné', async () => {
+    gameState.avatar = 'fox';
+    const adventure = await startFirstLevel();
+    const img = character();
+    img.dispatchEvent(new Event('error'));
+    expect(img.hasAttribute('srcset')).toBe(false);
+    expect(img.getAttribute('src')).toBe('assets/images/arcade/fox_left_128x128.png');
+    expect(img.classList.contains('is-mirrored')).toBe(true);
+    adventure.stop();
+  });
+
+  test('avatar inconnu ou piégé : le renard', async () => {
+    gameState.avatar = '../evil" onerror="x';
+    const adventure = await startFirstLevel();
+    expect(character().dataset.fallback).toBe('assets/images/arcade/fox_left_128x128.png');
     adventure.stop();
   });
 });

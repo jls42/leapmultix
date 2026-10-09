@@ -12,7 +12,7 @@ import { eventBus } from '../core/eventBus.js';
 import { getAllBadges } from '../badges.js';
 import { VideoManager } from '../VideoManager.js';
 import { getTranslation } from '../utils-es6.js';
-import { setSafeContentWithImage, createSafeElement } from '../security-utils.js';
+import { createSafeElement } from '../security-utils.js';
 import { ADVENTURE_LEVELS } from '../core/adventure-data.js';
 import {
   normalizeChronoStats,
@@ -31,6 +31,7 @@ import {
 import { getCurrentLanguage } from '../i18n-store.js';
 import { createIcon } from './icons.js';
 import { createWebpImage } from '../webp-images.js';
+import { HEAD_SIZES, normalizeAvatarId, setAvatarHead } from '../avatar-heads.js';
 
 const MAX_STARS = 3;
 const TABLE_COUNT = 10;
@@ -546,14 +547,7 @@ export const Dashboard = {
     const userData = UserState.getCurrentUserData();
 
     // Mettre à jour l'avatar et le nom
-    const avatarEl = document.getElementById('dashboard-avatar');
-    setSafeContentWithImage(avatarEl, {
-      imageSrc: `assets/images/arcade/${userData.avatar || 'fox'}_head_avatar_128x128.png`,
-      imageAlt: getTranslation(userData.avatar || 'fox'),
-      width: '100',
-      height: '100',
-      imageClass: 'img-responsive',
-    });
+    this.showAvatar(userData.avatar);
     const nicknameEl = document.getElementById('dashboard-nickname');
     if (nicknameEl) nicknameEl.textContent = userData.nickname || '';
 
@@ -578,6 +572,24 @@ export const Dashboard = {
     // Scores et statistiques par mode
     if (isNew) document.getElementById('dashboard-scores-section')?.remove();
     else this.generateScoresSection();
+  },
+
+  /**
+   * Tête de l'avatar du joueur, nommée pour un lecteur d'écran
+   * @param {string} [avatarId]
+   */
+  showAvatar(avatarId) {
+    const avatarEl = document.getElementById('dashboard-avatar');
+    if (!avatarEl) return;
+    const avatar = normalizeAvatarId(avatarId);
+    const img = createSafeElement('img', '', {
+      class: 'img-responsive',
+      width: '100',
+      height: '100',
+      alt: getTranslation(avatar),
+    });
+    setAvatarHead(img, avatar, HEAD_SIZES.dashboard);
+    avatarEl.replaceChildren(img);
   },
 
   /**

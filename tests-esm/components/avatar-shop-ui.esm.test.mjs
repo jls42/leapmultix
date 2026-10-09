@@ -22,7 +22,6 @@ const SHOP = `
     <p id="avatar-shop-intro" class="avatar-shop-intro"></p>
     <div class="avatar-shop-list"></div>
   </div>`;
-const headSrc = avatar => `assets/images/arcade/${avatar}_head_avatar_128x128.png`;
 
 const zoe = coins => ({ nickname: 'Zoé', avatar: 'fox', coins, unlockedAvatars: ['fox'] });
 const shopButtons = () => [...document.querySelectorAll('#avatar-shop button')];
@@ -65,7 +64,7 @@ afterEach(() => {
 describe('Boutique des avatars', () => {
   test('un bouton par avatar verrouillé, nommé avec son prix, décrit par le solde', () => {
     play(zoe(62));
-    renderAvatarShop(['panda', 'dragon'], headSrc);
+    renderAvatarShop(['panda', 'dragon']);
     const shop = document.getElementById('avatar-shop');
     expect(shop.hidden).toBe(false);
     expect(document.getElementById('avatar-shop-intro').textContent).toBe(
@@ -80,19 +79,26 @@ describe('Boutique des avatars', () => {
       expect(button.type).toBe('button');
       expect(button.getAttribute('aria-describedby')).toBe('avatar-shop-intro');
       expect(button.querySelector('img').getAttribute('alt')).toBe('');
+      // La tête de l'avatar, à la taille de ceux du joueur (js/avatar-heads.js)
+      expect(button.querySelector('img').dataset.fallback).toBe(
+        `assets/images/arcade/${button.dataset.avatar}_head_avatar_128x128.png`
+      );
+      expect(button.querySelector('img').getAttribute('sizes')).toBe(
+        '(max-width: 480px) 56px, 72px'
+      );
     }
   });
 
   test('tout est débloqué : la boutique disparaît', () => {
     play(zoe(62));
-    renderAvatarShop([], headSrc);
+    renderAvatarShop([]);
     expect(document.getElementById('avatar-shop').hidden).toBe(true);
     expect(shopButtons()).toHaveLength(0);
   });
 
   test('assez de pièces : « Débloquer » débloque, débite, enregistre et prévient', async () => {
     play(zoe(62));
-    renderAvatarShop(['panda', 'dragon'], headSrc);
+    renderAvatarShop(['panda', 'dragon']);
     await touch('Dragon');
     expect(dialogText()).toContain('Débloquer l’avatar Dragon pour 50 pièces ?');
     expect(dialogText()).toContain('Il te restera 12 pièces.');
@@ -113,7 +119,7 @@ describe('Boutique des avatars', () => {
 
   test('« Pas maintenant » ne change rien', async () => {
     play(zoe(62));
-    renderAvatarShop(['dragon'], headSrc);
+    renderAvatarShop(['dragon']);
     await touch('Dragon');
     buttonNamed('Pas maintenant').click();
     await flush();
@@ -124,7 +130,7 @@ describe('Boutique des avatars', () => {
 
   test('pas assez de pièces : la fenêtre dit combien il en manque, rien ne change', async () => {
     play(zoe(37));
-    renderAvatarShop(['dragon'], headSrc);
+    renderAvatarShop(['dragon']);
     await touch('Dragon');
     expect(dialogText()).toContain('Il te manque 13 pièces pour débloquer l’avatar Dragon.');
     expect(dialogText()).toContain('Chrono');
@@ -139,7 +145,7 @@ describe('Boutique des avatars', () => {
 
   test('changement de langue : le solde et les prix suivent', () => {
     play(zoe(1));
-    renderAvatarShop(['dragon'], headSrc);
+    renderAvatarShop(['dragon']);
     setTranslations(EN);
     eventBus.emit('languageChanged', { lang: 'en' });
     expect(document.getElementById('avatar-shop-intro').textContent).toBe(

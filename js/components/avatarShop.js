@@ -9,6 +9,7 @@
  * avatars ne propose que des choix possibles. Rien n'est lu à voix haute.
  */
 import { AVATAR_PRICE, buyAvatar, coinBalance, missingCoins } from '../core/avatar-shop.js';
+import { HEAD_SIZES, setAvatarHead } from '../avatar-heads.js';
 import { UserState } from '../core/userState.js';
 import { eventBus } from '../core/eventBus.js';
 import { gameState } from '../game.js';
@@ -91,17 +92,17 @@ function priceTag() {
 /**
  * Bouton d'un avatar à débloquer : son visage, son nom, son prix et le cadenas
  * @param {string} avatarId
- * @param {(avatarId: string) => string} headSrc
  * @returns {HTMLButtonElement}
  */
-function shopButton(avatarId, headSrc) {
+function shopButton(avatarId) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'avatar-btn avatar-buy-btn';
   button.dataset.avatar = avatarId;
   button.setAttribute('aria-describedby', INTRO_ID);
   const img = document.createElement('img');
-  img.src = headSrc(avatarId);
+  // La même taille que les avatars du joueur, juste au-dessus
+  setAvatarHead(img, avatarId, HEAD_SIZES.choice);
   img.width = 100;
   img.height = 100;
   img.alt = '';
@@ -124,15 +125,14 @@ function shopButton(avatarId, headSrc) {
  * Boutons des avatars à débloquer, sous la grille ; la boutique disparaît quand tout est
  * débloqué
  * @param {string[]} lockedAvatars - Identifiants, dans l'ordre de la grille
- * @param {(avatarId: string) => string} headSrc - Image du visage d'un avatar
  */
-export function renderAvatarShop(lockedAvatars, headSrc) {
+export function renderAvatarShop(lockedAvatars) {
   const shop = document.getElementById(SHOP_ID);
   if (!shop) return;
   shop.hidden = lockedAvatars.length === 0;
   shop
     .querySelector('.avatar-shop-list')
-    ?.replaceChildren(...lockedAvatars.map(avatarId => shopButton(avatarId, headSrc)));
+    ?.replaceChildren(...lockedAvatars.map(avatarId => shopButton(avatarId)));
   writeShopTexts();
 }
 

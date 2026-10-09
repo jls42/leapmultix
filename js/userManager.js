@@ -9,7 +9,7 @@ import {
   updateWelcomeMessageUI,
   updateCoinDisplay,
 } from './utils-es6.js';
-import { getAvatarHeadSrc } from './main-helpers.js';
+import { HEAD_SIZES, setAvatarHead } from './avatar-heads.js';
 import { getCurrentLanguage } from './i18n-store.js';
 import Storage from './core/storage.js';
 import { checkUsername, normalizeUsername, USERNAME_MAX_LENGTH } from './security-utils.js';
@@ -328,8 +328,7 @@ export const UserManager = {
 
     const heroMascotImg = document.getElementById('hero-mascot-img');
     if (heroMascotImg) {
-      // Visage 128 px : la mascotte est affichée à 72 px au plus
-      heroMascotImg.src = getAvatarHeadSrc(avatar);
+      setAvatarHead(heroMascotImg, avatar, HEAD_SIZES.mascot);
       // Décorative : la bulle porte le message
       heroMascotImg.alt = '';
     }
@@ -761,7 +760,7 @@ export const UserManager = {
     tile.className = 'user-tile';
     const face = document.createElement('img');
     face.className = 'user-tile-face';
-    face.src = getAvatarHeadSrc(this._players[name]?.avatar);
+    setAvatarHead(face, Reflect.get(this._players, name)?.avatar, HEAD_SIZES.tile);
     face.alt = '';
     face.width = 72;
     face.height = 72;

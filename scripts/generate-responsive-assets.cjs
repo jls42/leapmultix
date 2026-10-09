@@ -37,8 +37,9 @@ const RESOLUTION_TARGETS = {
 const ASSET_PATTERNS = {
   monsters: /monstre\d+/i,
   // Logos des modes (accueil, tableau de bord) et des jeux (menu de l'Arcade), cadeaux de
-  // l'Aventure : affichés de 56 à 144 px, jusqu'à 512 pour un écran de densité 3
-  illustrations: /logo_(?:mode|multi)|cadeau_/i,
+  // l'Aventure, têtes des avatars (leur source de 1024 px) : affichés de 40 à 144 px,
+  // jusqu'à 512 pour un écran de densité 3
+  illustrations: /logo_(?:mode|multi)|cadeau_|_head_avatar\.png$/i,
   ui: /button|icon|arrow/i,
   backgrounds: /background|bg_/i,
 };
@@ -267,7 +268,7 @@ class ResponsiveAssetGenerator {
         )
       );
     } else if (ASSET_PATTERNS.illustrations.test(filename)) {
-      // Logos et cadeaux : résolutions moyennes
+      // Logos, cadeaux et têtes : résolutions moyennes
       ['128', '256', '512'].forEach(suffix => {
         if (RESOLUTION_TARGETS[suffix].width <= originalDimensions.width) {
           targets[suffix] = RESOLUTION_TARGETS[suffix];

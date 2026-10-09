@@ -72,19 +72,28 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
     UserManager._currentUser = null;
   });
 
-  test('getAvatarHeadSrc n’accepte que les avatars connus', () => {
-    expect(helpers.getAvatarHeadSrc('dragon')).toBe(
-      'assets/images/arcade/dragon_head_avatar_128x128.png'
+  test('normalizeAvatarId répond toujours à son ancienne adresse (main-helpers.js)', () => {
+    expect(helpers.normalizeAvatarId('licorne')).toBe('unicorn');
+    expect(helpers.normalizeAvatarId('x" onerror="alert(1)')).toBe('fox');
+  });
+
+  test('grille et boutique : la tête de chaque avatar, en WebP à la taille de la grille', () => {
+    document.body.append(...parse(SHOP));
+    helpers.renderAvatarSelector('#avatar-choice');
+    const heads = [...document.querySelectorAll('#avatar-choice img, #avatar-shop img')];
+    expect(heads.map(img => img.dataset.fallback)).toEqual(
+      ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'].map(
+        avatar => `assets/images/arcade/${avatar}_head_avatar_128x128.png`
+      )
     );
-    expect(helpers.getAvatarHeadSrc('renard')).toBe(
-      'assets/images/arcade/fox_head_avatar_128x128.png'
-    );
-    expect(helpers.getAvatarHeadSrc('x" onerror="alert(1)')).toBe(
-      'assets/images/arcade/fox_head_avatar_128x128.png'
-    );
-    expect(helpers.getAvatarHeadSrc(undefined)).toBe(
-      'assets/images/arcade/fox_head_avatar_128x128.png'
-    );
+    for (const img of heads) {
+      const avatar = /arcade\/([a-z]+)_head_avatar_128x128/.exec(img.dataset.fallback)[1];
+      expect(img.getAttribute('srcset')).toMatch(
+        new RegExp(`^assets/generated-images/arcade/${avatar}_head_avatar-128\\.webp 128w, `)
+      );
+      // css/theme-selector.css #slide6 .avatar-btn img
+      expect(img.getAttribute('sizes')).toBe('(max-width: 480px) 56px, 72px');
+    }
   });
 
   test('la grille ne propose que les avatars du joueur, en boutons radio natifs', () => {

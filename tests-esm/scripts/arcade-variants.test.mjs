@@ -89,6 +89,24 @@ describe('variantes des images d’Arcade produites par le générateur', () => 
     }
   });
 
+  test('têtes des avatars : 128, 256 et 512 depuis leur source de 1024 px', () => {
+    // Jusqu'à 96 px à l'écran (écran de fin), 288 pixels sur un écran de densité 3 ; le PNG de
+    // 128 px reste le repli, sans variante de plus
+    for (const avatar of ['fox', 'panda', 'unicorn', 'dragon', 'astronaut']) {
+      const file = `assets/images/arcade/${avatar}_head_avatar.png`;
+      expect(Object.keys(generator.getTargetResolutions(file, pngSize(file)))).toEqual([
+        '128',
+        '256',
+        '512',
+      ]);
+      const small = `assets/images/arcade/${avatar}_head_avatar_128x128.png`;
+      expect(Object.keys(generator.getTargetResolutions(small, pngSize(small)))).toEqual([
+        '64',
+        '128',
+      ]);
+    }
+  });
+
   test('la variante gardée hors ligne fait partie des variantes de chaque image', () => {
     expect(specs.filter(spec => spec.maxWidth < OFFLINE_VARIANT_WIDTH)).toEqual([]);
   });
@@ -96,8 +114,8 @@ describe('variantes des images d’Arcade produites par le générateur', () => 
   test('les autres images gardent leurs tailles (rien de plus à générer ni à déployer)', () => {
     const sizes = file => Object.keys(generator.getTargetResolutions(file, pngSize(file)));
     expect(sizes('assets/images/arcade/monstre05_right_128x128.png')).toEqual(['64', '128']);
-    // Sources de 1024 px que les jeux ne dessinent pas (en-tête, anciens sprites)
-    for (const other of ['fox_head_avatar', 'serpent1_droite']) {
+    // Source de 1024 px que les jeux ne dessinent pas (ancien sprite)
+    for (const other of ['serpent1_droite']) {
       expect(sizes(`assets/images/arcade/${other}.png`)).toEqual(['64', '128', '256']);
     }
     expect(sizes('assets/images/arcade/logo_mode_quizz.png')).toEqual(['128', '256', '512']);
@@ -121,7 +139,7 @@ describe('génération réelle (npm run assets:generate) dans un projet jetable'
       const square = size =>
         sharp({ create: { width: size, height: size, channels: 4, background: '#e67e22' } }).png();
       await square(1024).toFile(path.join(arcade, 'fox.png'));
-      await square(1024).toFile(path.join(arcade, 'fox_head_avatar.png'));
+      await square(1024).toFile(path.join(arcade, 'serpent1_droite.png'));
       const script = path.resolve('scripts/generate-responsive-assets.cjs');
       const run = spawnSync(process.execPath, [script], { cwd: project, encoding: 'utf8' });
       expect(run.status).toBe(0);
@@ -136,7 +154,7 @@ describe('génération réelle (npm run assets:generate) dans un projet jetable'
       ]);
       expect(fs.existsSync(path.join(generated, 'arcade/fox-1024.webp'))).toBe(true);
       // Une source hors du catalogue garde ses trois tailles
-      expect(Object.keys(map['arcade/fox_head_avatar'].resolutions)).toEqual(['64', '128', '256']);
+      expect(Object.keys(map['arcade/serpent1_droite'].resolutions)).toEqual(['64', '128', '256']);
     } finally {
       fs.rmSync(project, { recursive: true, force: true });
     }

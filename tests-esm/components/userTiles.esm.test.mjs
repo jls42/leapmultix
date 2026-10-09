@@ -9,6 +9,17 @@ const { VideoManager } = await import('../../js/VideoManager.js');
 const itemOf = name =>
   document.querySelector(`#user-list li.user-container[data-player="${name}"]`);
 
+/** Avatar d'une tête (js/avatar-heads.js) : ses variantes WebP et son PNG de repli */
+function headOf(img) {
+  const variants = img.getAttribute('srcset').split(', ');
+  const avatar = /arcade\/([a-z]+)_head_avatar-128\.webp 128w$/.exec(variants.at(0))?.[1];
+  expect(variants.at(-1)).toBe(
+    `assets/generated-images/arcade/${avatar}_head_avatar-512.webp 512w`
+  );
+  expect(img.dataset.fallback).toBe(`assets/images/arcade/${avatar}_head_avatar_128x128.png`);
+  return { avatar, sizes: img.getAttribute('sizes') };
+}
+
 const CREATION_MARKUP = `
   <div id="user-list" class="user-list"></div>
   <section class="new-player">
@@ -57,7 +68,8 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
     const linaTile = itemOf('Lina').querySelector('button.user-tile');
     expect(linaTile.type).toBe('button');
     const face = linaTile.querySelector('img.user-tile-face');
-    expect(face.getAttribute('src')).toBe('assets/images/arcade/panda_head_avatar_128x128.png');
+    // 72 px (css/users.css) : la variante de 256 px en densité 2 et 3
+    expect(headOf(face)).toEqual({ avatar: 'panda', sizes: '72px' });
     expect(face.getAttribute('alt')).toBe('');
     expect(linaTile.querySelector('.user-tile-name').textContent).toBe('Lina');
   });
@@ -67,8 +79,8 @@ describe('« Qui joue ? » : tuiles des profils (UserManager.refreshUserList)', 
 
     const sam = itemOf('Sam').querySelector('.user-tile-face');
     const eve = itemOf('Eve').querySelector('.user-tile-face');
-    expect(sam.getAttribute('src')).toBe('assets/images/arcade/astronaut_head_avatar_128x128.png');
-    expect(eve.getAttribute('src')).toBe('assets/images/arcade/fox_head_avatar_128x128.png');
+    expect(headOf(sam).avatar).toBe('astronaut');
+    expect(headOf(eve).avatar).toBe('fox');
   });
 
   test('« Supprimer » est un petit bouton séparé de la tuile, nommé avec le prénom', () => {

@@ -16,7 +16,7 @@
 import { GameMode } from '../core/GameMode.js';
 import { askToLeave } from '../game-exit.js';
 import { getAdventureLevelsByOperator } from '../core/adventure-data.js';
-import { createSafeImage, createSafeElement } from '../security-utils.js';
+import { createSafeElement } from '../security-utils.js';
 import {
   getTranslation,
   showCoinGainAnimation,
@@ -49,6 +49,8 @@ import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { chance, randomInt } from '../core/random.js';
 import { accessibilityManager } from '../accessibility.js';
 import { attachImageFallbacks, createWebpImage, webpImageAttributes } from '../webp-images.js';
+import { HEAD_SIZES, normalizeAvatarId, setAvatarHead } from '../avatar-heads.js';
+import { avatarSpec } from '../arcade-sprite-catalog.js';
 
 /** Nom des opérations dans les clés de traduction propres à une opération */
 const OPERATION_NAMES = { '+': 'addition', '−': 'subtraction', '÷': 'division' };
@@ -56,10 +58,10 @@ const OPERATION_NAMES = { '+': 'addition', '−': 'subtraction', '÷': 'division
 /** Étoiles au total pour le badge « Collectionneur d'étoiles » (badge_star_collector_desc) */
 const STAR_COLLECTOR_THRESHOLD = 10;
 
-// Cadeaux en WebP (js/webp-images.js), à leur taille affichée (css/adventure.css) : 72 px dans
-// la scène, 56 sur un écran de 480 px au plus ; 112 px sur l'écran de fin, 336 pixels sur un
-// écran de densité 3
-const SCENE_GIFT = { widths: [128, 256], src: 128, sizes: '(max-width: 480px) 56px, 72px' };
+// Cadeaux et personnage de la scène en WebP (js/webp-images.js), à leur taille affichée
+// (css/adventure.css) : 72 px dans la scène, 56 sur un écran de 480 px au plus ; 112 px sur
+// l'écran de fin, 336 pixels sur un écran de densité 3
+const SCENE_IMAGE = { widths: [128, 256], src: 128, sizes: '(max-width: 480px) 56px, 72px' };
 const RESULTS_GIFT = { widths: [128, 256, 512], src: 256, sizes: '112px' };
 
 /**
@@ -199,7 +201,7 @@ export class AdventureMode extends GameMode {
   getLevelHTML() {
     // Nommé hors du gabarit : la liste hors ligne (scripts/precache-list.mjs) lit les noms
     // d'images du code, pas ceux écrits dans un ${…}
-    const closedGift = webpImageAttributes('cadeau_ferme.png', SCENE_GIFT);
+    const closedGift = webpImageAttributes('cadeau_ferme.png', SCENE_IMAGE);
     return `
                 <div class="adventure-level-header">
                     <h2 class="section-title" data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h2>
@@ -652,7 +654,7 @@ export class AdventureMode extends GameMode {
     document
       .getElementById('adventure-treasure')
       ?.replaceChildren(
-        createWebpImage('cadeau_ouvert.png', SCENE_GIFT, { width: '72', height: '72' })
+        createWebpImage('cadeau_ouvert.png', SCENE_IMAGE, { width: '72', height: '72' })
       );
 
     this.addTimer(() => {
@@ -1122,22 +1124,29 @@ export class AdventureMode extends GameMode {
   updateAdventureAvatar() {
     const avatarEl = document.getElementById('adventure-avatar');
     if (avatarEl && gameState?.avatar) {
-      avatarEl.textContent = '';
-      const img = createSafeImage(
-        `assets/images/arcade/${gameState.avatar}_head_avatar_128x128.png`,
-        getTranslation(gameState.avatar),
-        { width: '88', height: '88' }
-      );
-      avatarEl.appendChild(img);
+      const avatar = normalizeAvatarId(gameState.avatar);
+      const img = createSafeElement('img', '', {
+        width: '88',
+        height: '88',
+        alt: getTranslation(avatar),
+      });
+      setAvatarHead(img, avatar, HEAD_SIZES.adventureMap);
+      avatarEl.replaceChildren(img);
     }
   }
 
   /**
-   * Obtenir l'avatar du joueur
+   * Personnage de la scène : la source haute définition du catalogue des images d'Arcade, à sa
+   * taille affichée, son petit PNG en repli. Le renard et l'astronaute y regardent à gauche :
+   * retournés (css/adventure.css), ils marchent vers le trésor comme les autres.
+   * @returns {string}
    */
   getPlayerAvatar() {
-    const avatar = gameState?.avatar || 'fox';
-    return `<img src="assets/images/arcade/${avatar}_right_128x128.png" width="72" height="72" alt="${getTranslation(avatar)}" />`;
+    const avatar = normalizeAvatarId(gameState?.avatar);
+    const sprite = avatarSpec(avatar);
+    const image = webpImageAttributes(sprite.fallbacks.at(0), SCENE_IMAGE, sprite.source);
+    const facing = sprite.facing === 'left' ? ' class="is-mirrored"' : '';
+    return `<img ${image}${facing} width="72" height="72" alt="${getTranslation(avatar)}" />`;
   }
 
   /**

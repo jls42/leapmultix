@@ -5,11 +5,19 @@ import { gameState } from './game.js';
 import Storage from './core/storage.js';
 import { renderAvatarShop } from './components/avatarShop.js';
 import { pickRandom } from './core/random.js';
+import {
+  AVATAR_IDS,
+  DEFAULT_AVATAR,
+  HEAD_SIZES,
+  normalizeAvatarId,
+  resolveAvatarAlias,
+  setAvatarHead,
+} from './avatar-heads.js';
 
-const AVATAR_LIST = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
-// Anciennes valeurs françaises encore présentes dans certains profils enregistrés
-const AVATAR_ALIASES = { renard: 'fox', licorne: 'unicorn', astronaute: 'astronaut' };
-const DEFAULT_AVATAR = 'fox';
+// Ancienne adresse de la liste blanche des avatars (js/avatar-heads.js) : un module qui
+// l'importe encore d'ici la trouve toujours
+export { normalizeAvatarId };
+
 const HERO_IMAGE_BY_LANG = {
   fr: 'assets/social/leapmultix-social-card.webp',
   en: 'assets/social/leapmultix-social-card.webp',
@@ -20,26 +28,6 @@ const HERO_DEFAULT_LANG = 'fr';
 const WELCOME_FALLBACK = 'Salut {nickname} ! On joue à quoi aujourd’hui ?';
 
 const isMissingTranslation = value => typeof value !== 'string' || /^\[.*\]$/.test(value);
-
-/**
- * Ramène un identifiant d'avatar (éventuellement ancien ou inconnu) à un avatar connu.
- * @param {string} [avatarId]
- * @returns {string} Identifiant de la liste AVATAR_LIST (renard par défaut)
- */
-export function normalizeAvatarId(avatarId) {
-  const resolved = AVATAR_ALIASES[avatarId] || avatarId;
-  return AVATAR_LIST.includes(resolved) ? resolved : DEFAULT_AVATAR;
-}
-
-/**
- * Chemin du visage (128×128) d'un avatar. L'identifiant est filtré par une liste
- * blanche : une valeur inattendue venant du stockage ne peut pas composer une URL.
- * @param {string} [avatarId]
- * @returns {string}
- */
-export function getAvatarHeadSrc(avatarId) {
-  return `assets/images/arcade/${normalizeAvatarId(avatarId)}_head_avatar_128x128.png`;
-}
 
 function resolveAvatarSelector(target) {
   if (!target) {
@@ -74,7 +62,7 @@ function avatarChoice(avatarName, checked) {
   radio.checked = checked;
   const labelRaw = getTranslation(avatarName);
   const img = document.createElement('img');
-  img.src = getAvatarHeadSrc(avatarName);
+  setAvatarHead(img, avatarName, HEAD_SIZES.choice);
   img.width = 100;
   img.height = 100;
   // Le nom visible donne déjà le nom accessible du bouton
@@ -106,11 +94,11 @@ export function renderAvatarSelector(target) {
   const isLocked = avatarName => avatarName !== current && !unlocked.includes(avatarName);
 
   avatarSelector.replaceChildren(
-    ...AVATAR_LIST.filter(avatarName => !isLocked(avatarName)).map(avatarName =>
+    ...AVATAR_IDS.filter(avatarName => !isLocked(avatarName)).map(avatarName =>
       avatarChoice(avatarName, avatarName === current)
     )
   );
-  renderAvatarShop(AVATAR_LIST.filter(isLocked), getAvatarHeadSrc);
+  renderAvatarShop(AVATAR_IDS.filter(isLocked));
 }
 
 /**
@@ -139,7 +127,7 @@ export async function updateWelcomeMessageUI() {
 }
 
 export function pickRandomAvatarId() {
-  const list = AVATAR_LIST;
+  const list = AVATAR_IDS;
   if (!Array.isArray(list) || list.length === 0) return 'fox';
   return pickRandom(list);
 }
@@ -220,7 +208,7 @@ function chooseImageNumber(avatarKey, available) {
 export function updateBackgroundByAvatar(avatarId) {
   const requested =
     avatarId || gameState?.avatar || UserState.getCurrentUserData()?.avatar || DEFAULT_AVATAR;
-  const resolved = AVATAR_ALIASES[requested] || requested;
+  const resolved = resolveAvatarAlias(requested);
 
   let available = avatarAvailableImages[resolved];
   let effective = resolved;
