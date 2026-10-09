@@ -15,7 +15,7 @@ import { initPacmanControls } from './multimiam-controls.js';
 import { initPacmanUI } from './multimiam-ui.js';
 import { showArcadeGameOver } from './arcade.js';
 import { createArcadeToast, getArcadeText } from './arcade-message.js';
-import { getArcadeCanvasBox, watchArcadeViewport } from './arcade-common.js';
+import { getArcadeCanvasBox, watchArcadeViewport, renderArcadeCanvas } from './arcade-common.js';
 import { cleanupGameResources } from './game-cleanup.js';
 import { chooseMazeLayout, fitMazeCells } from './multimiam-layout.js';
 
@@ -142,7 +142,7 @@ export class PacmanGame {
   // plateau sur toute la hauteur disponible, jusqu'à « Abandonner », comme dans les autres
   // jeux. Si les cases, plafonnées presque carrées, ne remplissent pas toute la hauteur (écran
   // très allongé), le labyrinthe s'y centre entre deux bandes de mur (css/arcade.css) ; les
-  // clics et les touchers suivent (object-fit, lu par js/multimiam-controls.js).
+  // clics et les touchers suivent (object-fit, converti par js/arcade-common.js).
   applyCanvasStyles(width, height, boardHeight = height) {
     const shownHeight = Math.max(height, boardHeight);
     this.canvas.style.width = width + 'px';
@@ -204,14 +204,14 @@ export class PacmanGame {
     ));
     this.cellSize = Math.min(this.cellWidth, this.cellHeight);
 
-    // Taille du dessin du labyrinthe (pixels du jeu), que suit le canevas
+    // Taille du dessin du labyrinthe, en unités du jeu
     this.boardWidth = this.cellWidth * across;
     this.boardHeight = this.cellHeight * down;
-    this.canvas.width = this.boardWidth;
-    this.canvas.height = this.boardHeight;
 
-    // IMPORTANT: Appliquer les styles CSS APRÈS avoir défini les dimensions internes
-    // pour éviter un décalage entre taille CSS et taille interne du canvas
+    // Le labyrinthe entier en unités du jeu, net à la densité de l'écran ; l'élément prend
+    // ensuite la hauteur du plateau (bandes de mur éventuelles, object-fit) : les clics et
+    // les touchers se convertissent en unités du jeu (js/arcade-common.js)
+    renderArcadeCanvas(this.canvas, this.boardWidth, this.boardHeight);
     this.applyCanvasStyles(this.boardWidth, this.boardHeight, dimensions.height);
   }
 

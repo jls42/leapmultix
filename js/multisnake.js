@@ -11,6 +11,8 @@ import {
   readableCanvasFontSize,
   canvasToClientPoint,
   watchArcadeViewport,
+  sizeArcadeCanvas,
+  getArcadeCanvasSize,
 } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
 import { recordOperationResult } from './core/operation-stats.js';
@@ -348,17 +350,9 @@ class SnakeGame {
       Math.floor(Math.min(box.width / this.cols, box.height / this.rows))
     );
 
-    // Le canevas correspond exactement à la grille, affiché à sa taille réelle
-    this.canvas.width = this.cols * this.cellSize;
-    this.canvas.height = this.rows * this.cellSize;
-    this.canvas.style.width = this.canvas.width + 'px';
-    this.canvas.style.height = this.canvas.height + 'px';
-    if (this.isMobile) {
-      // Assurer image-rendering pixel-perfect
-      this.canvas.style.imageRendering = 'pixelated';
-      this.canvas.style.imageRendering = '-moz-crisp-edges';
-      this.canvas.style.imageRendering = 'crisp-edges';
-    }
+    // Le canevas correspond exactement à la grille, affiché à sa taille, net à la densité
+    // de l'écran : les touchers se convertissent en unités du jeu (js/arcade-common.js)
+    sizeArcadeCanvas(this.canvas, this.cols * this.cellSize, this.rows * this.cellSize);
 
     this.canvas.style.display = 'block';
     this.canvas.style.margin = '0 auto';
@@ -367,7 +361,7 @@ class SnakeGame {
     this.canvas.style.boxSizing = 'content-box';
 
     console.log(
-      `Snake: Canvas redimensionné: ${this.canvas.width}x${this.canvas.height}, grille: ${this.cols}x${this.rows}, cellule: ${this.cellSize}px`
+      `Snake: plateau ${this.cols * this.cellSize}x${this.rows * this.cellSize} (interne ${this.canvas.width}x${this.canvas.height}), grille: ${this.cols}x${this.rows}, cellule: ${this.cellSize}px`
     );
   }
 
@@ -917,13 +911,20 @@ class SnakeGame {
   // Dessiner le jeu
   draw() {
     if (!this.ctx || !this.canvas) return;
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const { width, height } = getArcadeCanvasSize(this.canvas);
+    this.ctx.clearRect(0, 0, width, height);
 
     // L'herbe couvre tout le plateau, à ses proportions (rognée aux bords)
-    const board = { x: 0, y: 0, width: this.canvas.width, height: this.canvas.height };
-    if (!drawArcadeSprite(this.ctx, this.grassTexture, board, { fit: 'cover' })) {
+    if (
+      !drawArcadeSprite(
+        this.ctx,
+        this.grassTexture,
+        { x: 0, y: 0, width, height },
+        { fit: 'cover' }
+      )
+    ) {
       this.ctx.fillStyle = '#000000';
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(0, 0, width, height);
     }
 
     // Dessiner les nombres

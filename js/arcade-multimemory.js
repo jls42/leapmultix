@@ -30,6 +30,9 @@ import {
   getArcadeCanvasBox,
   clientToCanvasPoint,
   watchArcadeViewport,
+  sizeArcadeCanvas,
+  getArcadeCanvasSize,
+  canvasPixelScale,
 } from './arcade-common.js';
 import { getDifficultySettings } from './difficulty.js';
 import { TablePreferences } from './core/tablePreferences.js';
@@ -40,6 +43,8 @@ import { isArcadePaused, isNoTimeLimit } from './arcade-time.js';
 // Dépend des helpers ESM (plus d'assignations window.*)
 
 const FULL_TABLE_SET = Array.from({ length: 10 }, (_, i) => i + 1);
+// Largeur de l'image arrivée d'une image d'Arcade (0 tant qu'elle n'est pas là)
+const imageWidth = sprite => sprite?.image?.naturalWidth ?? 0;
 
 // Clavier : la carte visée se déplace aux flèches ([colonnes, lignes]), se retourne à
 // Entrée ou à Espace
@@ -591,10 +596,12 @@ class MemoryGame {
     if (!this.canvas?.isConnected || !this.cols) return;
 
     const card = memoryCardSize(this.cols, this.rows, getArcadeCanvasBox(this.canvas), this.margin);
-    this.canvas.width = this.cols * card.width + this.margin * (this.cols + 1);
-    this.canvas.height = this.rows * card.height + this.margin * (this.rows + 1);
-    this.canvas.style.width = `${this.canvas.width}px`;
-    this.canvas.style.height = `${this.canvas.height}px`;
+    // Affiché à sa taille, net à la densité de l'écran (js/arcade-common.js)
+    sizeArcadeCanvas(
+      this.canvas,
+      this.cols * card.width + this.margin * (this.cols + 1),
+      this.rows * card.height + this.margin * (this.rows + 1)
+    );
 
     this.calculateCardDimensions();
     this.positionCards();
@@ -782,8 +789,9 @@ class MemoryGame {
 
   // Calcule les dimensions des cartes dans la disposition choisie (layoutBoard)
   calculateCardDimensions() {
-    const availableWidth = this.canvas.width - this.margin * (this.cols + 1);
-    const availableHeight = this.canvas.height - this.margin * (this.rows + 1);
+    const board = getArcadeCanvasSize(this.canvas);
+    const availableWidth = board.width - this.margin * (this.cols + 1);
+    const availableHeight = board.height - this.margin * (this.rows + 1);
     this.cardWidth = availableWidth / this.cols;
     this.cardHeight = availableHeight / this.rows;
   }
@@ -795,8 +803,9 @@ class MemoryGame {
     const gridHeight = this.rows * this.cardHeight + (this.rows - 1) * this.margin;
 
     // Calculer offset pour centrer la grille
-    const offsetX = Math.floor((this.canvas.width - gridWidth) / 2);
-    const offsetY = Math.floor((this.canvas.height - gridHeight) / 2);
+    const board = getArcadeCanvasSize(this.canvas);
+    const offsetX = Math.floor((board.width - gridWidth) / 2);
+    const offsetY = Math.floor((board.height - gridHeight) / 2);
 
     // Positionner chaque carte avec des coordonnées entières pour éviter les problèmes d'arrondi
     for (let i = 0; i < this.cards.length; i++) {
@@ -1019,8 +1028,10 @@ class MemoryGame {
 
   // Dessine le jeu
   draw() {
-    // Effacer le canvas
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.drawnSignature = this.boardSignature();
+    // Effacer le plateau (unités du jeu)
+    const board = getArcadeCanvasSize(this.canvas);
+    this.ctx.clearRect(0, 0, board.width, board.height);
 
     // Dessiner l'arrière-plan
     this.drawBackground();
@@ -1070,12 +1081,13 @@ class MemoryGame {
   // Dessine l'arrière-plan du jeu
   drawBackground() {
     // Dégradé de fond simple
-    const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+    const board = getArcadeCanvasSize(this.canvas);
+    const gradient = this.ctx.createLinearGradient(0, 0, 0, board.height);
     gradient.addColorStop(0, '#4A148C');
     gradient.addColorStop(1, '#7B1FA2');
 
     this.ctx.fillStyle = gradient;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillRect(0, 0, board.width, board.height);
   }
 
   // Dessine une carte
@@ -1086,11 +1098,13 @@ class MemoryGame {
     this.ctx.save();
     this.ctx.globalAlpha = opacity;
 
-    // Effet d'ombre pour toutes les cartes
+    // Effet d'ombre pour toutes les cartes ; une ombre ne suit pas la transformation du
+    // contexte : à la densité de l'écran
+    const shadow = canvasPixelScale(this.canvas);
     this.ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    this.ctx.shadowBlur = 5;
-    this.ctx.shadowOffsetX = 2;
-    this.ctx.shadowOffsetY = 2;
+    this.ctx.shadowBlur = 5 * shadow;
+    this.ctx.shadowOffsetX = 2 * shadow;
+    this.ctx.shadowOffsetY = 2 * shadow;
 
     // Forme arrondie
     this.pathRoundedRect(cardX, cardY, cardWidth, cardHeight, 10);
@@ -1193,6 +1207,9 @@ class MemoryGame {
       this.drawCardQuestionMark(cardX, cardY, cardWidth, cardHeight);
       return;
     }
+    // L'ombre est celle de la carte : ni la texture ni le monstre n'en portent une à eux (à
+    // la densité de l'écran, une ombre floue par image coûtait deux tiers des images par seconde)
+    this.ctx.shadowColor = 'transparent';
     const cardBox = { x: cardX, y: cardY, width: cardWidth, height: cardHeight };
     drawArcadeSprite(this.ctx, this.cardBack, cardBox, { fit: 'cover' });
     const monsterBox = {
@@ -1212,10 +1229,36 @@ class MemoryGame {
     this.ctx.fillText('?', cardX + cardWidth / 2, cardY + cardHeight / 2);
   }
 
+  /**
+   * Ce que montre le plateau : sa taille, chaque carte (place, état, animation, image
+   * arrivée), la carte survolée, la carte visée au clavier, la police chargée
+   * @returns {string}
+   */
+  boardSignature() {
+    const hovered = this.getCardAtPosition(this.lastMousePos.x, this.lastMousePos.y);
+    const cursor = this.isKeyboardCursorVisible() ? this.cursorIndex : -1;
+    const fonts = globalThis.document?.fonts?.status;
+    const board = [this.canvas.width, this.canvas.height, this.cards.indexOf(hovered), cursor];
+    const cards = this.cards.map(card => this.cardSignature(card));
+    return [...board, imageWidth(this.cardBack), fonts, ...cards].join('|');
+  }
+
+  cardSignature(card) {
+    const { x, y, width, height, isFlipped, isMatched, victoryScale, victoryOpacity } = card;
+    const shown = [x, y, width, height, isFlipped, isMatched, victoryScale, victoryOpacity];
+    return [...shown, imageWidth(this.monsterOf(card))].join(',');
+  }
+
+  // Redessine le plateau s'il a changé depuis le dernier dessin : à la densité de l'écran,
+  // seize cartes et leurs ombres redessinées à chaque image coûtaient des images par seconde
+  drawIfChanged() {
+    if (this.boardSignature() !== this.drawnSignature) this.draw();
+  }
+
   // Boucle principale du jeu
   gameLoop() {
     if (!this.isGameOver && isArcadeActive()) {
-      this.draw();
+      this.drawIfChanged();
       this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
       this.animations.push(this.gameLoopId);
     }

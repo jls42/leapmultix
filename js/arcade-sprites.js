@@ -11,22 +11,11 @@
    ===================== */
 
 import { variantUrl, fallbackUrl, variantWidth } from './arcade-sprite-catalog.js';
-import { getCanvasDisplayScale } from './arcade-common.js';
+import { getCanvasDisplayScale, arcadePixelRatio } from './arcade-common.js';
 
 /**
- * Densité d'écran retenue pour les images (et les canevas) : au-delà de 3, la différence
- * ne se voit plus à distance de jeu, et les images et les canevas grossiraient pour rien.
- */
-export const MAX_PIXEL_RATIO = 3;
-
-/** @returns {number} Densité de l'écran, entre 1 et MAX_PIXEL_RATIO */
-export function arcadePixelRatio() {
-  const ratio = Number(globalThis.devicePixelRatio) || 1;
-  return Math.min(MAX_PIXEL_RATIO, Math.max(1, ratio));
-}
-
-/**
- * Pixels de l'écran par unité du jeu sur ce canevas.
+ * Pixels de l'écran par unité du jeu sur ce canevas (densité plafonnée comme celle des
+ * canevas, js/arcade-common.js).
  * @param {HTMLCanvasElement} canvas
  * @returns {number}
  */

@@ -10,6 +10,7 @@ const {
   showGameInstructions,
   getArcadeCanvasBox,
   fitArcadeCanvas,
+  getArcadeCanvasSize,
   readableCanvasFontSize,
   watchArcadeViewport,
   STAGE_CHANGE_EVENT,
@@ -281,7 +282,16 @@ describe('Place du plateau en plein écran', () => {
 });
 
 describe('Mise à l’échelle du plateau sans changer la partie', () => {
-  test('le dessin garde sa taille interne et ses proportions, l’affichage remplit la place', () => {
+  const realGetContext = HTMLCanvasElement.prototype.getContext;
+  // jsdom ne dessine pas : un contexte qui reçoit la transformation (densité de l'écran)
+  beforeEach(() => {
+    HTMLCanvasElement.prototype.getContext = () => ({ setTransform() {} });
+  });
+  afterEach(() => {
+    HTMLCanvasElement.prototype.getContext = realGetContext;
+  });
+
+  test('la partie garde sa taille et ses proportions, l’affichage remplit la place', () => {
     const { canvas } = renderStage();
     canvas.width = 400;
     canvas.height = 600;
@@ -290,7 +300,10 @@ describe('Mise à l’échelle du plateau sans changer la partie', () => {
     // Plus de place (plein écran) : le plateau grandit, toujours sans déformation
     fitArcadeCanvas(canvas, { width: 1000, height: 900 });
     expect([canvas.style.width, canvas.style.height]).toEqual(['600px', '900px']);
-    expect([canvas.width, canvas.height]).toEqual([400, 600]);
+    // La partie (unités du jeu) ne change pas ; la taille interne suit l'affichage
+    // (densité 1 ici : js/arcade-canvas-density pour les écrans denses)
+    expect(getArcadeCanvasSize(canvas)).toEqual({ width: 400, height: 600 });
+    expect([canvas.width, canvas.height]).toEqual([600, 900]);
   });
 
   test('les nombres restent lisibles aussitôt après une mise à l’échelle', () => {

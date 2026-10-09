@@ -12,7 +12,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
+const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
 const { startStaticServer } = require('../../utils/static-server.cjs');
 
 // Sans images générées (CI : npm run assets:generate ne tourne qu'au déploiement), les jeux
@@ -99,17 +99,23 @@ async function launchGame(page, game) {
 }
 
 async function backToArcadeMenu(page) {
+  // « Abandonner » demande confirmation (js/game-exit.js)
   await pressButton(page, '#game [id$="abandon-btn"]');
+  await answerGameDialog(page, true);
   await pressButton(page, '#arcade-back-btn');
 }
 
 /**
- * Images dessinées une fois la partie posée : l'espion repart de zéro après le chargement,
- * puis note quelques dizaines d'images (les variantes plus grandes ont eu le temps d'arriver)
+ * Images dessinées une fois la partie posée : l'espion repart de zéro après le chargement
+ * (les variantes plus grandes ont eu le temps d'arriver), puis note les images suivantes.
+ * MultiMemory ne redessine qu'un plateau qui change : un redimensionnement le redessine.
  */
 async function settledSprites(page) {
   await pause(2500);
-  await page.evaluate(() => globalThis.__sprites.clear());
+  await page.evaluate(() => {
+    globalThis.__sprites.clear();
+    globalThis.dispatchEvent(new Event('resize'));
+  });
   await pause(800);
   return page.evaluate(() => [...globalThis.__sprites.values()]);
 }
