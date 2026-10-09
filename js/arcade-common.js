@@ -438,19 +438,126 @@ export function getArcadeCanvasBox(canvas, { minWidth = 200, minHeight = 160 } =
   return { width: Math.max(minWidth, width), height: Math.max(minHeight, height) };
 }
 
+/* =====================
+   Canevas à la densité de l'écran
+   - Chaque jeu dessine en unités du jeu : la taille de son plateau (grille × case, ou
+     taille choisie au lancement pour MultiInvaders). La taille interne du canevas suit sa
+     taille affichée × la densité de l'écran, et une transformation ramène le dessin aux
+     unités du jeu : le plateau est net sur un téléphone comme sur un écran 4K, sans rien
+     changer aux positions, aux vitesses ni aux touchers (qui se convertissent en unités
+     du jeu, plus bas).
+   - Densité plafonnée à 3 : au-delà, rien ne se voit de plus à distance de jeu, et chaque
+     image coûterait davantage (neuf fois plus de pixels à densité 3 qu'à densité 1). Côté
+     plafonné à 4096 pixels : surface maximale d'un canevas sur Safari iOS (4096 × 4096) et
+     taille de texture garantie des processeurs graphiques mobiles ; au-delà, un canevas
+     peut rester blanc.
+   ===================== */
+
+export const MAX_PIXEL_RATIO = 3;
+export const MAX_CANVAS_SIDE = 4096;
+// Taille de chaque plateau en unités du jeu
+const gameSizes = new WeakMap();
+
+/** @returns {number} Densité de l'écran retenue, entre 1 et MAX_PIXEL_RATIO */
+export function arcadePixelRatio() {
+  const ratio = Number(globalThis.devicePixelRatio) || 1;
+  return Math.min(MAX_PIXEL_RATIO, Math.max(1, ratio));
+}
+
 /**
- * Affiche le canevas en entier dans la place donnée, sans changer sa taille interne
- * (la partie, ses positions et ses vitesses restent les mêmes) ni ses proportions.
+ * Taille du plateau en unités du jeu (sa taille interne s'il n'en a pas reçu).
  * @param {HTMLCanvasElement} canvas
- * @param {{width: number, height: number}} box - Place (pixels CSS, cadre exclu)
- * @returns {number} Pixels CSS affichés par pixel interne
+ * @returns {{width: number, height: number}}
  */
-export function fitArcadeCanvas(canvas, box) {
-  const scale = Math.min(box.width / canvas.width, box.height / canvas.height);
-  canvas.style.width = `${Math.max(1, Math.floor(canvas.width * scale))}px`;
-  canvas.style.height = `${Math.max(1, Math.floor(canvas.height * scale))}px`;
+export function getArcadeCanvasSize(canvas) {
+  return gameSizes.get(canvas) ?? { width: canvas?.width || 0, height: canvas?.height || 0 };
+}
+
+/**
+ * Taille du plateau en unités du jeu, avant son affichage par fitArcadeCanvas.
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} width
+ * @param {number} height
+ */
+export function setArcadeCanvasSize(canvas, width, height) {
+  gameSizes.set(canvas, { width, height });
+}
+
+/**
+ * Pixels internes du canevas par unité du jeu. Les ombres (shadowBlur, shadowOffsetX/Y) ne
+ * suivent pas la transformation du contexte : elles se multiplient par ce facteur.
+ * @param {HTMLCanvasElement} canvas
+ * @returns {number}
+ */
+export function canvasPixelScale(canvas) {
+  const { width } = getArcadeCanvasSize(canvas);
+  return width > 0 && canvas.width > 0 ? canvas.width / width : 1;
+}
+
+/**
+ * Taille interne pour un affichage donné (pixels CSS) : × la densité, côté plafonné. Changer
+ * la taille d'un canevas remet son contexte à zéro : la transformation se repose à chaque fois.
+ */
+function renderAtDisplaySize(canvas, cssWidth, cssHeight) {
+  const { width, height } = getArcadeCanvasSize(canvas);
+  const ratio = Math.min(
+    arcadePixelRatio(),
+    MAX_CANVAS_SIDE / Math.max(1, cssWidth),
+    MAX_CANVAS_SIDE / Math.max(1, cssHeight)
+  );
+  canvas.width = Math.max(1, Math.round(cssWidth * ratio));
+  canvas.height = Math.max(1, Math.round(cssHeight * ratio));
+  if (width > 0 && height > 0) {
+    canvas.getContext('2d')?.setTransform(canvas.width / width, 0, 0, canvas.height / height, 0, 0);
+  }
   // L'échelle d'affichage a changé : les nombres se recalculent dès la prochaine image
   displayScaleCache.delete(canvas);
+}
+
+/**
+ * Plateau dont le dessin s'affiche à sa taille en unités du jeu (une unité = un pixel CSS) :
+ * taille interne à la densité de l'écran. Le jeu pose la taille de l'élément (MultiMiam :
+ * plus haut que son dessin, centré par object-fit).
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} width - Unités du jeu, et pixels CSS du dessin affiché
+ * @param {number} height
+ */
+export function renderArcadeCanvas(canvas, width, height) {
+  setArcadeCanvasSize(canvas, width, height);
+  renderAtDisplaySize(canvas, width, height);
+}
+
+/**
+ * Plateau affiché à sa taille en unités du jeu (MultiSnake, MultiMemory) : élément et dessin
+ * de cette taille en pixels CSS, taille interne à la densité de l'écran.
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} width - Unités du jeu, et pixels CSS affichés
+ * @param {number} height
+ */
+export function sizeArcadeCanvas(canvas, width, height) {
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+  renderArcadeCanvas(canvas, width, height);
+}
+
+/**
+ * Affiche le canevas en entier dans la place donnée, sans changer sa taille en unités du jeu
+ * (la partie, ses positions et ses vitesses restent les mêmes) ni ses proportions ; sa taille
+ * interne suit l'affichage, à la densité de l'écran.
+ * @param {HTMLCanvasElement} canvas
+ * @param {{width: number, height: number}} box - Place (pixels CSS, cadre exclu)
+ * @returns {number} Pixels CSS affichés par unité du jeu
+ */
+export function fitArcadeCanvas(canvas, box) {
+  const size = getArcadeCanvasSize(canvas);
+  // Premier affichage d'un canevas qui n'a reçu que sa taille interne : elle devient sa taille
+  setArcadeCanvasSize(canvas, size.width, size.height);
+  const scale = Math.min(box.width / size.width, box.height / size.height);
+  const cssWidth = Math.max(1, Math.floor(size.width * scale));
+  const cssHeight = Math.max(1, Math.floor(size.height * scale));
+  canvas.style.width = `${cssWidth}px`;
+  canvas.style.height = `${cssHeight}px`;
+  renderAtDisplaySize(canvas, cssWidth, cssHeight);
   return scale;
 }
 
@@ -514,8 +621,9 @@ function watchBannerSize(stage, schedule, cleanups) {
 
 /* =====================
    Géométrie des canevas : du pointeur au dessin, et retour
-   Le canevas peut être affiché plus petit que sa taille interne, et avec des bandes
-   (object-fit: contain) : les jeux convertissent toujours par ces fonctions.
+   Le canevas peut être affiché à une autre taille que celle du jeu, avec des bandes
+   (object-fit: contain), et sa taille interne suit la densité de l'écran : les jeux
+   convertissent toujours par ces fonctions, en unités du jeu.
    ===================== */
 
 /**
@@ -548,7 +656,7 @@ function fittedSize(fit, boxW, boxH, intW, intH) {
  * @param {HTMLCanvasElement} canvas
  * @returns {{left: number, top: number, width: number, height: number, scaleX: number, scaleY: number}}
  *   left, top, width, height : en pixels CSS (coordonnées de la fenêtre) ;
- *   scaleX, scaleY : pixels internes du canevas par pixel CSS.
+ *   scaleX, scaleY : unités du jeu par pixel CSS.
  */
 export function getCanvasContentRect(canvas) {
   const rect = canvas.getBoundingClientRect();
@@ -558,8 +666,9 @@ export function getCanvasContentRect(canvas) {
   const frame = sumEdges(border, padding);
   const boxW = Math.max(0, rect.width - frame.x);
   const boxH = Math.max(0, rect.height - frame.y);
-  const intW = canvas.width || boxW || 1;
-  const intH = canvas.height || boxH || 1;
+  const size = getArcadeCanvasSize(canvas);
+  const intW = size.width || boxW || 1;
+  const intH = size.height || boxH || 1;
   const drawn = fittedSize(style?.objectFit, boxW, boxH, intW, intH);
 
   const [posX, posY] = String(style?.objectPosition || '50% 50%').split(/\s+/);
@@ -576,7 +685,7 @@ export function getCanvasContentRect(canvas) {
 }
 
 /**
- * Point de la fenêtre (souris, doigt) → coordonnées internes du canevas.
+ * Point de la fenêtre (souris, doigt) → coordonnées du jeu (unités du jeu).
  * @param {HTMLCanvasElement} canvas
  * @param {number} clientX
  * @param {number} clientY
@@ -588,7 +697,7 @@ export function clientToCanvasPoint(canvas, clientX, clientY) {
 }
 
 /**
- * Coordonnées internes du canevas → point de la fenêtre (pixels CSS).
+ * Coordonnées du jeu (unités du jeu) → point de la fenêtre (pixels CSS).
  * @param {HTMLCanvasElement} canvas
  * @param {number} x
  * @param {number} y
@@ -604,8 +713,9 @@ const displayScaleCache = new WeakMap();
 const DISPLAY_SCALE_CACHE_MS = 500;
 
 /**
- * Pixels CSS affichés par pixel interne (1 quand le canevas n'est pas réduit).
- * Sert à garder des nombres lisibles quand l'écran réduit le dessin.
+ * Pixels CSS affichés par unité du jeu (1 quand le plateau s'affiche à sa taille), quelle
+ * que soit la densité de l'écran. Sert à garder des nombres lisibles quand l'écran réduit
+ * le dessin.
  * @param {HTMLCanvasElement} canvas
  * @returns {number}
  */
@@ -627,7 +737,8 @@ export function getCanvasDisplayScale(canvas) {
   const enCache = cachedDisplayScale(canvas, now);
   if (enCache !== null) return enCache;
   const { width } = getCanvasContentRect(canvas);
-  const raw = canvas.width > 0 && width > 0 ? width / canvas.width : 1;
+  const gameWidth = getArcadeCanvasSize(canvas).width;
+  const raw = gameWidth > 0 && width > 0 ? width / gameWidth : 1;
   const scale = Number.isFinite(raw) && raw > 0 ? raw : 1;
   displayScaleCache.set(canvas, { scale, time: now, width: canvas.width });
   return scale;
@@ -671,10 +782,10 @@ export function getCanvasFont(sizePx, weight = 700) {
 }
 
 /**
- * Taille de police interne qui s'affiche à au moins `minCssPx` pixels CSS,
+ * Taille de police (unités du jeu) qui s'affiche à au moins `minCssPx` pixels CSS,
  * même si l'écran réduit le canevas.
  * @param {HTMLCanvasElement} canvas
- * @param {number} sizePx - Taille voulue (pixels internes)
+ * @param {number} sizePx - Taille voulue (unités du jeu)
  * @param {number} [minCssPx=MIN_CANVAS_TEXT_PX]
  * @returns {number}
  */

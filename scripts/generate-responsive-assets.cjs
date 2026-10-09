@@ -7,6 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL } = require('url');
 let sharp = null;
 
 try {
@@ -40,6 +41,17 @@ const ASSET_PATTERNS = {
   backgrounds: /background|bg_/i,
 };
 
+// Catalogue des images des jeux d'Arcade (module ES lu par import dynamique)
+const ARCADE_CATALOG = path.resolve(__dirname, '../js/arcade-sprite-catalog.js');
+// Une image d'Arcade demandée au-delà de 256 px (fusées, personnages, textures) : dessinée en
+// grand sur un écran dense, sa source reçoit toutes les résolutions, 512 et 1024 compris
+const SMALL_SET_MAX_WIDTH = 256;
+
+/** Chemin d'une source relatif à assets/images, avec des « / » (« arcade/fox.png ») */
+function sourceKey(sourceFile) {
+  return path.relative(ASSETS_SOURCE, sourceFile).split(path.sep).join('/');
+}
+
 class ResponsiveAssetGenerator {
   constructor() {
     this.report = {
@@ -57,6 +69,19 @@ class ResponsiveAssetGenerator {
     Object.keys(RESOLUTION_TARGETS).forEach(res => {
       this.report.resolutions[res] = 0;
     });
+
+    // Sources haute définition des jeux d'Arcade (loadArcadeSources)
+    this.arcadeHdSources = new Set();
+  }
+
+  /**
+   * Sources que les jeux d'Arcade peuvent demander au-delà de 256 px, d'après leur
+   * catalogue (js/arcade-sprite-catalog.js) : seules elles reçoivent 512 et 1024.
+   */
+  async loadArcadeSources() {
+    const catalog = await import(pathToFileURL(ARCADE_CATALOG).href);
+    const large = catalog.arcadeSpriteSpecs().filter(spec => spec.maxWidth > SMALL_SET_MAX_WIDTH);
+    this.arcadeHdSources = new Set(large.map(spec => `arcade/${spec.source}.png`));
   }
 
   async generate() {
@@ -70,6 +95,7 @@ class ResponsiveAssetGenerator {
         return;
       }
 
+      await this.loadArcadeSources();
       await this.scanAndProcess();
       await this.generateImageMap();
       await this.syncToPublicDir();
@@ -230,13 +256,14 @@ class ResponsiveAssetGenerator {
     const targets = {};
 
     // Stratégie par type d'asset
-    if (ASSET_PATTERNS.monsters.test(filename)) {
-      // Monstres: toutes les résolutions
-      Object.entries(RESOLUTION_TARGETS).forEach(([suffix, config]) => {
-        if (config.width <= originalDimensions.width) {
-          targets[suffix] = config;
-        }
-      });
+    if (ASSET_PATTERNS.monsters.test(filename) || this.arcadeHdSources.has(sourceKey(sourceFile))) {
+      // Monstres, et sources haute définition des jeux d'Arcade (js/arcade-sprite-catalog.js) :
+      // toutes les résolutions, pour une image nette en grand écran comme sur un téléphone
+      return Object.fromEntries(
+        Object.entries(RESOLUTION_TARGETS).filter(
+          ([, config]) => config.width <= originalDimensions.width
+        )
+      );
     } else if (ASSET_PATTERNS.logos.test(filename)) {
       // Logos: résolutions moyennes
       ['128', '256', '512'].forEach(suffix => {

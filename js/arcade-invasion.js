@@ -19,7 +19,8 @@ import { showArcadePenalty } from './arcade-points.js';
 import { getArcadeText } from './arcade-message.js';
 import { eventBus } from './core/eventBus.js';
 import { InfoBar } from './components/infoBar.js';
-import { arcadeSpriteLoader } from './arcade-sprite-loader.js';
+import { spriteFor, drawArcadeSprite, prefetchArcadeSprite } from './arcade-sprites.js';
+import { avatarSpec, monsterSpec, spaceshipSpec } from './arcade-sprite-catalog.js';
 import { getDifficultySettings } from './difficulty.js';
 import { gameState as globalGameState } from './game.js';
 import { TablePreferences } from './core/tablePreferences.js';
@@ -45,6 +46,8 @@ import {
   readableCanvasFontSize,
   fitArcadeCanvas,
   watchArcadeViewport,
+  setArcadeCanvasSize,
+  canvasPixelScale,
 } from './arcade-common.js';
 import { UserState } from './core/userState.js';
 import { pickRandom, shuffleInPlace } from './core/random.js';
@@ -63,6 +66,13 @@ const AVATAR_ERROR_FALLBACK = 'Oups\u00a0! Ne tire pas sur la bonne réponse.';
 const INVADERS_INSTRUCTION_MS = 8000;
 // Posée au milieu du plateau, entre les monstres en haut et le vaisseau en bas
 const INVADERS_INSTRUCTION_PLACEMENT = 'middle';
+// Numéros des monstres de MultiInvaders (sources haute définition)
+const numbersFrom = (first, last) => Array.from({ length: last - first + 1 }, (_, i) => first + i);
+const INVADER_MONSTERS = [...numbersFrom(1, 43), ...numbersFrom(84, 111), ...numbersFrom(121, 155)];
+// Amis cachés dans la bonne réponse : tous les avatars sauf celui du joueur
+const FRIEND_AVATARS = ['panda', 'fox', 'astronaut', 'unicorn', 'dragon'];
+// L'ami grandit jusqu'à 1,2 fois la taille d'un monstre quand il apparaît
+const FRIEND_PULSE = 1.2;
 
 function initializeInvadersGame() {
   try {
@@ -141,8 +151,8 @@ function setupGameUI() {
  * @param {Object} params - Paramètres de nettoyage
  * @param {Object} params.gameVars - Variables du jeu (gameLoopId, arcadeAvatarTimeoutId)
  * @param {number} params.autoRestartTimeout - Timeout de redémarrage auto
- * @param {HTMLImageElement} params.spaceshipImg - Image du vaisseau
- * @param {HTMLImageElement} params.avatarImg - Image de l'avatar
+ * @param {Object} params.spaceshipImg - Fusée (image partagée entre les parties, jamais vidée)
+ * @param {Object} params.avatarImg - Ami libéré (image partagée, jamais vidée)
  * @param {Function} params.handleSpaceDown - Handler pour la barre d'espace
  * @param {number} params.score - Score actuel
  * @returns {number} Le score actuel
@@ -265,8 +275,7 @@ function showInvadersInstructions(canvas) {
  */
 function sizeInvadersBoard(canvas) {
   const dimensions = calculateCanvasDimensions(canvas);
-  canvas.width = dimensions.displayWidth;
-  canvas.height = dimensions.displayHeight;
+  setArcadeCanvasSize(canvas, dimensions.displayWidth, dimensions.displayHeight);
   const fitBoard = () => fitArcadeCanvas(canvas, getArcadeCanvasBox(canvas));
   fitBoard();
   return { ...dimensions, fitBoard };
@@ -305,120 +314,37 @@ function computeBaseAlienSpeed(isMobile, difficulty, enemySpeed) {
   return 0.09 * enemySpeed;
 }
 
+/**
+ * Fusée choisie dans le menu de l'Arcade (valeur enregistrée « fichier|repli »), sinon la
+ * Comète de l'avatar : sa source haute définition, chargée à la taille où elle s'affiche.
+ * @param {{selectedSpaceship?: string, avatar?: string}} selectedState
+ * @returns {import('./arcade-sprites.js').ArcadeSprite}
+ */
 function createSpaceshipSprite(selectedState) {
   const playerAvatar = selectedState?.avatar ?? 'fox';
-  const spaceshipFile =
-    selectedState?.selectedSpaceship || `spaceship_${playerAvatar}.png|spaceship_default.png`;
-  const [mainFile, rawFallbackFile] = spaceshipFile.split('|');
+  const selection =
+    selectedState?.selectedSpaceship ||
+    `spaceship_${playerAvatar}.png|spaceship_default_128x128.png`;
+  return spriteFor(spaceshipSpec(selection));
+}
 
-  const sanitizeSpriteName = fileName => (fileName || '').trim().replace(/\.png$/i, '');
-  const mainSpriteName = sanitizeSpriteName(mainFile) || 'spaceship_default';
+/** Avatars qui peuvent sortir de la bonne réponse : tous sauf celui du joueur */
+function friendAvatars() {
+  const playerAvatar = globalGameState?.avatar ?? 'fox';
+  return FRIEND_AVATARS.filter(name => name !== playerAvatar);
+}
 
-  let fallbackSpriteName = null;
-  if (rawFallbackFile?.trim() && rawFallbackFile !== mainFile) {
-    fallbackSpriteName = sanitizeSpriteName(rawFallbackFile);
-  } else if (mainSpriteName !== 'spaceship_default') {
-    fallbackSpriteName = 'spaceship_default';
-  }
-
-  const loaderInstance = arcadeSpriteLoader?.loader;
-  const spriteContext = 'ui';
-  const createSpriteSource = spriteName => {
-    if (!spriteName) return null;
-    const normalized = sanitizeSpriteName(spriteName);
-    const basePath = `assets/images/arcade/${normalized}.png`;
-    let optimizedUrl = basePath;
-
-    try {
-      const optimalSize = loaderInstance?.calculateOptimalSize?.(spriteContext);
-      if (optimalSize && loaderInstance?.getOptimalImageUrl) {
-        optimizedUrl = loaderInstance.getOptimalImageUrl(basePath, optimalSize);
-      }
-    } catch (error) {
-      console.warn(`[Arcade] Impossible d'optimiser le sprite ${normalized}`, error);
-    }
-
-    return {
-      name: normalized,
-      basePath,
-      optimizedUrl,
-    };
+/**
+ * Case d'une image qui grandit et rétrécit autour de son centre.
+ * @returns {{x: number, y: number, width: number, height: number}}
+ */
+function pulsedBox(x, y, size, pulse) {
+  return {
+    x: x + (size * (1 - pulse)) / 2,
+    y: y + (size * (1 - pulse)) / 2,
+    width: size * pulse,
+    height: size * pulse,
   };
-
-  const spaceshipSources = {
-    primary: createSpriteSource(mainSpriteName),
-    fallback:
-      fallbackSpriteName && fallbackSpriteName !== mainSpriteName
-        ? createSpriteSource(fallbackSpriteName)
-        : null,
-  };
-
-  const spaceshipImg = new Image();
-  spaceshipImg.decoding = 'async';
-
-  let activeSpriteKey = 'primary';
-  let attemptedOptimizedRecovery = false;
-  let fallbackApplied = false;
-
-  const assignSpriteSource = key => {
-    const source = spaceshipSources[key];
-    if (!source) return false;
-    activeSpriteKey = key;
-    attemptedOptimizedRecovery = false;
-    spaceshipImg.src = source.optimizedUrl || source.basePath;
-    return true;
-  };
-
-  const canRetryWithBaseSource = source => {
-    if (attemptedOptimizedRecovery) return false;
-    const optimizedUrl = source?.optimizedUrl;
-    if (!optimizedUrl) return false;
-    return optimizedUrl !== source?.basePath;
-  };
-
-  const tryRecoverFromOptimizedFailure = source => {
-    if (!canRetryWithBaseSource(source)) {
-      return false;
-    }
-
-    attemptedOptimizedRecovery = true;
-    spaceshipImg.src = source.basePath;
-    return true;
-  };
-
-  const tryApplyFallbackSprite = () => {
-    const fallbackSource = spaceshipSources.fallback;
-    if (activeSpriteKey !== 'primary' || !fallbackSource || fallbackApplied) {
-      return false;
-    }
-
-    fallbackApplied = true;
-    const fallbackName = fallbackSource.name ?? 'spaceship_default';
-    console.info(
-      `[Arcade] Image du vaisseau personnalisée non trouvée, utilisation de "${fallbackName}" en secours.`
-    );
-    assignSpriteSource('fallback');
-    return true;
-  };
-
-  spaceshipImg.onerror = function handleSpaceshipError() {
-    const source = spaceshipSources[activeSpriteKey];
-    if (tryRecoverFromOptimizedFailure(source)) {
-      return;
-    }
-
-    if (tryApplyFallbackSprite()) {
-      return;
-    }
-
-    console.error(
-      `[Arcade] Impossible de charger le sprite de vaisseau "${source?.name ?? 'inconnu'}".`
-    );
-  };
-
-  assignSpriteSource('primary');
-
-  return spaceshipImg;
 }
 
 export function startMultiplicationInvasion() {
@@ -495,56 +421,38 @@ export function startMultiplicationInvasion() {
     avatarX = 0,
     avatarY = 0,
     avatarW = 0,
-    avatarH = 0,
     avatarDisplayTime = 0;
 
-  // Pré-chargement des images
+  // Images : la fusée choisie, et les monstres, chargés une vague à l'avance (jamais les
+  // cent monstres d'un coup)
   const spaceshipImg = createSpaceshipSprite(globalGameState);
-  let spaceshipLoaded = false;
-  let imagesLoaded = false;
-  // Nombre d'images à charger
-  spaceshipImg.onload = function () {
-    spaceshipLoaded = true;
-    if (spaceshipLoaded && monsterSpritesLoaded) imagesLoaded = true;
-  };
-
-  // ENNEMIS : monstres dédiés
-  const monsterSpriteNames = [];
-  for (let i = 1; i <= 43; i++) {
-    const num = i.toString().padStart(2, '0');
-    monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
-  }
-  // Intégration nouveaux monstres convertis
-  for (let i = 84; i <= 111; i++) {
-    const num = i.toString().padStart(2, '0');
-    monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
-  }
-  for (let i = 121; i <= 145; i++) {
-    const num = i.toString().padStart(2, '0');
-    monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
-  }
-  // Intégration des nouveaux monstres 146–155
-  for (let i = 146; i <= 155; i++) {
-    const num = i.toString().padStart(2, '0');
-    monsterSpriteNames.push(`monstre${num}_right_128x128.png`);
-  }
-  const monsterSprites = monsterSpriteNames.map(name => {
-    const spriteName = name.replace(/\.png$/, '');
-    return arcadeSpriteLoader.loadSpriteSync(spriteName, 'monster');
-  });
-  let monsterSpritesLoaded = false;
-  let loadedCount = 0;
-  const imagesToLoad = monsterSprites.length;
-  monsterSprites.forEach(sprite => {
-    sprite.onload = function () {
-      loadedCount++;
-      if (loadedCount === imagesToLoad) monsterSpritesLoaded = true;
-      if (spaceshipLoaded && monsterSpritesLoaded) imagesLoaded = true;
-    };
-  });
+  const monsterSprites = INVADER_MONSTERS.map(number => spriteFor(monsterSpec(number)));
 
   // Pool de sprites pour éviter répétitions avant épuisement
   let availableMonsterSprites = monsterSprites.slice();
+  // Monstres de la vague suivante, tirés une vague à l'avance pour être chargés à temps
+  let nextWaveSprites = null;
+
+  // Sélection unique de sprites pour une vague, sans répétition inter-vagues
+  function drawFromMonsterPool(count) {
+    if (availableMonsterSprites.length < count) availableMonsterSprites = monsterSprites.slice();
+    const picked = shuffleInPlace(availableMonsterSprites).slice(0, count);
+    availableMonsterSprites = availableMonsterSprites.filter(s => !picked.includes(s));
+    return picked;
+  }
+
+  // Monstres de la vague qui commence ; ceux de la suivante, et les amis qui peuvent sortir
+  // de la bonne réponse (un instant à l'écran), se chargent déjà à la taille des monstres
+  function takeWaveSprites(count) {
+    const sprites = nextWaveSprites ?? drawFromMonsterPool(count);
+    nextWaveSprites = drawFromMonsterPool(count);
+    nextWaveSprites.forEach(sprite => prefetchArcadeSprite(canvas, sprite, alienWidth, alienWidth));
+    const friendSize = alienWidth * FRIEND_PULSE;
+    for (const name of friendAvatars()) {
+      prefetchArcadeSprite(canvas, spriteFor(avatarSpec(name)), friendSize, friendSize);
+    }
+    return sprites;
+  }
 
   // Pré-chargement des sons (supprimé si non utilisé)
 
@@ -567,7 +475,7 @@ export function startMultiplicationInvasion() {
     // En pause, la fusée ne bouge pas
     if (isArcadePaused()) return;
     const x = canvasX - bulletOffset();
-    player.x = Math.max(5, Math.min(canvas.width - player.width - 5, x));
+    player.x = Math.max(5, Math.min(displayWidth - player.width - 5, x));
   }
 
   // Monstre dont l'enfant a touché la colonne : toute la largeur dessinée du monstre,
@@ -609,7 +517,7 @@ export function startMultiplicationInvasion() {
       const touch = e.touches[0];
       if (!touch) return;
       const point = clientToCanvasPoint(canvas, touch.clientX, touch.clientY);
-      if (point.y > canvas.height / 2) aimAt(point.x);
+      if (point.y > displayHeight / 2) aimAt(point.x);
     },
     { passive: false }
   );
@@ -668,16 +576,8 @@ export function startMultiplicationInvasion() {
     const correctAnswer = q.answer;
     aliens = [];
     const nbAliens = 5;
-    // Sélection unique de sprites pour cette vague, sans répétition inter-vagues
-    if (availableMonsterSprites.length < nbAliens) {
-      availableMonsterSprites = monsterSprites.slice();
-    }
-    const shuffledPool = shuffleInPlace(availableMonsterSprites);
-
-    const spritesForWave = shuffledPool.slice(0, nbAliens);
-    // Retirer les sprites utilisées du pool
-    availableMonsterSprites = availableMonsterSprites.filter(s => !spritesForWave.includes(s));
     layoutAliens(nbAliens);
+    const spritesForWave = takeWaveSprites(nbAliens);
     const totalWidth = nbAliens * alienWidth + (nbAliens - 1) * spacing;
     const startX = (displayWidth - totalWidth) / 2;
     const options = [correctAnswer];
@@ -767,7 +667,7 @@ export function startMultiplicationInvasion() {
     if (arcadeControls.rightPressed) player.x += player.speed * step;
     player.x = Math.max(
       64 * (displayWidth / baseWidth),
-      Math.min(canvas.width - 64 * (displayWidth / baseWidth), player.x)
+      Math.min(displayWidth - 64 * (displayWidth / baseWidth), player.x)
     );
   }
 
@@ -825,14 +725,9 @@ export function startMultiplicationInvasion() {
     // le son de la mauvaise réponse vient de la pastille.
     showArcadeMessage('arcade_avatar_error', 'neutral', 1800, AVATAR_ERROR_FALLBACK);
 
-    // L'ami caché dans la bonne réponse apparaît un instant
+    // L'ami caché dans la bonne réponse apparaît un instant (image chargée d'avance)
     avatarErrorAnim = 24;
-    const possibleAvatars = ['panda', 'fox', 'astronaut', 'unicorn', 'dragon'].filter(
-      a => a !== (globalGameState?.avatar ?? 'fox')
-    );
-    const randomAvatar = pickRandom(possibleAvatars);
-    const spriteName = `${randomAvatar}_right_128x128`;
-    avatarErrorImg = arcadeSpriteLoader.loadSpriteSync(spriteName, 'ui');
+    avatarErrorImg = spriteFor(avatarSpec(pickRandom(friendAvatars())));
     avatarErrorX = alien.x;
     avatarErrorY = alien.y;
     avatarErrorW = alienWidth;
@@ -882,18 +777,11 @@ export function startMultiplicationInvasion() {
       recordOperationResult(operator, currentProblem.a, currentProblem.b, true);
       showingAvatar = true;
 
-      const avatarKeys = ['panda', 'fox', 'astronaut', 'unicorn', 'dragon'];
-      const playerAvatar = globalGameState?.avatar ?? 'fox';
-      const possibleAvatars = avatarKeys.filter(a => a !== playerAvatar);
-
-      const liberatedAvatar = pickRandom(possibleAvatars);
-
-      const liberatedSpriteName = `${liberatedAvatar}_right_128x128`;
-      avatarImg = arcadeSpriteLoader.loadSpriteSync(liberatedSpriteName, 'ui');
+      // L'ami libéré : un avatar autre que celui du joueur (image chargée d'avance)
+      avatarImg = spriteFor(avatarSpec(pickRandom(friendAvatars())));
       avatarX = aliens[0].x;
       avatarY = aliens[0].y;
       avatarW = alienWidth;
-      avatarH = alienWidth;
       avatarDisplayTime = 0;
 
       setTimeout(() => {
@@ -958,84 +846,88 @@ export function startMultiplicationInvasion() {
   }
 
   function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (imagesLoaded) {
-      // Affichage du vaisseau avec un alignement précis en bas de l'écran
-      // Taille plus grande sur desktop pour une meilleure visibilité
-      const shipWidth = isMobile ? player.width * 1.5 : player.width * 3.5;
-      const shipHeight = isMobile ? player.height * 1.5 : player.height * 3.5;
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
+    drawShip();
+    if (avatarErrorAnim > 0 && avatarErrorImg) drawHiddenFriend();
+    else if (showingAvatar && avatarImg) drawFreedFriend();
+    else drawAliens();
+    drawBullets();
+  }
 
-      // Positionner la fusée pour qu'elle soit au-dessus de player.y avec un décalage minimal
-      ctx.drawImage(
-        spaceshipImg,
-        player.x - shipWidth / 2 + player.width / 2, // Centrer horizontalement
-        player.y - shipHeight + player.height / 2, // Placer juste au-dessus de la position y
-        shipWidth,
-        shipHeight
-      );
-    } else {
-      ctx.fillStyle = player.color;
-      ctx.fillRect(player.x, player.y, player.width, player.height);
+  // Fusée posée au bas du plateau, à ses proportions (plus grande sur ordinateur) ; un
+  // rectangle tant que son image n'est pas arrivée
+  function drawShip() {
+    const size = isMobile ? 1.5 : 3.5;
+    const shipWidth = player.width * size;
+    const shipHeight = player.height * size;
+    const box = {
+      x: player.x - shipWidth / 2 + player.width / 2, // Centrer horizontalement
+      y: player.y - shipHeight + player.height / 2, // Juste au-dessus de la position y
+      width: shipWidth,
+      height: shipHeight,
+    };
+    if (drawArcadeSprite(ctx, spaceshipImg, box)) return;
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+  }
+
+  // L'ami caché apparaît un instant dans un cercle clair : une erreur n'est jamais rouge
+  function drawHiddenFriend() {
+    avatarErrorPulse = (avatarErrorPulse || 0) + 1;
+    const pulse = 1 + 0.2 * Math.sin(avatarErrorPulse / 2);
+    ctx.save();
+    ctx.globalAlpha = 0.98;
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(
+      avatarErrorX + avatarErrorW / 2,
+      avatarErrorY + avatarErrorH / 2,
+      (avatarErrorW * pulse) / 2 + 12,
+      0,
+      2 * Math.PI
+    );
+    ctx.stroke();
+    const box = pulsedBox(avatarErrorX, avatarErrorY, avatarErrorW, pulse);
+    drawArcadeSprite(ctx, avatarErrorImg, box, { facing: 'right' });
+    ctx.restore();
+    avatarErrorAnim--;
+    if (avatarErrorAnim === 0) {
+      avatarErrorImg = null;
     }
-    // === Avatar error animation ===
-    if (avatarErrorAnim && avatarErrorAnim > 0 && avatarErrorImg) {
-      avatarErrorPulse = (avatarErrorPulse || 0) + 1;
-      const pulse = 1 + 0.2 * Math.sin(avatarErrorPulse / 2);
-      ctx.save();
-      ctx.globalAlpha = 0.98;
-      // L'ami caché apparaît dans un cercle clair : une erreur n'est jamais rouge
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(
-        avatarErrorX + avatarErrorW / 2,
-        avatarErrorY + avatarErrorH / 2,
-        (avatarErrorW * pulse) / 2 + 12,
-        0,
-        2 * Math.PI
-      );
-      ctx.stroke();
-      ctx.drawImage(
-        avatarErrorImg,
-        avatarErrorX + (avatarErrorW * (1 - pulse)) / 2,
-        avatarErrorY + (avatarErrorH * (1 - pulse)) / 2,
-        avatarErrorW * pulse,
-        avatarErrorH * pulse
-      );
-      ctx.restore();
-      avatarErrorAnim--;
-      if (avatarErrorAnim === 0) {
-        avatarErrorImg = null;
+  }
+
+  // L'ami libéré grandit et rétrécit, dans un halo doré
+  function drawFreedFriend() {
+    avatarDisplayTime++;
+    const pulse = 1 + 0.15 * Math.sin(avatarDisplayTime / 5);
+    ctx.save();
+    ctx.globalAlpha = 0.96;
+    ctx.shadowColor = '#ffe066';
+    // Le flou d'une ombre ne suit pas la transformation : à la densité de l'écran
+    ctx.shadowBlur = 32 * canvasPixelScale(canvas);
+    drawArcadeSprite(ctx, avatarImg, pulsedBox(avatarX, avatarY, avatarW, pulse), {
+      facing: 'right',
+    });
+    ctx.restore();
+  }
+
+  // Monstres à leurs proportions, chacun avec son nombre ; un carré tant que son image
+  // n'est pas arrivée
+  function drawAliens() {
+    // Nombres lisibles : au moins 16 px à l'écran, même sur un petit téléphone
+    const fontSize = readableCanvasFontSize(canvas, alienWidth * 0.28);
+    aliens.forEach(alien => {
+      const box = { x: alien.x, y: alien.y, width: alienWidth, height: alienWidth };
+      if (!drawArcadeSprite(ctx, alien.sprite, box)) {
+        ctx.fillStyle = alien.color;
+        ctx.fillRect(alien.x, alien.y, alienWidth, alienWidth);
       }
-    } else if (showingAvatar && avatarImg) {
-      // Animation: simple scaling/pulse
-      avatarDisplayTime++;
-      const pulse = 1 + 0.15 * Math.sin(avatarDisplayTime / 5);
-      ctx.save();
-      ctx.globalAlpha = 0.96;
-      ctx.shadowColor = '#ffe066';
-      ctx.shadowBlur = 32;
-      ctx.drawImage(
-        avatarImg,
-        avatarX + (avatarW * (1 - pulse)) / 2,
-        avatarY + (avatarH * (1 - pulse)) / 2,
-        avatarW * pulse,
-        avatarH * pulse
-      );
-      ctx.restore();
-    } else {
-      // Nombres lisibles : au moins 16 px à l'écran, même sur un petit téléphone
-      const fontSize = readableCanvasFontSize(canvas, alienWidth * 0.28);
-      aliens.forEach(alien => {
-        if (imagesLoaded) {
-          ctx.drawImage(alien.sprite, alien.x, alien.y, alienWidth, alienWidth);
-        } else {
-          ctx.fillStyle = alien.color;
-          ctx.fillRect(alien.x, alien.y, alienWidth, alienWidth);
-        }
-        drawAlienLabel(alien, fontSize);
-      });
-    }
+      drawAlienLabel(alien, fontSize);
+    });
+  }
+
+  function drawBullets() {
     ctx.fillStyle = '#ffff00';
     bullets.forEach(bullet => {
       ctx.fillRect(
@@ -1124,8 +1016,7 @@ export function startMultiplicationInvasion() {
     const next = calculateCanvasDimensions(canvas);
     if (next.displayWidth === displayWidth && next.displayHeight === displayHeight) return;
     ({ displayWidth, displayHeight } = next);
-    canvas.width = displayWidth;
-    canvas.height = displayHeight;
+    setArcadeCanvasSize(canvas, displayWidth, displayHeight);
     Object.assign(player, {
       x: displayWidth / 2 - 25,
       y: displayHeight - 30,

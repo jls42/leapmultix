@@ -18,24 +18,28 @@ const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
 const ARCADE_GAMES = ['invasion', 'multimiam', 'multimemory', 'multisnake'];
 
-// Dessins des canevas, en coordonnées internes : images (tête du serpent, dos des cartes,
-// monstres), textes (faces des cartes, nombres des monstres) et tirs de MultiInvaders
+// Dessins des canevas, en unités du jeu, avec la transformation du dessin (t : échelle et
+// décalage vers les pixels internes, à la densité de l'écran) : images (tête du serpent, dos
+// des cartes, monstres), textes (faces des cartes, nombres des monstres) et tirs de
+// MultiInvaders
 const CANVAS_SPY_SOURCE = `(() => {
   const proto = CanvasRenderingContext2D.prototype;
   const draws = (globalThis.__draws = { images: [], texts: [], shots: [] });
   const keep = list => { if (list.length > 600) list.splice(0, 300); };
+  const scaleOf = ctx => { const m = ctx.getTransform(); return [m.a, m.d, m.e, m.f]; };
   const drawImage = proto.drawImage;
   proto.drawImage = function spyImage(image, ...rest) {
     if (rest.length >= 4) {
-      const src = ((image && image.src) || '').split('/').pop();
-      draws.images.push({ src, x: rest[0], y: rest[1], w: rest[2], h: rest[3], canvas: this.canvas.id });
+      // Nom de l'image quelle que soit sa variante (« tete_haut-128.webp » : « tete_haut.png »)
+      const src = ((image && image.src) || '').split('/').pop().replace(/-\\d+\\.webp$/, '.png');
+      draws.images.push({ src, x: rest[0], y: rest[1], w: rest[2], h: rest[3], t: scaleOf(this), canvas: this.canvas.id });
       keep(draws.images);
     }
     return drawImage.call(this, image, ...rest);
   };
   const fillText = proto.fillText;
   proto.fillText = function spyText(text, x, y, ...rest) {
-    draws.texts.push({ text: String(text), x, y, canvas: this.canvas.id });
+    draws.texts.push({ text: String(text), x, y, t: scaleOf(this), canvas: this.canvas.id });
     keep(draws.texts);
     return fillText.call(this, text, x, y, ...rest);
   };
@@ -173,10 +177,13 @@ function noteSpot(during, spot) {
   return seen;
 }
 
-/** Point de la fenêtre où s'affiche un point interne du canevas */
-function toScreen(page, canvasId, x, y) {
+/**
+ * Point de la fenêtre où s'affiche un point du jeu, sur le canevas d'un dessin relevé par
+ * l'espion : son canevas et sa transformation t (échelle et décalage vers les pixels internes)
+ */
+function toScreen(page, drawn, x, y) {
   return page.evaluate(
-    (id, px, py) => {
+    ({ canvas: id, t: [sx, sy, tx, ty] }, px, py) => {
       const canvas = document.getElementById(id);
       const rect = canvas.getBoundingClientRect();
       const style = getComputedStyle(canvas);
@@ -184,9 +191,13 @@ function toScreen(page, canvasId, x, y) {
       const top = rect.top + Number.parseFloat(style.borderTopWidth);
       const width = rect.width - Number.parseFloat(style.borderLeftWidth) * 2;
       const height = rect.height - Number.parseFloat(style.borderTopWidth) * 2;
-      return { x: left + (px * width) / canvas.width, y: top + (py * height) / canvas.height };
+      const inner = { x: sx * px + tx, y: sy * py + ty };
+      return {
+        x: left + (inner.x * width) / canvas.width,
+        y: top + (inner.y * height) / canvas.height,
+      };
     },
-    canvasId,
+    drawn,
     x,
     y
   );
@@ -368,12 +379,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     );
     const backs = await lastImages(page, 'multimemory-canvas', 'chemin', 12);
     const target = backs[7];
-    const point = await toScreen(
-      page,
-      'multimemory-canvas',
-      target.x + target.w / 2,
-      target.y + target.h / 2
-    );
+    const point = await toScreen(page, target, target.x + target.w / 2, target.y + target.h / 2);
     await page.touchscreen.tap(point.x, point.y);
     await pause(200);
     // La face retournée s'écrit au centre de la carte touchée
@@ -392,12 +398,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     await launchGame(page, 'multisnake');
     await enterFullscreen(page);
     const [head] = await lastImages(page, 'multisnake-canvas', 'tete_', 1);
-    const point = await toScreen(
-      page,
-      'multisnake-canvas',
-      head.x + head.w / 2,
-      head.y + head.h / 2 - 3 * head.h
-    );
+    const point = await toScreen(page, head, head.x + head.w / 2, head.y - 2.5 * head.h);
     await page.touchscreen.tap(point.x, point.y);
     await page.waitForFunction(
       startY => {
@@ -422,14 +423,14 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     await page.setViewport(LANDSCAPE);
     await pause(800);
     // Un monstre qui ne porte pas la bonne réponse : le toucher rapporte 100 points. Son
-    // nombre est écrit au-dessus de son centre (coordonnées internes du canevas)
+    // nombre est écrit au-dessus de son centre (unités du jeu)
     const question = await page.$eval('.arcade-question', el => el.textContent);
     const [a, b] = question.match(/\d+/g).map(Number);
     const labels = await page.evaluate(() =>
       globalThis.__draws.texts.filter(t => t.canvas === 'arcade-canvas').slice(-5)
     );
     const wrong = labels.find(label => Number(label.text) !== a * b);
-    const point = await toScreen(page, 'arcade-canvas', wrong.x, wrong.y + 60);
+    const point = await toScreen(page, wrong, wrong.x, wrong.y + 60);
     await page.touchscreen.tap(point.x, point.y);
     await pause(100);
     const [shot] = await page.evaluate(() =>

@@ -74,6 +74,7 @@ jest.unstable_mockModule('../js/components/infoBar.js', () => ({
 }));
 
 const { startMultiplicationInvasion } = await import('../js/arcade-invasion.js');
+const { getArcadeCanvasSize } = await import('../js/arcade-common.js');
 
 const restorers = [];
 let canvas;
@@ -136,12 +137,14 @@ describe('MultiInvaders, téléphone tourné', () => {
     expect(waveNumbers()).toEqual(numbers);
   });
 
-  test('un tir déjà parti : la taille interne reste, seul l’affichage suit', () => {
-    const before = [canvas.width, canvas.height];
+  test('un tir déjà parti : la taille de la partie reste, seul l’affichage suit', () => {
+    const before = getArcadeCanvasSize(canvas);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space' }));
     rotate();
-    expect([canvas.width, canvas.height]).toEqual(before);
+    expect(getArcadeCanvasSize(canvas)).toEqual(before);
     expect(Number.parseFloat(canvas.style.height)).toBeLessThanOrEqual(390 - 120);
+    // La taille interne suit l'affichage (densité 1 sous jsdom)
+    expect(canvas.height).toBe(Math.round(Number.parseFloat(canvas.style.height)));
   });
 });
 
