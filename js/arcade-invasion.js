@@ -46,6 +46,8 @@ import {
   readableCanvasFontSize,
   fitArcadeCanvas,
   watchArcadeViewport,
+  setArcadeCanvasSize,
+  canvasPixelScale,
 } from './arcade-common.js';
 import { UserState } from './core/userState.js';
 import { pickRandom, shuffleInPlace } from './core/random.js';
@@ -273,8 +275,7 @@ function showInvadersInstructions(canvas) {
  */
 function sizeInvadersBoard(canvas) {
   const dimensions = calculateCanvasDimensions(canvas);
-  canvas.width = dimensions.displayWidth;
-  canvas.height = dimensions.displayHeight;
+  setArcadeCanvasSize(canvas, dimensions.displayWidth, dimensions.displayHeight);
   const fitBoard = () => fitArcadeCanvas(canvas, getArcadeCanvasBox(canvas));
   fitBoard();
   return { ...dimensions, fitBoard };
@@ -474,7 +475,7 @@ export function startMultiplicationInvasion() {
     // En pause, la fusée ne bouge pas
     if (isArcadePaused()) return;
     const x = canvasX - bulletOffset();
-    player.x = Math.max(5, Math.min(canvas.width - player.width - 5, x));
+    player.x = Math.max(5, Math.min(displayWidth - player.width - 5, x));
   }
 
   // Monstre dont l'enfant a touché la colonne : toute la largeur dessinée du monstre,
@@ -516,7 +517,7 @@ export function startMultiplicationInvasion() {
       const touch = e.touches[0];
       if (!touch) return;
       const point = clientToCanvasPoint(canvas, touch.clientX, touch.clientY);
-      if (point.y > canvas.height / 2) aimAt(point.x);
+      if (point.y > displayHeight / 2) aimAt(point.x);
     },
     { passive: false }
   );
@@ -666,7 +667,7 @@ export function startMultiplicationInvasion() {
     if (arcadeControls.rightPressed) player.x += player.speed * step;
     player.x = Math.max(
       64 * (displayWidth / baseWidth),
-      Math.min(canvas.width - 64 * (displayWidth / baseWidth), player.x)
+      Math.min(displayWidth - 64 * (displayWidth / baseWidth), player.x)
     );
   }
 
@@ -845,7 +846,7 @@ export function startMultiplicationInvasion() {
   }
 
   function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
     drawShip();
     if (avatarErrorAnim > 0 && avatarErrorImg) drawHiddenFriend();
     else if (showingAvatar && avatarImg) drawFreedFriend();
@@ -903,7 +904,8 @@ export function startMultiplicationInvasion() {
     ctx.save();
     ctx.globalAlpha = 0.96;
     ctx.shadowColor = '#ffe066';
-    ctx.shadowBlur = 32;
+    // Le flou d'une ombre ne suit pas la transformation : à la densité de l'écran
+    ctx.shadowBlur = 32 * canvasPixelScale(canvas);
     drawArcadeSprite(ctx, avatarImg, pulsedBox(avatarX, avatarY, avatarW, pulse), {
       facing: 'right',
     });
@@ -1014,8 +1016,7 @@ export function startMultiplicationInvasion() {
     const next = calculateCanvasDimensions(canvas);
     if (next.displayWidth === displayWidth && next.displayHeight === displayHeight) return;
     ({ displayWidth, displayHeight } = next);
-    canvas.width = displayWidth;
-    canvas.height = displayHeight;
+    setArcadeCanvasSize(canvas, displayWidth, displayHeight);
     Object.assign(player, {
       x: displayWidth / 2 - 25,
       y: displayHeight - 30,

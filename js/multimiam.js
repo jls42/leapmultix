@@ -15,7 +15,7 @@ import { initPacmanControls } from './multimiam-controls.js';
 import { initPacmanUI } from './multimiam-ui.js';
 import { showArcadeGameOver } from './arcade.js';
 import { createArcadeToast, getArcadeText } from './arcade-message.js';
-import { getArcadeCanvasBox, watchArcadeViewport } from './arcade-common.js';
+import { getArcadeCanvasBox, watchArcadeViewport, renderArcadeCanvas } from './arcade-common.js';
 import { cleanupGameResources } from './game-cleanup.js';
 import { shouldTransposeMaze } from './multimiam-layout.js';
 
@@ -138,8 +138,8 @@ export class PacmanGame {
     return { width: Math.floor(box.width), height: Math.floor(box.height) };
   }
 
-  // Appliquer les styles visuels au canvas : le labyrinthe à sa taille interne (cases
-  // carrées), et le plateau sur toute la hauteur disponible, jusqu'à « Abandonner », comme
+  // Appliquer les styles visuels au canvas : le labyrinthe à sa taille (cases carrées), et
+  // le plateau sur toute la hauteur disponible, jusqu'à « Abandonner », comme
   // dans les autres jeux. Plus large que la place (téléphone en portrait), le labyrinthe s'y
   // centre entre deux bandes de mur (css/arcade.css) ; les clics et les touchers suivent
   // (object-fit, converti par js/arcade-common.js).
@@ -206,12 +206,10 @@ export class PacmanGame {
     const actualWidth = this.cellSize * across;
     const actualHeight = this.cellSize * down;
 
-    // S'assurer que le canvas a la bonne taille pour afficher tout le labyrinthe
-    this.canvas.width = actualWidth;
-    this.canvas.height = actualHeight;
-
-    // IMPORTANT: Appliquer les styles CSS APRÈS avoir défini les dimensions internes
-    // pour éviter un décalage entre taille CSS et taille interne du canvas
+    // Le labyrinthe entier en unités du jeu, net à la densité de l'écran ; l'élément prend
+    // ensuite la hauteur du plateau (bandes de mur, object-fit) : les clics et les touchers
+    // se convertissent en unités du jeu (js/arcade-common.js)
+    renderArcadeCanvas(this.canvas, actualWidth, actualHeight);
     this.applyCanvasStyles(actualWidth, actualHeight, dimensions.height);
   }
 

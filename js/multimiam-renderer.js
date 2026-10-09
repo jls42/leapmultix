@@ -1,7 +1,7 @@
 // multimiam-renderer.js - Gestion du rendu pour le jeu Pacman (ESM)
 // (c) LeapMultix - 2025
 
-import { getCanvasFont, readableCanvasFontSize } from './arcade-common.js';
+import { getCanvasFont, readableCanvasFontSize, getArcadeCanvasSize } from './arcade-common.js';
 import { mazeToScreen, transposeDirection } from './multimiam-layout.js';
 import { drawArcadeSprite, prefetchArcadeSprite } from './arcade-sprites.js';
 
@@ -59,7 +59,8 @@ export default class PacmanRenderer {
     const ctx = g.ctx;
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, g.canvas.width, g.canvas.height);
+    const board = getArcadeCanvasSize(g.canvas);
+    ctx.clearRect(0, 0, board.width, board.height);
 
     this.drawLabyrinth();
 
@@ -113,7 +114,7 @@ export default class PacmanRenderer {
     const ctx = g.ctx;
     if (!g.answerPositions || g.answerPositions.length === 0) return;
 
-    const isMobile = g.canvas.width < 500;
+    const isMobile = getArcadeCanvasSize(g.canvas).width < 500;
     // Nombres lisibles : au moins 16 px à l'écran, même quand les cases sont petites
     const baseSize = isMobile ? g.cellSize * 0.6 : Math.max(20, Math.min(28, g.cellSize * 0.5));
     const fontSize = readableCanvasFontSize(g.canvas, baseSize);
