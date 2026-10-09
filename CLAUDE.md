@@ -311,6 +311,7 @@ sonarjs:S5725 - External scripts without integrity is acceptable for analytics s
 
 - `VideoManager.js` - Video playback management (12 KB)
 - `responsive-image-loader.js` - Responsive image loading (9 KB)
+- `webp-images.js` - Screen illustrations (Arcade menu logos and ships, dashboard logos, Adventure gifts) served as WebP at their displayed size × device pixel ratio (`srcset`, `sizes`), with the repository PNG as fallback until `npm run assets:generate` has produced the variants: `createWebpImage`, `webpImageAttributes` for templates, `attachImageFallbacks` once a template is shown (the sanitizer strips `onerror`). Keep the PNG file name as a literal outside `${…}`: `scripts/precache-list.mjs` finds the images to keep offline by their names in the code
 
 **Game Orchestration:**
 

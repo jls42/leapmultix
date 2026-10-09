@@ -48,12 +48,19 @@ import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { chance, randomInt } from '../core/random.js';
 import { accessibilityManager } from '../accessibility.js';
+import { attachImageFallbacks, createWebpImage, webpImageAttributes } from '../webp-images.js';
 
 /** Nom des opérations dans les clés de traduction propres à une opération */
 const OPERATION_NAMES = { '+': 'addition', '−': 'subtraction', '÷': 'division' };
 
 /** Étoiles au total pour le badge « Collectionneur d'étoiles » (badge_star_collector_desc) */
 const STAR_COLLECTOR_THRESHOLD = 10;
+
+// Cadeaux en WebP (js/webp-images.js), à leur taille affichée (css/adventure.css) : 72 px dans
+// la scène, 56 sur un écran de 480 px au plus ; 112 px sur l'écran de fin, 336 pixels sur un
+// écran de densité 3
+const SCENE_GIFT = { widths: [128, 256], src: 128, sizes: '(max-width: 480px) 56px, 72px' };
+const RESULTS_GIFT = { widths: [128, 256, 512], src: 256, sizes: '112px' };
 
 /**
  * La clé existe-t-elle dans la langue active ?
@@ -190,6 +197,9 @@ export class AdventureMode extends GameMode {
    * @returns {string}
    */
   getLevelHTML() {
+    // Nommé hors du gabarit : la liste hors ligne (scripts/precache-list.mjs) lit les noms
+    // d'images du code, pas ceux écrits dans un ${…}
+    const closedGift = webpImageAttributes('cadeau_ferme.png', SCENE_GIFT);
     return `
                 <div class="adventure-level-header">
                     <h2 class="section-title" data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h2>
@@ -200,7 +210,7 @@ export class AdventureMode extends GameMode {
                     <div class="adventure-character" id="adventure-character">${this.getPlayerAvatar()}</div>
                     <div class="adventure-path" id="adventure-path"></div>
                     <div class="adventure-treasure" id="adventure-treasure">
-                        <img src="assets/images/arcade/cadeau_ferme.png" alt="" width="72" height="72">
+                        <img ${closedGift} alt="" width="72" height="72">
                     </div>
                 </div>
 
@@ -260,11 +270,17 @@ export class AdventureMode extends GameMode {
 
       this.setupLevelSelection();
     } else {
-      // Phase de jeu - utiliser l'interface parent
-      await super.initializeUI();
-      this.placeActionsAfterAnswers('.adventure-controls');
-      this.setupGameControls();
+      await this.initializeLevelUI();
     }
+  }
+
+  /** Phase de jeu : l'interface du parent, le cadeau de la scène, puis les commandes */
+  async initializeLevelUI() {
+    await super.initializeUI();
+    // Cadeau de la scène en WebP, produit au déploiement : sans lui, le PNG d'origine
+    attachImageFallbacks(this.gameScreen);
+    this.placeActionsAfterAnswers('.adventure-controls');
+    this.setupGameControls();
   }
 
   /**
@@ -630,22 +646,14 @@ export class AdventureMode extends GameMode {
     this.phase = 'ending';
     this.state.isActive = false;
 
-    // Le personnage rejoint le trésor, qui s'ouvre
+    // Le personnage rejoint le trésor, qui s'ouvre : une nouvelle image (changer le seul src
+    // ne suffirait pas, le navigateur garderait la variante du srcset)
     this.moveAdventureCharacter(true);
-    const treasure = document.getElementById('adventure-treasure');
-    if (treasure) {
-      const img = treasure.querySelector('img');
-      if (img) {
-        img.src = 'assets/images/arcade/cadeau_ouvert.png';
-      } else {
-        treasure.textContent = '';
-        const safeImg = createSafeImage('assets/images/arcade/cadeau_ouvert.png', '', {
-          width: '72',
-          height: '72',
-        });
-        treasure.appendChild(safeImg);
-      }
-    }
+    document
+      .getElementById('adventure-treasure')
+      ?.replaceChildren(
+        createWebpImage('cadeau_ouvert.png', SCENE_GIFT, { width: '72', height: '72' })
+      );
 
     this.addTimer(() => {
       // La partie a pu être quittée entre-temps
@@ -810,7 +818,7 @@ export class AdventureMode extends GameMode {
       const messageEl = wrapper.querySelector('.results-message');
       wrapper.insertBefore(createStarRating(stars), messageEl);
       wrapper.insertBefore(
-        createSafeImage('assets/images/arcade/cadeau_ouvert.png', '', {
+        createWebpImage('cadeau_ouvert.png', RESULTS_GIFT, {
           width: '112',
           height: '112',
           class: 'results-treasure',

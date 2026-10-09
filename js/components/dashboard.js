@@ -30,6 +30,7 @@ import {
 } from '../core/mode-stats.js';
 import { getCurrentLanguage } from '../i18n-store.js';
 import { createIcon } from './icons.js';
+import { createWebpImage } from '../webp-images.js';
 
 const MAX_STARS = 3;
 const TABLE_COUNT = 10;
@@ -425,6 +426,11 @@ function statsOf(userData) {
   return normalizeModeStats(userData);
 }
 
+// Logo d'une rangée en WebP (js/webp-images.js) : 56 px affichés (css/progress-dashboard.css),
+// 168 pixels sur un écran de densité 3. Le 512 n'est jamais demandé pour 56 px, mais le
+// navigateur reprend celui que l'accueil ou le menu de l'Arcade ont déjà chargé (téléphone)
+const SCORE_LOGO = { widths: [128, 256, 512], src: 128, sizes: '56px' };
+
 /** Rangées des modes classiques, dans l'ordre affiché : logo, nom, faits du profil */
 const CLASSIC_ROWS = [
   {
@@ -766,7 +772,8 @@ export const Dashboard = {
    * Une rangée de score : logo du mode, nom, puis faits « libellé → valeur ».
    * @param {Object} spec
    * @param {string} spec.className - Classe historique de la rangée
-   * @param {string} spec.logo - Chemin du logo (décoratif : le nom est écrit)
+   * @param {string} spec.logo - PNG du logo dans assets/images/arcade, servi en WebP
+   *   (décoratif : le nom est écrit)
    * @param {string} spec.name - Nom du mode ou du jeu
    * @param {Array<{label: string, value: (string|number)}>|null} spec.facts - Faits, ou null si aucun score
    * @returns {HTMLLIElement}
@@ -785,9 +792,7 @@ export const Dashboard = {
       row.appendChild(box);
     } else {
       row.appendChild(
-        createSafeElement('img', '', {
-          src: logo,
-          alt: '',
+        createWebpImage(logo, SCORE_LOGO, {
           class: 'score-logo',
           width: '64',
           height: '64',
@@ -817,7 +822,7 @@ export const Dashboard = {
     const rows = CLASSIC_ROWS.map(row =>
       this._buildScoreRow({
         className: 'classic-game-stats',
-        logo: `assets/images/arcade/${row.logo}`,
+        logo: row.logo,
         name: tr(row.key, row.name),
         facts: row.facts(userData, stats),
       })
@@ -847,7 +852,7 @@ export const Dashboard = {
     return games.map(([game, logo, nameKey, fallback]) =>
       this._buildScoreRow({
         className: 'arcade-game-stats',
-        logo: `assets/images/arcade/${logo}`,
+        logo,
         name: tr(nameKey, fallback),
         facts: arcadeFacts(stats, game),
       })

@@ -23,6 +23,7 @@ jest.unstable_mockModule('../js/arcade-message.js', () => ({ showArcadeMessage: 
 jest.unstable_mockModule('../js/game.js', () => ({ gameState: { avatar: 'fox' } }));
 
 const { ArcadeMode } = await import('../js/modes/ArcadeMode.js');
+const { attachImageFallbacks } = await import('../js/webp-images.js');
 
 const GENERATED = 'assets/generated-images/arcade/';
 let mode;
@@ -92,7 +93,8 @@ describe('Menu de l’Arcade : images à la taille affichée', () => {
   });
 
   test('variantes absentes (développement, CI) : le PNG d’origine prend le relais', () => {
-    mode.attachImageFallbacks();
+    // Ce que fait le menu une fois affiché (initializeUI)
+    attachImageFallbacks(screen);
     const logo = screen.querySelector('img.arcade-logo');
     logo.dispatchEvent(new Event('error'));
     expect(logo.hasAttribute('srcset')).toBe(false);

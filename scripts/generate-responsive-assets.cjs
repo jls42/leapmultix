@@ -36,8 +36,9 @@ const RESOLUTION_TARGETS = {
 // Patterns spéciaux par type d'asset
 const ASSET_PATTERNS = {
   monsters: /monstre\d+/i,
-  // Logos des modes (accueil) et des jeux (menu de l'Arcade), affichés de 120 à 144 px
-  logos: /logo_(?:mode|multi)/i,
+  // Logos des modes (accueil, tableau de bord) et des jeux (menu de l'Arcade), cadeaux de
+  // l'Aventure : affichés de 56 à 144 px, jusqu'à 512 pour un écran de densité 3
+  illustrations: /logo_(?:mode|multi)|cadeau_/i,
   ui: /button|icon|arrow/i,
   backgrounds: /background|bg_/i,
 };
@@ -265,8 +266,8 @@ class ResponsiveAssetGenerator {
           ([, config]) => config.width <= originalDimensions.width
         )
       );
-    } else if (ASSET_PATTERNS.logos.test(filename)) {
-      // Logos: résolutions moyennes
+    } else if (ASSET_PATTERNS.illustrations.test(filename)) {
+      // Logos et cadeaux : résolutions moyennes
       ['128', '256', '512'].forEach(suffix => {
         if (RESOLUTION_TARGETS[suffix].width <= originalDimensions.width) {
           targets[suffix] = RESOLUTION_TARGETS[suffix];

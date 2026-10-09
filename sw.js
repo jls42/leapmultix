@@ -229,6 +229,7 @@ const PRECACHE_CORE = [
   '/js/VideoManager.js',
   '/js/virtual-keyboard.js',
   '/js/voice-clips.js',
+  '/js/webp-images.js',
   '/manifest.json',
   '/offline.html',
 ];

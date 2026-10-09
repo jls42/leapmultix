@@ -76,6 +76,19 @@ describe('variantes des images d’Arcade produites par le générateur', () => 
     }
   });
 
+  test('cadeaux de l’Aventure : 128, 256 et 512, comme les logos', () => {
+    // Affichés à 72 px dans la scène (56 sur téléphone), à 112 px sur l'écran de fin : 336
+    // pixels sur un écran de densité 3, au-delà des 256 de la série courte
+    for (const gift of ['cadeau_ferme', 'cadeau_ouvert']) {
+      const file = `assets/images/arcade/${gift}.png`;
+      expect(Object.keys(generator.getTargetResolutions(file, pngSize(file)))).toEqual([
+        '128',
+        '256',
+        '512',
+      ]);
+    }
+  });
+
   test('la variante gardée hors ligne fait partie des variantes de chaque image', () => {
     expect(specs.filter(spec => spec.maxWidth < OFFLINE_VARIANT_WIDTH)).toEqual([]);
   });
@@ -83,8 +96,8 @@ describe('variantes des images d’Arcade produites par le générateur', () => 
   test('les autres images gardent leurs tailles (rien de plus à générer ni à déployer)', () => {
     const sizes = file => Object.keys(generator.getTargetResolutions(file, pngSize(file)));
     expect(sizes('assets/images/arcade/monstre05_right_128x128.png')).toEqual(['64', '128']);
-    // Sources de 1024 px que les jeux ne dessinent pas (aventure, en-tête)
-    for (const other of ['cadeau_ouvert', 'fox_head_avatar', 'serpent1_droite']) {
+    // Sources de 1024 px que les jeux ne dessinent pas (en-tête, anciens sprites)
+    for (const other of ['fox_head_avatar', 'serpent1_droite']) {
       expect(sizes(`assets/images/arcade/${other}.png`)).toEqual(['64', '128', '256']);
     }
     expect(sizes('assets/images/arcade/logo_mode_quizz.png')).toEqual(['128', '256', '512']);
@@ -108,7 +121,7 @@ describe('génération réelle (npm run assets:generate) dans un projet jetable'
       const square = size =>
         sharp({ create: { width: size, height: size, channels: 4, background: '#e67e22' } }).png();
       await square(1024).toFile(path.join(arcade, 'fox.png'));
-      await square(1024).toFile(path.join(arcade, 'cadeau_ouvert.png'));
+      await square(1024).toFile(path.join(arcade, 'fox_head_avatar.png'));
       const script = path.resolve('scripts/generate-responsive-assets.cjs');
       const run = spawnSync(process.execPath, [script], { cwd: project, encoding: 'utf8' });
       expect(run.status).toBe(0);
@@ -123,7 +136,7 @@ describe('génération réelle (npm run assets:generate) dans un projet jetable'
       ]);
       expect(fs.existsSync(path.join(generated, 'arcade/fox-1024.webp'))).toBe(true);
       // Une source hors du catalogue garde ses trois tailles
-      expect(Object.keys(map['arcade/cadeau_ouvert'].resolutions)).toEqual(['64', '128', '256']);
+      expect(Object.keys(map['arcade/fox_head_avatar'].resolutions)).toEqual(['64', '128', '256']);
     } finally {
       fs.rmSync(project, { recursive: true, force: true });
     }

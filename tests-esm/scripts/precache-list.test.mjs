@@ -239,6 +239,8 @@ describe('Le dépôt', () => {
         '/assets/images/arcade/tete_haut.png',
         '/assets/images/arcade/chemin.png',
         '/assets/images/arcade/herbe.png',
+        // Cadeaux de l'Aventure, servis en WebP : le service worker garde leurs variantes
+        '/assets/images/arcade/cadeau_ferme.png',
         '/assets/images/arcade/cadeau_ouvert.png',
         '/assets/generated-images/arcade/logo_mode_quizz-256.webp',
         // Images haute définition des jeux d'Arcade : une variante chacune (catalogue)
