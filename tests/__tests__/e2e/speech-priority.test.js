@@ -94,12 +94,14 @@ describe('Speech Priority System E2E', () => {
     }
   });
 
+  // Plus long que la navigation qu'il attend (20 s) : sous la charge de toute la suite en
+  // parallèle, le délai par défaut de Jest (10 s) coupait page.goto avant le sien
   beforeEach(async () => {
     page = await browser.newPage();
     await injectSpeechStub(page);
     await enableVoice(page);
     await page.goto(baseUrl, gotoOptions);
-  });
+  }, 30000);
 
   afterEach(async () => {
     await page.close();
