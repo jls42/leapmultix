@@ -73,6 +73,20 @@ curl -s -H 'Cache-Control: no-cache' https://leapmultix.jls42.org/sw.js | grep -
 git show origin/main:sw.js | grep -m1 'const VERSION'
 ```
 
+## CSP et mesure d'audience
+
+- **Deux CSP s'appliquent à `index.html`** : celle de CloudFront (politiques d'en-têtes
+  `leapmultix-default-policy`, `leapmultix-html-policy`, `leapmultix-assets-policy`, hors du
+  dépôt), complète, et la balise meta de la page (`script-src 'self'`, `object-src 'none'`,
+  `base-uri 'self'`, `form-action 'self'`), qui vaut aussi sur les serveurs locaux. Le
+  navigateur applique les deux : un script hors du site est refusé même si CloudFront
+  l'autorise. Pas de `frame-ancestors` ni d'`upgrade-insecure-requests` dans la balise :
+  ignorés en meta, ou gênants sur `http://localhost`.
+- **Plausible** : le traceur est servi par le site (`js/vendor/plausible.js`) ; `deploy.sh`
+  écrit `PLAUSIBLE_DOMAIN` dans `<meta name="plausible-domain">` (nom d'hôte seul, sinon le
+  déploiement s'arrête) et, sans domaine, retire les blocs `plausible:start` / `plausible:end`.
+  Les événements partent vers `https://plausible.io/api/event` (`connect-src` de CloudFront).
+
 Variables de dépôt attendues (Settings > Secrets and variables > Actions) :
 `AWS_DEPLOY_ROLE_ARN`, `S3_BUCKET`, `CLOUDFRONT_DISTRIB`, `PLAUSIBLE_DOMAIN`, `VOICE_BASE`
 (`/voice/` : adresse des clips de la voix enregistrée, voir `docs/voix-enregistree.md`).

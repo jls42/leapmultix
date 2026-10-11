@@ -102,6 +102,12 @@ fi
 
 # Vérification du domaine Plausible (optionnel)
 if [[ -n "$PLAUSIBLE_DOMAIN" ]]; then
+    # Nom d'hôte seul : il est écrit tel quel dans index.html (sed), puis lu par
+    # js/plausible-init.js ; un « / », un « & » ou un guillemet casserait la page
+    if [[ ! "$PLAUSIBLE_DOMAIN" =~ ^[A-Za-z0-9.-]{1,253}$ ]]; then
+        echo -e "${RED}❌ Domaine Plausible invalide (nom d'hôte attendu) : $PLAUSIBLE_DOMAIN${NC}"
+        exit 1
+    fi
     echo -e "${GREEN}📊 Domaine Plausible: $PLAUSIBLE_DOMAIN${NC}"
 else
     echo -e "${YELLOW}⚠️  Domaine Plausible non configuré - analytics désactivés${NC}"

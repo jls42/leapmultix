@@ -16,6 +16,9 @@ const codacyOnlyXss = {
 };
 
 export default [
+  // Copie telle quelle du traceur de Plausible (npm run vendor:plausible), relue à chaque mise à
+  // jour du paquet : les règles du jeu ne s'appliquent pas au code d'un tiers
+  { ignores: ['js/vendor/**'] },
   js.configs.recommended,
   {
     languageOptions: {

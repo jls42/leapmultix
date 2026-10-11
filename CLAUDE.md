@@ -40,8 +40,9 @@ Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run li
 - Scripts Node : `node:fs`, `node:path`… ; des tâches asynchrones en série passent par
   `scripts/lib/in-sequence.cjs` plutôt que par un `await` dans une boucle.
 - CSS : notation moderne `rgb(255 255 255 / 0.9)`, jamais `rgba(...)`.
-- Scripts externes : `crossorigin="anonymous"` ; empreinte d'intégrité pour une bibliothèque figée,
-  pas pour Plausible, qui change : la CSP restreint les sources.
+- Aucun script hors du site : la CSP d'`index.html` (balise meta) les refuse. Un code tiers se
+  copie dans `js/vendor/` depuis son paquet npm à version exacte, comme le traceur de Plausible
+  (`npm run vendor:plausible`, copie vérifiée par un test).
 - Faux positif d'un analyseur : suppression ESLint en ligne, au plus près, raison écrite après
   `--` (syntaxe et exemples : `docs/guide/analyse-statique.md`).
 

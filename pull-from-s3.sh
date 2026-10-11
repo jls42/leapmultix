@@ -181,17 +181,11 @@ fi
 echo -e "${BLUE}🔄 Restauration des placeholders pour le développement...${NC}"
 
 if [[ -f "$TEMP_DIR/index.html" ]]; then
-    # Restaurer le placeholder Plausible si analytics sont détectés
-    if grep -q "plausible.io/js/script.js" "$TEMP_DIR/index.html"; then
+    # Restaurer le placeholder Plausible si analytics sont détectés. Motif fixe : le domaine lu
+    # dans la page rapatriée n'entre jamais dans la commande sed
+    if grep -q 'name="plausible-domain"' "$TEMP_DIR/index.html"; then
         echo -e "${GREEN}   📊 Analytics Plausible détectés - restauration du placeholder${NC}"
-
-        # Extraire le domaine actuel
-        CURRENT_DOMAIN=$(grep -o 'data-domain="[^"]*"' "$TEMP_DIR/index.html" | sed 's/data-domain="//' | sed 's/"//' | head -1)
-        if [[ -n "$CURRENT_DOMAIN" ]]; then
-            echo -e "${BLUE}   🔍 Domaine détecté: $CURRENT_DOMAIN${NC}"
-            # Remplacer le domaine par le placeholder
-            sed -i "s/data-domain=\"$CURRENT_DOMAIN\"/data-domain=\"{{PLAUSIBLE_DOMAIN}}\"/g" "$TEMP_DIR/index.html"
-        fi
+        sed -i 's|<meta name="plausible-domain" content="[^"]*"|<meta name="plausible-domain" content="{{PLAUSIBLE_DOMAIN}}"|' "$TEMP_DIR/index.html"
     else
         echo -e "${YELLOW}   ⚠️  Aucun analytics Plausible détecté${NC}"
     fi

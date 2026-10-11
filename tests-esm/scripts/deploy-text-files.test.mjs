@@ -98,13 +98,9 @@ const INDEX_WITH_ANALYTICS = [
   '    <!-- plausible:end -->',
   '    <link rel="stylesheet" href="css/main.css">',
   '    <!-- plausible:start -->',
-  '    <!-- Analytics Plausible (remplacé par le script de déploiement) -->',
-  '    <script src="js/plausible-init.js"></script>',
-  '    <script',
-  '      defer',
-  '      data-domain="{{PLAUSIBLE_DOMAIN}}"',
-  '      src="https://plausible.io/js/script.js"',
-  '    ></script>',
+  '    <!-- Mesure d’audience (domaine écrit par le script de déploiement) -->',
+  '    <meta name="plausible-domain" content="{{PLAUSIBLE_DOMAIN}}" />',
+  '    <script type="module" src="js/plausible-init.js"></script>',
   '    <!-- plausible:end -->',
   '  </head>',
   '  <body>',
@@ -133,7 +129,7 @@ describe('deploy.sh : mesure d’audience', () => {
     expect(html).not.toMatch(/plausible/i);
     expect(html).toContain('<main id="main-content">Le jeu</main>');
     expect(html).toContain('window.reste = true;');
-    expect(html.split('\n')).toHaveLength(INDEX_WITH_ANALYTICS.split('\n').length - 12);
+    expect(html.split('\n')).toHaveLength(INDEX_WITH_ANALYTICS.split('\n').length - 8);
   });
 
   test('le vrai index.html : sans domaine, plus rien de Plausible, la page entière', () => {
@@ -157,9 +153,21 @@ describe('deploy.sh : mesure d’audience', () => {
 
   test('avec un domaine : les blocs restent, le domaine est écrit', () => {
     const html = deployedIndex({ PLAUSIBLE_DOMAIN: 'exemple.org' });
-    expect(html).toContain('data-domain="exemple.org"');
+    expect(html).toContain('<meta name="plausible-domain" content="exemple.org" />');
     expect(html).toContain('<main id="main-content">Le jeu</main>');
   });
+
+  // Écrit tel quel dans la page : un « / » ou un « & » cassait la commande sed, un guillemet
+  // la balise
+  test.each(['exemple.org/x', 'a&b.org', 'exemple.org" x="'])(
+    'domaine « %s » : refusé, rien n’est envoyé',
+    domain => {
+      const { result, calls } = deploy({ PLAUSIBLE_DOMAIN: domain });
+      expect(result.status).toBe(1);
+      expect(result.stdout).toMatch(/Domaine Plausible invalide/);
+      expect(calls).toEqual([]);
+    }
+  );
 });
 
 describe('deploy.sh : fichiers modifiés à taille constante', () => {
