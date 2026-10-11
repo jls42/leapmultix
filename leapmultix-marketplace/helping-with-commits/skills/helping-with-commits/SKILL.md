@@ -1,7 +1,7 @@
 ---
 name: helping-with-commits
 description: Automates Git commit creation with Conventional Commits. Use when user wants to commit changes. (project)
-allowed-tools: Read, Grep, Glob, Bash
+allowed-tools: Read, Grep, Glob, Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(npm run format:check), Bash(npm run format), Bash(npm run lint), Bash(npm run lint:fix), Bash(npm test), Bash(npm run i18n:compare)
 ---
 
 # Commit Helper

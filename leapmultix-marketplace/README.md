@@ -95,5 +95,5 @@ AGPL-3.0 © Julien LE SAUX
 
 ## Links
 
-- **Homepage**: https://github.com/leapmultix/leapmultix
-- **Repository**: https://github.com/leapmultix/leapmultix.git
+- **Homepage**: https://github.com/jls42/leapmultix
+- **Repository**: https://github.com/jls42/leapmultix.git

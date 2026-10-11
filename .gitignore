@@ -55,6 +55,17 @@ coverage/
 
 # Deployment config (may contain secrets)
 deploy.config
+# Secrets courants : jamais versionnés (identifiants, clés, jetons)
+deploy*.config
+*.env
+.mcp.json
+.npmrc
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+*service-account*.json
 
 # Generated analysis reports
 analysis/

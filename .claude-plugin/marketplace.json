@@ -19,8 +19,8 @@
       "source": "./leapmultix-marketplace/chrome-devtools-tester",
       "category": "testing",
       "keywords": ["chrome", "devtools", "testing", "mcp", "browser"],
-      "homepage": "https://github.com/leapmultix/leapmultix",
-      "repository": "https://github.com/leapmultix/leapmultix.git",
+      "homepage": "https://github.com/jls42/leapmultix",
+      "repository": "https://github.com/jls42/leapmultix.git",
       "license": "AGPL-3.0"
     },
     {
@@ -34,8 +34,8 @@
       "source": "./leapmultix-marketplace/helping-with-commits",
       "category": "productivity",
       "keywords": ["git", "commits", "conventional-commits", "automation"],
-      "homepage": "https://github.com/leapmultix/leapmultix",
-      "repository": "https://github.com/leapmultix/leapmultix.git",
+      "homepage": "https://github.com/jls42/leapmultix",
+      "repository": "https://github.com/jls42/leapmultix.git",
       "license": "AGPL-3.0"
     },
     {
@@ -49,8 +49,8 @@
       "source": "./leapmultix-marketplace/expert-claude-code",
       "category": "development",
       "keywords": ["claude-code", "documentation", "expert", "skills", "agents", "plugins"],
-      "homepage": "https://github.com/leapmultix/leapmultix",
-      "repository": "https://github.com/leapmultix/leapmultix.git",
+      "homepage": "https://github.com/jls42/leapmultix",
+      "repository": "https://github.com/jls42/leapmultix.git",
       "license": "AGPL-3.0"
     },
     {
@@ -64,8 +64,8 @@
       "source": "./leapmultix-marketplace/web-research-specialist",
       "category": "research",
       "keywords": ["research", "documentation", "context7", "websearch", "official-docs"],
-      "homepage": "https://github.com/leapmultix/leapmultix",
-      "repository": "https://github.com/leapmultix/leapmultix.git",
+      "homepage": "https://github.com/jls42/leapmultix",
+      "repository": "https://github.com/jls42/leapmultix.git",
       "license": "AGPL-3.0"
     }
   ]

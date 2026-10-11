@@ -6,8 +6,8 @@
     "name": "Julien LE SAUX",
     "email": "contact@jls42.org"
   },
-  "homepage": "https://github.com/leapmultix/leapmultix",
-  "repository": "https://github.com/leapmultix/leapmultix.git",
+  "homepage": "https://github.com/jls42/leapmultix",
+  "repository": "https://github.com/jls42/leapmultix.git",
   "license": "AGPL-3.0",
   "keywords": ["claude-code", "documentation", "expert", "skills", "agents", "plugins"]
 }
