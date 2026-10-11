@@ -153,7 +153,7 @@ paths:
 
 **Integration and Analytics:**
 
-- `plausible-init.js` - Plausible analytics initialization
+- `plausible-init.js` - Audience measurement: Plausible's official tracker, served by the site (`js/vendor/plausible.js`, copied from the npm package by `npm run vendor:plausible`), started with the domain `deploy.sh` writes in `<meta name="plausible-domain">` (none in development: nothing is measured). No script comes from plausible.io; only the events go to its API. The tracker sets `window.plausible`, which receives the game's events (« Voice fallback »)
 - `cache-updater.js` - Cache management and version control
 - `imports.js` - Module import utilities
 

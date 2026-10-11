@@ -6,6 +6,12 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <meta charset="UTF-8" />
+    <!-- Aucun script hors du site, partout : en prod, CloudFront envoie en plus sa propre CSP,
+         plus complète, et les deux s'appliquent ; les serveurs locaux n'en envoient aucune -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+    />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover"
@@ -335,29 +341,11 @@
     <script type="module" src="js/seo-assets-preloader.js"></script>
 
     <!-- plausible:start -->
-    <!-- Analytics Plausible (domaine écrit par deploy.sh ; sans domaine, il retire tout le bloc
-         jusqu'à plausible:end) -->
-    <!--
-    Note: Integrity hash intentionally omitted for Plausible Analytics script.
-    Plausible updates their script periodically and using integrity hashes would break analytics
-    when they push updates. This is a common practice for third-party analytics services.
-    Risk is low as Plausible is privacy-focused and doesn't track personal data.
-    Alternative: Use CSP header to restrict script sources if needed.
-
-    Suppressing static analysis warnings:
-    sonarjs:S5725 - External scripts without integrity is acceptable for analytics services that auto-update
-    -->
-    <!-- Plausible Analytics initialization -->
-    <script src="js/plausible-init.js"></script>
-    <!-- eslint-disable-next-line sonarjs/no-script-without-integrity -- Analytics script auto-updates, integrity would break functionality -->
-    <!-- async, pas defer : un script defer passe avant ceux du jeu et retient DOMContentLoaded ; un
-    plausible.io muet (pare-feu qui ne répond pas) bloquait ainsi le démarrage jusqu'à 30 s -->
-    <script
-      async
-      data-domain="{{PLAUSIBLE_DOMAIN}}"
-      src="https://plausible.io/js/script.js"
-      crossorigin="anonymous"
-    ></script>
+    <!-- Mesure d'audience (domaine écrit par deploy.sh ; sans domaine, il retire tout le bloc
+         jusqu'à plausible:end). Le traceur de Plausible est servi par le site (js/vendor/,
+         npm run vendor:plausible) : aucun script de plausible.io ne tourne dans le jeu -->
+    <meta name="plausible-domain" content="{{PLAUSIBLE_DOMAIN}}" />
+    <script type="module" src="js/plausible-init.js"></script>
     <!-- plausible:end -->
   </head>
 

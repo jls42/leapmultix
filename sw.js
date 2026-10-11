@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v38'; // bump to trigger client update
+const VERSION = 'v39'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -251,6 +251,7 @@ const PRECACHE_CORE = [
   '/js/uiUtils.js',
   '/js/userManager.js',
   '/js/utils-es6.js',
+  '/js/vendor/plausible.js',
   '/js/VideoManager.js',
   '/js/virtual-keyboard.js',
   '/js/voice-clips.js',
