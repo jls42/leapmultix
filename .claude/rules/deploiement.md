@@ -78,4 +78,5 @@ Variables de dépôt attendues (Settings > Secrets and variables > Actions) :
 (`/voice/` : adresse des clips de la voix enregistrée, voir `docs/voix-enregistree.md`).
 
 Déploiement manuel toujours possible : `./deploy.sh` en local (lit `deploy.config`),
-ou l'onglet Actions avec l'option `dry_run` pour simuler sans rien écrire.
+ou l'onglet Actions (« Run workflow » sur `main`, la seule branche que le job accepte),
+avec l'option `dry_run` pour simuler sans rien écrire.

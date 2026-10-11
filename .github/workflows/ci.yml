@@ -12,15 +12,20 @@ on:
         type: boolean
         default: false
 
+# Jeton GitHub en lecture seule pour tous les jobs ; deploy y ajoute seulement
+# id-token, pour l'échange OIDC avec AWS.
+permissions:
+  contents: read
+
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -43,14 +48,14 @@ jobs:
         run: npm run format:check
 
   seo-report:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: verify
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -73,9 +78,9 @@ jobs:
   # éphémère : aucune clé AWS n'est stockée dans le dépôt.
   deploy:
     name: Déploiement
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: verify
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     permissions:
       id-token: write # échange du jeton OIDC avec AWS
       contents: read
@@ -85,7 +90,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Échouer ici plutôt que de déployer un site amputé : sans PLAUSIBLE_DOMAIN,
       # deploy.sh retire silencieusement les scripts d'analytics.
@@ -109,7 +114,7 @@ jobs:
           echo "Variables présentes."
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '20'
           cache: 'npm'
