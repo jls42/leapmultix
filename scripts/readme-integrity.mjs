@@ -34,11 +34,21 @@ export function codeBlocks(text) {
 // premier caractère qu'une URL ne permet pas (accent grave, parenthèse, lettre accentuée…)
 const LINK = /\]\(([^)\s]+)\)|<(https?:\/\/[^>\s]+)>|(https?:\/\/[\w\-.~:/?#@!$&'*+,;=%]+)/g;
 
-/** Liens d'un texte, sans les ancres internes ; la ponctuation qui finit une phrase en est ôtée */
+/** Ponctuation qui finit une phrase, et non l'adresse nue qu'elle suit */
+const TRAILING = new Set(['.', ',', ';', ':', '!', '?', '*', "'"]);
+
+/** Adresse nue sans sa ponctuation finale, lue depuis la fin (aucun retour arrière) */
+function withoutTrailingPunctuation(url) {
+  let end = url.length;
+  while (end > 0 && TRAILING.has(url.at(end - 1))) end--;
+  return url.slice(0, end);
+}
+
+/** Liens d'un texte, sans les ancres internes */
 export function links(text) {
   const found = new Set();
   for (const [, target, bracketed, bare] of text.matchAll(LINK)) {
-    const link = target ?? bracketed ?? bare.replace(/[.,;:!?*']+$/, '');
+    const link = target ?? bracketed ?? withoutTrailingPunctuation(bare);
     if (!link.startsWith('#')) found.add(link);
   }
   return found;
