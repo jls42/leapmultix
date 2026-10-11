@@ -21,6 +21,7 @@ import { eventBus } from './core/eventBus.js';
 import { InfoBar } from './components/infoBar.js';
 import { spriteFor, drawArcadeSprite, prefetchArcadeSprite } from './arcade-sprites.js';
 import { avatarSpec, monsterSpec, spaceshipSpec } from './arcade-sprite-catalog.js';
+import { normalizeAvatarId } from './avatar-heads.js';
 import { getDifficultySettings } from './difficulty.js';
 import { gameState as globalGameState } from './game.js';
 import { TablePreferences } from './core/tablePreferences.js';
@@ -316,7 +317,7 @@ function computeBaseAlienSpeed(isMobile, difficulty, enemySpeed) {
  * @returns {import('./arcade-sprites.js').ArcadeSprite}
  */
 function createSpaceshipSprite(selectedState) {
-  const playerAvatar = selectedState?.avatar ?? 'fox';
+  const playerAvatar = normalizeAvatarId(selectedState?.avatar);
   const selection =
     selectedState?.selectedSpaceship ||
     `spaceship_${playerAvatar}.png|spaceship_default_128x128.png`;
@@ -325,7 +326,7 @@ function createSpaceshipSprite(selectedState) {
 
 /** Avatars qui peuvent sortir de la bonne réponse : tous sauf celui du joueur */
 function friendAvatars() {
-  const playerAvatar = globalGameState?.avatar ?? 'fox';
+  const playerAvatar = normalizeAvatarId(globalGameState?.avatar);
   return FRIEND_AVATARS.filter(name => name !== playerAvatar);
 }
 

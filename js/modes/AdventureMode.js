@@ -956,7 +956,10 @@ export class AdventureMode extends GameMode {
 
     if (operatorProgress) {
       Object.values(operatorProgress).forEach(progress => {
-        this.totalStars += progress.stars || 0;
+        // Seuls les nombres comptent : un profil repris d'un fichier peut porter n'importe quoi,
+        // et le total s'écrit dans le gabarit de la carte
+        const stars = Number(progress?.stars);
+        if (Number.isFinite(stars)) this.totalStars += stars;
       });
     }
 

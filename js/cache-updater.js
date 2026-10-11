@@ -4,7 +4,7 @@
  */
 
 // Version globale de l'application - doit correspondre à sw.js
-export const APP_VERSION = 'v37';
+export const APP_VERSION = 'v38';
 export const VERSION_PARAM = `v=${APP_VERSION}`;
 
 const runtime = globalThis;
@@ -261,6 +261,16 @@ export function addVersionParam() {
   }
 }
 
+/**
+ * Adresse de la page, avec le paramètre de version. Absolue : un chemin « //hôte/… », donné
+ * tel quel à location.href, mènerait vers un autre site.
+ * @param {{href: string}} loc - Adresse de la page (window.location)
+ * @returns {string}
+ */
+export function versionedPageUrl(loc) {
+  return new URL(`?${VERSION_PARAM}`, loc.href).href;
+}
+
 // Fonction pour vider manuellement le cache et recharger (fonction interne utilisée par le service worker)
 export function clearCacheAndReload() {
   const cachesApi = runtime.caches;
@@ -268,7 +278,7 @@ export function clearCacheAndReload() {
     localStorage.setItem('cache_cleared_timestamp', APP_VERSION);
     const loc = runtime.location;
     if (loc) {
-      loc.href = `${loc.pathname}?${VERSION_PARAM}`;
+      loc.href = versionedPageUrl(loc);
     }
   };
 

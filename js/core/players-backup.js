@@ -16,12 +16,23 @@ export const BACKUP_VERSION = 1;
 export const BACKUP_MAX_BYTES = 10 * 1024 * 1024;
 
 /**
+ * Au-delà, ce n'est pas un profil de joueur : un profil très joué d'avant la v37 (historique
+ * entier, 506 réponses en treize mois) pèse 71 000 caractères. La borne en laisse vingt fois
+ * plus, et moins de la moitié du stockage du navigateur (~5 millions de caractères).
+ */
+export const PLAYER_MAX_CHARS = 2 * 1024 * 1024;
+
+/**
  * Prénom qu'une version du jeu a pu ranger : la règle actuelle (checkUsername), ou l'ancienne
  * ([a-zA-Z0-9À-ÿ\s._-], où passaient aussi « × », « ÷ » et toute espace). Jamais « __proto__ ».
  */
 const STORED_NAME = /^[\p{L}\p{M}\p{N}\s\u0027\u2019.\u00B7_\u00D7\u00F7\u200C-]{1,50}$/u;
 
 const isPlainObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+/** Un objet, pas plus gros qu'un vrai profil : un profil démesuré remplirait le stockage */
+const isPlayerProfile = data =>
+  isPlainObject(data) && JSON.stringify(data).length <= PLAYER_MAX_CHARS;
 
 /**
  * @param {*} name
@@ -79,7 +90,9 @@ export function readPlayersBackup(text) {
     return { error: 'format' };
   }
   const entries = Object.entries(parsed.players);
-  const players = entries.filter(([name, data]) => isStoredPlayerName(name) && isPlainObject(data));
+  const players = entries.filter(
+    ([name, data]) => isStoredPlayerName(name) && isPlayerProfile(data)
+  );
   return { players, rejected: entries.length - players.length };
 }
 

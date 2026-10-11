@@ -27,6 +27,16 @@ export const STORAGE_KEYS = {
 };
 
 /**
+ * Écrit une valeur, sérialisée en JSON sauf une chaîne ; lève l'erreur du navigateur
+ * @param {string} key
+ * @param {*} value
+ */
+function writeItem(key, value) {
+  const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+  localStorage.setItem(key, serialized);
+}
+
+/**
  * API de stockage centralisée
  */
 const Storage = {
@@ -62,11 +72,26 @@ const Storage = {
    */
   set(key, value) {
     try {
-      const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-      localStorage.setItem(key, serialized);
+      writeItem(key, value);
       return true;
     } catch (error) {
       console.error(`Erreur écriture localStorage [${key}]:`, error);
+      return false;
+    }
+  },
+
+  /**
+   * Comme set, sans journal : pour un refus attendu (stockage plein) que l'appelant rattrape
+   * @param {string} key - Clé de stockage
+   * @param {*} value - Valeur à sauvegarder
+   * @returns {boolean} Faux si le navigateur refuse d'écrire
+   */
+  trySet(key, value) {
+    try {
+      writeItem(key, value);
+      return true;
+    } catch {
+      // Refus attendu : l'appelant a un repli, qui journalise s'il échoue à son tour
       return false;
     }
   },

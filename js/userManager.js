@@ -27,7 +27,13 @@ import {
   emptyChronoStats,
 } from './core/chrono-stats.js';
 import { profileOperationStats } from './core/profile-operation-stats.js';
-import { TRASH_DAYS, isTrashExpired, loadTrash, saveTrash } from './core/players-trash.js';
+import {
+  TRASH_DAYS,
+  isTrashExpired,
+  loadTrash,
+  saveTrash,
+  trySaveTrash,
+} from './core/players-trash.js';
 import { buildPlayersBackup, requestPersistentStorage } from './core/players-backup.js';
 import { confirmDialog } from './components/confirm-dialog.js';
 
@@ -94,8 +100,13 @@ const createDefaultUserData = (nickname = '') => ({
 const legacyArcadeKey = (game, nickname) =>
   game === 'invasion' ? `arcadeScores_${nickname}` : `arcadeScores_${game}_${nickname}`;
 
-/** Surnom sous lequel arcade-scores.js rangeait les scores : le surnom affiché, sans espaces autour */
-const legacyArcadeOwner = (raw, currentUser) => String(raw.nickname || currentUser || '').trim();
+/**
+ * Surnom sous lequel arcade-scores.js rangeait les scores : le surnom affiché, sans espaces
+ * autour. Aucun pour un profil repris d'un fichier (legacyArcade: false) : il n'a jamais rien
+ * rangé sur cet appareil, il n'en reprend ni n'en protège les anciennes clés
+ */
+const legacyArcadeOwner = (raw, currentUser) =>
+  raw.legacyArcade === false ? '' : String(raw.nickname || currentUser || '').trim();
 
 /**
  * Les 5 meilleurs scores d'un jeu d'Arcade d'avant la v37, pour l'amorçage des compteurs
@@ -519,10 +530,11 @@ export const UserManager = {
       return false;
     }
 
-    const trash = loadTrash();
-    trash.push({ name: key, deletedAt: Date.now(), data: Reflect.get(this._players, key) });
-    // Une corbeille qui ne s'écrit pas : le profil reste, plutôt que d'être perdu
-    if (!saveTrash(trash)) {
+    const entry = { name: key, deletedAt: Date.now(), data: Reflect.get(this._players, key) };
+    const trash = [...loadTrash(), entry];
+    // Pas la place de deux copies : le profil quitte d'abord la liste, puis va dans la corbeille.
+    // Une corbeille qui ne s'écrit toujours pas : le profil reste, plutôt que d'être perdu
+    if (!trySaveTrash(trash) && !this._trashWithoutSecondCopy(key, entry, trash)) {
       console.error(`Corbeille indisponible : « ${key} » n'est pas supprimé`);
       return false;
     }
@@ -537,6 +549,23 @@ export const UserManager = {
     // Plus de joueur courant : la barre du haut retire ce qui dépend d'un profil
     if (wasCurrentUser) this.emitUserChanged(null);
     return true;
+  },
+
+  /**
+   * Retire le profil de la liste, puis l'écrit dans la corbeille ; si elle ne s'écrit toujours
+   * pas, il revient dans la liste (rien n'est perdu)
+   * @param {string} key
+   * @param {{name: string, deletedAt: number, data: Object}} entry - Son entrée de corbeille
+   * @param {Array<Object>} trash - La corbeille, entrée comprise
+   * @returns {boolean} Vrai si le profil est dans la corbeille
+   * @private
+   */
+  _trashWithoutSecondCopy(key, entry, trash) {
+    Reflect.deleteProperty(this._players, key);
+    if (this.savePlayers() && saveTrash(trash)) return true;
+    this._addPlayer(key, entry.data);
+    this.savePlayers();
+    return false;
   },
 
   /**
@@ -597,7 +626,10 @@ export const UserManager = {
       ...Object.entries(this._players),
       ...trash.map(entry => [entry.name, entry.data]),
     ];
-    return new Set(profiles.flatMap(([name, data]) => [name, legacyArcadeOwner(data ?? {}, name)]));
+    // Un profil repris d'un fichier (legacyArcade: false) n'a jamais rangé de clé sur cet
+    // appareil : ni son prénom ni son surnom n'en protègent
+    const native = profiles.filter(([, data]) => data?.legacyArcade !== false);
+    return new Set(native.flatMap(([name, data]) => [name, legacyArcadeOwner(data ?? {}, name)]));
   },
 
   /**
@@ -613,31 +645,38 @@ export const UserManager = {
   },
 
   /**
-   * Ajoute les joueurs d'une sauvegarde relue (core/players-backup.js). Un joueur déjà dans la
-   * liste n'est jamais écrasé : il est rendu dans « skipped ».
+   * Ajoute les joueurs d'une sauvegarde relue (core/players-backup.js). Comme pour createUser,
+   * un prénom de la liste n'est jamais écrasé (« skipped ») et un prénom de la corbeille s'y
+   * restaure (« inTrash »).
    * @param {Array<[string, Object]>} entries - Prénom et profil, déjà vérifiés
-   * @returns {{added: string[], skipped: string[], error?: 'storage'}}
+   * @returns {{added: string[], skipped: string[], inTrash: string[], error?: 'storage'}}
    */
   importPlayers(entries) {
     const added = [];
     const skipped = [];
+    const inTrash = [];
+    const trashed = new Set(loadTrash().map(entry => entry.name));
     for (const [name, data] of entries) {
       if (Object.prototype.hasOwnProperty.call(this._players, name)) {
         skipped.push(name);
+      } else if (trashed.has(name)) {
+        inTrash.push(name);
       } else {
-        // Venu d'ailleurs sans ses statistiques par calcul : il ne prend pas celles de l'appareil
-        const profile = Object.hasOwn(data, 'operationStats')
-          ? data
-          : { ...data, operationStats: {} };
-        this._addPlayer(name, profile);
+        // Venu d'ailleurs : ni les statistiques par calcul de l'appareil, ni les anciens scores
+        // d'Arcade rangés ici sous son surnom (ceux d'un homonyme, peut-être supprimé)
+        this._addPlayer(name, {
+          ...data,
+          operationStats: Object.hasOwn(data, 'operationStats') ? data.operationStats : {},
+          legacyArcade: false,
+        });
         added.push(name);
       }
     }
     if (added.length > 0 && !this.savePlayers()) {
       added.forEach(name => Reflect.deleteProperty(this._players, name));
-      return { added: [], skipped, error: 'storage' };
+      return { added: [], skipped, inTrash, error: 'storage' };
     }
-    return { added, skipped };
+    return { added, skipped, inTrash };
   },
 
   /**
@@ -805,7 +844,12 @@ export const UserManager = {
       cancelLabel: getTranslation('delete_profile_dialog_cancel'),
       returnFocusTo: origin,
     });
-    if (!confirmed || !this.deleteUser(name)) return;
+    if (!confirmed) return;
+    if (!this.deleteUser(name)) {
+      // Refus du navigateur : components/playerTools.js le dit sous « Qui joue ? »
+      eventBus.emit('playerTrashFailed', { name });
+      return;
+    }
     this.refreshUserList();
     this._focusAfterProfileRemoval();
     // « Léa est dans la corbeille. » (components/playerTools.js)

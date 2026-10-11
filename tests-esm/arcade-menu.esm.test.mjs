@@ -22,6 +22,7 @@ jest.unstable_mockModule('../js/game.js', () => ({ gameState: { avatar: 'fox' } 
 
 const { ArcadeMode } = await import('../js/modes/ArcadeMode.js');
 const { isNoTimeLimit, setNoTimeLimit } = await import('../js/arcade-time.js');
+const { gameState } = await import('../js/game.js');
 
 let mode;
 let screen;
@@ -109,6 +110,23 @@ describe('Menu Arcade', () => {
   test('sans choix enregistré (ou choix d’un autre avatar), la première fusée est cochée', () => {
     const radios = [...screen.querySelectorAll('input[name="spaceship-choice-invasion"]')];
     expect(radios[0].checked).toBe(true);
+  });
+
+  // Un profil repris d'un fichier peut porter n'importe quel avatar ; un ancien profil, son
+  // nom français. Les fusées sont celles de l'avatar connu, jamais la valeur telle quelle.
+  test.each([
+    ['inconnu', '"><meta http-equiv="refresh" content="0;url=https://example.test/"><b x="', 'fox'],
+    ['ancien nom français', 'licorne', 'unicorn'],
+  ])('avatar %s : les fusées de l’avatar connu', (_, avatar, known) => {
+    gameState.avatar = avatar;
+    try {
+      const html = mode.getSpaceshipHTML('invasion');
+      expect(html).not.toContain(`spaceship_${avatar}`);
+      expect(html).not.toContain('<meta');
+      expect(html).toContain(`spaceship_${known}.png|spaceship_default_128x128.png`);
+    } finally {
+      gameState.avatar = 'fox';
+    }
   });
 
   test('« Commandes » : icônes dessinées au lieu d’émojis, une ligne par type de commande', () => {

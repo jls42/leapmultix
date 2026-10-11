@@ -20,6 +20,7 @@ import {
 } from '../components/loadErrorNotice.js';
 import { UNTIMED_GAMES, isNoTimeLimit, setNoTimeLimit } from '../arcade-time.js';
 import { spaceshipSpec } from '../arcade-sprite-catalog.js';
+import { normalizeAvatarId } from '../avatar-heads.js';
 import { attachImageFallbacks, webpImageAttributes } from '../webp-images.js';
 
 // Images du menu en WebP, à la taille où elles s'affichent × la densité de l'écran
@@ -414,8 +415,11 @@ export class ArcadeMode extends GameMode {
 
   /**
    * Obtenir les variantes de vaisseau selon l'avatar
+   * @param {string} [avatarId] - Ramené à un avatar de la liste (avatar-heads.js) : un ancien
+   *   profil porte un nom français, un profil repris d'un fichier n'importe quelle valeur
    */
-  getSpaceshipVariants(avatar) {
+  getSpaceshipVariants(avatarId) {
+    const avatar = normalizeAvatarId(avatarId);
     const overrides = {
       fox: { high: 'renard_vaisseau_2_256x256.png', low: 'renard_vaisseau_256x256.png' },
       panda: { high: 'panda_vaisseau_2_256x256.png', low: 'panda_vaisseau_256x256.png' },
