@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 # Régénère les traductions du README à partir de README.md (français, référence).
 #
-# Outil : aipmt (ai-powered-markdown-translator). Par défaut il passe par le CLI
-# Codex, donc sur le quota de l'abonnement ChatGPT : aucune clé d'API, aucune
-# facturation à l'usage. `codex login` doit avoir été fait au préalable.
+# Outil : aipmt (ai-powered-markdown-translator). Par défaut il passe par Gemini via
+# agy (--use_antigravity), sur le quota de l'abonnement Google : aucune clé d'API,
+# aucune facturation à l'usage. aipmt y refuse toute réponse où le modèle a tenté
+# d'utiliser un outil ; il fait de même avec --use_claude_code, pas avec --use_codex.
 #
 #   ./scripts/regen-readme-translations.sh              # toutes les langues
 #   ./scripts/regen-readme-translations.sh en es        # seulement celles-ci
-#   AIPMT_PROVIDER=--use_antigravity ./scripts/...      # Gemini par agy, quota de
-#                                                       # l'abonnement Google (aipmt ≥ 1.15.0)
-#   AIPMT_PROVIDER=--use_claude ./scripts/...           # autre fournisseur
+#   AIPMT_PROVIDER=--use_claude_code ./scripts/...      # quota de l'abonnement Claude
+#   AIPMT_PROVIDER=--use_codex ./scripts/...            # quota ChatGPT, sans ce refus
+#
+# Pas --use_claude : c'est l'API, facturée à l'usage.
 #
 # Ne jamais modifier ce script pendant qu'il tourne : bash le lit au fil de
 # l'exécution, et reprendrait après la boucle au mauvais endroit du fichier.
@@ -24,6 +26,10 @@
 #   3. Le modèle traduit parfois un titre autrement que son lien dans la table
 #      des matières. scripts/readme-anchors.mjs --fix réaligne les liens ; le
 #      test tests-esm/scripts/readme-anchors.test.mjs garde les quinze README.
+#
+# Avant de remplacer un README, la traduction doit garder les blocs de code et les
+# liens de la source (scripts/readme-integrity.mjs) : une commande changée ou une
+# adresse ajoutée par le modèle n'entre pas dans le dépôt.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -31,14 +37,14 @@ cd "$(dirname "$0")/.."
 SOURCE=README.md
 LANGUE_SOURCE=fr
 LANGUES_PAR_DEFAUT=(en es pt de zh hi ar it sv pl nl ro ja ko)
-PROVIDER="${AIPMT_PROVIDER:---use_codex}"
+PROVIDER="${AIPMT_PROVIDER:---use_antigravity}"
 ESSAIS="${AIPMT_ESSAIS:-3}"
-# Codex prend 3 à 5 minutes sur un README de cette taille ; la marge évite
-# qu'un appel lent soit abattu avant d'avoir répondu.
+# Une traduction de ce README prend plusieurs minutes ; la marge évite qu'un
+# appel lent soit abattu avant d'avoir répondu.
 DELAI="${AIPMT_TIMEOUT:-1800}"
 
 if ! command -v aipmt > /dev/null; then
-  echo "ERREUR : aipmt introuvable. Installer avec « pipx install ai-powered-markdown-translator »." >&2
+  echo "ERREUR : aipmt introuvable. Installer avec « pipx install ai-powered-markdown-translator==1.16.2 »." >&2
   exit 1
 fi
 if [[ ! -f "$SOURCE" ]]; then
@@ -107,6 +113,13 @@ for langue in "${langues[@]}"; do
 
       if [[ "$manquants" -gt 0 ]]; then
         echo "   $manquants média(s) perdu(s) : on rejette et on relance"
+        rm -f "$intermediaire"
+        continue
+      fi
+
+      # Blocs de code et liens de la source, à l'identique (écarts nommés sur stderr)
+      if ! node scripts/readme-integrity.mjs "$SOURCE" "$intermediaire"; then
+        echo "   blocs de code ou liens différents de la source : on rejette et on relance"
         rm -f "$intermediaire"
         continue
       fi
