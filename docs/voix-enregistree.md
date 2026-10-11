@@ -423,9 +423,10 @@ Avant de générer toute une langue avec une nouvelle voix, quelques voix candid
      juste n'est pas réécouté. Les clips signalés sont d'abord refaits en boucle, sans
      écoute, tant que Whisper doute (deux ou trois tours). Le propriétaire n'écoute ensuite
      que ceux qu'il n'a toujours pas validés, et l'échantillon des accords.
-   - **Refaire** : `generate.mjs --lang fr --redo ecartes.txt` (seulement les clips écartés
-     à l'écoute ; l'ancien de chacun est mis de côté dans `ecoute/avant/`). Whisper
-     retranscrit ensuite les clips refaits (leur sha256 a changé), puis
+   - **Refaire** : `generate.mjs --lang fr --redo ecartes.txt --max-total-chars <plafond>`
+     (seulement les clips écartés à l'écoute, dans le plafond accordé ; l'ancien de chacun
+     est mis de côté dans `ecoute/avant/`). Whisper retranscrit ensuite les clips refaits
+     (leur sha256 a changé), puis
      `npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl --compare ecartes.txt`
      compare l'ancien et le nouveau de chaque clip, avec le verdict de Whisper.
 

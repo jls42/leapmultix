@@ -467,6 +467,22 @@ describe('Génération des clips', () => {
     expect(manifest().clips[first.key].cost).toBeNull();
   });
 
+  test('coût annoncé négatif : compté comme inconnu, le budget en crédits tient', async () => {
+    // Un coût de -1000 rendrait le coût moyen négatif : plus aucune phrase ne dépasserait
+    server = await startServer((request, rank) => {
+      const reply = ok(request);
+      if (rank === 1) reply.headers['character-cost'] = '-1000';
+      return reply;
+    });
+    const ordered = generationOrder(PHRASES).map(p => saidText(p.text, 'fr'));
+    const budget = ordered.slice(0, 3).reduce((sum, said) => sum + costOf(said), 0) + 2;
+    const summary = await run({ maxCredits: budget });
+    expect(summary.stop).toBe('budget');
+    expect(summary.generated).toBeLessThan(PHRASES.length);
+    expect(summary.credits).toBeGreaterThan(0);
+    expect(summary.credits).toBeLessThanOrEqual(budget);
+  });
+
   test('arrêt demandé : l’appel en cours est abandonné, aucun fichier', async () => {
     const controller = new AbortController();
     server = await startServer(() => {

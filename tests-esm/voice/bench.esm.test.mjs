@@ -566,6 +566,18 @@ describe('commande', () => {
     expect(result.stderr).toContain('--max-total-chars obligatoire');
   });
 
+  test('un banc tourne déjà dans ce dossier : refus avant tout appel, verrou laissé', () => {
+    const out = path.join(work, 'sortie');
+    fs.mkdirSync(out, { recursive: true });
+    // Le processus de ce test est vivant : son numéro tient le verrou
+    fs.writeFileSync(benchPaths(out).lockFile, `${process.pid}\n`);
+    const result = bench('--out', out, '--max-total-chars', '100000');
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('tourne déjà');
+    expect(fs.existsSync(benchPaths(out).billedFile)).toBe(false);
+    expect(fs.readFileSync(benchPaths(out).lockFile, 'utf8')).toBe(`${process.pid}\n`);
+  });
+
   test('options : --config requis, --list-voices avec sa langue, Whisper du dossier courant', () => {
     expect(() => parseArgs([])).toThrow('--config <banc.json> est requis');
     expect(() => parseArgs(['--list-voices', 'google'])).toThrow('--language-code');

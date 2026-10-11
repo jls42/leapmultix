@@ -173,9 +173,10 @@ function isAlive(pid) {
 }
 
 /**
- * Verrou d'une version de voix : deux générations simultanées paieraient deux fois et se
- * gêneraient (le nettoyage de l'une effacerait les fichiers en cours de l'autre). Un verrou
- * dont le processus n'existe plus est repris.
+ * Verrou d'une version de voix ou d'un banc : deux exécutions simultanées paieraient deux fois
+ * et se gêneraient (le nettoyage de l'une effacerait les fichiers en cours de l'autre). Un
+ * verrou dont le processus n'existe plus est repris.
+ * @param {{lockFile: string}} paths - storePaths ou benchPaths
  * @returns {Promise<{release: () => Promise<void>}>}
  */
 export async function acquireLock(paths, { pid = process.pid, alive = isAlive } = {}) {
@@ -187,17 +188,17 @@ export async function acquireLock(paths, { pid = process.pid, alive = isAlive } 
 async function tryLock(paths, { pid, alive }, attempts) {
   if (attempts === 0) throw new Error(`Verrou impossible à prendre : ${paths.lockFile}`);
   try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou de la voix, chemin bâti par storePaths
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou bâti par storePaths ou benchPaths
     const handle = await fsp.open(paths.lockFile, 'wx');
     await handle.writeFile(`${pid}\n`);
     await handle.close();
     return { release: () => fsp.rm(paths.lockFile, { force: true }) };
   } catch (error) {
     if (error.code !== 'EEXIST') throw error;
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou de la voix, chemin bâti par storePaths
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou bâti par storePaths ou benchPaths
     const owner = Number((await fsp.readFile(paths.lockFile, 'utf8').catch(() => '')).trim());
     if (owner && alive(owner)) {
-      throw new Error(`Une génération tourne déjà (processus ${owner}) : attendre sa fin`);
+      throw new Error(`Une exécution tourne déjà (processus ${owner}) : attendre sa fin`);
     }
     await fsp.rm(paths.lockFile, { force: true });
   }

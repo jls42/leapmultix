@@ -42,7 +42,9 @@ const keyMasker = apiKey => message => String(message).replaceAll(apiKey, '***')
  * Appel HTTP d'un fournisseur : ses en-têtes d'accès s'ajoutent à ceux de l'appel, une panne
  * réseau devient une erreur « network » où la clé est masquée, une réponse en erreur passe par
  * errorFrom, le classement propre au fournisseur. Un appel annulé par son signal garde son
- * erreur telle quelle.
+ * erreur telle quelle. Une redirection n'est jamais suivie : vers une autre origine, fetch
+ * garderait xi-api-key et x-goog-api-key, corps compris. Les API ne redirigent pas, donc une
+ * redirection arrête tout, comme une réponse inutilisable.
  * @param {{label: string, apiKey: string, authHeaders: Record<string, string>,
  *   baseUrl: string, fetchImpl: typeof fetch,
  *   errorFrom: (res: Response) => Promise<ProviderError>}} options
@@ -56,10 +58,15 @@ export function httpCaller({ label, apiKey, authHeaders, baseUrl, fetchImpl, err
       res = await fetchImpl(`${baseUrl}${pathname}`, {
         ...init,
         headers: { ...authHeaders, ...init.headers },
+        redirect: 'manual',
       });
     } catch (error) {
       if (init.signal?.aborted) throw error;
       throw new ProviderError('network', `${label} injoignable : ${hide(error.message)}`);
+    }
+    if (res.status >= 300 && res.status < 400) {
+      await res.body?.cancel();
+      throw new ProviderError('response', `${label} : redirection ${res.status} non suivie`);
     }
     if (!res.ok) throw await errorFrom(res);
     return res;

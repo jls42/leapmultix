@@ -41,6 +41,7 @@ import { readTranscripts } from './check.mjs';
 import { ProviderError } from './providers/common.mjs';
 import { createGoogle } from './providers/google.mjs';
 import {
+  acquireLock,
   billedChars,
   rawExtension,
   recordBilled,
@@ -353,6 +354,7 @@ export function benchPaths(outDir) {
   return {
     outDir,
     billedFile: path.join(outDir, 'billed.jsonl'),
+    lockFile: path.join(outDir, 'bench.lock'),
     manifestDir: path.join(outDir, 'manifests'),
     whisperManifest: path.join(outDir, 'manifests', 'whisper.json'),
     transcripts: path.join(outDir, 'transcripts.jsonl'),
@@ -696,9 +698,13 @@ function printPlan({ plan, phrases, billed }) {
 }
 
 /** Banc, dossier, phrases et travail restant, sans rien écrire */
-function prepareBench(args) {
+/** Réglages du banc et ses fichiers : le verrou vit dans son dossier */
+function locateBench(args) {
   const setup = benchSetup(readJson(args.config));
-  const paths = benchPaths(args.out ?? path.join(args.voicesRepo, 'bancs', setup.id));
+  return { setup, paths: benchPaths(args.out ?? path.join(args.voicesRepo, 'bancs', setup.id)) };
+}
+
+function prepareBench(args, { setup, paths }) {
   const corpus = buildCorpus(setup.lang);
   const phrases = benchPhrases(corpus, setup.lang, setup);
   const plan = planBench({ voices: setup.voices, phrases, lang: setup.lang, paths });
@@ -740,13 +746,24 @@ function printResults({ results, files, batches }, paths) {
 async function main(argv) {
   const args = parseArgs(argv);
   if (args.listVoices) return listVoices(args);
-  const bench = prepareBench(args);
-  printPlan(bench);
-  if (args.dryRun) return 0;
-  const needed = bench.plan.reduce((sum, step) => sum + step.chars, 0);
-  assertCap(needed, bench.billed, args.maxTotalChars);
-  printResults(await runBench(args, bench), bench.paths);
-  return 0;
+  const location = locateBench(args);
+  if (args.dryRun) {
+    printPlan(prepareBench(args, location));
+    return 0;
+  }
+  // Un seul banc à la fois par dossier : un second paierait les mêmes phrases et effacerait les
+  // fichiers en cours du premier. Plan et registre se lisent donc sous le verrou.
+  const lock = await acquireLock(location.paths);
+  try {
+    const bench = prepareBench(args, location);
+    printPlan(bench);
+    const needed = bench.plan.reduce((sum, step) => sum + step.chars, 0);
+    assertCap(needed, bench.billed, args.maxTotalChars);
+    printResults(await runBench(args, bench), bench.paths);
+    return 0;
+  } finally {
+    await lock.release();
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
