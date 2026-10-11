@@ -18,11 +18,13 @@ compris, avant tout accès au disque. Il est refusé s'il sort du dossier couran
 personnel et du dossier temporaire, ou s'il n'a pas le type attendu : manifeste .json,
 dossier des clips, fichiers de transcriptions .jsonl (ceux de --also-done existent déjà).
 
-Installation (une fois) :
+Installation (une fois), chaque paquet vérifié par son empreinte :
   python3 -m venv .venv-whisper
-  .venv-whisper/bin/pip install -r scripts/voice/requirements-whisper.txt
-Le modèle (large-v3-turbo, ~1,6 Go) se télécharge au premier lancement ; sur GPU NVIDIA,
-compter une dizaine de minutes pour 7 500 clips, bien plus sur CPU.
+  .venv-whisper/bin/pip install --require-hashes --only-binary :all: \\
+      -r scripts/voice/requirements-whisper.txt
+Le modèle (large-v3-turbo, ~1,6 Go) se télécharge au premier lancement, au commit fixé par
+MODEL_REVISIONS ; sur GPU NVIDIA, compter une dizaine de minutes pour 7 500 clips, bien plus
+sur CPU.
 """
 
 import argparse
@@ -31,6 +33,11 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+
+# Commit du modèle sur le Hub : sans lui, chaque chargement demande le commit de « main » et
+# prend le nouveau s'il a bougé, donc d'autres transcriptions, sans relecture. Pour en changer :
+# mettre le nouveau commit ici, puis comparer les transcriptions avant et après.
+MODEL_REVISIONS = {"large-v3-turbo": "0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf"}
 
 
 def parse_args():
@@ -102,8 +109,10 @@ def load_model(name, device):
     if device == "auto":
         device = "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
     compute = "float16" if device == "cuda" else "int8"
-    print(f"Modèle {name} sur {device} ({compute})", file=sys.stderr)
-    return WhisperModel(name, device=device, compute_type=compute)
+    revision = MODEL_REVISIONS.get(name)
+    pinned = f"commit {revision[:12]}" if revision else "sans commit fixé"
+    print(f"Modèle {name} ({pinned}) sur {device} ({compute})", file=sys.stderr)
+    return WhisperModel(name, device=device, compute_type=compute, revision=revision)
 
 
 def done_pairs(out):

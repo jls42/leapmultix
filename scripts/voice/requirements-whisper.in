@@ -1,0 +1,4 @@
+# Tête de la transcription locale (Whisper) ; requirements-whisper.txt en est la fermeture
+# complète, chaque paquet avec ses empreintes. Pour monter de version : changer cette ligne,
+# régénérer le .txt par la commande écrite en tête de celui-ci, puis relancer une transcription.
+faster-whisper==1.2.1

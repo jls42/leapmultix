@@ -90,8 +90,8 @@ export function runWhisper({ python, lang, paths, transcripts }, spawn = spawnSy
   if (!fs.existsSync(python)) {
     throw new Error(
       `Interpréteur de Whisper introuvable : ${python}\n` +
-        'Installer une fois : python3 -m venv .venv-whisper && ' +
-        '.venv-whisper/bin/pip install -r scripts/voice/requirements-whisper.txt\n' +
+        'Installer une fois : python3 -m venv .venv-whisper && .venv-whisper/bin/pip install ' +
+        '--require-hashes --only-binary :all: -r scripts/voice/requirements-whisper.txt\n' +
         '(ou --python <interpréteur>, ou --skip-whisper)'
     );
   }
