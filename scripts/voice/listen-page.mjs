@@ -304,7 +304,7 @@ export function buildListenPage({ lang, voice, manifest, transcripts, sample, pa
     ? ''
     : ' Sans transcriptions Whisper (<code>--transcripts</code>), seules les durées signalent.';
   const intro = `<p class="muted">${counted}, puis ${plural(said.length, 'phrase', 'phrases')} dont le texte dit diffère : formes féminines, que Whisper ne distingue pas («&nbsp;un&nbsp;» et «&nbsp;une&nbsp;» s'écrivent «&nbsp;1&nbsp;»), et textes imposés. Un signalement n'est pas un verdict : seule l'oreille tranche.${noWhisper}</p>
-<p>Cocher «&nbsp;à refaire&nbsp;» chaque clip faux, puis copier la liste dans <code>ecartes.txt</code> : <code>node --env-file=&lt;.env&gt; scripts/voice/generate.mjs --lang ${escapeHtml(lang)} --redo ecartes.txt</code> (payant), relancer Whisper, puis comparer avec <code>npm run voice:listen -- --lang ${escapeHtml(lang)} --transcripts &lt;fichier&gt; --compare ecartes.txt</code>.</p>`;
+<p>Cocher «&nbsp;à refaire&nbsp;» chaque clip faux, puis copier la liste dans <code>ecartes.txt</code> : <code>node --env-file=&lt;.env&gt; scripts/voice/generate.mjs --lang ${escapeHtml(lang)} --redo ecartes.txt --max-total-chars &lt;plafond&gt;</code> (payant, dans le plafond accordé), relancer Whisper, puis comparer avec <code>npm run voice:listen -- --lang ${escapeHtml(lang)} --transcripts &lt;fichier&gt; --compare ecartes.txt</code>.</p>`;
   const html = pageHtml({
     title: 'Écoute des clips',
     voiceLabel: `${lang} ${voice.version}`,

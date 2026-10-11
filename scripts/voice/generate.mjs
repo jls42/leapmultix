@@ -330,11 +330,16 @@ function release(state, reservation) {
   state.reservedCredits -= reservation.credits;
 }
 
-/** Compte un appel payé : caractères envoyés et crédits réels (estimés s'ils manquent) */
+/**
+ * Compte un appel payé : caractères envoyés et crédits réels (estimés s'ils manquent). Un coût
+ * nul ou négatif compte comme absent : il ramènerait le coût moyen à zéro ou au-dessous, et
+ * plus aucune phrase ne dépasserait le budget en crédits.
+ */
 function account(state, chars, cost) {
+  const known = Number.isFinite(cost) && cost > 0 ? cost : null;
   state.chars += chars;
-  state.credits += cost ?? chars * state.ratio;
-  if (cost === null) return;
+  state.credits += known ?? chars * state.ratio;
+  if (known === null) return;
   state.costSeen = true;
   state.ratio = state.credits / state.chars;
 }

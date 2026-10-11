@@ -178,6 +178,17 @@ describe('Page d’écoute : clips signalés', () => {
     expect(document.querySelector('main').textContent).toContain('seules les durées signalent');
   });
 
+  test('la commande payante affichée porte un plafond (--max-total-chars)', async () => {
+    const { html } = listenPage(await standardStore());
+    const { document } = new JSDOM(html).window;
+    const command = [...document.querySelectorAll('main code')]
+      .map(code => code.textContent)
+      .find(text => text.includes('--redo'));
+    expect(command).toBe(
+      'node --env-file=<.env> scripts/voice/generate.mjs --lang fr --redo ecartes.txt --max-total-chars <plafond>'
+    );
+  });
+
   test('une transcription piégée reste du texte : aucun élément injecté', async () => {
     const { html } = listenPage(await standardStore());
     const { document } = new JSDOM(html).window;
