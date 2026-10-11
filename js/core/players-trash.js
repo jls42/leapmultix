@@ -47,6 +47,16 @@ export function saveTrash(entries) {
 }
 
 /**
+ * Comme saveTrash, sans journal : premier essai de « Supprimer », le profil encore dans la
+ * liste. Refusé faute de place pour deux copies, UserManager.deleteUser a un repli.
+ * @param {Array<Object>} entries
+ * @returns {boolean} Faux si le navigateur refuse d'écrire
+ */
+export function trySaveTrash(entries) {
+  return Storage.trySet(PLAYERS_TRASH_KEY, entries);
+}
+
+/**
  * Date de l'effacement pour de bon
  * @param {{deletedAt: number}} entry
  * @returns {number}

@@ -15,6 +15,7 @@ import {
   askWorkerVersion,
   hasMixedScriptVersions,
   reloadIfOutdated,
+  versionedPageUrl,
 } from '../js/cache-updater.js';
 
 const ORIGIN = 'https://leapmultix.jls42.org';
@@ -80,5 +81,21 @@ describe('Nouveau service worker installé', () => {
     await reloadIfOutdated(workerAnswering('v1'), reload);
     await reloadIfOutdated(brokenWorker, reload);
     expect(reload).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('Rechargement après le nettoyage du cache', () => {
+  test('l’adresse rechargée reste sur le site, même pour un chemin « //hôte/… »', () => {
+    for (const path of ['/', '/index.html', '//example.test/x']) {
+      const href = `${ORIGIN}${path}?ancien=1#fin`;
+      // Le navigateur résout l'adresse donnée à location.href par rapport à la page
+      const target = new URL(versionedPageUrl({ href, pathname: new URL(href).pathname }), href);
+      expect([path, target.origin, target.pathname, target.search]).toEqual([
+        path,
+        ORIGIN,
+        path,
+        `?v=${APP_VERSION}`,
+      ]);
+    }
   });
 });

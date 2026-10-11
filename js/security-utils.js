@@ -244,7 +244,8 @@ function parseHtmlToDocument(html) {
   }
 }
 
-const ATTR_LINKS = new Set(['href', 'src', 'xlink:href']);
+// Attributs qui portent une adresse : aucune en javascript:, data: ni vbscript:
+const ATTR_LINKS = new Set(['href', 'src', 'xlink:href', 'formaction', 'action']);
 
 function hasBlockedProtocol(value) {
   return /^\s*(javascript:|data:|vbscript:)/i.test(value || '');
@@ -263,8 +264,11 @@ function shouldRemoveAttribute(name, value) {
 }
 
 function scrubDangerousContent(doc) {
-  // Retirer éléments potentiellement dangereux
-  doc.querySelectorAll('script, iframe, object, embed').forEach(n => n.remove());
+  // Retirer éléments potentiellement dangereux ; meta, base, link et form agissent sur toute la
+  // page (navigation, adresse des liens, feuille de style, envoi) et aucun gabarit n'en a besoin
+  doc
+    .querySelectorAll('script, iframe, object, embed, meta, base, link, form')
+    .forEach(n => n.remove());
   // Nettoyer attributs dangereux
   const root = doc.body || doc;
   root.querySelectorAll('*').forEach(el => {

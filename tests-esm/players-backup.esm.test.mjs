@@ -12,7 +12,7 @@ import { legacySnapshot, seedLegacyStorage } from './helpers/legacy-profiles.mjs
 const { UserManager } = await import('../js/userManager.js');
 const { VideoManager } = await import('../js/VideoManager.js');
 const { PlayerTools } = await import('../js/components/playerTools.js');
-const { readPlayersBackup, requestPersistentStorage } = await import(
+const { PLAYER_MAX_CHARS, readPlayersBackup, requestPersistentStorage } = await import(
   '../js/core/players-backup.js'
 );
 const store = await import('../js/i18n-store.js');
@@ -87,7 +87,7 @@ describe('Export : tous les joueurs de la liste, tels qu’ils sont rangés', ()
     }
   });
 
-  test('export, navigateur vidé, reprise : les profils reviennent à l’identique', () => {
+  test('export, navigateur vidé, reprise : les profils reviennent à l’identique, marqués repris', () => {
     seedLegacyStorage(localStorage);
     UserManager._players = UserManager.loadPlayers();
     const text = JSON.stringify(UserManager.exportPlayers(NOW));
@@ -98,8 +98,14 @@ describe('Export : tous les joueurs de la liste, tels qu’ils sont rangés', ()
     expect(UserManager.importPlayers(backup.players)).toEqual({
       added: ['Zoé', 'Léa', 'Tom'],
       skipped: [],
+      inTrash: [],
     });
-    expect(stored()).toEqual(JSON.parse(text).players);
+    // Seul ajout : le marqueur d'un profil repris d'un fichier (anciens scores d'Arcade)
+    const marked = Object.entries(JSON.parse(text).players).map(([name, profile]) => [
+      name,
+      { ...profile, legacyArcade: false },
+    ]);
+    expect(stored()).toEqual(Object.fromEntries(marked));
   });
 });
 
@@ -111,9 +117,18 @@ describe('Reprise d’un fichier : vérifiée, sans écraser personne', () => {
     const backup = readPlayersBackup(
       backupText({ Léa: { nickname: 'Léa', coins: 900 }, Noé: { nickname: 'Noé', coins: 4 } })
     );
-    expect(UserManager.importPlayers(backup.players)).toEqual({ added: ['Noé'], skipped: ['Léa'] });
+    expect(UserManager.importPlayers(backup.players)).toEqual({
+      added: ['Noé'],
+      skipped: ['Léa'],
+      inTrash: [],
+    });
     expect(stored()['Léa'].coins).toBe(7);
-    expect(stored()['Noé']).toEqual({ nickname: 'Noé', coins: 4, operationStats: {} });
+    expect(stored()['Noé']).toEqual({
+      nickname: 'Noé',
+      coins: 4,
+      operationStats: {},
+      legacyArcade: false,
+    });
   });
 
   test('un profil venu d’ailleurs, sans statistiques par calcul, ne prend pas celles de l’appareil', () => {
@@ -170,9 +185,97 @@ describe('Reprise d’un fichier : vérifiée, sans écraser personne', () => {
     expect(UserManager.importPlayers(backup.players)).toEqual({
       added: [],
       skipped: [],
+      inTrash: [],
       error: 'storage',
     });
     expect(Object.keys(UserManager.getAllPlayers())).toEqual(['Léa']);
+  });
+});
+
+describe('Sauvegarde fabriquée : un profil démesuré n’est pas repris', () => {
+  test('un profil de 3 millions de caractères est écarté et compté, les autres sont repris', () => {
+    const backup = readPlayersBackup(
+      backupText({
+        Géant: { nickname: 'Géant', notes: 'x'.repeat(3_000_000) },
+        Noé: { nickname: 'Noé' },
+      })
+    );
+    expect(backup.players.map(([name]) => name)).toEqual(['Noé']);
+    expect(backup.rejected).toBe(1);
+  });
+
+  test('la borne laisse passer de très loin un vrai profil, même ancien et très joué', () => {
+    // Zoé : treize mois de jeu, 506 réponses gardées dans l'historique d'avant la v37
+    const zoe = JSON.stringify(legacySnapshot().players['Zoé']);
+    expect(zoe.length * 20).toBeLessThan(PLAYER_MAX_CHARS);
+  });
+});
+
+describe('Reprise : un homonyme n’hérite pas des anciens scores d’Arcade d’un enfant supprimé', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
+  // Scores d'avant la v37, rangés sous le surnom
+  const TOM_KEYS = ['arcadeScores_Tom', 'arcadeScores_multimiam_Tom'];
+  const seedDevice = players => {
+    localStorage.setItem('players', JSON.stringify(players));
+    for (const key of TOM_KEYS) localStorage.setItem(key, '[980,455]');
+    UserManager._players = UserManager.loadPlayers();
+  };
+  const importText = players =>
+    UserManager.importPlayers(readPlayersBackup(backupText(players)).players);
+  const arcadeTop5Of = name => {
+    UserManager._currentUser = name;
+    return UserManager.getCurrentUserData().modeStats.arcadeTop5;
+  };
+  const tomKeys = () => TOM_KEYS.map(key => localStorage.getItem(key));
+
+  test('« Tom » repris, sans compteurs : rien des anciennes clés de « Tom »', () => {
+    seedDevice({});
+    expect(importText({ Tom: { nickname: 'Tom' } }).added).toEqual(['Tom']);
+    expect(arcadeTop5Of('Tom')).toEqual({});
+  });
+
+  test('« Tom » dans la corbeille : pas repris ; à l’échéance, ses clés partent avec lui', () => {
+    seedDevice({ Tom: { nickname: 'Tom' } });
+    const now = jest.spyOn(Date, 'now').mockReturnValue(T0);
+    UserManager.deleteUser('Tom');
+    expect(importText({ Tom: { nickname: 'Tom', coins: 5 } })).toEqual({
+      added: [],
+      skipped: [],
+      inTrash: ['Tom'],
+    });
+    expect(UserManager.getAllPlayers()).toEqual({});
+    // Relance du jeu trente jours plus tard
+    now.mockReturnValue(T0 + 30 * DAY);
+    UserManager.init();
+    expect(JSON.parse(localStorage.getItem('playersTrash'))).toEqual([]);
+    expect(tomKeys()).toEqual([null, null]);
+  });
+
+  test('« Zed », surnommé « Tom » : ni amorcé avec ses scores, ni gardien de ses clés', () => {
+    seedDevice({ Tom: { nickname: 'Tom' } });
+    jest.spyOn(Date, 'now').mockReturnValue(T0);
+    UserManager.deleteUser('Tom');
+    expect(importText({ Zed: { nickname: 'Tom' } }).added).toEqual(['Zed']);
+    expect(arcadeTop5Of('Zed')).toEqual({});
+    UserManager.purgeExpiredTrash(T0 + 30 * DAY);
+    expect(tomKeys()).toEqual([null, null]);
+  });
+
+  test('« Tom » repris pendant que « Thomas », surnommé « Tom », est dans la corbeille', () => {
+    seedDevice({ Thomas: { nickname: 'Tom' } });
+    jest.spyOn(Date, 'now').mockReturnValue(T0);
+    UserManager.deleteUser('Thomas');
+    expect(importText({ Tom: { nickname: 'Tom' } }).added).toEqual(['Tom']);
+    expect(arcadeTop5Of('Tom')).toEqual({});
+    UserManager.purgeExpiredTrash(T0 + 30 * DAY);
+    expect(tomKeys()).toEqual([null, null]);
+  });
+
+  test('un marqueur venu du fichier ne l’emporte pas : tout profil repris est marqué', () => {
+    seedDevice({});
+    importText({ Tom: { nickname: 'Tom', legacyArcade: true } });
+    expect(stored()['Tom'].legacyArcade).toBe(false);
   });
 });
 
@@ -307,6 +410,34 @@ describe('« Qui joue ? » : boutons de la sauvegarde', () => {
     await PlayerTools.importFile(new File([backupText(players)], 'classe.json'));
     expect(document.getElementById('players-backup-message').textContent).toBe(
       'Aucun joueur ajouté. 6\u00a0joueurs déjà dans la liste, laissés tels quels.'
+    );
+  });
+
+  test('un joueur de la corbeille n’est pas repris : le message le dit à part', async () => {
+    UserManager.createUser('Léa', 'panda');
+    UserManager.createUser('Noé', 'fox');
+    UserManager.deleteUser('Léa');
+    UserManager.refreshUserList();
+    const players = {
+      Léa: { nickname: 'Léa' },
+      Noé: { nickname: 'Noé' },
+      Zoé: { nickname: 'Zoé' },
+    };
+    await PlayerTools.importFile(new File([backupText(players)], 'joueurs.json'));
+    expect(document.getElementById('players-backup-message').textContent).toBe(
+      '1\u00a0joueur ajouté. Déjà dans la liste, laissés tels quels\u00a0: Noé. ' +
+        'Dans la corbeille, laissés tels quels\u00a0: Léa.'
+    );
+  });
+
+  test('au-delà de 5, les joueurs de la corbeille sont comptés', async () => {
+    const names = ['Adam', 'Inès', 'Jade', 'Lina', 'Noah', 'Rose'];
+    for (const name of names) UserManager.createUser(name, 'fox');
+    for (const name of names) UserManager.deleteUser(name);
+    const players = Object.fromEntries(names.map(name => [name, { nickname: name }]));
+    await PlayerTools.importFile(new File([backupText(players)], 'classe.json'));
+    expect(document.getElementById('players-backup-message').textContent).toBe(
+      'Aucun joueur ajouté. 6\u00a0joueurs dans la corbeille, laissés tels quels.'
     );
   });
 

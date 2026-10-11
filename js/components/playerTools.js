@@ -188,15 +188,33 @@ function skippedMessage(skipped) {
 }
 
 /**
- * Bilan d'une reprise : ajoutés, laissés tels quels, illisibles
- * @param {{added: string[], skipped: string[]}} result
+ * Joueurs de la corbeille, laissés tels quels (ils s'y restaurent) : nommés s'ils sont peu,
+ * comptés sinon
+ * @param {string[]} inTrash
+ * @returns {string}
+ */
+function inTrashMessage(inTrash) {
+  const count = inTrash.length;
+  if (count > SKIPPED_NAMES_MAX) {
+    const fallback = `${count} joueurs dans la corbeille, laissés tels quels.`;
+    return translateOr('import_in_trash_many', fallback, { n: count });
+  }
+  const names = listOfNames(inTrash);
+  const fallback = `Dans la corbeille, laissés tels quels\u00a0: ${names}.`;
+  return translateOr('import_in_trash', fallback, { names });
+}
+
+/**
+ * Bilan d'une reprise : ajoutés, laissés tels quels (liste, puis corbeille), illisibles
+ * @param {{added: string[], skipped: string[], inTrash: string[]}} result
  * @param {number} rejected
  * @returns {string}
  */
-function importSummary({ added, skipped }, rejected) {
+function importSummary({ added, skipped, inTrash }, rejected) {
   const count = added.length;
   const parts = [translateOr('import_done', `${count} joueurs ajoutés.`, { n: count })];
   if (skipped.length > 0) parts.push(skippedMessage(skipped));
+  if (inTrash.length > 0) parts.push(inTrashMessage(inTrash));
   if (rejected > 0) {
     const fallback = `${rejected} joueurs illisibles écartés.`;
     parts.push(translateOr('import_rejected', fallback, { n: rejected }));
@@ -225,6 +243,7 @@ export const PlayerTools = {
       this._wired = true;
       eventBus.on('playersChanged', () => this.refresh());
       eventBus.on('playerTrashed', event => this._announceTrashed(event?.detail?.name));
+      eventBus.on('playerTrashFailed', event => this._announceTrashFailed(event?.detail?.name));
       document.addEventListener('input', event => this._onInput(event));
       // En capture : Entrée s'arrête ici, avant la navigation clavier globale
       document.addEventListener('keydown', event => this._onFilterEnter(event), true);
@@ -346,6 +365,17 @@ export const PlayerTools = {
     if (!name) return;
     const fallback = `«\u00a0${name}\u00a0» est dans la corbeille.`;
     this.say(translateOr('trash_added', fallback, { name }));
+  },
+
+  /**
+   * « Léa n'a pas pu être supprimé » : le navigateur a refusé d'écrire (userManager.js)
+   * @param {string} name
+   * @private
+   */
+  _announceTrashFailed(name) {
+    if (!name) return;
+    const fallback = `«\u00a0${name}\u00a0» n’a pas pu être supprimé\u00a0: le navigateur manque de place.`;
+    this.say(translateOr('trash_failed', fallback, { name }));
   },
 
   /**

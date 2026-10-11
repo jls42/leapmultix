@@ -53,4 +53,31 @@ describe('ESM: Adventure persistence', () => {
     expect(html).toContain('data-level="2"');
   });
 });
+
+describe('ESM: Adventure, étoiles d’un profil repris d’un fichier', () => {
+  test('le total ne compte que des nombres : rien d’autre n’entre dans le gabarit', async () => {
+    const saved = userStore.adventureProgressByOperator;
+    userStore.adventureProgressByOperator = {
+      '×': {
+        1: { completed: true, stars: 2 },
+        2: { completed: true, stars: '3' },
+        3: {
+          completed: true,
+          stars: '<meta http-equiv="refresh" content="0;url=https://example.test/">',
+        },
+        // « 1e999 » d'un fichier JSON se relit Infinity
+        4: { completed: true, stars: Infinity },
+      },
+    };
+    try {
+      const adv = new AdventureMode();
+      const html = await adv.getCustomHTML();
+      expect(adv.totalStars).toBe(5);
+      expect(html).toContain('<span id="total-stars-display">5</span>');
+      expect(html).not.toContain('<meta');
+    } finally {
+      userStore.adventureProgressByOperator = saved;
+    }
+  });
+});
 /* eslint-env jest, node */

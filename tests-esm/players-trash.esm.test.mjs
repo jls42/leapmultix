@@ -132,6 +132,56 @@ describe('Supprimer range le profil dans la corbeille, sans rien effacer', () =>
   });
 });
 
+describe('Profil démesuré : « Supprimer » ne demande pas la place d’une seconde copie', () => {
+  const profile = (name, size) => ({ nickname: name, notes: 'x'.repeat(size) });
+
+  // Le stockage du navigateur tient environ 5 millions de caractères, clés comprises ; le faux
+  // stockage des tests (tests/setup.js) n'a pas de limite : il la reçoit ici
+  beforeEach(() => {
+    const QUOTA = 5_000_000;
+    const setItem = localStorage.setItem.bind(localStorage);
+    jest.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+      let used = key.length + String(value).length;
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const other = localStorage.key(i);
+        if (other !== key) used += other.length + localStorage.getItem(other).length;
+      }
+      if (used > QUOTA) throw new DOMException('Stockage plein', 'QuotaExceededError');
+      return setItem(key, value);
+    });
+  });
+
+  test('un profil qui occupe 60 % du stockage va dans la corbeille', () => {
+    localStorage.setItem(
+      'players',
+      JSON.stringify({ Géant: profile('Géant', 3_000_000), Tom: { nickname: 'Tom' } })
+    );
+    UserManager._players = UserManager.loadPlayers();
+    expect(UserManager.deleteUser('Géant')).toBe(true);
+    expect(Object.keys(stored('players'))).toEqual(['Tom']);
+    expect(stored('playersTrash').map(entry => entry.name)).toEqual(['Géant']);
+    // Le premier essai (deux copies) est refusé, le repli réussit : rien d'anormal à journaliser
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  test('profils de 255 000 caractères repris jusqu’à remplir le stockage : chacun se supprime', () => {
+    const names = [];
+    for (let i = 1; i <= 20; i += 1) {
+      const name = `Joueur ${i}`;
+      const result = UserManager.importPlayers([[name, profile(name, 255_000)]]);
+      if (result.error) break;
+      names.push(name);
+    }
+    expect(names.length).toBeGreaterThanOrEqual(18);
+    // La reprise de trop, refusée faute de place, est journalisée : ce n'est pas ce qu'on vérifie
+    console.error.mockClear();
+    for (const name of names) expect([name, UserManager.deleteUser(name)]).toEqual([name, true]);
+    expect(console.error).not.toHaveBeenCalled();
+    expect(stored('players')).toEqual({});
+    expect(stored('playersTrash').map(entry => entry.name)).toEqual(names);
+  });
+});
+
 describe(`Au bout de ${TRASH_DAYS} jours, effacé pour de bon`, () => {
   test('la purge efface les entrées trop vieilles et leurs scores d’Arcade, pas les autres', () => {
     seedClass();
@@ -281,6 +331,21 @@ describe('« Qui joue ? » : la corbeille, en haut de la liste', () => {
       '« Léa » est déjà dans la liste. Pour restaurer celui de la corbeille, supprime d’abord le joueur de la liste.'
     );
     expect(document.querySelectorAll('#player-trash-list li')).toHaveLength(1);
+  });
+
+  test('suppression refusée par le navigateur : le message le dit, le joueur reste', async () => {
+    const setItem = localStorage.setItem.bind(localStorage);
+    jest.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+      if (key === 'playersTrash') throw new DOMException('Plein', 'QuotaExceededError');
+      return setItem(key, value);
+    });
+    await deleteFromTile('Léa');
+    expect(document.getElementById('user-tools-message').textContent).toBe(
+      '«\u00a0Léa\u00a0» n’a pas pu être supprimé\u00a0: le navigateur manque de place.'
+    );
+    expect(Object.keys(stored('players')).sort()).toEqual(['Léa', 'Tom']);
+    const tiles = [...document.querySelectorAll('#user-list .user-container')];
+    expect(tiles.map(item => item.dataset.player)).toEqual(['Léa', 'Tom']);
   });
 
   test('plus aucun joueur, mais une corbeille : la barre reste, sans « Nouveau joueur »', async () => {
