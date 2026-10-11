@@ -129,8 +129,8 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
      puis la commande fait le contrôle de `voice:check`, écrit `a-reecouter-<l>.txt` et la
      **page d'écoute** des clips signalés, dont elle affiche l'adresse. Le code 0 est exigé,
      avec `--allow-missing` seulement sur accord. Pour Whisper, installer une fois
-     `python3 -m venv .venv-whisper && .venv-whisper/bin/pip install -r scripts/voice/requirements-whisper.txt`,
-     ou passer `--python <interpréteur>`.
+     `python3 -m venv .venv-whisper && .venv-whisper/bin/pip install --require-hashes --only-binary :all: -r scripts/voice/requirements-whisper.txt`
+     (chaque paquet vérifié par son empreinte), ou passer `--python <interpréteur>`.
    - **Ce qui est signalé** (`transcript-compare.mjs`, `check.mjs`) :
      - un nombre entendu différent, en trop ou en moins ;
      - une phrase éloignée. En français, sous 0,5 de ressemblance : Whisper y confond des

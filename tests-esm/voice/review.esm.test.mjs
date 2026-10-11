@@ -124,7 +124,9 @@ describe('voice:review', () => {
     const result = run(['--allow-missing']);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('Interpréteur de Whisper introuvable');
-    expect(result.stderr).toContain('pip install -r scripts/voice/requirements-whisper.txt');
+    expect(result.stderr).toContain(
+      'pip install --require-hashes --only-binary :all: -r scripts/voice/requirements-whisper.txt'
+    );
   });
 
   test('Whisper en échec : arrêt, avec son code', () => {
