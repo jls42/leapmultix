@@ -116,7 +116,6 @@ const SITE = {
   'assets/icons/panda-192.png': 'p',
   'assets/translations/fr.json': '{}',
   'assets/translations/en.json': '{}',
-  'assets/translations/i18n-keep.json': '{}',
   'assets/images/arcade/fox_head_avatar_128x128.png': 'i',
   'assets/images/arcade/fox_left_128x128.png': 'i',
   'assets/images/arcade/panda_left_128x128.png': 'i',

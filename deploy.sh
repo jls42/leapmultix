@@ -144,9 +144,11 @@ fi
 TEMP_DIR=$(mktemp -d)
 echo -e "${BLUE}📁 Répertoire temporaire: $TEMP_DIR${NC}"
 
-# Copie uniquement les fichiers nécessaires au déploiement
+# Copie uniquement les fichiers nécessaires au déploiement : ni lien symbolique (sa cible
+# partirait, ou serait réécrite par le versionnage des modules), ni fichier caché
 echo -e "${BLUE}📋 Copie des fichiers sources...${NC}"
-rsync -av \
+rsync -av --no-links \
+  --exclude='.*' \
   --include='index.html' \
   --include='parents.html' \
   --include='modes.html' \
@@ -250,37 +252,41 @@ fi
 # Synchronisation S3
 echo -e "${BLUE}☁️  Synchronisation S3...${NC}"
 
-SYNC_CMD="aws s3 sync --size-only --delete \
-  \"$TEMP_DIR/\" s3://$S3_BUCKET \
-  --exclude \"*\" \
-  --include \"index.html\" \
-  --include \"parents.html\" \
-  --include \"modes.html\" \
-  --include \"pwa.html\" \
-  --include \"offline.html\" \
-  --include \"sw.js\" \
-  --include \"manifest.json\" \
-  --include \"favicon.svg\" \
-  --include \"favicon.ico\" \
-  --include \"favicon.png\" \
-  --include \"robots.txt\" \
-  --include \"sitemap.xml\" \
-  --include \"assets/*\" \
-  --include \"css/*\" \
-  --include \"js/*\" \
-  --include \"img/*\" \
-  --exclude \"assets/voice/*\""
+# La commande est un tableau, sans eval ; aucun lien suivi (la copie n'en a pas : rsync
+# --no-links)
+SYNC_ARGS=(
+  s3 sync --size-only --delete --no-follow-symlinks
+  "$TEMP_DIR/" "s3://$S3_BUCKET"
+  --exclude "*"
+  --include "index.html"
+  --include "parents.html"
+  --include "modes.html"
+  --include "pwa.html"
+  --include "offline.html"
+  --include "sw.js"
+  --include "manifest.json"
+  --include "favicon.svg"
+  --include "favicon.ico"
+  --include "favicon.png"
+  --include "robots.txt"
+  --include "sitemap.xml"
+  --include "assets/*"
+  --include "css/*"
+  --include "js/*"
+  --include "img/*"
+  --exclude "assets/voice/*"
+)
 
 if [[ "$DRY_RUN" == "true" ]]; then
     echo -e "${YELLOW}🔍 Mode dry-run - Commande qui serait exécutée:${NC}"
     # L'option de l'AWS CLI s'écrit --dryrun, sans tiret : avec --dry-run, la
     # commande échouait en « Unknown options » et la simulation ne montrait rien.
-    echo "$SYNC_CMD --dryrun"
-    eval "$SYNC_CMD --dryrun"
+    echo "aws ${SYNC_ARGS[*]} --dryrun"
+    aws "${SYNC_ARGS[@]}" --dryrun
 else
     echo -e "${GREEN}📤 Synchronisation en cours...${NC}"
 
-    if eval "$SYNC_CMD"; then
+    if aws "${SYNC_ARGS[@]}"; then
         echo -e "${GREEN}✅ Synchronisation S3 terminée avec succès !${NC}"
 
         # La synchronisation compare les tailles (--size-only). Or un fichier texte
@@ -309,7 +315,7 @@ else
             '*.json:application/json' '*.xml:application/xml' '*.txt:text/plain'; do
             motif="${entree%%:*}"
             type_mime="${entree#*:}"
-            if aws s3 cp "$TEMP_DIR" "s3://$S3_BUCKET" --recursive \
+            if aws s3 cp "$TEMP_DIR" "s3://$S3_BUCKET" --recursive --no-follow-symlinks \
                 --exclude "*" --include "$motif" \
                 --content-type "$type_mime" --metadata-directive REPLACE > /dev/null; then
                 echo -e "${GREEN}   ✅ $motif${NC}"

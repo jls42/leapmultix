@@ -19,7 +19,7 @@ function main() {
   const transDir = path.join(root, 'assets', 'translations');
   const keys = loadTranslationKeys(transDir);
   const used = collectUsedKeys(root);
-  const whitelist = loadWhitelist(path.join(transDir, 'whitelist.txt'));
+  const whitelist = loadWhitelist(path.join(root, 'scripts', 'i18n-whitelist.txt'));
 
   function computeMissing(lang) {
     const missing = [];

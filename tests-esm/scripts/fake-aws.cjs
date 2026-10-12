@@ -1,6 +1,9 @@
 /**
  * Faux AWS CLI du test de deploy.sh : chaque fichier que la commande enverrait est noté dans
- * le fichier AWS_LOG, une ligne JSON par fichier ({ command, file, contentType }).
+ * le fichier AWS_LOG, une ligne JSON par fichier ({ command, file, contentType,
+ * followSymlinks }) ; les autres commandes sont notées avec leurs arguments, et
+ * `aws s3 sync <dossier> s3://…` avec les entrées du dossier (un lien y figure sous son nom,
+ * sans être suivi).
  * `aws s3 sync --size-only` n'envoie rien : le test se place dans le cas où S3 a déjà, pour
  * chaque fichier, un fichier de même taille. Avec FAKE_AWS_FAIL=cp, les copies échouent.
  */
@@ -37,7 +40,13 @@ function walk(dir) {
     );
 }
 
-const [service, command, source, target] = args;
+// Arguments positionnels : ni option, ni valeur d'une option (les options peuvent précéder
+// les chemins : aws s3 sync --delete <dossier> s3://…)
+const VALUE_OPTIONS = new Set(['--exclude', '--include', '--content-type', '--metadata-directive']);
+const positionals = args.filter(
+  (arg, i) => !arg.startsWith('--') && !VALUE_OPTIONS.has(args[i - 1])
+);
+const [service, command, source, target] = positionals;
 if (service === 's3' && command === 'cp') {
   if (process.env.FAKE_AWS_FAIL === 'cp') process.exit(1);
   const option = name => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
@@ -47,7 +56,10 @@ if (service === 's3' && command === 'cp') {
         .filter(kept)
         .map(file => path.posix.join(prefix, file))
     : [prefix];
-  for (const file of files) note({ command, file, contentType: option('--content-type') });
+  const followSymlinks = !args.includes('--no-follow-symlinks');
+  for (const file of files) {
+    note({ command, file, contentType: option('--content-type'), followSymlinks });
+  }
   // FAKE_AWS_KEEP : copie de ce qui serait envoyé, pour en lire le contenu
   if (process.env.FAKE_AWS_KEEP) {
     const recursive = args.includes('--recursive');
@@ -58,6 +70,8 @@ if (service === 's3' && command === 'cp') {
       fs.copyFileSync(from, to);
     }
   }
+} else if (service === 's3' && command === 'sync' && !source.startsWith('s3://')) {
+  note({ command: `${service} ${command}`, args, files: walk(source) });
 } else {
-  note({ command: `${service} ${command}` });
+  note({ command: `${service} ${command}`, args });
 }

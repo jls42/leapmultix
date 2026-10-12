@@ -44,9 +44,6 @@ export const BLOCK_END = '// precache:end';
 /** Toujours gardés : la page, la page hors ligne, le manifeste */
 const SHELL = ['/index.html', '/offline.html', '/manifest.json'];
 
-/** Fichiers d'un dossier servi mais jamais lus par le jeu */
-const NOT_FOR_PLAYERS = new Set(['/assets/translations/i18n-keep.json']);
-
 /** Lue par le service worker lui-même à l'installation (variantes des images) */
 const IMAGE_MAP = '/assets/generated-images/image-map.json';
 
@@ -326,7 +323,7 @@ function crawl(root, index, start) {
   const queue = [...start];
   while (queue.length > 0) {
     const sitePath = queue.shift();
-    if (found.has(sitePath) || NOT_FOR_PLAYERS.has(sitePath) || sitePath === IMAGE_MAP) continue;
+    if (found.has(sitePath) || sitePath === IMAGE_MAP) continue;
     found.add(sitePath);
     if (sitePath.endsWith('.js')) queue.push(...moduleReferences(root, index, sitePath));
     else if (sitePath.endsWith('.css')) queue.push(...cssReferences(root, sitePath));

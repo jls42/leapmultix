@@ -4,14 +4,15 @@
  * - Scans JS/HTML for getTranslation('key') and data-translate attributes
  * - Detects template prefixes like getTranslation(`character_intro_${...}`)
  * - Flattens translation JSON and compares to used keys/prefixes
- * - Writes report to assets/translations/unused_keys.txt
+ * - Writes report to analysis/i18n-unused-keys.txt (outside assets/: nothing of the
+ *   development tools is published)
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const translationsDir = path.join(root, 'assets', 'translations');
-const keepConfigPath = path.join(translationsDir, 'i18n-keep.json');
+const keepConfigPath = path.join(root, 'tools', 'i18n-keep.json');
 // codeDirs definition moved inline where it's used
 
 function readJSON(fp) {
@@ -141,7 +142,7 @@ function collectUsedKeys() {
   return { used, dynPrefixes };
 }
 
-// Default keep/allowlist, merged with assets/translations/i18n-keep.json
+// Default keep/allowlist, merged with tools/i18n-keep.json
 const KEEP_DEFAULTS = {
   keys: [
     'fox',
@@ -264,8 +265,9 @@ function main() {
     .filter(k => !isUsedKey(k, used, dynPrefixes) && !inKeep(k))
     .sort((a, b) => a.localeCompare(b));
 
-  const reportPath = path.join(translationsDir, 'unused_keys.txt');
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- reportPath is constructed from translationsDir
+  const reportPath = path.join(root, 'analysis', 'i18n-unused-keys.txt');
+  fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- reportPath is constructed from the repository root
   fs.writeFileSync(reportPath, unused.join('\n') + '\n', 'utf8');
 
   console.log(`Scanned ${used.size} direct keys, ${dynPrefixes.size} dynamic prefixes.`);
