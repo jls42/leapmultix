@@ -138,7 +138,7 @@ LeapMultix oferece um treino completo das 4 operações aritméticas em **todos 
 
 ### Pré-requisitos
 
-- Node.js (versão 16 ou superior)
+- Node.js (versão 22 ou superior)
 - Um navegador web moderno
 
 ### Instalação

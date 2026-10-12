@@ -138,7 +138,7 @@ LeapMultix biedt in **alle modi** een volledige training van de 4 rekenbewerking
 
 ### Vereisten
 
-- Node.js (versie 16 of hoger)
+- Node.js (versie 22 of hoger)
 - Een moderne webbrowser
 
 ### Installatie

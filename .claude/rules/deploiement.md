@@ -48,6 +48,13 @@ Deux points à connaître avant d'y toucher :
   développement ne vivent pas dans les dossiers publiés (`assets/`, `css/`, `js/`, `img/`) :
   listes des scripts i18n dans `scripts/i18n-whitelist.txt` et `tools/i18n-keep.json`, rapports
   dans `analysis/` (ignoré par git). Test : `tests-esm/scripts/deploy-text-files.test.mjs`.
+- **Seul le commit en tête de `main` se déploie** : un run relancé, ou dépassé par une fusion
+  plus récente, s'arrête au premier pas du job `deploy` (avis « n'est plus la tête de main »,
+  rien d'envoyé) ; le commit le plus récent se déploie par son propre run.
+- **`deploy.sh` vérifie ses réglages avant tout envoi** : nom de bucket S3 selon les règles
+  d'AWS, identifiant de distribution CloudFront (majuscules et chiffres), domaine Plausible,
+  `VOICE_BASE`, et `VERSION` de `sw.js` égale à `APP_VERSION`. Un écart arrête tout, message
+  sur la sortie d'erreur.
 - **Le rôle IAM n'accepte que `refs/heads/main`.** Le dépôt étant public, c'est
   cette condition qui empêche la pull request d'un inconnu d'obtenir les droits
   de déploiement. Il est défini dans le dépôt d'infrastructure

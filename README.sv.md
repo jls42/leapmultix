@@ -138,7 +138,7 @@ LeapMultix erbjuder fullständig träning i de fyra räknesätten i **alla läge
 
 ### Förutsättningar
 
-- Node.js (version 16 eller senare)
+- Node.js (version 22 eller senare)
 - En modern webbläsare
 
 ### Installation

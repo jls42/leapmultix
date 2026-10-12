@@ -138,7 +138,7 @@ LeapMultix oferă exersarea completă a celor 4 operații aritmetice în **toate
 
 ### Cerințe preliminare
 
-- Node.js (versiunea 16 sau mai recentă)
+- Node.js (versiunea 22 sau mai recentă)
 - Un browser web modern
 
 ### Instalare
