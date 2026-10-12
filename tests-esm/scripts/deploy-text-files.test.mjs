@@ -8,7 +8,7 @@
  * faux AWS CLI, qui note chaque envoi et, à taille égale, ne synchronise rien.
  */
 import { afterEach, beforeEach, describe, expect, test } from '@jest/globals';
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -179,6 +179,7 @@ describe('deploy.sh : fichiers modifiés à taille constante', () => {
     const forced = Object.fromEntries(
       calls.filter(call => call.command === 'cp').map(call => [call.file, call.contentType])
     );
+    expect(calls.filter(call => call.command === 'cp' && call.followSymlinks)).toEqual([]);
     const expected = Object.fromEntries(
       Object.keys(TEXT_FILES).map(file => [file, TEXT_TYPES[path.extname(file)]])
     );
@@ -189,5 +190,87 @@ describe('deploy.sh : fichiers modifiés à taille constante', () => {
     const { result } = deploy({ FAKE_AWS_FAIL: 'cp' });
     expect(result.status).toBe(1);
     expect(result.stdout).toMatch(/en échec/);
+  });
+});
+
+describe('deploy.sh : ce qui ne part jamais', () => {
+  test('ni lien symbolique, ni fichier caché ; aucun lien suivi par l’AWS CLI', () => {
+    write('../ailleurs/secret.txt', 'secret du poste');
+    fs.symlinkSync(path.join(site, '../ailleurs/secret.txt'), path.join(site, 'js/lien.js'));
+    fs.symlinkSync(path.join(site, '../ailleurs'), path.join(site, 'assets/dossier-lie'));
+    write('js/.cache.js', 'fichier caché');
+    write('assets/sounds/.keep', '');
+    const keep = path.join(site, 'envoyé');
+    const { result, calls } = deploy({ FAKE_AWS_KEEP: keep });
+    expect(result.status).toBe(0);
+    const sent = calls.filter(call => call.command === 'cp').map(call => call.file);
+    expect(sent).not.toContain('js/lien.js');
+    expect(sent).not.toContain('js/.cache.js');
+    expect(sent).toContain('js/main.js');
+    // Ce que la synchronisation trouverait dans la copie : ni les liens, ni le fichier caché
+    const sync = calls.find(call => call.command === 's3 sync');
+    expect(sync.files).toContain('js/main.js');
+    expect(
+      sync.files.filter(file => /^(js\/lien\.js|assets\/dossier-lie)(\/|$)|\/\./.test(file))
+    ).toEqual([]);
+    expect(sync.args).toContain('--no-follow-symlinks');
+    fs.rmSync(path.join(site, '../ailleurs'), { recursive: true, force: true });
+  });
+
+  test('--dry-run : la synchronisation simulée (--dryrun), rien d’envoyé', () => {
+    const result = spawnSync('bash', ['deploy.sh', '--config', 'absent.config', '--dry-run'], {
+      cwd: site,
+      encoding: 'utf8',
+      env: {
+        PATH: `${path.join(site, 'bin')}${path.delimiter}${process.env.PATH}`,
+        HOME: process.env.HOME,
+        S3_BUCKET: 'site-de-test',
+        AWS_LOG: path.join(site, 'aws.log'),
+      },
+    });
+    expect(result.status).toBe(0);
+    const calls = fs
+      .readFileSync(path.join(site, 'aws.log'), 'utf8')
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    expect(calls.map(call => call.command)).toEqual(['s3 sync']);
+    expect(calls[0].args).toContain('--dryrun');
+  });
+
+  test('la commande se construit sans eval', () => {
+    const code = fs
+      .readFileSync('deploy.sh', 'utf8')
+      .split('\n')
+      .filter(line => !line.trim().startsWith('#'));
+    expect(code.filter(line => /\beval\b/.test(line))).toEqual([]);
+  });
+
+  test('aucun lien symbolique suivi dans les dossiers publiés', () => {
+    // Mode 120000 de git : rsync --no-links l'écarterait, mais ni la liste hors ligne ni la
+    // génération des images ne le verraient
+    const links = execFileSync('git', ['ls-files', '-s', 'assets', 'css', 'js', 'img'], {
+      encoding: 'utf8',
+    })
+      .split('\n')
+      .filter(line => line.startsWith('120000 '));
+    expect(links).toEqual([]);
+  });
+
+  test('aucun fichier d’outillage dans les dossiers publiés', () => {
+    // Fichiers suivis ou nouveaux (non ignorés) présents dans l'arbre : ceux que rsync copierait
+    const published = execFileSync(
+      'git',
+      ['ls-files', '--cached', '--others', '--exclude-standard', 'assets', 'css', 'js', 'img'],
+      { encoding: 'utf8' }
+    )
+      .split('\n')
+      .filter(file => file && fs.existsSync(file));
+    expect(published.filter(file => /\.(py|sh|cjs|mjs|md)$/.test(file))).toEqual([]);
+    expect(published.filter(file => file.startsWith('assets/translations/'))).toEqual([
+      'assets/translations/en.json',
+      'assets/translations/es.json',
+      'assets/translations/fr.json',
+    ]);
   });
 });

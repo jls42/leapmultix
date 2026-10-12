@@ -3,8 +3,9 @@
  Generate a conservative list of unused i18n keys across all languages.
  - Scans code for getTranslation('...') and data-translate attributes
  - Compares with assets/translations/{fr,en,es}.json
- - Applies whitelist patterns from assets/translations/whitelist.txt
- - Writes intersection(unused_fr, unused_en, unused_es) to assets/translations/unused_keys.txt
+ - Applies whitelist patterns from scripts/i18n-whitelist.txt
+ - Writes intersection(unused_fr, unused_en, unused_es) to analysis/i18n-unused-keys.txt
+   (outside assets/: nothing of the development tools is published)
  - Prints a short summary and saves a copy in docs/audit/logs/i18n_unused.out
 */
 const fs = require('node:fs');
@@ -19,13 +20,14 @@ const {
 function main() {
   const root = process.cwd();
   const transDir = path.join(root, 'assets', 'translations');
-  const outFile = path.join(transDir, 'unused_keys.txt');
+  const outFile = path.join(root, 'analysis', 'i18n-unused-keys.txt');
   const logDir = path.join(root, 'docs', 'audit', 'logs');
   if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+  fs.mkdirSync(path.dirname(outFile), { recursive: true });
 
   const keys = loadTranslationKeys(transDir);
   const used = collectUsedKeys(root);
-  const whitelist = loadWhitelist(path.join(transDir, 'whitelist.txt'));
+  const whitelist = loadWhitelist(path.join(root, 'scripts', 'i18n-whitelist.txt'));
 
   function computeUnused(lang) {
     const unused = new Set();
@@ -47,7 +49,7 @@ function main() {
 
   fs.writeFileSync(outFile, intersection.join('\n') + (intersection.length ? '\n' : ''), 'utf8');
 
-  const summary = `i18n-unused summary\nFR-unused=${unusedFR.size} EN-unused=${unusedEN.size} ES-unused=${unusedES.size}\nIntersection (written to unused_keys.txt) = ${intersection.length}`;
+  const summary = `i18n-unused summary\nFR-unused=${unusedFR.size} EN-unused=${unusedEN.size} ES-unused=${unusedES.size}\nIntersection (written to analysis/i18n-unused-keys.txt) = ${intersection.length}`;
   fs.writeFileSync(path.join(logDir, 'i18n_unused.out'), summary + '\n', 'utf8');
   console.log(summary);
   console.log(`Wrote ${outFile}`);

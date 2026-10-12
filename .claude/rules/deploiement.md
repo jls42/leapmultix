@@ -38,6 +38,11 @@ Deux points à connaître avant d'y toucher :
   étape, `aws s3 sync --delete` effacerait toutes les images du site : mesuré,
   3145 suppressions. Un garde-fou refuse de déployer si la génération est
   incomplète.
+- **Rien d'autre que le site ne part** : ni lien symbolique (`rsync --no-links`, et
+  `--no-follow-symlinks` pour l'AWS CLI), ni fichier caché (`--exclude='.*'`). Les outils de
+  développement ne vivent pas dans les dossiers publiés (`assets/`, `css/`, `js/`, `img/`) :
+  listes des scripts i18n dans `scripts/i18n-whitelist.txt` et `tools/i18n-keep.json`, rapports
+  dans `analysis/` (ignoré par git). Test : `tests-esm/scripts/deploy-text-files.test.mjs`.
 - **Le rôle IAM n'accepte que `refs/heads/main`.** Le dépôt étant public, c'est
   cette condition qui empêche la pull request d'un inconnu d'obtenir les droits
   de déploiement. Il est défini dans le dépôt d'infrastructure
