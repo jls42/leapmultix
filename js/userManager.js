@@ -379,15 +379,21 @@ export const UserManager = {
   },
 
   /**
-   * Retire les clés d'Arcade d'avant la v37 (arcadeScores_<surnom>), pour ces surnoms
+   * Retire les clés d'Arcade d'avant la v37 (arcadeScores_<surnom>), pour ces surnoms, sauf
+   * les clés protégées : la clé d'un jeu et d'un surnom peut être celle d'un autre jeu et d'un
+   * autre surnom (« multimiam_Léa » pour MultiInvaders vise arcadeScores_multimiam_Léa, la clé
+   * MultiMiam de Léa), d'où une protection par clé et non par surnom
    * @param {string[]} owners
+   * @param {Set<string>} [protectedKeys]
    * @private
    */
-  _removeLegacyArcadeScores(owners) {
+  _removeLegacyArcadeScores(owners, protectedKeys = new Set()) {
     for (const owner of new Set(owners.filter(Boolean))) {
       for (const game of ARCADE_GAMES) {
+        const key = legacyArcadeKey(game, owner);
+        if (protectedKeys.has(key)) continue;
         try {
-          localStorage.removeItem(legacyArcadeKey(game, owner));
+          localStorage.removeItem(key);
         } catch {
           // Stockage indisponible : rien à effacer
         }
@@ -606,12 +612,14 @@ export const UserManager = {
     // Effacement promis par la page Confidentialité : les anciens scores d'Arcade, rangés sous
     // le surnom (et donc le prénom en clair), partent avec le profil, sauf ceux d'un autre
     // profil qui porte le même nom, dans la liste ou dans la corbeille
-    const inUse = this._legacyOwnersInUse(kept);
+    const inUse = [...this._legacyOwnersInUse(kept)].flatMap(owner =>
+      ARCADE_GAMES.map(game => legacyArcadeKey(game, owner))
+    );
     const owners = expired.flatMap(entry => [
       entry.name,
       legacyArcadeOwner(entry.data ?? {}, entry.name),
     ]);
-    this._removeLegacyArcadeScores(owners.filter(owner => !inUse.has(owner)));
+    this._removeLegacyArcadeScores(owners, new Set(inUse));
     return expired.length;
   },
 
@@ -655,9 +663,13 @@ export const UserManager = {
     const added = [];
     const skipped = [];
     const inTrash = [];
-    const trashed = new Set(loadTrash().map(entry => entry.name));
-    for (const [name, data] of entries) {
-      if (Object.prototype.hasOwnProperty.call(this._players, name)) {
+    // Un prénom compte sous sa forme rangée (NFC, espaces simples) : « Léa » écrite en lettres
+    // décomposées, ou « Léa  B. », ne s'ajoutent pas à côté du « Léa » ou du « Léa B. » déjà là
+    const listed = new Set(Object.keys(this._players).map(normalizeUsername));
+    const trashed = new Set(loadTrash().map(entry => normalizeUsername(entry.name)));
+    for (const [rawName, data] of entries) {
+      const name = normalizeUsername(rawName);
+      if (listed.has(name)) {
         skipped.push(name);
       } else if (trashed.has(name)) {
         inTrash.push(name);
@@ -669,6 +681,7 @@ export const UserManager = {
           operationStats: Object.hasOwn(data, 'operationStats') ? data.operationStats : {},
           legacyArcade: false,
         });
+        listed.add(name);
         added.push(name);
       }
     }
@@ -743,6 +756,8 @@ export const UserManager = {
   refreshUserList() {
     const userListDiv = document.getElementById('user-list');
     if (!userListDiv) return;
+    // Les 30 jours de la corbeille valent aussi pour un jeu resté ouvert plusieurs jours
+    this.purgeExpiredTrash();
 
     while (userListDiv.firstChild) userListDiv.firstChild.remove();
     const names = this.sortedPlayerNames();

@@ -110,6 +110,28 @@ describe('Export : tous les joueurs de la liste, tels qu’ils sont rangés', ()
 });
 
 describe('Reprise d’un fichier : vérifiée, sans écraser personne', () => {
+  test('un prénom déjà là sous une autre forme (lettres décomposées, deux espaces) est laissé', () => {
+    UserManager.createUser('Léa', 'panda');
+    UserManager.createUser('Noé B.', 'fox');
+    // « Le » + accent combinant : la même « Léa » à l'œil, une autre suite de caractères
+    const decomposed = 'Le\u0301a';
+    const backup = readPlayersBackup(
+      backupText({ [decomposed]: { nickname: 'Léa' }, 'Noé  B.': { nickname: 'Noé' } })
+    );
+    expect(UserManager.importPlayers(backup.players)).toEqual({
+      added: [],
+      skipped: ['Léa', 'Noé B.'],
+      inTrash: [],
+    });
+    expect(Object.keys(stored()).sort()).toEqual(['Léa', 'Noé B.']);
+  });
+
+  test('un nouveau prénom est rangé sous sa forme du formulaire (NFC, espaces simples)', () => {
+    const backup = readPlayersBackup(backupText({ 'Ame\u0301lie  R.': { nickname: 'Amélie' } }));
+    expect(UserManager.importPlayers(backup.players).added).toEqual(['Amélie R.']);
+    expect(Object.keys(stored())).toEqual(['Amélie R.']);
+  });
+
   test('un joueur déjà là est laissé tel quel, les autres sont ajoutés', () => {
     UserManager.createUser('Léa', 'panda');
     UserManager._players['Léa'].coins = 7;

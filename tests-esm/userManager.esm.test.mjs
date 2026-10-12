@@ -258,6 +258,41 @@ describe('UserManager : surnom partagé', () => {
     jest.restoreAllMocks();
   });
 
+  test('un surnom qui forme la clé d’un autre jeu d’un autre joueur ne l’efface pas', () => {
+    jest.spyOn(VideoManager, 'playCharacterIntro').mockImplementation(() => {});
+    UserManager._players = {};
+    UserManager.createUser('Léa', 'panda');
+    UserManager.createUser('Max', 'fox');
+    // Pour MultiInvaders, le surnom « multimiam_Léa » vise arcadeScores_multimiam_Léa : la clé
+    // MultiMiam de Léa, toujours dans la liste
+    UserManager._players['Max'].nickname = 'multimiam_Léa';
+    localStorage.setItem('arcadeScores_multimiam_Léa', '[200]');
+    localStorage.setItem('arcadeScores_multisnake_multimiam_Léa', '[5]');
+    UserManager.deleteUser('Max');
+    UserManager.purgeExpiredTrash(Date.now() + 31 * 24 * 60 * 60 * 1000);
+    expect(localStorage.getItem('arcadeScores_multimiam_Léa')).toBe('[200]');
+    // Les clés propres à Max partent bien
+    expect(localStorage.getItem('arcadeScores_multisnake_multimiam_Léa')).toBeNull();
+    localStorage.clear();
+  });
+
+  test('« Qui joue ? » affiché : la corbeille expirée est purgée, même sans relancer le jeu', () => {
+    jest.spyOn(VideoManager, 'playCharacterIntro').mockImplementation(() => {});
+    UserManager._players = {};
+    UserManager.createUser('Zoé', 'panda');
+    UserManager.deleteUser('Zoé');
+    const trash = JSON.parse(localStorage.getItem('playersTrash'));
+    trash[0].deletedAt -= 31 * 24 * 60 * 60 * 1000;
+    localStorage.setItem('playersTrash', JSON.stringify(trash));
+    const list = document.createElement('div');
+    list.id = 'user-list';
+    document.body.appendChild(list);
+    UserManager.refreshUserList();
+    expect(localStorage.getItem('playersTrash')).toBe('[]');
+    document.body.replaceChildren();
+    localStorage.clear();
+  });
+
   test('effacer un profil garde les anciens scores d’un autre profil au même surnom', () => {
     jest.spyOn(VideoManager, 'playCharacterIntro').mockImplementation(() => {});
     UserManager._players = {};
