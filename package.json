@@ -17,7 +17,7 @@
     "test:e2e": "jest --maxWorkers=50% tests/__tests__/e2e",
     "lint": "eslint \"js/**/*.js\"",
     "serve": "node scripts/serve.cjs",
-    "serve:dist": "serve -s dist -l tcp://127.0.0.1:5000",
+    "serve:dist": "node scripts/serve.cjs dist",
     "analyze:dependencies": "node scripts/analyze-dependencies.js",
     "dead-code": "node scripts/improved-dead-code-check.js",
     "analyze:globals": "node scripts/analyze-globals.js",
@@ -107,7 +107,6 @@
     "prettier": "^3.5.3",
     "puppeteer": "^24.20.0",
     "rollup": "^4.41.1",
-    "serve": "^14.2.4",
     "sharp": "^0.35.5",
     "stylelint": "^17.15.0",
     "stylelint-config-standard": "^40.0.0"
