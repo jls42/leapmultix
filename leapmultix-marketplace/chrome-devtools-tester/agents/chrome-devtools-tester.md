@@ -10,19 +10,22 @@ Test web applications using Chrome DevTools MCP tools. Focus on real browser tes
 
 ## Server Setup
 
-Before testing, ensure the dev server is running on port 8000, listening on this machine only:
+Before testing, ensure a dev server is running that listens on this machine only and serves
+only the published site: the working tree also holds untracked files (deploy.config, .env,
+private voice clips, .git) that must reach neither the network nor the tested page.
 
 ```bash
 # Check if server is running
-lsof -i :8000
+lsof -i :8080
 
-# If not running, start it (from project root). Never on all interfaces: the working tree
-# also holds untracked files (deploy.config, .env, private voice clips) that it would serve
-# to the whole network
-python3 -m http.server --bind 127.0.0.1 --directory . 8000
+# If not running, start it (from project root): the files deploy.sh publishes, on 127.0.0.1,
+# port 8080 or the next free one
+npm run serve
 ```
 
-Application URL: `http://127.0.0.1:8000`
+Application URL: the one the server prints (`http://localhost:8080/` by default). In a project
+without this server, bind to `127.0.0.1` and serve the published folder, never the working tree:
+`python3 -m http.server --bind 127.0.0.1 --directory <published folder> 8000`.
 
 ## Test Dimensions
 

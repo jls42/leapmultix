@@ -253,8 +253,8 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
    autre voix : `npm run voice:publish -- local --lang <l> --version <version> --audience all`.
 2. `npm run serve`.
 3. Ouvrir `http://localhost:8080/index.html?voix=local`. Cela ne marche que sur localhost,
-   et `?voix=local` y vaut marque de testeur. `serve-lite` liste les fichiers à la racine,
-   d'où `index.html`.
+   et `?voix=local` y vaut marque de testeur. Le serveur n'écoute que sur cet ordinateur et
+   ne sert que le site publié, plus `voice/`.
 
 **Nouvelle langue, nouvelle voix ou nouveau fournisseur** : voir
 [reference.md](reference.md#nouvelle-langue-ou-nouvelle-voix).
