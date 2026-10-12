@@ -24,14 +24,18 @@ const WRONG = 'What is 7 times 8?';
 
 /**
  * Faux Whisper : lit le manifeste, transcrit chaque clip par sa phrase, sauf WRONG entendu
- * « 7 times 6 » ; garde ses arguments ; sort avec FAKE_WHISPER_EXIT s'il est donné
+ * « 7 times 6 » ; garde ses arguments et le nom de ses variables d'environnement ; sort avec
+ * le code écrit dans exit-code, à côté de lui, s'il existe (une variable d'environnement ne
+ * lui parviendrait pas : il reçoit un environnement réduit)
  */
 const FAKE_WHISPER = `#!/usr/bin/env node
 const fs = require('node:fs');
 const path = require('node:path');
 const args = process.argv.slice(2);
 fs.writeFileSync(path.join(__dirname, 'args.json'), JSON.stringify(args));
-if (process.env.FAKE_WHISPER_EXIT) process.exit(Number(process.env.FAKE_WHISPER_EXIT));
+fs.writeFileSync(path.join(__dirname, 'env.json'), JSON.stringify(Object.keys(process.env)));
+const exitFile = path.join(__dirname, 'exit-code');
+if (fs.existsSync(exitFile)) process.exit(Number(fs.readFileSync(exitFile, 'utf8')));
 const value = flag => args[args.indexOf(flag) + 1];
 const { clips } = JSON.parse(fs.readFileSync(value('--manifest'), 'utf8'));
 const lines = Object.entries(clips).map(([key, entry]) => {
@@ -130,9 +134,37 @@ describe('voice:review', () => {
   });
 
   test('Whisper en échec : arrêt, avec son code', () => {
-    const result = run(['--python', fake, '--allow-missing'], { FAKE_WHISPER_EXIT: '3' });
+    fs.writeFileSync(path.join(work, 'exit-code'), '3');
+    const result = run(['--python', fake, '--allow-missing']);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('Whisper a échoué (code 3)');
+  });
+
+  test('Whisper reçoit un environnement réduit : ni clé des fournisseurs, ni identifiant', () => {
+    const result = run(['--python', fake, '--allow-missing'], {
+      ELEVENLABS_API_KEY: 'cle-elevenlabs',
+      GOOGLE_TTS_API_KEY: 'cle-google',
+      MISTRAL_API_KEY: 'cle-mistral',
+      AWS_SECRET_ACCESS_KEY: 'secret-aws',
+      HF_TOKEN: 'jeton-hf',
+      CUDA_VISIBLE_DEVICES: '0',
+      HF_HOME: path.join(work, 'hf'),
+      LD_LIBRARY_PATH: '/opt/cuda/lib64',
+    });
+    expect(result.status).toBe(0);
+    const names = JSON.parse(fs.readFileSync(path.join(work, 'env.json'), 'utf8'));
+    expect(names).toEqual(
+      expect.arrayContaining(['PATH', 'HOME', 'CUDA_VISIBLE_DEVICES', 'HF_HOME', 'LD_LIBRARY_PATH'])
+    );
+    for (const secret of [
+      'ELEVENLABS_API_KEY',
+      'GOOGLE_TTS_API_KEY',
+      'MISTRAL_API_KEY',
+      'AWS_SECRET_ACCESS_KEY',
+      'HF_TOKEN',
+    ]) {
+      expect(names).not.toContain(secret);
+    }
   });
 
   test('--skip-whisper : les transcriptions déjà là servent, Whisper n’est pas lancé', () => {
