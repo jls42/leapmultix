@@ -74,8 +74,9 @@ export function translate(key, params = {}) {
 // Fetch translations JSON for a language (no global side effects)
 export async function fetchTranslations(lang) {
   const l = langueLivree(lang || _currentLanguage);
-  const ver = VERSION_PARAM || Date.now();
-  const url = `assets/translations/${l}.json?v=${ver}`;
+  // VERSION_PARAM vaut déjà « v=<version> » (cache-updater.js)
+  const query = VERSION_PARAM || `v=${Date.now()}`;
+  const url = `assets/translations/${l}.json?${query}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch translations: ${l}`);
   return await res.json();

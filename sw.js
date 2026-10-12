@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v42'; // bump to trigger client update
+const VERSION = 'v43'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -685,8 +685,6 @@ const PRECACHE_IMAGES = [
   '/assets/images/arcade/tete_haut.png',
   '/assets/images/arcade/unicorn_head_avatar_128x128.png',
   '/assets/images/arcade/unicorn_right_128x128.png',
-  '/assets/images/forest.png',
-  '/assets/images/river.png',
 ];
 // precache:end
 

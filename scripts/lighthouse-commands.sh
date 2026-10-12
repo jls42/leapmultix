@@ -5,17 +5,19 @@
 echo "🚨 AUDIT LIGHTHOUSE MOBILE - PHASE 8.4"
 echo "======================================"
 
-# S'assurer que Lighthouse est installé
-if ! command -v lighthouse &> /dev/null; then
-    echo "📦 Installation Lighthouse CLI..."
-    # --ignore-scripts : une installation globale ne doit pas exécuter les
-    # scripts de cycle de vie du paquet. Lighthouse n'en a pas besoin, son
-    # binaire est lié par npm indépendamment.
-    npm install -g --ignore-scripts lighthouse
+# Lighthouse du dépôt (devDependencies, version et empreinte figées par package-lock.json),
+# jamais une installation globale sans version : npm ci d'abord
+if [[ ! -x node_modules/.bin/lighthouse ]]; then
+    echo "❌ Lighthouse introuvable dans node_modules : lancer npm ci" >&2
+    exit 1
 fi
+lighthouse() {
+    npx --no-install lighthouse "$@"
+    return $?
+}
 
-# URLs à tester (ajuster selon votre configuration)
-BASE_URL="http://localhost:8000"
+# URLs à tester : le serveur de développement (npm run serve)
+BASE_URL="http://localhost:8080"
 REPORT_DIR="analysis/lighthouse-reports"
 
 # Créer le répertoire de rapports
