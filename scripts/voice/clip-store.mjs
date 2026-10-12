@@ -92,6 +92,17 @@ export function saidHash(said) {
   return sha256(said).slice(0, 12);
 }
 
+/** Langue : deux lettres (assertLangCode) */
+const LANG_PART = /^[a-z]{2}$/;
+/** Version : l'expression de l'index du jeu (js/core/voice-index.js) */
+const VERSION_PART = /^[a-z0-9][a-z0-9.-]{0,63}$/;
+
+function assertPathPart(label, value, pattern) {
+  if (typeof value !== 'string' || !pattern.test(value)) {
+    throw new Error(`${label} refusée pour un chemin : ${JSON.stringify(value)}`);
+  }
+}
+
 /**
  * @param {string} outDir - Racine du dépôt privé des voix
  * @param {string} lang
@@ -100,6 +111,11 @@ export function saidHash(said) {
  * @param {'mp3'|'wav'} [rawExt] - Extension des bruts (rawExtension)
  */
 export function storePaths(outDir, lang, version, rawKey = version, rawExt = 'mp3') {
+  // Chaque morceau devient un nom de dossier ou de fichier : jamais « .. » ni « / », sinon une
+  // version comme « ../../ailleurs » ferait déplacer puis supprimer un dossier hors du dépôt
+  assertPathPart('langue', lang, LANG_PART);
+  assertPathPart('version', version, VERSION_PART);
+  assertPathPart('dossier des bruts', rawKey, VERSION_PART);
   return {
     rawDir: path.join(outDir, 'raw', lang, rawKey),
     rawExt,

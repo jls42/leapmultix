@@ -47,7 +47,7 @@ import {
   processClip,
   probeClip,
 } from './audio-process.mjs';
-import { ProviderError } from './providers/common.mjs';
+import { ProviderError, checkedBaseUrl } from './providers/common.mjs';
 import { createElevenLabs } from './providers/elevenlabs.mjs';
 import { createGoogle } from './providers/google.mjs';
 import { createMistral } from './providers/mistral.mjs';
@@ -239,8 +239,14 @@ async function inspectWith(probeAudio, file) {
 function retryDelay(error, attempt, { delays, signal }) {
   const retriable = error instanceof ProviderError && RETRIABLE_KINDS.has(error.kind);
   if (signal?.aborted || !retriable || attempt >= delays.length) return null;
+  // Un délai annoncé démesuré arrête l'exécution : au-delà de la borne de setTimeout, il
+  // deviendrait un nouvel essai immédiat, et le fournisseur ne répondrait pas mieux
+  if ((error.retryAfterMs ?? 0) > MAX_RETRY_AFTER_MS) return null;
   return Math.max(error.retryAfterMs ?? 0, delays[attempt]);
 }
+
+/** Plus long délai annoncé (retry-after) que l'on attend avant un nouvel essai : 10 minutes */
+export const MAX_RETRY_AFTER_MS = 10 * 60 * 1000;
 
 /**
  * Tâche relancée après une erreur passagère du fournisseur (débit, serveur, réseau)
@@ -848,7 +854,7 @@ export async function openProvider(voice, env = process.env) {
   if (!entry) throw new Error(`Fournisseur inconnu : ${voice.provider}`);
   const provider = entry.create({
     apiKey: env[entry.keyVariable],
-    baseUrl: env[entry.baseUrlVariable] || undefined,
+    baseUrl: checkedBaseUrl(env[entry.baseUrlVariable], entry.baseUrlVariable),
   });
   try {
     await provider.checkVoice(voice);
