@@ -59,6 +59,11 @@ const PUBLISHED = {
   privateDirs: ['assets/voice/'],
 };
 
+/** Fichier de la version construite (npm run build, dist/) : tout, sauf un fichier caché */
+function isBuiltFile(relativePath) {
+  return !relativePath.split('/').some(part => part.startsWith('.'));
+}
+
 /** Chemin relatif que deploy.sh publie, sans fichier caché */
 function isPublished(relativePath) {
   if (relativePath.split('/').some(part => part.startsWith('.'))) return false;
@@ -119,13 +124,13 @@ function sitePath(pathname) {
 }
 
 /**
- * Page du site ; un fichier absent, ou que deploy.sh ne publie pas, retombe sur index.html
+ * Page du site ; un fichier absent, ou hors du site servi (isServed), retombe sur index.html
  * (navigation par diapositives)
  */
-async function serveSite(req, res, pathname, rootDir) {
+async function serveSite(req, res, pathname, rootDir, isServed) {
   const relativePath = sitePath(pathname).slice(1);
   let filePath = path.join(rootDir, relativePath);
-  let data = isPublished(relativePath) ? await readInside(rootDir, filePath) : null;
+  let data = isServed(relativePath) ? await readInside(rootDir, filePath) : null;
   if (!data) {
     filePath = path.join(rootDir, 'index.html');
     data = await fs.readFile(filePath);
@@ -146,12 +151,12 @@ function isLoopbackHost(hostHeader = '') {
 
 /**
  * Réponse à une requête : GET ou HEAD seulement, Host de la boucle locale ; /voice/ depuis
- * voiceDir, le reste depuis rootDir
+ * voiceDir, le reste depuis rootDir : ce que deploy.sh publie, ou ce que dit isServed
  * @param {import('node:http').IncomingMessage} req
  * @param {import('node:http').ServerResponse} res
- * @param {{rootDir: string, voiceDir?: string}} options
+ * @param {{rootDir: string, voiceDir?: string | null, isServed?: (relativePath: string) => boolean}} options
  */
-async function serveRequest(req, res, { rootDir, voiceDir }) {
+async function serveRequest(req, res, { rootDir, voiceDir, isServed = isPublished }) {
   if (!['GET', 'HEAD'].includes(req.method || '')) {
     res.writeHead(405).end();
     return;
@@ -165,10 +170,10 @@ async function serveRequest(req, res, { rootDir, voiceDir }) {
     // Normalisé AVANT le choix du dossier : /%2fvoice/… et /js/..%2fvoice/… sont /voice/…
     const pathname = path.posix.normalize(decodeURIComponent(requestUrl.pathname || '/'));
     if (pathname.startsWith('/voice/')) await serveVoice(req, res, pathname, voiceDir);
-    else await serveSite(req, res, pathname, rootDir);
+    else await serveSite(req, res, pathname, rootDir, isServed);
   } catch (error) {
     res.writeHead(500).end(String(error));
   }
 }
 
-module.exports = { PUBLISHED, isLoopbackHost, serveRequest };
+module.exports = { PUBLISHED, isBuiltFile, isLoopbackHost, serveRequest };

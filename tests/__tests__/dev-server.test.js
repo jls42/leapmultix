@@ -2,19 +2,23 @@
  * Serveur de développement (npm run serve, scripts/serve.cjs) : la boucle locale seulement,
  * jamais le réseau de la maison ou de l'école ; le port suivant si 8080 est pris ; le site
  * publié et le dossier voice/ du dépôt (?voix=local), rien d'autre (règles détaillées dans
- * static-server.test.js, même module).
+ * static-server.test.js, même module). npm run serve:dist : la version construite (dist/).
  * @jest-environment node
  */
 
+const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const http = require('node:http');
 const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
-const { portRange, startDevServer } = require('../../scripts/serve.cjs');
+const { distOptions, portRange, startDevServer } = require('../../scripts/serve.cjs');
 
 const HOME_PAGE = '<p>accueil</p>';
 const VOICE_INDEX = '{ "languages": {} }';
+const BUILT_PAGE = '<p>version construite</p>';
+const BUNDLE = 'export const construit = true;';
+const PACKAGE = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../package.json'), 'utf8'));
 
 function get(port, rawPath) {
   return new Promise((resolve, reject) => {
@@ -108,7 +112,47 @@ describe('serveur de développement', () => {
   });
 
   test('npm run serve lance ce serveur', () => {
-    const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../package.json'), 'utf8'));
-    expect(pkg.scripts.serve).toBe('node scripts/serve.cjs');
+    expect(PACKAGE.scripts.serve).toBe('node scripts/serve.cjs');
+  });
+
+  describe('npm run serve:dist', () => {
+    let buildDir;
+
+    beforeAll(() => {
+      buildDir = path.join(tmp, 'construit');
+      fs.mkdirSync(path.join(buildDir, 'dist/css'), { recursive: true });
+      fs.writeFileSync(path.join(buildDir, 'dist/index.html'), BUILT_PAGE);
+      fs.writeFileSync(path.join(buildDir, 'dist/bootstrap-critical-ab12cd.js'), BUNDLE);
+      fs.writeFileSync(path.join(buildDir, 'dist/.env'), 'CLE=secret');
+    });
+
+    test('tout dist/, modules de Rollup compris, sauf les fichiers cachés ; pas de voix', async () => {
+      const { port } = await start(distOptions({ PORT: '0' }, buildDir));
+      expect(await get(port, '/')).toEqual({ status: 200, body: BUILT_PAGE });
+      expect(await get(port, '/bootstrap-critical-ab12cd.js')).toEqual({
+        status: 200,
+        body: BUNDLE,
+      });
+      expect(await get(port, '/.env')).toEqual({ status: 200, body: BUILT_PAGE });
+      expect((await get(port, '/voice/index.json')).status).toBe(404);
+    });
+
+    test('ports 5000 à 5019, PORT en impose un ; dist/ absent : npm run build d’abord', () => {
+      expect(distOptions({}, buildDir).ports).toEqual({ first: 5000, last: 5019 });
+      expect(distOptions({ PORT: '5050' }, buildDir).ports).toEqual({ first: 5050, last: 5050 });
+      expect(() => distOptions({}, path.join(tmp, 'jamais-construit'))).toThrow('npm run build');
+    });
+
+    test('argument inconnu : refus, aucun serveur', () => {
+      const script = path.resolve(__dirname, '../../scripts/serve.cjs');
+      const result = spawnSync(process.execPath, [script, 'tout'], { encoding: 'utf8' });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('usage : node scripts/serve.cjs [dist]');
+    });
+
+    test('npm run serve:dist lance ce serveur, sans le paquet serve', () => {
+      expect(PACKAGE.scripts['serve:dist']).toBe('node scripts/serve.cjs dist');
+      expect(PACKAGE.devDependencies).not.toHaveProperty('serve');
+    });
   });
 });
