@@ -151,13 +151,9 @@ cd leapmultix
 # Installer les dépendances
 npm install
 
-# Lancer le serveur de développement (option 1)
+# Lancer le serveur de développement (le site publié, sur cet ordinateur seulement)
 npm run serve
 # L'application sera accessible sur http://localhost:8080 (ou port suivant disponible)
-
-# Ou avec Python (option 2)
-python3 -m http.server 8000
-# L'application sera accessible sur http://localhost:8000
 ```
 
 ### Scripts disponibles

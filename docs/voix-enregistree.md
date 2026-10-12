@@ -468,8 +468,8 @@ le jeu revient à la voix de l'appareil au prochain chargement en ligne.
 
 **Essai local** : `npm run voice:publish -- local --lang fr --audience all --default-on`
 relie le dossier `voice/` du site (ignoré par git) aux clips du dépôt privé ; `npm run serve`,
-puis ouvrir `http://localhost:8080/index.html?voix=local` (`serve-lite` liste les fichiers à la
-racine : viser `index.html`). Pour le menu « Voix », ajouter ensuite une autre voix à l'index
+puis ouvrir `http://localhost:8080/index.html?voix=local` (le serveur ne sert que le site publié
+et `voice/`, sur cet ordinateur seulement). Pour le menu « Voix », ajouter ensuite une autre voix à l'index
 local : `npm run voice:publish -- local --lang en --version jane-v1-1 --audience all`.
 
 ## Licence et mentions

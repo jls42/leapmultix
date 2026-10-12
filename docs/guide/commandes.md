@@ -8,7 +8,7 @@ Run all commands from the root directory:
 
 ```bash
 npm install          # Setup dependencies
-npm run serve        # Start development server (static preview)
+npm run serve        # Development server: the published site, on 127.0.0.1 only (port 8080)
 npm test            # Run all tests
 npm run test:watch  # Run tests in watch mode
 npm run test:coverage # Run tests with coverage report
@@ -42,7 +42,7 @@ npm run verify      # Run lint + test + test:esm + coverage (quality gate)
 ### Build and Asset Management
 
 - `npm run build` - Build production bundle with Rollup
-- `npm run serve:dist` - Serve production build from dist/
+- `npm run serve:dist` - Serve production build from dist/ (127.0.0.1, port 5000)
 - `npm run assets:generate` - Generate responsive image assets (obligatoire dès qu'un PNG est ajouté/modifié afin de rafraîchir `assets/generated-images/` avant `deploy.sh`)
 - `npm run assets:backgrounds` - Convert `img/background_*.png` en WebP (à lancer si tu ajoutes/modifies un fond animé)
 - `npm run assets:analyze` - Analyze responsive asset usage

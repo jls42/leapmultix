@@ -1,110 +1,7 @@
 const http = require('node:http');
 const path = require('node:path');
-const fs = require('node:fs/promises');
 const { inSequence } = require('../../scripts/lib/in-sequence.cjs');
-
-const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.webp': 'image/webp',
-  '.ico': 'image/x-icon',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.mp4': 'video/mp4',
-  '.mp3': 'audio/mpeg',
-};
-
-function contentType(filePath) {
-  return MIME_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
-}
-
-/**
- * Ce que deploy.sh publie (sa liste rsync, comparée par tests/__tests__/static-server.test.js) :
- * le reste du dépôt (fichiers cachés, package.json, clips privés…) n'existe pas en ligne
- */
-const PUBLISHED = {
-  files: new Set([
-    'index.html',
-    'parents.html',
-    'modes.html',
-    'pwa.html',
-    'offline.html',
-    'sw.js',
-    'manifest.json',
-    'favicon.svg',
-    'favicon.ico',
-    'favicon.png',
-    'robots.txt',
-    'sitemap.xml',
-  ]),
-  dirs: ['assets/', 'css/', 'js/', 'img/'],
-  privateDirs: ['assets/voice/'],
-};
-
-/** Chemin relatif que deploy.sh publie, sans fichier caché */
-function isPublished(relativePath) {
-  if (relativePath.split('/').some(part => part.startsWith('.'))) return false;
-  if (PUBLISHED.privateDirs.some(dir => relativePath.startsWith(dir))) return false;
-  return (
-    PUBLISHED.files.has(relativePath) || PUBLISHED.dirs.some(dir => relativePath.startsWith(dir))
-  );
-}
-
-/** Contenu d'un fichier resté dans son dossier une fois les liens résolus, null sinon */
-async function readInside(dir, filePath) {
-  try {
-    const [realDir, realFile] = await Promise.all([fs.realpath(dir), fs.realpath(filePath)]);
-    // Le séparateur final écarte un dossier voisin qui commencerait par le même nom
-    return realFile.startsWith(realDir + path.sep) ? await fs.readFile(realFile) : null;
-  } catch {
-    // Absent ou illisible : même réponse qu'un fichier absent
-    return null;
-  }
-}
-
-/**
- * Voix enregistrée : /voice/ se sert depuis un dossier de test (options.voiceDir), avec un
- * vrai 404 pour un clip absent, jamais le repli sur index.html
- */
-async function serveVoice(req, res, pathname, voiceDir) {
-  const data =
-    voiceDir && (await readInside(voiceDir, path.join(voiceDir, pathname.slice('/voice/'.length))));
-  if (!data) {
-    res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found');
-    return;
-  }
-  res.writeHead(200, { 'Content-Type': contentType(pathname) });
-  res.end(req.method === 'HEAD' ? undefined : data);
-}
-
-/** Fichier demandé du site : index.html pour la racine ou un dossier */
-function sitePath(pathname) {
-  if (!pathname || pathname === '/') return '/index.html';
-  return pathname.endsWith('/') ? `${pathname}index.html` : pathname;
-}
-
-/**
- * Page du site ; un fichier absent, ou que deploy.sh ne publie pas, retombe sur index.html
- * (navigation par diapositives)
- */
-async function serveSite(req, res, pathname, rootDir) {
-  const relativePath = sitePath(pathname).slice(1);
-  let filePath = path.join(rootDir, relativePath);
-  let data = isPublished(relativePath) ? await readInside(rootDir, filePath) : null;
-  if (!data) {
-    filePath = path.join(rootDir, 'index.html');
-    data = await fs.readFile(filePath);
-  }
-  res.writeHead(200, { 'Content-Type': contentType(filePath) });
-  res.end(req.method === 'HEAD' ? undefined : data);
-}
+const { serveRequest } = require('../../scripts/lib/site-server.cjs');
 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -217,20 +114,7 @@ async function startStaticServer(networkIdleSetting = 'networkidle2', options = 
     // Muet : la requête reste sans réponse, la connexion ouverte
     if (network.state.silent) return;
     network.state.slowLink?.slowDown(res);
-    if (!['GET', 'HEAD'].includes(req.method || '')) {
-      res.writeHead(405).end();
-      return;
-    }
-
-    try {
-      const requestUrl = new URL(req.url, 'http://localhost');
-      // Normalisé AVANT le choix du dossier : /%2fvoice/… et /js/..%2fvoice/… sont /voice/…
-      const pathname = path.posix.normalize(decodeURIComponent(requestUrl.pathname || '/'));
-      if (pathname.startsWith('/voice/')) await serveVoice(req, res, pathname, options.voiceDir);
-      else await serveSite(req, res, pathname, rootDir);
-    } catch (error) {
-      res.writeHead(500).end(String(error));
-    }
+    await serveRequest(req, res, { rootDir, voiceDir: options.voiceDir });
   });
 
   network = createNetworkSwitch(server);
@@ -251,4 +135,4 @@ async function startStaticServer(networkIdleSetting = 'networkidle2', options = 
   };
 }
 
-module.exports = { startStaticServer, PUBLISHED };
+module.exports = { startStaticServer };
