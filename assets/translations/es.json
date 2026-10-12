@@ -142,6 +142,7 @@
   "create_user": "Crear",
   "current_avatar_label": "Avatar actual:",
   "customization_saved": "¡Personalización guardada!",
+  "save_failed": "El navegador se niega a guardarlo: no se ha guardado nada (navegación privada o falta de espacio).",
   "daily_challenge_connect_prompt": "¡Inicia sesión para ver el desafío!",
   "daily_challenge_title": "Desafío del día",
   "dashboard": "Panel de control",

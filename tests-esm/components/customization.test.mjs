@@ -235,6 +235,62 @@ describe('Personnalisation : avatar du joueur', () => {
   });
 });
 
+describe('Personnalisation : enregistrement refusé par le navigateur', () => {
+  const SAVE_MARKUP = `
+    <section id="slide6" class="slide">
+      <div class="nickname-selector">
+        <input id="nickname-input" type="text" />
+        <button id="save-nickname-btn">Enregistrer</button>
+      </div>
+    </section>
+  `;
+
+  beforeEach(() => {
+    setTranslations({
+      customization_saved: 'Personnalisation sauvegardée !',
+      nickname_saved: 'Surnom sauvegardé !',
+      save_failed: 'Le navigateur refuse d’enregistrer : rien n’a été sauvegardé.',
+    });
+    document.body.innerHTML = SAVE_MARKUP;
+    UserManager._players = { Lina: { avatar: 'fox', nickname: 'Lina' } };
+    UserManager._currentUser = 'Lina';
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+    UserManager._players = {};
+    UserManager._currentUser = null;
+    document.body.innerHTML = '';
+  });
+
+  const message = () => {
+    jest.advanceTimersByTime(10); // showMessage remplit le toast juste après l'avoir inséré
+    return document.querySelector('.message-popup').textContent;
+  };
+  const refuseWrites = () =>
+    jest.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+
+  test('« Enregistrer » : sauvegardée si le navigateur écrit, sinon le refus est dit', () => {
+    Customization.save();
+    expect(message()).toBe('Personnalisation sauvegardée !');
+    refuseWrites();
+    Customization.save();
+    expect(message()).toBe('Le navigateur refuse d’enregistrer : rien n’a été sauvegardé.');
+  });
+
+  test('surnom : le refus du navigateur est dit, pas « Surnom sauvegardé ! »', () => {
+    Customization.setupEvents();
+    refuseWrites();
+    document.getElementById('nickname-input').value = 'Lili';
+    document.getElementById('save-nickname-btn').click();
+    expect(message()).toBe('Le navigateur refuse d’enregistrer : rien n’a été sauvegardé.');
+  });
+});
+
 describe('Personnalisation : « Vider le cache », repli à la main', () => {
   afterEach(() => {
     closeOpenDialog();

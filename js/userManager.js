@@ -291,7 +291,8 @@ export const UserManager = {
   /**
    * Mettre à jour directement les données de l'utilisateur actuel
    * @param {Object} updatedData - Données à fusionner
-   * @returns {boolean} Vrai si un joueur courant a reçu ces données
+   * @returns {boolean} Vrai si les données du joueur courant sont enregistrées ; faux sans joueur
+   *   courant, ou si le navigateur refuse d'écrire (navigation privée, place manquante)
    */
   updateCurrentUserData(updatedData) {
     if (
@@ -305,8 +306,7 @@ export const UserManager = {
       ...updatedData,
     };
 
-    this.savePlayers();
-    return true;
+    return this.savePlayers();
   },
 
   /**

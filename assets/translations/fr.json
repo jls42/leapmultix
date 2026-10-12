@@ -146,6 +146,7 @@
   "create_user": "Créer",
   "current_avatar_label": "Avatar actuel :",
   "customization_saved": "Personnalisation sauvegardée !",
+  "save_failed": "Le navigateur refuse d’enregistrer : rien n’a été sauvegardé (navigation privée ou place manquante).",
   "daily_challenge_connect_prompt": "Connecte-toi pour voir le défi !",
   "daily_challenge_title": "Défi du jour",
   "dashboard": "Tableau de bord",

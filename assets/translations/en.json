@@ -136,6 +136,7 @@
   "create_user": "Create",
   "current_avatar_label": "Current avatar:",
   "customization_saved": "Customization saved!",
+  "save_failed": "The browser refused to store it: nothing was saved (private browsing or out of space).",
   "daily_challenge_connect_prompt": "Log in to see the challenge!",
   "daily_challenge_title": "Daily challenge",
   "dashboard": "Dashboard",

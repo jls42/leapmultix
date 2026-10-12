@@ -112,6 +112,20 @@ describe('UserManager : profils des joueurs', () => {
       expect(zoe.volume).toBe(0.5);
     });
 
+    test('navigateur qui refuse d’écrire : la mise à jour rend faux', () => {
+      UserManager.createUser('Zoé', 'panda');
+      UserManager.selectUser('Zoé');
+      expect(UserManager.updateCurrentUserData({ coins: 5 })).toBe(true);
+      const setItem = jest.spyOn(localStorage, 'setItem').mockImplementation(() => {
+        throw new Error('QuotaExceededError');
+      });
+      try {
+        expect(UserManager.updateCurrentUserData({ coins: 6 })).toBe(false);
+      } finally {
+        setItem.mockRestore();
+      }
+    });
+
     test('deux joueurs gardent chacun leurs données', () => {
       UserManager.createUser('Zoé', 'panda');
       UserManager.createUser('Léo', 'fox');
