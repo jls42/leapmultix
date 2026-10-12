@@ -47,7 +47,7 @@ test('génération complète, rien que des images : accepté', () => {
 test('dossier absent : refusé', () => {
   fs.rmSync(path.join(site, 'assets/generated-images'), { recursive: true });
   const result = check();
-  expect(result.stdout).toContain('absent, ou lien symbolique');
+  expect(result.stderr).toContain('absent, ou lien symbolique');
   expect(result.status).toBe(1);
 });
 
@@ -55,7 +55,7 @@ test('dossier remplacé par un lien : refusé comme tel', () => {
   fs.renameSync(path.join(site, 'assets/generated-images'), path.join(site, 'ailleurs'));
   fs.symlinkSync(path.join(site, 'ailleurs'), path.join(site, 'assets/generated-images'));
   const result = check();
-  expect(result.stdout).toContain('absent, ou lien symbolique');
+  expect(result.stderr).toContain('absent, ou lien symbolique');
   expect(result.status).toBe(1);
 });
 
@@ -63,7 +63,7 @@ test('moins de fichiers générés que de PNG sources : refusé', () => {
   write('img/autre-fond.png');
   write('img/encore-un.png');
   const result = check();
-  expect(result.stdout).toContain('Génération incomplète');
+  expect(result.stderr).toContain('Génération incomplète');
   expect(result.status).toBe(1);
 });
 
@@ -74,8 +74,8 @@ test.each([
 ])('%s : fichier inattendu, refusé', file => {
   write(file);
   const result = check();
-  expect(result.stdout).toContain('Fichiers inattendus');
-  expect(result.stdout).toContain(file);
+  expect(result.stderr).toContain('Fichiers inattendus');
+  expect(result.stderr).toContain(file);
   expect(result.status).toBe(1);
 });
 
@@ -86,6 +86,6 @@ test('lien parmi les images, même nommé en .webp : refusé', () => {
     path.join(site, 'assets/generated-images/arcade/lien.webp')
   );
   const result = check();
-  expect(result.stdout).toContain('lien.webp');
+  expect(result.stderr).toContain('lien.webp');
   expect(result.status).toBe(1);
 });

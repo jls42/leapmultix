@@ -15,7 +15,7 @@ set -eu
 DIR=assets/generated-images
 
 if [[ ! -d "$DIR" || -L "$DIR" ]]; then
-    echo "::error::$DIR absent, ou lien symbolique : déploiement interrompu"
+    echo "::error::$DIR absent, ou lien symbolique : déploiement interrompu" >&2
     exit 1
 fi
 
@@ -23,15 +23,15 @@ sources=$(find assets/images img -name '*.png' | wc -l)
 generes=$(find "$DIR" -type f | wc -l)
 echo "PNG sources : $sources — fichiers générés : $generes"
 if (( generes < sources )); then
-    echo "::error::Génération incomplète — déploiement interrompu"
+    echo "::error::Génération incomplète — déploiement interrompu" >&2
     exit 1
 fi
 
 inattendus=$(find "$DIR" -mindepth 1 ! -type d \
     ! \( -type f \( -name '*.webp' -o -name '*.png' -o -path "$DIR/image-map.json" \) \) -print)
 if [[ -n "$inattendus" ]]; then
-    echo "::error::Fichiers inattendus parmi les images générées — déploiement interrompu"
-    sed -n '1,10p' <<< "$inattendus"
+    echo "::error::Fichiers inattendus parmi les images générées — déploiement interrompu" >&2
+    sed -n '1,10p' <<< "$inattendus" >&2
     exit 1
 fi
 echo "Images générées complètes, rien d'autre que des images."
