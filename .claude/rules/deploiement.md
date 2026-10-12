@@ -10,6 +10,7 @@ paths:
   - 'scripts/precache-list.mjs'
   - 'offline.html'
   - 'pwa.html'
+  - 'scripts/check-generated-images.sh'
 ---
 
 # Déploiement et hors ligne
@@ -27,9 +28,11 @@ montent ensemble (test du même fichier).
 
 ## Déploiement automatique
 
-Un push sur `main` déploie le site, mais seulement si le job `verify` est passé :
-le job `deploy` de `.github/workflows/ci.yml` s'authentifie auprès d'AWS par jeton
-OIDC (aucune clé stockée), régénère les images, puis appelle `deploy.sh`.
+Un push sur `main` déploie le site, mais seulement si le job `verify` est passé
+(`.github/workflows/ci.yml`) : le job `images` régénère les images sans aucun droit AWS
+(c'est lui qui exécute le code des dépendances npm), puis le job `deploy` les reçoit en
+artefact, les contrôle (`scripts/check-generated-images.sh`), s'authentifie auprès d'AWS
+par jeton OIDC (aucune clé stockée) et appelle `deploy.sh`, sans `npm ci`.
 
 Deux points à connaître avant d'y toucher :
 

@@ -73,13 +73,57 @@ jobs:
           SEO_REPORT_BASE_URL: https://leapmultix.jls42.org
         run: npm run seo:report
 
+  # Images du site, générées sans aucun droit AWS : ce job exécute le code des dépendances
+  # npm (sharp…), il ne reçoit donc pas de jeton OIDC. Le job deploy, qui en reçoit un,
+  # n'exécute que le code du dépôt (deploy.sh, scripts/version-module-urls.mjs) et l'AWS CLI.
+  images:
+    name: Images du site
+    runs-on: ubuntu-24.04
+    needs: verify
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        # --ignore-scripts : défense en profondeur contre une dépendance
+        # compromise qui s'exécuterait à l'installation. Vérifié : sharp charge
+        # ses binaires préconstruits sans script d'installation, la génération
+        # d'images et les tests passent à l'identique.
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      # assets/generated-images/ n'est pas dans git (3100+ fichiers) : il faut le
+      # reconstruire ici, sinon la synchronisation S3, qui utilise --delete,
+      # effacerait toutes les images du site. Environ 25 min (WebP en effort 6).
+      - name: Génération des images responsives
+        run: npm run assets:generate
+
+      - name: Garde-fou avant l'envoi au job de déploiement
+        run: bash scripts/check-generated-images.sh
+
+      # Images déjà compressées (WebP, PNG) : l'archive ne les recompresse pas
+      - name: Images pour le job de déploiement
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: generated-images
+          path: assets/generated-images/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
   # Déploiement du site vers S3 + invalidation CloudFront, uniquement depuis main
-  # et uniquement si `verify` est passé. L'authentification se fait par jeton OIDC
-  # éphémère : aucune clé AWS n'est stockée dans le dépôt.
+  # et uniquement si `verify` et les images sont passés. L'authentification se fait par
+  # jeton OIDC éphémère : aucune clé AWS n'est stockée dans le dépôt.
   deploy:
     name: Déploiement
     runs-on: ubuntu-24.04
-    needs: verify
+    needs: images
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     permissions:
       id-token: write # échange du jeton OIDC avec AWS
@@ -113,37 +157,21 @@ jobs:
           fi
           echo "Variables présentes."
 
+      # Node seul, sans npm ci : deploy.sh n'appelle que scripts/version-module-urls.mjs,
+      # qui n'utilise que les modules de Node
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Install dependencies
-        # --ignore-scripts : défense en profondeur contre une dépendance
-        # compromise qui s'exécuterait à l'installation. Vérifié : sharp charge
-        # ses binaires préconstruits sans script d'installation, la génération
-        # d'images et les tests passent à l'identique.
-        run: npm ci --ignore-scripts --no-audit --no-fund
-
-      # assets/generated-images/ n'est pas dans git (3100+ fichiers) : il faut le
-      # reconstruire ici, sinon la synchronisation S3, qui utilise --delete,
-      # effacerait toutes les images du site. Environ 2 min 30 à froid.
-      - name: Génération des images responsives
-        run: npm run assets:generate
+      - name: Images générées par le job images
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: generated-images
+          path: assets/generated-images
 
       - name: Garde-fou avant synchronisation
-        run: |
-          # Une génération partielle serait aussi destructrice qu'une génération
-          # absente : on refuse de déployer s'il y a moins de fichiers générés que
-          # de PNG sources.
-          sources=$(find assets/images img -name '*.png' | wc -l)
-          generes=$(find assets/generated-images -type f | wc -l)
-          echo "PNG sources : $sources — fichiers générés : $generes"
-          if [ "$generes" -lt "$sources" ]; then
-            echo "::error::Génération incomplète — déploiement interrompu"
-            exit 1
-          fi
+        run: bash scripts/check-generated-images.sh
 
       - name: Outils attendus par deploy.sh
         run: |
@@ -152,8 +180,9 @@ jobs:
           fi
           rsync --version | head -1
           aws --version
+          node --version
 
-      # Les identifiants AWS n'apparaissent qu'à partir d'ici, après le build.
+      # Les identifiants AWS n'apparaissent qu'à partir d'ici.
       - name: Configuration des identifiants AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
