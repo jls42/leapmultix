@@ -336,12 +336,13 @@ export const Customization = {
           const nickname = nicknameInput.value.trim();
           if (nickname) {
             gameState.nickname = nickname;
-            showMessage(getTranslation('nickname_saved'));
 
-            // Mettre à jour et sauvegarder immédiatement le surnom utilisateur
+            // Mettre à jour et sauvegarder immédiatement le surnom utilisateur ; un refus du
+            // navigateur se dit, au lieu d'un « sauvegardé » qui ne serait pas vrai
             const userData = UserState.getCurrentUserData();
             userData.nickname = nickname;
-            UserState.updateUserData(userData);
+            const saved = UserState.updateUserData(userData);
+            showMessage(getTranslation(saved ? 'nickname_saved' : 'save_failed'));
             void updateWelcomeMessageUI();
 
             // Tâche 1.5: Cacher le clavier virtuel après sauvegarde
@@ -520,9 +521,9 @@ export const Customization = {
     userData.theme = gameState.theme;
     userData.unlockedAvatars = gameState.unlockedAvatars;
 
-    UserState.updateUserData(userData);
+    const saved = UserState.updateUserData(userData);
 
-    showMessage(getTranslation('customization_saved'));
+    showMessage(getTranslation(saved ? 'customization_saved' : 'save_failed'));
   },
 };
 
