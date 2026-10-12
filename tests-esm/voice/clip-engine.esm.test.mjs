@@ -380,6 +380,15 @@ describe('Moteur des clips', () => {
     expect(audio.plays).toEqual([]);
   });
 
+  test('liste de lecture (audio/mpegurl) : pas un MP3, clip tenu pour absent', async () => {
+    respond = async () => new Response('#EXTM3U', { headers: { 'Content-Type': 'audio/mpegurl' } });
+    const engine = makeEngine();
+    engine.start('Mode Quiz', handlers());
+    await flush();
+    expect(fallbacks).toEqual(['absent']);
+    expect(audio.plays).toEqual([]);
+  });
+
   test('réseau coupé : repli, sans retenir le clip comme absent', async () => {
     respond = async () => {
       throw new TypeError('Failed to fetch');

@@ -114,7 +114,9 @@ export async function fetchVoiceIndex(base, fetchImpl = fetch) {
 // Moteur des clips
 // ---------------------------------------------------------------------------------------
 
-const isMp3Response = res => (res.headers.get('content-type') ?? '').startsWith('audio/mpeg');
+/** « audio/mpeg » exactement, paramètres à part : audio/mpegurl (liste de lecture) commence pareil */
+const isMp3Response = res =>
+  (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase() === 'audio/mpeg';
 
 function silenceBlob() {
   const bytes = Uint8Array.from(atob(SILENCE_MP3), char => char.codePointAt(0));

@@ -839,3 +839,70 @@ describe('Service worker : réseau qui ne répond pas (wifi d’école, portail 
     expect(fourth.state.done).toBe(false);
   });
 });
+
+describe('Service worker : durcissements', () => {
+  test('liste de lecture (audio/mpegurl) : transmise, jamais gardée comme clip', async () => {
+    const playlist = new FakeResponse('#EXTM3U', { headers: { 'Content-Type': 'audio/mpegurl' } });
+    const worker = loadWorker(() => playlist);
+    const url = clipUrl('fr', 'lucie-v3-2', 'abc123');
+    expect((await request(worker, url)).status).toBe(200);
+    expect((await voiceCache(worker)).size).toBe(0);
+  });
+
+  test('« audio/mpeg » suivi de paramètres : gardé comme clip', async () => {
+    const clip = new FakeResponse('mp3', {
+      headers: { 'Content-Type': 'audio/mpeg; charset=binary' },
+    });
+    const worker = loadWorker(() => clip);
+    await request(worker, clipUrl('fr', 'lucie-v3-2', 'abc123'));
+    expect((await voiceCache(worker)).size).toBe(1);
+  });
+
+  test('index retiré (404) : les clips gardés partent aussi, même hors ligne', async () => {
+    let state = 'publié';
+    const url = clipUrl('fr', 'lucie-v3-2', 'abc123');
+    const worker = loadWorker(requested => {
+      if (state === 'hors ligne') throw new TypeError('Failed to fetch');
+      if (requested.endsWith('/voice/index.json')) {
+        return state === 'retiré'
+          ? new FakeResponse('', { status: 404 })
+          : new FakeResponse(JSON.stringify(INDEX));
+      }
+      return mp3('clip');
+    });
+    await request(worker, '/voice/index.json');
+    await request(worker, url);
+    expect([...(await voiceCache(worker)).keys()]).toContain(url);
+    state = 'retiré';
+    await request(worker, '/voice/index.json');
+    expect((await voiceCache(worker)).size).toBe(0);
+    state = 'hors ligne';
+    expect((await request(worker, url)).type).toBe('error');
+  });
+
+  test('page HTML répondue pour une image absente : transmise, jamais gardée', async () => {
+    const html = () => new FakeResponse('<html>', { headers: { 'Content-Type': 'text/html' } });
+    const worker = loadWorker(html);
+    const response = await request(worker, '/assets/images/arcade/absente.png', {
+      destination: 'image',
+    });
+    expect(response.status).toBe(200);
+    const runtime = await worker.caches.open(constant(worker, 'RUNTIME_CACHE'));
+    expect(runtime.entries.size).toBe(0);
+  });
+
+  test('chemin en « // » : jamais la copie gardée sous l’adresse d’un autre hôte', async () => {
+    const { worker } = await installedOffline();
+    const version = constant(worker, 'VERSION');
+    const offline = await worker.caches.open(constant(worker, 'OFFLINE_CACHE'));
+    offline.entries.set('https://autre.example/js/game.js', new FakeResponse('copie étrangère'));
+    offline.entries.set('https://autre.example/page.html', new FakeResponse('page étrangère'));
+    // Hors ligne, un fichier jamais gardé finit en erreur réseau : jamais la copie étrangère
+    const script = await request(worker, `${ORIGIN}//autre.example/js/game.js?v=${version}`, {
+      destination: 'script',
+    }).catch(error => error);
+    expect(script?.body).not.toBe('copie étrangère');
+    const page = await request(worker, `${ORIGIN}//autre.example/page.html`, { mode: 'navigate' });
+    expect(page.body).not.toBe('page étrangère');
+  });
+});

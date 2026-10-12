@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v41'; // bump to trigger client update
+const VERSION = 'v42'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -792,13 +792,20 @@ self.addEventListener('message', event => {
   if (event.data?.type === 'version') event.ports?.[0]?.postMessage({ version: VERSION });
 });
 
-/** Un clip ne se garde que s'il est bien un MP3 du site, reçu en entier */
+/** Type d'une réponse, sans ses paramètres (« audio/mpeg; charset=… » → « audio/mpeg ») */
+const mediaType = response =>
+  (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+
+/**
+ * Un clip ne se garde que s'il est bien un MP3 du site, reçu en entier : « audio/mpeg » exactement
+ * (audio/mpegurl, une liste de lecture, commence pareil)
+ */
 function isStorableClip(response) {
   return (
     response.status === 200 &&
     response.type === 'basic' &&
     !response.redirected &&
-    (response.headers.get('content-type') || '').startsWith('audio/mpeg')
+    mediaType(response) === 'audio/mpeg'
   );
 }
 
@@ -858,8 +865,9 @@ async function voiceIndex(event) {
           .catch(() => {})
       );
     } else if ([403, 404, 410].includes(response.status)) {
-      // Index retiré : sa copie ne doit pas revenir hors ligne
-      event.waitUntil(cache.delete(VOICE_INDEX));
+      // Index retiré (coupe-circuit) : ni sa copie ni les clips gardés ne doivent revenir,
+      // même hors ligne ; un clip retiré pour son contenu ne reste pas sur l'appareil
+      event.waitUntil(caches.delete(VOICE_CACHE));
     }
     return response;
   } catch {
@@ -892,6 +900,13 @@ function fromNetwork(request, init) {
 }
 
 /** Copie gardée par cette version : le préchargement d'abord, puis ce qui a servi en ligne */
+/**
+ * Clé de cache du site pour un chemin : absolue, sur l'origine du site. Un chemin en « // »
+ * (« //autre.example/x ») se lirait sinon comme l'adresse d'un autre hôte.
+ * @param {string} pathname
+ */
+const sameOriginKey = pathname => `${self.location.origin}${pathname}`;
+
 async function cachedCopy(key) {
   const offline = await caches.open(OFFLINE_CACHE);
   const hit = await offline.match(key);
@@ -920,7 +935,7 @@ async function cachedResponse(request, anyVersion = false) {
   if (exact) return exact;
   const url = new URL(request.url);
   if (!url.search || !(anyVersion || isOwnVersion(url))) return undefined;
-  return cachedCopy(url.pathname);
+  return cachedCopy(sameOriginKey(url.pathname));
 }
 
 /**
@@ -979,7 +994,8 @@ async function imageResponse(event) {
   if (cached) return cached;
   try {
     const net = await fromNetwork(request);
-    if (net.ok) {
+    // Comme keepImage : jamais la page qu'un serveur répond pour une image absente
+    if (net.ok && mediaType(net) !== 'text/html') {
       const cache = await caches.open(RUNTIME_CACHE);
       event.waitUntil(cache.put(request, net.clone()));
     }
@@ -1061,7 +1077,7 @@ async function copyThenNetwork(settled, keptCopy, offlineCopy) {
 async function versionCopy(request) {
   const url = new URL(request.url);
   if (!isOwnVersion(url)) return cachedCopy(request);
-  const precached = await (await caches.open(OFFLINE_CACHE)).match(url.pathname);
+  const precached = await (await caches.open(OFFLINE_CACHE)).match(sameOriginKey(url.pathname));
   return precached || cachedResponse(request);
 }
 
@@ -1160,7 +1176,7 @@ async function precachedResponse(request) {
 async function keptPage(request) {
   const cache = await caches.open(OFFLINE_CACHE);
   const { pathname } = new URL(request.url);
-  return cache.match(SHELL_PATHS.has(pathname) ? SHELL_URL : pathname);
+  return cache.match(SHELL_PATHS.has(pathname) ? SHELL_URL : sameOriginKey(pathname));
 }
 
 /**
