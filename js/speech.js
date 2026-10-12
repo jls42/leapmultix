@@ -200,41 +200,24 @@ function filterLowQualityVoices(voices) {
 }
 
 /**
- * Finds a preferred voice from a list of candidates.
- * Prioritizes local high-quality voices, then remote Google voices.
- * @param {SpeechSynthesisVoice[]} voiceCandidates - The list of available voices.
- * @param {string} langPrefix - The language prefix (e.g., 'fr').
- * @returns {SpeechSynthesisVoice | null} The found voice or null.
+ * First voice of the list whose name is one of the preferred names, in their order
+ * @param {SpeechSynthesisVoice[]} voiceCandidates - The voices to search.
+ * @param {string[]} names - Preferred names, best first.
+ * @returns {SpeechSynthesisVoice | undefined}
  */
-function findPreferredVoice(voiceCandidates, langPrefix) {
-  const preferred = preferredVoiceRegistry.get(langPrefix) || defaultPreferredVoices;
-
-  // First, try to find a preferred local voice (better reliability, no network)
-  for (const voiceName of preferred.local) {
-    const found = voiceCandidates.find(v => v.name === voiceName);
-    if (found) {
-      return found;
-    }
-  }
-
-  // Then try remote voices (Google voices - high quality but require network)
-  for (const voiceName of preferred.remote) {
-    const found = voiceCandidates.find(v => v.name === voiceName);
-    if (found) {
-      return found;
-    }
-  }
-
-  return null;
+function findPreferredVoice(voiceCandidates, names) {
+  return names.map(name => voiceCandidates.find(v => v.name === name)).find(Boolean);
 }
 
 /**
  * Selects the best available voice for a given language.
- * Strategy prioritizes reliability and quality:
+ * Strategy: a voice of the device first, so that nothing leaves it. A network voice (such
+ * as Chrome's « Google français ») sends each phrase to its service: it is only used when
+ * the device has no voice of the language.
  * 1. Filter out known low-quality voices
- * 2. Search for preferred high-quality voices (local first, then remote)
- * 3. Fallback to any local voice
- * 4. Fallback to any remote voice
+ * 2. Exact locale first (fr-FR before fr-CA when fr-FR is asked)
+ * 3. A preferred local voice, then any local voice
+ * 4. Only then a preferred network voice, then any network voice
  *
  * @param {string} lang - The desired language code (e.g., 'fr-FR').
  * @returns {SpeechSynthesisVoice | null} The best voice found, or null.
@@ -271,20 +254,18 @@ function getBestVoice(lang) {
     return aIsExact ? -1 : 1;
   });
 
-  // 3. Try to find a preferred voice (searches both local and remote)
-  const preferredVoice = findPreferredVoice(qualityCandidates, langPrefix);
-  if (preferredVoice) {
-    return preferredVoice;
-  }
+  const preferred = preferredVoiceRegistry.get(langPrefix) || defaultPreferredVoices;
+  const localVoices = qualityCandidates.filter(v => v.localService);
+  const networkVoices = qualityCandidates.filter(v => !v.localService);
 
-  // 4. Fallback to first local voice (better reliability for offline use)
-  const localVoice = qualityCandidates.find(v => v.localService);
+  // 3. A voice of the device: nothing leaves it, and it works offline
+  const localVoice = findPreferredVoice(localVoices, preferred.local) ?? localVoices[0];
   if (localVoice) {
     return localVoice;
   }
 
-  // 5. Last resort: use first remote voice
-  return qualityCandidates[0];
+  // 4. Last resort: a network voice
+  return findPreferredVoice(networkVoices, preferred.remote) ?? networkVoices[0];
 }
 
 function announceVoiceSelection(reason, voice) {

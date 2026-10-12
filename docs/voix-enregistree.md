@@ -106,6 +106,10 @@ place et ce qui vient ensuite.
   local gardent la voix de l'appareil.
 - **Repli** : la voix de l'appareil reprend si un clip manque, est en erreur, est
   refusé par le navigateur, ne démarre pas en 1,5 s, ou n'est pas en cache hors ligne.
+- **Voix de l'appareil** (`getBestVoice` de `js/speech.js`) : une voix locale d'abord, rien
+  ne quitte l'appareil ; une voix réseau (« Google français » de Chrome, qui envoie chaque
+  phrase à son service) seulement si l'appareil n'a aucune voix de la langue. Les voix de
+  piètre qualité (eSpeak…) restent écartées.
 
 ## Règle : toute phrase dite passe par les traductions
 
