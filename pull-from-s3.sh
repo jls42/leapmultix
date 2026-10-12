@@ -1,7 +1,14 @@
 #!/bin/bash
 #
-# Script de récupération LeapMultix depuis AWS S3
-# Usage: ./pull-from-s3.sh [--config fichier-config]
+# Récupération du site LeapMultix depuis le bucket S3, contrôlée avant toute écriture
+# Usage: ./pull-from-s3.sh [--config fichier-config] [--dry-run]
+#
+# Le bucket reçoit une copie transformée par deploy.sh (version dans les adresses des
+# modules, balises de déploiement d'index.html). scripts/check-s3-copy.mjs défait ces
+# changements, puis compare la copie aux fichiers suivis de HEAD : un seul fichier différent,
+# ou inconnu de git, et rien n'est écrit dans le dépôt. Sinon, seules les images générées
+# (assets/generated-images/, ignorées par git) y sont copiées : les fichiers suivis,
+# identiques, ne sont pas touchés.
 #
 
 set -e
@@ -20,24 +27,21 @@ show_help() {
     echo "Options:"
     echo "  --config FILE    Utiliser un fichier de configuration spécifique"
     echo "  --dry-run        Simuler la récupération sans l'exécuter"
-    echo "  --backup         Créer une sauvegarde avant de télécharger"
     echo "  --help           Afficher cette aide"
     echo ""
     echo "Variables d'environnement supportées:"
     echo "  S3_BUCKET              Nom du bucket S3"
     echo "  TF_VAR_leapmultixs3bucket  Variable Terraform (priorité sur S3_BUCKET)"
     echo ""
-    echo "Ce script récupère les fichiers depuis S3 et les place dans le répertoire courant."
-    echo "Il restaure aussi les placeholders pour le développement local."
+    echo "Ce script compare le contenu du bucket aux fichiers suivis de HEAD et refuse toute"
+    echo "différence. S'il n'y en a aucune, il copie les images générées dans le dépôt."
     echo ""
 }
 
 # Valeurs par défaut
 CONFIG_FILE="deploy.config"
 DRY_RUN=false
-BACKUP=false
 TEMP_DIR=""
-BACKUP_DIR=""
 
 # Parsing des arguments
 while [[ $# -gt 0 ]]; do
@@ -48,10 +52,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --dry-run)
             DRY_RUN=true
-            shift
-            ;;
-        --backup)
-            BACKUP=true
             shift
             ;;
         --help)
@@ -81,6 +81,8 @@ echo "=================================="
 # Chargement de la configuration
 if [[ -f "$CONFIG_FILE" ]]; then
     echo -e "${GREEN}📝 Chargement de la configuration: $CONFIG_FILE${NC}"
+    # Fichier choisi à l'exécution (--config), hors dépôt : rien à suivre pour ShellCheck
+    # shellcheck source=/dev/null
     source "$CONFIG_FILE"
 else
     echo -e "${YELLOW}⚠️  Fichier de configuration non trouvé: $CONFIG_FILE${NC}"
@@ -112,59 +114,47 @@ if ! aws s3 ls "s3://$S3_BUCKET" > /dev/null 2>&1; then
     exit 1
 fi
 
-# Création d'une sauvegarde si demandée
-if [[ "$BACKUP" == "true" ]]; then
-    BACKUP_DIR="backup-$(date +%Y%m%d-%H%M%S)"
-    echo -e "${BLUE}💾 Création d'une sauvegarde: $BACKUP_DIR${NC}"
-    mkdir -p "$BACKUP_DIR"
-
-    # Sauvegarde des fichiers existants
-    for dir in assets css js img; do
-        if [[ -d "$dir" ]]; then
-            cp -r "$dir" "$BACKUP_DIR/"
-        fi
-    done
-
-    for file in index.html offline.html sw.js manifest.json favicon.svg favicon.ico favicon.png; do
-        if [[ -f "$file" ]]; then
-            cp "$file" "$BACKUP_DIR/"
-        fi
-    done
-
-    echo -e "${GREEN}✅ Sauvegarde créée dans: $BACKUP_DIR${NC}"
-fi
-
 # Création du répertoire temporaire
 TEMP_DIR=$(mktemp -d)
 echo -e "${BLUE}📁 Répertoire temporaire: $TEMP_DIR${NC}"
 
-# Synchronisation depuis S3
+# Synchronisation depuis S3, vers le dossier temporaire seulement. Mêmes fichiers que ceux
+# que deploy.sh publie ; la commande est un tableau, sans eval
 echo -e "${BLUE}☁️  Téléchargement depuis S3...${NC}"
 
-SYNC_CMD="aws s3 sync s3://$S3_BUCKET \"$TEMP_DIR/\" \
-  --exclude \"*\" \
-  --include \"index.html\" \
-  --include \"offline.html\" \
-  --include \"sw.js\" \
-  --include \"manifest.json\" \
-  --include \"favicon.svg\" \
-  --include \"favicon.ico\" \
-  --include \"favicon.png\" \
-  --include \"assets/*\" \
-  --include \"css/*\" \
-  --include \"js/*\" \
-  --include \"img/*\""
+SYNC_ARGS=(
+  s3 sync "s3://$S3_BUCKET" "$TEMP_DIR/"
+  --exclude "*"
+  --include "index.html"
+  --include "parents.html"
+  --include "modes.html"
+  --include "pwa.html"
+  --include "offline.html"
+  --include "sw.js"
+  --include "manifest.json"
+  --include "favicon.svg"
+  --include "favicon.ico"
+  --include "favicon.png"
+  --include "robots.txt"
+  --include "sitemap.xml"
+  --include "assets/*"
+  --include "css/*"
+  --include "js/*"
+  --include "img/*"
+  --exclude "assets/voice/*"
+)
 
 if [[ "$DRY_RUN" == "true" ]]; then
     echo -e "${YELLOW}🔍 Mode dry-run - Commande qui serait exécutée:${NC}"
-    echo "$SYNC_CMD --dry-run"
-    eval "$SYNC_CMD --dry-run"
+    # L'option de l'AWS CLI s'écrit --dryrun, sans tiret (même correction que deploy.sh)
+    echo "aws ${SYNC_ARGS[*]} --dryrun"
+    aws "${SYNC_ARGS[@]}" --dryrun
     exit 0
 fi
 
 echo -e "${GREEN}📥 Téléchargement en cours...${NC}"
 
-if ! eval "$SYNC_CMD"; then
+if ! aws "${SYNC_ARGS[@]}"; then
     echo -e "${RED}❌ Erreur lors du téléchargement depuis S3${NC}"
     exit 1
 fi
@@ -177,59 +167,17 @@ if [[ ! -f "$TEMP_DIR/index.html" ]]; then
     exit 1
 fi
 
-# Restauration des placeholders pour le développement local
-echo -e "${BLUE}🔄 Restauration des placeholders pour le développement...${NC}"
-
-if [[ -f "$TEMP_DIR/index.html" ]]; then
-    # Restaurer le placeholder Plausible si analytics sont détectés. Motif fixe : le domaine lu
-    # dans la page rapatriée n'entre jamais dans la commande sed
-    if grep -q 'name="plausible-domain"' "$TEMP_DIR/index.html"; then
-        echo -e "${GREEN}   📊 Analytics Plausible détectés - restauration du placeholder${NC}"
-        sed -i 's|<meta name="plausible-domain" content="[^"]*"|<meta name="plausible-domain" content="{{PLAUSIBLE_DOMAIN}}"|' "$TEMP_DIR/index.html"
-    else
-        echo -e "${YELLOW}   ⚠️  Aucun analytics Plausible détecté${NC}"
-    fi
+# Contrôle de la copie, puis copie des seules images générées : rien d'autre n'entre dans
+# le dépôt, et rien du tout si le bucket diffère de git
+echo -e "${BLUE}🔎 Comparaison avec les fichiers suivis de HEAD...${NC}"
+if ! node scripts/check-s3-copy.mjs "$TEMP_DIR" --restore; then
+    echo -e "${RED}❌ Récupération refusée : le contenu du bucket diffère de git${NC}"
+    exit 1
 fi
-
-# Copie des fichiers vers le répertoire courant
-echo -e "${BLUE}📋 Copie des fichiers vers le répertoire local...${NC}"
-
-# Créer les répertoires si nécessaire
-for dir in assets css js img; do
-    if [[ -d "$TEMP_DIR/$dir" ]]; then
-        mkdir -p "$dir"
-        cp -r "$TEMP_DIR/$dir"/* "$dir/" 2>/dev/null || true
-    fi
-done
-
-# Copier les fichiers racine
-for file in index.html offline.html sw.js manifest.json favicon.svg favicon.ico favicon.png; do
-    if [[ -f "$TEMP_DIR/$file" ]]; then
-        cp "$TEMP_DIR/$file" .
-        echo -e "${GREEN}   ✅ $file${NC}"
-    fi
-done
-
-echo -e "${GREEN}✅ Copie des fichiers terminée${NC}"
 
 # Affichage du résumé
 echo ""
 echo "=================================="
-echo -e "${GREEN}🎉 Récupération terminée avec succès !${NC}"
-echo ""
-echo -e "${BLUE}📊 Fichiers récupérés depuis: s3://$S3_BUCKET${NC}"
-
-if [[ "$BACKUP" == "true" ]]; then
-    echo -e "${BLUE}💾 Sauvegarde locale créée dans: $BACKUP_DIR${NC}"
-fi
-
-echo -e "${YELLOW}⚠️  N'oubliez pas de:${NC}"
-echo -e "${YELLOW}   1. Vérifier les modifications avec 'git status'${NC}"
-echo -e "${YELLOW}   2. Configurer les variables locales si nécessaire${NC}"
-echo -e "${YELLOW}   3. Tester l'application avec 'npm run serve'${NC}"
-
-if [[ -f "$TEMP_DIR/index.html" ]] && grep -q "{{PLAUSIBLE_DOMAIN}}" "$TEMP_DIR/index.html"; then
-    echo -e "${GREEN}   ✅ Placeholders restaurés pour le développement${NC}"
-fi
-
+echo -e "${GREEN}🎉 Récupération terminée : bucket conforme à git${NC}"
+echo -e "${BLUE}📊 Fichiers comparés depuis: s3://$S3_BUCKET${NC}"
 echo ""

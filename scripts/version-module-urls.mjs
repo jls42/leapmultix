@@ -13,6 +13,8 @@
 // - dans js/**/*.js : import … from './a.js', export … from '../b.js', import './c.js',
 //   import('./d.js') (chemins relatifs, argument littéral) ;
 // - dans index.html : src="js/….js" et href="css/….css" / href="js/….js".
+// unversionSite fait l'inverse, sur la copie que rapatrie pull-from-s3.sh
+// (scripts/check-s3-copy.mjs).
 //
 // Usage : node scripts/version-module-urls.mjs <dossier du site> <version>
 
@@ -26,21 +28,36 @@ const VERSION = /^v[0-9A-Za-z.-]{1,40}$/;
 /** Chemin relatif d'un module, sans paramètre ni ancre */
 const RELATIVE_MODULE = String.raw`\.{1,2}\/[^'"?#\s]+?\.js`;
 
-const IMPORT_PATTERNS = [
+const IMPORT_HEADS = [
   // import … from './a.js' ; export … from '../b.js'
-  new RegExp(String.raw`(\bfrom\s*)(['"])(${RELATIVE_MODULE})\2`, 'g'),
+  String.raw`\bfrom\s*`,
   // import './c.js'
-  new RegExp(String.raw`(\bimport\s*)(['"])(${RELATIVE_MODULE})\2`, 'g'),
+  String.raw`\bimport\s*`,
   // import('./d.js')
-  new RegExp(String.raw`(\bimport\s*\(\s*)(['"])(${RELATIVE_MODULE})\2`, 'g'),
+  String.raw`\bimport\s*\(\s*`,
 ];
 
+/** Imports relatifs ; suffix : ce qui suit le chemin dans l'adresse (« ?v=… » une fois versionnée) */
+const importPatterns = (suffix = '') =>
+  IMPORT_HEADS.map(
+    head => new RegExp(String.raw`(${head})(['"])(${RELATIVE_MODULE})${suffix}\2`, 'g')
+  );
+
+const IMPORT_PATTERNS = importPatterns();
+
 /** Scripts et feuilles de style de la page : src="js/….js", href="css/….css" ou "js/….js" */
-const HTML_ASSET = /(\b(?:src|href)=")((?:js\/[^"?#\s]+\.js)|(?:css\/[^"?#\s]+\.css))(")/g;
+const HTML_ASSET_URL = String.raw`(?:js\/[^"?#\s]+\.js)|(?:css\/[^"?#\s]+\.css)`;
+const htmlAssetPattern = (suffix = '') =>
+  new RegExp(String.raw`(\b(?:src|href)=")(${HTML_ASSET_URL})${suffix}(")`, 'g');
+
+const HTML_ASSET = htmlAssetPattern();
 
 function assertVersion(version) {
   if (!VERSION.test(version)) throw new Error(`Version invalide : ${version}`);
 }
+
+/** « ?v=<version> » dans une expression : la version validée n'a que « . » à protéger */
+const versionSuffix = version => String.raw`\?v=${version.replaceAll('.', String.raw`\.`)}`;
 
 /**
  * Chemins des imports relatifs d'un module, sous les mêmes formes que versionImports :
@@ -87,6 +104,36 @@ export function versionHtmlAssets(html, version) {
   return { text, count };
 }
 
+/**
+ * Retire ?v=<version> des imports relatifs d'un module : l'inverse de versionImports
+ * @param {string} source
+ * @param {string} version
+ * @returns {string}
+ */
+export function unversionImports(source, version) {
+  assertVersion(version);
+  return importPatterns(versionSuffix(version)).reduce(
+    (text, pattern) =>
+      text.replace(
+        pattern,
+        (_match, head, quote, specifier) => `${head}${quote}${specifier}${quote}`
+      ),
+    source
+  );
+}
+
+/**
+ * Retire ?v=<version> des scripts et feuilles de style d'une page : l'inverse de
+ * versionHtmlAssets
+ * @param {string} html
+ * @param {string} version
+ * @returns {string}
+ */
+export function unversionHtmlAssets(html, version) {
+  assertVersion(version);
+  return html.replace(htmlAssetPattern(versionSuffix(version)), '$1$2$3');
+}
+
 /** Fichiers .js d'un dossier, sous-dossiers compris */
 function jsFiles(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
@@ -117,6 +164,23 @@ export function versionSite(siteDir, version) {
   fs.writeFileSync(page, text);
   report.htmlAssets = count;
   return report;
+}
+
+/**
+ * Retire la version de la copie d'un site : modules de js/ et page index.html, comme avant
+ * versionSite
+ * @param {string} siteDir
+ * @param {string} version
+ */
+export function unversionSite(siteDir, version) {
+  assertVersion(version);
+  for (const file of jsFiles(path.join(siteDir, 'js'))) {
+    const source = fs.readFileSync(file, 'utf8');
+    const text = unversionImports(source, version);
+    if (text !== source) fs.writeFileSync(file, text);
+  }
+  const page = path.join(siteDir, 'index.html');
+  fs.writeFileSync(page, unversionHtmlAssets(fs.readFileSync(page, 'utf8'), version));
 }
 
 function main([siteDir, version]) {

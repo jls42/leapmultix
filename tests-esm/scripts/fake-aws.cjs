@@ -1,11 +1,13 @@
 /**
- * Faux AWS CLI du test de deploy.sh : chaque fichier que la commande enverrait est noté dans
- * le fichier AWS_LOG, une ligne JSON par fichier ({ command, file, contentType,
- * followSymlinks }) ; les autres commandes sont notées avec leurs arguments, et
+ * Faux AWS CLI des tests de deploy.sh et de pull-from-s3.sh : chaque fichier que la commande
+ * enverrait est noté dans le fichier AWS_LOG, une ligne JSON par fichier ({ command, file,
+ * contentType, followSymlinks }) ; les autres commandes sont notées avec leurs arguments, et
  * `aws s3 sync <dossier> s3://…` avec les entrées du dossier (un lien y figure sous son nom,
  * sans être suivi).
  * `aws s3 sync --size-only` n'envoie rien : le test se place dans le cas où S3 a déjà, pour
  * chaque fichier, un fichier de même taille. Avec FAKE_AWS_FAIL=cp, les copies échouent.
+ * `aws s3 sync s3://… <dossier>` (rapatriement) copie le contenu de FAKE_S3_DIR, filtres
+ * appliqués, sauf avec --dryrun ; chaque appel est noté avec ses arguments.
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -72,6 +74,15 @@ if (service === 's3' && command === 'cp') {
   }
 } else if (service === 's3' && command === 'sync' && !source.startsWith('s3://')) {
   note({ command: `${service} ${command}`, args, files: walk(source) });
+} else if (service === 's3' && command === 'sync') {
+  note({ command: `${service} ${command}`, args });
+  if (!args.includes('--dryrun')) {
+    for (const file of walk(process.env.FAKE_S3_DIR).filter(kept)) {
+      const to = path.join(target, file);
+      fs.mkdirSync(path.dirname(to), { recursive: true });
+      fs.copyFileSync(path.join(process.env.FAKE_S3_DIR, file), to);
+    }
+  }
 } else {
   note({ command: `${service} ${command}`, args });
 }

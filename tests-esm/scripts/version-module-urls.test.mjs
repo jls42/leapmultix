@@ -12,6 +12,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
+  unversionHtmlAssets,
+  unversionImports,
   versionHtmlAssets,
   versionImports,
   versionSite,
@@ -131,6 +133,27 @@ describe('Le dépôt réel', () => {
     const { text, count } = versionHtmlAssets(fs.readFileSync('index.html', 'utf8'), 'v23');
     expect(count).toBeGreaterThan(10);
     expect(text.match(/\b(?:src|href)="(?:js\/[^"?]+\.js|css\/[^"?]+\.css)"/g)).toBeNull();
+  });
+});
+
+describe('unversionImports et unversionHtmlAssets (copie rapatriée du bucket)', () => {
+  test('défont exactement le versionnage, sur chaque module du dépôt et index.html', () => {
+    const changed = jsFiles('js').filter(file => {
+      const source = fs.readFileSync(file, 'utf8');
+      return unversionImports(versionImports(source, 'v23').text, 'v23') !== source;
+    });
+    expect(changed).toEqual([]);
+    const html = fs.readFileSync('index.html', 'utf8');
+    expect(unversionHtmlAssets(versionHtmlAssets(html, 'v23').text, 'v23')).toBe(html);
+  });
+
+  test('une autre version reste telle quelle (le point de la version n’est pas un joker)', () => {
+    const other = "import { a } from './a.js?v=v22';\nimport('./b.js?v=v2x3');";
+    expect(unversionImports(other, 'v23')).toBe(other);
+    expect(unversionImports(other, 'v2.3')).toBe(other);
+    expect(unversionImports("import('./b.js?v=v2.3');", 'v2.3')).toBe("import('./b.js');");
+    const page = '<script src="js/a.js?v=v22"></script>';
+    expect(unversionHtmlAssets(page, 'v23')).toBe(page);
   });
 });
 
