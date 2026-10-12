@@ -2,6 +2,8 @@
 paths:
   - 'deploy.sh'
   - 'deploy.config*'
+  - 'pull-from-s3.sh'
+  - 'scripts/check-s3-copy.mjs'
   - '.github/workflows/**'
   - 'sw.js'
   - 'js/cache-updater.js'
@@ -102,3 +104,8 @@ Variables de dépôt attendues (Settings > Secrets and variables > Actions) :
 Déploiement manuel toujours possible : `./deploy.sh` en local (lit `deploy.config`),
 ou l'onglet Actions (« Run workflow » sur `main`, la seule branche que le job accepte),
 avec l'option `dry_run` pour simuler sans rien écrire.
+
+Rapatriement : `./pull-from-s3.sh` compare le contenu du bucket aux fichiers suivis de HEAD,
+une fois défaits les changements de `deploy.sh` (`scripts/check-s3-copy.mjs`). Un seul fichier
+différent ou inconnu de git, et rien n'est écrit dans le dépôt ; sinon, seules les images
+générées (`assets/generated-images/`) y sont copiées.
