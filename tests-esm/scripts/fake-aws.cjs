@@ -3,7 +3,8 @@
  * enverrait est noté dans le fichier AWS_LOG, une ligne JSON par fichier ({ command, file,
  * contentType, followSymlinks }) ; les autres commandes sont notées avec leurs arguments, et
  * `aws s3 sync <dossier> s3://…` avec les entrées du dossier (un lien y figure sous son nom,
- * sans être suivi).
+ * sans être suivi) et, avec --delete, les clés du faux bucket (FAKE_S3_DIR) qu'il effacerait :
+ * absentes du dossier, filtres appliqués.
  * `aws s3 sync --size-only` n'envoie rien : le test se place dans le cas où S3 a déjà, pour
  * chaque fichier, un fichier de même taille. Avec FAKE_AWS_FAIL=cp, les copies échouent.
  * `aws s3 sync s3://… <dossier>` (rapatriement) copie le contenu de FAKE_S3_DIR, filtres
@@ -73,7 +74,13 @@ if (service === 's3' && command === 'cp') {
     }
   }
 } else if (service === 's3' && command === 'sync' && !source.startsWith('s3://')) {
-  note({ command: `${service} ${command}`, args, files: walk(source) });
+  const files = walk(source);
+  const bucket = process.env.FAKE_S3_DIR;
+  const deleted =
+    args.includes('--delete') && bucket
+      ? walk(bucket).filter(key => kept(key) && !files.includes(key))
+      : [];
+  note({ command: `${service} ${command}`, args, files, deleted });
 } else if (service === 's3' && command === 'sync') {
   note({ command: `${service} ${command}`, args });
   if (!args.includes('--dryrun')) {

@@ -47,7 +47,10 @@ Deux points à connaître avant d'y toucher :
   `--no-follow-symlinks` pour l'AWS CLI), ni fichier caché (`--exclude='.*'`). Les outils de
   développement ne vivent pas dans les dossiers publiés (`assets/`, `css/`, `js/`, `img/`) :
   listes des scripts i18n dans `scripts/i18n-whitelist.txt` et `tools/i18n-keep.json`, rapports
-  dans `analysis/` (ignoré par git). Test : `tests-esm/scripts/deploy-text-files.test.mjs`.
+  dans `analysis/` (ignoré par git). La synchronisation n'a pas de filtre : le bucket est le
+  miroir exact de la copie, et `--delete` efface aussi ce qu'un ancien déploiement aurait
+  laissé hors du site (les voix vivent dans un autre bucket). Test :
+  `tests-esm/scripts/deploy-text-files.test.mjs`.
 - **Seul le commit en tête de `main` se déploie** : un run relancé, ou dépassé par une fusion
   plus récente, s'arrête au premier pas du job `deploy` (avis « n'est plus la tête de main »,
   rien d'envoyé) ; le commit le plus récent se déploie par son propre run.

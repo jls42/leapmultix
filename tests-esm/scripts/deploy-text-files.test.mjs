@@ -261,6 +261,38 @@ describe('deploy.sh : ce qui ne part jamais', () => {
     fs.rmSync(path.join(site, '../ailleurs'), { recursive: true, force: true });
   });
 
+  test('le bucket devient le miroir de la copie : un reste d’ancien déploiement est effacé', () => {
+    const bucket = fs.mkdtempSync(path.join(os.tmpdir(), 'bucket-'));
+    const keys = [
+      'index.html',
+      'js/main.js',
+      'js/ancien-module.js',
+      'dist/index.html',
+      'coverage/index.html',
+      'package.json',
+      'scripts/fix-sw.js',
+    ];
+    for (const key of keys) {
+      fs.mkdirSync(path.dirname(path.join(bucket, key)), { recursive: true });
+      fs.writeFileSync(path.join(bucket, key), 'ancien déploiement');
+    }
+    try {
+      const { result, calls } = deploy({ FAKE_S3_DIR: bucket });
+      expect(result.status).toBe(0);
+      const sync = calls.find(call => call.command === 's3 sync');
+      expect(sync.args).toContain('--delete');
+      expect(sync.deleted.sort()).toEqual([
+        'coverage/index.html',
+        'dist/index.html',
+        'js/ancien-module.js',
+        'package.json',
+        'scripts/fix-sw.js',
+      ]);
+    } finally {
+      fs.rmSync(bucket, { recursive: true, force: true });
+    }
+  });
+
   test('--dry-run : la synchronisation simulée (--dryrun), rien d’envoyé', () => {
     const result = spawnSync('bash', ['deploy.sh', '--config', 'absent.config', '--dry-run'], {
       cwd: site,
