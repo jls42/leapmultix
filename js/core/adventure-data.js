@@ -3,20 +3,6 @@
  * Utilise une fonction génératrice pour éviter la duplication de code
  */
 
-// Configuration des images par niveau (alternance forêt/rivière)
-const LEVEL_IMAGES = [
-  'forest.png',
-  'river.png',
-  'forest.png',
-  'river.png',
-  'forest.png',
-  'river.png',
-  'forest.png',
-  'river.png',
-  'forest.png',
-  'river.png',
-];
-
 // Configuration de la progression des étoiles requises
 const REQUIRED_STARS = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18];
 
@@ -48,7 +34,6 @@ function generateDifficultyLevels(operationPrefix) {
     difficulty: DIFFICULTY_PROGRESSION[index],
     nameKey: `${operationPrefix}_level_${index + 1}_name`,
     descKey: `${operationPrefix}_level_${index + 1}_desc`,
-    image: LEVEL_IMAGES[index],
     requiredStars: stars,
   }));
 }
@@ -63,7 +48,6 @@ function generateMultiplicationLevels() {
     table,
     nameKey: `level_${index + 1}_name`,
     descKey: `level_${index + 1}_desc`,
-    image: LEVEL_IMAGES[index],
     requiredStars: REQUIRED_STARS[index],
   }));
 }

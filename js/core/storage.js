@@ -120,25 +120,6 @@ const Storage = {
     return Object.prototype.hasOwnProperty.call(players, userId) ? players[userId] : {};
   },
 
-  /**
-   * Sauvegarder les données d'un utilisateur
-   * @param {string} userId - ID de l'utilisateur
-   * @param {Object} userData - Données à sauvegarder
-   * @returns {boolean} Succès de l'opération
-   */
-  saveUserData(userId, userData) {
-    if (!userId) return false;
-
-    const playersObj = this.get(STORAGE_KEYS.PLAYERS, {});
-    const id = String(userId)
-      .replaceAll(/[^\w .-]/g, '')
-      .slice(0, 50);
-    const pMap = new Map(Object.entries(playersObj || {}));
-    const existing = pMap.get(id) || {};
-    pMap.set(id, { ...existing, ...userData });
-    return this.set(STORAGE_KEYS.PLAYERS, Object.fromEntries(pMap));
-  },
-
   // === FONCTIONS SPÉCIALISÉES UTILISATEURS ===
 
   /**

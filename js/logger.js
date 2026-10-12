@@ -74,27 +74,6 @@ export class Logger {
   exportLogs() {
     return JSON.stringify(this.logs, null, 2);
   }
-
-  // Sauvegarder les logs dans localStorage
-  saveLogs() {
-    try {
-      localStorage.setItem('leapmultix_logs', this.exportLogs());
-    } catch (e) {
-      console.error('Impossible de sauvegarder les logs:', e);
-    }
-  }
-
-  // Charger les logs depuis localStorage
-  loadLogs() {
-    try {
-      const saved = localStorage.getItem('leapmultix_logs');
-      if (saved) {
-        this.logs = JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error('Impossible de charger les logs:', e);
-    }
-  }
 }
 
 // Instance ESM
