@@ -8,10 +8,13 @@ echo "======================================"
 # Lighthouse du dépôt (devDependencies, version et empreinte figées par package-lock.json),
 # jamais une installation globale sans version : npm ci d'abord
 if [[ ! -x node_modules/.bin/lighthouse ]]; then
-    echo "❌ Lighthouse introuvable dans node_modules : lancer npm ci"
+    echo "❌ Lighthouse introuvable dans node_modules : lancer npm ci" >&2
     exit 1
 fi
-lighthouse() { npx --no-install lighthouse "$@"; }
+lighthouse() {
+    npx --no-install lighthouse "$@"
+    return $?
+}
 
 # URLs à tester : le serveur de développement (npm run serve)
 BASE_URL="http://localhost:8080"
