@@ -10,12 +10,14 @@
 import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
 import { promisify } from 'node:util';
+import { childEnv } from './child-env.mjs';
 
 const execFileAsync = promisify(execFile);
 // detached : un Ctrl+C (envoyé au groupe de processus) ne tue pas un traitement en cours ;
-// il se termine, puis la génération s'arrête proprement
+// il se termine, puis la génération s'arrête proprement. Environnement réduit : ffmpeg et
+// ffprobe n'ont pas à voir les clés des fournisseurs
 const run = (command, args) =>
-  execFileAsync(command, args, { detached: true, maxBuffer: 16 * 1024 * 1024 });
+  execFileAsync(command, args, { detached: true, maxBuffer: 16 * 1024 * 1024, env: childEnv() });
 
 /** Sonie en dessous de laquelle un clip est muet (plancher d'ebur128 : −70 LUFS) */
 const SILENT_LUFS = -69.9;

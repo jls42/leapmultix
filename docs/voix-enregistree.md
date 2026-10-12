@@ -305,6 +305,9 @@ clip publié ne se réécrit pas.
     `MISTRAL_API_KEY`, lue dans un fichier `.env` hors dépôt. Chez Google, une clé classique
     (`AIza…`) restreinte à Cloud Text-to-Speech : ce service refuse les clés liées à un
     compte de service (`AQ.…`).
+  - Ces clés ne servent qu'aux appels des fournisseurs : Whisper, ffmpeg et ffprobe
+    reçoivent un environnement réduit (`scripts/voice/child-env.mjs`), sans clé ni
+    identifiant, GPU compris (`CUDA_*`, `LD_LIBRARY_PATH`, cache `HF_*` des modèles).
 
 **Choisir une voix : le banc d'écoute** (`npm run voice:bench`, skill `comparing-voices`).
 Avant de générer toute une langue avec une nouvelle voix, quelques voix candidates disent

@@ -29,6 +29,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildCorpus } from './corpus.mjs';
 import { checkClips, exitCode, printSummary, readTranscripts, writeFlagged } from './check.mjs';
+import { childEnv } from './child-env.mjs';
 import { readManifest, storePaths } from './clip-store.mjs';
 import { DEFAULT_OUT, loadVoiceVersion } from './generate.mjs';
 import { DEFAULT_SAMPLE, buildComparePage, buildListenPage, writePage } from './listen-page.mjs';
@@ -97,7 +98,8 @@ export function runWhisper({ python, lang, paths, transcripts }, spawn = spawnSy
   }
   const args = [WHISPER_SCRIPT, '--manifest', paths.manifestFile, '--clips', paths.clipDir];
   args.push('--lang', lang, '--out', transcripts);
-  const result = spawn(python, args, { stdio: 'inherit' });
+  // Environnement réduit : Whisper n'a pas à voir les clés que charge node --env-file
+  const result = spawn(python, args, { stdio: 'inherit', env: childEnv() });
   if (result.error) throw new Error(`Whisper n'a pas pu démarrer : ${result.error.message}`);
   if (result.status !== 0) throw new Error(`Whisper a échoué (code ${result.status})`);
 }
