@@ -19,6 +19,30 @@ export class ProviderError extends Error {
   }
 }
 
+const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/**
+ * Adresse d'un fournisseur remplacée par l'environnement (*_BASE_URL, pour les essais) : https,
+ * ou http sur la boucle locale seulement. La clé de l'API part à cette adresse.
+ * @param {string|undefined} value
+ * @param {string} variable - Nom de la variable d'environnement, pour le message
+ * @returns {string|undefined} undefined : l'adresse par défaut du fournisseur
+ */
+export function checkedBaseUrl(value, variable) {
+  if (!value) return undefined;
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`${variable} n'est pas une adresse`);
+  }
+  const local = url.protocol === 'http:' && LOOPBACK_HOSTNAMES.has(url.hostname);
+  if (url.protocol !== 'https:' && !local) {
+    throw new Error(`${variable} : https, ou http sur la boucle locale seulement`);
+  }
+  return value;
+}
+
 /**
  * Refuse une clé absente ou mal formée : une clé avec un espace ou un saut de ligne ferait
  * citer sa valeur par fetch dans un message d'erreur

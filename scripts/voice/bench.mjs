@@ -38,7 +38,7 @@ import { hasAgreement, saidText, voiceSaidText } from './said-text.mjs';
 import { checkAudioTools, processClip, probeClip } from './audio-process.mjs';
 import { compareTranscript } from './transcript-compare.mjs';
 import { readTranscripts } from './check.mjs';
-import { ProviderError } from './providers/common.mjs';
+import { ProviderError, checkedBaseUrl } from './providers/common.mjs';
 import { createGoogle } from './providers/google.mjs';
 import {
   acquireLock,
@@ -674,7 +674,7 @@ async function listVoices({ listVoices: provider, languageCode }, env = process.
   }
   const google = createGoogle({
     apiKey: env.GOOGLE_TTS_API_KEY,
-    baseUrl: env.GOOGLE_TTS_BASE_URL || undefined,
+    baseUrl: checkedBaseUrl(env.GOOGLE_TTS_BASE_URL, 'GOOGLE_TTS_BASE_URL'),
   });
   for (const voice of await google.listVoices(languageCode)) {
     console.log(`${voice.name.padEnd(36)} ${voice.gender}`);

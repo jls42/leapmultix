@@ -9,6 +9,7 @@
 
 import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import { promisify } from 'node:util';
 import { childEnv } from './child-env.mjs';
 
@@ -18,6 +19,31 @@ const execFileAsync = promisify(execFile);
 // ffprobe n'ont pas à voir les clés des fournisseurs
 const run = (command, args) =>
   execFileAsync(command, args, { detached: true, maxBuffer: 16 * 1024 * 1024, env: childEnv() });
+
+/** Format d'un brut du fournisseur, d'après son extension (rawFile : .mp3 ou .wav) */
+const RAW_FORMATS = new Map([
+  ['.mp3', 'mp3'],
+  ['.wav', 'wav'],
+]);
+
+/**
+ * Arguments d'entrée de ffmpeg et ffprobe : fichiers locaux seulement, et le format imposé quand
+ * il est donné. Le brut reçu du fournisseur l'impose toujours : laissé à deviner, son contenu
+ * pourrait être lu comme une liste de lecture HLS, qui ouvre d'autres fichiers ou des adresses
+ * @param {string} file
+ * @param {string} [format] - Démultiplexeur de ffmpeg (« mp3 », « wav »)
+ * @returns {string[]}
+ */
+export function inputArgs(file, format) {
+  return ['-protocol_whitelist', 'file', ...(format ? ['-f', format] : []), '-i', file];
+}
+
+/** Format imposé au brut d'un fournisseur ; une autre extension est refusée */
+export function rawFormat(rawPath) {
+  const format = RAW_FORMATS.get(path.extname(rawPath).toLowerCase());
+  if (!format) throw new Error(`Brut au format inconnu : ${path.basename(rawPath)} (.mp3 ou .wav)`);
+  return format;
+}
 
 /** Sonie en dessous de laquelle un clip est muet (plancher d'ebur128 : −70 LUFS) */
 const SILENT_LUFS = -69.9;
@@ -49,8 +75,7 @@ export async function detectSilences(
   const { stderr } = await run('ffmpeg', [
     '-hide_banner',
     '-nostats',
-    '-i',
-    file,
+    ...inputArgs(file),
     '-af',
     `silencedetect=noise=${noiseDb}dB:d=${minSeconds}`,
     '-f',
@@ -108,8 +133,7 @@ async function measureLoudness(wavPath) {
   const { stderr } = await run('ffmpeg', [
     '-hide_banner',
     '-nostats',
-    '-i',
-    wavPath,
+    ...inputArgs(wavPath),
     '-af',
     'ebur128=peak=true',
     '-f',
@@ -134,8 +158,7 @@ async function cutIsolatedBlips(wavPath) {
       '-loglevel',
       'error',
       '-y',
-      '-i',
-      wavPath,
+      ...inputArgs(wavPath),
       '-af',
       `atrim=start=${start.toFixed(3)}:end=${end.toFixed(3)},asetpts=PTS-STARTPTS`,
       '-f',
@@ -155,8 +178,7 @@ async function decodeTrimmed(rawPath, wavPath, encoding) {
     '-loglevel',
     'error',
     '-y',
-    '-i',
-    rawPath,
+    ...inputArgs(rawPath, rawFormat(rawPath)),
     '-af',
     trimFilter(encoding),
     '-ac',
@@ -188,8 +210,7 @@ async function encodeMp3(wavPath, outPath, gain, bitrateKbps) {
     '-loglevel',
     'error',
     '-y',
-    '-i',
-    wavPath,
+    ...inputArgs(wavPath),
     '-af',
     `volume=${gain.toFixed(2)}dB`,
     '-map_metadata',
@@ -242,7 +263,7 @@ export async function probeClip(filePath) {
       'format=duration,bit_rate:stream=codec_name,channels',
       '-of',
       'json',
-      filePath,
+      ...inputArgs(filePath).filter(arg => arg !== '-i'),
     ]));
   } catch (error) {
     // ffprobe absent : panne d'outil ; fichier que ffprobe ne lit pas : mauvais contenu
