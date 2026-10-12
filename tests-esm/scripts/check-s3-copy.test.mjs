@@ -222,6 +222,7 @@ describe('pull-from-s3.sh, avec un faux AWS CLI', () => {
     const result = pull();
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('js/core/storage.js');
+    expect(result.stderr).toContain('Récupération refusée');
     expect(fs.existsSync(path.join(repo, IMAGE))).toBe(false);
     expect(git('status', '--porcelain')).toBe('');
     expect(fs.readFileSync(path.join(repo, 'js/core/storage.js'), 'utf8')).toBe(

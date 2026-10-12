@@ -57,7 +57,8 @@ function assertVersion(version) {
 }
 
 /** « ?v=<version> » dans une expression : la version validée n'a que « . » à protéger */
-const versionSuffix = version => String.raw`\?v=${version.replaceAll('.', String.raw`\.`)}`;
+const ESCAPED_DOT = String.raw`\.`;
+const versionSuffix = version => String.raw`\?v=${version.replaceAll('.', ESCAPED_DOT)}`;
 
 /**
  * Chemins des imports relatifs d'un module, sous les mêmes formes que versionImports :

@@ -72,13 +72,12 @@ function listEntries(dir, prefix = '') {
   });
 }
 
+const GIT_OPTIONS = { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 };
+
 function git(rootDir, args, input) {
-  return execFileSync('git', args, {
-    cwd: rootDir,
-    input,
-    encoding: 'utf8',
-    maxBuffer: 256 * 1024 * 1024,
-  });
+  // git du poste, trouvé dans le PATH comme aws et node par pull-from-s3.sh, que le propriétaire
+  // lance dans son propre environnement : la règle S4036 (PATH modifiable) est ici sans objet
+  return execFileSync('git', args, { ...GIT_OPTIONS, cwd: rootDir, input }); // NOSONAR
 }
 
 /** Objets des fichiers suivis de HEAD : chemin → empreinte */
@@ -110,6 +109,14 @@ function objectId(content, format) {
   return crypto.createHash(format).update(`blob ${content.length}\0`).update(content).digest('hex');
 }
 
+/** Sort d'une entrée de la copie : refusée, hors de git, identique à HEAD ou différente */
+function classify(copyDir, { file, regular }, tracked, format) {
+  if (!regular || CONTROL_CHARACTERS.test(file)) return 'refused';
+  if (!tracked.has(file)) return 'untracked';
+  const id = objectId(fs.readFileSync(path.join(copyDir, file)), format);
+  return id === tracked.get(file) ? 'same' : 'different';
+}
+
 /**
  * Compare la copie (déjà ramenée à la forme du dépôt) aux fichiers de git
  * @returns {{same: string[], different: string[], refused: string[], restorable: string[]}}
@@ -117,21 +124,17 @@ function objectId(content, format) {
 export function compareWithGit(copyDir, rootDir = ROOT_DIR) {
   const format = git(rootDir, ['rev-parse', '--show-object-format']).trim();
   const tracked = trackedObjects(rootDir);
-  const result = { same: [], different: [], refused: [], restorable: [] };
-  const untracked = [];
-  for (const { file, regular } of listEntries(copyDir)) {
-    if (!regular || CONTROL_CHARACTERS.test(file)) result.refused.push(file);
-    else if (!tracked.has(file)) untracked.push(file);
-    else if (objectId(fs.readFileSync(path.join(copyDir, file)), format) === tracked.get(file)) {
-      result.same.push(file);
-    } else result.different.push(file);
+  const lists = new Map(['same', 'different', 'refused', 'untracked'].map(name => [name, []]));
+  for (const entry of listEntries(copyDir)) {
+    lists.get(classify(copyDir, entry, tracked, format)).push(entry.file);
   }
-  const ignored = ignoredPaths(rootDir, untracked);
-  for (const file of untracked) {
-    const restorable = file.startsWith(RESTORABLE_DIR) && ignored.has(file);
-    (restorable ? result.restorable : result.refused).push(file);
+  const ignored = ignoredPaths(rootDir, lists.get('untracked'));
+  const refused = lists.get('refused');
+  const restorable = [];
+  for (const file of lists.get('untracked')) {
+    (file.startsWith(RESTORABLE_DIR) && ignored.has(file) ? restorable : refused).push(file);
   }
-  return result;
+  return { same: lists.get('same'), different: lists.get('different'), refused, restorable };
 }
 
 /** Copie dans le dépôt les images générées (les fichiers suivis sont identiques) */

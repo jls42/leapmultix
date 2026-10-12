@@ -59,7 +59,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo -e "${RED}Argument inconnu: $1${NC}"
+            echo -e "${RED}Argument inconnu: $1${NC}" >&2
             show_help
             exit 1
             ;;
@@ -96,21 +96,21 @@ if [[ -n "$TF_VAR_leapmultixs3bucket" ]]; then
 elif [[ -n "$S3_BUCKET" ]]; then
     echo -e "${GREEN}🪣 Bucket S3: $S3_BUCKET${NC}"
 else
-    echo -e "${RED}❌ Erreur: Aucun bucket S3 configuré${NC}"
-    echo -e "${YELLOW}   Définissez S3_BUCKET ou TF_VAR_leapmultixs3bucket${NC}"
+    echo -e "${RED}❌ Erreur: Aucun bucket S3 configuré${NC}" >&2
+    echo -e "${YELLOW}   Définissez S3_BUCKET ou TF_VAR_leapmultixs3bucket${NC}" >&2
     exit 1
 fi
 
 # Vérification des prérequis
 if ! command -v aws &> /dev/null; then
-    echo -e "${RED}❌ Erreur: AWS CLI non installé${NC}"
+    echo -e "${RED}❌ Erreur: AWS CLI non installé${NC}" >&2
     exit 1
 fi
 
 # Vérification que le bucket existe et est accessible
 if ! aws s3 ls "s3://$S3_BUCKET" > /dev/null 2>&1; then
-    echo -e "${RED}❌ Erreur: Impossible d'accéder au bucket S3: $S3_BUCKET${NC}"
-    echo -e "${YELLOW}   Vérifiez vos credentials AWS et l'existence du bucket${NC}"
+    echo -e "${RED}❌ Erreur: Impossible d'accéder au bucket S3: $S3_BUCKET${NC}" >&2
+    echo -e "${YELLOW}   Vérifiez vos credentials AWS et l'existence du bucket${NC}" >&2
     exit 1
 fi
 
@@ -155,7 +155,7 @@ fi
 echo -e "${GREEN}📥 Téléchargement en cours...${NC}"
 
 if ! aws "${SYNC_ARGS[@]}"; then
-    echo -e "${RED}❌ Erreur lors du téléchargement depuis S3${NC}"
+    echo -e "${RED}❌ Erreur lors du téléchargement depuis S3${NC}" >&2
     exit 1
 fi
 
@@ -163,7 +163,7 @@ echo -e "${GREEN}✅ Téléchargement S3 terminé${NC}"
 
 # Vérification qu'il y a bien des fichiers téléchargés
 if [[ ! -f "$TEMP_DIR/index.html" ]]; then
-    echo -e "${RED}❌ Erreur: Aucun fichier téléchargé ou index.html manquant${NC}"
+    echo -e "${RED}❌ Erreur: Aucun fichier téléchargé ou index.html manquant${NC}" >&2
     exit 1
 fi
 
@@ -171,7 +171,7 @@ fi
 # le dépôt, et rien du tout si le bucket diffère de git
 echo -e "${BLUE}🔎 Comparaison avec les fichiers suivis de HEAD...${NC}"
 if ! node scripts/check-s3-copy.mjs "$TEMP_DIR" --restore; then
-    echo -e "${RED}❌ Récupération refusée : le contenu du bucket diffère de git${NC}"
+    echo -e "${RED}❌ Récupération refusée : le contenu du bucket diffère de git${NC}" >&2
     exit 1
 fi
 
