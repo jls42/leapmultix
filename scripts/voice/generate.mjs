@@ -47,7 +47,7 @@ import {
   processClip,
   probeClip,
 } from './audio-process.mjs';
-import { ProviderError, checkedBaseUrl } from './providers/common.mjs';
+import { ProviderError, checkedBaseUrl, maybeBilled } from './providers/common.mjs';
 import { createElevenLabs } from './providers/elevenlabs.mjs';
 import { createGoogle } from './providers/google.mjs';
 import { createMistral } from './providers/mistral.mjs';
@@ -352,13 +352,14 @@ function account(state, chars, cost) {
 
 /**
  * Appel payé : compté, puis inscrit au registre aussitôt (le total payé doit survivre à un
- * arrêt brutal, avant que le journal des exécutions ne soit écrit)
+ * arrêt brutal, avant que le journal des exécutions ne soit écrit). uncertain : appel peut-être
+ * facturé, sans audio (maybeBilled), inscrit par prudence.
  */
-async function recordPaid(ctx, key, chars, cost) {
+async function recordPaid(ctx, key, chars, cost, uncertain) {
   account(ctx.state, chars, cost);
   try {
     const at = ctx.options.now().toISOString();
-    await recordBilled(ctx.paths, { key, chars, cost, at });
+    await recordBilled(ctx.paths, { key, chars, cost, at, ...(uncertain && { uncertain }) });
   } catch (error) {
     throw new FatalError(`Registre des caractères payés impossible à écrire : ${error.message}`);
   }
@@ -388,11 +389,20 @@ async function synthesizeRaw(key, said, raw, ctx) {
   const { voice, provider, state, options } = ctx;
   const reservation = reserve(state, charCount(said));
   if (!reservation) return null;
+  // Chaque essai qui a pu être facturé sans rendre d'audio (réseau coupé, arrêt demandé en
+  // cours d'appel) s'inscrit au registre avant le suivant ; arrêté avant l'envoi, rien ne part
+  const attempt = async () => {
+    options.signal?.throwIfAborted();
+    try {
+      return await provider.synthesize({ text: said, voice, signal: options.signal });
+    } catch (error) {
+      const uncertain = maybeBilled(error, options.signal);
+      if (uncertain) await recordPaid(ctx, key, reservation.chars, null, uncertain);
+      throw error;
+    }
+  };
   try {
-    const { audio, requestId, cost } = await withRetries(
-      () => provider.synthesize({ text: said, voice, signal: options.signal }),
-      options
-    );
+    const { audio, requestId, cost } = await withRetries(attempt, options);
     // Payé dès la réponse : compté même si l'écriture échoue ensuite
     await recordPaid(ctx, key, reservation.chars, cost ?? null);
     await writeRaw(raw, audio);

@@ -200,25 +200,54 @@ export async function acquireLock(paths, { pid = process.pid, alive = isAlive } 
   return tryLock(paths, { pid, alive }, 2);
 }
 
-/** Prise du verrou en `attempts` essais au plus : un verrou abandonné est retiré, puis repris */
+/**
+ * Prise du verrou en `attempts` essais au plus : un verrou abandonné est retiré, puis repris.
+ * Le pid s'écrit d'abord dans un brouillon, puis le verrou naît d'un lien, d'un seul coup : il
+ * n'existe jamais vide, état qu'une autre exécution prendrait pour un verrou abandonné.
+ */
 async function tryLock(paths, { pid, alive }, attempts) {
   if (attempts === 0) throw new Error(`Verrou impossible à prendre : ${paths.lockFile}`);
+  const draft = `${paths.lockFile}.${pid}`;
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- brouillon du verrou bâti par storePaths ou benchPaths
+  await fsp.writeFile(draft, `${pid}\n`);
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou bâti par storePaths ou benchPaths
-    const handle = await fsp.open(paths.lockFile, 'wx');
-    await handle.writeFile(`${pid}\n`);
-    await handle.close();
+    await fsp.link(draft, paths.lockFile);
     return { release: () => fsp.rm(paths.lockFile, { force: true }) };
   } catch (error) {
     if (error.code !== 'EEXIST') throw error;
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou bâti par storePaths ou benchPaths
-    const owner = Number((await fsp.readFile(paths.lockFile, 'utf8').catch(() => '')).trim());
-    if (owner && alive(owner)) {
-      throw new Error(`Une exécution tourne déjà (processus ${owner}) : attendre sa fin`);
-    }
-    await fsp.rm(paths.lockFile, { force: true });
+  } finally {
+    await fsp.rm(draft, { force: true });
   }
+  await removeAbandonedLock(paths.lockFile, alive);
   return tryLock(paths, { pid, alive }, attempts - 1);
+}
+
+/** Âge en deçà duquel un verrou vide est en cours d'écriture (version du script d'avant le lien) */
+const FRESH_LOCK_MS = 10_000;
+
+/** Fichier modifié il y a moins de FRESH_LOCK_MS */
+async function isFresh(file) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou bâti par storePaths ou benchPaths
+  const stat = await fsp.stat(file).catch(() => null);
+  return stat !== null && Date.now() - stat.mtimeMs < FRESH_LOCK_MS;
+}
+
+/**
+ * Retire un verrou dont le processus n'existe plus. Un verrou tenu arrête tout, de même qu'un
+ * verrou vide tout récent : une autre exécution est en train d'y écrire son pid.
+ */
+async function removeAbandonedLock(lockFile, alive) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- verrou bâti par storePaths ou benchPaths
+  const text = (await fsp.readFile(lockFile, 'utf8').catch(() => '')).trim();
+  const owner = Number(text);
+  if (owner && alive(owner)) {
+    throw new Error(`Une exécution tourne déjà (processus ${owner}) : attendre sa fin`);
+  }
+  if (text === '' && (await isFresh(lockFile))) {
+    throw new Error(`Verrou en cours de création : ${lockFile} ; réessayer dans un instant`);
+  }
+  await fsp.rm(lockFile, { force: true });
 }
 
 /**
@@ -384,23 +413,40 @@ export async function reconcile({ paths, manifest, phrasesByKey, said, inspect, 
   return report;
 }
 
-/** Lignes JSON d'un fichier ; aucune s'il n'existe pas, une ligne illisible compte pour rien */
-function readJsonLines(file) {
+/** Arrêt sur une ligne du registre qu'on ne sait pas compter */
+const unreadableLedger = (where, reason) =>
+  new Error(
+    `Registre des caractères payés illisible : ${where} (${reason}) ; à corriger à la main`
+  );
+
+/**
+ * Lignes JSON d'un fichier, avec leur emplacement ; aucune s'il n'existe pas. Une ligne
+ * illisible arrête tout : comptée pour rien, elle laisserait dépasser le plafond.
+ */
+function readLedgerLines(file) {
   if (!fs.existsSync(file)) return [];
   return fs
     .readFileSync(file, 'utf8')
     .split('\n')
-    .filter(Boolean)
-    .map(line => {
+    .flatMap((text, index) => {
+      if (!text) return [];
+      const where = `${file}, ligne ${index + 1}`;
       try {
-        return JSON.parse(line);
+        return [{ entry: JSON.parse(text), where }];
       } catch {
-        return {};
+        throw unreadableLedger(where, 'JSON invalide');
       }
     });
 }
 
-const sumChars = lines => lines.reduce((sum, line) => sum + (Number(line.chars) || 0), 0);
+/** Caractères d'une ligne : un nombre fini, positif ou nul ; négatif, il ferait baisser le total */
+function charsOf({ entry, where }) {
+  const chars = entry?.chars;
+  if (typeof chars !== 'number' || !Number.isFinite(chars) || chars < 0) {
+    throw unreadableLedger(where, `chars : ${JSON.stringify(chars)}`);
+  }
+  return chars;
+}
 
 /**
  * Caractères déjà payés pour une version : le registre des réponses payées, plus les
@@ -408,8 +454,11 @@ const sumChars = lines => lines.reduce((sum, line) => sum + (Number(line.chars) 
  * @returns {number}
  */
 export function billedChars(paths) {
-  const legacyRuns = readJsonLines(paths.runLogFile).filter(run => !run.ledger);
-  return sumChars(readJsonLines(paths.billedFile)) + sumChars(legacyRuns);
+  const legacyRuns = readLedgerLines(paths.runLogFile).filter(({ entry }) => !entry?.ledger);
+  return [...readLedgerLines(paths.billedFile), ...legacyRuns].reduce(
+    (sum, line) => sum + charsOf(line),
+    0
+  );
 }
 
 /** Inscrit une réponse payée au registre, aussitôt reçue */

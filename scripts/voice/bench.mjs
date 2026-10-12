@@ -38,7 +38,7 @@ import { hasAgreement, saidText, voiceSaidText } from './said-text.mjs';
 import { checkAudioTools, processClip, probeClip } from './audio-process.mjs';
 import { compareTranscript } from './transcript-compare.mjs';
 import { readTranscripts } from './check.mjs';
-import { ProviderError, checkedBaseUrl } from './providers/common.mjs';
+import { ProviderError, checkedBaseUrl, maybeBilled } from './providers/common.mjs';
 import { createGoogle } from './providers/google.mjs';
 import {
   acquireLock,
@@ -442,12 +442,19 @@ async function buyRaw(item, { bench, provider, paths, retry }) {
     provider: bench.voice.provider,
     voiceId: bench.voice.voiceId,
   };
+  // Essai qui a pu être facturé sans rendre d'audio (réseau coupé) : inscrit avant le suivant
+  const attempt = async () => {
+    try {
+      return await provider.synthesize({ text: item.said, voice: bench.voice });
+    } catch (error) {
+      const uncertain = maybeBilled(error);
+      if (uncertain) await recordBilled(paths, { ...line, uncertain });
+      throw error;
+    }
+  };
   let audio;
   try {
-    ({ audio } = await withRetries(
-      () => provider.synthesize({ text: item.said, voice: bench.voice }),
-      retry
-    ));
+    ({ audio } = await withRetries(attempt, retry));
   } catch (error) {
     // Réponse payée mais inutilisable : payée quand même, donc inscrite
     if (error instanceof ProviderError && error.kind === 'response')

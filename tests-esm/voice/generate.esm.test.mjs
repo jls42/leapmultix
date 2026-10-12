@@ -28,6 +28,8 @@ import {
 import { ClipContentError } from '../../scripts/voice/audio-process.mjs';
 import { createElevenLabs, ProviderError } from '../../scripts/voice/providers/elevenlabs.mjs';
 import {
+  acquireLock,
+  billedChars,
   rawFile,
   replacedFile,
   saidHash,
@@ -67,6 +69,12 @@ async function startServer(respond) {
     requests.push(request);
     const reply = await respond(request, requests.length);
     if (!reply) return; // requête laissée en suspens (test d'interruption)
+    if (reply.cut) {
+      // Connexion coupée : sans réponse, ou au milieu du corps, une fois les en-têtes partis
+      if (!reply.status) return res.socket.destroy();
+      res.writeHead(reply.status, reply.headers ?? {});
+      return res.write(reply.body, () => res.socket.destroy());
+    }
     res.writeHead(reply.status, reply.headers ?? {});
     res.end(reply.body);
   });
@@ -151,6 +159,15 @@ function allFiles(dir) {
   });
 }
 const partFiles = () => allFiles(outDir).filter(file => file.endsWith('.part'));
+/** Lignes du registre des caractères payés */
+const ledger = () =>
+  fs.existsSync(paths().billedFile)
+    ? fs
+        .readFileSync(paths().billedFile, 'utf8')
+        .trim()
+        .split('\n')
+        .map(line => JSON.parse(line))
+    : [];
 
 beforeEach(async () => {
   outDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'voices-'));
@@ -483,7 +500,7 @@ describe('Génération des clips', () => {
     expect(summary.credits).toBeLessThanOrEqual(budget);
   });
 
-  test('arrêt demandé : l’appel en cours est abandonné, aucun fichier', async () => {
+  test('arrêt demandé : l’appel en cours est abandonné et inscrit au registre, aucun fichier', async () => {
     const controller = new AbortController();
     server = await startServer(() => {
       controller.abort();
@@ -495,6 +512,88 @@ describe('Génération des clips', () => {
     expect(allFiles(paths().clipDir)).toEqual([]);
     expect(allFiles(paths().rawDir)).toEqual([]);
     expect(partFiles()).toEqual([]);
+    // La requête est arrivée : peut-être facturée, elle compte pour le plafond
+    expect(server.tts()).toHaveLength(1);
+    expect(ledger()).toEqual([expect.objectContaining({ uncertain: 'interrupted', cost: null })]);
+    expect(billedChars(paths())).toBe(ledger()[0].chars);
+  });
+
+  test('connexion coupée après l’envoi : chaque essai inscrit au registre avant le suivant', async () => {
+    server = await startServer((request, rank) => (rank <= 2 ? { cut: true } : ok(request)));
+    const summary = await run({ phrases: [PHRASES[0]] });
+    expect(summary.generated).toBe(1);
+    expect(server.tts()).toHaveLength(3);
+    const chars = [...saidText(PHRASES[0].text, 'fr')].length;
+    expect(ledger().map(line => line.uncertain ?? 'payé')).toEqual(['network', 'network', 'payé']);
+    expect(billedChars(paths())).toBe(3 * chars);
+  });
+
+  test('corps coupé après les en-têtes : réponse payée inutilisable, inscrite, arrêt', async () => {
+    server = await startServer(request => ({
+      ...ok(request),
+      cut: true,
+      body: fakeMp3(request.body.text).subarray(0, 3),
+    }));
+    const summary = await run();
+    expect(summary.stop).toBe('response');
+    expect(server.tts()).toHaveLength(1);
+    expect(ledger()).toHaveLength(1);
+    expect(ledger()[0].uncertain).toBeUndefined();
+    expect(partFiles()).toEqual([]);
+  });
+
+  test('registre : une ligne illisible, ou un nombre de caractères absent ou négatif, arrête tout', async () => {
+    await fsp.mkdir(path.dirname(paths().billedFile), { recursive: true });
+    const write = lines => fs.writeFileSync(paths().billedFile, `${lines.join('\n')}\n`);
+    write(['{"key":"a","chars":40}', 'pas du JSON']);
+    expect(() => billedChars(paths())).toThrow(/ligne 2 \(JSON invalide\)/);
+    write(['{"key":"a","chars":40}', '{"key":"b","chars":-500}']);
+    expect(() => billedChars(paths())).toThrow(/ligne 2 \(chars : -500\)/);
+    write(['{"key":"a"}']);
+    expect(() => billedChars(paths())).toThrow(/ligne 1 \(chars : undefined\)/);
+    write(['{"key":"a","chars":40}']);
+    // Ancien journal : seules les exécutions d'avant le registre comptent
+    fs.writeFileSync(
+      paths().runLogFile,
+      `${JSON.stringify({ chars: 100 })}\n${JSON.stringify({ chars: 999, ledger: true })}\n`
+    );
+    expect(billedChars(paths())).toBe(140);
+    // Un nombre écrit en texte n'est pas un nombre : arrêt aussi
+    write(['{"key":"a","chars":"40"}']);
+    expect(() => billedChars(paths())).toThrow(/ligne 1 \(chars : "40"\)/);
+  });
+
+  test('verrou vide tout récent : en cours d’écriture, tenu pour occupé ; ancien, repris', async () => {
+    const lockFile = path.join(outDir, 'manifests', 'fr', 'vide.lock');
+    await fsp.mkdir(path.dirname(lockFile), { recursive: true });
+    fs.writeFileSync(lockFile, '');
+    await expect(acquireLock({ lockFile }, { alive: () => false })).rejects.toThrow(
+      /en cours de création/
+    );
+    expect(fs.existsSync(lockFile)).toBe(true);
+    const old = new Date(Date.now() - 60_000);
+    fs.utimesSync(lockFile, old, old);
+    const lock = await acquireLock({ lockFile }, { pid: 4321, alive: () => false });
+    expect(fs.readFileSync(lockFile, 'utf8')).toBe('4321\n');
+    await lock.release();
+  });
+
+  test('verrou : une seule prise parmi des exécutions simultanées, aucun brouillon laissé', async () => {
+    const lockFile = path.join(outDir, 'manifests', 'fr', 'essai.lock');
+    await fsp.mkdir(path.dirname(lockFile), { recursive: true });
+    const tries = await Promise.allSettled(
+      Array.from({ length: 40 }, (_, i) =>
+        acquireLock({ lockFile }, { pid: 5000 + i, alive: () => true })
+      )
+    );
+    const taken = tries.filter(attempt => attempt.status === 'fulfilled');
+    expect(taken).toHaveLength(1);
+    for (const refused of tries.filter(attempt => attempt.status === 'rejected')) {
+      expect(refused.reason.message).toMatch(/tourne déjà/);
+    }
+    expect(fs.readdirSync(path.dirname(lockFile))).toEqual(['essai.lock']);
+    await taken[0].value.release();
+    expect(fs.existsSync(lockFile)).toBe(false);
   });
 
   test('réglages changés sous la même version : refus', async () => {
@@ -746,6 +845,28 @@ describe('Fournisseur ElevenLabs : classement des erreurs', () => {
     })();
     expect(error.kind).toBe('auth');
     expect(error.message).not.toContain('cle-factice');
+  });
+
+  test('corps d’erreur qui citerait la clé : masquée', async () => {
+    const error = await synth(
+      reply(401, { detail: { status: 'invalid_api_key', message: `clé ${FAKE_KEY} refusée` } })
+    ).catch(e => e);
+    expect(error.kind).toBe('auth');
+    expect(error.message).toContain('clé *** refusée');
+    expect(error.message).not.toContain(FAKE_KEY);
+  });
+
+  test('corps coupé après des en-têtes 200 : réponse inutilisable, jamais une erreur inattendue', async () => {
+    const cut = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array([0xff, 0xfb]));
+        controller.error(new TypeError('terminated'));
+      },
+    });
+    const error = await synth(async () => new Response(cut, { status: 200 })).catch(e => e);
+    expect(error).toBeInstanceOf(ProviderError);
+    expect(error.kind).toBe('response');
+    expect(error.message).toContain('réponse coupée en route');
   });
 
   test('réseau coupé : erreur réseau (nouvel essai possible)', async () => {
