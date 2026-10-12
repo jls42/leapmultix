@@ -204,7 +204,7 @@ describe('deploy.sh : réglages et versions contrôlés avant tout envoi', () =>
     write('sw.js', "const VERSION = 'v6'; // bump to trigger client update\n");
     const { result, calls } = deploy();
     expect(result.status).toBe(1);
-    expect(result.stderr).toMatch(/VERSION de sw\.js \(v6\) différente d'APP_VERSION \(v7\)/);
+    expect(result.stderr).toContain("VERSION de sw.js (v6) différente d'APP_VERSION (v7)");
     expect(calls).toEqual([]);
   });
 
