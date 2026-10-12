@@ -56,7 +56,5 @@ npm run verify      # Run lint + test + test:esm + coverage (quality gate)
 
 ### Service Worker Management
 
-- `npm run sw:disable` - Disable service worker
-- `npm run sw:fix` - Fix service worker issues
 - `npm run precache:update` - Rewrite the offline precache list in `sw.js` (`scripts/precache-list.mjs`)
 - `npm run vendor:plausible` - Copy Plausible's official tracker (`@plausible-analytics/tracker`, exact version in `package.json`) to `js/vendor/plausible.js`, after each update of the package (`tests-esm/vendor-plausible.esm.test.mjs` fails until then)
