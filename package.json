@@ -92,7 +92,7 @@
     "@babel/preset-env": "^7.27.2",
     "@eslint/js": "^9.35.0",
     "@plausible-analytics/tracker": "0.4.6",
-    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-terser": "^1.0.0",
     "chrome-launcher": "^1.2.1",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
@@ -108,7 +108,7 @@
     "puppeteer": "^24.20.0",
     "rollup": "^4.41.1",
     "serve": "^14.2.4",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "stylelint": "^17.15.0",
     "stylelint-config-standard": "^40.0.0"
   },
