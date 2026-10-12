@@ -49,6 +49,20 @@ async function errorFrom(res) {
 /**
  * @param {{apiKey: string, baseUrl?: string, fetchImpl?: typeof fetch}} options
  */
+/**
+ * Audio d'une réponse 200. Un corps coupé en route (connexion perdue après les en-têtes) devient
+ * une réponse inutilisable : la synthèse est sans doute payée, réessayer repaierait. Un arrêt
+ * demandé garde son erreur.
+ */
+async function bodyOf(res, signal) {
+  try {
+    return Buffer.from(await res.arrayBuffer());
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    throw new ProviderError('response', `ElevenLabs : réponse coupée en route (${error.message})`);
+  }
+}
+
 export function createElevenLabs({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl = fetch }) {
   assertApiKey(apiKey, 'ELEVENLABS_API_KEY');
   const call = httpCaller({
@@ -99,7 +113,7 @@ export function createElevenLabs({ apiKey, baseUrl = DEFAULT_BASE_URL, fetchImpl
           voice_settings: voice.settings,
         }),
       });
-      const audio = Buffer.from(await res.arrayBuffer());
+      const audio = await bodyOf(res, signal);
       if (!looksLikeMp3(audio)) {
         // Réponse payée mais inutilisable : réessayer repaierait, on arrête tout
         throw new ProviderError(

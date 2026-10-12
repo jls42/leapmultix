@@ -19,6 +19,20 @@ export class ProviderError extends Error {
   }
 }
 
+/**
+ * Échec d'un appel de synthèse qui a pu être facturé sans rendre d'audio : panne réseau (la
+ * requête a pu arriver), ou appel abandonné en cours par un arrêt demandé. Le registre des
+ * caractères payés l'inscrit par prudence : un plafond doit surestimer la dépense, jamais la
+ * sous-estimer.
+ * @param {unknown} error
+ * @param {AbortSignal} [signal]
+ * @returns {'network'|'interrupted'|null}
+ */
+export function maybeBilled(error, signal) {
+  if (signal?.aborted) return 'interrupted';
+  return error instanceof ProviderError && error.kind === 'network' ? 'network' : null;
+}
+
 const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]']);
 
 /**
@@ -59,13 +73,15 @@ export function assertApiKey(apiKey, variable) {
   }
 }
 
-/** Masque la clé dans un message (erreur réseau qui citerait l'en-tête) */
+/** Masque la clé dans un message (erreur réseau qui citerait l'en-tête, corps d'erreur) */
 const keyMasker = apiKey => message => String(message).replaceAll(apiKey, '***');
 
 /**
  * Appel HTTP d'un fournisseur : ses en-têtes d'accès s'ajoutent à ceux de l'appel, une panne
  * réseau devient une erreur « network » où la clé est masquée, une réponse en erreur passe par
- * errorFrom, le classement propre au fournisseur. Un appel annulé par son signal garde son
+ * errorFrom, le classement propre au fournisseur, et la clé est masquée dans son message : un
+ * corps d'erreur qui la citerait finirait à l'écran et au journal des exécutions, versionné
+ * dans le dépôt des voix. Un appel annulé par son signal garde son
  * erreur telle quelle. Une redirection n'est jamais suivie : vers une autre origine, fetch
  * garderait xi-api-key et x-goog-api-key, corps compris. Les API ne redirigent pas, donc une
  * redirection arrête tout, comme une réponse inutilisable.
@@ -92,7 +108,11 @@ export function httpCaller({ label, apiKey, authHeaders, baseUrl, fetchImpl, err
       await res.body?.cancel();
       throw new ProviderError('response', `${label} : redirection ${res.status} non suivie`);
     }
-    if (!res.ok) throw await errorFrom(res);
+    if (!res.ok) {
+      const error = await errorFrom(res);
+      error.message = hide(error.message);
+      throw error;
+    }
     return res;
   };
 }

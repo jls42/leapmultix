@@ -292,6 +292,35 @@ describe('synthèse du banc', () => {
     expect(steps[1].chars).toBe(0);
   });
 
+  test('connexion coupée après l’envoi : chaque essai inscrit au registre, par prudence', async () => {
+    const calls = [];
+    let cuts = 2;
+    const open = async voice => ({
+      async synthesize({ text }) {
+        calls.push(text);
+        if (cuts-- > 0) throw new ProviderError('network', 'Google TTS injoignable : terminated');
+        return { audio: Buffer.from(`RIFF----WAVE ${voice.voiceId} ${text}`) };
+      },
+    });
+    const retry = { delays: [0, 0], sleep: async () => {} };
+    const steps = plan();
+    await synthesizeBench(steps, { paths, open, audio: fakeAudio, retry });
+    const lines = fs
+      .readFileSync(paths.billedFile, 'utf8')
+      .trim()
+      .split('\n')
+      .map(line => JSON.parse(line));
+    expect(lines.slice(0, 3).map(line => line.uncertain ?? 'payé')).toEqual([
+      'network',
+      'network',
+      'payé',
+    ]);
+    expect(billedChars({ billedFile: paths.billedFile })).toBe(
+      neededChars(steps) + 2 * charsOf([phrases[0].said])
+    );
+    expect(calls).toHaveLength(2 * phrases.length + 2);
+  });
+
   test('réponse payée mais inutilisable : inscrite au registre, puis arrêt', async () => {
     const failure = new ProviderError('response', 'Google TTS : réponse sans WAV exploitable');
     await expect(run(plan(), fakeOpen([], failure))).rejects.toThrow(
