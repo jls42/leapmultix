@@ -271,28 +271,13 @@ fi
 echo -e "${BLUE}☁️  Synchronisation S3...${NC}"
 
 # La commande est un tableau, sans eval ; aucun lien suivi (la copie n'en a pas : rsync
-# --no-links)
+# --no-links). Sans filtre : la copie ne contient que le site (liste rsync ci-dessus), et le
+# bucket en devient le miroir exact. --delete efface donc aussi ce qu'un ancien déploiement a
+# laissé hors de cette liste (813 fichiers de 2025 trouvés le 12/10/2026, dont dist/, une
+# ancienne version du jeu servie sur le même domaine). Les voix sont dans un autre bucket.
 SYNC_ARGS=(
   s3 sync --size-only --delete --no-follow-symlinks
   "$TEMP_DIR/" "s3://$S3_BUCKET"
-  --exclude "*"
-  --include "index.html"
-  --include "parents.html"
-  --include "modes.html"
-  --include "pwa.html"
-  --include "offline.html"
-  --include "sw.js"
-  --include "manifest.json"
-  --include "favicon.svg"
-  --include "favicon.ico"
-  --include "favicon.png"
-  --include "robots.txt"
-  --include "sitemap.xml"
-  --include "assets/*"
-  --include "css/*"
-  --include "js/*"
-  --include "img/*"
-  --exclude "assets/voice/*"
 )
 
 if [[ "$DRY_RUN" == "true" ]]; then
