@@ -21,8 +21,6 @@
     "analyze:dependencies": "node scripts/analyze-dependencies.js",
     "dead-code": "node scripts/improved-dead-code-check.js",
     "analyze:globals": "node scripts/analyze-globals.js",
-    "sw:disable": "node scripts/disable-sw.js",
-    "sw:fix": "node scripts/fix-sw.js",
     "assets:diff": "node scripts/assets-diff.cjs",
     "i18n:verify": "node scripts/i18n-verify.cjs",
     "i18n:unused": "node scripts/i18n-generate-unused.cjs",

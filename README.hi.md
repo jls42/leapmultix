@@ -206,10 +206,6 @@ npm run i18n:compare   # Comparer les traductions (en/es) avec fr.json (référe
 npm run build          # Build de prod (Rollup) + postbuild (dist/ complet)
 npm run serve:dist     # Servir dist/ sur http://localhost:5000 (ou port disponible)
 
-# PWA et Service Worker
-npm run sw:disable     # Désactiver le service worker
-npm run sw:fix         # Corriger les problèmes de service worker
-
 # Voix enregistrée (poste du propriétaire, clips hors dépôt)
 npm run voice:corpus       # Résumé des phrases dites, par langue
 npm run voice:corpus:lock  # Mettre à jour le verrou du corpus
@@ -513,13 +509,6 @@ Puppeteer के साथ स्वचालित रूप से:
 
 ```bash
 npm run test:pwa-offline
-```
-
-**Service Worker प्रबंधन scripts**:
-
-```bash
-npm run sw:disable  # Désactiver le service worker
-npm run sw:fix      # Corriger les problèmes de cache
 ```
 
 ### गुणवत्ता मानक
