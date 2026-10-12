@@ -60,7 +60,11 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
   conversation.
   - C'est le cas de la génération, et de `publish clips|index|remove`, qui écrivent en ligne.
   - Montrer d'abord l'aperçu : la même commande avec `--dry-run`, qui ne fait que lire.
-  - L'accord donne un **plafond en caractères**.
+    Aperçu sans frais, mais pas sans risque : `--dry-run` et `--limit 0` exécutent le code de la
+    branche ; ne les lancer que sur du code relu.
+  - L'accord donne un **plafond en caractères**, pour une commande et un dépôt des voix donnés :
+    le registre est tenu par dépôt et par version (une autre version, un autre `--out` repartent
+    de zéro).
 - **Chaque commande payante porte `--max-total-chars <plafond accordé>`.**
   - Le registre `manifests/<l>/<version>.billed.jsonl` inscrit chaque réponse payée dès sa
     réception : le total survit à un arrêt brutal.

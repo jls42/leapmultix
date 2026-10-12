@@ -92,3 +92,24 @@ describe('Commande', () => {
     expect(result.stderr).toContain('Usage');
   });
 });
+
+describe('Formes de secrets', () => {
+  // Fabriquées à l'exécution : le dépôt ne contient aucune chaîne de cette forme
+  const fakeAws = ['AKIA', 'X'.repeat(16)].join('');
+  const fakeGithub = ['ghp', '_', 'a'.repeat(36)].join('');
+  const fakeKeyHeader = ['-----BEGIN', 'RSA PRIVATE KEY-----'].join(' ');
+
+  test.each([fakeAws, fakeGithub, fakeKeyHeader])(
+    'une traduction qui apporte %s est refusée',
+    secret => {
+      const source = '# Titre\n\nTexte.\n';
+      const problems = integrityProblems(source, `# Titre\n\nTexte ${secret}.\n`);
+      expect(problems).toEqual([expect.stringContaining('secret ajoutée')]);
+    }
+  );
+
+  test('une chaîne déjà dans la source ne compte pas', () => {
+    const source = `Exemple : ${fakeAws}\n`;
+    expect(integrityProblems(source, `Exemple : ${fakeAws}\n`)).toEqual([]);
+  });
+});

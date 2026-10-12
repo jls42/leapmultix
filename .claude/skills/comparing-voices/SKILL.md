@@ -62,7 +62,8 @@ fois la voix choisie, toute la langue se génère avec le skill `generating-voic
        exemple la place de la voix (par défaut ou au choix du joueur) ;
      - `size` (22 par défaut), `include` pour imposer des phrases du corpus.
 2. **Aperçu** :
-   `npm run voice:bench -- --config scripts/voice/benches/<id>.json --dry-run`. Il affiche les
+   `npm run voice:bench -- --config scripts/voice/benches/<id>.json --dry-run` (sans frais, mais
+   il exécute le code de la branche : seulement sur du code relu). Il affiche les
    phrases (pièges de la langue, puis chaque famille et chaque opération), et pour chaque
    candidate les clips à faire et les caractères à payer. Rien n'est appelé ni écrit.
 3. **Accord** : présenter les candidates, le total de caractères et son coût ; attendre le
