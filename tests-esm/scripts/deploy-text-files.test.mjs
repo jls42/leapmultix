@@ -164,10 +164,54 @@ describe('deploy.sh : mesure d’audience', () => {
     domain => {
       const { result, calls } = deploy({ PLAUSIBLE_DOMAIN: domain });
       expect(result.status).toBe(1);
-      expect(result.stdout).toMatch(/Domaine Plausible invalide/);
+      expect(result.stderr).toMatch(/Domaine Plausible invalide/);
       expect(calls).toEqual([]);
     }
   );
+});
+
+describe('deploy.sh : réglages et versions contrôlés avant tout envoi', () => {
+  // Le bucket entre dans l'adresse s3:// d'une synchronisation qui efface ce qui manque
+  test.each(['Site-De-Test', 'site de test', 'site/autre', 'ab', 'site-'])(
+    'bucket « %s » : refusé, rien n’est envoyé',
+    bucket => {
+      const { result, calls } = deploy({ S3_BUCKET: bucket });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toMatch(/Nom de bucket S3 invalide/);
+      expect(calls).toEqual([]);
+    }
+  );
+
+  test.each([
+    'arn:aws:cloudfront::123456789012:distribution/E1ABCDEFGHIJ',
+    'e1abcdefghij',
+    'E1 ABC',
+  ])('distribution CloudFront « %s » : refusée, rien n’est envoyé', distribution => {
+    const { result, calls } = deploy({ CLOUDFRONT_DISTRIB: distribution });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toMatch(/distribution CloudFront invalide/);
+    expect(calls).toEqual([]);
+  });
+
+  test('identifiant de distribution valide : invalidation demandée après l’envoi', () => {
+    const { result, calls } = deploy({ CLOUDFRONT_DISTRIB: 'E1ABCDEFGHIJ' });
+    expect(result.status).toBe(0);
+    const invalidation = calls.find(call => call.command === 'cloudfront create-invalidation');
+    expect(invalidation.args).toContain('E1ABCDEFGHIJ');
+  });
+
+  test('VERSION de sw.js différente d’APP_VERSION : refus, rien n’est envoyé', () => {
+    write('sw.js', "const VERSION = 'v6'; // bump to trigger client update\n");
+    const { result, calls } = deploy();
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("VERSION de sw.js (v6) différente d'APP_VERSION (v7)");
+    expect(calls).toEqual([]);
+  });
+
+  test('VERSION de sw.js suivie d’un commentaire, comme dans le dépôt : acceptée', () => {
+    write('sw.js', "const VERSION = 'v7'; // bump to trigger client update\n");
+    expect(deploy().result.status).toBe(0);
+  });
 });
 
 describe('deploy.sh : fichiers modifiés à taille constante', () => {
@@ -189,7 +233,7 @@ describe('deploy.sh : fichiers modifiés à taille constante', () => {
   test('un envoi forcé en échec arrête le déploiement', () => {
     const { result } = deploy({ FAKE_AWS_FAIL: 'cp' });
     expect(result.status).toBe(1);
-    expect(result.stdout).toMatch(/en échec/);
+    expect(result.stderr).toMatch(/en échec/);
   });
 });
 

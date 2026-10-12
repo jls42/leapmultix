@@ -138,7 +138,7 @@ LeapMultix provides comprehensive practice with all 4 arithmetic operations in *
 
 ### Prerequisites
 
-- Node.js (version 16 or later)
+- Node.js (version 22 or later)
 - A modern web browser
 
 ### Installation

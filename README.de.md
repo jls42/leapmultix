@@ -138,7 +138,7 @@ LeapMultix bietet in **allen Modi** ein umfassendes Training der vier Grundreche
 
 ### Voraussetzungen
 
-- Node.js (Version 16 oder höher)
+- Node.js (Version 22 oder höher)
 - Ein moderner Webbrowser
 
 ### Installation

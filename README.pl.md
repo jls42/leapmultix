@@ -136,7 +136,7 @@ LeapMultix oferuje kompleksowe ćwiczenia z 4 działań arytmetycznych we **wszy
 
 ### Wymagania wstępne
 
-- Node.js (wersja 16 lub nowsza)
+- Node.js (wersja 22 lub nowsza)
 - Nowoczesna przeglądarka internetowa
 
 ### Instalacja

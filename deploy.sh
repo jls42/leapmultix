@@ -58,7 +58,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo -e "${RED}Argument inconnu: $1${NC}"
+            echo -e "${RED}Argument inconnu: $1${NC}" >&2
             show_help
             exit 1
             ;;
@@ -95,8 +95,14 @@ if [[ -n "$TF_VAR_leapmultixs3bucket" ]]; then
 elif [[ -n "$S3_BUCKET" ]]; then
     echo -e "${GREEN}🪣 Bucket S3: $S3_BUCKET${NC}"
 else
-    echo -e "${RED}❌ Erreur: Aucun bucket S3 configuré${NC}"
-    echo -e "${YELLOW}   Définissez S3_BUCKET ou TF_VAR_leapmultixs3bucket${NC}"
+    echo -e "${RED}❌ Erreur: Aucun bucket S3 configuré${NC}" >&2
+    echo -e "${YELLOW}   Définissez S3_BUCKET ou TF_VAR_leapmultixs3bucket${NC}" >&2
+    exit 1
+fi
+# Nom de bucket seul (règles d'AWS : minuscules, chiffres, points et tirets) : il entre tel
+# quel dans l'adresse s3:// de la synchronisation, qui efface ce qui n'est pas dans la copie
+if [[ ! "$S3_BUCKET" =~ ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$ ]]; then
+    echo -e "${RED}❌ Nom de bucket S3 invalide : $S3_BUCKET${NC}" >&2
     exit 1
 fi
 
@@ -105,7 +111,7 @@ if [[ -n "$PLAUSIBLE_DOMAIN" ]]; then
     # Nom d'hôte seul : il est écrit tel quel dans index.html (sed), puis lu par
     # js/plausible-init.js ; un « / », un « & » ou un guillemet casserait la page
     if [[ ! "$PLAUSIBLE_DOMAIN" =~ ^[A-Za-z0-9.-]{1,253}$ ]]; then
-        echo -e "${RED}❌ Domaine Plausible invalide (nom d'hôte attendu) : $PLAUSIBLE_DOMAIN${NC}"
+        echo -e "${RED}❌ Domaine Plausible invalide (nom d'hôte attendu) : $PLAUSIBLE_DOMAIN${NC}" >&2
         exit 1
     fi
     echo -e "${GREEN}📊 Domaine Plausible: $PLAUSIBLE_DOMAIN${NC}"
@@ -119,7 +125,7 @@ fi
 # elle, le jeu garde la voix de l'appareil.
 if [[ -n "$VOICE_BASE" ]]; then
     if [[ "$VOICE_BASE" != "/voice/" ]]; then
-        echo -e "${RED}❌ VOICE_BASE doit valoir /voice/ (reçu : $VOICE_BASE)${NC}"
+        echo -e "${RED}❌ VOICE_BASE doit valoir /voice/ (reçu : $VOICE_BASE)${NC}" >&2
         exit 1
     fi
     echo -e "${GREEN}🔊 Voix enregistrée : $VOICE_BASE${NC}"
@@ -129,6 +135,11 @@ fi
 
 # Vérification de CloudFront (optionnel)
 if [[ -n "$CLOUDFRONT_DISTRIB" ]]; then
+    # Identifiant seul (majuscules et chiffres), jamais une adresse ou un ARN
+    if [[ ! "$CLOUDFRONT_DISTRIB" =~ ^[A-Z0-9]{8,32}$ ]]; then
+        echo -e "${RED}❌ Identifiant de distribution CloudFront invalide : $CLOUDFRONT_DISTRIB${NC}" >&2
+        exit 1
+    fi
     echo -e "${GREEN}☁️  Distribution CloudFront: $CLOUDFRONT_DISTRIB${NC}"
 else
     echo -e "${YELLOW}⚠️  CloudFront non configuré - pas d'invalidation${NC}"
@@ -136,7 +147,7 @@ fi
 
 # Vérification des prérequis
 if ! command -v aws &> /dev/null; then
-    echo -e "${RED}❌ Erreur: AWS CLI non installé${NC}"
+    echo -e "${RED}❌ Erreur: AWS CLI non installé${NC}" >&2
     exit 1
 fi
 
@@ -177,22 +188,22 @@ if [[ "$FORCE_VERSION" == "true" ]]; then
     if [[ -f "$TEMP_DIR/sw.js" ]]; then
         sed -i.bak "s/^const VERSION = '.*';/const VERSION = '${NEW_VERSION}';/" "$TEMP_DIR/sw.js" && rm "$TEMP_DIR/sw.js.bak"
         if ! grep -q "const VERSION = '${NEW_VERSION}';" "$TEMP_DIR/sw.js"; then
-            echo -e "${RED}❌ Échec mise à jour VERSION dans sw.js${NC}"
+            echo -e "${RED}❌ Échec mise à jour VERSION dans sw.js${NC}" >&2
             exit 1
         fi
     else
-        echo -e "${RED}❌ sw.js introuvable dans le répertoire temporaire${NC}"
+        echo -e "${RED}❌ sw.js introuvable dans le répertoire temporaire${NC}" >&2
         exit 1
     fi
 
     if [[ -f "$TEMP_DIR/js/cache-updater.js" ]]; then
         sed -i.bak "s/^export const APP_VERSION = '.*';/export const APP_VERSION = '${NEW_VERSION}';/" "$TEMP_DIR/js/cache-updater.js" && rm "$TEMP_DIR/js/cache-updater.js.bak"
         if ! grep -q "export const APP_VERSION = '${NEW_VERSION}';" "$TEMP_DIR/js/cache-updater.js"; then
-            echo -e "${RED}❌ Échec mise à jour APP_VERSION dans js/cache-updater.js${NC}"
+            echo -e "${RED}❌ Échec mise à jour APP_VERSION dans js/cache-updater.js${NC}" >&2
             exit 1
         fi
     else
-        echo -e "${RED}❌ js/cache-updater.js introuvable dans le répertoire temporaire${NC}"
+        echo -e "${RED}❌ js/cache-updater.js introuvable dans le répertoire temporaire${NC}" >&2
         exit 1
     fi
 fi
@@ -218,7 +229,7 @@ if [[ -n "$VOICE_BASE" ]]; then
     VOICE_META='<meta name="leapmultix-voice-base" content="/voice/" />'
     sed -i.bak "s|$VOICE_META_EMPTY|$VOICE_META|" "$TEMP_DIR/index.html" && rm "$TEMP_DIR/index.html.bak"
     if ! grep -qF "$VOICE_META" "$TEMP_DIR/index.html"; then
-        echo -e "${RED}❌ Balise leapmultix-voice-base introuvable dans index.html${NC}"
+        echo -e "${RED}❌ Balise leapmultix-voice-base introuvable dans index.html${NC}" >&2
         exit 1
     fi
     echo -e "${GREEN}   ✅ Voix enregistrée configurée${NC}"
@@ -240,12 +251,19 @@ fi
 # 25/09/2026 au passage en v22. Voir scripts/version-module-urls.mjs.
 APP_VERSION_SITE=$(sed -n "s/^export const APP_VERSION = '\(.*\)';$/\1/p" "$TEMP_DIR/js/cache-updater.js")
 if [[ -z "$APP_VERSION_SITE" ]]; then
-    echo -e "${RED}❌ APP_VERSION introuvable dans js/cache-updater.js${NC}"
+    echo -e "${RED}❌ APP_VERSION introuvable dans js/cache-updater.js${NC}" >&2
+    exit 1
+fi
+# Le service worker renouvelle sa copie quand VERSION change : une VERSION différente
+# d'APP_VERSION laisserait les joueurs déjà venus sur l'ancienne copie des modules
+SW_VERSION=$(sed -n "s/^const VERSION = '\([^']*\)';.*$/\1/p" "$TEMP_DIR/sw.js")
+if [[ "$SW_VERSION" != "$APP_VERSION_SITE" ]]; then
+    echo -e "${RED}❌ VERSION de sw.js (${SW_VERSION:-absente}) différente d'APP_VERSION (${APP_VERSION_SITE})${NC}" >&2
     exit 1
 fi
 echo -e "${BLUE}🔢 Version dans les adresses des modules : ${APP_VERSION_SITE}${NC}"
 if ! node scripts/version-module-urls.mjs "$TEMP_DIR" "$APP_VERSION_SITE"; then
-    echo -e "${RED}❌ Versionnage des adresses des modules en échec${NC}"
+    echo -e "${RED}❌ Versionnage des adresses des modules en échec${NC}" >&2
     exit 1
 fi
 
@@ -307,7 +325,7 @@ else
         echo -e "${BLUE}📌 Envoi forcé des fichiers texte (modifiés à taille constante)...${NC}"
         for fichier in sw.js js/cache-updater.js sitemap.xml index.html; do
             if [[ ! -f "$TEMP_DIR/$fichier" ]]; then
-                echo -e "${RED}   ❌ $fichier introuvable — déploiement incohérent${NC}"
+                echo -e "${RED}   ❌ $fichier introuvable — déploiement incohérent${NC}" >&2
                 exit 1
             fi
         done
@@ -320,7 +338,7 @@ else
                 --content-type "$type_mime" --metadata-directive REPLACE > /dev/null; then
                 echo -e "${GREEN}   ✅ $motif${NC}"
             else
-                echo -e "${RED}   ❌ Envoi des fichiers $motif en échec${NC}"
+                echo -e "${RED}   ❌ Envoi des fichiers $motif en échec${NC}" >&2
                 exit 1
             fi
         done
@@ -340,7 +358,7 @@ else
             echo -e "${BLUE}📊 Analytics Plausible configuré pour: $PLAUSIBLE_DOMAIN${NC}"
         fi
     else
-        echo -e "${RED}❌ Erreur lors du déploiement${NC}"
+        echo -e "${RED}❌ Erreur lors du déploiement${NC}" >&2
         exit 1
     fi
 fi
