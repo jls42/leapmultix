@@ -27,7 +27,7 @@ const FR = LANGS.get('fr');
 const plain = text =>
   String(text)
     .replaceAll('&nbsp;', ' ')
-    .replaceAll(/[\s  ]+/g, ' ')
+    .replaceAll(/[\s\u00A0\u202F]+/g, ' ')
     .trim();
 
 const UP_TO = /(?:jusqu['’]à|up to|hasta)\s+(\d+)/i;

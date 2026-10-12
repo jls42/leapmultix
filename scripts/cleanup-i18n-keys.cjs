@@ -53,7 +53,7 @@ function cleanupTranslationFile(filePath) {
 
   // Remove each key
   for (const key of KEYS_TO_REMOVE) {
-    if (translations.hasOwnProperty(key)) {
+    if (Object.hasOwn(translations, key)) {
       delete translations[key];
       removed.push(key);
     } else {

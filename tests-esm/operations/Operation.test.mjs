@@ -1,5 +1,5 @@
 /* eslint-env jest, node */
-/* eslint-disable sonarjs/no-duplicate-functions -- Test file: similar operation test patterns for different operations */
+/* eslint-disable sonarjs/no-identical-functions -- Test file: similar operation test patterns for different operations */
 /**
  * Tests pour les classes d'opération (Operation, Multiplication, Addition, Subtraction)
  * Phase 1.7 - Tests unitaires R1

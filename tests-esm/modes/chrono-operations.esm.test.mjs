@@ -134,7 +134,7 @@ describe('Chrono hors multiplication : les questions', () => {
     const chrono = await startChrono();
     const { a, b, question } = chrono.state.currentQuestion;
     expect(question).toBe(`${a} ${MINUS} ${b} = ?`);
-    expect(speak.mock.calls.at(-1)[0]).toBe(`Combien font ${a} moins ${b} ?`);
+    expect(speak.mock.calls.at(-1)[0]).toBe(`Combien font ${a} moins ${b}\u00A0?`);
   });
 
   test('division : dit « divisé par », jamais par 1', async () => {
@@ -142,7 +142,7 @@ describe('Chrono hors multiplication : les questions', () => {
     const chrono = await startChrono({ inputMode: 'mcq' });
     const { a, b } = chrono.state.currentQuestion;
     expect(b).toBeGreaterThanOrEqual(2);
-    expect(speak.mock.calls.at(-1)[0]).toBe(`Combien font ${a} divisé par ${b} ?`);
+    expect(speak.mock.calls.at(-1)[0]).toBe(`Combien font ${a} divisé par ${b}\u00A0?`);
     const options = [...document.querySelectorAll('#chrono-options .option')].map(text);
     expect(options).toContain(String(a / b));
   });
