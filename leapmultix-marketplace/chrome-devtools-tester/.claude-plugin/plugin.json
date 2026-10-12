@@ -1,7 +1,7 @@
 {
   "name": "chrome-devtools-tester",
   "description": "Test web application features in Chrome browser using DevTools MCP. Use proactively after implementing features or bug fixes.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": {
     "name": "Julien LE SAUX",
     "email": "contact@jls42.org"

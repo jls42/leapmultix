@@ -36,7 +36,9 @@ chore(deps): update jest to 29.7.0
 
 ## Rules
 
-1. **Never commit without user approval** - Always show the commit message and wait for explicit validation
+1. **Never commit without user approval** - Always show the commit message, the staged files
+   (`git diff --cached --stat`) and the branch (`git status --short --branch`), then wait for
+   explicit validation: a global `git add` stages every untracked file that is not ignored
 2. **Never mention AI** in commit messages (no "Generated with Claude", no "Co-Authored-By: Claude")
 3. **Never commit** if tests fail (unless explicit WIP request)
 4. **Never commit** secrets or API keys

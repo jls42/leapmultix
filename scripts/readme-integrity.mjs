@@ -3,7 +3,8 @@
 // traduit que la prose. Les blocs de code reviennent à l'identique, dans le même ordre, et les
 // liens (adresses, fichiers, images) sont exactement ceux de la source, ancres mises à part :
 // scripts/readme-anchors.mjs les réaligne. Une commande changée ou une adresse ajoutée par le
-// modèle finirait sinon dans le dépôt, puis dans le marketplace, sans relecture.
+// modèle finirait sinon dans le dépôt, puis dans le marketplace, sans relecture. Une chaîne de la
+// forme d'un secret (clé AWS, GitHub, Google…) absente de la source est refusée aussi.
 //
 // Usage :
 //   node scripts/readme-integrity.mjs <source> <traduction>   code 1 si le contenu diffère
@@ -70,7 +71,29 @@ export function integrityProblems(source, translation) {
   const found = links(translation);
   for (const link of found) if (!expectedLinks.has(link)) problems.push(`lien ajouté : ${link}`);
   for (const link of expectedLinks) if (!found.has(link)) problems.push(`lien perdu : ${link}`);
+  for (const secret of secretsAdded(source, translation)) {
+    problems.push(`chaîne de la forme d'un secret ajoutée : ${secret.slice(0, 8)}…`);
+  }
   return problems;
+}
+
+/**
+ * Formes de secrets courantes (clés AWS, GitHub, Google, Slack, OpenAI ou Anthropic, clés
+ * privées) : une traduction ne doit jamais en apporter, la source n'en contient pas
+ */
+const SECRET_SHAPES = [
+  /\bAKIA[0-9A-Z]{16}\b/g,
+  /\bgh[pousr]_[A-Za-z0-9]{36,}\b/g,
+  /\bAIza[0-9A-Za-z_-]{35}\b/g,
+  /\bxox[abprs]-[A-Za-z0-9-]{10,}/g,
+  /\bsk-(?:ant-)?[A-Za-z0-9_-]{20,}/g,
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/g,
+];
+
+/** Chaînes de la forme d'un secret présentes dans la traduction et absentes de la source */
+export function secretsAdded(source, translation) {
+  const found = shape => new Set(translation.match(shape) ?? []);
+  return SECRET_SHAPES.flatMap(shape => [...found(shape)].filter(hit => !source.includes(hit)));
 }
 
 function main(argv) {
