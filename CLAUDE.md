@@ -164,8 +164,8 @@ l'être vraiment. Donc, avant toute annonce de résultat :
 
 ## Déploiement
 
-Un push sur `main` déploie le site après le job `verify` (`.github/workflows/ci.yml` : jeton OIDC,
-images régénérées, puis `deploy.sh`). À savoir avant d'y toucher, détails dans
+Un push sur `main` déploie le site après le job `verify` (`.github/workflows/ci.yml` : images
+régénérées dans un job sans droit AWS, puis jeton OIDC et `deploy.sh`, sans dépendance npm). À savoir avant d'y toucher, détails dans
 `.claude/rules/deploiement.md` :
 
 - **Monter `APP_VERSION` à chaque mise en prod** (avec la `VERSION` de `sw.js`, un test l'exige) :
