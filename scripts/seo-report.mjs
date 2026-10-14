@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import lighthouse from 'lighthouse';
 import { launch as launchChrome } from 'chrome-launcher';
+import { auditInFreshChrome } from './lib/fresh-chrome.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,43 +37,37 @@ async function ensureReportDirectory() {
   await fs.mkdir(REPORT_DIR, { recursive: true });
 }
 
+/** Lighthouse sur le Chrome qui écoute sur ce port */
+const lighthouseOn = (url, port) => lighthouse(url, { logLevel: 'error', output: 'json', port });
+
 async function runAudit(page) {
   const url = resolveUrl(page.path);
   console.log(`\n🚀 Audit Lighthouse : ${page.label} (${url})`);
 
-  const chrome = await launchChrome({
-    chromeFlags: ['--headless=new', '--no-sandbox'],
+  // Un Chrome neuf par audit, relancé s'il refuse la connexion (scripts/lib/fresh-chrome.mjs)
+  const { lhr, report } = await auditInFreshChrome(url, {
+    launch: () => launchChrome({ chromeFlags: ['--headless=new', '--no-sandbox'] }),
+    audit: lighthouseOn,
   });
+  const reportPath = path.join(REPORT_DIR, `${page.slug}.json`);
 
-  try {
-    const options = {
-      logLevel: 'error',
-      output: 'json',
-      port: chrome.port,
-    };
+  await fs.writeFile(reportPath, report, 'utf8');
 
-    const runnerResult = await lighthouse(url, options);
-    const { lhr, report } = runnerResult;
-    const reportPath = path.join(REPORT_DIR, `${page.slug}.json`);
-
-    await fs.writeFile(reportPath, report, 'utf8');
-
-    const { categories } = lhr;
-    console.log(`  Performance       : ${formatScore(categories.performance)}`);
-    console.log(`  Accessibilité     : ${formatScore(categories.accessibility)}`);
-    console.log(`  Bonnes pratiques  : ${formatScore(categories['best-practices'])}`);
-    console.log(`  SEO               : ${formatScore(categories.seo)}`);
-    if (categories.pwa) {
-      console.log(`  PWA               : ${formatScore(categories.pwa)}`);
-    }
-    console.log(`  → Rapport JSON : ${reportPath}`);
-  } finally {
-    await chrome.kill();
+  const { categories } = lhr;
+  console.log(`  Performance       : ${formatScore(categories.performance)}`);
+  console.log(`  Accessibilité     : ${formatScore(categories.accessibility)}`);
+  console.log(`  Bonnes pratiques  : ${formatScore(categories['best-practices'])}`);
+  console.log(`  SEO               : ${formatScore(categories.seo)}`);
+  if (categories.pwa) {
+    console.log(`  PWA               : ${formatScore(categories.pwa)}`);
   }
+  console.log(`  → Rapport JSON : ${reportPath}`);
 }
 
 async function main() {
   await ensureReportDirectory();
+  // CHROME_PATH : le Chrome que le job de la CI installe ; sinon, celui que chrome-launcher trouve
+  console.log(`Chrome : ${process.env.CHROME_PATH || 'trouvé par chrome-launcher sur le poste'}`);
   for (const page of pages) {
     // eslint-disable-next-line no-await-in-loop -- audits doivent être séquentiels pour éviter les conflits de port
     await runAudit(page);
