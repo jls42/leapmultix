@@ -25,6 +25,7 @@ import {
   voiceKey,
 } from '../../js/core/spoken-text.js';
 import { getAdventureLevelsByOperator } from '../../js/core/adventure-data.js';
+import { AVATAR_IDS, welcomeMessageKey } from '../../js/core/avatars.js';
 import { chronoFact, chronoTables, otherFactDirection } from '../../js/core/chrono-questions.js';
 import {
   DISCOVERY_FACTORS,
@@ -329,6 +330,10 @@ export function buildCorpus(lang, dict = readTranslations(lang)) {
   );
   addAll('bravo', variantsOf(dict, lang, 'correct'));
   FIXED_KEYS.forEach(key => addAll('phrase fixe', variantsOf(dict, lang, key)));
+  // Message d'accueil de chaque mascotte, dit à l'ouverture de sa vidéo (js/VideoManager.js)
+  AVATAR_IDS.forEach(avatar =>
+    addAll('bienvenue', variantsOf(dict, lang, welcomeMessageKey(avatar)))
+  );
   for (const operator of OPERATORS) {
     addQuizPhrases(ctx, operator);
     addAdventureAndDiscoveryPhrases(ctx, operator);

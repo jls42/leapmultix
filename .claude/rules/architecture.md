@@ -37,6 +37,7 @@ paths:
 - `profile-operation-stats.js` - Per-calculation stats stored in each profile (`operationStats`, read by the Quiz draw); a profile from before this field starts from a copy of the device-wide `operationStats` key, which is never written again nor deleted
 - `players-trash.js` - Trash of deleted players (`playersTrash`): a deleted profile waits 30 days with all its data, restorable from « Qui joue ? », then is erased at the next launch with its old Arcade scores. Deleting never needs room for a second copy: when the trash cannot be written next to the list, the profile leaves the list first (`UserManager._trashWithoutSecondCopy`); a refusal says so under « Qui joue ? » (`playerTrashFailed`)
 - `players-backup.js` - Players backup file (JSON `leapmultix-players`, version 1): export, checked import that never overwrites a player already there, in the list or in the trash (profiles over `PLAYER_MAX_CHARS` left out), `navigator.storage.persist()`. An imported profile is marked `legacyArcade: false`: it neither takes nor protects this device's pre-v37 Arcade keys (`arcadeScores_<nickname>`)
+- `avatars.js` - Avatar whitelist (`AVATAR_IDS`) and the key of each mascot's welcome message (`welcomeMessageKey`), with no dependency: the voice corpus (`scripts/voice/corpus.mjs`) reads it under Node
 - `avatar-shop.js` - Avatars unlocked with coins (`AVATAR_PRICE` = 50): balance, missing coins, purchase on the profile (no storage access: the caller saves)
 - `chrono-input.js` - Chrono typed-answer check (validates as soon as the answer is right or can no longer be)
 - `daily-challenge.js` - Daily challenge management
@@ -107,10 +108,10 @@ paths:
 
 **Video and Media:**
 
-- `VideoManager.js` - Video playback management
+- `VideoManager.js` - Character intro video; the mascot reads its welcome message aloud (`speak`, recorded voice or device voice), « Passer » cuts it
 - `responsive-image-loader.js` - Responsive image loading
 - `webp-images.js` - Screen illustrations (Arcade menu logos and ships, dashboard logos, Adventure gifts) served as WebP at their displayed size × device pixel ratio (`srcset`, `sizes`), with the repository PNG as fallback until `npm run assets:generate` has produced the variants: `createWebpImage`, `webpImageAttributes` for templates, `attachImageFallbacks` once a template is shown (the sanitizer strips `onerror`). Keep the PNG file name as a literal outside `${…}`: `scripts/precache-list.mjs` finds the images to keep offline by their names in the code
-- `avatar-heads.js` - Every avatar head on screen (« Qui joue ? » tiles, form and trash, home mascot, Personalisation, dashboard, Adventure map, Discovery tip, end screens) goes through `setAvatarHead(img, id, HEAD_SIZES.<place>)`, or `avatarHeadAttributes()` in a template: WebP 128/256/512 from the 1024 px source at the size the CSS gives it, the 128 px PNG as fallback; it rewrites srcset, sizes, src and fallback together (with a srcset, changing `src` alone no longer changes the picture). The heads written in `index.html` carry the same attributes (test). Also the avatar whitelist (`AVATAR_IDS`, `normalizeAvatarId`, old French names)
+- `avatar-heads.js` - Every avatar head on screen (« Qui joue ? » tiles, form and trash, home mascot, Personalisation, dashboard, Adventure map, Discovery tip, end screens) goes through `setAvatarHead(img, id, HEAD_SIZES.<place>)`, or `avatarHeadAttributes()` in a template: WebP 128/256/512 from the 1024 px source at the size the CSS gives it, the 128 px PNG as fallback; it rewrites srcset, sizes, src and fallback together (with a srcset, changing `src` alone no longer changes the picture). The heads written in `index.html` carry the same attributes (test). Also `normalizeAvatarId` (old French names) and the avatar whitelist `AVATAR_IDS`, re-exported from `core/avatars.js`
 
 **Game Orchestration:**
 

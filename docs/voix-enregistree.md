@@ -166,9 +166,13 @@ dite reste une phrase du corpus.
 - **Fin bornée** : au-delà d'une durée estimée d'après le texte (large : 3 s plus 200 ms
   par caractère, pour ne jamais couper une voix lente), la phrase est tenue pour finie et
   la file avance. Un son bloqué ne retient rien.
-- **Arrêts** (`cancelSpeech()`) : réponse de l'enfant, « Continuer », sortie de mode,
-  navigation, écran de fin d'arcade, changement de langue, voix ou son coupés, onglet
-  caché. Un mode n'annonce qu'après la navigation, qui arrête l'ancien mode.
+- **Arrêts** (`cancelSpeech()`) : réponse de l'enfant, « Continuer », « Passer » sur la
+  vidéo d'accueil, sortie de mode, navigation, écran de fin d'arcade, changement de langue,
+  voix ou son coupés, onglet caché. Un mode n'annonce qu'après la navigation, qui arrête
+  l'ancien mode.
+- **Message d'accueil** : à l'ouverture de sa vidéo (profil créé, « Revoir ma vidéo »), la
+  mascotte dit le message affiché (`character_intro_<avatar>`) ; une vidéo finie le laisse
+  terminer.
 - **iPhone** : le premier geste (`click`, `touchend` ou `keydown`, jamais `pointerdown`)
   amorce la synthèse par un énoncé vide et muet ; un échec réarme le geste suivant.
 - **Bip de bonne réponse** rogné à 0,25 s (le son utile durait 0,196 s sur 2 s) ; le
@@ -364,8 +368,9 @@ Avant de générer toute une langue avec une nouvelle voix, quelques voix candid
      génération continue. Le propriétaire choisit alors un texte dit de même sens
      (`SAID_OVERRIDES`), ou la voix de l'appareil pour cette phrase (`--allow-missing` à la
      publication).
-   - Ordre : annonces, bravos, phrases fixes, erreurs, questions, questions à trou,
-     vrai/faux, Découverte, énoncés (les plus longs, en dernier) ; × puis ÷, + et −.
+   - Ordre : annonces, bravos, phrases fixes, messages d'accueil, erreurs, questions,
+     questions à trou, vrai/faux, Découverte, énoncés (les plus longs, en dernier) ; × puis
+     ÷, + et −.
    - **Idempotent** : relancer la même commande ne génère que ce qui manque ; un brut déjà
      payé est retraité sans nouvel appel.
    - **Aucun fichier à moitié** : chaque fichier s'écrit en `.part`, puis est renommé une

@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v45'; // bump to trigger client update
+const VERSION = 'v46'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -173,6 +173,7 @@ const PRECACHE_CORE = [
   '/js/core/adventure-progress.js',
   '/js/core/audio.js',
   '/js/core/avatar-shop.js',
+  '/js/core/avatars.js',
   '/js/core/challenge-stats.js',
   '/js/core/chrono-input.js',
   '/js/core/chrono-questions.js',

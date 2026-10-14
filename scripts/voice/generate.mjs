@@ -130,6 +130,7 @@ export const FAMILY_ORDER = [
   'annonce',
   'bravo',
   'phrase fixe',
+  'bienvenue',
   'erreur',
   'question',
   'question à trou',

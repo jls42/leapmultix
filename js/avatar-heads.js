@@ -11,9 +11,10 @@
  * réécrit à chaque fois.
  */
 import { webpImage, webpImageAttributes } from './webp-images.js';
+import { AVATAR_IDS } from './core/avatars.js';
 
-/** Avatars du jeu : la liste blanche des identifiants (une adresse ne se compose qu'avec eux) */
-export const AVATAR_IDS = Object.freeze(['fox', 'panda', 'unicorn', 'dragon', 'astronaut']);
+/** Avatars du jeu : la liste blanche des identifiants (js/core/avatars.js) */
+export { AVATAR_IDS };
 const KNOWN_AVATARS = new Set(AVATAR_IDS);
 export const DEFAULT_AVATAR = 'fox';
 // Anciennes valeurs françaises encore présentes dans certains profils enregistrés
