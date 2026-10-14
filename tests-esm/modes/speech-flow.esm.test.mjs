@@ -70,7 +70,7 @@ beforeAll(() => {
   store.setTranslations({
     quiz_mode: 'Mode Quiz',
     challenge_mode: 'Mode Défi',
-    incorrect: 'Presque !',
+    incorrect: 'Raté !',
     correct: 'Bravo !',
     feedback_incorrect: 'La bonne réponse est {correctAnswer}.',
     challenge_feedback_incorrect: 'La bonne réponse est {correctAnswer}.',
@@ -201,7 +201,7 @@ describe('Quiz : bip, « Bravo », question suivante', () => {
     quiz.state.questionCount = quiz.config.maxQuestions - 1;
     option('quiz', true).click();
     const explanation = engine.last();
-    expect(explanation.text.startsWith('Presque ! La bonne réponse est 8.')).toBe(true);
+    expect(explanation.text.startsWith('Raté ! La bonne réponse est 8.')).toBe(true);
 
     quiz.continueAfterError();
     expect(explanation.handle.stop).toHaveBeenCalledTimes(1);
@@ -232,7 +232,7 @@ describe('Défi : l’explication d’une erreur est dite en entier', () => {
   test('la question suivante attend la fin de la phrase, chrono arrêté jusque-là', async () => {
     const challenge = await wrongAnswer();
     const explanation = engine.last();
-    expect(explanation.text).toBe('Presque ! La bonne réponse est 8.');
+    expect(explanation.text).toBe('Raté ! La bonne réponse est 8.');
     explanation.ctx.onStarted();
     const timeLeft = challenge.state.timeLeft;
 

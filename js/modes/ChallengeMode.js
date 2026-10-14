@@ -454,7 +454,7 @@ export class ChallengeMode extends GameMode {
   }
 
   /**
-   * Phrase dite après une erreur, affichée telle quelle : « Presque ! La bonne réponse
+   * Phrase dite après une erreur, affichée telle quelle : « Raté ! La bonne réponse
    * est 8. » (GameMode.speakQuestion la charge d'avance)
    * @returns {string|null}
    */

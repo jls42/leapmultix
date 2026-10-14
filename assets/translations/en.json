@@ -185,7 +185,7 @@
   "recorded_voice_hint_google": "Synthetic voice recorded in advance with Google Cloud Text-to-Speech: nothing is sent to Google during the game. When unchecked, the game reads with the device's voice.",
   "recorded_voice_hint_mistral": "Synthetic voice recorded in advance with Mistral AI: nothing is sent to Mistral AI during the game. When unchecked, the game reads with the device's voice.",
   "hint": "Hint",
-  "incorrect": "Almost!",
+  "incorrect": "Missed!",
   "incorrect_answer_was_false": "The right answer is False.",
   "incorrect_answer_was_true": "The right answer is True.",
   "keep_practicing": "Keep practicing!",

@@ -1,7 +1,7 @@
 /* eslint-env jest, node */
 /**
  * Voix et statistiques des modes Quiz, Défi et Aventure.
- * - Défi : après une erreur, la phrase entière est lue (« Presque ! La bonne réponse
+ * - Défi : après une erreur, la phrase entière est lue (« Raté ! La bonne réponse
  *   est 8. »), rien ne la coupe ; après une bonne réponse, un seul encouragement.
  * - Aventure : chaque question est lue à voix haute, comme au Quiz et au Défi, avec les
  *   facteurs dans l'ordre affiché (« Combien font 7 fois 8 ? »).
@@ -63,7 +63,7 @@ function option(mode, wrong) {
 
 beforeAll(() => {
   store.setTranslations({
-    incorrect: 'Presque !',
+    incorrect: 'Raté !',
     correct: 'Bravo !',
     challenge_feedback_incorrect: 'La bonne réponse est {correctAnswer}.',
     challenge_feedback_correct: 'Correct ! +{points} points',
@@ -109,7 +109,7 @@ describe('Défi : la voix', () => {
     option('challenge', true).click();
 
     const spoken = speak.mock.calls.map(([text]) => text);
-    expect(spoken).toEqual(['Presque ! La bonne réponse est 8.']);
+    expect(spoken).toEqual(['Raté ! La bonne réponse est 8.']);
     challenge.stop();
   });
 

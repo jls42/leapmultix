@@ -1088,7 +1088,7 @@ export class GameMode {
   }
 
   /**
-   * Explication calme d'une erreur dans la zone de retour : « Presque ! », la bonne
+   * Explication calme d'une erreur dans la zone de retour : « Raté ! », la bonne
    * réponse, puis ce que fait l'opération.
    * @returns {{lead: string, message: string}|null} Textes à lire à voix haute
    */
@@ -1108,7 +1108,7 @@ export class GameMode {
   }
 
   /**
-   * Phrase dite après une erreur sur la question en cours : « Presque ! », puis la bonne
+   * Phrase dite après une erreur sur la question en cours : « Raté ! », puis la bonne
    * réponse (l'explication affichée par showErrorExplanation)
    * @returns {string|null}
    */

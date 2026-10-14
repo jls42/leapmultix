@@ -139,11 +139,11 @@ describe('Règles de la file', () => {
     speak('Bravo !');
     const bravo = engine.last();
     speak('Combien font 7 fois 8 ?', { queue: true });
-    speak('Presque ! La bonne réponse est 56.');
+    speak('Raté ! La bonne réponse est 56.');
     expect(bravo.handle.stop).toHaveBeenCalledTimes(1);
 
     engine.last().ctx.onEnded();
-    expect(engine.texts()).toEqual(['Bravo !', 'Presque ! La bonne réponse est 56.']);
+    expect(engine.texts()).toEqual(['Bravo !', 'Raté ! La bonne réponse est 56.']);
   });
 
   test('cancelSpeech coupe la phrase en cours et oublie celle en attente', () => {
@@ -256,7 +256,7 @@ describe('Fin de la parole (whenSpeechEnds)', () => {
   });
 
   test('tenue à la fin de la phrase en cours, pas avant', async () => {
-    speak('Presque ! La bonne réponse est 56.');
+    speak('Raté ! La bonne réponse est 56.');
     const explanation = engine.last();
     const silence = watch(whenSpeechEnds());
     explanation.ctx.onStarted();
@@ -285,7 +285,7 @@ describe('Fin de la parole (whenSpeechEnds)', () => {
   });
 
   test('tenue quand la parole est coupée', async () => {
-    speak('Presque ! La bonne réponse est 56.');
+    speak('Raté ! La bonne réponse est 56.');
     const silence = watch(whenSpeechEnds());
     cancelSpeech();
     await flush();
@@ -294,11 +294,11 @@ describe('Fin de la parole (whenSpeechEnds)', () => {
 
   test('tenue à l’échéance d’une phrase dont la fin n’est jamais signalée', async () => {
     jest.useFakeTimers();
-    speak('Presque ! La bonne réponse est 56.');
+    speak('Raté ! La bonne réponse est 56.');
     const silence = watch(whenSpeechEnds());
     engine.last().ctx.onStarted();
     await jest.advanceTimersByTimeAsync(
-      estimateSpeechDurationMs('Presque ! La bonne réponse est 56.') - 10
+      estimateSpeechDurationMs('Raté ! La bonne réponse est 56.') - 10
     );
     expect(silence.settled).toBe(false);
     await jest.advanceTimersByTimeAsync(20);
@@ -571,8 +571,8 @@ describe('Préchargement', () => {
   test('le moteur en place charge les phrases qui peuvent se dire, sans les dire', () => {
     const clips = preloadingEngine();
     setSpeechEngine(clips);
-    preloadSpeech(['Presque ! La bonne réponse est 56.', '[incorrect] 56', '  ', null]);
-    expect(clips.preload).toHaveBeenCalledWith(['Presque ! La bonne réponse est 56.']);
+    preloadSpeech(['Raté ! La bonne réponse est 56.', '[incorrect] 56', '  ', null]);
+    expect(clips.preload).toHaveBeenCalledWith(['Raté ! La bonne réponse est 56.']);
     expect(clips.texts()).toEqual([]);
   });
 

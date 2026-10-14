@@ -396,7 +396,7 @@ function createExplanationLines({ facts, countBy, hintText, additionalContent })
 
 /**
  * Explication calme après une erreur : une erreur est une étape, pas une sanction.
- * Un mot d'accueil (« Presque ! »), la bonne réponse, puis, si fournis, les calculs
+ * Le constat (« Raté ! »), la bonne réponse, puis, si fournis, les calculs
  * utiles (vrai résultat, vérification), le comptage qui mène au résultat et une astuce.
  * Tout est construit en texte (aucun HTML injecté).
  * @param {HTMLElement} element - Élément cible

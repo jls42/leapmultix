@@ -392,7 +392,7 @@
   font-size: var(--text-md);
 }
 
-/* Le retour tient sur une ligne : la marque à côté du mot (« Juste », « Presque ! »), pas au
+/* Le retour tient sur une ligne : la marque à côté du mot (« Juste », « Raté ! »), pas au
    bord de la carte (même spécificité que la règle commune de game.css, chargée avant) */
 .chrono-container > .chrono-feedback {
   display: flex;

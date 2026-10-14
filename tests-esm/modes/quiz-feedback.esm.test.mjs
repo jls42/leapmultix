@@ -29,7 +29,7 @@ const TRANSLATIONS = {
   quiz_mode: 'Mode Quiz',
   continue: 'Continuer',
   abandon_quiz_button: 'Abandonner',
-  incorrect: 'Presque !',
+  incorrect: 'Raté !',
   feedback_incorrect: 'La bonne réponse est {correctAnswer}.',
   feedback_correct: 'Correct ! +{points} points',
   feedback_count_by: 'Compter par {step} :',
@@ -118,7 +118,7 @@ describe('Quiz : retour sur erreur', () => {
 
     const panel = document.querySelector('#quiz-feedback .feedback-explain');
     expect(panel).not.toBeNull();
-    expect(panel.querySelector('.feedback-lead').textContent).toBe('Presque !');
+    expect(panel.querySelector('.feedback-lead').textContent).toBe('Raté !');
     expect(panel.querySelector('.feedback-answer').textContent).toBe('La bonne réponse est 42.');
     const steps = [...panel.querySelectorAll('.feedback-count-step')].map(s => s.textContent);
     expect(steps).toEqual(['6', '12', '18', '24', '30', '36', '42']);
@@ -231,7 +231,7 @@ describe('Explication (setSafeComplexFeedback)', () => {
   test('panneau calme en texte : mot d’accueil, réponse, comptage puis astuce', () => {
     const el = document.createElement('div');
     setSafeComplexFeedback(el, 'La bonne réponse est 12.', 'Double le nombre', '', {
-      lead: 'Presque !',
+      lead: 'Raté !',
       countBy: { label: 'Compter par 2 :', steps: [2, 4, 6, 8, 10, 12] },
     });
 

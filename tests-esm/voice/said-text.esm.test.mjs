@@ -36,7 +36,7 @@ describe('Texte dit : accord des nombres en 1', () => {
     ['101 pommes et 121 billes', 'cent une pommes et cent vingt et une billes'],
     ['11 boîtes, 71 pommes, 91 billes', '11 boîtes, 71 pommes, 91 billes'],
     ['1 oiseau, puis 1 autre oiseau arrive', '1 oiseau, puis 1 autre oiseau arrive'],
-    ['Presque ! La bonne réponse est 21.', 'Presque ! La bonne réponse est 21.'],
+    ['Raté ! La bonne réponse est 21.', 'Raté ! La bonne réponse est 21.'],
   ])('fr : %s', (text, said) => {
     expect(saidText(text, 'fr')).toBe(said);
   });
@@ -62,7 +62,10 @@ describe('Texte dit : en espagnol, les nombres en lettres', () => {
   test.each([
     ['7 por 8 es igual a 54', 'siete por ocho es igual a cincuenta y cuatro'],
     ['¿90 dividido entre cuánto es 9?', '¿noventa dividido entre cuánto es nueve?'],
-    ['¡Casi! La respuesta correcta es 56.', '¡Casi! La respuesta correcta es cincuenta y seis.'],
+    [
+      '¡Fallaste! La respuesta correcta es 56.',
+      '¡Fallaste! La respuesta correcta es cincuenta y seis.',
+    ],
     ['Tabla del 7', 'Tabla del siete'],
     ['Tengo 16 caramelos y me como 3.', 'Tengo dieciséis caramelos y me como tres.'],
     [

@@ -1062,7 +1062,7 @@ export class ChronoMode extends GameMode {
   }
 
   /**
-   * Retour d’une réponse, le temps de la question seulement : « Juste » ou « Presque ! »,
+   * Retour d’une réponse, le temps de la question seulement : « Juste » ou « Raté ! »,
    * sans le résultat. La correction attend l’écran de fin : affichée sous la question
    * suivante, elle en donnait la réponse quand c’était l’inverse (6 × 8 après 8 × 6).
    * @param {boolean} isCorrect
