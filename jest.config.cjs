@@ -12,7 +12,8 @@ module.exports = {
   // No transforms needed for plain ESM + JS; keep explicit empty transform
   transform: {},
 
-  // Configuration coverage
+  // Couverture mesurée sur les tests ESM (npm run test:coverage), les seuls qui chargent les
+  // vrais modules du jeu ; le code tiers copié dans js/vendor/ n'est pas le nôtre
   collectCoverageFrom: [
     'js/**/*.js',
     '!js/tests/**',
@@ -20,6 +21,7 @@ module.exports = {
     '!js/**/*.spec.js',
     '!js/bundles/**',
     '!js/optimized/**',
+    '!js/vendor/**',
     '!node_modules/**',
   ],
 
@@ -27,15 +29,14 @@ module.exports = {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
 
-  // Seuils de couverture - À augmenter progressivement
-  // Note: Couverture actuelle à 0% car tests unitaires isolés
-  // Objectif: Augmenter progressivement vers 80% global
+  // Seuils au niveau mesuré le 14/10/2026 (lignes 85,6 %, branches 83,2 %, fonctions 84,8 %) :
+  // une baisse fait échouer verify. Les remonter quand la couverture progresse.
   coverageThreshold: {
     global: {
-      branches: 0,
-      functions: 0,
-      lines: 0,
-      statements: 0,
+      branches: 83,
+      functions: 84,
+      lines: 85,
+      statements: 85,
     },
   },
 

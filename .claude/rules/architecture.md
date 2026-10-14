@@ -195,7 +195,7 @@ The application maintains state through:
 - **Framework**: Jest with jsdom environment
 - **Configuration**: `jest.config.cjs`
 - **Location**: `tests/__tests__/` with `*.test.js` naming
-- **Coverage**: Reports to `coverage/` directory, includes all `js/**/*.js` files
+- **Coverage**: Measured on the ESM tests (`npm run test:coverage`, run by `npm run verify`), the only ones that load the real modules; reports in `coverage/`, all `js/**/*.js` files except `js/vendor/`; global thresholds at the measured level in `jest.config.cjs`
 - **ESM Tests**: Separate `tests-esm/` directory for `.mjs` files; tests that load the real modules belong here
 - **End-to-end Tests**: `tests-esm/e2e/` (Puppeteer drives Chrome against `tests/utils/static-server.cjs`); shared game steps in `tests-esm/helpers/game-session.mjs`
 

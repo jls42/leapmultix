@@ -14,7 +14,7 @@ npm install              # dépendances
 npm run serve            # serveur de développement
 npm test                 # Jest (tests/)
 npm run test:esm         # tests ESM (tests-esm/, sur les vrais modules, dont le bout en bout dans Chrome)
-npm run verify           # lint + test + test:esm + couverture : la porte qualité
+npm run verify           # lint + test + test:esm avec couverture et seuils : la porte qualité
 npm run format:check     # Prettier (npm run format pour corriger)
 npm run lint             # ESLint sur js/** (les scripts : npx eslint <fichiers>)
 npx stylelint "css/**/*.css"
