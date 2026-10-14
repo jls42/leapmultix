@@ -451,15 +451,22 @@ Avant de générer toute une langue avec une nouvelle voix, quelques voix candid
      clip : `--allow-missing` accepte des phrases sans clip (voix de l'appareil pour
      elles), jamais un clip en conflit. L'entrée porte le service de la voix (`provider`),
      et garde les autres voix de la langue, sauf celle qui deviendrait la voix par défaut.
+     Chaque clip annoncé doit avoir la transcription Whisper de son contenu actuel
+     (`npm run voice:review` ; `transcripts-fr.jsonl` du dossier courant, ou `--transcripts`).
+     Changer la version de la voix par défaut d'une langue déjà publiée demande
+     `--change-version`.
    - **Autre voix** : `npm run voice:publish -- clips --lang en --version jane-v1-1 --bucket <bucket>`,
      puis `npm run voice:check-online -- --lang en --version jane-v1-1 --allow-other-version`,
      puis `npm run voice:publish -- alternative --lang en --version jane-v1-1 --bucket <bucket> --distribution <id> --audience test`.
      La voix rejoint le menu de la langue aux conditions de `index` (clips en ligne et
-     identiques, corpus couvert) ; la voix par défaut et les autres langues ne bougent pas.
+     identiques, corpus couvert, clips transcrits : `transcripts-en-jane-v1-1.jsonl`) ; la voix
+     par défaut et les autres langues ne bougent pas.
      `--remove` la retire.
    - L'index distant n'est réécrit qu'après une lecture sûre : une erreur de lecture, un
      JSON illisible ou un index invalide arrêtent `index` et `remove`. `--force` repart
-     alors d'un index vide, **les autres langues sont perdues** : dernier recours.
+     alors d'un index vide, **les autres langues sont perdues** : dernier recours. L'écriture
+     est conditionnelle (ETag lu) : si une autre publication a changé l'index entre-temps,
+     rien n'est écrit, et la commande se relance.
 6. **Ouverture par étapes** : testeurs (`?voix=test`), puis la commande `index` avec
    `--audience all` (les joueurs qui avaient allumé la voix), puis avec
    `--audience all --default-on`. Chaque `index` réécrit la voix par défaut de la langue (ses

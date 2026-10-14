@@ -24,11 +24,17 @@
 //   node scripts/voice/publish.mjs <commande> --lang fr [--out <dépôt des voix>]
 //     [--bucket <nom>] [--distribution <id CloudFront>] [--audience test|all]
 //     [--default-on] [--site <dossier du jeu>] [--dry-run] [--allow-missing] [--force]
-//     [--version <version d'une autre voix>] [--remove]
+//     [--version <version d'une autre voix>] [--remove] [--change-version]
+//     [--transcripts <fichier.jsonl>]
 // Bucket et distribution : options, ou variables VOICE_BUCKET et CLOUDFRONT_DISTRIB.
 // L'index distant n'est réécrit qu'après une lecture sûre : une erreur de lecture (réseau,
 // droits), un JSON illisible ou un index invalide arrêtent index et remove ; --force
-// repart alors d'un index vide (les autres langues seraient perdues).
+// repart alors d'un index vide (les autres langues seraient perdues). L'écriture est
+// conditionnelle (ETag lu) : si une autre publication l'a changé entre-temps, rien n'est écrit.
+// index refuse de changer la version de la voix par défaut d'une langue déjà publiée sans
+// --change-version, et index comme alternative exigent la transcription Whisper du contenu
+// actuel de chaque clip (npm run voice:review ; --transcripts <fichier.jsonl>, sinon
+// transcripts-<langue>[-<version>].jsonl du dossier courant).
 // Ordre d'une mise en ligne : check.mjs, clips, check-online.mjs, index (audience test).
 
 import crypto from 'node:crypto';
@@ -55,6 +61,7 @@ import {
   valueOption,
 } from './cli-options.mjs';
 import { inSequence } from '../lib/in-sequence.cjs';
+import { currentTranscripts, readTranscripts, transcriptsFile } from './check.mjs';
 import { readManifest, storePaths } from './clip-store.mjs';
 import { buildCorpus } from './corpus.mjs';
 import { DEFAULT_OUT, loadVoice, loadVoiceVersion } from './generate.mjs';
@@ -345,18 +352,36 @@ function parseRemoteIndex(raw, force) {
 }
 
 /**
- * Index distant validé ; null seulement s'il n'existe pas encore. Réécrire l'index sur une
- * lecture ratée couperait toutes les langues : toute autre erreur arrête la commande.
+ * Index distant validé (null seulement s'il n'existe pas encore) et condition de sa
+ * réécriture : même ETag que lu, ou toujours absent. Réécrire l'index sur une lecture ratée
+ * couperait toutes les langues : toute autre erreur arrête la commande, sauf --force, qui
+ * réécrit alors sans condition.
+ * @returns {Promise<{index: Object|null, condition: string[]}>}
  */
 async function readRemoteIndex(run, bucket, force) {
-  let raw;
+  const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'voice-index-'));
+  const file = path.join(dir, 'index.json');
   try {
-    raw = await run(['s3', 'cp', `s3://${bucket}/${INDEX_KEY}`, '-']);
-  } catch (error) {
-    if (isMissingObject(error)) return null;
-    return refuseUnlessForced(force, `lecture impossible (${firstLine(error)})`);
+    let etag;
+    try {
+      const meta = await run(['s3api', 'get-object', '--bucket', bucket, '--key', INDEX_KEY, file]);
+      etag = JSON.parse(meta).ETag;
+    } catch (error) {
+      if (isMissingObject(error)) return { index: null, condition: ['--if-none-match', '*'] };
+      const index = refuseUnlessForced(force, `lecture impossible (${firstLine(error)})`);
+      return { index, condition: [] };
+    }
+    const index = parseRemoteIndex(await fsp.readFile(file, 'utf8'), force);
+    return { index, condition: ['--if-match', etag] };
+  } finally {
+    await fsp.rm(dir, { recursive: true, force: true });
   }
-  return parseRemoteIndex(raw, force);
+}
+
+/** S3 a-t-il refusé l'écriture parce que l'index a changé depuis sa lecture ? */
+export function isConditionFailure(error) {
+  const text = `${error?.message ?? ''} ${error?.stderr ?? ''}`;
+  return /PreconditionFailed|ConditionalRequestConflict|\((412|409)\)/.test(text);
 }
 
 /**
@@ -390,23 +415,39 @@ async function assertPublishable(ctx) {
   );
 }
 
-async function writeRemoteIndex(ctx, index) {
+/** Écrit l'index sous condition (voir readRemoteIndex), puis invalide son cache */
+async function writeRemoteIndex(ctx, index, condition) {
   const { run, bucket, distribution, dryRun, log } = ctx;
   log(JSON.stringify(index, null, 2));
   if (dryRun) return;
-  const file = path.join(await fsp.mkdtemp(path.join(os.tmpdir(), 'voice-index-')), 'index.json');
-  await fsp.writeFile(file, `${JSON.stringify(index, null, 2)}\n`);
-  await run([
-    's3',
-    'cp',
-    file,
-    `s3://${bucket}/${INDEX_KEY}`,
-    '--content-type',
-    'application/json',
-    '--cache-control',
-    'no-cache',
-  ]);
-  await fsp.rm(path.dirname(file), { recursive: true, force: true });
+  const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'voice-index-'));
+  const file = path.join(dir, 'index.json');
+  try {
+    await fsp.writeFile(file, `${JSON.stringify(index, null, 2)}\n`);
+    await run([
+      's3api',
+      'put-object',
+      '--bucket',
+      bucket,
+      '--key',
+      INDEX_KEY,
+      '--body',
+      file,
+      '--content-type',
+      'application/json',
+      '--cache-control',
+      'no-cache',
+      ...condition,
+    ]);
+  } catch (error) {
+    if (!isConditionFailure(error)) throw error;
+    throw new Error(
+      "Index distant changé depuis sa lecture (une autre publication ?) : rien n'est écrit, " +
+        'relancer la commande'
+    );
+  } finally {
+    await fsp.rm(dir, { recursive: true, force: true });
+  }
   if (distribution) {
     await run([
       'cloudfront',
@@ -459,6 +500,8 @@ const CLI_OPTIONS = {
   '--site': pathOption('site'),
   '--version': valueOption('version'),
   '--remove': flagOption('remove'),
+  '--change-version': flagOption('changeVersion'),
+  '--transcripts': pathOption('transcripts'),
 };
 
 /**
@@ -481,6 +524,7 @@ export function parsePublishArgs(argv, env = process.env) {
     allowMissing: false,
     force: false,
     remove: false,
+    changeVersion: false,
     site: ROOT,
     bucket: env.VOICE_BUCKET,
     distribution: env.CLOUDFRONT_DISTRIB,
@@ -510,16 +554,56 @@ function assertVersionOption({ command, version }) {
 
 /** Lit l'index distant, le transforme, puis l'écrit (avec le résumé avant et après) */
 async function updateIndex(ctx, update) {
-  const current = await readRemoteIndex(ctx.run, ctx.bucket, ctx.force);
+  const { index: current, condition } = await readRemoteIndex(ctx.run, ctx.bucket, ctx.force);
   const index = update(current);
   ctx.log(`Langues avant : ${describeLanguages(current)}`);
   ctx.log(`Langues après : ${describeLanguages(index)}`);
-  await writeRemoteIndex(ctx, index);
+  await writeRemoteIndex(ctx, index, condition);
   return index;
 }
 
+/**
+ * La voix par défaut d'une langue publiée ne change de version qu'avec --change-version :
+ * depuis une copie de travail ancienne, index ramènerait sans le dire une version antérieure
+ */
+function assertVersionKept(current, ctx, entry) {
+  const published = current?.languages?.[ctx.lang]?.version;
+  if (!entry || !published || published === entry.version || ctx.changeVersion) return;
+  throw new Error(
+    `La voix par défaut de ${ctx.lang} passerait de ${published} à ${entry.version} : ` +
+      "--change-version pour le confirmer. Rien n'est écrit."
+  );
+}
+
 function publishIndex(ctx, entry) {
-  return updateIndex(ctx, current => withLanguage(current, ctx.lang, entry));
+  return updateIndex(ctx, current => {
+    assertVersionKept(current, ctx, entry);
+    return withLanguage(current, ctx.lang, entry);
+  });
+}
+
+/**
+ * Chaque clip annoncé a la transcription Whisper de son contenu actuel (npm run voice:review),
+ * selon la règle de voice:check ; une transcription douteuse se réécoute, elle ne bloque pas
+ * @param {Object} ctx - lang, manifest, transcripts (fichier) ; version pour une autre voix
+ * @param {string|null} version - Autre voix de la langue, sinon la voix par défaut
+ */
+function assertTranscribed(ctx, version) {
+  const file = ctx.transcripts ?? transcriptsFile(ctx.lang, version);
+  if (!fs.existsSync(file)) {
+    throw new Error(
+      `Transcriptions introuvables (${file}) : npm run voice:review, ou --transcripts`
+    );
+  }
+  const { current } = currentTranscripts(readTranscripts(file), ctx.manifest);
+  const missing = Object.keys(ctx.manifest.clips).filter(key => !current.has(key));
+  if (missing.length) {
+    throw new Error(
+      `${missing.length} clips sans transcription de leur contenu actuel (${file}) : ` +
+        'npm run voice:review avant de les annoncer'
+    );
+  }
+  ctx.log(`${current.size} clips transcrits par Whisper`);
 }
 
 /**
@@ -539,6 +623,7 @@ async function publishAlternative(ctx, phrases) {
   requireClips(ctx.manifest, ctx.paths);
   const alternative = alternativeEntry(ctx.voice, ctx.audience);
   await assertPublishable(ctx);
+  assertTranscribed(ctx, version);
   return updateIndex(ctx, current => withAlternative(current, lang, version, alternative));
 }
 
@@ -578,6 +663,7 @@ async function publishLanguage(ctx, phrases) {
   const entry = indexEntry(ctx.voice, { audience: ctx.audience, defaultOn: ctx.defaultOn });
   ctx.phrases = phrases ?? buildCorpus(ctx.lang);
   await assertPublishable(ctx);
+  assertTranscribed(ctx, null);
   return publishIndex(ctx, entry);
 }
 

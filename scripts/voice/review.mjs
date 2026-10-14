@@ -28,7 +28,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildCorpus } from './corpus.mjs';
-import { checkClips, exitCode, printSummary, readTranscripts, writeFlagged } from './check.mjs';
+import {
+  checkClips,
+  exitCode,
+  printSummary,
+  readTranscripts,
+  transcriptsFile,
+  writeFlagged,
+} from './check.mjs';
 import { childEnv } from './child-env.mjs';
 import { readManifest, storePaths } from './clip-store.mjs';
 import { DEFAULT_OUT, loadVoiceVersion } from './generate.mjs';
@@ -76,7 +83,7 @@ export function parseArgs(argv, cwd = process.cwd()) {
   // Une autre voix a ses propres fichiers : une transcription vaut pour un clip d'une voix
   const tag = args.version ? `${args.lang}-${args.version}` : args.lang;
   args.python ??= path.join(cwd, '.venv-whisper', 'bin', 'python');
-  args.transcripts ??= path.join(cwd, `transcripts-${tag}.jsonl`);
+  args.transcripts ??= transcriptsFile(args.lang, args.version, cwd);
   args.flagged = path.join(cwd, `a-reecouter-${tag}.txt`);
   return args;
 }
