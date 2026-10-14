@@ -118,6 +118,9 @@ Réglages du dépôt (Settings > Secrets and variables > Actions) : **secrets**
 `docs/voix-enregistree.md`). Le dépôt et les journaux de la CI sont publics : GitHub y masque la
 valeur des secrets, l'action AWS masque le numéro de compte, et la vraie synchronisation ne
 journalise que ses erreurs (`--only-show-errors`), la simulation gardant la liste complète.
+Les variables `S3_BUCKET`, `CLOUDFRONT_DISTRIB` et `AWS_DEPLOY_ROLE_ARN` restent pour les outils
+du poste (le skill de la voix lit `gh variable get CLOUDFRONT_DISTRIB`, un secret ne se relit
+pas) : elles ne sont pas publiques, et la CI ne lit que les secrets (test).
 Tests : `tests-esm/scripts/ci-secrets.test.mjs`, `tests-esm/scripts/deploy-text-files.test.mjs`.
 
 Déploiement manuel toujours possible : `./deploy.sh` en local (lit `deploy.config`),
