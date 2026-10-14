@@ -45,6 +45,10 @@ Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run li
   (`npm run vendor:plausible`, copie vérifiée par un test).
 - Faux positif d'un analyseur : suppression ESLint en ligne, au plus près, raison écrite après
   `--` (syntaxe et exemples : `docs/guide/analyse-statique.md`).
+- Dépendances : rien d'inutilisé ni de déprécié (`npm ci` sans avertissement « deprecated »). Les
+  `overrides` de `package.json` donnent des versions à jour aux sous-dépendances abandonnées du
+  module d'istanbul que Jest impose (`js-yaml`, `glob`) : à retirer quand `babel-plugin-istanbul`
+  les aura mises à jour lui-même.
 
 ## Architecture
 
