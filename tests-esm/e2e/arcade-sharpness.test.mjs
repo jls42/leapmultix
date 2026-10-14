@@ -9,18 +9,27 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+  createUserAndSkipIntro,
+  pause,
+  pressButton,
+  launchArcadeGame,
+  backToArcadeMenu,
+} from '../helpers/game-session.mjs';
+import { chromeSession } from '../helpers/chrome-session.mjs';
+
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 
 // Sans images générées par le générateur actuel (CI : npm run assets:generate ne tourne
 // qu'au déploiement ; un dossier d'images plus ancien n'a pas les variantes 512 et 1024 des
 // sources de l'Arcade), les jeux prennent les petits PNG du dépôt : seules les proportions se
 // vérifient alors
 const GENERATED = fs.existsSync(
-  path.resolve(__dirname, '../../../assets/generated-images/arcade/renard_vaisseau_2-1024.webp')
+  path.resolve(ROOT, 'assets/generated-images/arcade/renard_vaisseau_2-1024.webp')
 );
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
@@ -89,29 +98,6 @@ const SPRITE_SPY_SOURCE = `(() => {
   };
 })();`;
 
-const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-async function pressButton(page, selector) {
-  const button = await page.waitForSelector(selector, { visible: true, timeout: 10000 });
-  await button.evaluate(el => el.click());
-}
-
-async function launchGame(page, game) {
-  const card = `.arcade-game-card[data-game="${game}"]`;
-  await page.waitForSelector(card, { visible: true, timeout: 10000 });
-  const expanded = await page.$eval(card, el => el.classList.contains('expanded'));
-  if (!expanded) await pressButton(page, `${card} .arcade-game-toggle`);
-  await pressButton(page, `${card} .play-arcade-btn`);
-  await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
-}
-
-async function backToArcadeMenu(page) {
-  // « Abandonner » demande confirmation (js/game-exit.js)
-  await pressButton(page, '#game [id$="abandon-btn"]');
-  await answerGameDialog(page, true);
-  await pressButton(page, '#arcade-back-btn');
-}
-
 /**
  * Images dessinées une fois la partie posée : l'espion repart de zéro après le chargement
  * (les variantes plus grandes ont eu le temps d'arriver), puis note les images suivantes.
@@ -156,35 +142,16 @@ function isBlurry({ natural, screen }) {
 const describeGenerated = GENERATED ? describe : describe.skip;
 
 describe('Images des jeux d’Arcade (E2E)', () => {
-  let browser;
+  const chrome = chromeSession();
   let page;
-  let server;
-
-  beforeAll(async () => {
-    server = await startStaticServer('networkidle0');
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-  }, 30000);
-
-  afterAll(async () => {
-    if (browser) await browser.close();
-    if (server) await server.stop();
-  });
-
-  afterEach(async () => {
-    if (page) await page.close();
-    page = null;
-  });
 
   async function openArcade(viewport) {
-    page = await browser.newPage();
+    page = await chrome.newPage();
     await page.setBypassServiceWorker(true);
     if (viewport.isMobile) await page.setUserAgent(ANDROID_USER_AGENT);
     await page.setViewport(viewport);
     await page.evaluateOnNewDocument(SPRITE_SPY_SOURCE);
-    await page.goto(server.url, server.gotoOptions);
+    await page.goto(chrome.server.url, chrome.server.gotoOptions);
     await createUserAndSkipIntro(page);
     await pressButton(page, '.mode-btn[data-mode="arcade"]');
   }
@@ -194,7 +161,7 @@ describe('Images des jeux d’Arcade (E2E)', () => {
     await openArcade(viewport);
     const byGame = {};
     for (const game of ARCADE_GAMES) {
-      await launchGame(page, game);
+      await launchArcadeGame(page, game);
       byGame[game] = await settledSprites(page);
       await backToArcadeMenu(page);
     }
@@ -265,7 +232,7 @@ describe('Images des jeux d’Arcade (E2E)', () => {
   describeGenerated('MultiInvaders, ordinateur de densité 2', () => {
     test('la fusée et l’ami caché sont nets et à leurs proportions', async () => {
       await openArcade(SCREENS[1][1]);
-      await launchGame(page, 'invasion');
+      await launchArcadeGame(page, 'invasion');
       await pause(1500);
       // Tir sur la bonne réponse : l'ami caché apparaît un instant à la place du monstre
       const question = await page.$eval('.arcade-question', el => el.textContent);

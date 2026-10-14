@@ -7,9 +7,16 @@
  * @jest-environment node
  */
 
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, afterEach, beforeAll, describe, expect, test } from '@jest/globals';
+import puppeteer from 'puppeteer';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
+import {
+  createUserAndSkipIntro,
+  pause,
+  pressButton,
+  launchArcadeGame,
+  backToArcadeMenu,
+} from '../helpers/game-session.mjs';
 
 const PORTRAIT = { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
 const LANDSCAPE = { width: 844, height: 390, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
@@ -58,29 +65,6 @@ const CANVAS_SPY_SOURCE = `(() => {
     return fillRect.call(this, x, y, w, h);
   };
 })();`;
-
-async function pressButton(page, selector) {
-  const button = await page.waitForSelector(selector, { visible: true, timeout: 10000 });
-  await button.evaluate(el => el.click());
-}
-
-async function launchGame(page, game) {
-  const card = `.arcade-game-card[data-game="${game}"]`;
-  await page.waitForSelector(card, { visible: true, timeout: 10000 });
-  const expanded = await page.$eval(card, el => el.classList.contains('expanded'));
-  if (!expanded) await pressButton(page, `${card} .arcade-game-toggle`);
-  await pressButton(page, `${card} .play-arcade-btn`);
-  await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
-}
-
-async function backToArcadeMenu(page) {
-  // « Abandonner » demande confirmation (règle de sortie, js/game-exit.js)
-  await pressButton(page, '#game [id$="abandon-btn"]');
-  await answerGameDialog(page, true);
-  await pressButton(page, '#arcade-back-btn');
-}
-
-const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * Mise en page posée : le bouton plein écran est monté et deux images ont passé (le bandeau
@@ -280,7 +264,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   test('téléphone tourné : chaque plateau prend la largeur, sans faire défiler la page', async () => {
     await openArcade(LANDSCAPE);
     for (const game of ARCADE_GAMES) {
-      await launchGame(page, game);
+      await launchArcadeGame(page, game);
       await settle(page);
       const { board, overflow } = await screenState(page);
       expect({ game, ...overflow }).toEqual({ game, x: 0, y: 0 });
@@ -295,7 +279,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   test('téléphone tourné, barres du navigateur affichées : bandeau sur une ligne, au-dessus du plateau', async () => {
     await openArcade(SHORT_LANDSCAPE);
     for (const game of ARCADE_GAMES) {
-      await launchGame(page, game);
+      await launchArcadeGame(page, game);
       await settle(page);
       const layout = await page.evaluate(() => {
         const bar = document.querySelector('#arcade-mult-display').getBoundingClientRect();
@@ -323,7 +307,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   test('téléphone en portrait : plateaux plus hauts que larges, sans défilement', async () => {
     await openArcade(PORTRAIT);
     for (const game of ARCADE_GAMES) {
-      await launchGame(page, game);
+      await launchArcadeGame(page, game);
       await settle(page);
       const { board, overflow } = await screenState(page);
       expect({ game, ...overflow }).toEqual({ game, x: 0, y: 0 });
@@ -361,7 +345,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     async (_screen, viewport, phone, spot, games) => {
       await openArcade(viewport, { phone });
       for (const game of games) {
-        await launchGame(page, game);
+        await launchArcadeGame(page, game);
         await settle(page);
         await pause(700);
         const during = await stageLayout(page);
@@ -395,7 +379,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
 
   test('plein écran : toute la partie, puis Échap en sort sans quitter la partie', async () => {
     await openArcade(PORTRAIT);
-    await launchGame(page, 'multisnake');
+    await launchArcadeGame(page, 'multisnake');
     const before = await screenState(page);
     await enterFullscreen(page);
     const full = await screenState(page);
@@ -420,7 +404,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
 
   test('plein écran puis téléphone tourné : la carte touchée est celle qui se retourne', async () => {
     await openArcade(PORTRAIT);
-    await launchGame(page, 'multimemory');
+    await launchArcadeGame(page, 'multimemory');
     await enterFullscreen(page);
     await page.setViewport(LANDSCAPE);
     await pause(500);
@@ -450,7 +434,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
 
   test('plein écran : un toucher au-dessus de la tête fait monter le serpent', async () => {
     await openArcade(PORTRAIT);
-    await launchGame(page, 'multisnake');
+    await launchArcadeGame(page, 'multisnake');
     await enterFullscreen(page);
     const [head] = await lastImages(page, 'multisnake-canvas', 'tete_', 1);
     const point = await toScreen(page, head, head.x + head.w / 2, head.y - 2.5 * head.h);
@@ -473,7 +457,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
 
   test('plein écran, téléphone tourné : MultiInvaders vise la colonne touchée', async () => {
     await openArcade(PORTRAIT);
-    await launchGame(page, 'invasion');
+    await launchArcadeGame(page, 'invasion');
     await enterFullscreen(page);
     await page.setViewport(LANDSCAPE);
     await pause(800);
@@ -501,7 +485,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
 
   test('ordinateur : le bouton plein écran agrandit le plateau, Échap le rend', async () => {
     await openArcade(DESKTOP, { phone: false });
-    await launchGame(page, 'multimemory');
+    await launchArcadeGame(page, 'multimemory');
     const before = await screenState(page);
     await page.waitForSelector('.arcade-fullscreen-btn', { visible: true, timeout: 5000 });
     await page.click('.arcade-fullscreen-btn');

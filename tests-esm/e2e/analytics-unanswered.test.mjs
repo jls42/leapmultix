@@ -8,8 +8,9 @@
  * @jest-environment node
  */
 
-const puppeteer = require('puppeteer');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, beforeAll, describe, expect, test } from '@jest/globals';
+import puppeteer from 'puppeteer';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
 
 const NAME = 'SansMesure';
 

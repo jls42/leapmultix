@@ -276,8 +276,8 @@ leapmultix/
 │   ├── generated-images/   # Variantes responsives (généré, hors git)
 │   ├── fonts/, sounds/, videos/, icons/, social/
 │   └── translations/       # fr.json, en.json, es.json
-├── tests/__tests__/        # Tests Jest (jsdom, et bout-en-bout via Puppeteer)
-├── tests-esm/              # Tests Jest en modules ES (.mjs)
+├── tests/__tests__/        # Tests Jest (jsdom)
+├── tests-esm/              # Tests Jest en modules ES (.mjs), et bout-en-bout via Puppeteer
 ├── scripts/                # Génération d'assets, i18n, rapports
 │   ├── precache-list.mjs   # Liste de préchargement hors ligne de sw.js (npm run precache:update)
 │   └── voice/              # Voix enregistrée : corpus, génération, écoute, publication

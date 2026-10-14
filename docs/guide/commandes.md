@@ -11,12 +11,12 @@ npm install          # Setup dependencies
 npm run serve        # Development server: the published site, on 127.0.0.1 only (port 8080)
 npm test            # Run all tests
 npm run test:watch  # Run tests in watch mode
-npm run test:coverage # Run tests with coverage report
+npm run test:coverage # ESM tests (tests-esm/) with coverage of js/ and its thresholds
 npm run test:core   # Run core functionality tests only
 npm run lint        # Run ESLint
 npm run lint:fix    # Fix ESLint issues automatically
 npm run format      # Format code with Prettier
-npm run verify      # Run lint + test + test:esm + coverage (quality gate)
+npm run verify      # Run lint + test + test:esm with coverage (quality gate)
 ```
 
 ### Testing Commands

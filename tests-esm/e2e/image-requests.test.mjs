@@ -11,14 +11,20 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const { spawnSync } = require('node:child_process');
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import {
+  createUserAndSkipIntro,
+  answerGameDialog,
+  pause,
+  pressButton,
+} from '../helpers/game-session.mjs';
+import { chromeSession } from '../helpers/chrome-session.mjs';
 
-const ROOT = path.resolve(__dirname, '../../..');
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 // Variantes WebP du générateur (npm run assets:generate) : absentes en CI, où les jeux
 // passent à leurs PNG ; sur un poste qui les a, le passage sans elles se vérifie aussi
 const GENERATED = fs.existsSync(
@@ -28,13 +34,6 @@ const PHONE = { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, h
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
 const ARCADE_GAMES = ['invasion', 'multimiam', 'multimemory', 'multisnake'];
-
-const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-async function pressButton(page, selector) {
-  const button = await page.waitForSelector(selector, { visible: true, timeout: 10000 });
-  await button.evaluate(el => el.click());
-}
 
 /** Une partie lancée depuis le menu de l'Arcade, puis abandonnée */
 async function playAndLeave(page, game) {
@@ -160,27 +159,8 @@ const RUNS = [
 ];
 
 describe('Aucune image demandée sous deux adresses (E2E)', () => {
-  let browser;
+  const chrome = chromeSession();
   let page;
-  let server;
-
-  beforeAll(async () => {
-    server = await startStaticServer('networkidle0');
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-  }, 30000);
-
-  afterAll(async () => {
-    if (browser) await browser.close();
-    if (server) await server.stop();
-  });
-
-  afterEach(async () => {
-    if (page) await page.close();
-    page = null;
-  });
 
   // Sans variantes sur le poste (CI), le premier passage est déjà celui-là
   const runs = RUNS.filter(([, forced]) => GENERATED || !forced);
@@ -188,13 +168,13 @@ describe('Aucune image demandée sous deux adresses (E2E)', () => {
   test.each(runs)(
     'menu de l’Arcade et ses quatre jeux, %s',
     async (_label, forced) => {
-      page = await browser.newPage();
+      page = await chrome.newPage();
       await page.setBypassServiceWorker(true);
       await page.setUserAgent(ANDROID_USER_AGENT);
       await page.setViewport(PHONE);
       if (forced) await withoutVariants(page);
       const requests = await watchImageRequests(page);
-      await page.goto(server.url, server.gotoOptions);
+      await page.goto(chrome.server.url, chrome.server.gotoOptions);
       await createUserAndSkipIntro(page);
       requests.start();
       await pressButton(page, '.mode-btn[data-mode="arcade"]');
@@ -209,7 +189,7 @@ describe('Aucune image demandée sous deux adresses (E2E)', () => {
   test.each(runs)(
     '« Qui joue ? », accueil, Personnalisation, tableau de bord et Aventure, %s',
     async (_label, forced) => {
-      page = await browser.newPage();
+      page = await chrome.newPage();
       await page.setBypassServiceWorker(true);
       await page.setUserAgent(ANDROID_USER_AGENT);
       await page.setViewport(PHONE);
@@ -217,7 +197,7 @@ describe('Aucune image demandée sous deux adresses (E2E)', () => {
       const requests = await watchImageRequests(page);
       await openWithProfiles(page, zoeSnapshot());
       requests.start();
-      await page.goto(server.url, server.gotoOptions);
+      await page.goto(chrome.server.url, chrome.server.gotoOptions);
       await page.waitForSelector('.user-container .user-tile', { visible: true, timeout: 10000 });
       await pause(1000);
       await page.evaluate(() =>

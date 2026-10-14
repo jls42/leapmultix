@@ -8,19 +8,20 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const puppeteer = require('puppeteer');
-const {
+import { beforeEach, describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
   createUserAndSkipIntro,
   answerGameDialog,
   gameDialogState,
-} = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+} from '../helpers/game-session.mjs';
+import { chromeSession } from '../helpers/chrome-session.mjs';
 
-const FR = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../../../assets/translations/fr.json'), 'utf8')
-);
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
+
+const FR = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets/translations/fr.json'), 'utf8'));
 
 /** Boutons de langue visibles dans la barre de l'écran affiché */
 function visibleLanguages(page) {
@@ -48,41 +49,32 @@ async function startInvasion(page) {
   await page.waitForSelector('#slide4.active-slide .arcade-game-ui canvas', { visible: true });
 }
 
-describe('Clavier et sorties de partie (E2E)', () => {
-  let browser;
-  let page;
-  let server;
-  let dialogs;
-
-  beforeAll(async () => {
-    server = await startStaticServer('networkidle0');
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-  }, 30000);
-
-  afterAll(async () => {
-    if (browser) await browser.close();
-    if (server) await server.stop();
+/**
+ * Le jeu ouvert sur cet écran, un joueur créé. L'écran se règle avant le chargement : changer
+ * d'écran tactile ensuite rechargerait la page. Plus aucune fenêtre du navigateur ne doit
+ * s'ouvrir (la question se pose dans la fenêtre du jeu) : leurs messages vont dans dialogs.
+ */
+async function openGame(chrome, viewport, dialogs) {
+  const page = await chrome.newPage();
+  await page.setViewport(viewport);
+  page.on('dialog', dialog => {
+    dialogs.push(dialog.message());
+    return dialog.dismiss();
   });
+  await page.goto(chrome.server.url, chrome.server.gotoOptions);
+  await createUserAndSkipIntro(page);
+  return page;
+}
+
+describe('Clavier et sorties de partie (E2E)', () => {
+  const chrome = chromeSession();
+  let page;
+  let dialogs;
 
   beforeEach(async () => {
     dialogs = [];
-    page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
-    // Plus aucune fenêtre du navigateur : la question se pose dans la fenêtre du jeu
-    page.on('dialog', dialog => {
-      dialogs.push(dialog.message());
-      return dialog.dismiss();
-    });
-    await page.goto(server.url, server.gotoOptions);
-    await createUserAndSkipIntro(page);
+    page = await openGame(chrome, { width: 1280, height: 800 }, dialogs);
   }, 40000);
-
-  afterEach(async () => {
-    if (page) await page.close();
-  });
 
   test('pendant le Quiz, Échap pose la question de « Abandonner » ; Échap encore, la partie continue', async () => {
     await startQuiz(page);
@@ -159,40 +151,18 @@ describe('Clavier et sorties de partie (E2E)', () => {
 });
 
 describe('Clavier et sorties de partie au téléphone (E2E)', () => {
-  let browser;
+  const chrome = chromeSession();
   let page;
-  let server;
   let dialogs;
-
-  beforeAll(async () => {
-    server = await startStaticServer('networkidle0');
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-  }, 30000);
-
-  afterAll(async () => {
-    if (browser) await browser.close();
-    if (server) await server.stop();
-  });
 
   beforeEach(async () => {
     dialogs = [];
-    page = await browser.newPage();
-    // Avant le chargement : changer d'écran tactile ensuite rechargerait la page
-    await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
-    page.on('dialog', dialog => {
-      dialogs.push(dialog.message());
-      return dialog.dismiss();
-    });
-    await page.goto(server.url, server.gotoOptions);
-    await createUserAndSkipIntro(page);
+    page = await openGame(
+      chrome,
+      { width: 390, height: 844, isMobile: true, hasTouch: true },
+      dialogs
+    );
   }, 40000);
-
-  afterEach(async () => {
-    if (page) await page.close();
-  });
 
   test('le menu ouvert pendant un jeu d’Arcade reste au-dessus de son bandeau', async () => {
     await page.$eval('.mode-btn[data-mode="arcade"]', button => button.click());

@@ -3,7 +3,7 @@
  * menu des modes
  * @param {import('puppeteer').Page} page
  */
-async function createUserAndSkipIntro(page) {
+export async function createUserAndSkipIntro(page) {
   await page.waitForSelector('#new-user-name', { visible: true, timeout: 10000 });
   await page.type('#new-user-name', 'TestUser-' + Date.now());
   await page.click('#create-user-btn');
@@ -25,7 +25,7 @@ async function createUserAndSkipIntro(page) {
  * @param {import('puppeteer').Page} page
  * @param {boolean} confirmed - true : « Abandonner » ; false : « Continuer la partie »
  */
-async function answerGameDialog(page, confirmed) {
+export async function answerGameDialog(page, confirmed) {
   const answer = confirmed ? 'confirm' : 'cancel';
   const button = await page.waitForSelector(`[role="alertdialog"] [data-answer="${answer}"]`, {
     visible: true,
@@ -42,7 +42,7 @@ async function answerGameDialog(page, confirmed) {
  * @param {import('puppeteer').Page} page
  * @returns {Promise<{question: string|null, focused: string|null}|null>} null : pas de fenêtre
  */
-function gameDialogState(page) {
+export function gameDialogState(page) {
   return page.evaluate(() => {
     const dialog = document.querySelector('[role="alertdialog"]');
     return (
@@ -54,4 +54,42 @@ function gameDialogState(page) {
   });
 }
 
-module.exports = { createUserAndSkipIntro, answerGameDialog, gameDialogState };
+/** Laisse au jeu le temps de dessiner ou d'animer */
+export const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Appuie sur un bouton de navigation. Clic direct : juste après un changement d'écran,
+ * l'émulation décale un instant la zone visible et un toucher calculé tomberait à côté.
+ * Seuls les gestes testés passent par l'écran tactile.
+ * @param {import('puppeteer').Page} page
+ * @param {string} selector
+ */
+export async function pressButton(page, selector) {
+  const button = await page.waitForSelector(selector, { visible: true, timeout: 10000 });
+  await button.evaluate(el => el.click());
+}
+
+/**
+ * Lance un mini-jeu depuis le menu Arcade : déplier sa tuile, puis « Jouer »
+ * @param {import('puppeteer').Page} page
+ * @param {string} game - data-game de la tuile du jeu
+ */
+export async function launchArcadeGame(page, game) {
+  const card = `.arcade-game-card[data-game="${game}"]`;
+  await page.waitForSelector(card, { visible: true, timeout: 10000 });
+  const expanded = await page.$eval(card, el => el.classList.contains('expanded'));
+  if (!expanded) await pressButton(page, `${card} .arcade-game-toggle`);
+  await pressButton(page, `${card} .play-arcade-btn`);
+  await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
+}
+
+/**
+ * Retour au menu Arcade : « Abandonner », confirmé (règle de sortie, js/game-exit.js), puis
+ * « Retour au menu Arcade »
+ * @param {import('puppeteer').Page} page
+ */
+export async function backToArcadeMenu(page) {
+  await pressButton(page, '#game [id$="abandon-btn"]');
+  await answerGameDialog(page, true);
+  await pressButton(page, '#arcade-back-btn');
+}

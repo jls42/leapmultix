@@ -10,14 +10,15 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const { spawnSync } = require('node:child_process');
-const puppeteer = require('puppeteer');
-const { startStaticServer } = require('../../utils/static-server.cjs');
-const { answerGameDialog } = require('../../utils/game-session.cjs');
+import { describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import { answerGameDialog, pause } from '../helpers/game-session.mjs';
+import { chromeSession } from '../helpers/chrome-session.mjs';
 
-const ROOT = path.resolve(__dirname, '../../..');
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 // Sans les variantes du générateur actuel (CI : npm run assets:generate ne tourne qu'au
 // déploiement), seul le repli sur les PNG se vérifie
 const GENERATED = fs.existsSync(
@@ -52,8 +53,6 @@ function zoeSnapshot() {
   );
   return JSON.parse(run.stdout);
 }
-
-const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /** Bouton de l'écran affiché (chaque écran a sa barre du haut) */
 async function pressShown(page, selector) {
@@ -124,28 +123,9 @@ const avatarsOf = heads => heads.map(img => /\/([a-z]+)_head_avatar/.exec(img.sr
 const WORN_HEADS = '#hero-mascot-img, #current-avatar-img, [data-player="Zoé"] .user-tile-face';
 
 describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
-  let browser;
+  const chrome = chromeSession();
   let page;
-  let server;
   const snapshot = zoeSnapshot();
-
-  beforeAll(async () => {
-    server = await startStaticServer('networkidle0');
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-  }, 30000);
-
-  afterAll(async () => {
-    if (browser) await browser.close();
-    if (server) await server.stop();
-  });
-
-  afterEach(async () => {
-    if (page) await page.close();
-    page = null;
-  });
 
   /**
    * Le jeu ouvert pour Zoé
@@ -164,7 +144,7 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
    * @param {{withoutVariants?: boolean}} [options]
    */
   async function openGame(viewport, { withoutVariants = false } = {}) {
-    page = await browser.newPage();
+    page = await chrome.newPage();
     await page.setBypassServiceWorker(true);
     if (viewport.isMobile) await page.setUserAgent(ANDROID_USER_AGENT);
     await page.setViewport(viewport);
@@ -178,14 +158,14 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
         }
       });
     }
-    await page.goto(server.url, server.gotoOptions);
+    await page.goto(chrome.server.url, chrome.server.gotoOptions);
     await page.evaluate(entries => {
       localStorage.clear();
       for (const [key, value] of Object.entries(entries)) {
         localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
       }
     }, snapshot);
-    await page.reload(server.gotoOptions);
+    await page.reload(chrome.server.gotoOptions);
     await page.waitForSelector('.user-container .user-tile', { visible: true, timeout: 10000 });
   }
 

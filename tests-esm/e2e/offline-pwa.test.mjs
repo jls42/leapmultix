@@ -7,15 +7,17 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, beforeAll, describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import puppeteer from 'puppeteer';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
+import { createUserAndSkipIntro, pause } from '../helpers/game-session.mjs';
+
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 
 const GENERATED_MAP = 'assets/generated-images/image-map.json';
-const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
-
 /** Clic direct sur un bouton, une fois visible */
 async function press(page, selector) {
   const button = await page.waitForSelector(selector, { visible: true, timeout: 10000 });
@@ -190,7 +192,7 @@ describe('Hors ligne après une première visite', () => {
   test('aucune requête du site en échec, aucune erreur de page', () => {
     // Sans images générées (CI : npm run assets:generate ne tourne qu'au déploiement), leur
     // carte et leurs variantes n'existent pas : la page prend alors les originaux, gardés
-    const generated = fs.existsSync(path.resolve(__dirname, '../../../', GENERATED_MAP));
+    const generated = fs.existsSync(path.resolve(ROOT, GENERATED_MAP));
     const absent = /^\/assets\/(?:generated-images\/|images\/image-map\.json)/;
     expect(failures.filter(failure => generated || !absent.test(failure))).toEqual([]);
     expect(errors).toEqual([]);
