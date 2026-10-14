@@ -69,7 +69,15 @@ describe('Copies du marketplace', () => {
           .readdirSync(agentsDir)
           .map(name => [path.join('.claude/agents', name), path.join(agentsDir, name)])
       : [];
-    return [...skills, ...agents];
+    // Scripts des hooks du plugin (hooks.json, lui, n'existe que dans le plugin)
+    const hooksDir = path.join(root, 'hooks');
+    const hooks = fs.existsSync(hooksDir)
+      ? fs
+          .readdirSync(hooksDir)
+          .filter(name => name !== 'hooks.json')
+          .map(name => [path.join('.claude/hooks', name), path.join(hooksDir, name)])
+      : [];
+    return [...skills, ...agents, ...hooks];
   });
 
   test('des copies à comparer', () => {
@@ -88,6 +96,73 @@ describe('Copies du marketplace', () => {
         entry.name,
         entry.version,
       ]);
+    }
+  });
+});
+
+/** Agents du dépôt et du marketplace */
+const agentFiles = [
+  ...fs.readdirSync('.claude/agents').map(name => path.join('.claude/agents', name)),
+  ...dirs(MARKETPLACE).flatMap(plugin => {
+    const dir = path.join(MARKETPLACE, plugin.name, 'agents');
+    return fs.existsSync(dir) ? fs.readdirSync(dir).map(name => path.join(dir, name)) : [];
+  }),
+];
+
+/** Outils de l'agent (tools du frontmatter) ; sans cette ligne, il les aurait tous */
+function agentTools(file) {
+  const line = fs
+    .readFileSync(file, 'utf8')
+    .split('\n')
+    .find(l => l.startsWith('tools:'));
+  return line
+    ? line
+        .slice('tools:'.length)
+        .split(',')
+        .map(tool => tool.trim())
+        .filter(Boolean)
+    : null;
+}
+
+const WEB_TOOLS = new Set(['WebFetch', 'WebSearch']);
+const LOCAL_TOOLS = new Set(['Read', 'Grep', 'Glob', 'Bash', 'Edit', 'Write', 'NotebookEdit']);
+const CHROME_HOOK = 'chrome-localhost-only.mjs';
+const NAVIGATION = 'mcp__chrome-devtools__navigate_page|mcp__chrome-devtools__new_page';
+
+describe('Agents : le web ou le poste, jamais les deux', () => {
+  test('des agents à vérifier, dans le dépôt et le marketplace', () => {
+    expect(agentFiles.length).toBeGreaterThanOrEqual(6);
+  });
+
+  // Une page lue peut porter des consignes : un agent qui lit le web ne lit pas les fichiers du
+  // poste, sinon une page piégée mènerait de la lecture d'un secret à sa sortie
+  test.each(agentFiles)('%s', file => {
+    const tools = agentTools(file);
+    expect(tools).not.toBeNull();
+    const web = tools.filter(tool => WEB_TOOLS.has(tool));
+    const local = tools.filter(tool => LOCAL_TOOLS.has(tool));
+    expect({ web, local: web.length ? local : [] }).toEqual({ web, local: [] });
+  });
+
+  test('l’agent Chrome ne navigue que vers le serveur local : hook de l’agent et du plugin', () => {
+    const front = fs
+      .readFileSync('.claude/agents/chrome-devtools-tester.md', 'utf8')
+      .split('---')[1];
+    expect(front).toContain(`matcher: '${NAVIGATION}'`);
+    expect(front).toContain(`command: '$\{CLAUDE_PROJECT_DIR}/.claude/hooks/${CHROME_HOOK}'`);
+    expect(front).toContain("args: ['--always']");
+    expect(front).toContain('onFailure: block');
+    // Un agent de plugin ignore les hooks de son frontmatter : le plugin les pose lui-même
+    const plugin = path.join(MARKETPLACE, 'chrome-devtools-tester', 'hooks');
+    const [entry] = JSON.parse(fs.readFileSync(path.join(plugin, 'hooks.json'), 'utf8')).hooks
+      .PreToolUse;
+    expect(entry.matcher).toBe(NAVIGATION);
+    expect(entry.hooks[0].command).toBe(`$\{CLAUDE_PLUGIN_ROOT}/hooks/${CHROME_HOOK}`);
+    for (const script of [
+      path.join('.claude/hooks', CHROME_HOOK),
+      path.join(plugin, CHROME_HOOK),
+    ]) {
+      expect(fs.statSync(script).mode & 0o111).not.toBe(0);
     }
   });
 });

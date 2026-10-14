@@ -18,6 +18,8 @@ Agent for testing web application features in Chrome browser using DevTools MCP 
 - Page navigation, screenshots, element interaction
 - Console and network request monitoring
 - Performance tracing
+- Local server only: while this agent runs, a plugin hook refuses any address other than
+  `http://localhost` or `http://127.0.0.1`, and any `initScript` (requires Node.js)
 
 ### expert-claude-code
 
@@ -33,6 +35,7 @@ Expert Claude Code agent that consults official documentation to help create ski
 - Helps create and configure skills, agents, plugins
 - Guides on hooks, MCP servers, and CI/CD integration
 - Answers questions about Claude Code CLI and configuration
+- Reads the web, never your files: it has no local file tool, so pass it the context it needs
 
 ### helping-with-commits
 
@@ -63,6 +66,7 @@ Research agent for documentation and technical information. Uses Context7 MCP fi
 - Falls back to WebSearch/WebFetch on official sources
 - Avoids polluting main conversation context
 - Focused on authoritative documentation sources
+- Reads the web, never your files: it has no local file tool, so pass it the context it needs
 
 ## Installation
 

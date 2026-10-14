@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__chrome-devtools__navigate_page|mcp__chrome-devtools__new_page",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/chrome-localhost-only.mjs",
+            "args": []
+          }
+        ]
+      }
+    ]
+  }
+}

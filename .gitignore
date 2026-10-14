@@ -17,6 +17,8 @@ build/
 !.claude/skills/
 !.claude/agents/
 !.claude/rules/
+# Scripts des hooks déclarés par les agents (versionnés, comme leurs copies du marketplace)
+!.claude/hooks/
 .genkit/
 *.swp
 *.swo

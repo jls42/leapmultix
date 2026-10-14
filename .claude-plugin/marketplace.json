@@ -11,7 +11,7 @@
     {
       "name": "chrome-devtools-tester",
       "description": "Test web application features in Chrome browser using DevTools MCP. Use proactively after implementing features or bug fixes.",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "author": {
         "name": "Julien LE SAUX",
         "email": "contact@jls42.org"
@@ -41,7 +41,7 @@
     {
       "name": "expert-claude-code",
       "description": "Expert Claude Code agent that consults official documentation to help create skills, agents, plugins, hooks, and configure Claude Code.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "Julien LE SAUX",
         "email": "contact@jls42.org"
@@ -56,7 +56,7 @@
     {
       "name": "web-research-specialist",
       "description": "Research agent for documentation. Uses Context7 MCP first, falls back to WebSearch/WebFetch on official sources only.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "Julien LE SAUX",
         "email": "contact@jls42.org"
