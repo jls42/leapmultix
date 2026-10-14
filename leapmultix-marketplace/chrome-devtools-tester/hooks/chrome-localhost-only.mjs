@@ -31,9 +31,9 @@ function isLocal(address) {
   return url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname);
 }
 
-/** L'appel vient-il de l'agent de test ? (--always : chaque appel est vérifié) */
-function fromTester(input, always) {
-  return always || TESTER.test(input.agent_type ?? '');
+/** L'appel vient-il de l'agent de test ? */
+function fromTester(input) {
+  return TESTER.test(input.agent_type ?? '');
 }
 
 /**
@@ -47,15 +47,6 @@ function navigationRefusal({ url, initScript } = {}) {
   return `Adresse refusée : cet agent ne navigue que vers http://localhost ou http://127.0.0.1 (demandé : ${url})`;
 }
 
-/**
- * Raison du refus, ou null si l'appel passe
- * @param {{agent_type?: string, tool_input?: {url?: string, initScript?: string}}} input
- * @param {boolean} always - vérifier quel que soit l'agent
- */
-function refusal(input, always) {
-  return fromTester(input, always) ? navigationRefusal(input.tool_input) : null;
-}
-
 let input;
 try {
   input = JSON.parse(readFileSync(0, 'utf8'));
@@ -63,7 +54,10 @@ try {
   process.stderr.write('Entrée du hook illisible : appel refusé\n');
   process.exit(2);
 }
-const reason = refusal(input, process.argv.includes('--always'));
+// --always (frontmatter de l'agent) : chaque appel est vérifié ; sinon (plugin), ceux de l'agent
+// de test seulement
+const checked = process.argv.includes('--always') || fromTester(input);
+const reason = checked ? navigationRefusal(input.tool_input) : null;
 if (reason) {
   process.stderr.write(`${reason}\n`);
   process.exit(2);
