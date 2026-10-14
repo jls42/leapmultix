@@ -566,7 +566,7 @@ describe('Moteur des clips', () => {
   });
 
   describe('préchargement pendant qu’une phrase se télécharge : il attend', () => {
-    const ERROR_TEXT = 'Presque ! La bonne réponse est 56.';
+    const ERROR_TEXT = 'Raté ! La bonne réponse est 56.';
     let releaseQuestion;
 
     beforeEach(() => {
@@ -605,7 +605,7 @@ describe('Moteur des clips', () => {
       try {
         const slow = makeEngine();
         slow.start('Combien font 9 fois 6 ?', handlers());
-        slow.preload(['Presque ! La bonne réponse est 54.']);
+        slow.preload(['Raté ! La bonne réponse est 54.']);
         expect(preloads()).toHaveLength(1);
         jest.advanceTimersByTime(1500);
         expect(fallbacks).toEqual(['timeout']);
@@ -623,7 +623,7 @@ describe('Moteur des clips', () => {
       releaseQuestion();
       await flush();
       audio.fire('playing');
-      engine.preload(['Presque ! La bonne réponse est 54.']);
+      engine.preload(['Raté ! La bonne réponse est 54.']);
       expect(preloads()).toHaveLength(2);
     });
   });

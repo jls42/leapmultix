@@ -56,7 +56,7 @@ const BASE_TRANSLATIONS = {
   level_2_name: 'Table de 2',
   table_label: 'Table',
   level_locked_message: 'Niveau verrouillé : il te faut {requiredStars} étoiles.',
-  incorrect: 'Presque !',
+  incorrect: 'Raté !',
   feedback_incorrect: 'La bonne réponse est {correctAnswer}.',
   feedback_count_by: 'Compter par {step} :',
   continue: 'Continuer',
@@ -293,7 +293,7 @@ describe('Aventure : une erreur est une étape, jusqu’à la dernière question
     answer('wrong');
 
     const panel = document.querySelector('#adventure-feedback .feedback-explain');
-    expect(panel.querySelector('.feedback-lead').textContent).toBe('Presque !');
+    expect(panel.querySelector('.feedback-lead').textContent).toBe('Raté !');
     expect(panel.querySelector('.feedback-answer').textContent).toBe('La bonne réponse est 8.');
     const box = document.getElementById('adventure-continue');
     expect(box.hidden).toBe(false);

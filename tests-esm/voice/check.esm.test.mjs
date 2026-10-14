@@ -32,7 +32,7 @@ describe('Nombres en lettres ramenés en chiffres', () => {
     ['fr', 'quatre-vingt-dix-neuf', '99'],
     ['fr', 'cent vingt et un', '121'],
     ['fr', 'deux cent un', '201'],
-    ['fr', 'Presque ! La bonne réponse est 56.', 'presque la bonne réponse est 56'],
+    ['fr', 'Raté ! La bonne réponse est 56.', 'raté la bonne réponse est 56'],
     ['en', 'What is seven times eight?', 'what is 7 times 8'],
     ['en', 'one hundred and twenty-one', '121'],
     ['es', '¿Cuánto es siete por ocho?', 'cuánto es 7 por 8'],
@@ -69,7 +69,7 @@ describe('Transcription comparée à la phrase', () => {
 
   test('phrase trop différente, mêmes nombres : à réécouter', () => {
     const result = compareTranscript(
-      'Presque ! La bonne réponse est 8.',
+      'Raté ! La bonne réponse est 8.',
       'Merci d’avoir regardé 8',
       'fr'
     );
@@ -116,7 +116,7 @@ describe('Contrôle strict en anglais et en espagnol (voix Mistral)', () => {
 
   test.each([
     ['7 por 8 es igual a 54', '7x8 es igual a 54.', false],
-    ['¡Casi! La respuesta correcta es 56.', 'Casi. La respuesta correcta es 56.', false],
+    ['¡Fallaste! La respuesta correcta es 56.', 'Fallaste. La respuesta correcta es 56.', false],
     ['¿Cuánto es 7 por 8?', 'Conto, Sivan, Inés, Bonad, Juan Osor.', true],
     ['Modo Quiz', 'Viva havn. Modo Quiz.', true],
     // Écritures de Whisper : « 30 y 1 » pour 31, accents oubliés

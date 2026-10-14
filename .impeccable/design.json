@@ -601,7 +601,7 @@
       "**Do** utiliser uniquement les jetons de `css/themes.css` (`--color-*`, `--space-*`, `--radius-*`, `--shadow-*`, `--ease-*`, `--dur-*`, `--text-*`).",
       "**Do** marquer la bonne réponse avec le vert de succès et une coche, et laisser l'explication affichée jusqu'à ce que l'enfant appuie sur « Continuer ».",
       "**Do** garder des animations de 120 à 320 ms en décélération (`--ease-out`), pour un changement d'état seulement, avec leur équivalent en `prefers-reduced-motion`.",
-      "**Do** écrire « Presque ! » plutôt que « Incorrect ! » : une erreur est une étape, pas une sanction.",
+      "**Do** dire une erreur franchement, sans sanction : « Raté ! », puis la bonne réponse. Une réponse est juste ou fausse, jamais « presque » juste.",
       "**Do** vérifier chaque écran en Classique et en Nuit, et en contraste élevé."
     ],
     "donts": [

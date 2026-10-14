@@ -213,7 +213,7 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
   pas démarré en 1,5 s (le téléchargement continue alors pour le cache). Plausible compte
   une fois par session chaque cause (`Voice fallback`).
 - **Préchargement** : les annonces de mode et les « Bravo » dès que la voix est branchée ;
-  pendant chaque question, la phrase de son erreur (« Presque ! La bonne réponse est 56. »),
+  pendant chaque question, la phrase de son erreur (« Raté ! La bonne réponse est 56. »),
   une fois le clip de la question parti pour ne pas lui prendre la bande passante. Dite à la
   réponse, elle sort du cache.
 - **Première visite** (ni copie de l'index ni choix du joueur) : la décision « parole

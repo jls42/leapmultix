@@ -269,7 +269,7 @@ function addChronoPhrases(ctx, operator) {
 }
 
 /**
- * Erreurs : « Presque ! La bonne réponse est 8. » (Quiz et Aventure ; Défi à part)
+ * Erreurs : « Raté ! La bonne réponse est 8. » (Quiz et Aventure ; Défi à part)
  * @param {Object} ctx - Contexte de construction (voir buildCorpus)
  */
 function addErrorPhrases(ctx) {
