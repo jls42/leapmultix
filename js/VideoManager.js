@@ -1,4 +1,6 @@
 import { getTranslation } from './utils-es6.js';
+import { cancelSpeech, speak } from './speech.js';
+import { welcomeMessageKey } from './core/avatars.js';
 
 /**
  * Module de Gestion des Vidéos de Personnages
@@ -453,6 +455,17 @@ export const VideoManager = {
 
     // Afficher la modal
     this.showModal();
+    this.speakWelcome(avatar);
+  },
+
+  /**
+   * La mascotte dit son message d'accueil : voix enregistrée, sinon voix de l'appareil.
+   * Seulement traduit : speak() écarte une clé manquante (« [character_intro_…] »), et le
+   * texte de repli français ne se dit pas dans une autre langue.
+   * @param {string} avatar - Nom de l'avatar
+   */
+  speakWelcome(avatar) {
+    speak(getTranslation(welcomeMessageKey(avatar)));
   },
 
   /**
@@ -616,7 +629,7 @@ export const VideoManager = {
     };
 
     const fallback = defaultMessages[avatar] || "Merci de m'avoir choisi, on va bien s'amuser !";
-    return translateOr(`character_intro_${avatar}`, fallback);
+    return translateOr(welcomeMessageKey(avatar), fallback);
   },
 
   /**
@@ -701,6 +714,8 @@ export const VideoManager = {
    * Passer la vidéo
    */
   skipVideo() {
+    // « Passer » coupe aussi le message d'accueil ; une vidéo finie le laisse terminer
+    cancelSpeech();
     this.hideModal();
 
     if (this._skipCallback) {

@@ -1,10 +1,20 @@
 /* eslint-env jest, node */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
-// « Passer » est traduit ; « close_video » manque encore (repli attendu)
+const UNICORN_WELCOME = "Coucou\u00a0! Ensemble, on va apprendre en s'amusant comme jamais\u00a0!";
+// « Passer » et le message de la licorne sont traduits ; « close_video » et les autres
+// messages manquent encore (repli attendu)
+const TRANSLATIONS = new Map([
+  ['skip_video', 'Passer'],
+  ['character_intro_unicorn', UNICORN_WELCOME],
+]);
 jest.unstable_mockModule('../js/utils-es6.js', () => ({
-  getTranslation: k => (k === 'skip_video' ? 'Passer' : `[${k}]`),
+  getTranslation: k => TRANSLATIONS.get(k) ?? `[${k}]`,
 }));
+
+// La parole est observée, pas jouée : ce qui est dit, ce qui est coupé
+const speech = { speak: jest.fn(), cancelSpeech: jest.fn() };
+jest.unstable_mockModule('../js/speech.js', () => speech);
 
 const { VideoManager } = await import('../js/VideoManager.js');
 
@@ -37,6 +47,8 @@ function setReducedMotion(reduce) {
 
 beforeEach(() => {
   jest.useFakeTimers();
+  speech.speak.mockClear();
+  speech.cancelSpeech.mockClear();
   freshModal();
 });
 
@@ -225,6 +237,36 @@ describe('Modale vidéo de l’avatar', () => {
       false
     );
     error.mockRestore();
+  });
+
+  test('la mascotte dit son message d’accueil, celui qui s’affiche, à l’ouverture', () => {
+    withListeners();
+    VideoManager.playCharacterIntro('unicorn', jest.fn());
+    expect(document.getElementById('video-welcome-message').textContent).toBe(UNICORN_WELCOME);
+    expect(speech.speak).toHaveBeenCalledTimes(1);
+    expect(speech.speak).toHaveBeenCalledWith(UNICORN_WELCOME);
+  });
+
+  test('message pas encore traduit : le repli s’affiche, seule la clé part à speak(), qui l’écarte', () => {
+    withListeners();
+    VideoManager.playCharacterIntro('fox', jest.fn());
+    // Le repli français n'est pas dit dans une autre langue ; speak() refuse « [clé] »
+    // (tests-esm/speech-queue.esm.test.mjs, « ni traduction manquante »)
+    expect(document.getElementById('video-welcome-message').textContent).toMatch(/^Salut/);
+    expect(speech.speak).toHaveBeenCalledWith('[character_intro_fox]');
+  });
+
+  test('« Passer » coupe le message d’accueil ; une vidéo finie le laisse terminer', () => {
+    withListeners();
+    VideoManager.playCharacterIntro('unicorn', jest.fn());
+    VideoManager.onVideoEnded();
+    expect(speech.cancelSpeech).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(200);
+    VideoManager.playCharacterIntro('unicorn', jest.fn());
+    jest.advanceTimersByTime(700);
+    document.getElementById('skip-intro-btn').click();
+    expect(speech.cancelSpeech).toHaveBeenCalledTimes(1);
   });
 
   test('« Revoir ma vidéo » (demande explicite) démarre tout de suite, même avec moins d’animations', () => {

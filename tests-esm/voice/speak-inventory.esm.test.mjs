@@ -41,6 +41,8 @@ const EXPECTED = {
   'js/modes/QuizMode.js': { speak: 2, showFeedback: 1 },
   // showFeedback(…, speakIt) : la définition et son appel à speak()
   'js/ui-feedback.js': { speak: 1, showFeedback: 1 },
+  // message d'accueil de la mascotte, à l'ouverture de sa vidéo (character_intro_<avatar>)
+  'js/VideoManager.js': { speak: 1 },
 };
 
 function jsFiles(dir) {
