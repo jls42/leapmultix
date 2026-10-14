@@ -127,10 +127,19 @@ describe('Publication', () => {
   let paths;
   let calls;
   let logs;
+  let transcripts;
 
   beforeEach(async () => {
     logs = [];
     outDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'voices-publish-'));
+    // Transcriptions Whisper du contenu actuel de chaque clip (npm run voice:review)
+    transcripts = path.join(outDir, 'transcripts-fr.jsonl');
+    await fsp.writeFile(
+      transcripts,
+      clips
+        .map(c => JSON.stringify({ key: c.key, heard: c.text, sha256: sha256(c.data) }))
+        .join('\n')
+    );
     paths = storePaths(outDir, 'fr', voice.version);
     await fsp.mkdir(paths.clipDir, { recursive: true });
     const manifest = newManifest('fr', voice);
@@ -156,8 +165,32 @@ describe('Publication', () => {
   function readIndex({ index = null, indexText = null, indexError = null }) {
     if (indexError) throw indexError;
     if (indexText !== null) return indexText;
-    if (!index) throw new Error('fatal error: An error occurred (404) when calling HeadObject');
+    if (!index) {
+      throw new Error(
+        'An error occurred (NoSuchKey) when calling the GetObject operation: ' +
+          'The specified key does not exist.'
+      );
+    }
     return JSON.stringify(index);
+  }
+
+  /** get-object : l'index distant écrit dans le fichier demandé, son ETag rendu */
+  function getIndex(args, indexOptions) {
+    fs.writeFileSync(args.at(-1), readIndex(indexOptions));
+    return JSON.stringify({ ETag: '"etag-lu"' });
+  }
+
+  /** put-object : l'index écrit et sa condition ; conflict, un index changé entre-temps */
+  function putIndex(call, conflict) {
+    const value = option => call.args[call.args.indexOf(option) + 1];
+    if (conflict) {
+      throw Object.assign(new Error('Command failed'), {
+        stderr: 'An error occurred (PreconditionFailed) when calling the PutObject operation',
+      });
+    }
+    call.written = JSON.parse(fs.readFileSync(value('--body'), 'utf8'));
+    const condition = ['--if-match', '--if-none-match'].find(option => call.args.includes(option));
+    call.condition = condition ? [condition, value(condition)] : [];
   }
 
   /** Réponse de list-objects-v2 : les clips déjà en ligne, avec leur ETag */
@@ -170,21 +203,24 @@ describe('Publication', () => {
     });
   }
 
-  /** Garde la trace de ce qu'une copie vers S3 envoie : les clips préparés, ou l'index écrit */
+  /** Garde la trace de ce qu'une copie vers S3 envoie : les clips préparés */
   function traceCopy(call) {
-    const [, , from, to] = call.args;
+    const [, , from] = call.args;
     if (call.args.includes('--recursive')) call.staged = fs.readdirSync(from).sort();
-    if (to?.endsWith('index.json')) call.written = JSON.parse(fs.readFileSync(from, 'utf8'));
   }
 
-  function fakeAws({ remote = [], ...indexOptions } = {}) {
+  function fakeAws({ remote = [], conflict = false, ...indexOptions } = {}) {
     return async args => {
       const call = { args };
       calls.push(call);
-      if (args[0] === 's3api' && args[1] === 'list-objects-v2') return listing(remote);
-      if (args[0] !== 's3' || args[1] !== 'cp') return '';
-      if (args[3] === '-') return readIndex(indexOptions);
-      traceCopy(call);
+      const [service, command] = args;
+      if (service === 's3api' && command === 'list-objects-v2') return listing(remote);
+      if (service === 's3api' && command === 'get-object') return getIndex(args, indexOptions);
+      if (service === 's3api' && command === 'put-object') {
+        putIndex(call, conflict);
+        return '{}';
+      }
+      if (service === 's3' && command === 'cp') traceCopy(call);
       return '';
     };
   }
@@ -201,7 +237,7 @@ describe('Publication', () => {
   };
   const run = (args, aws, io = {}) =>
     publish(
-      { ...base, out: outDir, ...args },
+      { ...base, out: outDir, transcripts, ...args },
       { run: aws, log: message => logs.push(message), phrases, ...io }
     );
   const written = () => calls.find(c => c.written)?.written ?? null;
@@ -483,6 +519,87 @@ describe('Publication', () => {
     }
   });
 
+  describe('index : écriture gardée', () => {
+    const withEs = { schema: VOICE_KEY_SCHEMA, languages: { es: ENTRY } };
+
+    test('réécrit seulement s’il n’a pas changé depuis sa lecture ; absent, jamais écrasé', async () => {
+      await run({ command: 'index' }, fakeAws({ remote: online(), index: withEs }));
+      expect(calls.find(c => c.written).condition).toEqual(['--if-match', '"etag-lu"']);
+      calls = [];
+      await run({ command: 'index' }, fakeAws({ remote: online() }));
+      expect(calls.find(c => c.written).condition).toEqual(['--if-none-match', '*']);
+    });
+
+    test('changé par une autre publication entre la lecture et l’écriture : refus, rien d’invalidé', async () => {
+      const aws = fakeAws({ remote: online(), index: withEs, conflict: true });
+      await expect(run({ command: 'index' }, aws)).rejects.toThrow('changé depuis sa lecture');
+      expect(calls.some(c => c.args[0] === 'cloudfront')).toBe(false);
+    });
+
+    test('--force après une lecture ratée : réécrit sans condition', async () => {
+      const indexError = new Error('Could not connect to the endpoint URL');
+      await run({ command: 'remove', force: true }, fakeAws({ indexError }));
+      expect(calls.find(c => c.written).condition).toEqual([]);
+    });
+
+    test('la voix par défaut ne change de version qu’avec --change-version', async () => {
+      const older = { ...indexEntry(voice), version: 'test-0' };
+      const published = { schema: VOICE_KEY_SCHEMA, languages: { es: ENTRY, fr: older } };
+      const aws = () => fakeAws({ remote: online(), index: published });
+      await expect(run({ command: 'index' }, aws())).rejects.toThrow(
+        'passerait de test-0 à test-1'
+      );
+      expect(written()).toBeNull();
+      await run({ command: 'index', changeVersion: true }, aws());
+      expect(written().languages.fr.version).toBe('test-1');
+    });
+
+    test('même version republiée (autre audience) : sans option', async () => {
+      const same = { schema: VOICE_KEY_SCHEMA, languages: { fr: indexEntry(voice) } };
+      await run({ command: 'index', audience: 'all' }, fakeAws({ remote: online(), index: same }));
+      expect(written().languages.fr.audience).toBe('all');
+    });
+  });
+
+  describe('index : chaque clip annoncé est transcrit (npm run voice:review)', () => {
+    const aws = () => fakeAws({ remote: online() });
+    const lines = list => list.map(line => JSON.stringify(line)).join('\n');
+
+    test('fichier absent : refus ; par défaut, celui du dossier courant', async () => {
+      const absent = path.join(outDir, 'absent.jsonl');
+      await expect(run({ command: 'index', transcripts: absent }, aws())).rejects.toThrow(
+        'Transcriptions introuvables'
+      );
+      await expect(run({ command: 'index', transcripts: undefined }, aws())).rejects.toThrow(
+        path.join(process.cwd(), 'transcripts-fr.jsonl')
+      );
+      expect(written()).toBeNull();
+    });
+
+    test('un clip transcrit dans un contenu qu’il n’a plus : refus', async () => {
+      const [first, ...others] = clips;
+      const stale = path.join(outDir, 'perimees.jsonl');
+      await fsp.writeFile(
+        stale,
+        lines([
+          { key: first.key, heard: first.text, sha256: sha256('ancien contenu') },
+          ...others.map(c => ({ key: c.key, heard: c.text, sha256: sha256(c.data) })),
+        ])
+      );
+      await expect(run({ command: 'index', transcripts: stale }, aws())).rejects.toThrow(
+        '1 clips sans transcription'
+      );
+      expect(written()).toBeNull();
+    });
+
+    test('ligne d’avant les empreintes : vaut pour tout contenu, comme pour voice:check', async () => {
+      const legacy = path.join(outDir, 'anciennes.jsonl');
+      await fsp.writeFile(legacy, lines(clips.map(c => ({ key: c.key, heard: c.text }))));
+      await run({ command: 'index', transcripts: legacy }, aws());
+      expect(written().languages.fr.version).toBe('test-1');
+    });
+  });
+
   describe('autres voix de la langue (alternative)', () => {
     const jane = loadVoiceVersion('en', 'jane-v1-1');
     const EN = {
@@ -556,6 +673,20 @@ describe('Publication', () => {
         alternative({ version: 'sulafat-v1-1' }, fakeAws({ index: indexWithEn(EN) }))
       ).rejects.toThrow(/voix par défaut/);
       expect(calls.some(c => c.written)).toBe(false);
+    });
+
+    test('Jane sans transcription de ses clips : refus ; par défaut, son propre fichier', async () => {
+      await janeStore();
+      const empty = path.join(outDir, 'vide.jsonl');
+      await fsp.writeFile(empty, '');
+      const aws = () => fakeAws({ remote: online(), index: indexWithEn(EN) });
+      await expect(alternative({ transcripts: empty }, aws())).rejects.toThrow(
+        '3 clips sans transcription'
+      );
+      await expect(alternative({ transcripts: undefined }, aws())).rejects.toThrow(
+        path.join(process.cwd(), 'transcripts-en-jane-v1-1.jsonl')
+      );
+      expect(written()).toBeNull();
     });
 
     test('index republié : les autres voix sont gardées, sauf celle qui devient la voix par défaut', () => {

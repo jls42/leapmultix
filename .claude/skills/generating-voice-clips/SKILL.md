@@ -207,6 +207,11 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
    - `index` :
      - refuse une entrée que le jeu écarterait (nom, version) ;
      - refuse tant qu'un clip manque ou diffère ;
+     - refuse tant qu'un clip n'a pas la transcription Whisper de son contenu actuel
+       (`voice:review` d'abord ; `alternative` aussi) ;
+     - refuse de changer la version de la voix par défaut d'une langue publiée sans
+       `--change-version`, sur accord explicite ;
+     - n'écrit que si l'index distant n'a pas changé depuis sa lecture ; sinon, relancer ;
      - garde les autres langues de l'index, et les autres voix de la langue. Après
        publication, relire `/voice/index.json`.
    - `--version` ne va qu'avec `clips`, `local` et `alternative` : `index` et `remove` ne

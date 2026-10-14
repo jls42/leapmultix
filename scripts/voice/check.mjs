@@ -16,6 +16,7 @@
 
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inSequence } from '../lib/in-sequence.cjs';
 import { buildCorpus } from './corpus.mjs';
@@ -85,13 +86,27 @@ export function durationOutliers(entries) {
 }
 
 /**
- * Transcriptions comparées aux phrases. Pour chaque clip, la dernière transcription de son
- * contenu actuel fait foi ; une ligne sans sha256, d'avant leur ajout, vaut pour tout contenu.
- * Un clip refait peut revenir à un contenu déjà transcrit : Google redonne parfois, pour la
- * même phrase, le même son à l'octet près, et Whisper ne le retranscrit pas. Seul un clip dont
- * aucune transcription ne porte le contenu actuel est périmé.
+ * Fichier des transcriptions Whisper d'une voix, dans le dossier courant (ignoré par git) : une
+ * autre voix de la langue (version) a le sien, une transcription vaut pour un clip d'une voix
+ * @param {string} lang
+ * @param {string|null|undefined} version - Autre voix de la langue, sinon la voix par défaut
+ * @param {string} [cwd]
  */
-export function transcriptReport(transcripts, manifest, lang) {
+export function transcriptsFile(lang, version, cwd = process.cwd()) {
+  const tag = version ? `${lang}-${version}` : lang;
+  return path.join(cwd, `transcripts-${tag}.jsonl`);
+}
+
+/**
+ * Transcription en vigueur de chaque clip du manifeste. Pour chaque clip, la dernière
+ * transcription de son contenu actuel fait foi ; une ligne sans sha256, d'avant leur ajout,
+ * vaut pour tout contenu. Un clip refait peut revenir à un contenu déjà transcrit : Google
+ * redonne parfois, pour la même phrase, le même son à l'octet près, et Whisper ne le
+ * retranscrit pas. Seul un clip dont aucune transcription ne porte le contenu actuel est
+ * périmé.
+ * @returns {{current: Map<string, Object>, seen: Set<string>}}
+ */
+export function currentTranscripts(transcripts, manifest) {
   const current = new Map();
   const seen = new Set();
   for (const line of transcripts) {
@@ -100,6 +115,12 @@ export function transcriptReport(transcripts, manifest, lang) {
     seen.add(line.key);
     if (!line.sha256 || line.sha256 === entry.sha256) current.set(line.key, line);
   }
+  return { current, seen };
+}
+
+/** Transcriptions comparées aux phrases (voir currentTranscripts) */
+export function transcriptReport(transcripts, manifest, lang) {
+  const { current, seen } = currentTranscripts(transcripts, manifest);
   const flagged = [];
   for (const [key, { heard }] of current) {
     const entry = manifest.clips[key];
