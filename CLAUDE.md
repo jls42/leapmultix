@@ -45,6 +45,10 @@ Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run li
   (`npm run vendor:plausible`, copie vérifiée par un test).
 - Faux positif d'un analyseur : suppression ESLint en ligne, au plus près, raison écrite après
   `--` (syntaxe et exemples : `docs/guide/analyse-statique.md`).
+- Dépendances : rien d'inutilisé ni de déprécié (`npm ci` sans avertissement « deprecated »). Les
+  `overrides` de `package.json` donnent des versions à jour aux sous-dépendances abandonnées du
+  module d'istanbul que Jest impose (`js-yaml`, `glob`) : à retirer quand `babel-plugin-istanbul`
+  les aura mises à jour lui-même.
 
 ## Architecture
 
@@ -91,6 +95,9 @@ Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run li
   propriétaire fusionne lui-même.
 - Messages au format Conventional Commits, en français, à l'impératif, concis ; aucun outil d'IA
   nommé dans un commit ni dans une PR ; aucun secret.
+- Dépôt public : un correctif de sécurité dit ce qu'il change (« ci: identifiants AWS lus depuis
+  les secrets »), jamais la faiblesse qu'il ferme ni où la voir, dans le commit comme dans la PR ;
+  le détail reste dans les notes privées.
 - Skills et agents copiés dans `leapmultix-marketplace/` : `.claude/rules/marketplace.md`.
 
 ### Retours de PR : boucle obligatoire, jusqu'au vert
