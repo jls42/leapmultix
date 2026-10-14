@@ -82,7 +82,10 @@ Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run li
 ## Commits et PR
 
 - Proposer chaque commit avec le skill `helping-with-commits` et attendre l'accord. Exception : les
-  commits qui ne font que corriger les retours des analyseurs d'une PR déjà autorisée.
+  commits qui ne font que corriger les retours des analyseurs d'une PR déjà autorisée, dans les
+  fichiers que l'analyseur cite. L'exception ne couvre jamais `.github/`, les scripts de
+  `package.json`, `deploy.sh`, `pull-from-s3.sh`, `scripts/voice/`, `.claude/`, ni `CLAUDE.md` (et
+  ses liens `AGENTS.md`, `GEMINI.md`) : un retour d'analyseur qui les vise attend l'accord.
 - Jamais de commit sur `main` : une branche (`feat/…`, `fix/…`), poussée, puis une PR. Le
   propriétaire fusionne lui-même.
 - Messages au format Conventional Commits, en français, à l'impératif, concis ; aucun outil d'IA
