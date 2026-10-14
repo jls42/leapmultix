@@ -80,6 +80,11 @@ Deux points à connaître avant d'y toucher :
   servi par son préchargement avant le réseau, si bien qu'un déploiement sans montée de
   version laisse aux joueurs déjà venus leurs anciens modules jusqu'à la suivante
   (`sw.js` et `APP_VERSION` montent ensemble, un test l'exige).
+- **Le npm de la CI est celui du poste et de Dependabot** (`npm@11.13.0`, installé avant
+  chaque `npm ci`) : le npm 10 livré avec Node 22 refuse un `package-lock.json` écrit par
+  npm 11 dès qu'une dépendance pair optionnelle ne s'accorde pas (Lighthouse 13, octobre 2026).
+  Si le poste change de version majeure de npm, la CI suit. Test :
+  `tests-esm/scripts/ci-npm.test.mjs`.
 
 Après chaque fusion, vérifier en ligne que la prod sert la version fusionnée.
 Le déploiement attend la fin de `verify` : compter 5 à 20 minutes.
