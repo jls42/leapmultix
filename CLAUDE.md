@@ -95,6 +95,9 @@ Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run li
   propriétaire fusionne lui-même.
 - Messages au format Conventional Commits, en français, à l'impératif, concis ; aucun outil d'IA
   nommé dans un commit ni dans une PR ; aucun secret.
+- Dépôt public : un correctif de sécurité dit ce qu'il change (« ci: identifiants AWS lus depuis
+  les secrets »), jamais la faiblesse qu'il ferme ni où la voir, dans le commit comme dans la PR ;
+  le détail reste dans les notes privées.
 - Skills et agents copiés dans `leapmultix-marketplace/` : `.claude/rules/marketplace.md`.
 
 ### Retours de PR : boucle obligatoire, jusqu'au vert
