@@ -6,8 +6,13 @@
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
 import puppeteer from 'puppeteer';
-import { createUserAndSkipIntro, answerGameDialog } from '../helpers/game-session.mjs';
 import { startStaticServer } from '../../tests/utils/static-server.cjs';
+import {
+  createUserAndSkipIntro,
+  pressButton,
+  launchArcadeGame,
+  backToArcadeMenu,
+} from '../helpers/game-session.mjs';
 
 // Téléphone : les jeux reconnaissent un mobile à son agent utilisateur
 const PHONE_VIEWPORT = {
@@ -33,33 +38,6 @@ const SNAKE_HEAD_SPY_SOURCE =
   '    return draw.call(this, image, ...rest);' +
   '  };' +
   '})();';
-
-/**
- * Appuie sur un bouton de navigation. Clic direct : juste après un changement d'écran,
- * l'émulation décale un instant la zone visible et un toucher calculé tomberait à côté.
- * Seuls les gestes testés passent par l'écran tactile.
- */
-async function pressButton(page, selector) {
-  const button = await page.waitForSelector(selector, { visible: true, timeout: 10000 });
-  await button.evaluate(el => el.click());
-}
-
-/** Lance un mini-jeu depuis le menu Arcade : déplier sa tuile, puis « Jouer » */
-async function launchGame(page, game) {
-  const card = `.arcade-game-card[data-game="${game}"]`;
-  await page.waitForSelector(card, { visible: true, timeout: 10000 });
-  const expanded = await page.$eval(card, el => el.classList.contains('expanded'));
-  if (!expanded) await pressButton(page, `${card} .arcade-game-toggle`);
-  await pressButton(page, `${card} .play-arcade-btn`);
-  await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
-}
-
-/** Retour au menu Arcade : « Abandonner », confirmé, puis « Retour au menu Arcade » */
-async function backToArcadeMenu(page) {
-  await pressButton(page, '#game [id$="abandon-btn"]');
-  await answerGameDialog(page, true);
-  await pressButton(page, '#arcade-back-btn');
-}
 
 /**
  * Ce qui dépasse de l'écran du téléphone, en pixels (0 : la page ne défile pas).
@@ -110,7 +88,7 @@ describe('Arcade sur téléphone (E2E)', () => {
 
   test("chaque mini-jeu tient dans l'écran, sans faire défiler la page", async () => {
     for (const game of ARCADE_GAMES) {
-      await launchGame(page, game);
+      await launchArcadeGame(page, game);
       // Mesure aussitôt : la consigne s'affiche quelques secondes sous le plateau
       expect({ game, ...(await pageOverflow(page)) }).toEqual({ game, x: 0, y: 0 });
       await backToArcadeMenu(page);
@@ -118,7 +96,7 @@ describe('Arcade sur téléphone (E2E)', () => {
   }, 90000);
 
   test('le serpent suit un glissement du doigt', async () => {
-    await launchGame(page, 'multisnake');
+    await launchArcadeGame(page, 'multisnake');
     const center = await page.$eval('#multisnake-canvas', canvas => {
       const rect = canvas.getBoundingClientRect();
       return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };

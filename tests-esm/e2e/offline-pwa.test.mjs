@@ -12,14 +12,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
-import { createUserAndSkipIntro } from '../helpers/game-session.mjs';
 import { startStaticServer } from '../../tests/utils/static-server.cjs';
+import { createUserAndSkipIntro, pause } from '../helpers/game-session.mjs';
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 
 const GENERATED_MAP = 'assets/generated-images/image-map.json';
-const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
-
 /** Clic direct sur un bouton, une fois visible */
 async function press(page, selector) {
   const button = await page.waitForSelector(selector, { visible: true, timeout: 10000 });

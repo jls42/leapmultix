@@ -9,10 +9,15 @@
  * @jest-environment node
  */
 
-import { afterAll, afterEach, beforeAll, describe, expect, test } from '@jest/globals';
-import puppeteer from 'puppeteer';
-import { createUserAndSkipIntro, answerGameDialog } from '../helpers/game-session.mjs';
-import { startStaticServer } from '../../tests/utils/static-server.cjs';
+import { describe, expect, test } from '@jest/globals';
+import {
+  createUserAndSkipIntro,
+  pause,
+  pressButton,
+  launchArcadeGame,
+  backToArcadeMenu,
+} from '../helpers/game-session.mjs';
+import { chromeSession } from '../helpers/chrome-session.mjs';
 
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
@@ -82,28 +87,6 @@ const CLIENT_SPY_SOURCE = `(() => {
   };
 })();`;
 
-const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-async function pressButton(page, selector) {
-  const button = await page.waitForSelector(selector, { visible: true, timeout: 10000 });
-  await button.evaluate(el => el.click());
-}
-
-async function launchGame(page, game) {
-  const card = `.arcade-game-card[data-game="${game}"]`;
-  await page.waitForSelector(card, { visible: true, timeout: 10000 });
-  const expanded = await page.$eval(card, el => el.classList.contains('expanded'));
-  if (!expanded) await pressButton(page, `${card} .arcade-game-toggle`);
-  await pressButton(page, `${card} .play-arcade-btn`);
-  await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
-}
-
-async function backToArcadeMenu(page) {
-  await pressButton(page, '#game [id$="abandon-btn"]');
-  await answerGameDialog(page, true);
-  await pressButton(page, '#arcade-back-btn');
-}
-
 /**
  * Taille interne du canevas, taille affichée de son dessin (pixels CSS, cadre exclu ; le
  * labyrinthe de MultiMiam est centré par object-fit dans un élément plus haut) et densité
@@ -128,35 +111,16 @@ async function pointAt(page, viewport, point) {
 }
 
 describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
-  let browser;
+  const chrome = chromeSession();
   let page;
-  let server;
-
-  beforeAll(async () => {
-    server = await startStaticServer('networkidle0');
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-  }, 30000);
-
-  afterAll(async () => {
-    if (browser) await browser.close();
-    if (server) await server.stop();
-  });
-
-  afterEach(async () => {
-    if (page) await page.close();
-    page = null;
-  });
 
   async function openArcade(viewport) {
-    page = await browser.newPage();
+    page = await chrome.newPage();
     await page.setBypassServiceWorker(true);
     if (viewport.isMobile) await page.setUserAgent(ANDROID_USER_AGENT);
     await page.setViewport(viewport);
     await page.evaluateOnNewDocument(CLIENT_SPY_SOURCE);
-    await page.goto(server.url, server.gotoOptions);
+    await page.goto(chrome.server.url, chrome.server.gotoOptions);
     await createUserAndSkipIntro(page);
     await pressButton(page, '.mode-btn[data-mode="arcade"]');
   }
@@ -166,7 +130,7 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
     async (_name, viewport) => {
       await openArcade(viewport);
       for (const game of ARCADE_GAMES) {
-        await launchGame(page, game);
+        await launchArcadeGame(page, game);
         await pause(400);
         const { internal, css, ratio } = await canvasSizes(page);
         const expected = css.map(side => Math.round(side * ratio));
@@ -186,7 +150,7 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
     '%s : MultiMemory retourne la carte visée',
     async (_name, viewport) => {
       await openArcade(viewport);
-      await launchGame(page, 'multimemory');
+      await launchArcadeGame(page, 'multimemory');
       // Plateau posé (bouton plein écran monté, police chargée) : les derniers dos de cartes
       // dessinés avec leur image (centrée sur la carte). Le plateau ne se redessine que s'il
       // change : son dernier dessin est le bon.
@@ -218,7 +182,7 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
     '%s : MultiInvaders tire sous le monstre visé, et la pastille se pose au-dessus',
     async (_name, viewport) => {
       await openArcade(viewport);
-      await launchGame(page, 'invasion');
+      await launchArcadeGame(page, 'invasion');
       await pause(1500);
       const question = await page.$eval('.arcade-question', el => el.textContent);
       const [a, b] = question.match(/\d+/g).map(Number);
@@ -248,7 +212,7 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
     '%s : MultiSnake monte quand on vise au-dessus de sa tête',
     async (_name, viewport) => {
       await openArcade(viewport);
-      await launchGame(page, 'multisnake');
+      await launchArcadeGame(page, 'multisnake');
       await page.waitForFunction(
         () => globalThis.__client.images.some(d => d.src.startsWith('tete_')),
         { timeout: 8000 }
@@ -283,7 +247,7 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
     '%s : MultiMiam part vers la case touchée',
     async (_name, viewport, toward, fullscreen) => {
       await openArcade(viewport);
-      await launchGame(page, 'multimiam');
+      await launchArcadeGame(page, 'multimiam');
       if (fullscreen) await pressButton(page, '.arcade-fullscreen-btn');
       await pause(1500);
       const start = await page.evaluate(
@@ -317,7 +281,7 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
 
   test('téléphone, densité 3 : le voile de pause couvre exactement le plateau', async () => {
     await openArcade(PHONE_3);
-    await launchGame(page, 'multisnake');
+    await launchArcadeGame(page, 'multisnake');
     await pressButton(page, '.arcade-pause-btn');
     await page.waitForSelector('.arcade-pause-overlay', { visible: true, timeout: 5000 });
     const [board, veil] = await page.evaluate(() =>
