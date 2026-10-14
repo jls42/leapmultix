@@ -31,19 +31,29 @@ function isLocal(address) {
   return url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname);
 }
 
+/** L'appel vient-il de l'agent de test ? (--always : chaque appel est vérifié) */
+function fromTester(input, always) {
+  return always || TESTER.test(input.agent_type ?? '');
+}
+
+/**
+ * Raison du refus d'une navigation, ou null si elle passe
+ * @param {{url?: string, initScript?: string}} [toolInput]
+ */
+function navigationRefusal({ url, initScript } = {}) {
+  if (initScript) return 'initScript refusé : il pourrait mener la page hors du serveur local';
+  // Sans adresse : retour, avance ou rechargement de la page déjà ouverte
+  if (url === undefined || isLocal(url)) return null;
+  return `Adresse refusée : cet agent ne navigue que vers http://localhost ou http://127.0.0.1 (demandé : ${url})`;
+}
+
 /**
  * Raison du refus, ou null si l'appel passe
  * @param {{agent_type?: string, tool_input?: {url?: string, initScript?: string}}} input
  * @param {boolean} always - vérifier quel que soit l'agent
  */
 function refusal(input, always) {
-  if (!always && !TESTER.test(input.agent_type ?? '')) return null;
-  const { url, initScript } = input.tool_input ?? {};
-  if (initScript) return 'initScript refusé : il pourrait mener la page hors du serveur local';
-  // Sans adresse : retour, avance ou rechargement de la page déjà ouverte
-  if (url === undefined) return null;
-  if (isLocal(url)) return null;
-  return `Adresse refusée : cet agent ne navigue que vers http://localhost ou http://127.0.0.1 (demandé : ${url})`;
+  return fromTester(input, always) ? navigationRefusal(input.tool_input) : null;
 }
 
 let input;
