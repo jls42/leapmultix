@@ -112,9 +112,13 @@ git show origin/main:sw.js | grep -m1 'const VERSION'
   déploiement s'arrête) et, sans domaine, retire les blocs `plausible:start` / `plausible:end`.
   Les événements partent vers `https://plausible.io/api/event` (`connect-src` de CloudFront).
 
-Variables de dépôt attendues (Settings > Secrets and variables > Actions) :
-`AWS_DEPLOY_ROLE_ARN`, `S3_BUCKET`, `CLOUDFRONT_DISTRIB`, `PLAUSIBLE_DOMAIN`, `VOICE_BASE`
-(`/voice/` : adresse des clips de la voix enregistrée, voir `docs/voix-enregistree.md`).
+Réglages du dépôt (Settings > Secrets and variables > Actions) : **secrets**
+`AWS_DEPLOY_ROLE_ARN`, `S3_BUCKET`, `CLOUDFRONT_DISTRIB` ; **variables** `PLAUSIBLE_DOMAIN`,
+`VOICE_BASE` (`/voice/` : adresse des clips de la voix enregistrée, voir
+`docs/voix-enregistree.md`). Le dépôt et les journaux de la CI sont publics : GitHub y masque la
+valeur des secrets, l'action AWS masque le numéro de compte, et la vraie synchronisation ne
+journalise que ses erreurs (`--only-show-errors`), la simulation gardant la liste complète.
+Tests : `tests-esm/scripts/ci-secrets.test.mjs`, `tests-esm/scripts/deploy-text-files.test.mjs`.
 
 Déploiement manuel toujours possible : `./deploy.sh` en local (lit `deploy.config`),
 ou l'onglet Actions (« Run workflow » sur `main`, la seule branche que le job accepte),

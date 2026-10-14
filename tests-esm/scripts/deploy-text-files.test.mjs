@@ -312,6 +312,15 @@ describe('deploy.sh : ce qui ne part jamais', () => {
       .map(JSON.parse);
     expect(calls.map(call => call.command)).toEqual(['s3 sync']);
     expect(calls[0].args).toContain('--dryrun');
+    // La simulation montre la liste de ce qui serait envoyé ou effacé
+    expect(calls[0].args).not.toContain('--only-show-errors');
+  });
+
+  test('la vraie synchronisation ne journalise que ses erreurs : le journal de la CI est public', () => {
+    const { result, calls } = deploy();
+    expect(result.status).toBe(0);
+    const sync = calls.find(call => call.command === 's3 sync');
+    expect(sync.args).toContain('--only-show-errors');
   });
 
   test('la commande se construit sans eval', () => {

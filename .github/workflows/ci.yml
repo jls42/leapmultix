@@ -165,25 +165,29 @@ jobs:
 
       # Échouer ici plutôt que de déployer un site amputé : sans PLAUSIBLE_DOMAIN,
       # deploy.sh retire silencieusement les scripts d'analytics.
-      - name: Vérification des variables du dépôt
+      # Bucket, distribution et rôle AWS sont des secrets : le dépôt est public, ses journaux
+      # aussi, et GitHub y masque la valeur d'un secret (numéro de compte AWS compris).
+      - name: Vérification des réglages du dépôt
         if: steps.tete.outputs.a_jour == 'true'
         env:
-          S3_BUCKET: ${{ vars.S3_BUCKET }}
-          CLOUDFRONT_DISTRIB: ${{ vars.CLOUDFRONT_DISTRIB }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          CLOUDFRONT_DISTRIB: ${{ secrets.CLOUDFRONT_DISTRIB }}
           PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
           VOICE_BASE: ${{ vars.VOICE_BASE }}
-          ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
         run: |
           manquantes=''
           for nom in S3_BUCKET CLOUDFRONT_DISTRIB PLAUSIBLE_DOMAIN VOICE_BASE ROLE_ARN; do
             [ -n "${!nom}" ] || manquantes="$manquantes $nom"
           done
           if [ -n "$manquantes" ]; then
-            echo "::error::Variables de dépôt manquantes :$manquantes"
-            echo "À définir dans Settings > Secrets and variables > Actions > Variables."
+            echo "::error::Réglages du dépôt manquants :$manquantes"
+            echo "À définir dans Settings > Secrets and variables > Actions :"
+            echo "secrets S3_BUCKET, CLOUDFRONT_DISTRIB, AWS_DEPLOY_ROLE_ARN (pour ROLE_ARN) ;"
+            echo "variables PLAUSIBLE_DOMAIN, VOICE_BASE."
             exit 1
           fi
-          echo "Variables présentes."
+          echo "Réglages présents."
 
       # Node seul, sans npm ci : deploy.sh n'appelle que scripts/version-module-urls.mjs,
       # qui n'utilise que les modules de Node
@@ -219,14 +223,15 @@ jobs:
         if: steps.tete.outputs.a_jour == 'true'
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: eu-west-3
+          mask-aws-account-id: true
 
       - name: Déploiement S3 + invalidation CloudFront
         if: steps.tete.outputs.a_jour == 'true'
         env:
-          TF_VAR_leapmultixs3bucket: ${{ vars.S3_BUCKET }}
-          CLOUDFRONT_DISTRIB: ${{ vars.CLOUDFRONT_DISTRIB }}
+          TF_VAR_leapmultixs3bucket: ${{ secrets.S3_BUCKET }}
+          CLOUDFRONT_DISTRIB: ${{ secrets.CLOUDFRONT_DISTRIB }}
           PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
           VOICE_BASE: ${{ vars.VOICE_BASE }}
           DRY_RUN: ${{ inputs.dry_run }}

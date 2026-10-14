@@ -289,7 +289,9 @@ if [[ "$DRY_RUN" == "true" ]]; then
 else
     echo -e "${GREEN}📤 Synchronisation en cours...${NC}"
 
-    if aws "${SYNC_ARGS[@]}"; then
+    # Le journal de la CI est public : il ne montre que les erreurs, ni la liste des fichiers
+    # envoyés ou effacés, ni l'adresse du bucket. La simulation (--dryrun) garde la liste.
+    if aws "${SYNC_ARGS[@]}" --only-show-errors; then
         echo -e "${GREEN}✅ Synchronisation S3 terminée avec succès !${NC}"
 
         # La synchronisation compare les tailles (--size-only). Or un fichier texte
