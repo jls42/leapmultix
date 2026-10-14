@@ -11,14 +11,16 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const { spawnSync } = require('node:child_process');
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, afterEach, beforeAll, describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import puppeteer from 'puppeteer';
+import { createUserAndSkipIntro, answerGameDialog } from '../helpers/game-session.mjs';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
 
-const ROOT = path.resolve(__dirname, '../../..');
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 // Variantes WebP du générateur (npm run assets:generate) : absentes en CI, où les jeux
 // passent à leurs PNG ; sur un poste qui les a, le passage sans elles se vérifie aussi
 const GENERATED = fs.existsSync(

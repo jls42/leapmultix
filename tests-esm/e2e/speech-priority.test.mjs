@@ -4,9 +4,10 @@
  * @jest-environment node
  */
 
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
+import puppeteer from 'puppeteer';
+import { createUserAndSkipIntro } from '../helpers/game-session.mjs';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
 
 // Synthèse factice : note chaque énoncé et chaque coupure ; un énoncé ne finit que quand
 // le test appelle __endUtterance() (le début est signalé tout de suite, comme un navigateur)

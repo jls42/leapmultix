@@ -12,8 +12,8 @@ Depuis la racine (catalogue complet : `docs/guide/commandes.md`) :
 ```bash
 npm install              # dépendances
 npm run serve            # serveur de développement
-npm test                 # Jest (tests/, dont les tests de bout en bout dans Chrome)
-npm run test:esm         # tests ESM (tests-esm/, sur les vrais modules)
+npm test                 # Jest (tests/)
+npm run test:esm         # tests ESM (tests-esm/, sur les vrais modules, dont le bout en bout dans Chrome)
 npm run verify           # lint + test + test:esm + couverture : la porte qualité
 npm run format:check     # Prettier (npm run format pour corriger)
 npm run lint             # ESLint sur js/** (les scripts : npx eslint <fichiers>)
@@ -58,7 +58,8 @@ Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run li
   à la demande par `js/lazy-loader.js` ; importer `utils-es6.js` ou `core/utils.js`, jamais
   `./utils.js`.
 - Tests : Jest et jsdom (`jest.config.cjs`) dans `tests/__tests__/*.test.js` ; un test qui charge
-  les vrais modules va dans `tests-esm/*.test.mjs`.
+  les vrais modules va dans `tests-esm/*.test.mjs`, un test de bout en bout (Puppeteer, Chrome)
+  dans `tests-esm/e2e/`.
 - Carte complète des modules : `.claude/rules/architecture.md`.
 
 ## Données, textes, pages et images

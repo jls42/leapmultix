@@ -10,14 +10,16 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const { spawnSync } = require('node:child_process');
-const puppeteer = require('puppeteer');
-const { startStaticServer } = require('../../utils/static-server.cjs');
-const { answerGameDialog } = require('../../utils/game-session.cjs');
+import { afterAll, afterEach, beforeAll, describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import puppeteer from 'puppeteer';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
+import { answerGameDialog } from '../helpers/game-session.mjs';
 
-const ROOT = path.resolve(__dirname, '../../..');
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 // Sans les variantes du générateur actuel (CI : npm run assets:generate ne tourne qu'au
 // déploiement), seul le repli sur les PNG se vérifie
 const GENERATED = fs.existsSync(

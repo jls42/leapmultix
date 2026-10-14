@@ -9,14 +9,18 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, beforeAll, describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import puppeteer from 'puppeteer';
+import { createUserAndSkipIntro } from '../helpers/game-session.mjs';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
+
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 
 // Délai du service worker (NETWORK_TIMEOUT_MS de sw.js) ; chaque étape a 2 s de plus
-const SW_SOURCE = fs.readFileSync(path.resolve(__dirname, '../../../sw.js'), 'utf8');
+const SW_SOURCE = fs.readFileSync(path.resolve(ROOT, 'sw.js'), 'utf8');
 const NETWORK_TIMEOUT_MS = Number(/const NETWORK_TIMEOUT_MS = (\d+);/.exec(SW_SOURCE)?.[1] ?? 4000);
 const STEP_LIMIT_MS = NETWORK_TIMEOUT_MS + 2000;
 // Version du service worker : ses adresses ?v=<VERSION> viennent toujours de leur copie

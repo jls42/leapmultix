@@ -6,16 +6,20 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, beforeAll, describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import puppeteer from 'puppeteer';
+import { createUserAndSkipIntro } from '../helpers/game-session.mjs';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
+
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 
 // Silence MP3 de 0,157 s, le même que js/voice-clips.js utilise pour déverrouiller le son
 function silenceMp3() {
-  const source = fs.readFileSync(path.resolve(__dirname, '../../../js/voice-clips.js'), 'utf8');
+  const source = fs.readFileSync(path.resolve(ROOT, 'js/voice-clips.js'), 'utf8');
   return Buffer.from(/const SILENCE_MP3 =\s*'([^']+)'/.exec(source)[1], 'base64');
 }
 

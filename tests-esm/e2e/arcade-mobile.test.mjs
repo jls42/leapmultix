@@ -4,9 +4,10 @@
  * @jest-environment node
  */
 
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
+import puppeteer from 'puppeteer';
+import { createUserAndSkipIntro, answerGameDialog } from '../helpers/game-session.mjs';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
 
 // Téléphone : les jeux reconnaissent un mobile à son agent utilisateur
 const PHONE_VIEWPORT = {

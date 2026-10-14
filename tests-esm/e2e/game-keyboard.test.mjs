@@ -8,19 +8,21 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const puppeteer = require('puppeteer');
-const {
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import puppeteer from 'puppeteer';
+import {
   createUserAndSkipIntro,
   answerGameDialog,
   gameDialogState,
-} = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+} from '../helpers/game-session.mjs';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
 
-const FR = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../../../assets/translations/fr.json'), 'utf8')
-);
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
+
+const FR = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets/translations/fr.json'), 'utf8'));
 
 /** Boutons de langue visibles dans la barre de l'écran affiché */
 function visibleLanguages(page) {

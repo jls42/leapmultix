@@ -7,9 +7,10 @@
  * @jest-environment node
  */
 
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, afterEach, beforeAll, describe, expect, test } from '@jest/globals';
+import puppeteer from 'puppeteer';
+import { createUserAndSkipIntro, answerGameDialog } from '../helpers/game-session.mjs';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
 
 const PORTRAIT = { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
 const LANDSCAPE = { width: 844, height: 390, deviceScaleFactor: 3, isMobile: true, hasTouch: true };

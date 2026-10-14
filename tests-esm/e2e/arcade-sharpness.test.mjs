@@ -9,18 +9,22 @@
  * @jest-environment node
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, afterEach, beforeAll, describe, expect, test } from '@jest/globals';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import puppeteer from 'puppeteer';
+import { createUserAndSkipIntro, answerGameDialog } from '../helpers/game-session.mjs';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
+
+const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 
 // Sans images générées par le générateur actuel (CI : npm run assets:generate ne tourne
 // qu'au déploiement ; un dossier d'images plus ancien n'a pas les variantes 512 et 1024 des
 // sources de l'Arcade), les jeux prennent les petits PNG du dépôt : seules les proportions se
 // vérifient alors
 const GENERATED = fs.existsSync(
-  path.resolve(__dirname, '../../../assets/generated-images/arcade/renard_vaisseau_2-1024.webp')
+  path.resolve(ROOT, 'assets/generated-images/arcade/renard_vaisseau_2-1024.webp')
 );
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';

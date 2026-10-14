@@ -197,6 +197,7 @@ The application maintains state through:
 - **Location**: `tests/__tests__/` with `*.test.js` naming
 - **Coverage**: Reports to `coverage/` directory, includes all `js/**/*.js` files
 - **ESM Tests**: Separate `tests-esm/` directory for `.mjs` files; tests that load the real modules belong here
+- **End-to-end Tests**: `tests-esm/e2e/` (Puppeteer drives Chrome against `tests/utils/static-server.cjs`); shared game steps in `tests-esm/helpers/game-session.mjs`
 
 ## Build and Quality Tools
 

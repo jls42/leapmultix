@@ -3,7 +3,7 @@
  * menu des modes
  * @param {import('puppeteer').Page} page
  */
-async function createUserAndSkipIntro(page) {
+export async function createUserAndSkipIntro(page) {
   await page.waitForSelector('#new-user-name', { visible: true, timeout: 10000 });
   await page.type('#new-user-name', 'TestUser-' + Date.now());
   await page.click('#create-user-btn');
@@ -25,7 +25,7 @@ async function createUserAndSkipIntro(page) {
  * @param {import('puppeteer').Page} page
  * @param {boolean} confirmed - true : « Abandonner » ; false : « Continuer la partie »
  */
-async function answerGameDialog(page, confirmed) {
+export async function answerGameDialog(page, confirmed) {
   const answer = confirmed ? 'confirm' : 'cancel';
   const button = await page.waitForSelector(`[role="alertdialog"] [data-answer="${answer}"]`, {
     visible: true,
@@ -42,7 +42,7 @@ async function answerGameDialog(page, confirmed) {
  * @param {import('puppeteer').Page} page
  * @returns {Promise<{question: string|null, focused: string|null}|null>} null : pas de fenêtre
  */
-function gameDialogState(page) {
+export function gameDialogState(page) {
   return page.evaluate(() => {
     const dialog = document.querySelector('[role="alertdialog"]');
     return (
@@ -53,5 +53,3 @@ function gameDialogState(page) {
     );
   });
 }
-
-module.exports = { createUserAndSkipIntro, answerGameDialog, gameDialogState };

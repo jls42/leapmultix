@@ -9,9 +9,10 @@
  * @jest-environment node
  */
 
-const puppeteer = require('puppeteer');
-const { createUserAndSkipIntro, answerGameDialog } = require('../../utils/game-session.cjs');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, afterEach, beforeAll, describe, expect, test } from '@jest/globals';
+import puppeteer from 'puppeteer';
+import { createUserAndSkipIntro, answerGameDialog } from '../helpers/game-session.mjs';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
 
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';

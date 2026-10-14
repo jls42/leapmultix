@@ -3,8 +3,9 @@
  * @jest-environment node
  */
 
-const puppeteer = require('puppeteer');
-const { startStaticServer } = require('../../utils/static-server.cjs');
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
+import puppeteer from 'puppeteer';
+import { startStaticServer } from '../../tests/utils/static-server.cjs';
 
 describe('Basic Application Load E2E', () => {
   let browser;
