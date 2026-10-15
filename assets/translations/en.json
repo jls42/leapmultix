@@ -300,7 +300,7 @@
   "mnemonic_2": "Multiplying by 2: double the number.",
   "mnemonic_3": "Multiplying by 3: double the number, then add it again.",
   "mnemonic_4": "Multiplying by 4: double the number twice.",
-  "mnemonic_5": "Multiplying by 5: results end with 0 or 5.",
+  "mnemonic_5": "Multiplying by 5: results end with 0 or 5. Another tip: add a 0 to the other number, then cut the result in half (for example 5 × 8: 8 becomes 80, and half of 80 is 40).",
   "mnemonic_6": "Multiplying by 6: five times the number, plus the number.",
   "mnemonic_7": "Multiplying by 7: think of the calendar! One week = 7 days, two weeks = 14 days…",
   "mnemonic_8": "Multiplying by 8: double three times.",
