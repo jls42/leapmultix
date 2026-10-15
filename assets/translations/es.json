@@ -306,7 +306,7 @@
   "mnemonic_2": "Multiplicar por 2: es doblar el número.",
   "mnemonic_3": "Multiplicar por 3: el doble del número más el número mismo.",
   "mnemonic_4": "Multiplicar por 4: doblar dos veces.",
-  "mnemonic_5": "Multiplicar por 5: los resultados terminan en 0 o 5.",
+  "mnemonic_5": "Multiplicar por 5: los resultados terminan en 0 o 5. Otro truco: añade un 0 al otro número y luego parte el resultado por la mitad (por ejemplo 5 × 8: el 8 se convierte en 80, y la mitad de 80 es 40).",
   "mnemonic_6": "Multiplicar por 6: cinco veces el número, más el número.",
   "mnemonic_7": "Multiplicar por 7: ¡piensa en el calendario! Una semana = 7 días, dos semanas = 14 días…",
   "mnemonic_8": "Multiplicar por 8: doblar tres veces.",
