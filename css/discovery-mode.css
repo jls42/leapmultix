@@ -446,6 +446,7 @@
   margin: 0;
   font-size: var(--text-body);
   line-height: var(--leading-body);
+  white-space: pre-line; /* une seconde astuce commence sa propre ligne */
 }
 
 /* --- Étapes suivantes : séparées par un filet --- */

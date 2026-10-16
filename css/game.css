@@ -350,6 +350,11 @@ strong.feedback-count-step {
   color: var(--color-ink-muted);
 }
 
+/* Une seconde astuce commence sa propre ligne (« \n » dans la traduction) */
+.quiz-hint-inline span {
+  white-space: pre-line;
+}
+
 /* === ACTIONS DE PARTIE === */
 
 /* « Continuer » après une erreur : attend l'enfant, aucun minuteur */

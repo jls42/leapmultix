@@ -310,7 +310,7 @@
   "mnemonic_2": "Multiplication par 2 : c'est comme additionner le nombre à lui-même.",
   "mnemonic_3": "Multiplication par 3 : c'est le double du nombre, plus le nombre.",
   "mnemonic_4": "Multiplication par 4 : c'est comme doubler le nombre deux fois.",
-  "mnemonic_5": "Multiplication par 5 : les résultats finissent toujours par 0 ou par 5. Autre astuce : ajoute un 0 à l'autre nombre, puis coupe le résultat en deux (par exemple 5 × 8 : 8 devient 80, et la moitié de 80, c'est 40).",
+  "mnemonic_5": "Multiplication par 5 : les résultats finissent toujours par 0 ou par 5.\nAutre astuce : ajoute un 0 à l'autre nombre, puis coupe le résultat en deux (par exemple 5 × 8 : 8 devient 80, et la moitié de 80, c'est 40).",
   "mnemonic_6": "Multiplication par 6 : c'est 5 fois le nombre, plus le nombre.",
   "mnemonic_7": "Multiplication par 7 : pense au calendrier ! Une semaine = 7 jours, deux semaines = 14 jours…",
   "mnemonic_8": "Multiplication par 8 : c'est comme doubler le nombre trois fois.",
