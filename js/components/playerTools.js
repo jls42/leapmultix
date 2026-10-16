@@ -249,8 +249,22 @@ export const PlayerTools = {
       document.addEventListener('keydown', event => this._onFilterEnter(event), true);
       document.addEventListener('click', event => this._onClick(event));
       document.addEventListener('change', event => this._onImportChosen(event));
+      // Un joueur choisi : le filtre a servi, l'enfant suivant retrouve toutes les tuiles
+      document.addEventListener('userChanged', event => {
+        if (event.detail?.userData) this.clearFilter();
+      });
     }
     this.refresh();
+  },
+
+  /**
+   * Vide le filtre des prénoms : toutes les tuiles reviennent
+   */
+  clearFilter() {
+    const input = document.getElementById('user-filter-input');
+    if (!input?.value) return;
+    input.value = '';
+    this.applyFilter();
   },
 
   /**

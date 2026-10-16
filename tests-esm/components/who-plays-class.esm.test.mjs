@@ -1,14 +1,16 @@
 /* eslint-env jest, node */
 /**
  * « Qui joue ? » sur un poste de classe (28 profils) : tuiles triées par prénom dans la langue
- * du jeu, filtre dès 10 joueurs, et « Nouveau joueur » en haut de la liste. Monté sur le vrai
- * écran d'index.html, sans innerHTML.
+ * du jeu, filtre dès 10 joueurs, « Nouveau joueur » en haut de la liste, et un prénom déjà pris
+ * sous une autre écriture. Monté sur le vrai écran d'index.html, sans innerHTML.
  */
 import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { readFileSync } from 'node:fs';
 
 const { UserManager } = await import('../../js/userManager.js');
 const { PlayerTools } = await import('../../js/components/playerTools.js');
+const { saveTrash } = await import('../../js/core/players-trash.js');
+const { VideoManager } = await import('../../js/VideoManager.js');
 const store = await import('../../js/i18n-store.js');
 
 const FR = JSON.parse(
@@ -183,6 +185,25 @@ describe('Filtre des prénoms, dès 10 joueurs', () => {
     expect(visibleNames()).toEqual(['Maël', 'Maëlys']);
   });
 
+  test('un joueur choisi vide le filtre : l’enfant suivant retrouve les 28 tuiles', () => {
+    useClass(CLASS);
+    typeFilter('to');
+    expect(visibleNames()).toEqual(['Tom']);
+    // Tom choisi (UserManager.selectUser), puis « Changer de joueur » : la liste est redessinée
+    UserManager.emitUserChanged({ nickname: 'Tom' });
+    UserManager.refreshUserList();
+    expect(document.getElementById('user-filter-input').value).toBe('');
+    expect(visibleNames()).toEqual(SORTED);
+  });
+
+  test('le joueur en cours supprimé, personne n’est choisi : le filtre reste', () => {
+    useClass(CLASS);
+    typeFilter('ma');
+    UserManager.emitUserChanged(null);
+    expect(document.getElementById('user-filter-input').value).toBe('ma');
+    expect(visibleNames()).toEqual(['Maël', 'Maëlys']);
+  });
+
   test('sous 10 joueurs, le filtre disparaît et ne cache plus rien', () => {
     useClass(SORTED.slice(0, 10));
     typeFilter('zzz');
@@ -204,6 +225,48 @@ describe('Filtre des prénoms, dès 10 joueurs', () => {
     expect(documentListener).not.toHaveBeenCalled();
     expect(document.activeElement.querySelector('.user-tile-name').textContent).toBe('Jean-Luc');
     expect(UserManager.getCurrentUser()).toBeNull();
+  });
+});
+
+describe('Prénom déjà pris sous une autre écriture (accents, majuscules)', () => {
+  beforeEach(() => {
+    // La vidéo de la mascotte suit une création : l'écran monté ici n'a pas son lecteur
+    jest.spyOn(VideoManager, 'playCharacterIntro').mockImplementation(() => {});
+  });
+
+  test.each([
+    ['léa', 'Léa'],
+    ['LEA', 'Léa'],
+    ['Ines', 'Inès'],
+    ['jean-luc', 'Jean-Luc'],
+  ])('« %s » ne crée pas un second profil : %s joue déjà', typed => {
+    useClass(CLASS);
+    expect(UserManager.createUser(typed, 'fox')).toBe(false);
+    expect(Object.keys(UserManager._players)).toHaveLength(CLASS.length);
+  });
+
+  test('le formulaire renvoie à la tuile : « Ce joueur existe déjà… »', () => {
+    useClass(CLASS);
+    const input = document.getElementById('new-user-name');
+    input.value = 'lea';
+    UserManager._handleCreateUser(input, null);
+    const message = document.getElementById('new-user-message');
+    expect(message.hidden).toBe(false);
+    expect(message.textContent).toBe(FR.user_already_exists_alert);
+  });
+
+  test('dans la corbeille sous une autre écriture : « zoe » renvoie à Zoé', () => {
+    useClass(CLASS.filter(name => name !== 'Zoé'));
+    saveTrash([{ name: 'Zoé', deletedAt: Date.now(), data: { nickname: 'Zoé' } }]);
+    expect(UserManager._nameTaken('zoe')).toBe('trash');
+  });
+
+  test('un prénom voisin reste libre : Léo à côté de Léa, Line à côté de Lina', () => {
+    useClass(CLASS);
+    expect(UserManager._nameTaken('Line')).toBeNull();
+    expect(UserManager.createUser('Léo', 'fox')).toBe(true);
+    expect(Object.keys(UserManager._players)).toHaveLength(CLASS.length + 1);
+    expect(VideoManager.playCharacterIntro).toHaveBeenCalledTimes(1);
   });
 });
 

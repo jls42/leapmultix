@@ -1051,14 +1051,18 @@ export const UserManager = {
   },
 
   /**
-   * Prénom déjà pris par un joueur de la liste, ou de la corbeille
+   * Prénom déjà pris par un joueur de la liste, ou de la corbeille, sans tenir compte des
+   * accents ni des majuscules (comme le filtre de « Qui joue ? ») : « léa » est Léa, « Ines »
+   * est Inès. Un second profil ferait croire à l'enfant qu'il a perdu sa progression.
    * @param {string} name - Prénom rangé (checkUsername)
    * @returns {'exists'|'trash'|null}
    * @private
    */
   _nameTaken(name) {
-    if (Object.prototype.hasOwnProperty.call(this._players, name)) return 'exists';
-    return loadTrash().some(entry => entry.name === name) ? 'trash' : null;
+    const collator = new Intl.Collator(getCurrentLanguage(), { sensitivity: 'base' });
+    const sameName = other => collator.compare(other, name) === 0;
+    if (Object.keys(this._players).some(sameName)) return 'exists';
+    return loadTrash().some(entry => sameName(entry.name)) ? 'trash' : null;
   },
 
   /**
