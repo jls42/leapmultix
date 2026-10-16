@@ -51,9 +51,17 @@ const RECORDERS_SOURCE =
   '  globalThis.__played = played;' +
   '})();';
 
-/** Attend la première phrase de la synthèse : phrases dites, sons joués, question affichée */
+/**
+ * Attend la première phrase de la synthèse et la question à l'écran : phrases dites, sons
+ * joués, question affichée
+ */
 async function firstSpeech(page) {
-  await page.waitForFunction(() => globalThis.__spoken.some(Boolean), { timeout: 20000 });
+  await page.waitForFunction(
+    () =>
+      globalThis.__spoken.some(Boolean) &&
+      Boolean(document.querySelector('#quiz-question')?.textContent.trim()),
+    { timeout: 20000 }
+  );
   return page.evaluate(() => ({
     spoken: globalThis.__spoken.filter(Boolean),
     played: globalThis.__played,
@@ -138,6 +146,12 @@ describe('Voix enregistrée E2E', () => {
     const { context, page } = await openGame(query, options);
     try {
       await createUserAndSkipIntro(page);
+      // Le message d'accueil de la mascotte, déjà dit si « Passer » est venu tard, n'est pas
+      // une phrase du Quiz
+      await page.evaluate(() => {
+        globalThis.__spoken.length = 0;
+        globalThis.__played.length = 0;
+      });
       await page.click('.mode-btn[data-mode="quiz"]');
       await check(page);
     } finally {
