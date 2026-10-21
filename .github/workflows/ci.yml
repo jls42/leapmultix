@@ -11,6 +11,10 @@ on:
         description: 'Simuler le déploiement sans rien écrire sur S3'
         type: boolean
         default: false
+      test_notif:
+        description: "Envoyer l'alerte Telegram de test (vérifie secrets et chemin d'envoi)"
+        type: boolean
+        default: false
 
 # Jeton GitHub en lecture seule pour tous les jobs ; deploy y ajoute seulement
 # id-token, pour l'échange OIDC avec AWS.
@@ -245,4 +249,137 @@ jobs:
             ./deploy.sh --dry-run
           else
             ./deploy.sh
+          fi
+
+  # Notifications Telegram : site mis à jour, échec, ou test du chemin d'envoi. Un déploiement
+  # raté ne casse rien en ligne, mais un run rouge ne se voit pas depuis un téléphone : cette
+  # alerte en est le seul témoin. Job à part, lancé quoi qu'il arrive (always()), qui lit
+  # l'issue des quatre autres dans needs. Mêmes événements que le déploiement (push ou « Run
+  # workflow » sur main) : une pull request ne déploie rien.
+  notifications:
+    name: Notifications
+    runs-on: ubuntu-24.04
+    needs: [verify, seo-report, images, deploy]
+    if: always() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: read
+    steps:
+      # Un job en échec : alerte. Un job annulé : alerte si ce commit est encore la tête de
+      # main ; sinon un run plus récent l'a dépassé et c'est lui qui déploie (groupe de
+      # concurrence deploy, ou run dépassé annulé à la main : les 18 runs annulés des 100
+      # derniers de main, au 21/10/2026). Ce run compte alors comme un succès, comme le job
+      # deploy qui, pour un commit dépassé, réussit sans rien envoyer. Tête de main illisible :
+      # alerte, mieux vaut un ping en trop qu'une panne muette.
+      - name: Bilan des jobs
+        id: bilan
+        if: always()
+        env:
+          RESULTATS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          case " $RESULTATS " in
+            *' failure '*)
+              ISSUE=echec
+              ;;
+            *' cancelled '*)
+              # Dépôt public : la tête de main se lit sans jeton
+              TETE=$(git ls-remote "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" refs/heads/main | cut -f1)
+              if [ -z "$TETE" ] || [ "$TETE" = "$GITHUB_SHA" ]; then
+                ISSUE=echec
+              else
+                ISSUE=succes
+              fi
+              ;;
+            *)
+              ISSUE=succes
+              ;;
+          esac
+          echo "jobs : $RESULTATS -> $ISSUE"
+          echo "issue=$ISSUE" >> "$GITHUB_OUTPUT"
+
+      # Historique complet, pour comparer le push à son état antérieur, mais sans le contenu
+      # des fichiers : sparse-checkout fait un clone partiel (blob:none). Le diff ne lit que les
+      # arbres, moins de 3 Mo pour tout l'historique, contre plus de 800 Mo d'images et de vidéos.
+      - name: Checkout repository
+        if: github.event_name == 'push' && steps.bilan.outputs.issue == 'succes'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          sparse-checkout: .github
+          persist-credentials: false
+
+      # Uniquement sur push, et seulement si le diff touche un fichier que deploy.sh envoie
+      # (même liste que son rsync). Les commits de doc, de CI, de scripts ou de dépendances se
+      # déploient en silence : le site est servi tel quel, aucune dépendance npm n'y entre, et
+      # une notification qui sonne pour rien finit ignorée. Le titre du commit passe par env
+      # (jamais interpolé dans le shell).
+      - name: Notification de mise à jour du site
+        if: github.event_name == 'push' && steps.bilan.outputs.issue == 'succes'
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AVANT: ${{ github.event.before }}
+          TITRE: ${{ github.event.head_commit.message }}
+        run: |
+          # Pages, service worker, manifeste, icônes, robots.txt, sitemap.xml, et les
+          # dossiers assets/, css/, img/, js/.
+          SITE='^(assets|css|img|js)/|^((index|modes|offline|parents|pwa)\.html|sw\.js|manifest\.json|favicon\.(ico|png|svg)|robots\.txt|sitemap\.xml)$'
+          # Ancien commit connu et aucun fichier du site touché : silence.
+          # Ancien commit inconnu (force-push, historique réécrit) : on
+          # notifie — mieux vaut un ping en trop qu'une mise à jour muette.
+          # --no-renames : un fichier sorti du site compte, et le diff s'en tient
+          # aux arbres ; -z : chemins bruts, jamais entre guillemets (accents).
+          if git cat-file -e "${AVANT}^{commit}" 2>/dev/null \
+            && ! git diff --name-only --no-renames -z "$AVANT" HEAD | grep -qzE "$SITE"; then
+            echo "aucun changement de contenu : déploiement silencieux"
+            exit 0
+          fi
+          TXT="✅ leapmultix.jls42.org mis à jour — $(printf '%s' "$TITRE" | head -n 1)"
+          REP=$(curl -sS --max-time 25 --retry 3 --retry-delay 5 \
+            "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${CHAT_ID}" \
+            -d "disable_web_page_preview=true" \
+            --data-urlencode "text=${TXT}")
+          if printf '%s' "$REP" | grep -q '"ok":true'; then
+            echo "notification envoyée"
+          else
+            echo "::error::Telegram a refusé la notification : $REP"
+            exit 1
+          fi
+
+      # Un job en échec (voir le bilan), ou le test manuel du chemin d'envoi (test_notif,
+      # « Run workflow » sur main) : une alerte qu'on n'a jamais vue partir n'existe pas.
+      # always() : elle part même si le run a été annulé. Un échec hors de la chaîne de
+      # déploiement (le rapport SEO, qui ne la conditionne pas) laisse le job deploy réussir :
+      # le message le dit, plutôt que d'annoncer un site resté en l'état (seul échec des 100
+      # derniers runs de main, le 14/10/2026). La réponse de l'API est vérifiée : un refus
+      # Telegram fait échouer l'étape au lieu de prétendre avoir alerté.
+      - name: Alerte Telegram en cas d'échec
+        if: always() && (steps.bilan.outputs.issue == 'echec' || (steps.bilan.outputs.issue == 'succes' && github.event_name == 'workflow_dispatch' && inputs.test_notif))
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ISSUE: ${{ steps.bilan.outputs.issue }}
+          DEPLOIEMENT: ${{ needs.deploy.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$ISSUE" != "echec" ]; then
+            TXT="🔔 TEST de l'alerte CI de leapmultix.jls42.org — secrets et chemin d'envoi OK."
+          elif [ "$DEPLOIEMENT" = "success" ]; then
+            TXT="⛔ leapmultix.jls42.org : un job de la CI a échoué, mais le déploiement a réussi. Détail : $RUN_URL"
+          elif [ "$DEPLOIEMENT" = "failure" ] || [ "$DEPLOIEMENT" = "cancelled" ]; then
+            # deploy.sh a pu commencer la synchronisation S3.
+            TXT="⛔ leapmultix.jls42.org : le déploiement a échoué en cours de route. Le site en ligne a pu changer. Détail : $RUN_URL"
+          else
+            TXT="⛔ leapmultix.jls42.org : le déploiement a échoué. Le site en ligne n'a pas bougé. Détail : $RUN_URL"
+          fi
+          REP=$(curl -sS --max-time 25 --retry 3 --retry-delay 5 \
+            "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${CHAT_ID}" \
+            -d "disable_web_page_preview=true" \
+            --data-urlencode "text=${TXT}")
+          if printf '%s' "$REP" | grep -q '"ok":true'; then
+            echo "alerte envoyée"
+          else
+            echo "::error::Telegram a refusé l'alerte : $REP"
+            exit 1
           fi
