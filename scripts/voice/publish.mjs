@@ -668,10 +668,10 @@ async function publishLanguage(ctx, phrases) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  Promise.resolve()
-    .then(() => publish(parsePublishArgs(process.argv.slice(2))))
-    .catch(error => {
-      console.error(error.message);
-      process.exitCode = 1;
-    });
+  try {
+    await publish(parsePublishArgs(process.argv.slice(2)));
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
 }

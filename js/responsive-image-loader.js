@@ -4,53 +4,51 @@
  */
 
 class ResponsiveImageLoader {
+  imageMap = null;
+  imageMapPaths = ['/assets/generated-images/image-map.json', '/assets/images/image-map.json'];
+  activeImageMapPath = null;
+  imageCache = new Map();
+  loadingPromises = new Map();
+
+  // Configuration des breakpoints
+  breakpoints = {
+    mobile: 480,
+    tablet: 768,
+    desktop: 1200,
+    largeDesktop: 1920,
+  };
+
+  // Mapping tailles selon contexte
+  sizeContexts = {
+    monster: {
+      mobile: 128,
+      tablet: 256,
+      desktop: 512,
+      largeDesktop: 512,
+    },
+    logo: {
+      mobile: 128,
+      tablet: 256,
+      desktop: 256,
+      largeDesktop: 256,
+    },
+    ui: {
+      mobile: 64,
+      tablet: 64,
+      desktop: 128,
+      largeDesktop: 128,
+    },
+    background: {
+      mobile: 256,
+      tablet: 512,
+      desktop: 1024,
+      largeDesktop: 1024,
+    },
+  };
+
   constructor() {
-    this.imageMap = null;
-    this.imageMapPaths = [
-      '/assets/generated-images/image-map.json',
-      '/assets/images/image-map.json',
-    ];
-    this.activeImageMapPath = null;
     this.devicePixelRatio = window.devicePixelRatio || 1;
     this.screenWidth = window.innerWidth;
-    this.imageCache = new Map();
-    this.loadingPromises = new Map();
-
-    // Configuration des breakpoints
-    this.breakpoints = {
-      mobile: 480,
-      tablet: 768,
-      desktop: 1200,
-      largeDesktop: 1920,
-    };
-
-    // Mapping tailles selon contexte
-    this.sizeContexts = {
-      monster: {
-        mobile: 128,
-        tablet: 256,
-        desktop: 512,
-        largeDesktop: 512,
-      },
-      logo: {
-        mobile: 128,
-        tablet: 256,
-        desktop: 256,
-        largeDesktop: 256,
-      },
-      ui: {
-        mobile: 64,
-        tablet: 64,
-        desktop: 128,
-        largeDesktop: 128,
-      },
-      background: {
-        mobile: 256,
-        tablet: 512,
-        desktop: 1024,
-        largeDesktop: 1024,
-      },
-    };
 
     // Démarrer l'initialisation async séparément du constructeur
     setTimeout(() => this.init(), 0);
@@ -233,7 +231,7 @@ class ResponsiveImageLoader {
     if (larger) return larger;
 
     // Si aucune taille supérieure, prendre la plus grande disponible
-    return availableSizes[availableSizes.length - 1];
+    return availableSizes.at(-1);
   }
 
   async loadOptimalImage(img, optimalUrl, fallbackUrl) {

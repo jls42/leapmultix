@@ -604,20 +604,22 @@ if (
   import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
 ) {
   const auditor = new AccessibilityAuditor();
-  auditor
-    .runAudit()
-    .then(score => {
-      console.log(`\n✅ Audit terminé avec score global: ${score}/100`);
+  try {
+    const score = await auditor.runAudit();
+    console.log(`\n✅ Audit terminé avec score global: ${score}/100`);
 
-      if (score >= 80) {
-        console.log('🎉 Excellente accessibilité !');
-      } else if (score >= 60) {
-        console.log('⚠️ Accessibilité correcte, améliorations possibles');
-      } else {
-        console.log('🚨 Accessibilité insuffisante, corrections nécessaires');
-      }
-    })
-    .catch(console.error);
+    if (score >= 80) {
+      console.log('🎉 Excellente accessibilité !');
+    } else if (score >= 60) {
+      console.log('⚠️ Accessibilité correcte, améliorations possibles');
+    } else {
+      console.log('🚨 Accessibilité insuffisante, corrections nécessaires');
+    }
+  } catch (error) {
+    // Un audit en échec sort en erreur, comme audit-mobile-responsive.js
+    console.error(error);
+    process.exitCode = 1;
+  }
 }
 
 export { AccessibilityAuditor };

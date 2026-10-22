@@ -239,10 +239,7 @@ export const UserManager = {
    * @returns {Object} Données utilisateur avec valeurs par défaut
    */
   getCurrentUserData() {
-    if (
-      !this._currentUser ||
-      !Object.prototype.hasOwnProperty.call(this._players, this._currentUser)
-    ) {
+    if (!this._currentUser || !Object.hasOwn(this._players, this._currentUser)) {
       return createDefaultUserData(this._currentUser || '');
     }
 
@@ -256,11 +253,7 @@ export const UserManager = {
    * @param {Object} gameState - État actuel du jeu
    */
   saveCurrentUserData(gameState) {
-    if (
-      !this._currentUser ||
-      !Object.prototype.hasOwnProperty.call(this._players, this._currentUser)
-    )
-      return;
+    if (!this._currentUser || !Object.hasOwn(this._players, this._currentUser)) return;
 
     const userData = this._players[this._currentUser];
 
@@ -295,11 +288,7 @@ export const UserManager = {
    *   courant, ou si le navigateur refuse d'écrire (navigation privée, place manquante)
    */
   updateCurrentUserData(updatedData) {
-    if (
-      !this._currentUser ||
-      !Object.prototype.hasOwnProperty.call(this._players, this._currentUser)
-    )
-      return false;
+    if (!this._currentUser || !Object.hasOwn(this._players, this._currentUser)) return false;
 
     this._players[this._currentUser] = {
       ...this._players[this._currentUser],
@@ -409,11 +398,9 @@ export const UserManager = {
   selectUser(name) {
     const raw = typeof name === 'string' ? name : '';
     // Clé exacte d'abord : les prénoms rangés par l'ancienne règle (« Léa B. ») restent valables
-    const key = Object.prototype.hasOwnProperty.call(this._players, raw)
-      ? raw
-      : normalizeUsername(raw);
+    const key = Object.hasOwn(this._players, raw) ? raw : normalizeUsername(raw);
 
-    if (!Object.prototype.hasOwnProperty.call(this._players, key)) {
+    if (!Object.hasOwn(this._players, key)) {
       console.error(`Utilisateur "${name}" non trouvé`);
       return null;
     }
@@ -528,10 +515,8 @@ export const UserManager = {
    * @returns {boolean} Succès de la suppression
    */
   deleteUser(name) {
-    const key = Object.prototype.hasOwnProperty.call(this._players, name)
-      ? name
-      : normalizeUsername(name);
-    if (!Object.prototype.hasOwnProperty.call(this._players, key)) {
+    const key = Object.hasOwn(this._players, name) ? name : normalizeUsername(name);
+    if (!Object.hasOwn(this._players, key)) {
       console.error(`Utilisateur "${name}" non trouvé`);
       return false;
     }
@@ -584,7 +569,7 @@ export const UserManager = {
     const index = trash.findIndex(entry => entry.name === name && entry.deletedAt === deletedAt);
     if (index === -1) return { ok: false, name, problem: 'missing' };
     // Un joueur de la liste porte ce prénom : il n'est pas écrasé
-    if (Object.prototype.hasOwnProperty.call(this._players, name)) {
+    if (Object.hasOwn(this._players, name)) {
       return { ok: false, name, problem: 'exists' };
     }
     this._addPlayer(name, trash.at(index).data);

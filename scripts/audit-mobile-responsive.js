@@ -470,10 +470,12 @@ if (
   import.meta.url === pathToFileURL(path.resolve(globalThis.process.argv[1])).href
 ) {
   const auditor = new MobileResponsiveAuditor();
-  auditor.runCompleteAudit().catch(error => {
+  try {
+    await auditor.runCompleteAudit();
+  } catch (error) {
     console.error(error);
     globalThis.process.exitCode = 1;
-  });
+  }
 }
 
 export default MobileResponsiveAuditor;

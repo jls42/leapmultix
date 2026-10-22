@@ -227,7 +227,9 @@ process.on('uncaughtException', error => {
 });
 
 // Exécution
-main().catch(error => {
+try {
+  await main();
+} catch (error) {
   console.error('\n❌ Erreur:', error.message);
   process.exit(1);
-});
+}

@@ -249,12 +249,10 @@ async function main(argv) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main(process.argv.slice(2))
-    .then(code => {
-      process.exitCode = code;
-    })
-    .catch(error => {
-      console.error(error.message);
-      process.exitCode = 1;
-    });
+  try {
+    process.exitCode = await main(process.argv.slice(2));
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
 }

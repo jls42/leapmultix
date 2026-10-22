@@ -78,7 +78,7 @@ function createIcon(shapes) {
  */
 function nextTrappedFocus(container, focusables, versLArriere) {
   const first = focusables[0];
-  const last = focusables[focusables.length - 1];
+  const last = focusables.at(-1);
   const active = document.activeElement;
   if (!container.contains(active)) return versLArriere ? last : first;
   if (versLArriere && active === first) return last;

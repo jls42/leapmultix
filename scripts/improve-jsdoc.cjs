@@ -8,10 +8,8 @@
 const fs = require('node:fs');
 
 class JSDocImprover {
-  constructor() {
-    this.improvements = 0;
-    this.processedFiles = [];
-  }
+  improvements = 0;
+  processedFiles = [];
 
   /**
    * Améliorer la documentation des modules core prioritaires

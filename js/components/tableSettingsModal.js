@@ -327,7 +327,7 @@ export const TableSettingsModal = {
     const focusable = this.getFocusableElements();
     if (focusable.length === 0) return;
     const first = focusable[0];
-    const last = focusable[focusable.length - 1];
+    const last = focusable.at(-1);
     const cible = e.shiftKey && document.activeElement === first ? last : null;
     const suite = !e.shiftKey && document.activeElement === last ? first : cible;
     if (!suite) return;

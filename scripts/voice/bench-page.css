@@ -311,8 +311,10 @@ textarea {
   white-space: nowrap;
 }
 
+/* !important : la préférence l'emporte sur les transitions de chaque élément, que le
+   sélecteur * ne battrait pas (levée Sonar css:S9423). */
 @media (prefers-reduced-motion: reduce) {
   * {
-    transition: none !important;
+    transition: none !important; /* NOSONAR */
   }
 }

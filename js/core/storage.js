@@ -117,7 +117,7 @@ const Storage = {
     if (!userId) return {};
     const players = this.get(STORAGE_KEYS.PLAYERS, {});
 
-    return Object.prototype.hasOwnProperty.call(players, userId) ? players[userId] : {};
+    return Object.hasOwn(players, userId) ? players[userId] : {};
   },
 
   // === FONCTIONS SPÉCIALISÉES UTILISATEURS ===
@@ -189,7 +189,7 @@ const Storage = {
     if (
       currentUser &&
       players &&
-      Object.prototype.hasOwnProperty.call(players, currentUser) &&
+      Object.hasOwn(players, currentUser) &&
       players[currentUser].volume !== undefined
     ) {
       return Math.max(0, Math.min(1, players[currentUser].volume));
@@ -213,7 +213,7 @@ const Storage = {
      * @param {*} currentUser - Description du paramètre
      * @returns {*} Description du retour
      */
-    if (currentUser && players && Object.prototype.hasOwnProperty.call(players, currentUser)) {
+    if (currentUser && players && Object.hasOwn(players, currentUser)) {
       players[currentUser].volume = volumeLevel;
       this.savePlayers(players);
     }

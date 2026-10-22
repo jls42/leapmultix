@@ -34,10 +34,11 @@ function activeElementOwnsKey(key) {
 }
 
 class KeyboardNavigation {
+  isKeyboardMode = false;
+  focusableElements = [];
+  currentFocusIndex = -1;
+
   constructor() {
-    this.isKeyboardMode = false;
-    this.focusableElements = [];
-    this.currentFocusIndex = -1;
     this.abortController =
       typeof AbortController !== 'undefined'
         ? new AbortController()
@@ -289,7 +290,7 @@ class KeyboardNavigation {
     event.preventDefault();
     this.updateFocusableElements();
     if (this.focusableElements.length > 0) {
-      this.focusableElements[this.focusableElements.length - 1].focus();
+      this.focusableElements.at(-1).focus();
     }
   }
 

@@ -194,7 +194,7 @@ let _appliedBackgroundKey = null;
  * @returns {number}
  */
 function chooseImageNumber(avatarKey, available) {
-  if (!Object.prototype.hasOwnProperty.call(_chosenImageByAvatar, avatarKey)) {
+  if (!Object.hasOwn(_chosenImageByAvatar, avatarKey)) {
     _chosenImageByAvatar[avatarKey] = pickRandom(available);
   }
   return _chosenImageByAvatar[avatarKey];

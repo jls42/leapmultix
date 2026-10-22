@@ -308,7 +308,7 @@ export class DiscoveryMode extends GameMode {
     const cards = [...(this.gameScreen?.children ?? [])].filter(child =>
       child.classList.contains('content-card')
     );
-    this._root = cards[cards.length - 1] ?? null;
+    this._root = cards.at(-1) ?? null;
     if (!this._root) return;
 
     if (this.phase === 'selection') {
