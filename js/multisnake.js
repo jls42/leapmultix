@@ -895,7 +895,7 @@ class SnakeGame {
       this.snake = this.multisnake;
 
       // Réinitialiser aussi le serpent précédent pour éviter les animations bizarres
-      this.lastPositions = JSON.parse(JSON.stringify(this.multisnake));
+      this.lastPositions = this.multisnake.map(segment => ({ ...segment }));
       this.animationProgress = 1; // Pas d'animation pendant la réinitialisation
 
       this.direction = { x: 1, y: 0 };
@@ -1101,7 +1101,7 @@ class SnakeGame {
   drawSnakeTail(tail, multisnakePositions) {
     const tailDir = { x: 0, y: 0 };
     if (multisnakePositions.length > 1) {
-      const beforeTail = multisnakePositions[multisnakePositions.length - 2];
+      const beforeTail = multisnakePositions.at(-2);
       const calculatedTailDir = this.calculateTailDirection(tail, beforeTail);
       tailDir.x = calculatedTailDir.x;
       tailDir.y = calculatedTailDir.y;
@@ -1133,7 +1133,7 @@ class SnakeGame {
     this.drawSnakeHead(head);
 
     // Queue
-    const tail = multisnakePositions[multisnakePositions.length - 1];
+    const tail = multisnakePositions.at(-1);
     this.drawSnakeTail(tail, multisnakePositions);
   }
 

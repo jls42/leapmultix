@@ -157,21 +157,22 @@ a {
 }
 
 /* Utilitaires : !important nécessaire pour l'emporter sur l'affichage propre à
-   un composant (ex. .top-bar .icon-btn en inline-flex). */
+   un composant (ex. .top-bar .icon-btn en inline-flex). Sonar le signale
+   (css:S9423) : chaque ligne porte sa levée. */
 .hidden {
-  display: none !important;
+  display: none !important; /* NOSONAR */
 }
 
 .sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip-path: inset(50%) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
+  position: absolute !important; /* NOSONAR */
+  width: 1px !important; /* NOSONAR */
+  height: 1px !important; /* NOSONAR */
+  padding: 0 !important; /* NOSONAR */
+  margin: -1px !important; /* NOSONAR */
+  overflow: hidden !important; /* NOSONAR */
+  clip-path: inset(50%) !important; /* NOSONAR */
+  white-space: nowrap !important; /* NOSONAR */
+  border: 0 !important; /* NOSONAR */
 }
 
 [aria-live].sr-only {
@@ -183,11 +184,12 @@ a {
 }
 
 /* === FOCUS : toujours visible au clavier, jamais au clic ===
-   !important : l'anneau l'emporte sur tout « outline: none » d'un composant. */
+   !important : l'anneau l'emporte sur tout « outline: none » d'un composant
+   (levée Sonar css:S9423 sur chaque ligne). */
 :focus-visible,
 .keyboard-navigation :focus {
-  outline: 3px solid var(--color-focus) !important;
-  outline-offset: 3px !important;
+  outline: 3px solid var(--color-focus) !important; /* NOSONAR */
+  outline-offset: 3px !important; /* NOSONAR */
 }
 
 /* === LIEN D'ÉVITEMENT : sur l'accueil seulement, premier arrêt de tabulation, visible

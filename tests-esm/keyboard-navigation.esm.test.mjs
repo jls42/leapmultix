@@ -116,4 +116,32 @@ describe('Navigation clavier globale', () => {
     appuyer('ArrowLeft');
     expect(document.activeElement).toBe(reponses[0]);
   });
+
+  test('Début et Fin restent sur l’écran affiché, sans la barre du haut d’un écran masqué', () => {
+    // Chaque écran porte sa barre du haut : la première du document est celle de l'accueil,
+    // masqué pendant le tableau de bord
+    const ecran = (id, actif) => {
+      const slide = document.createElement('div');
+      slide.id = id;
+      slide.className = actif ? 'slide active-slide' : 'slide';
+      const barre = document.createElement('div');
+      barre.className = 'top-bar';
+      slide.appendChild(barre);
+      document.body.appendChild(slide);
+      return { slide, barre };
+    };
+    const accueil = ecran('slide0', false);
+    const tableauDeBord = ecran('slide7', true);
+    accueil.barre.appendChild(bouton('À propos', 0));
+    const aPropos = tableauDeBord.barre.appendChild(bouton('À propos', 0));
+    const retour = tableauDeBord.slide.appendChild(bouton('Retour à l’accueil', 100));
+    retour.focus();
+    appuyer('Tab'); // passe en mode clavier
+
+    appuyer('Home');
+    expect(document.activeElement).toBe(aPropos);
+
+    appuyer('End');
+    expect(document.activeElement).toBe(retour);
+  });
 });

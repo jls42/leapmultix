@@ -326,7 +326,7 @@ export const InfoBar = {
       const elementId = this.getElementId(key, mode);
       const element = document.getElementById(elementId);
 
-      if (element && Object.prototype.hasOwnProperty.call(updates, key)) {
+      if (element && Object.hasOwn(updates, key)) {
         this.renderValue(element, key, updates[key]);
       }
     });

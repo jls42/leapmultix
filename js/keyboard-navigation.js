@@ -34,10 +34,11 @@ function activeElementOwnsKey(key) {
 }
 
 class KeyboardNavigation {
+  isKeyboardMode = false;
+  focusableElements = [];
+  currentFocusIndex = -1;
+
   constructor() {
-    this.isKeyboardMode = false;
-    this.focusableElements = [];
-    this.currentFocusIndex = -1;
     this.abortController =
       typeof AbortController !== 'undefined'
         ? new AbortController()
@@ -137,14 +138,10 @@ class KeyboardNavigation {
   }
 
   isElementVisible(element) {
-    // Vérifier si l'élément est dans la slide active
+    // Seule la slide active compte : chaque slide porte sa propre barre du haut, et celle
+    // d'une slide masquée (la première du document est celle de l'accueil) ne prend pas le focus
     const activeSlide = document.querySelector('.slide.active-slide');
-    if (activeSlide && !activeSlide.contains(element)) {
-      // Sauf si c'est dans la top-bar qui est globale
-      const topBar = document.querySelector('.top-bar');
-      return Boolean(topBar?.contains(element));
-    }
-    return true;
+    return !activeSlide || activeSlide.contains(element);
   }
 
   /** Touche à laisser passer : hors mode clavier, déjà traitée, ou gardée par l'élément actif */
@@ -289,7 +286,7 @@ class KeyboardNavigation {
     event.preventDefault();
     this.updateFocusableElements();
     if (this.focusableElements.length > 0) {
-      this.focusableElements[this.focusableElements.length - 1].focus();
+      this.focusableElements.at(-1).focus();
     }
   }
 

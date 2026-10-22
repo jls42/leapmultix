@@ -7,10 +7,11 @@ import { pressAbandon } from './game-exit.js';
 import { translate } from './i18n-store.js';
 
 export class AccessibilityManager {
+  announcementRegion = null;
+  alertRegion = null;
+  keyboardNavigationEnabled = false;
+
   constructor() {
-    this.announcementRegion = null;
-    this.alertRegion = null;
-    this.keyboardNavigationEnabled = false;
     this.init();
   }
 

@@ -293,12 +293,13 @@ img {
   scroll-behavior: smooth;
 }
 
-/* Réduction motion si préféré */
+/* Réduction motion si préféré. !important : la préférence l'emporte sur les animations de
+   chaque composant, que le sélecteur * ne battrait pas (levée Sonar css:S9423 par ligne). */
 @media (prefers-reduced-motion: reduce) {
   * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important; /* NOSONAR */
+    animation-iteration-count: 1 !important; /* NOSONAR */
+    transition-duration: 0.01ms !important; /* NOSONAR */
   }
 }
 
