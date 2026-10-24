@@ -15,7 +15,6 @@ import './accessibility.js';
 import './keyboard-navigation.js';
 import './security-utils.js';
 import './touch-support.js';
-import './responsive-image-loader.js';
 import './error-handlers.js';
 
 // --- UI de base ---
