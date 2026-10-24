@@ -83,14 +83,6 @@ img {
   width: 100%;
 }
 
-.card-base {
-  width: 100%;
-  margin: 5px 0;
-  max-height: 85vh;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-}
-
 /* Optimisation générale layout mobile */
 @media (max-width: 768px) {
   body {
@@ -154,12 +146,6 @@ img {
     align-items: flex-start;
   }
 
-  .card-base {
-    width: calc(50% - 10px);
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-
   /* Arcade cards plus compactes */
   #multimiam-arcade-card,
   #multimemory-arcade-card,
@@ -191,11 +177,6 @@ img {
     min-height: auto; /* Remove forced height on desktop */
   }
 
-  /* Cartes en 3 colonnes */
-  .card-base {
-    width: calc(33.333% - 15px);
-  }
-
   /* Boutons plus petits sur desktop */
   .btn-sm-desktop {
     padding: 6px 12px;
@@ -213,11 +194,6 @@ img {
   .grid-responsive {
     grid-template-columns: repeat(4, 1fr);
     gap: 25px;
-  }
-
-  /* Cartes en 4 colonnes */
-  .card-base {
-    width: calc(25% - 20px);
   }
 }
 
@@ -285,12 +261,6 @@ img {
 .slide-transition {
   will-change: transform;
   transform: translateZ(0);
-}
-
-/* Optimisation scrolling */
-.scroll-container {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
 }
 
 /* Réduction motion si préféré. !important : la préférence l'emporte sur les animations, les

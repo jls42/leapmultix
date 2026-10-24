@@ -706,36 +706,6 @@ body:has(#slide1.active-slide) .skip-link:focus {
   }
 }
 
-/* === CARTE GÉNÉRIQUE === */
-.card-base {
-  display: inline-block;
-  margin: 5px;
-  padding: var(--space-4);
-  vertical-align: top;
-  text-align: left;
-  color: var(--color-ink);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  transition:
-    transform var(--dur-base) var(--ease-out),
-    box-shadow var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out);
-}
-
-.card-base--clickable {
-  cursor: pointer;
-}
-
-@media (hover: hover) {
-  .card-base--clickable:hover {
-    border-color: var(--color-action);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-  }
-}
-
 /* === NOTIFICATIONS : toasts (messages et badges) ===
    Une seule apparence : surface, contour d'action, ombre neutre.
    - .message-popup (js/ui-feedback.js) : un message, en bas au centre ;

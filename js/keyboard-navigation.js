@@ -118,7 +118,6 @@ class KeyboardNavigation {
       '[tabindex]:not([tabindex="-1"]):not([hidden])',
       '.background-btn:not([hidden])',
       '.color-theme-btn:not([hidden])',
-      '.card-base--clickable:not([hidden])',
       '.difficulty-btn:not([hidden])',
       'canvas[tabindex]:not([hidden])',
     ];
@@ -192,8 +191,7 @@ class KeyboardNavigation {
       }
     } else if (
       activeElement.classList.contains('background-btn') ||
-      activeElement.classList.contains('color-theme-btn') ||
-      activeElement.classList.contains('card-base--clickable')
+      activeElement.classList.contains('color-theme-btn')
     ) {
       event.preventDefault();
       activeElement.click();
