@@ -189,7 +189,6 @@ npm run verify:cleanup # Analyse combinée (dead code + globals)
 # Gestion des assets
 npm run assets:generate    # Générer les images responsives
 npm run assets:backgrounds # Convertir les fonds en WebP
-npm run assets:analyze     # Analyse des assets responsive
 npm run assets:diff        # Comparaison des assets
 
 # Internationalisation
@@ -265,7 +264,7 @@ leapmultix/
 │   ├── voice-clips.js      # Lecteur de la voix enregistrée (repli : speech.js)
 │   ├── slides.js, mode-orchestrator.js, lazy-loader.js, game-cleanup.js
 │   ├── game-exit.js        # Une seule règle pour quitter une partie en cours
-│   ├── VideoManager.js, responsive-image-loader.js
+│   ├── VideoManager.js
 │   ├── userManager.js, main-helpers.js, utils-es6.js, questionGenerator.js
 │   └── main-es6.js, main.js, bootstrap.js, game.js   # Points d'entrée
 ├── css/                    # Feuilles de style (jetons de design : themes.css)
