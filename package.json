@@ -50,7 +50,6 @@
     "test:esm": "NODE_OPTIONS=--experimental-vm-modules jest --maxWorkers=50% tests-esm --testMatch \"**/*.test.mjs\"",
     "assets:generate": "node scripts/generate-responsive-assets.cjs",
     "assets:backgrounds": "node scripts/convert-backgrounds.cjs",
-    "assets:analyze": "node scripts/analyze-responsive-usage.cjs",
     "plugin:sync": "node scripts/sync-plugin-assets.mjs",
     "build:sitemap": "node scripts/generate-sitemap.cjs",
     "i18n:readme": "bash scripts/regen-readme-translations.sh"

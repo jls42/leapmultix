@@ -45,7 +45,6 @@ npm run verify      # Run lint + test + test:esm with coverage (quality gate)
 - `npm run serve:dist` - Serve production build from dist/ (127.0.0.1, port 5000)
 - `npm run assets:generate` - Generate responsive image assets (obligatoire dès qu'un PNG est ajouté/modifié afin de rafraîchir `assets/generated-images/` avant `deploy.sh`)
 - `npm run assets:backgrounds` - Convert `img/background_*.png` en WebP (à lancer si tu ajoutes/modifies un fond animé)
-- `npm run assets:analyze` - Analyze responsive asset usage
 - `npm run assets:diff` - Compare asset changes
 
 ### Audit and Quality Checks
