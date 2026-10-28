@@ -585,7 +585,8 @@ export class DiscoveryMode extends GameMode {
     const divisor = this._getPlan().drop.value;
     const multiples = getTranslation('division_tip_multiples', { divisor });
     if (!DIVISIBILITY_RULES.includes(divisor)) return multiples;
-    return `${multiples}\n${getTranslation(`division_tip_${divisor}`)}`;
+    const rule = getTranslation(`division_tip_${divisor}`);
+    return `${multiples}\n${rule}`;
   }
 
   /**
