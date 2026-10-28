@@ -13,9 +13,9 @@
       {
         "rule": "broken-image",
         "value": "*",
-        "files": ["js/modes/DiscoveryMode.js"],
+        "files": ["js/modes/DiscoveryMode.js", "js/modes/AdventureMode.js"],
         "createdAt": "2026-10-28T20:32:25.640Z",
-        "reason": "Claude : faux positif, le détecteur ne lit pas les attributs écrits par ${…}. La tête de la mascotte reçoit src, srcset, sizes et data-fallback de avatarHeadAttributes() (js/webp-images.js, webpImage), vérifiés par tests-esm/modes/discovery-mode.esm.test.mjs"
+        "reason": "Claude : faux positif, le détecteur ne lit pas les attributs écrits par ${…}. La tête de la mascotte (Découverte) reçoit src, srcset, sizes et data-fallback de avatarHeadAttributes(), le cadeau et le personnage de la scène (Aventure) de webpImageAttributes() (js/webp-images.js, webpImage), vérifiés par tests-esm/modes/discovery-mode.esm.test.mjs"
       }
     ]
   }
