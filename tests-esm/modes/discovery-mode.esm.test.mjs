@@ -34,6 +34,13 @@ const dictionaries = {
     discovery_speech_division: '{a} divisé par {b} égale {result}',
     hint: 'Indice',
     mnemonic_7: 'Pense au calendrier ! Une semaine = 7 jours, deux semaines = 14 jours…',
+    division_tip_multiples: 'Les nombres de la table de {divisor} sont les multiples de {divisor}.',
+    division_tip_2: 'Critère de 2',
+    division_tip_3: 'Critère de 3',
+    division_tip_5: 'Critère de 5',
+    division_tip_6: 'Critère de 6',
+    division_tip_9: 'Critère de 9',
+    division_tip_10: 'Critère de 10',
     group: 'Groupe',
   },
   en: {
@@ -47,7 +54,7 @@ let lang = 'fr';
 const translate = (key, params = {}) => {
   const value = dictionaries[lang][key];
   if (value === undefined) return `[${key}]`;
-  return Object.entries(params).reduce((text, [p, v]) => text.replace(`{${p}}`, v), value);
+  return Object.entries(params).reduce((text, [p, v]) => text.replaceAll(`{${p}}`, v), value);
 };
 
 const speakMock = jest.fn();
@@ -97,6 +104,19 @@ function createMode(operator = '×') {
   mode.operator = operator;
   mode.operation = getOperation(operator);
   return mode;
+}
+
+/**
+ * Mode Division d'un niveau dont le tirage a donné ce diviseur (le tirage est
+ * aléatoire : on recommence jusqu'à l'obtenir, 1 chance sur 4 au pire)
+ */
+function divisionModeWith(level, divisor) {
+  for (let attempt = 0; attempt < 500; attempt++) {
+    const mode = createMode('÷');
+    mode.currentLevel = level;
+    if (mode._getPlan().drop.value === divisor) return mode;
+  }
+  throw new Error(`Diviseur ${divisor} jamais tiré au niveau ${level}`);
 }
 
 /** Analyse une chaîne HTML (sans l'insérer dans la page) pour l'interroger */
@@ -477,6 +497,40 @@ describe('ESM: Découverte, exploration', () => {
     const fox = frag.querySelector('.mnemonic-mascot');
     expect(fox.dataset.fallback).toBe('assets/images/arcade/fox_head_avatar_128x128.png');
     expect(fox.getAttribute('srcset')).not.toMatch(/evil/);
+  });
+
+  test.each([
+    ['easy', 3, 'Critère de 3'],
+    ['easy', 4, null],
+    ['medium', 9, 'Critère de 9'],
+    ['medium', 10, 'Critère de 10'],
+    ['hard', 11, null],
+  ])(
+    'division %s, diviseur %i : la mascotte nomme les multiples, puis le critère s’il existe',
+    (level, divisor, rule) => {
+      const mode = divisionModeWith(level, divisor);
+      const frag = toFragment(mode.getTableExplorationHTML());
+      expect(frag.querySelector('.mnemonic-tip img.mnemonic-mascot')).not.toBeNull();
+      const lines = frag.querySelector('.mnemonic-tip p').textContent.split('\n');
+      // Le nombre reste collé au mot qui le suit (« 11 sont »)
+      expect(lines[0]).toBe(
+        `Les nombres de la table de ${divisor}\u00a0sont les multiples de ${divisor}.`
+      );
+      expect(lines.slice(1)).toEqual(rule ? [rule] : []);
+      // Les nombres du carrousel sont bien ceux de la table du diviseur nommé
+      mode._getPlan().examples.forEach(({ a, b }) => {
+        expect(b).toBe(divisor);
+        expect(a % divisor).toBe(0);
+      });
+    }
+  );
+
+  test('addition et soustraction : pas d’astuce de mascotte', () => {
+    for (const operator of ['+', '−']) {
+      const mode = createMode(operator);
+      mode.currentLevel = 'easy';
+      expect(toFragment(mode.getTableExplorationHTML()).querySelector('.mnemonic-tip')).toBeNull();
+    }
   });
 
   test('l’indice ne coupe pas ses égalités en fin de ligne', () => {

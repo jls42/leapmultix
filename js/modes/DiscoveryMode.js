@@ -23,6 +23,7 @@ import { attachImageFallbacks } from '../webp-images.js';
 import {
   DISCOVERY_FACTORS,
   DISCOVERY_TABLES,
+  DIVISIBILITY_RULES,
   DIVISION_LEVELS,
   DROP_PLANS,
   EXAMPLE_BANDS,
@@ -518,7 +519,7 @@ export class DiscoveryMode extends GameMode {
                         <div id="animation-container" class="animation-container"></div>
                     </div>
 
-                    ${isMultiplication ? this._renderMnemonicHTML() : ''}
+                    ${this._renderTipHTML()}
                 </div>
 
                 ${this.generateNumberLineHTML()}
@@ -561,13 +562,41 @@ export class DiscoveryMode extends GameMode {
   }
 
   /**
-   * Astuce de la table, donnée par la mascotte du joueur. Ses égalités ne se coupent
-   * pas en fin de ligne (« une semaine = 7 jours »).
+   * Astuce de l'écran : celle de la table (×) ou celle du diviseur tiré (÷) ; aucune
+   * pour l'addition et la soustraction
    * @returns {string}
    * @private
    */
-  _renderMnemonicHTML() {
-    const tip = keepNumbersTogether(getTranslation(`mnemonic_${this.currentTable}`));
+  _renderTipHTML() {
+    if (this.operator === '×') {
+      return this._renderMnemonicHTML(getTranslation(`mnemonic_${this.currentTable}`));
+    }
+    if (this.operator === '÷') return this._renderMnemonicHTML(this._getDivisionTip());
+    return '';
+  }
+
+  /**
+   * Division : les nombres du carrousel sont les multiples du diviseur ; pour ceux de
+   * DIVISIBILITY_RULES, une seconde ligne donne le critère de divisibilité
+   * @returns {string}
+   * @private
+   */
+  _getDivisionTip() {
+    const divisor = this._getPlan().drop.value;
+    const multiples = getTranslation('division_tip_multiples', { divisor });
+    if (!DIVISIBILITY_RULES.includes(divisor)) return multiples;
+    return `${multiples}\n${getTranslation(`division_tip_${divisor}`)}`;
+  }
+
+  /**
+   * Astuce donnée par la mascotte du joueur. Ses égalités ne se coupent pas en fin de
+   * ligne (« une semaine = 7 jours »).
+   * @param {string} text
+   * @returns {string}
+   * @private
+   */
+  _renderMnemonicHTML(text) {
+    const tip = keepNumbersTogether(text);
     return `
                     <div class="mnemonic-tip">
                         <img class="mnemonic-mascot" ${this._getMascotHeadAttributes()} alt="" width="56" height="56" />
