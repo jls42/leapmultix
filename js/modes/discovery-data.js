@@ -63,6 +63,12 @@ export const DIVISION_LEVELS = {
 };
 
 /**
+ * Diviseurs dont l'astuce donne aussi un critère de divisibilité (clés division_tip_<d>) ;
+ * les autres n'ont que la ligne sur les multiples
+ */
+export const DIVISIBILITY_RULES = [2, 3, 5, 6, 9, 10];
+
+/**
  * Manipulation (+, −) : premier terme fixé pour la visite et affiché d'emblée,
  * nombres à poser choisis pour que le résultat reste dans le niveau (jamais négatif).
  */
