@@ -189,6 +189,7 @@ const PRECACHE_CORE = [
   '/js/core/chrono-questions.js',
   '/js/core/chrono-stats.js',
   '/js/core/daily-challenge.js',
+  '/js/core/divisibility.js',
   '/js/core/eventBus.js',
   '/js/core/GameMode.js',
   '/js/core/mainInit.js',

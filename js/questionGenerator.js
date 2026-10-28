@@ -7,6 +7,7 @@ import { UserState } from './core/userState.js';
 import { getTranslation } from './utils-es6.js';
 import { getOperation } from './core/operations/OperationRegistry.js';
 import { chance, pickRandom, randomFloat } from './core/random.js';
+import { divisibilityStatement, isDivisible, pickDivisibilityPair } from './core/divisibility.js';
 
 // --- Helpers pour génération d'opérandes ---
 
@@ -149,6 +150,8 @@ function generateQuestionByType(chosenType, operation, operator, a, b, result) {
  * @returns {Object} { question, answer, type, operator, a, b, table, num }
  */
 export function generateQuestion(options) {
+  // Divisibilité : demandée par l'Aventure, jamais tirée par 'auto' (core/divisibility.js)
+  if (options?.type === 'divisibility') return generateDivisibilityQuestion();
   const settings = readQuestionOptions(options);
   const { operator, type } = settings;
   const operation = getOperation(operator);
@@ -174,6 +177,22 @@ export function generateQuestion(options) {
     b,
     table: operator === '×' ? a : undefined,
     num: operator === '×' ? b : undefined,
+  };
+}
+
+/**
+ * Phrase à juger Vrai ou Faux : « 2213 est divisible par 3 »
+ * @returns {Object} { question, answer, type, operator, a, b }, a le nombre et b le diviseur
+ */
+function generateDivisibilityQuestion() {
+  const { number, divisor } = pickDivisibilityPair();
+  return {
+    question: divisibilityStatement(number, divisor, getTranslation),
+    answer: isDivisible(number, divisor),
+    type: 'divisibility',
+    operator: '÷',
+    a: number,
+    b: divisor,
   };
 }
 

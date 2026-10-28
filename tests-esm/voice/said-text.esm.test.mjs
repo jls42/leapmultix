@@ -76,7 +76,12 @@ describe('Texte dit : en espagnol, les nombres en lettres', () => {
       '100, 101, 110, 121, 144, 200, 999',
       'cien, ciento uno, ciento diez, ciento veintiuno, ciento cuarenta y cuatro, doscientos, novecientos noventa y nueve',
     ],
-    ['Año 2026', 'Año 2026'],
+    [
+      '1000, 1001, 1100, 1250, 2213, 7041',
+      'mil, mil uno, mil cien, mil doscientos cincuenta, dos mil doscientos trece, siete mil cuarenta y uno',
+    ],
+    ['2213 es divisible entre 3', 'dos mil doscientos trece es divisible entre tres'],
+    ['Año 12026', 'Año 12026'],
   ])('%s', (text, said) => {
     expect(saidText(text, 'es')).toBe(said);
   });
