@@ -33,6 +33,7 @@ const WORDS = {
       soixante: 60,
     },
     hundreds: ['cent', 'cents'],
+    thousands: ['mille'],
     joiners: ['et'],
   },
   en: {
@@ -67,6 +68,7 @@ const WORDS = {
       ninety: 90,
     },
     hundreds: ['hundred'],
+    thousands: ['thousand'],
     joiners: ['and'],
   },
   es: {
@@ -116,6 +118,7 @@ const WORDS = {
       ciento: 100,
     },
     hundreds: [],
+    thousands: ['mil'],
     joiners: ['y'],
   },
 };
@@ -129,9 +132,17 @@ function tokens(text) {
     .filter(Boolean);
 }
 
-/** Ajoute un mot-nombre à la valeur en cours (null si le mot ne s'y enchaîne pas) */
+/**
+ * Ajoute un mot-nombre à la valeur en cours (null si le mot ne s'y enchaîne pas). « mille »
+ * multiplie ce qui précède (« deux mille » : 2000) ; « cent » ne multiplie que la partie sous
+ * mille (« deux mille deux cent treize » : 2213, pas 200 213)
+ */
 function extend(value, token, words, previous) {
-  if (words.hundreds.includes(token)) return (value || 1) * 100;
+  if (words.thousands.includes(token)) return (value || 1) * 1000;
+  if (words.hundreds.includes(token)) {
+    const belowThousand = value % 1000;
+    return value - belowThousand + (belowThousand || 1) * 100;
+  }
   const unit = words.units[token];
   if (unit === undefined) return null;
   // Français : « quatre-vingt(s) » vaut 80, pas 4 + 20
@@ -206,15 +217,21 @@ export const STRICT_LANGS = { en: STRICT, es: STRICT };
 /**
  * Écritures de Whisper sans défaut de voix, ramenées aux mots de la phrase avant la
  * comparaison : « watt » pour le « what » des questions à trou, « 18-4 » pour « 18 minus 4 »,
- * « 8 x 10 » pour « 8 times 10 », et en espagnol « 30 y 1 » pour « treinta y uno » (31)
+ * « 8 x 10 » pour « 8 times 10 », en espagnol « 30 y 1 » pour « treinta y uno » (31), et le
+ * séparateur des milliers de chaque langue (« 2,213 », « 2.213 », « 2 213 » pour 2213). Un
+ * séparateur n'est retiré que devant trois chiffres exactement : « 3,45 » ou « 10 11 » restent
+ * deux nombres.
  */
 const WHISPER_SPELLINGS = {
+  fr: [[/(?<=\d)[ \u00a0\u202f](?=\d{3}(?!\d))/g, '']],
   en: [
+    [/(?<=\d),(?=\d{3}(?!\d))/g, ''],
     [/\bwatt\b/gi, 'what'],
     [/(\d)\s*-\s*(\d)/g, '$1 minus $2'],
     [/(\d)\s*[x×]\s*(\d)/gi, '$1 times $2'],
   ],
   es: [
+    [/(?<=\d)\.(?=\d{3}(?!\d))/g, ''],
     [/\b([2-9]0) y ([1-9])\b/g, (_match, tens, unit) => String(Number(tens) + Number(unit))],
     [/(\d)\s*-\s*(\d)/g, '$1 menos $2'],
     [/(\d)\s*[x×]\s*(\d)/gi, '$1 por $2'],
