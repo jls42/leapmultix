@@ -2,10 +2,11 @@
 // Pages d'écoute des clips d'une langue, à ouvrir dans le navigateur (fichier local, dans
 // le dépôt privé des voix, hors git) : Whisper soupçonne, l'oreille tranche.
 //
-// - Page d'écoute (par défaut) : les clips signalés (Whisper : nombres entendus différents
-//   ou phrase éloignée ; durée anormale), puis un échantillon des phrases dont le texte dit
-//   diffère de la phrase (formes féminines « une fois 7 », que Whisper ne distingue pas ;
-//   textes imposés de said-text.mjs).
+// - Page d'écoute (par défaut) : les clips signalés, seuls à écouter (Whisper : nombres
+//   entendus différents ou phrase éloignée ; durée anormale), puis, à part, un échantillon
+//   facultatif, pour la forme, de clips que rien ne signale (textes imposés de la langue ou
+//   de la voix, formes féminines « une fois 7 » que Whisper ne distingue pas, autres clips).
+//   Avec --keys, la page se limite à un lot, les nouveaux clips par exemple.
 // - Comparaison (--compare <fichier>) : chaque clip refait de la liste, celle passée à
 //   generate.mjs --redo. L'ancien clip (mis de côté par la génération) et le nouveau, avec
 //   ce que Whisper a entendu de chacun.
@@ -17,13 +18,15 @@
 // Usage :
 //   node scripts/voice/listen-page.mjs --lang fr [--out <dépôt des voix>]
 //     [--transcripts <fichier.jsonl>] [--sample <n>] [--compare <fichier>]
-//     [--version <version>]
+//     [--version <version>] [--keys <fichier>]
 //   --version     : une autre voix de la langue (alternatives.json)
 //   --transcripts : sortie de whisper_transcribe.py (sans elle, seules les durées signalent)
-//   --sample      : taille de l'échantillon des textes dits différents (défaut : 12)
+//   --sample      : taille de l'échantillon pour la forme (défaut : 12)
 //   --compare     : empreintes des clips refaits, une par ligne
-// Écrit <dépôt des voix>/ecoute/<langue>-<version>.html, ou <langue>-<version>-refaits.html
-// avec --compare, et en affiche l'adresse.
+//   --keys        : empreintes d'un lot, une par ligne : page limitée à ces clips (la durée
+//                   se juge toujours au débit de toute la voix)
+// Écrit <dépôt des voix>/ecoute/<langue>-<version>.html, <langue>-<version>-lot.html avec
+// --keys, ou <langue>-<version>-refaits.html avec --compare, et en affiche l'adresse.
 
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
@@ -48,8 +51,8 @@ const STYLE_FILE = path.join(HERE, 'listen-page.css');
 const SCRIPT_FILE = path.join(HERE, 'listen-page.client.js');
 
 /**
- * Taille par défaut de l'échantillon des textes dits différents : une dizaine d'accords, la
- * seule écoute demandée au propriétaire en plus des clips que Whisper n'a pas validés
+ * Taille par défaut de l'échantillon pour la forme. Le propriétaire n'écoute que les clips
+ * signalés ; l'échantillon, à part sur la page, s'écoute si l'on veut
  */
 export const DEFAULT_SAMPLE = 12;
 
@@ -93,55 +96,102 @@ export function evenlySpaced(list, count) {
 }
 
 /**
- * Échantillon des phrases dont le texte dit diffère : les textes imposés d'abord (tous,
- * peu nombreux), puis les accords en genre, régulièrement espacés dans l'ordre des empreintes
- * @returns {string[]} empreintes
+ * Texte dit imposé : pour toute la langue (SAID_OVERRIDES) ou pour la voix seule (son
+ * saidOverrides, dans voices.json ou alternatives.json)
+ * @returns {(text: string) => string|undefined} raison affichée, ou rien
  */
-export function saidSample(manifest, lang, size) {
-  if (size <= 0) return [];
-  const imposed = SAID_OVERRIDES[lang] ?? new Map();
-  const differing = Object.keys(manifest.clips)
-    .filter(key => manifest.clips[key].said !== manifest.clips[key].text)
-    .sort((a, b) => a.localeCompare(b));
-  const first = differing.filter(key => imposed.has(manifest.clips[key].text));
-  // Accords en genre seulement : en espagnol, les nombres dits en lettres font différer
-  // presque tous les textes dits, et l'échantillon ne viserait plus rien
-  const others = differing.filter(
-    key => !imposed.has(manifest.clips[key].text) && hasAgreement(manifest.clips[key].text, lang)
-  );
-  return [...first, ...evenlySpaced(others, size - first.length)].slice(0, size);
+function imposedReason(lang, voice) {
+  const language = SAID_OVERRIDES[lang] ?? new Map();
+  const ownTexts = new Set(Object.keys(voice?.saidOverrides ?? {}));
+  return text => {
+    if (language.has(text)) return 'Texte imposé';
+    if (ownTexts.has(text)) return 'Texte imposé (voix)';
+    return undefined;
+  };
+}
+
+/** Raison d'un clip de l'échantillon : texte imposé, accord en genre, ou clip ordinaire */
+function sampleReason(entry, lang, reasonOf) {
+  if (entry.said === entry.text) return 'Échantillon';
+  const imposed = reasonOf(entry.text);
+  if (imposed) return imposed;
+  return hasAgreement(entry.text, lang) ? 'Accord en genre' : 'Échantillon';
 }
 
 /**
- * Clips de la page d'écoute : signalés (Whisper, puis durée), puis échantillon des textes
- * dits différents
+ * Échantillon pour la forme, parmi les clips que rien ne signale : textes imposés (de la
+ * langue ou de la voix) sur la moitié au plus, puis accords en genre, puis autres clips,
+ * chaque groupe régulièrement espacé dans l'ordre des empreintes. En espagnol, les nombres
+ * dits en lettres font différer presque tous les textes dits : seuls les accords comptent
+ * comme tels, le reste va aux autres clips.
+ * @param {Object} [options]
+ * @param {Object} [options.voice] - entrée de la voix, pour ses textes imposés
+ * @param {Set<string>} [options.only] - empreintes d'un lot : seules proposées
+ * @param {Set<string>} [options.skip] - empreintes déjà signalées, jamais proposées
+ * @returns {string[]} empreintes
+ */
+export function saidSample(manifest, lang, size, { voice, only, skip = new Set() } = {}) {
+  if (size <= 0) return [];
+  const reasonOf = imposedReason(lang, voice);
+  const groups = new Map([
+    ['Texte imposé', []],
+    ['Texte imposé (voix)', []],
+    ['Accord en genre', []],
+    ['Échantillon', []],
+  ]);
+  Object.keys(manifest.clips)
+    .filter(key => (!only || only.has(key)) && !skip.has(key))
+    .sort((a, b) => a.localeCompare(b))
+    .forEach(key => groups.get(sampleReason(manifest.clips[key], lang, reasonOf)).push(key));
+  const imposed = [...groups.get('Texte imposé'), ...groups.get('Texte imposé (voix)')];
+  const first = evenlySpaced(imposed, Math.ceil(size / 2));
+  const second = evenlySpaced(groups.get('Accord en genre'), size - first.length);
+  const rest = size - first.length - second.length;
+  return [...first, ...second, ...evenlySpaced(groups.get('Échantillon'), rest)];
+}
+
+/**
+ * Clips de la page d'écoute : signalés (Whisper, puis durée), à écouter, puis échantillon
+ * pour la forme. only (empreintes d'un lot) limite les deux ; la durée se juge au débit de
+ * toute la voix.
  * @returns {{flagged: Object[], said: Object[], byWhisper: number}}
  */
-export function listenItems({ manifest, transcripts = [], lang, sample = DEFAULT_SAMPLE }) {
+export function listenItems({
+  manifest,
+  transcripts = [],
+  lang,
+  sample = DEFAULT_SAMPLE,
+  voice,
+  only,
+}) {
   const byKey = transcriptsByKey(transcripts);
-  const imposed = SAID_OVERRIDES[lang] ?? new Map();
+  const reasonOf = imposedReason(lang, voice);
+  const inBatch = key => !only || only.has(key);
   const card = (key, reason, detail) => {
     const entry = manifest.clips[key];
     const heard = heardNow(byKey.get(key) ?? [], entry.sha256);
     return { key, reason, detail, text: entry.text, said: entry.said, sha256: entry.sha256, heard };
   };
-  const whisper = transcriptReport(transcripts, manifest, lang).flagged.map(flag =>
-    card(
-      flag.key,
-      flag.numbersMatch ? 'Phrase éloignée' : 'Nombres entendus différents',
-      `similarité ${decimal(flag.similarity, 2)}`
-    )
-  );
+  const whisper = transcriptReport(transcripts, manifest, lang)
+    .flagged.filter(flag => inBatch(flag.key))
+    .map(flag =>
+      card(
+        flag.key,
+        flag.numbersMatch ? 'Phrase éloignée' : 'Nombres entendus différents',
+        `similarité ${decimal(flag.similarity, 2)}`
+      )
+    );
   const seen = new Set(whisper.map(item => item.key));
   const durations = durationOutliers(Object.entries(manifest.clips))
-    .filter(outlier => !seen.has(outlier.key))
+    .filter(outlier => !seen.has(outlier.key) && inBatch(outlier.key))
     .map(outlier => card(outlier.key, 'Durée anormale', `${decimal(outlier.duration, 1)} s`));
-  const said = saidSample(manifest, lang, sample).map(key => {
+  const flagged = [...whisper, ...durations];
+  const skip = new Set(flagged.map(item => item.key));
+  const said = saidSample(manifest, lang, sample, { voice, only, skip }).map(key => {
     const entry = manifest.clips[key];
-    const reason = imposed.has(entry.text) ? 'Texte imposé' : 'Accord en genre';
-    return card(key, reason, `${decimal(entry.duration, 1)} s`);
+    return card(key, sampleReason(entry, lang, reasonOf), `${decimal(entry.duration, 1)} s`);
   });
-  return { flagged: [...whisper, ...durations], said, byWhisper: whisper.length };
+  return { flagged, said, byWhisper: whisper.length };
 }
 
 /** Verdict de Whisper sur le nouveau clip : juste, douteux, ou pas encore transcrit */
@@ -253,12 +303,15 @@ function compareCard(item, { beforeSrc, afterSrc }) {
 </li>`;
 }
 
-/** Section de cartes, ou une phrase qui dit qu'elle est vide */
-function section(title, cards, empty) {
+/**
+ * Section de cartes, ou une phrase qui dit qu'elle est vide ; tone la marque : « must » (à
+ * écouter) ou « optional » (pour la forme)
+ */
+function section(title, cards, empty, tone = 'must') {
   const body = cards.length
     ? `<ol>${cards.join('\n')}</ol>`
     : `<p class="muted">${escapeHtml(empty)}</p>`;
-  return `<h2>${escapeHtml(title)}</h2>\n${body}`;
+  return `<section class="${tone}">\n<h2>${escapeHtml(title)}</h2>\n${body}\n</section>`;
 }
 
 /** Page complète : style et script insérés, panneau de la liste à copier */
@@ -292,42 +345,67 @@ ${fs.readFileSync(SCRIPT_FILE, 'utf8')}</script>
 
 const plural = (count, one, many) => `${count} ${count > 1 ? many : one}`;
 
-/**
- * Page d'écoute : clips signalés, puis échantillon des textes dits différents
- * @returns {{name: string, html: string, summary: string}}
- */
-export function buildListenPage({ lang, voice, manifest, transcripts, sample, paths, pageDir }) {
-  const { flagged, said, byWhisper } = listenItems({ manifest, transcripts, lang, sample });
-  const src = item => hrefFrom(pageDir, clipFile(paths, item.key));
-  const counted = `${plural(flagged.length, 'clip signalé', 'clips signalés')} (Whisper : ${byWhisper}, durée : ${flagged.length - byWhisper})`;
-  const noWhisper = transcripts?.length
+/** Introduction de la page d'écoute : ce qui est à écouter, ce qui ne l'est pas */
+function listenIntro({ lang, counted, sampled, hasTranscripts }) {
+  const noWhisper = hasTranscripts
     ? ''
     : ' Sans transcriptions Whisper (<code>--transcripts</code>), seules les durées signalent.';
-  const intro = `<p class="muted">${counted}, puis ${plural(said.length, 'phrase', 'phrases')} dont le texte dit diffère : formes féminines, que Whisper ne distingue pas («&nbsp;un&nbsp;» et «&nbsp;une&nbsp;» s'écrivent «&nbsp;1&nbsp;»), et textes imposés. Un signalement n'est pas un verdict : seule l'oreille tranche.${noWhisper}</p>
+  return `<p><strong>À écouter : la première partie seulement</strong>, ${counted}. Whisper y doute d'un nombre ou de la phrase, ou la durée est anormale : seule l'oreille tranche.${noWhisper}</p>
+<p class="muted">La seconde partie, ${plural(sampled, 'clip', 'clips')} que rien ne signale, n'est qu'un échantillon pour la forme, facultatif : textes imposés, formes féminines (Whisper écrit «&nbsp;1&nbsp;» pour «&nbsp;un&nbsp;» comme pour «&nbsp;une&nbsp;»), puis d'autres clips.</p>
 <p>Cocher «&nbsp;à refaire&nbsp;» chaque clip faux, puis copier la liste dans <code>ecartes.txt</code> : <code>node --env-file=&lt;.env&gt; scripts/voice/generate.mjs --lang ${escapeHtml(lang)} --redo ecartes.txt --max-total-chars &lt;plafond&gt;</code> (payant, dans le plafond accordé), relancer Whisper, puis comparer avec <code>npm run voice:listen -- --lang ${escapeHtml(lang)} --transcripts &lt;fichier&gt; --compare ecartes.txt</code>.</p>`;
+}
+
+/**
+ * Page d'écoute : clips signalés, à écouter, puis échantillon pour la forme ; keys (un lot)
+ * limite la page à ces clips
+ * @returns {{name: string, html: string, summary: string}}
+ */
+export function buildListenPage({
+  lang,
+  voice,
+  manifest,
+  transcripts,
+  sample,
+  keys,
+  paths,
+  pageDir,
+}) {
+  const only = keys ? new Set(keys) : undefined;
+  const items = listenItems({ manifest, transcripts, lang, sample, voice, only });
+  const { flagged, said, byWhisper } = items;
+  const src = item => hrefFrom(pageDir, clipFile(paths, item.key));
+  const counted = `${plural(flagged.length, 'clip signalé', 'clips signalés')} (Whisper : ${byWhisper}, durée : ${flagged.length - byWhisper})`;
+  const suffix = only ? '-lot' : '';
+  const batch = only ? ` (lot de ${only.size})` : '';
   const html = pageHtml({
-    title: 'Écoute des clips',
+    title: only ? `Écoute d'un lot de ${plural(only.size, 'clip', 'clips')}` : 'Écoute des clips',
     voiceLabel: `${lang} ${voice.version}`,
-    store: `ecoute-${lang}-${voice.version}`,
+    store: `ecoute-${lang}-${voice.version}${suffix}`,
     labels: { one: 'clip à refaire', many: 'clips à refaire' },
-    intro,
+    intro: listenIntro({
+      lang,
+      counted,
+      sampled: said.length,
+      hasTranscripts: transcripts?.length > 0,
+    }),
     sections: [
       section(
-        'Signalés par Whisper ou par leur durée',
+        'À écouter : signalés par Whisper ou par leur durée',
         flagged.map(item => listenCard(item, src(item))),
-        'Aucun clip signalé.'
+        'Aucun clip signalé : rien à écouter.'
       ),
       section(
-        'Texte dit différent de la phrase (échantillon)',
+        'Pour la forme : échantillon facultatif, rien de signalé',
         said.map(item => listenCard(item, src(item))),
-        'Aucune phrase dont le texte dit diffère.'
+        'Aucun clip à proposer.',
+        'optional'
       ),
     ],
   });
   return {
-    name: `${lang}-${voice.version}.html`,
+    name: `${lang}-${voice.version}${suffix}.html`,
     html,
-    summary: `Page d'écoute ${lang} ${voice.version} : ${counted}, ${plural(said.length, 'texte dit différent', 'textes dits différents')}`,
+    summary: `Page d'écoute ${lang} ${voice.version}${batch} : à écouter, ${counted} ; pour la forme, ${plural(said.length, 'clip', 'clips')}`,
   };
 }
 
@@ -379,11 +457,13 @@ const CLI_OPTIONS = {
   '--transcripts': pathOption('transcripts'),
   '--sample': integerOption('sample'),
   '--compare': pathOption('compare'),
+  '--keys': pathOption('keys'),
 };
 
 export function parseArgs(argv) {
   const args = parseOptions(argv, CLI_OPTIONS, { out: DEFAULT_OUT, sample: DEFAULT_SAMPLE });
   assertLangCode(args.lang);
+  if (args.keys && args.compare) throw new Error('--keys et --compare ne vont pas ensemble');
   return args;
 }
 
@@ -416,7 +496,11 @@ async function main(argv) {
   };
   const page = args.compare
     ? buildComparePage({ ...context, keys: readKeyList(args.compare) })
-    : buildListenPage({ ...context, sample: args.sample });
+    : buildListenPage({
+        ...context,
+        sample: args.sample,
+        keys: args.keys ? readKeyList(args.keys) : undefined,
+      });
   const file = await writePage(context.pageDir, page);
   console.log(`${page.summary}\n${pathToFileURL(file).href}`);
   return 0;

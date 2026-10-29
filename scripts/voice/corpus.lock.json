@@ -2,16 +2,16 @@
   "schema": "cyrb53-nfc-1",
   "languages": {
     "fr": {
-      "phrases": 7443,
-      "sha256": "5a38f2a9660802ead2a5910d4445d8d4119fc9270d9a3f3a0f6152330c31c7f6"
+      "phrases": 7515,
+      "sha256": "5387b25abf01319db69b7b1e3639dd4bca6e9671236a330b75824ab30251d4a1"
     },
     "en": {
-      "phrases": 7443,
-      "sha256": "ec482dfa0d8d32d1ebb498007d545840b496e1922981e44c16a33c64a7a27fd6"
+      "phrases": 7515,
+      "sha256": "e0de2fc57648fdc451dd8439b58bf326c1a03fe6b4f250020b4051173604a7d8"
     },
     "es": {
-      "phrases": 7443,
-      "sha256": "ccc590feb32557af7936a72011b61728fa52821316572f157af8d77ceeadfe74"
+      "phrases": 7515,
+      "sha256": "febc83b3fc116340570374a6c3029bd57a52f6882c2cbd6de165ec4bfaf6d4bc"
     }
   }
 }

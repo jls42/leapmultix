@@ -3,9 +3,10 @@
  */
 /* eslint-env jest, node */
 /**
- * Pages d'écoute des clips (scripts/voice/listen-page.mjs) : clips signalés, échantillon des
- * formes féminines et des textes imposés, cases « à refaire » (script de la page exécuté dans
- * jsdom), comparaison avant/après des clips refaits, et la commande.
+ * Pages d'écoute des clips (scripts/voice/listen-page.mjs) : clips signalés, seuls à écouter,
+ * échantillon pour la forme à part (textes imposés, formes féminines, autres clips), page d'un
+ * lot, cases « à refaire » (script de la page exécuté dans jsdom), comparaison avant/après des
+ * clips refaits, et la commande.
  */
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { spawnSync } from 'node:child_process';
@@ -21,6 +22,7 @@ import {
   buildListenPage,
   escapeHtml,
   evenlySpaced,
+  listenItems,
   saidSample,
 } from '../../scripts/voice/listen-page.mjs';
 import {
@@ -33,7 +35,10 @@ import {
 import { loadVoice } from '../../scripts/voice/generate.mjs';
 
 const SCRIPT = path.resolve('scripts/voice/listen-page.mjs');
-const VOICE = { ...loadVoice('fr'), version: 'test-1' };
+// Sans les textes imposés de la vraie voix : chaque test fixe les siens
+const VOICE = { ...loadVoice('fr'), saidOverrides: {}, version: 'test-1' };
+const MUST = 'À écouter : signalés par Whisper ou par leur durée';
+const OPTIONAL = 'Pour la forme : échantillon facultatif, rien de signalé';
 
 const phrase = text => ({ text, key: voiceKey(text) });
 /** Nombres entendus différents */
@@ -157,7 +162,7 @@ describe('Page d’écoute : clips signalés', () => {
   test('nombres mal entendus et durée anormale signalés, les clips justes absents', async () => {
     const { html, summary } = listenPage(await standardStore());
     const { document } = new JSDOM(html).window;
-    const flagged = cardsOf(document, 'Signalés par Whisper ou par leur durée');
+    const flagged = cardsOf(document, MUST);
     expect(flagged.map(card => [card.key, card.reason])).toEqual([
       [WRONG.key, 'Nombres entendus différents'],
       [TRAPPED.key, 'Nombres entendus différents'],
@@ -173,7 +178,7 @@ describe('Page d’écoute : clips signalés', () => {
     const { manifest } = await standardStore();
     const { html } = listenPage({ manifest, transcripts: [] });
     const { document } = new JSDOM(html).window;
-    const flagged = cardsOf(document, 'Signalés par Whisper ou par leur durée');
+    const flagged = cardsOf(document, MUST);
     expect(flagged.map(card => card.key)).toEqual([SLOW.key]);
     expect(document.querySelector('main').textContent).toContain('seules les durées signalent');
   });
@@ -189,14 +194,27 @@ describe('Page d’écoute : clips signalés', () => {
     );
   });
 
+  test('deux parties marquées : à écouter, puis pour la forme', async () => {
+    const { html } = listenPage(await standardStore());
+    const { document } = new JSDOM(html).window;
+    const sections = [...document.querySelectorAll('main > section')];
+    expect(sections.map(el => [el.className, el.querySelector('h2').textContent])).toEqual([
+      ['must', MUST],
+      ['optional', OPTIONAL],
+    ]);
+    const intro = document.querySelector('main > p strong').textContent;
+    expect(intro).toBe('À écouter : la première partie seulement');
+    expect(document.querySelector('main').textContent).toContain(
+      "n'est qu'un échantillon pour la forme, facultatif"
+    );
+  });
+
   test('une transcription piégée reste du texte : aucun élément injecté', async () => {
     const { html } = listenPage(await standardStore());
     const { document } = new JSDOM(html).window;
     expect(document.querySelectorAll('img')).toHaveLength(0);
     expect(document.querySelectorAll('script')).toHaveLength(1);
-    const trapped = cardsOf(document, 'Signalés par Whisper ou par leur durée').find(
-      card => card.key === TRAPPED.key
-    );
+    const trapped = cardsOf(document, MUST).find(card => card.key === TRAPPED.key);
     expect(trapped.rows.Whisper).toBe('<img src=x onerror="alert(1)"> Bonne réponse 3');
     expect(escapeHtml(`<a href="x">'&'</a>`)).toBe(
       '&lt;a href=&quot;x&quot;&gt;&#39;&amp;&#39;&lt;/a&gt;'
@@ -204,14 +222,15 @@ describe('Page d’écoute : clips signalés', () => {
   });
 });
 
-describe('Page d’écoute : formes féminines et textes imposés', () => {
-  test('textes dits différents : le texte imposé d’abord, puis les accords en genre', async () => {
+describe('Page d’écoute : échantillon pour la forme', () => {
+  test('texte imposé, puis accords en genre, puis autres clips ; jamais un clip signalé', async () => {
     const { html } = listenPage(await standardStore());
     const { document } = new JSDOM(html).window;
-    const said = cardsOf(document, 'Texte dit différent de la phrase (échantillon)');
+    const said = cardsOf(document, OPTIONAL);
     expect(said.map(card => [card.key, card.reason])).toEqual([
       [IMPOSED.key, 'Texte imposé'],
       [FEMININE.key, 'Accord en genre'],
+      [FINE.key, 'Échantillon'],
     ]);
     expect(said[1].rows).toMatchObject({
       Phrase: 'Combien font 1 fois 7 ?',
@@ -220,7 +239,7 @@ describe('Page d’écoute : formes féminines et textes imposés', () => {
     });
   });
 
-  test('échantillon borné : textes imposés d’abord, puis accords régulièrement espacés', () => {
+  test('échantillon borné : texte imposé d’abord, puis accords régulièrement espacés', () => {
     // Onze formes féminines, dont plusieurs trient avant le texte imposé
     const feminine = Array.from({ length: 11 }, (_, i) => phrase(`Combien font 1 fois ${i + 2} ?`));
     const entry = p => ({ text: p.text, said: saidText(p.text, 'fr'), duration: 1.2 });
@@ -232,14 +251,87 @@ describe('Page d’écoute : formes féminines et textes imposés', () => {
 
     expect(saidSample(manifest, 'fr', 1)).toEqual([IMPOSED.key]);
     expect(saidSample(manifest, 'fr', 4)).toEqual([IMPOSED.key, sorted[0], sorted[3], sorted[7]]);
-    expect(saidSample(manifest, 'fr', 50)).toHaveLength(12);
+    // Assez grand : tous les clips, le clip ordinaire en dernier
+    expect(saidSample(manifest, 'fr', 50)).toHaveLength(13);
+    expect(saidSample(manifest, 'fr', 50).at(-1)).toBe(FINE.key);
     expect(saidSample(manifest, 'fr', 0)).toEqual([]);
     expect(evenlySpaced([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 3)).toEqual([0, 3, 6]);
     expect(evenlySpaced([0, 1], 5)).toEqual([0, 1]);
     expect(evenlySpaced([0, 1], 0)).toEqual([]);
   });
 
-  test('en espagnol, l’échantillon vise les accords, pas les nombres dits en lettres', () => {
+  test('textes imposés à la voix (saidOverrides) : marqués, sur la moitié de l’échantillon au plus', () => {
+    const own = [
+      '345 est divisible par 5',
+      '2010 est divisible par 10',
+      '1011 est divisible par 3',
+    ].map(phrase);
+    const spoken = [
+      'Trois cent quarante-cinq est divisible par cinq',
+      'Deux mille dix est divisible par dix',
+      'Mille onze est divisible par trois',
+    ];
+    const voice = {
+      ...VOICE,
+      saidOverrides: Object.fromEntries(own.map((p, i) => [p.text, spoken.at(i)])),
+    };
+    const feminine = [2, 3, 4].map(n => phrase(`Combien font 1 fois ${n} ?`));
+    const entry = (p, said = saidText(p.text, 'fr')) => ({ text: p.text, said, duration: 1.5 });
+    const manifest = {
+      clips: Object.fromEntries([
+        ...own.map((p, i) => [p.key, entry(p, spoken.at(i))]),
+        ...[IMPOSED, ...feminine].map(p => [p.key, entry(p)]),
+      ]),
+    };
+    const reasons = (size, options) =>
+      listenItems({ manifest, lang: 'fr', sample: size, ...options }).said.map(item => item.reason);
+
+    // Quatre textes imposés (un de la langue, trois de la voix) : deux sur quatre places
+    expect(reasons(4, { voice }).sort()).toEqual(
+      ['Accord en genre', 'Accord en genre', 'Texte imposé', 'Texte imposé (voix)'].sort()
+    );
+    // Assez de place : tous, chacun avec sa raison
+    expect(reasons(12, { voice }).sort()).toEqual(
+      [
+        'Texte imposé',
+        ...Array(3).fill('Texte imposé (voix)'),
+        ...Array(3).fill('Accord en genre'),
+      ].sort()
+    );
+    // Une autre voix, sans ces textes : ses phrases ne sont plus que des clips ordinaires
+    expect(reasons(12, { voice: VOICE }).filter(r => r === 'Texte imposé (voix)')).toEqual([]);
+    expect(reasons(12, { voice: VOICE }).filter(r => r === 'Échantillon')).toHaveLength(3);
+  });
+
+  test('page d’un lot : signalés et échantillon pris dans le lot seulement', async () => {
+    const store = await standardStore();
+    const batch = [FEMININE.key, WRONG.key];
+    const { flagged, said } = listenItems({
+      ...store,
+      lang: 'fr',
+      voice: VOICE,
+      only: new Set(batch),
+    });
+    // SLOW et TRAPPED, signalés mais hors du lot, n'y sont pas
+    expect(flagged.map(item => item.key)).toEqual([WRONG.key]);
+    expect(said.map(item => item.key)).toEqual([FEMININE.key]);
+    // Lot d'un seul clip lent : sa durée se juge au débit de toute la voix, pas du lot
+    const page = buildListenPage({
+      lang: 'fr',
+      voice: VOICE,
+      ...store,
+      sample: 12,
+      keys: [SLOW.key],
+      paths,
+      pageDir,
+    });
+    expect(page.name).toBe('fr-test-1-lot.html');
+    expect(page.summary).toContain(
+      '(lot de 1) : à écouter, 1 clip signalé (Whisper : 0, durée : 1)'
+    );
+  });
+
+  test('en espagnol, les accords d’abord, puis les nombres dits en lettres comme clips ordinaires', () => {
     const spanish = [
       '7 por 8 es igual a 54',
       '¿Cuánto es 1 por 7?',
@@ -253,7 +345,8 @@ describe('Page d’écoute : formes féminines et textes imposés', () => {
     };
     // Les quatre textes dits diffèrent (nombres en lettres) ; deux seulement portent un accord
     expect(Object.values(manifest.clips).every(e => e.said !== e.text)).toBe(true);
-    expect(saidSample(manifest, 'es', 10).sort()).toEqual([spanish[2].key, spanish[3].key].sort());
+    expect(saidSample(manifest, 'es', 2).sort()).toEqual([spanish[2].key, spanish[3].key].sort());
+    expect(saidSample(manifest, 'es', 10)).toHaveLength(4);
   });
 });
 
@@ -458,9 +551,16 @@ describe('Commande', () => {
     const page = path.join(outDir, 'ecoute', `fr-${liveVoice.version}.html`);
     expect(result.stdout).toContain(`file://${page}`);
     expect(result.stdout).toContain(
-      '1 clip signalé (Whisper : 0, durée : 1), 1 texte dit différent'
+      'à écouter, 1 clip signalé (Whisper : 0, durée : 1) ; pour la forme, 2 clips'
     );
     expect(fs.readFileSync(page, 'utf8')).toContain(SLOW.key);
+
+    const batch = path.join(outDir, 'lot.txt');
+    fs.writeFileSync(batch, `${FEMININE.key}\n`);
+    const lot = run('--lang', 'fr', '--out', outDir, '--transcripts', transcripts, '--keys', batch);
+    expect(lot.status).toBe(0);
+    expect(lot.stdout).toContain(`fr-${liveVoice.version}-lot.html`);
+    expect(lot.stdout).toContain('(lot de 1) : à écouter, 0 clip signalé');
 
     const list = path.join(outDir, 'ecartes.txt');
     fs.writeFileSync(list, `${SLOW.key}\n`);
@@ -480,6 +580,9 @@ describe('Commande', () => {
     const invalid = run('--lang', 'fr', '--out', outDir, '--compare', list);
     expect(invalid.status).toBe(1);
     expect(invalid.stderr).toContain('Empreinte invalide');
+    const both = run('--lang', 'fr', '--out', outDir, '--compare', list, '--keys', list);
+    expect(both.status).toBe(1);
+    expect(both.stderr).toContain('--keys et --compare');
 
     expect(run('--lang', 'fr', '--out', outDir, '--bruit').status).toBe(1);
     expect(run('--out', outDir).status).toBe(1);

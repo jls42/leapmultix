@@ -345,14 +345,26 @@ export function tagAnswerOptions(container) {
   }
 }
 
+/** Questions écrites en phrase : un énoncé de problème, une divisibilité à juger */
+const SENTENCE_TYPES = new Set(['problem', 'divisibility']);
+
 /**
- * Un calcul s'affiche en grand ; un énoncé (problème) en police de lecture.
+ * La question est-elle une phrase plutôt qu'un calcul ?
+ * @param {Object} question - Question courante ({ type })
+ * @returns {boolean}
+ */
+export function isSentenceQuestion(question) {
+  return SENTENCE_TYPES.has(question?.type);
+}
+
+/**
+ * Un calcul s'affiche en grand ; une phrase (problème, divisibilité) en police de lecture.
  * @param {HTMLElement} element - Zone de question
  * @param {Object} question - Question courante ({ type })
  */
 export function markQuestionKind(element, question) {
   if (!element) return;
-  element.classList.toggle('is-sentence', question?.type === 'problem');
+  element.classList.toggle('is-sentence', isSentenceQuestion(question));
 }
 
 /**

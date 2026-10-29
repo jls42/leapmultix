@@ -15,7 +15,11 @@
 
 import { GameMode } from '../core/GameMode.js';
 import { askToLeave } from '../game-exit.js';
-import { getAdventureLevelsByOperator } from '../core/adventure-data.js';
+import {
+  DIVISIBILITY_LEVEL_IDS,
+  DIVISIBILITY_SHARE,
+  getAdventureLevelsByOperator,
+} from '../core/adventure-data.js';
 import { createSafeElement } from '../security-utils.js';
 import {
   getTranslation,
@@ -57,6 +61,19 @@ const OPERATION_NAMES = { '+': 'addition', '−': 'subtraction', '÷': 'division
 
 /** Étoiles au total pour le badge « Collectionneur d'étoiles » (badge_star_collector_desc) */
 const STAR_COLLECTOR_THRESHOLD = 10;
+
+/**
+ * Question de divisibilité ? Une sur trois en moyenne, dans les derniers niveaux de la
+ * division seulement
+ * @param {string} operator
+ * @param {{id: number}} level
+ * @returns {boolean}
+ */
+function drawsDivisibility(operator, level) {
+  return (
+    operator === '÷' && DIVISIBILITY_LEVEL_IDS.includes(level.id) && chance(DIVISIBILITY_SHARE)
+  );
+}
 
 // Cadeaux et personnage de la scène en WebP (js/webp-images.js), à leur taille affichée
 // (css/adventure.css) : 72 px dans la scène, 56 sur un écran de 480 px au plus ; 112 px sur
@@ -445,6 +462,10 @@ export class AdventureMode extends GameMode {
   getQuestionOptions() {
     if (!this.currentLevel) return super.getQuestionOptions();
 
+    if (drawsDivisibility(this.operator, this.currentLevel)) {
+      return { type: 'divisibility', operator: this.operator };
+    }
+
     // Pour la multiplication: utiliser table et multiplicande
     if (this.operator === '×') {
       // Choisir un multiplicande parmi ceux restants
@@ -478,23 +499,7 @@ export class AdventureMode extends GameMode {
     if (!this.state.currentQuestion || !this.questionElement) return;
 
     const question = this.state.currentQuestion;
-    const operator = question.operator || this.operator;
-
-    // Récupérer a et b avec fallback pour compatibilité multiplication
-    const a = question.a ?? question.table;
-    const b = question.b ?? question.num;
-
-    // Pour la multiplication et l'addition: inversion aléatoire (commutativité)
-    if (operator === '×' || operator === '+') {
-      if (chance(0.5)) {
-        this.questionElement.textContent = `${b} ${operator} ${a} = ?`;
-      } else {
-        this.questionElement.textContent = `${a} ${operator} ${b} = ?`;
-      }
-    } else {
-      // Pour la soustraction: pas d'inversion (non commutative)
-      this.questionElement.textContent = `${a} ${operator} ${b} = ?`;
-    }
+    this.questionElement.textContent = this.adventureQuestionText(question);
     markQuestionKind(this.questionElement, question);
 
     this.displayOptions();
@@ -503,6 +508,22 @@ export class AdventureMode extends GameMode {
     if (this.feedbackElement) {
       this.feedbackElement.textContent = '';
     }
+  }
+
+  /**
+   * Texte affiché : la phrase d'une divisibilité, sinon le calcul. Facteurs inversés une
+   * fois sur deux pour × et + (commutativité), jamais pour − et ÷.
+   * @param {Object} question
+   * @returns {string}
+   */
+  adventureQuestionText(question) {
+    if (question.type === 'divisibility') return this.getQuestionText(question);
+    const operator = question.operator || this.operator;
+    // Récupérer a et b avec fallback pour compatibilité multiplication
+    const a = question.a ?? question.table;
+    const b = question.b ?? question.num;
+    const swapped = (operator === '×' || operator === '+') && chance(0.5);
+    return swapped ? `${b} ${operator} ${a} = ?` : `${a} ${operator} ${b} = ?`;
   }
 
   /**
@@ -907,7 +928,7 @@ export class AdventureMode extends GameMode {
 
     // Historique borné : les compteurs du tableau de bord portent le reste
     appendProgressHistory(userData, {
-      question: `${a} ${operator} ${b} = ?`,
+      question: question.type === 'divisibility' ? question.question : `${a} ${operator} ${b} = ?`,
       correct: isCorrect,
       timestamp: Date.now(),
       mode: 'adventure',

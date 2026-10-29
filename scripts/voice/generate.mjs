@@ -136,6 +136,7 @@ export const FAMILY_ORDER = [
   'question à trou',
   'vrai ou faux',
   'découverte',
+  'divisibilité',
   'énoncé',
 ];
 export const OPERATOR_ORDER = ['×', '÷', '+', '−'];

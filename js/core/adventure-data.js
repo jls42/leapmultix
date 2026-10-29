@@ -58,6 +58,13 @@ export const ADVENTURE_LEVELS_ADDITION = generateDifficultyLevels('addition');
 export const ADVENTURE_LEVELS_SUBTRACTION = generateDifficultyLevels('subtraction');
 export const ADVENTURE_LEVELS_DIVISION = generateDifficultyLevels('division');
 
+/**
+ * Division : les deux derniers niveaux mêlent des questions de divisibilité
+ * (« 2213 est divisible par 3 », core/divisibility.js), une sur trois en moyenne
+ */
+export const DIVISIBILITY_LEVEL_IDS = [9, 10];
+export const DIVISIBILITY_SHARE = 1 / 3;
+
 // Export par défaut pour compatibilité (multiplication)
 export const ADVENTURE_LEVELS = ADVENTURE_LEVELS_MULTIPLICATION;
 

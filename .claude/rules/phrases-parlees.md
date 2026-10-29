@@ -26,8 +26,9 @@ dans la même PR que le changement de texte :
 1. le test du verrou échoue exprès : c'est le rappel ;
 2. générer les clips manquants avec le skill `generating-voice-clips` (payant : estimation
    `--dry-run` d'abord, accord du propriétaire), contrôler (Whisper, `voice:check`, refaits
-   tant que Whisper doute), faire écouter ce qu'il n'a pas validé et un échantillon
-   d'accords (page d'écoute : `npm run voice:listen`) ;
+   tant que Whisper doute), faire écouter ce qu'il n'a pas validé (page d'écoute :
+   `npm run voice:listen`, partie « À écouter » ; l'échantillon pour la forme y est
+   facultatif) ;
 3. publier les nouveaux clips (`voice:publish clips`, puis `voice:check-online`) **avant**
    de fusionner, puis `npm run voice:corpus:lock`.
 

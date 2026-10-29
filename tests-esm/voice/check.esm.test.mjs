@@ -38,8 +38,38 @@ describe('Nombres en lettres ramenés en chiffres', () => {
     ['es', '¿Cuánto es siete por ocho?', 'cuánto es 7 por 8'],
     ['es', 'treinta y una canicas', '31 canicas'],
     ['es', 'ciento veintiuno', '121'],
+    // Milliers : « cent » ne multiplie que la partie sous mille
+    ['fr', 'mille', '1000'],
+    ['fr', 'mille un', '1001'],
+    ['fr', 'deux mille deux cent treize', '2213'],
+    ['fr', 'trois mille quatre cent cinq', '3405'],
+    ['fr', 'sept mille quarante et un', '7041'],
+    ['fr', 'mille deux cent cinquante', '1250'],
+    ['en', 'one thousand', '1000'],
+    ['en', 'two thousand two hundred and thirteen', '2213'],
+    ['es', 'mil', '1000'],
+    ['es', 'mil uno', '1001'],
+    ['es', 'dos mil ciento veintiuno', '2121'],
   ])('%s : %s', (lang, text, expected) => {
     expect(normalizeForComparison(text, lang).join(' ')).toBe(expected);
+  });
+});
+
+describe('Séparateur des milliers écrit par Whisper', () => {
+  test.each([
+    ['en', '2213 is divisible by 3', '2,213 is divisible by 3.', false],
+    ['en', '2213 is divisible by 3', '2,231 is divisible by 3.', true],
+    ['es', '2709 es divisible entre 9', '2.709 es divisible entre 9.', false],
+    ['es', '2709 es divisible entre 9', '2.790 es divisible entre 9.', true],
+    ['fr', '2213 est divisible par 3', '2 213 est divisible par 3.', false],
+    ['fr', '2213 est divisible par 3', '2\u202f213 est divisible par 3.', false],
+    // Un séparateur ne vaut que devant trois chiffres : deux nombres restent deux nombres
+    ['en', '1011 is divisible by 3', '10 11 is divisible by 3.', true],
+    ['fr', '345 est divisible par 9', '3,45 et divisible par 9.', true],
+    ['fr', '5372 est divisible par 2', '10 372 est divisible par 2.', true],
+    ['en', '345 is divisible by 2', '3, 4, 5 is divisible by 2.', true],
+  ])('%s : « %s » entendu « %s » : à réécouter %s', (lang, expected, heard, flagged) => {
+    expect(compareTranscript(expected, heard, lang).flagged).toBe(flagged);
   });
 });
 

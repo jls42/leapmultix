@@ -52,7 +52,18 @@ export const WORDS_AFTER_NUMBERS = {
       'crayons',
     ],
     // Mots qui ne sont pas des noms : le nombre garde sa lecture par défaut
-    other: ['égale', 'plus', 'moins', 'divisé', 'autre', 'autres', 'éclate', 'éclatent', 'à'],
+    other: [
+      'égale',
+      'plus',
+      'moins',
+      'divisé',
+      'autre',
+      'autres',
+      'éclate',
+      'éclatent',
+      'à',
+      'est',
+    ],
   },
   es: {
     feminine: ['caja', 'cajas', 'manzana', 'manzanas', 'casilla', 'casillas', 'canica', 'canicas'],
@@ -164,13 +175,25 @@ function spanishBelowHundred(n, one) {
  * seul, « un » ou « una » devant un nom (« veintiún niños », « treinta y una cajas »). Au-delà
  * de 199, « doscientas » s'accorderait aussi devant un nom féminin : aucune phrase n'y arrive.
  */
-function spanishNumber(n, one = 'uno') {
+function spanishBelowThousand(n, one) {
   if (n === 100) return 'cien';
   const hundreds = Math.floor(n / 100);
   const rest = n % 100;
   if (hundreds === 0) return spanishBelowHundred(rest, one);
   if (rest === 0) return ES_HUNDREDS[hundreds];
   return `${ES_HUNDREDS[hundreds]} ${spanishBelowHundred(rest, one)}`;
+}
+
+/**
+ * Espagnol, nombre de 0 à 9999 en lettres (« dos mil doscientos trece ») : « mil » seul pour
+ * 1000, jamais « un mil » ; one comme pour spanishBelowThousand
+ */
+function spanishNumber(n, one = 'uno') {
+  const thousands = Math.floor(n / 1000);
+  const rest = n % 1000;
+  if (thousands === 0) return spanishBelowThousand(rest, one);
+  const head = thousands === 1 ? 'mil' : `${ES_UNITS[thousands]} mil`;
+  return rest === 0 ? head : `${head} ${spanishBelowThousand(rest, one)}`;
 }
 
 /**
@@ -205,7 +228,7 @@ const RULES = {
     invariable: n => n % 100 === 11,
     feminine: n => spanishNumber(n, 'una'),
     masculine: n => spanishNumber(n, 'un'),
-    spelled: n => (n < 1000 ? spanishNumber(n) : null),
+    spelled: n => (n < 10000 ? spanishNumber(n) : null),
   },
 };
 

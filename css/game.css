@@ -172,6 +172,9 @@ body {
 }
 
 .option {
+  /* Coche ou croix d'une tuile répondue (.option-mark) */
+  --option-mark-size: 1.5rem;
+
   position: relative;
   display: flex;
   align-items: center;
@@ -195,7 +198,8 @@ body {
     box-shadow var(--dur-fast) var(--ease-out),
     border-color var(--dur-base) var(--ease-out),
     background-color var(--dur-base) var(--ease-out),
-    color var(--dur-base) var(--ease-out);
+    color var(--dur-base) var(--ease-out),
+    padding var(--dur-base) var(--ease-out);
 }
 
 /* Mots (Vrai, Faux, nombres écrits en lettres) : police de lecture */
@@ -244,12 +248,20 @@ body {
   transform: translateY(var(--key-edge));
 }
 
+/* Un mot long (« Verdadero » sur une tuile de téléphone) ne passe pas sous la coche ou
+   la croix : la tuile marquée lui laisse la place de la marque en fin de tuile, le mot
+   glisse le temps qu'elle apparaît */
+.options .option.is-word:is(.is-correct, .is-chosen-wrong) {
+  padding-inline: var(--space-3) calc(var(--space-3) + var(--option-mark-size) + var(--space-1));
+}
+
 .option-mark {
   position: absolute;
   top: 50%;
   inset-inline-end: var(--space-3);
-  width: 1.5rem;
-  height: 1.5rem;
+  /* Hors tuile (bilan du Chrono), la taille par défaut */
+  width: var(--option-mark-size, 1.5rem);
+  height: var(--option-mark-size, 1.5rem);
   translate: 0 -50%;
   animation: option-mark-in var(--dur-base) var(--ease-out) both;
 }

@@ -39,8 +39,10 @@ import {
   toSpokenGapQuestion,
   preferredScrollBehavior,
   keepNumbersTogether,
+  isSentenceQuestion,
 } from '../ui-feedback.js';
 import { chance, randomInt, shuffleInPlace } from './random.js';
+import { divisibilityFacts, divisibilityStatement } from './divisibility.js';
 
 // ======================================
 // ÉNONCÉS DE PROBLÈMES
@@ -287,19 +289,15 @@ function operationDetails(question, operator, a, b, result) {
  * @returns {{message: string, hint: string, countBy: Object|null, facts: Array<{label: string, equation: string}>}}
  */
 export function buildErrorExplanation(question) {
+  if (question.type === 'divisibility') return divisibilityExplanation(question);
   const operator = question.operator || '×';
   const { a, b } = operandsOf(question);
   const result = computeResult(operator, a, b);
   const isTrueFalse = question.type === 'true_false';
 
-  let message;
-  if (isTrueFalse) {
-    message = getTranslation(
-      question.answer === true ? 'incorrect_answer_was_true' : 'incorrect_answer_was_false'
-    );
-  } else {
-    message = getTranslation('feedback_incorrect', { correctAnswer: question.answer });
-  }
+  const message = isTrueFalse
+    ? trueFalseMessage(question)
+    : getTranslation('feedback_incorrect', { correctAnswer: question.answer });
 
   // Vrai/Faux : le vrai résultat est écrit, pas seulement « Faux »
   const facts = [];
@@ -314,6 +312,28 @@ export function buildErrorExplanation(question) {
   if (fact?.equation) facts.push(fact);
 
   return { message, hint: keepNumbersTogether(hint), countBy, facts };
+}
+
+/** « La bonne réponse est Vrai. » ou « … Faux. » */
+function trueFalseMessage(question) {
+  return getTranslation(
+    question.answer === true ? 'incorrect_answer_was_true' : 'incorrect_answer_was_false'
+  );
+}
+
+/**
+ * Divisibilité : ce qu'on regarde (dernier chiffre, somme des chiffres) et le critère du
+ * diviseur, jamais le quotient (« 2213 ÷ 3 » ne tombe pas juste)
+ * @param {Object} question - { a: nombre, b: diviseur, answer }
+ */
+function divisibilityExplanation(question) {
+  const { a: number, b: divisor } = operandsOf(question);
+  const facts = divisibilityFacts(number, divisor).map(({ labelKey, equation }) => ({
+    label: translateOrEmpty(labelKey),
+    equation,
+  }));
+  const hint = keepNumbersTogether(translateOrEmpty(`division_tip_${divisor}`));
+  return { message: trueFalseMessage(question), hint, countBy: null, facts };
 }
 
 // ======================================
@@ -484,6 +504,20 @@ export const GOOD_SOUND_MS = 200;
  * phrase d'après son texte)
  */
 export const EXPLANATION_WAIT_MAX_MS = 6000;
+
+/**
+ * Phrase d'une question dans la langue active, ou null si elle n'en a pas (un calcul)
+ * @param {Object} question
+ * @returns {string|null}
+ */
+function retranslatedQuestion(question) {
+  if (question.type === 'divisibility') {
+    return divisibilityStatement(question.a, question.b, getTranslation);
+  }
+  if (question.type !== 'problem') return null;
+  const template = problemTemplates(question.operator)[question.templateIndex];
+  return typeof template === 'string' ? fillTemplate(template, problemParams(question)) : null;
+}
 
 /** Table d'une question pour « À revoir » au tableau de bord : en multiplication seulement */
 function reviewTableOf(question, operator) {
@@ -880,14 +914,14 @@ export class GameMode {
   }
 
   /**
-   * Texte affiché d'une question : un énoncé garde chaque nombre collé à son nom
+   * Texte affiché d'une question : une phrase garde chaque nombre collé à son nom
    * (« 9 sauts ») grâce aux espaces insécables.
    * @param {Object} question
    * @returns {string}
    */
   getQuestionText(question) {
     const text = String(question?.question ?? '');
-    return question?.type === 'problem' ? keepNumbersTogether(text) : text;
+    return isSentenceQuestion(question) ? keepNumbersTogether(text) : text;
   }
 
   /**
@@ -1360,14 +1394,15 @@ export class GameMode {
   }
 
   /**
-   * Énoncé de problème : même gabarit, dans la nouvelle langue
+   * Phrase de la question dans la nouvelle langue : même gabarit pour un énoncé, même
+   * nombre et même diviseur pour une divisibilité
    */
   refreshQuestionText() {
     const question = this.state.currentQuestion;
-    if (question?.type !== 'problem' || !this.questionElement) return;
-    const template = problemTemplates(question.operator)[question.templateIndex];
-    if (typeof template !== 'string') return;
-    question.question = fillTemplate(template, problemParams(question));
+    if (!question || !this.questionElement) return;
+    const text = retranslatedQuestion(question);
+    if (typeof text !== 'string') return;
+    question.question = text;
     this.questionElement.textContent = this.getQuestionText(question);
   }
 
@@ -1437,7 +1472,7 @@ export class GameMode {
   generateOptions() {
     const question = this.state.currentQuestion;
 
-    if (question.type === 'true_false') {
+    if (question.type === 'true_false' || question.type === 'divisibility') {
       return [
         { value: true, display: getTranslation('true') },
         { value: false, display: getTranslation('false') },
@@ -1464,9 +1499,10 @@ export class GameMode {
     const a = question.a ?? question.table;
     const b = question.b ?? question.num;
 
-    // Enregistrement stats multi-opérations
+    // Enregistrement stats multi-opérations ; une divisibilité n'est pas un calcul
+    // (« 2213 ÷ 3 » fausserait les stats de la division)
     try {
-      recordOperationResult(operator, a, b, isCorrect);
+      if (question.type !== 'divisibility') recordOperationResult(operator, a, b, isCorrect);
     } catch {
       /* no-op: stats optional */
     }
@@ -1540,6 +1576,8 @@ export class GameMode {
     const current = this.state.currentQuestion;
     if (!current) return null;
     const { operator, a, b, type, question } = current;
+    // Divisibilité : la phrase à juger, « 2213 est divisible par 3 »
+    if (type === 'divisibility') return String(question);
     // Vrai/faux : l'égalité proposée telle quelle, « 8 fois 6 égale 47 »
     if (type === 'true_false') return toSpokenForm(question);
     // « 2 × ? = 18 » : « 2 fois combien égale 18 ? », sans la réponse

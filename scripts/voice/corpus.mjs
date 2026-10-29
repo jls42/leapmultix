@@ -25,6 +25,7 @@ import {
   voiceKey,
 } from '../../js/core/spoken-text.js';
 import { getAdventureLevelsByOperator } from '../../js/core/adventure-data.js';
+import { divisibilityPairs, divisibilityStatement } from '../../js/core/divisibility.js';
 import { AVATAR_IDS, welcomeMessageKey } from '../../js/core/avatars.js';
 import { chronoFact, chronoTables, otherFactDirection } from '../../js/core/chrono-questions.js';
 import {
@@ -244,6 +245,19 @@ function addAdventureAndDiscoveryPhrases(ctx, operator) {
   }
 }
 
+/**
+ * Aventure de la division, derniers niveaux : « 2213 est divisible par 3 », chaque nombre
+ * de la liste fixe (core/divisibility.js). Une erreur dit « La bonne réponse est Vrai. »
+ * ou « … Faux. », déjà dans addErrorPhrases.
+ * @param {Object} ctx - Contexte de construction (voir buildCorpus)
+ */
+function addDivisibilityPhrases(ctx) {
+  const { t, add } = ctx;
+  for (const { number, divisor } of divisibilityPairs()) {
+    add('divisibilité', divisibilityStatement(number, divisor, t), '÷');
+  }
+}
+
 /** Chrono : le second nombre de chaque table, de 1 à 10 (chrono-questions.js) */
 const CHRONO_NUMS = Array.from({ length: 10 }, (_, i) => i + 1);
 
@@ -339,6 +353,7 @@ export function buildCorpus(lang, dict = readTranslations(lang)) {
     addAdventureAndDiscoveryPhrases(ctx, operator);
     addChronoPhrases(ctx, operator);
   }
+  addDivisibilityPhrases(ctx);
   addErrorPhrases(ctx);
   addDiscoveryChoicePhrases(ctx);
 
