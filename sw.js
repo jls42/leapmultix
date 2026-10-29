@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v58'; // bump to trigger client update
+const VERSION = 'v59'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -52,7 +52,7 @@ const BACKGROUND_FAMILY = /^\/img\/background_([a-z]+)_\d+\.(?:png|webp)$/;
 // famille de l'image classique : « fox_halloween_head_avatar-128.webp » celle de la tête du
 // renard, « background_fox_halloween_001.webp » les fonds du renard,
 // « leapmultix-social-card-halloween.webp » la carte classique.
-const SEASON_IDS = ['halloween'];
+const SEASON_IDS = ['halloween', 'christmas'];
 const SEASON_MARKS = SEASON_IDS.flatMap(id =>
   ['_', '-'].flatMap(before => ['_', '-', '.'].map(after => [`${before}${id}${after}`, after]))
 );

@@ -19,12 +19,13 @@ import {
 } from '../../js/core/seasons.js';
 
 const HALLOWEEN = SEASONS.find(season => season.id === 'halloween');
+const CHRISTMAS = SEASONS.find(season => season.id === 'christmas');
 // Fête d'essai qui passe le 31 décembre, comme le fera le Nouvel An
 const NEW_YEAR = Object.freeze({
   id: 'newyear',
   from: [12, 27],
   to: [1, 7],
-  themes: { light: 'snow', dark: 'fireworks' },
+  themes: { light: 'confetti', dark: 'fireworks' },
   costumes: ['heads'],
 });
 
@@ -56,6 +57,34 @@ describe('Halloween : du 24 octobre au 1er novembre inclus', () => {
     expect(seasonOfTheme('pumpkin')).toBe(HALLOWEEN);
     expect(seasonOfTheme('halloween')).toBe(HALLOWEEN);
     expect(seasonOfTheme('dark')).toBeNull();
+  });
+});
+
+describe('Noël : du 1er au 26 décembre inclus', () => {
+  test.each([
+    [day(2026, 11, 30), false],
+    [day(2026, 12, 1), true],
+    [day(2026, 12, 24), true],
+    [day(2026, 12, 26), true],
+    [day(2026, 12, 27), false],
+    [day(2027, 1, 1), false],
+    [day(2027, 12, 1), true],
+  ])('%s → %s', (date, expected) => {
+    expect(isInSeason(CHRISTMAS, date)).toBe(expected);
+    expect(findSeason(date)).toBe(expected ? CHRISTMAS : null);
+  });
+
+  test('deux thèmes, un clair et un sombre, reconnus comme ceux de la fête', () => {
+    expect(CHRISTMAS.themes).toEqual({ light: 'snow', dark: 'christmas' });
+    expect(SEASON_THEMES).toEqual(expect.arrayContaining(['snow', 'christmas']));
+    expect(seasonOfTheme('snow')).toBe(CHRISTMAS);
+    expect(seasonOfTheme('christmas')).toBe(CHRISTMAS);
+  });
+
+  test('son édition est l’année du 1er décembre, ?saison=christmas la force hors de ses dates', () => {
+    expect(seasonEdition(CHRISTMAS, day(2026, 12, 24))).toBe('christmas-2026');
+    expect(findSeason(day(2026, 6, 15), 'christmas')).toBe(CHRISTMAS);
+    expect(findSeason(day(2026, 12, 24), NO_SEASON)).toBeNull();
   });
 });
 

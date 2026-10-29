@@ -106,7 +106,9 @@ function failures(tokens, pairs, minimum) {
 
 describe('Contraste des thèmes de couleur (WCAG 2.1 AA)', () => {
   test('les thèmes de la feuille sont tous lus, fêtes comprises', () => {
-    expect(THEME_NAMES).toEqual(expect.arrayContaining(['blue', 'dark', 'pumpkin', 'halloween']));
+    expect(THEME_NAMES).toEqual(
+      expect.arrayContaining(['blue', 'dark', 'pumpkin', 'halloween', 'snow', 'christmas'])
+    );
   });
 
   test('la conversion OKLCH rend le blanc, le noir et leur contraste de 21:1', () => {

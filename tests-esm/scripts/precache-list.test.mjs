@@ -260,7 +260,9 @@ describe('Le dépôt', () => {
   });
 
   test('aucune image de fête : quelques jours par an, l’image classique la remplace hors ligne', () => {
-    expect([...list.core, ...list.images].filter(file => /halloween/.test(file))).toEqual([]);
+    expect([...list.core, ...list.images].filter(file => /halloween|christmas/.test(file))).toEqual(
+      []
+    );
   });
 
   test('taille bornée : le code sous 4 Mo, et jamais un dossier d’images entier', () => {

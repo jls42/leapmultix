@@ -84,7 +84,9 @@ sombre) dans les trois langues, un costume par personnage. Un costume se reconna
 vignette de 56 px : un grand accessoire de forme simple (chapeau, capuche, col, casque peint),
 le même sur la tête, le corps, les fusées et le fond. Halloween 2026 : chapeau de sorcier violet
 (renard), capuche-citrouille (panda), diadème de citrouilles et cape (licorne), cape de vampire
-(dragon), casque peint en citrouille (astronaute).
+(dragon), casque peint en citrouille (astronaute). Noël 2026 : bonnet de Père Noël (renard),
+serre-tête de bois de renne (panda), couronne de houx et cape rouge (licorne), bonnet de lutin
+à grelot (dragon), casque peint en boule de sapin (astronaute).
 
 ### 2. Registre
 
@@ -142,7 +144,11 @@ Recolorations : `bash scripts/seasons/recolor.sh <fête>` lit
 garantirait pas : les 14 morceaux du serpent (méthode `serpent`, seuls les verts tournent ;
 Halloween : `190 68`, dos violet, ventre orangé, yeux et langue gardés), l'herbe de MultiSnake
 et les murs de MultiMiam (méthode `teinte`, `-modulate` sur toute l'image). Le chemin de
-MultiMiam reste classique : orange, il effaçait le renard qui court dessus.
+MultiMiam reste classique : orange, il effaçait le renard qui court dessus. Un couvre-chef sur
+le serpent (Noël : le bonnet du logo, demandé par le propriétaire en jouant) : dessiné seul par
+Codex (`scripts/seasons/<fête>/bonnet.png`), posé par la méthode `bonnet` sur l'arrière de la
+tête de droite, dans la case, puis reporté sur les trois autres têtes par `comme` (elles sont
+cette même image retournée ou tournée, ce que le script vérifie au pixel près).
 
 Relire la planche, dans l'ordre de la liste : personnage reconnaissable, même côté que
 l'original (les sprites d'Arcade se retournent selon `facing`), accessoire lisible en petit,
@@ -213,7 +219,7 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   pilote, monstres, vidéos d'intro).
 - **Serpent** : 14 morceaux qui se raccordent case à case et une tête par direction, dessinés
   séparément. Un dessin refait ne garantit ni les raccords ni la taille : recoloration
-  (`recolor.sh`). Un chapeau dépasserait la case : la couleur suffit.
+  (`recolor.sh`). Un chapeau se pose sur la tête sans dépasser la case (méthode `bonnet`).
 - **Image propre à la fête, sans image classique** (bonbon des réponses de MultiMiam) : hors
   ligne, le service worker n'a rien à servir à sa place. Il répond 404 (`classicImage` de
   `sw.js`), pas une erreur réseau, et le jeu garde son dessin (la pastille) ; vu par
@@ -231,7 +237,17 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   consigne ; aucune image d'Halloween 2026 n'a été refaite.
 - **Deux générations à la fois** : pour ne pas attendre la fin d'une liste, une liste à part
   (`scripts/seasons/<fête>-<lot>/prompts.tsv`, lancée comme une fête) tourne en parallèle sans
-  gêner l'autre ; la verser ensuite dans la liste de la fête et effacer le dossier.
+  gêner l'autre ; la verser ensuite dans la liste de la fête et effacer le dossier. Noël
+  2026 : un lot par personnage (corps puis tête), puis, lancés chacun dès que la référence
+  attendue apparaît dans le journal (« fait : … »), un lot de fonds et un lot de fusées par
+  personnage : 53 images en 15 minutes, environ 1 % de la fenêtre de 5 h chacune.
+- **Planche faite à la main** : jamais `ls … | xargs montage … <sortie>`. xargs place les
+  fichiers après la sortie : le dernier devient la sortie de montage et il est écrasé par la
+  planche (Noël 2026 : une fusée à redessiner). Passer la liste avant la sortie
+  (`montage $(ls …) … <sortie>`).
+- **Couleurs à croiser** : la recoloration du serpent et la nourriture se voient ensemble, les
+  murs et les réponses de MultiMiam aussi. Noël : serpent rouge, donc nourriture d'une autre
+  couleur ; papillotes rouges, donc murs vert sapin.
 - **Variantes** : `assets/generated-images/` n'étant pas versionné, un worktree neuf les refait
   toutes avec `npm run assets:generate` (plus de 10 min, en tâche de fond).
   `npm run assets:backgrounds` reconvertit tous les fonds, mais les WebP classiques en sortent

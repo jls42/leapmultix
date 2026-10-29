@@ -57,6 +57,23 @@ export const SEASONS = Object.freeze([
     ]),
     worlds: 4,
   }),
+  Object.freeze({
+    id: 'christmas',
+    from: Object.freeze([12, 1]),
+    to: Object.freeze([12, 26]),
+    themes: Object.freeze({ light: 'snow', dark: 'christmas' }),
+    costumes: Object.freeze([
+      'heads',
+      'bodies',
+      'ships',
+      'snake',
+      'miam',
+      'logos',
+      'backgrounds',
+      'hero',
+    ]),
+    worlds: 4,
+  }),
 ]);
 
 /** Valeur du paramètre d'essai ?saison= qui retire toute fête */

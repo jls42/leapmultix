@@ -10,7 +10,15 @@
 # tourne de 180°) :
 # - serpent <teinte du dos> <teinte du ventre> : seuls les verts tournent, le vert du dos vers
 #   une teinte, le vert-jaune du ventre vers une autre ; yeux, langue et transparence gardés ;
-# - teinte <luminosité,saturation,teinte> : toute l'image (herbe, murs).
+# - teinte <luminosité,saturation,teinte> : toute l'image (herbe, murs) ;
+# - bonnet <image> <largeur> <x> <y> <angle> : pose l'image (un bonnet, fond transparent),
+#   rognée, mise à la largeur donnée et tournée de l'angle (degrés, sens horaire), coin haut
+#   gauche en (x, y), négatifs admis (le dépassement est rogné), sur la sortie déjà faite par une ligne précédente pour la même source ;
+#   elle doit rester dans la case : rien ne dépasse d'une tuile du serpent ;
+# - comme <source modèle> <transformation> : la sortie du modèle, faite plus haut, retournée ou
+#   tournée (flop, transverse, rotate 90…) ; seulement si l'original s'obtient exactement ainsi
+#   depuis l'original du modèle (vérifié) : un bonnet posé sur une tête du serpent passe aux
+#   trois autres à l'identique.
 #
 # Usage : bash scripts/seasons/recolor.sh <fête>   (depuis la racine du dépôt)
 # Prérequis : ImageMagick (convert, identify).
@@ -40,6 +48,26 @@ snake() {
         \( "$source" -alpha extract \) -compose CopyOpacity -composite "$target"
 }
 
+# Bonnet posé sur une sortie déjà faite
+hat() {
+    local target="$1" image="$2" width="$3" x="$4" y="$5" angle="$6"
+    [[ -s "$target" ]] || { echo "Sortie à faire avant le bonnet : $target" >&2; exit 1; }
+    convert "$target" \( "$image" -trim +repage -resize "${width}x" -background none \
+        -rotate "$angle" \) -geometry "$(printf '%+d%+d' "$x" "$y")" -compose Over \
+        -composite "$target"
+}
+
+# Sortie d'un modèle retournée ou tournée comme l'original l'est depuis l'original du modèle
+like() {
+    local source="$1" target="$2" model="$3"
+    shift 3
+    local made="${model%.png}_$SEASON.png" gap
+    [[ -s "$made" ]] || { echo "Modèle à faire avant : $made" >&2; exit 1; }
+    gap="$(convert "$model" "$@" miff:- | compare -metric AE miff:- "$source" null: 2>&1 || true)"
+    [[ "$gap" == "0" ]] || { echo "$source ne s'obtient pas de $model par $* ($gap)" >&2; exit 1; }
+    convert "$made" "$@" "$target"
+}
+
 while IFS=$'\t' read -r source method setting; do
     [[ -z "$source" || "$source" == \#* ]] && continue
     [[ -s "$source" ]] || { echo "Image absente : $source" >&2; exit 1; }
@@ -50,6 +78,12 @@ while IFS=$'\t' read -r source method setting; do
             snake "$source" "$target" "$back" "$belly" ;;
         teinte)
             convert "$source" -modulate "$setting" "$target" ;;
+        bonnet)
+            read -r image width x y angle <<<"$setting"
+            hat "$target" "$image" "$width" "$x" "$y" "$angle" ;;
+        comme)
+            read -r model op arg <<<"$setting"
+            like "$source" "$target" "$model" "-$op" ${arg:+"$arg"} ;;
         *)
             echo "Méthode inconnue : $method ($source)" >&2
             exit 1 ;;
