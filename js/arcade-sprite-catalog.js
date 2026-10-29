@@ -77,13 +77,18 @@ export function fallbackUrl(file) {
 
 export const MONSTER_COUNT = 155;
 
-/**
- * @param {number} index - Numéro du monstre, de 1 à 155
- * @returns {SpriteSpec}
- */
-export function monsterSpec(index) {
+/** Monstre classique, numéro de 1 à 155 */
+function classicMonster(index) {
   const number = String(index).padStart(2, '0');
   return spec(`monstre${number}_right`, [`monstre${number}_right_128x128.png`]);
+}
+
+/**
+ * @param {number} index - Numéro du monstre, de 1 à 155
+ * @returns {SpriteSpec} Costumé pendant une fête, le monstre classique en repli
+ */
+export function monsterSpec(index) {
+  return wornSpec(classicMonster(index), 'monsters');
 }
 
 /* --- Personnages : le renard et l'astronaute regardent à gauche dans leur source --- */
@@ -261,7 +266,7 @@ export function answerTokenSpec() {
  * @returns {SpriteSpec[]}
  */
 export function arcadeSpriteSpecs() {
-  const monsters = Array.from({ length: MONSTER_COUNT }, (_, i) => monsterSpec(i + 1));
+  const monsters = Array.from({ length: MONSTER_COUNT }, (_, i) => classicMonster(i + 1));
   const ships = [...new Set(SPACESHIP_SOURCES.values())].map(source => spec(source, []));
   const snake = [...SNAKE_PARTS].map(snakePart);
   return [...monsters, ...AVATARS.values(), ...ships, ...snake, ...TEXTURES.values()];
@@ -269,6 +274,7 @@ export function arcadeSpriteSpecs() {
 
 // Images classiques que chaque famille costume dans les jeux d'Arcade
 const COSTUMED_SPRITES = new Map([
+  ['monsters', () => Array.from({ length: MONSTER_COUNT }, (_, i) => classicMonster(i + 1))],
   ['bodies', () => [...AVATARS.values()]],
   ['ships', () => PILOTED_SHIPS.map(source => spec(source, []))],
   [

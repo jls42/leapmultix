@@ -11,9 +11,11 @@
  */
 
 /**
- * @typedef {'heads'|'bodies'|'ships'|'snake'|'miam'|'logos'|'backgrounds'|'hero'} CostumeFamily
+ * @typedef {'heads'|'bodies'|'monsters'|'ships'|'snake'|'miam'|'logos'|'backgrounds'|'hero'} CostumeFamily
  * heads : assets/images/arcade/<avatar>_<fête>_head_avatar.png ;
  * bodies : assets/images/arcade/<avatar>_<fête>.png (MultiMiam) ;
+ * monsters : assets/images/arcade/monstre<NN>_right_<fête>.png, les 155 monstres des jeux
+ *   d'Arcade (MultiMiam, MultiInvaders, MultiMemory), tournés à droite comme les classiques ;
  * ships : assets/images/arcade/<fusée>_<fête>.png (MultiInvaders) ;
  * snake : MultiSnake, dans assets/images/arcade : les 14 morceaux du serpent
  *   (<morceau>_<fête>.png), la nourriture des réponses (snake_apple_<fête>.png) et l'herbe du

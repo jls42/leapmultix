@@ -27,6 +27,7 @@ porte dans le code chacune, toutes lues par `costumed(nom, famille)` :
 | ------------- | -------------------------------------------------------------------------------- | ----------------------- |
 | `heads`       | `assets/images/arcade/<avatar>_<fête>_head_avatar.png`                           | `js/avatar-heads.js`    |
 | `bodies`      | `assets/images/arcade/<avatar>_<fête>.png` (MultiMiam)                           | `arcade-sprite-catalog` |
+| `monsters`    | `assets/images/arcade/monstre<NN>_right_<fête>.png` (155, tournés à droite)      | `arcade-sprite-catalog` |
 | `ships`       | `assets/images/arcade/<fusée>_<fête>.png` (dix fusées)                           | `arcade-sprite-catalog` |
 | `snake`       | 14 morceaux `<morceau>_<fête>.png`, `snake_apple_<fête>.png`, `herbe_<fête>.png` | `arcade-sprite-catalog` |
 | `miam`        | `mur_<fête>.png`, `multimiam_reponse_<fête>.png` (sous chaque réponse)           | `arcade-sprite-catalog` |

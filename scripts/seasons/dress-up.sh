@@ -46,6 +46,8 @@ format_clause() {
     case "$1" in
         carre-transparent)
             echo "Format carré 1024 × 1024. Fond TRANSPARENT (PNG avec canal alpha), sans sol, sans ombre portée ni halo : le sujet seul. Même place et même taille dans le cadre que la 1re image jointe ; un accessoire qui dépasse peut réduire l'ensemble de 10 % au plus. Les éléments du costume restent lisibles sur une vignette de 56 pixels : grands, de formes simples et bien contrastées." ;;
+        portrait-transparent)
+            echo "Format portrait 1024 × 1536. Fond TRANSPARENT (PNG avec canal alpha), sans sol, sans ombre portée ni halo : le sujet seul. Même place et même taille dans le cadre que la 1re image jointe ; un accessoire qui dépasse peut réduire l'ensemble de 10 % au plus. Les éléments du costume restent lisibles sur une vignette de 56 pixels : grands, de formes simples et bien contrastées." ;;
         paysage)
             echo "Format paysage 1536 × 1024, image pleine, sans bord ni cadre : elle sert de fond derrière l'interface du jeu." ;;
         bandeau)
@@ -58,6 +60,7 @@ format_clause() {
 format_size() {
     case "$1" in
         carre-transparent) echo 1024x1024 ;;
+        portrait-transparent) echo 1024x1536 ;;
         paysage) echo 1536x1024 ;;
         bandeau) echo 1200x630 ;;
         *) return 1 ;;
@@ -70,7 +73,7 @@ conforms() {
     [[ -s "$target" ]] || return 1
     size="$(identify -format '%wx%h' "$target" 2>/dev/null)" || return 1
     [[ "$size" == "$(format_size "$format")" ]] || return 1
-    if [[ "$format" == carre-transparent ]]; then
+    if [[ "$format" == *-transparent ]]; then
         corner="$(convert "$target" -format '%[fx:p{0,0}.a]' info: 2>/dev/null)" || return 1
         [[ "$corner" == 0 ]] || return 1
     fi
@@ -82,7 +85,7 @@ finish() {
     size="$(format_size "$format")"
     mkdir -p "$(dirname "$target")"
     case "$format" in
-        carre-transparent)
+        *-transparent)
             convert "$raw" -resize "$size" -background none -gravity center -extent "$size" "$target" ;;
         *)
             convert "$raw" -resize "$size^" -gravity center -extent "$size" -alpha off -quality 90 "$target" ;;

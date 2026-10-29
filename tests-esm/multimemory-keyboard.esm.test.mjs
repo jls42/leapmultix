@@ -16,7 +16,7 @@ jest.unstable_mockModule('../js/arcade.js', () => ({
   stopArcadeMode: jest.fn(),
   showArcadeGameOver,
   isArcadeActive: () => false,
-  monsterSprites: Array.from({ length: 16 }, () => ({ complete: false })),
+  memoryMonsterSprites: () => Array.from({ length: 16 }, () => ({ complete: false })),
 }));
 jest.unstable_mockModule('../js/arcade-session.js', () => ({ noteArcadePlay }));
 

@@ -472,7 +472,14 @@ const MEMORY_MONSTERS = [
   ...Array.from({ length: 83 }, (_, i) => i + 1),
   ...Array.from({ length: 10 }, (_, i) => i + 146),
 ];
-export const monsterSprites = MEMORY_MONSTERS.map(number => spriteFor(monsterSpec(number)));
+
+/**
+ * Monstres des cartes, demandés à chaque partie : ils portent le costume de la fête en cours
+ * @returns {Array<Object>}
+ */
+export function memoryMonsterSprites() {
+  return MEMORY_MONSTERS.map(number => spriteFor(monsterSpec(number)));
+}
 
 // ===== Timer de l'Arcade (compte à rebours) =====
 let arcadeTimerIntervalId = null,

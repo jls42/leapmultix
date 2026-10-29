@@ -12,11 +12,13 @@ import fs from 'node:fs';
 const { SEASONS, costumed, seasonWorlds, wearSeason } = await import('../js/core/seasons.js');
 const { avatarHeadImage, AVATAR_IDS } = await import('../js/avatar-heads.js');
 const {
+  MONSTER_COUNT,
   SNAKE_PART_FILES,
   answerTokenSpec,
   arcadeOfflineImages,
   arcadeSpriteSpecs,
   avatarSpec,
+  monsterSpec,
   seasonalSpriteSpecs,
   snakePartSpec,
   spaceshipSpec,
@@ -54,6 +56,10 @@ function heroImage() {
 const FAMILY_FILES = new Map([
   ['heads', () => AVATAR_IDS.map(avatar => sourceOf(avatarHeadImage(avatar, '56px').src))],
   ['bodies', () => AVATAR_IDS.map(avatar => arcade(avatarSpec(avatar).source))],
+  [
+    'monsters',
+    () => Array.from({ length: MONSTER_COUNT }, (_, i) => arcade(monsterSpec(i + 1).source)),
+  ],
   ['ships', () => SHIP_SELECTIONS.map(selection => arcade(spaceshipSpec(selection).source))],
   [
     'snake',
@@ -124,6 +130,14 @@ describe('Arcade', () => {
     wearSeason(HALLOWEEN);
     expect(avatarSpec('fox')).toEqual({ ...classic, source: 'fox_halloween' });
     expect(avatarSpec('inconnu').source).toBe('fox_halloween');
+  });
+
+  test('monstres : costumés quand la fête les annonce, mêmes replis classiques', () => {
+    const classic = monsterSpec(7);
+    expect(classic.source).toBe('monstre07_right');
+    wearSeason({ ...HALLOWEEN, costumes: ['monsters'] });
+    expect(monsterSpec(7)).toEqual({ ...classic, source: 'monstre07_right_halloween' });
+    expect(monsterSpec(155).source).toBe('monstre155_right_halloween');
   });
 
   test('fusées pilotées costumées, fusées sans pilote inchangées', () => {
