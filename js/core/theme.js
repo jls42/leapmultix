@@ -1,6 +1,7 @@
 /**
  * Theme and accessibility helpers (extracted from main.js)
  * - initThemes, effectiveColorTheme, applyColorTheme, rememberColorTheme
+ * - counterpartTheme, isDarkTheme, appliedColorTheme (bascule clair / sombre)
  * - updateVolume
  * - applyHighContrastMode
  * - applyFontSize
@@ -15,7 +16,7 @@ import { gameState } from '../game.js';
 import { repaintAvatarHeads } from '../avatar-heads.js';
 import { repaintModeLogos } from '../logos.js';
 import {
-  SEASON_THEMES,
+  SEASONS,
   findSeason,
   seasonEdition,
   seasonOfTheme,
@@ -28,11 +29,56 @@ const COLOR_THEME_KEY = 'colorTheme';
 /** Choix fait pendant une fête : « <édition>:<thème> », « none » pour un thème ordinaire */
 const SEASON_CHOICE_KEY = 'seasonChoice';
 const SEASON_DECLINED = 'none';
-/** Thèmes ordinaires sombres : pendant une fête, leur joueur reçoit son thème sombre */
-const DARK_THEMES = new Set(['blue', 'dark']);
-const THEME_CLASSES = ['pink', 'blue', 'green', 'orange', 'dark', ...SEASON_THEMES].map(
-  theme => `theme-${theme}`
+/**
+ * Chaque thème a son contraire de l'autre clarté, [clair, sombre] : Classique et Nuit, Ciel et
+ * Spatial, Nature et Forêt, Orangé et Braise, puis les deux thèmes de chaque fête. La bascule
+ * passe de l'un à l'autre ; pendant une fête, un thème sombre donne le thème sombre de la fête.
+ */
+const THEME_PAIRS = Object.freeze([
+  ['default', 'dark'],
+  ['sky', 'blue'],
+  ['green', 'moss'],
+  ['orange', 'ember'],
+  ...SEASONS.map(({ themes }) => [themes.light, themes.dark]),
+]);
+const DARK_THEMES = new Set(THEME_PAIRS.map(([, dark]) => dark));
+const COUNTERPARTS = new Map(
+  THEME_PAIRS.flatMap(([light, dark]) => [
+    [light, dark],
+    [dark, light],
+  ])
 );
+// « pink », d'un ancien thème, peut rester dans un profil : sa classe s'efface comme les autres
+const THEME_CLASSES = ['pink', ...COUNTERPARTS.keys()]
+  .filter(theme => theme !== 'default')
+  .map(theme => `theme-${theme}`);
+
+/** Thème affiché en dernier (applyColorTheme) */
+let applied = 'default';
+
+/**
+ * @param {string} theme
+ * @returns {boolean} Le thème est-il sombre ?
+ */
+export function isDarkTheme(theme) {
+  return DARK_THEMES.has(theme);
+}
+
+/**
+ * @param {string} theme
+ * @returns {string} Le même thème dans l'autre clarté ; Nuit pour un thème inconnu (Classique)
+ */
+export function counterpartTheme(theme) {
+  return COUNTERPARTS.get(theme) ?? 'dark';
+}
+
+/** Un thème connu, Classique sinon (ancien « pink », valeur abîmée) */
+const knownTheme = theme => (COUNTERPARTS.has(theme) ? theme : 'default');
+
+/** @returns {string} Le thème affiché, que la bascule retourne */
+export function appliedColorTheme() {
+  return applied;
+}
 
 /**
  * Marque le bouton actif d'un groupe (classe .active et aria-pressed).
@@ -65,14 +111,14 @@ function seasonChoice(edition) {
 
 /**
  * Thème à afficher. Pendant une fête : celui que l'enfant y a choisi, sinon celui de la fête
- * qui suit la clarté de son thème ordinaire (Spatial, Nuit → sombre ; les autres → clair) ;
+ * qui suit la clarté de son thème ordinaire (sombre ou clair, THEME_PAIRS) ;
  * un thème ordinaire choisi pendant la fête la retire jusqu'à la suivante.
  * @param {import('./seasons.js').Season|null} [season]
  * @param {Date} [date]
  * @returns {string}
  */
 export function effectiveColorTheme(season = currentSeason(), date = new Date()) {
-  const ordinary = localStorage.getItem(COLOR_THEME_KEY) || 'default';
+  const ordinary = knownTheme(localStorage.getItem(COLOR_THEME_KEY));
   if (!season) return ordinary;
   const choice = seasonChoice(seasonEdition(season, date));
   if (choice === SEASON_DECLINED) return ordinary;
@@ -97,11 +143,18 @@ export function rememberColorTheme(theme, season = currentSeason(), date = new D
   }
 }
 
-/** Les boutons des thèmes de fête ne se montrent que pendant leur fête */
-function showSeasonButtons(season) {
+/**
+ * Seuls les thèmes de la clarté affichée se montrent, et ceux d'une fête pendant cette fête
+ * seulement ; l'interrupteur « Mode sombre » suit
+ */
+function showThemeButtons(season, dark) {
   for (const btn of document.querySelectorAll('.color-theme-btn')) {
-    const owner = seasonOfTheme(btn.dataset.colorTheme);
-    if (owner) btn.hidden = owner !== season;
+    const theme = btn.dataset.colorTheme;
+    const owner = seasonOfTheme(theme);
+    btn.hidden = isDarkTheme(theme) !== dark || (owner !== null && owner !== season);
+  }
+  for (const toggle of document.querySelectorAll('.theme-mode-switch')) {
+    toggle.setAttribute('aria-checked', String(dark));
   }
 }
 
@@ -123,12 +176,13 @@ function repaintCostumedImages() {
  * @param {import('./seasons.js').Season|null} [season]
  */
 export function applyColorTheme(theme, season = currentSeason()) {
+  applied = knownTheme(theme);
   document.body.classList.remove(...THEME_CLASSES);
-  if (theme !== 'default') document.body.classList.add(`theme-${theme}`);
-  showSeasonButtons(season);
-  markPressed('.color-theme-btn', btn => btn.dataset.colorTheme === theme);
+  if (applied !== 'default') document.body.classList.add(`theme-${applied}`);
+  showThemeButtons(season, isDarkTheme(applied));
+  markPressed('.color-theme-btn', btn => btn.dataset.colorTheme === applied);
 
-  const costume = seasonOfTheme(theme);
+  const costume = seasonOfTheme(applied);
   if (costume !== wornSeason()) {
     wearSeason(costume);
     repaintCostumedImages();

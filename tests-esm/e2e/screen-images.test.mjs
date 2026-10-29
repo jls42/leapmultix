@@ -459,6 +459,17 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
         expect(dashboard.filter(img => !logo.test(img.src))).toEqual([]);
         expect(dashboard).toHaveLength(9);
         await openPersonalization();
+        // Thèmes affichés (display, pas l'attribut hidden seul) : ceux de la clarté en cours,
+        // quatre ordinaires et un de la fête, aucun de l'autre fête
+        const shown = await page.$$eval('.color-theme-btn', buttons =>
+          buttons
+            .filter(button => getComputedStyle(button).display !== 'none')
+            .map(button => button.dataset.colorTheme)
+        );
+        const otherSeason =
+          season === 'halloween' ? ['snow', 'christmas'] : ['pumpkin', 'halloween'];
+        expect(shown).toHaveLength(5);
+        expect(shown.filter(theme => otherSeason.includes(theme))).toEqual([]);
         const costumed = await settledImages(SLIDE6_HEADS);
         expect({
           problems: headProblems(costumed, headVariant),

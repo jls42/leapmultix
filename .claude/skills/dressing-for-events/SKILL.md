@@ -39,7 +39,7 @@ Une nouvelle famille : une porte qui appelle `costumed()`, une ligne dans `FAMIL
 suit sans autre réglage :
 
 - pendant la fête, chaque enfant reçoit le thème de la fête de même clarté que son thème
-  ordinaire (Spatial, Nuit → sombre ; les autres → clair) ; un thème ordinaire choisi pendant la
+  ordinaire (Nuit, Spatial, Forêt, Braise → sombre ; les autres → clair) ; un thème ordinaire choisi pendant la
   fête la retire jusqu'à l'édition suivante (`seasonChoice`, rattaché à l'année) ; le thème
   ordinaire n'est jamais réécrit ;
 - les images ne se costument que quand un thème de la fête est appliqué (`wearSeason`, posé

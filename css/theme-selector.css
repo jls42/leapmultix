@@ -175,6 +175,82 @@
   stroke-width: 1.5;
 }
 
+/* --- Interrupteur « Mode sombre » : le thème affiché dans l'autre clarté (role="switch") --- */
+.theme-mode-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: fit-content;
+  min-block-size: 48px;
+  margin: 0 auto var(--space-4);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+  background-color: var(--color-surface);
+  border: 0;
+  border-radius: var(--radius-pill);
+  box-shadow:
+    inset 0 0 0 2px var(--color-border),
+    0 var(--key-edge) 0 var(--color-border-strong);
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .theme-mode-switch:hover {
+    box-shadow:
+      inset 0 0 0 2px var(--color-action),
+      0 var(--key-edge) 0 var(--color-border-strong);
+  }
+}
+
+.theme-mode-switch:active {
+  transform: translateY(var(--key-edge));
+  box-shadow:
+    inset 0 0 0 2px var(--color-action),
+    0 0 0 var(--color-border-strong);
+}
+
+/* Rail : creux et contour franc éteint, couleur d'action allumé */
+.theme-mode-switch-track {
+  position: relative;
+  flex: none;
+  inline-size: 52px;
+  block-size: 32px;
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 2px var(--color-border-strong);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+
+.theme-mode-switch-thumb {
+  position: absolute;
+  inset-block-start: 4px;
+  inset-inline-start: 4px;
+  inline-size: 24px;
+  block-size: 24px;
+  background-color: var(--color-border-strong);
+  border-radius: 50%;
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+
+.theme-mode-switch[aria-checked='true'] .theme-mode-switch-track {
+  background-color: var(--color-action);
+  box-shadow: inset 0 0 0 2px var(--color-action-edge);
+}
+
+.theme-mode-switch[aria-checked='true'] .theme-mode-switch-thumb {
+  background-color: var(--color-on-action);
+  transform: translateX(20px);
+}
+
 /* --- Thèmes de couleurs : pastille du thème + libellé --- */
 .color-theme-selector {
   display: flex;
@@ -207,8 +283,8 @@
     background-color var(--dur-base) var(--ease-out);
 }
 
-/* Thèmes d'une fête hors de ses dates (js/core/theme.js) : l'affichage du bouton l'emporterait
-   sinon sur l'attribut hidden */
+/* Thèmes de l'autre clarté, ou d'une fête hors de ses dates (js/core/theme.js) : l'affichage
+   du bouton l'emporterait sinon sur l'attribut hidden */
 .color-theme-btn[hidden] {
   display: none;
 }

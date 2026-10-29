@@ -19,7 +19,13 @@ import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
 import { confirmDialog } from './confirm-dialog.js';
 import { keepWornAvatar } from '../core/avatar-shop.js';
-import { applyColorTheme, currentSeason, rememberColorTheme } from '../core/theme.js';
+import {
+  applyColorTheme,
+  appliedColorTheme,
+  counterpartTheme,
+  currentSeason,
+  rememberColorTheme,
+} from '../core/theme.js';
 import { seasonOfTheme } from '../core/seasons.js';
 
 /** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
@@ -394,6 +400,16 @@ export const Customization = {
     // Navigation par flèches dans les thèmes ; les avatars sont des boutons radio
     // natifs, le navigateur s'en charge déjà.
     this._bindArrowKeys(document.querySelector('.color-theme-selector'), '.color-theme-btn');
+
+    // Interrupteur « Mode sombre » : le thème affiché dans l'autre clarté (Classique ↔ Nuit…)
+    const modeSwitch = document.getElementById('theme-mode-switch');
+    if (modeSwitch && !modeSwitch.dataset.listenerAttached) {
+      modeSwitch.addEventListener(
+        'click',
+        singleActivation(() => this.updateColorTheme(counterpartTheme(appliedColorTheme())))
+      );
+      modeSwitch.dataset.listenerAttached = 'true';
+    }
 
     // Bouton « Vider le cache »
     const clearBtn = document.getElementById('clear-cache-btn');
