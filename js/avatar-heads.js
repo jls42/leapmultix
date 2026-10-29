@@ -12,6 +12,7 @@
  */
 import { webpImage, webpImageAttributes } from './webp-images.js';
 import { AVATAR_IDS } from './core/avatars.js';
+import { costumed } from './core/seasons.js';
 
 /** Avatars du jeu : la liste blanche des identifiants (js/core/avatars.js) */
 export { AVATAR_IDS };
@@ -76,7 +77,8 @@ const HEAD_WIDTHS = [128, 256, 512];
 /**
  * Arguments de js/webp-images.js pour une tête : PNG de 128 px du dépôt en repli, variantes
  * de la source de 1024 px. Le nom du PNG reste écrit en entier : scripts/precache-list.mjs
- * le trouve dans le code.
+ * le trouve dans le code. Pendant une fête, les variantes sont celles de la tête costumée
+ * (« fox_halloween_head_avatar ») ; le repli reste la tête classique, gardée hors ligne.
  * @param {string} [avatarId]
  * @param {string} sizes
  * @returns {[string, {widths: number[], src: number, sizes: string}, string]}
@@ -86,7 +88,7 @@ function headImage(avatarId, sizes) {
   return [
     `${id}_head_avatar_128x128.png`,
     { widths: HEAD_WIDTHS, src: 128, sizes },
-    `${id}_head_avatar`,
+    `${costumed(id, 'heads')}_head_avatar`,
   ];
 }
 
@@ -142,4 +144,19 @@ export function setAvatarHead(img, avatarId, sizes) {
     img.setAttribute(name, value);
   }
   armFallback(img);
+}
+
+/** Repli d'une tête, qui dit son avatar : « …/fox_head_avatar_128x128.png » */
+const HEAD_FALLBACK = /([a-z]+)_head_avatar_128x128\.png$/;
+
+/**
+ * Repose chaque tête affichée, à sa taille, quand le costume change (thème de fête appliqué ou
+ * retiré) : celles de index.html comme celles des écrans déjà montrés
+ * @param {ParentNode} [root]
+ */
+export function repaintAvatarHeads(root = document) {
+  for (const img of root.querySelectorAll('img[data-fallback$="_head_avatar_128x128.png"]')) {
+    const avatar = HEAD_FALLBACK.exec(img.dataset.fallback)?.at(1);
+    if (avatar) setAvatarHead(img, avatar, img.getAttribute('sizes') ?? '');
+  }
 }

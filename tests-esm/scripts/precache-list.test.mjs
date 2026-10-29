@@ -103,7 +103,9 @@ const SITE = {
     const son = 'assets/sounds/bip.wav';
     const tete = \`assets/images/arcade/\${avatar}_left_128x128.png\`;
     const tout = \`assets/images/arcade/\${nom}.png\`;
-    const lang = \`assets/translations/\${l}.json?v=\${v}\`;`,
+    const lang = \`assets/translations/\${l}.json?v=\${v}\`;
+    const fete = 'assets/images/arcade/fox_halloween_head_avatar.png';
+    const heros = \`assets/social/leapmultix-social-card-\${fete}.webp\`;`,
   'js/modes/Mode.js': `const sprite = loader.loadSpriteSync('chemin', 'ui');
     const corps = this.loadSprite('tete_haut.png');`,
   'js/lazy.js': "export const styles = ['css/optional.css'];",
@@ -122,6 +124,11 @@ const SITE = {
   'assets/images/arcade/chemin.png': 'i',
   'assets/images/arcade/tete_haut.png': 'i',
   'assets/images/arcade/inutile.png': 'i',
+  // Images d'une fête (js/core/seasons.js) : nommées dans le code, jamais préchargées
+  'assets/images/arcade/fox_halloween_head_avatar.png': 'i',
+  'assets/images/arcade/fox_halloween_left_128x128.png': 'i',
+  'assets/social/leapmultix-social-card-halloween.webp': 'h',
+  'img/background_fox_halloween_001.webp': 'b',
   'img/background_fox_003.webp': 'b',
   'img/background_fox_010.webp': 'b',
   'img/background_panda_002.webp': 'b',
@@ -250,6 +257,10 @@ describe('Le dépôt', () => {
     );
     const family = /^\/assets\/(?:images\/.+\.png|generated-images\/.+)$/;
     expect(list.images.filter(file => !family.test(file))).toEqual([]);
+  });
+
+  test('aucune image de fête : quelques jours par an, l’image classique la remplace hors ligne', () => {
+    expect([...list.core, ...list.images].filter(file => /halloween/.test(file))).toEqual([]);
   });
 
   test('taille bornée : le code sous 4 Mo, et jamais un dossier d’images entier', () => {

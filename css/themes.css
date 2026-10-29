@@ -182,9 +182,31 @@
   --color-scrim-game: oklch(96.5% 0.008 60deg / 0.8);
 }
 
+/* ========== FÊTE : CITROUILLE (Halloween, clair) ==========
+   Proposé du 24 octobre au 1er novembre (js/core/seasons.js) : crème orangée, encre et
+   titres violets, action citrouille. */
+.theme-pumpkin {
+  --color-page: oklch(93.5% 0.035 70deg);
+  --color-surface: oklch(99.5% 0.004 70deg);
+  --color-surface-sunken: oklch(96.5% 0.012 70deg);
+  --color-border: oklch(88.5% 0.02 60deg);
+  --color-border-strong: oklch(62% 0.04 305deg);
+  --color-ink: oklch(28% 0.04 305deg);
+  --color-ink-muted: oklch(47% 0.04 305deg);
+  --color-ink-heading: oklch(40% 0.13 305deg);
+  --color-action: oklch(56% 0.168 45deg);
+  --color-action-hover: oklch(51% 0.154 45deg);
+  --color-action-edge: oklch(42% 0.127 45deg);
+  --color-action-ink: oklch(50% 0.15 45deg);
+  --color-action-tint: oklch(94.5% 0.03 50deg);
+  --color-focus: oklch(52% 0.17 305deg);
+  --color-scrim-game: oklch(96.5% 0.012 70deg / 0.8);
+}
+
 /* ========== THÈMES SOMBRES : états et ombres communs ========== */
 .theme-blue,
-.theme-dark {
+.theme-dark,
+.theme-halloween {
   color-scheme: dark;
 
   --color-scrim-modal: oklch(8% 0.01 250deg / 0.72);
@@ -263,6 +285,28 @@
   --color-action-tint: oklch(32% 0.07 240deg);
   --color-focus: oklch(80% 0.112 240deg);
   --color-scrim-game: oklch(17% 0.012 250deg / 0.82);
+}
+
+/* ========== FÊTE : NUIT D'HALLOWEEN (sombre) ==========
+   Proposé du 24 octobre au 1er novembre (js/core/seasons.js) : aubergine, cartes violet
+   nuit, action citrouille, encre claire. */
+.theme-halloween {
+  --color-page: oklch(19% 0.05 305deg);
+  --color-surface: oklch(25.5% 0.055 305deg);
+  --color-surface-sunken: oklch(22% 0.05 305deg);
+  --color-border: oklch(36% 0.05 305deg);
+  --color-border-strong: oklch(58% 0.05 305deg);
+  --color-ink: oklch(95.5% 0.012 305deg);
+  --color-ink-muted: oklch(80% 0.03 305deg);
+  --color-ink-heading: oklch(84% 0.12 65deg);
+  --color-action: oklch(76% 0.15 60deg);
+  --color-action-hover: oklch(82% 0.12 60deg);
+  --color-action-edge: oklch(56% 0.14 50deg);
+  --color-action-ink: oklch(80% 0.13 60deg);
+  --color-action-tint: oklch(32% 0.06 50deg);
+  --color-on-action: oklch(22% 0.05 305deg);
+  --color-focus: oklch(80% 0.13 60deg);
+  --color-scrim-game: oklch(19% 0.05 305deg / 0.82);
 }
 
 /* ========== CONTRASTE ÉLEVÉ ==========

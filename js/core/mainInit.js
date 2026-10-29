@@ -308,6 +308,8 @@ function updateHeroMascot(avatarId) {
 }
 
 async function runInit() {
+  // D'abord : un thème de fête costume les images, avant que le fond et les têtes ne se posent
+  initThemes();
   scheduleInitialBackground();
   const resolvedLang = await prepareLanguage();
   safeUpdateSeoHeroImage(resolvedLang);
@@ -322,7 +324,6 @@ async function runInit() {
     logInitWarning('Migration stats échouée (données anciennes préservées)', error);
   }
 
-  initThemes();
   initUserSystems();
   initComponentModules();
   updateHeroMascot();

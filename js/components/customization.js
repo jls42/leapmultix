@@ -19,6 +19,8 @@ import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
 import { confirmDialog } from './confirm-dialog.js';
 import { keepWornAvatar } from '../core/avatar-shop.js';
+import { applyColorTheme, currentSeason, rememberColorTheme } from '../core/theme.js';
+import { seasonOfTheme } from '../core/seasons.js';
 
 /** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
 const SLIDE6_AVATAR_RADIOS = '#slide6 .avatar-selector .avatar-radio';
@@ -193,7 +195,10 @@ export const Customization = {
     container.addEventListener('keydown', event => {
       const step = steps[event.key];
       if (!step) return;
-      const items = [...container.querySelectorAll(itemSelector)].filter(item => !item.disabled);
+      // Ni désactivé ni caché (thèmes d'une fête, hors de ses dates)
+      const items = [...container.querySelectorAll(itemSelector)].filter(
+        item => !item.disabled && !item.hidden
+      );
       const index = items.indexOf(document.activeElement);
       if (index === -1) return;
       event.preventDefault();
@@ -474,32 +479,14 @@ export const Customization = {
   },
 
   /**
-   * Mettre à jour le thème de couleurs
+   * Mettre à jour le thème de couleurs. Un thème de fête ne vaut que pour la fête en cours :
+   * le thème ordinaire (gameState, profil, colorTheme) n'en garde aucune trace.
    */
   updateColorTheme(themeName) {
-    // Sauvegarder le thème dans gameState et localStorage
-    gameState.colorTheme = themeName;
-    localStorage.setItem('colorTheme', themeName);
-
-    for (const btn of document.querySelectorAll('.color-theme-btn')) {
-      const isActive = btn.dataset.colorTheme === themeName;
-      btn.classList.toggle('active', isActive);
-      btn.setAttribute('aria-pressed', String(isActive));
-    }
-
-    // Retirer toutes les classes de thème de couleur
-    document.body.classList.remove(
-      'theme-pink',
-      'theme-blue',
-      'theme-green',
-      'theme-orange',
-      'theme-dark'
-    );
-
-    // Ajouter la classe pour le nouveau thème si ce n'est pas le thème par défaut
-    if (themeName !== 'default') {
-      document.body.classList.add('theme-' + themeName);
-    }
+    const season = currentSeason();
+    rememberColorTheme(themeName, season);
+    if (!seasonOfTheme(themeName)) gameState.colorTheme = themeName;
+    applyColorTheme(themeName, season);
 
     // Message de confirmation
     const label = tr(`color_theme_${themeName}`, themeName);

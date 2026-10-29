@@ -7,7 +7,7 @@
 //   does not answer), the cached game page; offline, the same (offline.html only for a page
 //   never cached)
 // - Images: cache-first; offline, another image of the same family (other size of a sprite,
-//   other background of the same avatar)
+//   other background of the same avatar; a holiday's costumed image: its classic image)
 // - Translations JSON: stale-while-revalidate
 // - JS/CSS of this version (?v=<VERSION>, every address of a deployed site): the precached
 //   copy first, then the exact runtime copy, then the network, never cached under that
@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v54'; // bump to trigger client update
+const VERSION = 'v56'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -46,6 +46,16 @@ const PRECACHE_MAX_WIDTH = 256;
 const SPRITE_IMAGE = /^\/assets\/(?:images|generated-images)\/(.+)\.(?:png|webp)$/;
 const SIZE_SUFFIX = /-(\d+)$/;
 const BACKGROUND_FAMILY = /^\/img\/background_([a-z]+)_\d+\.(?:png|webp)$/;
+
+// Fêtes (js/core/seasons.js, mêmes identifiants : test) : une image costumée porte le nom de
+// l'image classique et le suffixe de sa fête. Jamais préchargée, elle rejoint hors ligne la
+// famille de l'image classique : « fox_halloween_head_avatar-128.webp » celle de la tête du
+// renard, « background_fox_halloween_001.webp » les fonds du renard,
+// « leapmultix-social-card-halloween.webp » la carte classique.
+const SEASON_IDS = ['halloween'];
+const SEASON_MARKS = SEASON_IDS.flatMap(id =>
+  ['_', '-'].flatMap(before => ['_', '-', '.'].map(after => [`${before}${id}${after}`, after]))
+);
 
 const TRANSLATIONS = /^\/assets\/translations\/[^/]+\.json$/;
 
@@ -196,6 +206,7 @@ const PRECACHE_CORE = [
   '/js/core/players-trash.js',
   '/js/core/profile-operation-stats.js',
   '/js/core/random.js',
+  '/js/core/seasons.js',
   '/js/core/spoken-text.js',
   '/js/core/stats-migration.js',
   '/js/core/storage.js',
@@ -217,6 +228,7 @@ const PRECACHE_CORE = [
   '/js/keyboard-navigation.js',
   '/js/lazy-loader.js',
   '/js/logger.js',
+  '/js/logos.js',
   '/js/main-es6.js',
   '/js/main-helpers.js',
   '/js/main.js',
@@ -488,6 +500,7 @@ const PRECACHE_IMAGES = [
   '/assets/images/arcade/herbe.png',
   '/assets/images/arcade/licorne_vaisseau_2_256x256.png',
   '/assets/images/arcade/licorne_vaisseau_256x256.png',
+  '/assets/images/arcade/logo_mode_arcade.png',
   '/assets/images/arcade/logo_mode_aventure.png',
   '/assets/images/arcade/logo_mode_chrono.png',
   '/assets/images/arcade/logo_mode_decouverte.png',
@@ -937,15 +950,42 @@ async function cachedResponse(request, anyVersion = false) {
 }
 
 /**
- * Famille d'une image : un sprite et ses tailles, ou les fonds d'un même avatar
+ * Chemin de l'image classique d'une image costumée (suffixe de la fête retiré) ; tout autre
+ * chemin, tel quel
+ * @param {string} pathname
+ * @returns {string}
+ */
+function classicPath(pathname) {
+  const found = SEASON_MARKS.find(([mark]) => pathname.includes(mark));
+  return found ? pathname.replace(found[0], found[1]) : pathname;
+}
+
+/**
+ * Famille d'une image : un sprite et ses tailles, ou les fonds d'un même avatar ; une image
+ * costumée est de la famille de son image classique
  * @param {string} pathname
  * @returns {string|null} null pour une image sans famille
  */
 function imageFamily(pathname) {
-  const sprite = spriteOf(pathname);
+  const classic = classicPath(pathname);
+  const sprite = spriteOf(classic);
   if (sprite) return `sprite:${sprite.base}`;
-  const background = BACKGROUND_FAMILY.exec(pathname);
+  const background = BACKGROUND_FAMILY.exec(classic);
   return background ? `fond:${background[1]}` : null;
+}
+
+/**
+ * Hors ligne, une image costumée sans famille (image des héros) : la copie gardée de son image
+ * classique. Une image propre à la fête, sans image classique (bonbon sous les réponses de
+ * MultiMiam) : une absence plutôt qu'une erreur réseau, la page garde son dessin (la pastille)
+ * @param {Request} request
+ * @returns {Promise<Response|undefined>}
+ */
+async function classicImage(request) {
+  const { pathname } = new URL(request.url);
+  const classic = classicPath(pathname);
+  if (classic === pathname) return undefined;
+  return (await cachedCopy(sameOriginKey(classic))) ?? new Response(null, { status: 404 });
 }
 
 /**
@@ -1002,7 +1042,7 @@ async function imageResponse(event) {
     // Image que la page n'attend plus (rechargée, écran quitté) : une réponse vide plutôt
     // qu'une erreur, que Firefox signalerait dans la console
     if (request.signal?.aborted) return new Response(null, { status: 204 });
-    return (await familyImage(request)) || Response.error();
+    return (await familyImage(request)) || (await classicImage(request)) || Response.error();
   }
 }
 
