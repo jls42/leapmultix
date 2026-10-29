@@ -58,6 +58,21 @@ h2 {
   color: var(--muted);
 }
 
+/* À écouter : marqué ; pour la forme : en retrait, séparé */
+.must > h2 {
+  border-left: 4px solid var(--warn);
+  padding-left: 8px;
+}
+
+.optional {
+  margin-top: 40px;
+  border-top: 1px dashed var(--line);
+}
+
+.optional > h2 {
+  color: var(--muted);
+}
+
 /* Langue et version d'un seul tenant : « lucie-v3-2 » ne se coupe pas au trait d'union */
 .nowrap {
   white-space: nowrap;
