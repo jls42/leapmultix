@@ -7,6 +7,8 @@ paths:
   - 'js/arcade-sprite*.js'
   - 'js/webp-images.js'
   - 'js/avatar-heads.js'
+  - 'js/core/seasons.js'
+  - 'scripts/seasons/**'
 ---
 
 # Images : sources, variantes WebP, préchargement
@@ -37,3 +39,9 @@ paths:
   `js/avatar-heads.js` (`setAvatarHead`, jamais `img.src` seul quand l'image a un `srcset`).
   Garder le nom du PNG en clair dans le code : `scripts/precache-list.mjs` y trouve les images à
   garder hors ligne.
+- Fêtes (`js/core/seasons.js`) : les images costumées portent le suffixe de leur fête
+  (`fox_halloween_head_avatar.png`, `background_fox_halloween_001.png`), dans les mêmes dossiers
+  que les classiques, et restent hors du préchargement ; leur repli est l'image classique.
+  Dessinées par Codex (`scripts/seasons/dress-up.sh`), sauf ce qui se raccorde case à case
+  (morceaux du serpent, herbe, murs), recoloré (`scripts/seasons/recolor.sh`) : skill
+  `dressing-for-events`.
