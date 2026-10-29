@@ -11,6 +11,7 @@ import {
   answerTokenSpec,
   monsterSpec,
   textureSpec,
+  variantUrl,
 } from './arcade-sprite-catalog.js';
 import PacmanQuestions from './multimiam-questions.js';
 import PacmanRenderer from './multimiam-renderer.js';
@@ -42,6 +43,18 @@ function findAvatarByName(avatars, name) {
     if (avatar.name === name) return avatar;
   }
   return undefined;
+}
+
+/**
+ * Fond des bandes de mur : pendant une fête qui costume MultiMiam, son mur (variante de 128 px),
+ * le mur classique dessous en repli (gardé hors ligne) ; hors fête, celui de css/arcade.css
+ * @returns {string}
+ */
+export function festiveWallBackground() {
+  const wall = textureSpec('mur.png').source;
+  return wall === 'mur'
+    ? ''
+    : `url(${variantUrl(wall, 128)}), url(assets/images/arcade/mur_128x128.png)`;
 }
 
 export class PacmanGame {
@@ -164,6 +177,7 @@ export class PacmanGame {
     // La texture des bandes continue les cases du labyrinthe
     this.canvas.style.backgroundSize = `${this.cellWidth}px ${this.cellHeight}px`;
     this.canvas.style.backgroundPosition = `0 ${(shownHeight - height) / 2}px`;
+    this.canvas.style.backgroundImage = festiveWallBackground();
     this.canvas.style.boxSizing = 'content-box';
     this.canvas.style.padding = '0';
     this.canvas.style.display = 'block';
