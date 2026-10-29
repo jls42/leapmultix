@@ -73,7 +73,7 @@ export function fallbackUrl(file) {
   return `${IMAGE_DIR}/${file}`;
 }
 
-/* --- Monstres : sources tournées vers la droite (les « _left » en sont les miroirs) --- */
+/* --- Monstres : sources tournées vers la droite, retournées au dessin (drawArcadeSprite) --- */
 
 export const MONSTER_COUNT = 155;
 
