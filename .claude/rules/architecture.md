@@ -56,7 +56,7 @@ paths:
 
 ### UI Components (`js/components/`)
 
-- `topBar.js` - Navigation and user controls
+- `topBar.js` - Navigation and user controls: icon buttons with a short word under the icon from 1200 px (`icon-btn-caption`, contained in the button's accessible name, WCAG 2.5.3; the ☰ menu shows the full label), and the « Mode sombre » switch on every screen (`data-theme-mode-switch`, asks `theme.js` through `eventBus` `colorMode:toggle`)
 - `dashboard.js` - Progress tracking and statistics
 - `customization.js` - Avatar, theme, and personalization
 - `infoBar.js` - Game status information display

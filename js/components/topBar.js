@@ -50,6 +50,18 @@ const VOICE_TITLES = {
 };
 
 /**
+ * Mots courts affichés sous les icônes sur grand écran (css/topbar.css). Chacun est contenu
+ * dans le nom accessible de son bouton (WCAG 2.5.3) : « Son » dans « Couper le son »…
+ */
+const CAPTIONS = Object.freeze({
+  mute: { key: 'mute_button_caption', fallback: 'Son' },
+  voice: { key: 'voice_toggle_caption', fallback: 'Voix' },
+  tables: { key: 'table_settings_caption', fallback: 'Tables' },
+  mode: { key: 'theme_mode_caption', fallback: 'Sombre' },
+  player: { key: 'change_user_caption', fallback: 'Joueur' },
+});
+
+/**
  * Traduction avec repli lisible tant qu'une clé manque dans les fichiers de langue.
  * @param {string} key - Clé i18n
  * @param {string} fallback - Texte de repli
@@ -132,7 +144,7 @@ function setButtonTitle(button, key, fallback) {
  * @param {string} spec.labelFallback - Libellé de repli
  * @returns {HTMLButtonElement}
  */
-function createIconButton({ id, className, icon, labelKey, labelFallback }) {
+function createIconButton({ id, className, icon, labelKey, labelFallback, caption }) {
   const button = document.createElement('button');
   button.type = 'button';
   if (id) button.id = id;
@@ -143,7 +155,25 @@ function createIconButton({ id, className, icon, labelKey, labelFallback }) {
   label.className = 'icon-btn-label';
   button.appendChild(label);
   setButtonLabel(button, labelKey, labelFallback);
+  const { key, fallback } = caption ?? { key: labelKey, fallback: labelFallback };
+  button.dataset.captionKey = key;
+  button.dataset.captionFallback = fallback;
+  button.appendChild(createCaption({ key, fallback }));
   return button;
+}
+
+/**
+ * Mot affiché sous l'icône sur grand écran ; le nom accessible du bouton le contient déjà
+ * @param {{key: string, fallback: string}} caption
+ * @returns {HTMLSpanElement}
+ */
+function createCaption({ key, fallback }) {
+  const caption = document.createElement('span');
+  caption.className = 'icon-btn-caption';
+  caption.setAttribute('aria-hidden', 'true');
+  caption.dataset.translate = key;
+  caption.textContent = tr(key, fallback);
+  return caption;
 }
 
 /**
@@ -152,12 +182,15 @@ function createIconButton({ id, className, icon, labelKey, labelFallback }) {
  */
 function renderIconButton(button, iconName) {
   const isCanonical = [...button.childNodes].every(
-    node => node.nodeType === 1 && (node.matches('svg.icon') || node.matches('.icon-btn-label'))
+    node =>
+      node.nodeType === 1 &&
+      (node.matches('svg.icon') || node.matches('.icon-btn-label, .icon-btn-caption'))
   );
   if (!isCanonical || !button.querySelector(':scope > .icon-btn-label')) {
     const label = document.createElement('span');
     label.className = 'icon-btn-label';
-    button.replaceChildren(label);
+    const { captionKey: key, captionFallback: fallback } = button.dataset;
+    button.replaceChildren(label, ...(key ? [createCaption({ key, fallback })] : []));
   }
   setIcon(button, iconName);
 }
@@ -194,15 +227,16 @@ const PLAYER_SCREENS = Object.freeze([
     slide: '7',
     className: 'dashboard-btn',
     icon: 'chart-column',
-    labelKey: 'dashboard',
-    labelFallback: 'Tableau de bord',
+    labelKey: 'dashboard_button_label',
+    labelFallback: 'Mes progrès',
+    caption: { key: 'dashboard_button_caption', fallback: 'Progrès' },
   },
   {
     slide: '6',
     className: 'personalization-btn',
     icon: 'palette',
-    labelKey: 'personalization',
-    labelFallback: 'Personnalisation',
+    labelKey: 'personalization_button_label',
+    labelFallback: 'Personnaliser',
   },
 ]);
 
@@ -356,13 +390,15 @@ export const TopBar = {
         createIconButton({
           id: `table-settings-btn-${slideId}`,
           className: 'btn btn-sm btn-secondary icon-btn table-settings-btn',
-          icon: 'settings',
+          icon: 'grid-3x3',
           labelKey: 'table_settings_button_label',
           labelFallback: 'Paramètres des tables',
+          caption: CAPTIONS.tables,
         })
       );
     }
 
+    navContainer.appendChild(this._buildThemeModeSwitch());
     navContainer.appendChild(this._buildVolumeControls(slideId));
 
     const voiceWrap = document.createElement('div');
@@ -373,6 +409,7 @@ export const TopBar = {
       icon: 'speech',
       labelKey: VOICE_LABEL.key,
       labelFallback: VOICE_LABEL.fallback,
+      caption: CAPTIONS.voice,
     });
     applyVoiceState(voiceBtn, readVoiceEnabled());
     voiceWrap.appendChild(voiceBtn);
@@ -386,9 +423,11 @@ export const TopBar = {
       const icon = createIcon('users');
       if (icon) change.appendChild(icon);
       const changeLabel = document.createElement('span');
+      changeLabel.className = 'change-user-label';
       changeLabel.dataset.translate = 'change_user';
       changeLabel.textContent = tr('change_user', 'Changer de joueur');
       change.appendChild(changeLabel);
+      change.appendChild(createCaption(CAPTIONS.player));
       navContainer.appendChild(change);
     }
 
@@ -410,9 +449,29 @@ export const TopBar = {
       icon: screen.icon,
       labelKey: screen.labelKey,
       labelFallback: screen.labelFallback,
+      caption: screen.caption,
     });
     button.dataset.slide = screen.slide;
     if (screen.slide === slideNumber) button.hidden = true;
+    return button;
+  },
+
+  /**
+   * Interrupteur « Mode sombre », sur tous les écrans : le thème affiché passe dans l'autre
+   * clarté (js/core/theme.js, qui tient son état à jour par data-theme-mode-switch)
+   * @returns {HTMLButtonElement}
+   */
+  _buildThemeModeSwitch() {
+    const button = createIconButton({
+      className: 'btn btn-sm btn-secondary icon-btn theme-mode-btn',
+      icon: 'moon',
+      labelKey: 'theme_mode_dark',
+      labelFallback: 'Mode sombre',
+      caption: CAPTIONS.mode,
+    });
+    button.setAttribute('role', 'switch');
+    button.setAttribute('aria-checked', String(document.body?.dataset.colorMode === 'dark'));
+    button.dataset.themeModeSwitch = '';
     return button;
   },
 
@@ -465,6 +524,7 @@ export const TopBar = {
       icon: 'volume-2',
       labelKey: MUTE_STATES.on.key,
       labelFallback: MUTE_STATES.on.fallback,
+      caption: CAPTIONS.mute,
     });
     const volume = readVolume();
     applyMuteState(mute, volume > 0 && !readMuted());
@@ -512,6 +572,7 @@ export const TopBar = {
     this.attachLanguageButtons();
     this.attachVolumeControls();
     this.attachVoiceToggles();
+    this.attachThemeModeSwitches();
     this.attachTableSettingsButtons();
     this.attachBurgerMenus();
     this.attachOutsideClickWatcher();
@@ -593,6 +654,18 @@ export const TopBar = {
         });
         slider.dataset.topBarListenerAttached = 'true';
       }
+    }
+  },
+
+  /** « Mode sombre » : la bascule est faite par js/core/theme.js, prévenu par le bus */
+  attachThemeModeSwitches() {
+    for (const btn of document.querySelectorAll('.top-bar [data-theme-mode-switch]')) {
+      if (btn.dataset.topBarListenerAttached) continue;
+      btn.addEventListener(
+        'click',
+        singleActivation(() => eventBus.emit('colorMode:toggle'))
+      );
+      btn.dataset.topBarListenerAttached = 'true';
     }
   },
 

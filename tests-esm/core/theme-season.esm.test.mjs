@@ -8,6 +8,7 @@ import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globa
 import fs from 'node:fs';
 
 const { SEASONS, wearSeason, wornSeason } = await import('../../js/core/seasons.js');
+const { eventBus } = await import('../../js/core/eventBus.js');
 const {
   applyColorTheme,
   appliedColorTheme,
@@ -16,6 +17,7 @@ const {
   initThemes,
   isDarkTheme,
   rememberColorTheme,
+  toggleColorMode,
 } = await import('../../js/core/theme.js');
 const { Customization } = await import('../../js/components/customization.js');
 
@@ -25,7 +27,7 @@ const IN_2027 = new Date(2027, 9, 31, 12);
 const AFTER = new Date(2026, 10, 2, 12);
 
 const SELECTOR = `
-  <button type="button" id="theme-mode-switch" class="theme-mode-switch" role="switch"
+  <button type="button" id="theme-mode-switch" class="theme-mode-switch" data-theme-mode-switch role="switch"
     aria-checked="false">Mode sombre</button>
   <div class="color-theme-selector">
     <button class="color-theme-btn" data-color-theme="pumpkin" hidden>Citrouille</button>
@@ -240,10 +242,20 @@ describe('Bascule clair / sombre', () => {
     localStorage.setItem('colorTheme', 'green');
     jest.useFakeTimers({ now: AFTER });
     initThemes();
-    Customization.updateColorTheme(counterpartTheme(appliedColorTheme()));
+    toggleColorMode();
     expect(localStorage.getItem('colorTheme')).toBe('moss');
     expect(document.body.classList.contains('theme-moss')).toBe(true);
     expect(localStorage.getItem('seasonChoice')).toBeNull();
+  });
+
+  test('la barre du haut demande la bascule par le bus : thème, clarté et interrupteurs suivent', () => {
+    jest.useFakeTimers({ now: AFTER });
+    initThemes();
+    eventBus.emit('colorMode:toggle');
+    expect(appliedColorTheme()).toBe('dark');
+    expect(document.body.dataset.colorMode).toBe('dark');
+    expect(switchChecked()).toBe('true');
+    expect(localStorage.getItem('colorTheme')).toBe('dark');
   });
 
   test('pendant la fête, la bascule passe à l’autre thème de la fête, thème ordinaire intact', () => {
@@ -251,7 +263,7 @@ describe('Bascule clair / sombre', () => {
     jest.useFakeTimers({ now: IN_2026 });
     initThemes();
     expect(appliedColorTheme()).toBe('pumpkin');
-    Customization.updateColorTheme(counterpartTheme(appliedColorTheme()));
+    toggleColorMode();
     expect(document.body.classList.contains('theme-halloween')).toBe(true);
     expect(localStorage.getItem('colorTheme')).toBe('green');
     expect(localStorage.getItem('seasonChoice')).toBe('halloween-2026:halloween');

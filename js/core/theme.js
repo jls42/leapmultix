@@ -15,6 +15,7 @@ import { setIcon } from '../components/icons.js';
 import { gameState } from '../game.js';
 import { repaintAvatarHeads } from '../avatar-heads.js';
 import { repaintModeLogos } from '../logos.js';
+import { eventBus } from './eventBus.js';
 import {
   SEASONS,
   findSeason,
@@ -145,15 +146,16 @@ export function rememberColorTheme(theme, season = currentSeason(), date = new D
 
 /**
  * Seuls les thèmes de la clarté affichée se montrent, et ceux d'une fête pendant cette fête
- * seulement ; l'interrupteur « Mode sombre » suit
+ * seulement ; les interrupteurs « Mode sombre » (Personnalisation, barre du haut) suivent
  */
 function showThemeButtons(season, dark) {
+  document.body.dataset.colorMode = dark ? 'dark' : 'light';
   for (const btn of document.querySelectorAll('.color-theme-btn')) {
     const theme = btn.dataset.colorTheme;
     const owner = seasonOfTheme(theme);
     btn.hidden = isDarkTheme(theme) !== dark || (owner !== null && owner !== season);
   }
-  for (const toggle of document.querySelectorAll('.theme-mode-switch')) {
+  for (const toggle of document.querySelectorAll('[data-theme-mode-switch]')) {
     toggle.setAttribute('aria-checked', String(dark));
   }
 }
@@ -189,7 +191,31 @@ export function applyColorTheme(theme, season = currentSeason()) {
   }
 }
 
+/**
+ * Choisit un thème : le retient (thème ordinaire, ou choix pendant la fête), le garde au profil
+ * s'il est ordinaire (gameState), et l'applique
+ * @param {string} theme
+ * @param {import('./seasons.js').Season|null} [season]
+ */
+export function chooseColorTheme(theme, season = currentSeason()) {
+  rememberColorTheme(theme, season);
+  if (!seasonOfTheme(theme)) gameState.colorTheme = theme;
+  applyColorTheme(theme, season);
+}
+
+/** Le thème affiché dans l'autre clarté (interrupteur « Mode sombre ») */
+export function toggleColorMode() {
+  chooseColorTheme(counterpartTheme(applied));
+}
+
+// La barre du haut demande la bascule par le bus (elle n'importe pas ce module, qui l'importe)
+let listening = false;
+
 export function initThemes() {
+  if (!listening) {
+    eventBus.on('colorMode:toggle', () => toggleColorMode());
+    listening = true;
+  }
   const season = currentSeason();
   applyColorTheme(effectiveColorTheme(season), season);
   applyHighContrastMode(localStorage.getItem('highContrastEnabled') === 'true');

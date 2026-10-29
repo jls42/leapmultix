@@ -2,6 +2,7 @@ import { describe, beforeAll, beforeEach, afterEach, test, expect, jest } from '
 import { setTranslations } from '../../js/i18n-store.js';
 import Storage from '../../js/core/storage.js';
 import { eventBus } from '../../js/core/eventBus.js';
+import fs from 'node:fs';
 
 const { TopBar } = await import('../../js/components/topBar.js');
 const { isVoiceEnabled, setVoiceEnabledResolver, setSpeechEngine, holdSpeechDecision } =
@@ -19,8 +20,11 @@ const TRANSLATIONS = {
   voice_toggle_on: 'Activer la voix',
   voice_toggle_off: 'Désactiver la voix',
   change_user: 'Changer de joueur',
-  dashboard: 'Tableau de bord',
-  personalization: 'Personnalisation',
+  dashboard_button_label: 'Mes progrès',
+  dashboard_button_caption: 'Progrès',
+  personalization_button_label: 'Personnaliser',
+  theme_mode_dark: 'Mode sombre',
+  theme_mode_caption: 'Sombre',
 };
 
 describe('TopBar : icônes SVG, libellés et états', () => {
@@ -58,14 +62,45 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     expect(bar.querySelector('.table-settings-btn').title).toBe('Paramètres des tables');
   });
 
-  test('« Tableau de bord » et « Personnalisation » : dans la barre (le menu sur téléphone), nommés, vers leur écran', () => {
+  test('« Mes progrès » et « Personnaliser » : dans la barre (le menu sur téléphone), nommés, vers leur écran', () => {
     const nav = TopBar.buildTopBarElement('slide1').querySelector('.top-bar-nav');
     const shortcut = selector => {
       const btn = nav.querySelector(selector);
       return [btn.dataset.slide, btn.getAttribute('aria-label'), btn.hidden];
     };
-    expect(shortcut('.dashboard-btn')).toEqual(['7', 'Tableau de bord', false]);
-    expect(shortcut('.personalization-btn')).toEqual(['6', 'Personnalisation', false]);
+    expect(shortcut('.dashboard-btn')).toEqual(['7', 'Mes progrès', false]);
+    expect(shortcut('.personalization-btn')).toEqual(['6', 'Personnaliser', false]);
+  });
+
+  test('« Mode sombre » : interrupteur sur chaque écran, choix du joueur compris, état suivi', () => {
+    for (const slide of ['slide0', 'slide1', 'slide7']) {
+      const toggle = TopBar.buildTopBarElement(slide).querySelector('[data-theme-mode-switch]');
+      expect([toggle.getAttribute('role'), toggle.getAttribute('aria-label')]).toEqual([
+        'switch',
+        'Mode sombre',
+      ]);
+      expect(toggle.getAttribute('aria-checked')).toBe('false');
+      expect(toggle.querySelector('svg.icon').dataset.icon).toBe('moon');
+    }
+    document.body.dataset.colorMode = 'dark';
+    const dark = TopBar.buildTopBarElement('slide1').querySelector('[data-theme-mode-switch]');
+    expect(dark.getAttribute('aria-checked')).toBe('true');
+    delete document.body.dataset.colorMode;
+  });
+
+  test('« Mode sombre » : un clic demande la bascule au thème par le bus', () => {
+    const asked = jest.fn();
+    eventBus.on('colorMode:toggle', asked);
+    TopBar.injectTopBarIntoSlides();
+    TopBar.attachThemeModeSwitches();
+    document.querySelector('#slide1 [data-theme-mode-switch]').click();
+    eventBus.off('colorMode:toggle', asked);
+    expect(asked).toHaveBeenCalledTimes(1);
+  });
+
+  test('paramètres des tables : une grille, pas un engrenage', () => {
+    const tables = TopBar.buildTopBarElement('slide1').querySelector('.table-settings-btn');
+    expect(tables.querySelector('svg.icon').dataset.icon).toBe('grid-3x3');
   });
 
   test('sur son propre écran, le bouton est masqué ; aucun sur le choix du joueur', () => {
@@ -415,5 +450,46 @@ describe('Accueil : plus de boutons sous le contenu', () => {
     const home = html.match(/<section id="slide1"[\s\S]*?<\/section>/)[0];
     expect(home).not.toMatch(/data-slide="[67]"/);
     expect(home).not.toContain('home-links');
+  });
+});
+
+describe('TopBar : mots sous les icônes', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  test.each(['fr', 'en', 'es'])(
+    '%s : chaque mot affiché est contenu dans le nom accessible de son bouton (WCAG 2.5.3)',
+    lang => {
+      setTranslations(JSON.parse(fs.readFileSync(`assets/translations/${lang}.json`, 'utf8')));
+      const bar = TopBar.buildTopBarElement('slide1');
+      const pairs = [...bar.querySelectorAll('.icon-btn, .change-user-btn')].map(btn => [
+        btn.querySelector('.icon-btn-caption')?.textContent ?? '',
+        btn.getAttribute('aria-label') ??
+          btn.querySelector('.change-user-label')?.textContent ??
+          '',
+      ]);
+      expect(pairs.length).toBeGreaterThanOrEqual(8);
+      expect(pairs.filter(([caption]) => !caption)).toEqual([]);
+      expect(
+        pairs.filter(
+          ([caption, name]) =>
+            !name.toLocaleLowerCase(lang).includes(caption.toLocaleLowerCase(lang))
+        )
+      ).toEqual([]);
+      setTranslations(TRANSLATIONS);
+    }
+  );
+
+  test('le mot reste sous l’icône quand le son change d’état', () => {
+    const bar = TopBar.buildTopBarElement('slide1');
+    document.body.appendChild(bar);
+    const mute = bar.querySelector('.mute-btn');
+    mute.textContent = '🔇';
+    TopBar.updateVolumeControls(0, true);
+    expect(mute.querySelector('.icon-btn-caption')?.textContent).toBe('Son');
+    expect(mute.getAttribute('aria-label')).toBe('Activer le son');
+    TopBar.updateVolumeControls(1, false);
+    expect(mute.querySelectorAll('.icon-btn-caption')).toHaveLength(1);
   });
 });

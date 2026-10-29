@@ -19,14 +19,7 @@ import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
 import { confirmDialog } from './confirm-dialog.js';
 import { keepWornAvatar } from '../core/avatar-shop.js';
-import {
-  applyColorTheme,
-  appliedColorTheme,
-  counterpartTheme,
-  currentSeason,
-  rememberColorTheme,
-} from '../core/theme.js';
-import { seasonOfTheme } from '../core/seasons.js';
+import { chooseColorTheme, toggleColorMode } from '../core/theme.js';
 
 /** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
 const SLIDE6_AVATAR_RADIOS = '#slide6 .avatar-selector .avatar-radio';
@@ -406,7 +399,7 @@ export const Customization = {
     if (modeSwitch && !modeSwitch.dataset.listenerAttached) {
       modeSwitch.addEventListener(
         'click',
-        singleActivation(() => this.updateColorTheme(counterpartTheme(appliedColorTheme())))
+        singleActivation(() => toggleColorMode())
       );
       modeSwitch.dataset.listenerAttached = 'true';
     }
@@ -499,10 +492,7 @@ export const Customization = {
    * le thème ordinaire (gameState, profil, colorTheme) n'en garde aucune trace.
    */
   updateColorTheme(themeName) {
-    const season = currentSeason();
-    rememberColorTheme(themeName, season);
-    if (!seasonOfTheme(themeName)) gameState.colorTheme = themeName;
-    applyColorTheme(themeName, season);
+    chooseColorTheme(themeName);
 
     // Message de confirmation
     const label = tr(`color_theme_${themeName}`, themeName);

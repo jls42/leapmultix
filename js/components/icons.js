@@ -165,6 +165,14 @@ const ICONS = Object.freeze({
     ['path', { d: 'M13 17V5' }],
     ['path', { d: 'M8 17v-3' }],
   ],
+  moon: [['path', { d: 'M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z' }]],
+  'grid-3x3': [
+    ['rect', { width: '18', height: '18', x: '3', y: '3', rx: '2' }],
+    ['path', { d: 'M3 9h18' }],
+    ['path', { d: 'M3 15h18' }],
+    ['path', { d: 'M9 3v18' }],
+    ['path', { d: 'M15 3v18' }],
+  ],
   palette: [
     [
       'path',
