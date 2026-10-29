@@ -11,6 +11,7 @@
 import { describe, test, expect, afterEach, jest } from '@jest/globals';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { SEASONS } from '../js/core/seasons.js';
 
 const ORIGIN = 'https://leapmultix.jls42.org';
 const SOURCE = fs.readFileSync('sw.js', 'utf8');
@@ -642,6 +643,47 @@ describe('Service worker : images hors ligne', () => {
     const kept = precacheList(worker, 'PRECACHE_CORE').find(url => url.includes('background_fox_'));
     const response = await request(worker, '/img/background_fox_013.png', { destination: 'image' });
     expect(await response.text()).toBe(`contenu de ${kept}`);
+  });
+
+  test('une image de fête jamais gardée : son image classique gardée', async () => {
+    const { worker } = await installedOffline();
+    const kept = precacheList(worker, 'PRECACHE_CORE').find(url => url.includes('background_fox_'));
+    const world = await request(worker, '/img/background_fox_halloween_001.webp', {
+      destination: 'image',
+    });
+    expect(await world.text()).toBe(`contenu de ${kept}`);
+    const hero = await request(worker, '/assets/social/leapmultix-social-card-halloween.webp', {
+      destination: 'image',
+    });
+    expect(await hero.text()).toBe('contenu de /assets/social/leapmultix-social-card.webp');
+  });
+
+  test('tête et corps costumés, à une taille jamais gardée : une autre taille du classique', async () => {
+    const { worker } = await installedOffline();
+    const generated = '/assets/generated-images/arcade';
+    // Ni la tête classique en 1024 ni le corps classique en 512 ne sont gardés : leur famille
+    const head = await request(worker, `${generated}/fox_halloween_head_avatar-1024.webp`, {
+      destination: 'image',
+    });
+    expect(await head.text()).toMatch(/^contenu de .+\/fox_head_avatar-(?:128|256|512)\.webp$/);
+    const body = await request(worker, `${generated}/panda_halloween-512.webp`, {
+      destination: 'image',
+    });
+    expect(await body.text()).toBe(`contenu de ${generated}/panda-128.webp`);
+  });
+
+  test('une image propre à la fête, sans image classique : absente, pas une erreur réseau', async () => {
+    const { worker } = await installedOffline();
+    const token = '/assets/generated-images/arcade/multimiam_reponse_halloween-128.webp';
+    const response = await request(worker, token, { destination: 'image' });
+    expect(response.type).not.toBe('error');
+    expect(response.status).toBe(404);
+  });
+
+  test('les fêtes du service worker sont celles du jeu (js/core/seasons.js)', () => {
+    const worker = loadWorker(async () => new FakeResponse('x'));
+    const ids = vm.runInContext('SEASON_IDS', worker.context);
+    expect([...ids]).toEqual(SEASONS.map(season => season.id));
   });
 
   test('une image sans copie ni famille gardée : échec, jamais une autre image', async () => {

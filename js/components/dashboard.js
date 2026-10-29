@@ -31,6 +31,7 @@ import {
 import { getCurrentLanguage } from '../i18n-store.js';
 import { createIcon } from './icons.js';
 import { createWebpImage } from '../webp-images.js';
+import { logoSource } from '../logos.js';
 import { HEAD_SIZES, normalizeAvatarId, setAvatarHead } from '../avatar-heads.js';
 
 const MAX_STARS = 3;
@@ -803,15 +804,15 @@ export const Dashboard = {
       if (svg) box.appendChild(svg);
       row.appendChild(box);
     } else {
-      row.appendChild(
-        createWebpImage(logo, SCORE_LOGO, {
-          class: 'score-logo',
-          width: '64',
-          height: '64',
-          loading: 'lazy',
-          decoding: 'async',
-        })
-      );
+      // Logo costumé pendant une fête (js/logos.js)
+      const attributes = {
+        class: 'score-logo',
+        width: '64',
+        height: '64',
+        loading: 'lazy',
+        decoding: 'async',
+      };
+      row.appendChild(createWebpImage(logo, SCORE_LOGO, attributes, logoSource(logo)));
     }
     const body = document.createElement('div');
     body.className = 'score-row-body';

@@ -108,11 +108,13 @@ class ResponsiveAssetGenerator {
 
   /**
    * Sources que les jeux d'Arcade peuvent demander au-delà de 256 px, d'après leur
-   * catalogue (js/arcade-sprite-catalog.js) : seules elles reçoivent 512 et 1024.
+   * catalogue (js/arcade-sprite-catalog.js), costumes des fêtes compris : seules elles
+   * reçoivent 512 et 1024.
    */
   async loadArcadeSources() {
     const catalog = await import(pathToFileURL(ARCADE_CATALOG).href);
-    const large = catalog.arcadeSpriteSpecs().filter(spec => spec.maxWidth > SMALL_SET_MAX_WIDTH);
+    const specs = [...catalog.arcadeSpriteSpecs(), ...catalog.seasonalSpriteSpecs()];
+    const large = specs.filter(spec => spec.maxWidth > SMALL_SET_MAX_WIDTH);
     this.arcadeHdSources = new Set(large.map(spec => `arcade/${spec.source}.png`));
   }
 

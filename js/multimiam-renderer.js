@@ -125,21 +125,13 @@ export default class PacmanRenderer {
       const { px: x, py: y } = this.cellCenter(ans.x, ans.y);
       const label = ans.value.toString();
 
-      // Pastille à la taille du nombre (1 à 3 chiffres), jamais plus petite que la case
+      // Pastille à la taille du nombre (1 à 3 chiffres), jamais plus petite que la case ;
+      // pendant une fête, l'image de la réponse (bonbon d'Halloween) à sa place, la pastille
+      // tant que l'image n'est pas arrivée
       const pillH = Math.max(g.cellSize * 0.8, fontSize * 1.3);
       const pillW = Math.max(pillH, ctx.measureText(label).width + fontSize * 0.6);
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(x - pillW / 2, y - pillH / 2, pillW, pillH, pillH / 2);
-      } else {
-        ctx.arc(x, y, pillW / 2, 0, Math.PI * 2);
-      }
-      ctx.fillStyle = '#3333FF';
-      ctx.fill();
-      // Contour clair, plus fin sur mobile
-      ctx.strokeStyle = isMobile ? 'rgba(255,255,255,0.6)' : 'white';
-      ctx.lineWidth = isMobile ? 1 : 2;
-      ctx.stroke();
+      if (!this.drawAnswerToken(x, y, pillW, fontSize))
+        this.drawAnswerPill(x, y, pillW, pillH, isMobile);
 
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -148,6 +140,38 @@ export default class PacmanRenderer {
       ctx.fillStyle = 'white';
       ctx.fillText(label, x, y);
     }
+  }
+
+  /** Pastille bleue d'une réponse, centrée sur (x, y) */
+  drawAnswerPill(x, y, pillW, pillH, isMobile) {
+    const ctx = this.game.ctx;
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(x - pillW / 2, y - pillH / 2, pillW, pillH, pillH / 2);
+    } else {
+      ctx.arc(x, y, pillW / 2, 0, Math.PI * 2);
+    }
+    ctx.fillStyle = '#3333FF';
+    ctx.fill();
+    // Contour clair, plus fin sur mobile
+    ctx.strokeStyle = isMobile ? 'rgba(255,255,255,0.6)' : 'white';
+    ctx.lineWidth = isMobile ? 1 : 2;
+    ctx.stroke();
+  }
+
+  /**
+   * Image d'une réponse pendant une fête (js/arcade-sprite-catalog.js, answerTokenSpec),
+   * centrée sur (x, y). Le bonbon d'Halloween occupe toute la largeur de son cadre carré, son
+   * corps uni 55 % de cette largeur et 30 % de sa hauteur : le cadre se règle pour que le
+   * nombre y tienne, en hauteur (fontSize) comme en largeur (pillW)
+   * @returns {boolean} Vrai si l'image est dessinée
+   */
+  drawAnswerToken(x, y, pillW, fontSize) {
+    const token = this.game.answerToken;
+    if (!token) return false;
+    const side = Math.max(3.8 * fontSize, 1.9 * pillW);
+    const box = { x: x - side / 2, y: y - side / 2, width: side, height: side };
+    return drawArcadeSprite(this.game.ctx, token, box);
   }
 
   /* === PACMAN =================================== */

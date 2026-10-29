@@ -22,6 +22,7 @@ import { UNTIMED_GAMES, isNoTimeLimit, setNoTimeLimit } from '../arcade-time.js'
 import { spaceshipSpec } from '../arcade-sprite-catalog.js';
 import { normalizeAvatarId } from '../avatar-heads.js';
 import { attachImageFallbacks, webpImageAttributes } from '../webp-images.js';
+import { logoSource } from '../logos.js';
 
 // Images du menu en WebP, à la taille où elles s'affichent × la densité de l'écran
 // (js/webp-images.js). Logos des jeux : 144 px affichés, 120 sur un écran de 480 px au plus
@@ -256,7 +257,7 @@ export class ArcadeMode extends GameMode {
         game => `
             <div id="${this.getCardId(game.id)}" class="arcade-game-card collapsed" data-game="${game.id}">
                 <div class="game-thumb">
-                    <img ${webpImageAttributes(game.logo, LOGO_IMAGE)}
+                    <img ${webpImageAttributes(game.logo, LOGO_IMAGE, logoSource(game.logo))}
                          width="144" height="144" alt="" class="arcade-logo">
                 </div>
 

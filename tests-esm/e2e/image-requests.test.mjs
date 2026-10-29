@@ -23,6 +23,8 @@ import {
   pressButton,
 } from '../helpers/game-session.mjs';
 import { chromeSession } from '../helpers/chrome-session.mjs';
+// Hors fête, quel que soit le jour : les images s'y reconnaissent à leur nom classique
+import { NO_SEASON } from '../../js/core/seasons.js';
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 // Variantes WebP du générateur (npm run assets:generate) : absentes en CI, où les jeux
@@ -174,7 +176,7 @@ describe('Aucune image demandée sous deux adresses (E2E)', () => {
       await page.setViewport(PHONE);
       if (forced) await withoutVariants(page);
       const requests = await watchImageRequests(page);
-      await page.goto(chrome.server.url, chrome.server.gotoOptions);
+      await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
       await createUserAndSkipIntro(page);
       requests.start();
       await pressButton(page, '.mode-btn[data-mode="arcade"]');
@@ -197,7 +199,7 @@ describe('Aucune image demandée sous deux adresses (E2E)', () => {
       const requests = await watchImageRequests(page);
       await openWithProfiles(page, zoeSnapshot());
       requests.start();
-      await page.goto(chrome.server.url, chrome.server.gotoOptions);
+      await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
       await page.waitForSelector('.user-container .user-tile', { visible: true, timeout: 10000 });
       await pause(1000);
       await page.evaluate(() =>

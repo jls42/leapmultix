@@ -18,6 +18,8 @@ import {
   backToArcadeMenu,
 } from '../helpers/game-session.mjs';
 import { chromeSession } from '../helpers/chrome-session.mjs';
+// Hors fête, quel que soit le jour : les images s'y reconnaissent à leur nom classique
+import { NO_SEASON } from '../../js/core/seasons.js';
 
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
@@ -120,7 +122,7 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
     if (viewport.isMobile) await page.setUserAgent(ANDROID_USER_AGENT);
     await page.setViewport(viewport);
     await page.evaluateOnNewDocument(CLIENT_SPY_SOURCE);
-    await page.goto(chrome.server.url, chrome.server.gotoOptions);
+    await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
     await createUserAndSkipIntro(page);
     await pressButton(page, '.mode-btn[data-mode="arcade"]');
   }

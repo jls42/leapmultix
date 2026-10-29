@@ -5,6 +5,7 @@ import { gameState } from './game.js';
 import Storage from './core/storage.js';
 import { renderAvatarShop } from './components/avatarShop.js';
 import { pickRandom } from './core/random.js';
+import { costumed, seasonWorlds, wornSeason } from './core/seasons.js';
 import {
   AVATAR_IDS,
   DEFAULT_AVATAR,
@@ -159,14 +160,24 @@ const updateHeroImageAlt = heroImg => {
   }
 };
 
+/**
+ * Image des héros de l'accueil, costumée pendant une fête qui en apporte une
+ * (assets/social/leapmultix-social-card-<fête>.webp, hors du préchargement)
+ * @param {string} lang
+ * @returns {string}
+ */
+function heroImageFor(lang) {
+  const season = wornSeason();
+  if (season?.costumes.includes('hero'))
+    return `assets/social/leapmultix-social-card-${season.id}.webp`;
+  return HERO_IMAGE_BY_LANG[lang] || HERO_IMAGE_BY_LANG[HERO_DEFAULT_LANG];
+}
+
 export function updateSeoHeroImage(preferredLang) {
   const heroImg = document.querySelector('.seo-hero');
   if (!heroImg) return;
 
-  const lang = resolveHeroLanguage(preferredLang);
-  const nextSrc = HERO_IMAGE_BY_LANG[lang] || HERO_IMAGE_BY_LANG[HERO_DEFAULT_LANG];
-
-  updateHeroImageSource(heroImg, nextSrc);
+  updateHeroImageSource(heroImg, heroImageFor(resolveHeroLanguage(preferredLang)));
   updateHeroImageAlt(heroImg);
 }
 
@@ -186,6 +197,7 @@ const avatarAvailableImages = {
 };
 const _chosenImageByAvatar = {};
 let _appliedBackgroundKey = null;
+let _appliedBackgroundAvatar = null;
 
 /**
  * Tire au sort le monde illustré d'un avatar, une seule fois par session.
@@ -209,6 +221,7 @@ export function updateBackgroundByAvatar(avatarId) {
   const requested =
     avatarId || gameState?.avatar || UserState.getCurrentUserData()?.avatar || DEFAULT_AVATAR;
   const resolved = resolveAvatarAlias(requested);
+  _appliedBackgroundAvatar = resolved;
 
   let available = avatarAvailableImages[resolved];
   let effective = resolved;
@@ -217,18 +230,30 @@ export function updateBackgroundByAvatar(avatarId) {
     effective = DEFAULT_AVATAR;
   }
 
-  const chosen = chooseImageNumber(effective, available);
-  const backgroundKey = `${effective}_${chosen}`;
+  // Pendant une fête, un des mondes costumés de l'avatar (background_<avatar>_<fête>_NNN),
+  // tiré une fois par session comme les mondes classiques
+  const world = costumed(effective, 'backgrounds');
+  const worlds = world === effective ? available : seasonWorlds(wornSeason());
+  const chosen = chooseImageNumber(world, worlds);
+  const backgroundKey = `${world}_${chosen}`;
   if (backgroundKey === _appliedBackgroundKey) return;
   _appliedBackgroundKey = backgroundKey;
 
   const imageNumber = String(chosen).padStart(3, '0');
-  const basePath = `../img/background_${effective}_${imageNumber}`;
+  const basePath = `../img/background_${world}_${imageNumber}`;
   const pngPath = `${basePath}.png`;
   const webpPath = `${basePath}.webp`;
   const imageSet = `image-set(url('${webpPath}') type('image/webp'), url('${pngPath}') type('image/png'))`;
   document.body.style.setProperty('--current-bg-image-webp', imageSet);
   document.body.style.setProperty('--current-bg-image-url', `url('${pngPath}')`);
+}
+
+/**
+ * Repose le fond déjà affiché, pour le même avatar, quand le costume des images change
+ * (thème de fête appliqué ou retiré) ; rien si aucun fond n'est encore posé
+ */
+export function refreshBackground() {
+  if (_appliedBackgroundAvatar) updateBackgroundByAvatar(_appliedBackgroundAvatar);
 }
 
 /**

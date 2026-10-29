@@ -25,7 +25,8 @@ paths:
 - `audio.js` - Audio manager with volume controls
 - `eventBus.js` - Event-driven communication between components
 - `mainInit.js` - DOM-ready initialization logic
-- `theme.js` - Theme and color customization system
+- `theme.js` - Theme and color customization system; the displayed theme (`effectiveColorTheme`): during a holiday, its theme of the same lightness as the player's own, unless the player picked an ordinary theme during this edition (`seasonChoice`); `colorTheme` is never overwritten by a holiday theme
+- `seasons.js` - Holidays (`SEASONS`: Halloween from 24/10 to 01/11 included, device date, `?saison=<id>` or `?saison=aucune` to test): the default theme follows the calendar, one entry per holiday, never two on the same day (test): two color themes each (light, dark) and the families of costumed images they bring (heads, Arcade bodies, ships, MultiSnake snake, apple and grass, MultiMiam walls and answer token, mode and Arcade game logos, `worlds` backgrounds per avatar, home hero image), each read through `costumed(name, family)` at its own gate, worn only while one of their themes is applied (`wearSeason`, set by `theme.js`), never precached (`isSeasonalImage`). Adding one: skill `dressing-for-events`; `tests-esm/core/seasons-registry.esm.test.mjs` and `tests-esm/season-images.esm.test.mjs` list what it still lacks
 - `userUi.js` - User interface utilities
 - `adventure-data.js` - Adventure mode data structures
 - `mult-stats.js` - Multiplication statistics tracking
@@ -110,6 +111,7 @@ paths:
 
 - `VideoManager.js` - Character intro video; the mascot reads its welcome message aloud (`speak`, recorded voice or device voice), « Passer » cuts it
 - `webp-images.js` - Screen illustrations (Arcade menu logos and ships, dashboard logos, Adventure gifts) served as WebP at their displayed size × device pixel ratio (`srcset`, `sizes`), with the repository PNG as fallback until `npm run assets:generate` has produced the variants: `createWebpImage`, `webpImageAttributes` for templates, `attachImageFallbacks` once a template is shown (the sanitizer strips `onerror`). Keep the PNG file name as a literal outside `${…}`: `scripts/precache-list.mjs` finds the images to keep offline by their names in the code
+- `logos.js` - Drawn logos of the six modes (home cards, `MODE_LOGOS` per `data-mode`) and the four Arcade games (Arcade menu, `ARCADE_LOGOS`), reused by the dashboard rows: `logoSource()` costumed during a holiday (`logos` family), `repaintModeLogos()` for the static home cards when the theme changes
 - `avatar-heads.js` - Every avatar head on screen (« Qui joue ? » tiles, form and trash, home mascot, Personalisation, dashboard, Adventure map, Discovery tip, end screens) goes through `setAvatarHead(img, id, HEAD_SIZES.<place>)`, or `avatarHeadAttributes()` in a template: WebP 128/256/512 from the 1024 px source at the size the CSS gives it, the 128 px PNG as fallback; it rewrites srcset, sizes, src and fallback together (with a srcset, changing `src` alone no longer changes the picture). The heads written in `index.html` carry the same attributes (test). Also `normalizeAvatarId` (old French names) and the avatar whitelist `AVATAR_IDS`, re-exported from `core/avatars.js`
 
 **Game Orchestration:**

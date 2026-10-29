@@ -17,6 +17,8 @@ import {
   launchArcadeGame,
   backToArcadeMenu,
 } from '../helpers/game-session.mjs';
+// Hors fête, quel que soit le jour : les images s'y reconnaissent à leur nom classique
+import { NO_SEASON } from '../../js/core/seasons.js';
 
 const PORTRAIT = { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
 const LANDSCAPE = { width: 844, height: 390, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
@@ -251,7 +253,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     if (phone) await page.setUserAgent(ANDROID_USER_AGENT);
     await page.setViewport(viewport);
     await page.evaluateOnNewDocument(CANVAS_SPY_SOURCE);
-    await page.goto(server.url, server.gotoOptions);
+    await page.goto(`${server.url}?saison=${NO_SEASON}`, server.gotoOptions);
     await createUserAndSkipIntro(page);
     await pressButton(page, '.mode-btn[data-mode="arcade"]');
   }

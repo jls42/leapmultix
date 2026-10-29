@@ -19,6 +19,9 @@
 //   personnages, fusées) que liste js/arcade-sprite-catalog.js, dont les adresses se
 //   construisent (aucun nom à chercher) : hors ligne, le service worker la sert pour toutes
 //   les tailles de l'image.
+// Jamais les images des fêtes (« fox_halloween_head_avatar.png », isSeasonalImage de
+// js/core/seasons.js) : elles ne servent que quelques jours par an, et hors ligne l'image
+// classique les remplace.
 //
 // Deux listes : « core », des fichiers du dépôt, tous gardés ou aucun ; « images », les
 // images d'assets/images (une famille chacune : à l'installation, le service worker garde
@@ -35,6 +38,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { relativeImportSpecifiers } from './version-module-urls.mjs';
 import { arcadeOfflineImages } from '../js/arcade-sprite-catalog.js';
+import { isSeasonalImage } from '../js/core/seasons.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const SW_FILE = 'sw.js';
@@ -366,7 +370,11 @@ export function buildPrecacheList(root = ROOT) {
   const index = createFileIndex(root);
   const found = crawl(root, index, [...SHELL, ...pageReferences(root, index)]);
   const arcade = found.has(ARCADE_CATALOG) ? arcadeOfflineImages() : [];
-  const all = [...found, ...firstBackgrounds(index), ...arcade];
+  // Images des fêtes (js/core/seasons.js) : quelques jours par an, pas à chaque installation ;
+  // hors ligne, l'image classique les remplace
+  const all = [...found, ...firstBackgrounds(index), ...arcade].filter(
+    sitePath => !isSeasonalImage(path.posix.basename(sitePath))
+  );
   const isImage = sitePath => IMAGE_FAMILY.test(sitePath) || sitePath.startsWith(GENERATED);
   return {
     core: sortedUnique(all.filter(sitePath => !isImage(sitePath))),

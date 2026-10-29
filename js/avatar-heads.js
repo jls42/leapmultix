@@ -12,6 +12,7 @@
  */
 import { webpImage, webpImageAttributes } from './webp-images.js';
 import { AVATAR_IDS } from './core/avatars.js';
+import { costumed } from './core/seasons.js';
 
 /** Avatars du jeu : la liste blanche des identifiants (js/core/avatars.js) */
 export { AVATAR_IDS };
@@ -76,7 +77,8 @@ const HEAD_WIDTHS = [128, 256, 512];
 /**
  * Arguments de js/webp-images.js pour une tête : PNG de 128 px du dépôt en repli, variantes
  * de la source de 1024 px. Le nom du PNG reste écrit en entier : scripts/precache-list.mjs
- * le trouve dans le code.
+ * le trouve dans le code. Pendant une fête, les variantes sont celles de la tête costumée
+ * (« fox_halloween_head_avatar ») ; le repli reste la tête classique, gardée hors ligne.
  * @param {string} [avatarId]
  * @param {string} sizes
  * @returns {[string, {widths: number[], src: number, sizes: string}, string]}
@@ -86,7 +88,7 @@ function headImage(avatarId, sizes) {
   return [
     `${id}_head_avatar_128x128.png`,
     { widths: HEAD_WIDTHS, src: 128, sizes },
-    `${id}_head_avatar`,
+    `${costumed(id, 'heads')}_head_avatar`,
   ];
 }
 
@@ -142,4 +144,31 @@ export function setAvatarHead(img, avatarId, sizes) {
     img.setAttribute(name, value);
   }
   armFallback(img);
+}
+
+/** Fin du repli d'une tête, qui suit son avatar : « …/fox_head_avatar_128x128.png » */
+const HEAD_FALLBACK_END = '_head_avatar_128x128.png';
+
+/**
+ * Avatar que dit le repli d'une tête, lu dans le nom du fichier (sans expression régulière : la
+ * lecture reste linéaire, quelle que soit l'adresse)
+ * @param {string} fallback
+ * @returns {string} Vide si ce n'est pas le repli d'une tête
+ */
+function avatarOfFallback(fallback) {
+  const name = fallback.slice(fallback.lastIndexOf('/') + 1);
+  return name.endsWith(HEAD_FALLBACK_END) ? name.slice(0, -HEAD_FALLBACK_END.length) : '';
+}
+
+/**
+ * Repose chaque tête affichée, à sa taille, quand le costume change (thème de fête appliqué ou
+ * retiré) : celles de index.html comme celles des écrans déjà montrés. L'avatar lu passe par la
+ * liste blanche de setAvatarHead
+ * @param {ParentNode} [root]
+ */
+export function repaintAvatarHeads(root = document) {
+  for (const img of root.querySelectorAll(`img[data-fallback$="${HEAD_FALLBACK_END}"]`)) {
+    const avatar = avatarOfFallback(img.dataset.fallback);
+    if (avatar) setAvatarHead(img, avatar, img.getAttribute('sizes') ?? '');
+  }
 }

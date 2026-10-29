@@ -71,10 +71,15 @@ export function attachImageFallbacks(root) {
  * @param {string} file - PNG du dépôt (assets/images/arcade)
  * @param {{widths: number[], src: number, sizes: string}} image
  * @param {Object<string, string>} [attributes] - Attributs du lieu (classe, taille, alt…)
+ * @param {string} [source] - Source des variantes, quand ce n'est pas ce PNG (logo costumé)
  * @returns {HTMLImageElement}
  */
-export function createWebpImage(file, image, attributes = {}) {
-  const img = createSafeElement('img', '', { ...webpImage(file, image), alt: '', ...attributes });
+export function createWebpImage(file, image, attributes = {}, source = file.replace(/\.png$/, '')) {
+  const img = createSafeElement('img', '', {
+    ...webpImage(file, image, source),
+    alt: '',
+    ...attributes,
+  });
   fallBackToPng(img);
   return img;
 }

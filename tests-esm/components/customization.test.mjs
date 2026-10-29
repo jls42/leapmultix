@@ -164,8 +164,11 @@ describe('theme.js : état des boutons de thème et de taille', () => {
   });
 
   test('initThemes applique le thème enregistré et son aria-pressed', () => {
+    // Hors de toute fête : pendant Halloween, le thème de la fête passerait devant
+    jest.useFakeTimers({ now: new Date(2026, 5, 15, 12) });
     localStorage.setItem('colorTheme', 'blue');
     initThemes();
+    jest.useRealTimers();
     expect(document.body.classList.contains('theme-blue')).toBe(true);
     const pressed = [...document.querySelectorAll('.color-theme-btn')].map(b =>
       b.getAttribute('aria-pressed')

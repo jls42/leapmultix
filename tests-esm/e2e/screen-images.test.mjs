@@ -7,6 +7,8 @@
  * d'Aventure.
  * Les têtes des avatars aussi (js/avatar-heads.js), de « Qui joue ? » à l'écran d'échec de
  * l'Aventure : avant, le PNG de 128 px partout (0,44 à 0,89 de la netteté voulue).
+ * Hors fête (?saison=aucune), quel que soit le jour ; un test force Halloween pour les têtes
+ * et les logos des modes costumés (js/core/seasons.js).
  * @jest-environment node
  */
 
@@ -17,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { answerGameDialog, pause } from '../helpers/game-session.mjs';
 import { chromeSession } from '../helpers/chrome-session.mjs';
+import { NO_SEASON } from '../../js/core/seasons.js';
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 // Sans les variantes du générateur actuel (CI : npm run assets:generate ne tourne qu'au
@@ -99,7 +102,12 @@ const SLIDE0_HEADS = '#slide0 .user-tile-face, #slide0 .creation-avatar-selector
 /** Personnalisation : avatar actuel, avatars du joueur et boutique */
 const SLIDE6_HEADS = '#current-avatar-img, #slide6 .avatar-btn img';
 const HEAD_VARIANT = /^\/assets\/generated-images\/arcade\/[a-z]+_head_avatar-\d+\.webp$/;
+const HALLOWEEN_HEAD_VARIANT =
+  /^\/assets\/generated-images\/arcade\/[a-z]+_halloween_head_avatar-\d+\.webp$/;
 const HEAD_PNG = /^\/assets\/images\/arcade\/[a-z]+_head_avatar_128x128\.png$/;
+/** Logos des cartes de modes de l'accueil, et la variante costumée d'un logo (js/logos.js) */
+const HOME_MODE_LOGOS = '.mode-btn[data-mode] .mode-icon img';
+const HALLOWEEN_LOGO = /^\/assets\/generated-images\/arcade\/logo_[a-z_]+_halloween-\d+\.webp$/;
 
 /**
  * Ce qui ne va pas dans des têtes : pas la variante attendue, pas chargée, floue
@@ -111,13 +119,14 @@ function headProblems(heads, expected = HEAD_VARIANT) {
     count: heads.length > 0,
     unexpected: heads.filter(img => !expected.test(img.src)),
     broken: heads.filter(img => !img.loaded),
-    blurry: expected === HEAD_VARIANT ? heads.filter(isBlurry) : [],
+    blurry: expected === HEAD_PNG ? [] : heads.filter(isBlurry),
   };
 }
 const HEADS_OK = { count: true, unexpected: [], broken: [], blurry: [] };
 
-/** Avatar que montrent des têtes, lu dans l'adresse affichée (currentSrc) */
-const avatarsOf = heads => heads.map(img => /\/([a-z]+)_head_avatar/.exec(img.src)?.[1]);
+/** Avatar que montrent des têtes, lu dans l'adresse affichée (currentSrc), costumé ou non */
+const avatarsOf = heads =>
+  heads.map(img => /\/([a-z]+)(?:_halloween)?_head_avatar/.exec(img.src)?.[1]);
 
 /** Têtes qui suivent l'avatar porté : mascotte, avatar actuel, tuile de Zoé */
 const WORN_HEADS = '#hero-mascot-img, #current-avatar-img, [data-player="Zoé"] .user-tile-face';
@@ -141,9 +150,10 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
   /**
    * « Qui joue ? » affiché avec les joueurs de l'instantané, avant tout choix
    * @param {Object} viewport
-   * @param {{withoutVariants?: boolean}} [options]
+   * @param {{withoutVariants?: boolean, season?: string}} [options] - season : fête forcée
+   *   (?saison=), aucune par défaut
    */
-  async function openGame(viewport, { withoutVariants = false } = {}) {
+  async function openGame(viewport, { withoutVariants = false, season = NO_SEASON } = {}) {
     page = await chrome.newPage();
     await page.setBypassServiceWorker(true);
     if (viewport.isMobile) await page.setUserAgent(ANDROID_USER_AGENT);
@@ -158,7 +168,7 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
         }
       });
     }
-    await page.goto(chrome.server.url, chrome.server.gotoOptions);
+    await page.goto(`${chrome.server.url}?saison=${season}`, chrome.server.gotoOptions);
     await page.evaluate(entries => {
       localStorage.clear();
       for (const [key, value] of Object.entries(entries)) {
@@ -425,6 +435,48 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
       },
       90000
     );
+
+    test('pendant Halloween : têtes et logos costumés nets, classiques dès un thème ordinaire', async () => {
+      await openGame(SCREENS[0][1], { season: 'halloween' });
+      const slide0 = await settledImages(SLIDE0_HEADS);
+      expect(slide0).toHaveLength(8);
+      expect(headProblems(slide0, HALLOWEEN_HEAD_VARIANT)).toEqual(HEADS_OK);
+      await chooseZoe();
+      // Logos des six modes de l'accueil, puis des neuf rangées du tableau de bord (cinq modes,
+      // quatre jeux d'Arcade)
+      const homeLogos = await settledImages(HOME_MODE_LOGOS);
+      expect(homeLogos).toHaveLength(6);
+      expect(
+        homeLogos.filter(img => !img.loaded || isBlurry(img) || !HALLOWEEN_LOGO.test(img.src))
+      ).toEqual([]);
+      const dashboard = await openDashboard();
+      expect(dashboard.filter(img => !HALLOWEEN_LOGO.test(img.src))).toEqual([]);
+      expect(dashboard).toHaveLength(9);
+      await openPersonalization();
+      const costumed = await settledImages(SLIDE6_HEADS);
+      expect({
+        problems: headProblems(costumed, HALLOWEEN_HEAD_VARIANT),
+        avatars: avatarsOf(costumed),
+      }).toEqual({
+        problems: HEADS_OK,
+        avatars: ['panda', 'fox', 'panda', 'unicorn', 'dragon', 'astronaut'],
+      });
+      // Un thème ordinaire retire la fête : les mêmes têtes reprennent leur dessin classique
+      await page.$eval('.color-theme-btn[data-color-theme="default"]', button => button.click());
+      await page.waitForFunction(
+        selector =>
+          [...document.querySelectorAll(selector)].every(
+            img => !img.currentSrc.includes('_halloween')
+          ),
+        { timeout: 10000 },
+        SLIDE6_HEADS
+      );
+      expect(headProblems(await settledImages(SLIDE6_HEADS))).toEqual(HEADS_OK);
+      const logoSources = await page.$$eval(HOME_MODE_LOGOS, imgs =>
+        imgs.map(img => img.getAttribute('src'))
+      );
+      expect(logoSources.filter(src => src.includes('_halloween'))).toEqual([]);
+    }, 90000);
   });
 
   test('sans variantes (développement, CI) : chaque image passe à son PNG et s’affiche', async () => {

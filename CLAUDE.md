@@ -80,6 +80,10 @@ Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run li
   `tests-esm/legal-pages.lock.json` l'exige (`tests-esm/legal-pages.esm.test.mjs`).
 - Images : sources haute définition, variantes WebP produites par `npm run assets:generate` ;
   réglages et pièges : `.claude/rules/images.md`.
+- Fêtes (Halloween, puis Noël et le Nouvel An) : le thème par défaut suit le calendrier, une
+  entrée par fête dans `js/core/seasons.js` (essai `?saison=<id>`) avec ses deux thèmes et le
+  jeu costumé ; en préparer une : skill `dressing-for-events`, au moins deux jours avant son
+  début.
 - Hors ligne : un module, un son, une image ou une feuille de style ajouté demande
   `npm run precache:update` (sinon `tests-esm/scripts/precache-list.test.mjs` échoue) ; service
   worker et déploiement : `.claude/rules/deploiement.md`.

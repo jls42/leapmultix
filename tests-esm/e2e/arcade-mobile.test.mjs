@@ -13,6 +13,8 @@ import {
   launchArcadeGame,
   backToArcadeMenu,
 } from '../helpers/game-session.mjs';
+// Hors fête, quel que soit le jour : les images s'y reconnaissent à leur nom classique
+import { NO_SEASON } from '../../js/core/seasons.js';
 
 // Téléphone : les jeux reconnaissent un mobile à son agent utilisateur
 const PHONE_VIEWPORT = {
@@ -77,7 +79,7 @@ describe('Arcade sur téléphone (E2E)', () => {
     await page.setUserAgent(ANDROID_USER_AGENT);
     await page.setViewport(PHONE_VIEWPORT);
     await page.evaluateOnNewDocument(SNAKE_HEAD_SPY_SOURCE);
-    await page.goto(server.url, server.gotoOptions);
+    await page.goto(`${server.url}?saison=${NO_SEASON}`, server.gotoOptions);
     await createUserAndSkipIntro(page);
     await pressButton(page, '.mode-btn[data-mode="arcade"]');
   }, 40000);

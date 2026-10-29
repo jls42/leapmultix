@@ -6,7 +6,12 @@ import { gameState } from './game.js';
 import { InfoBar } from './components/infoBar.js';
 import { getTranslation } from './utils-es6.js';
 import { spriteFor } from './arcade-sprites.js';
-import { MONSTER_COUNT, monsterSpec, textureSpec } from './arcade-sprite-catalog.js';
+import {
+  MONSTER_COUNT,
+  answerTokenSpec,
+  monsterSpec,
+  textureSpec,
+} from './arcade-sprite-catalog.js';
 import PacmanQuestions from './multimiam-questions.js';
 import PacmanRenderer from './multimiam-renderer.js';
 import { initPacmanEngine } from './multimiam-engine.js';
@@ -475,6 +480,9 @@ export class PacmanGame {
 
     this.wallTexture = spriteFor(textureSpec('mur.png'));
     this.pathTexture = spriteFor(textureSpec('chemin.png'));
+    // Pendant une fête, une image sous chaque réponse (bonbon d'Halloween) ; sinon la pastille
+    const token = answerTokenSpec();
+    this.answerToken = token ? spriteFor(token) : null;
   }
 }
 

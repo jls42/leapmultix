@@ -11,6 +11,8 @@
      tests-esm/scripts/arcade-variants.test.mjs vérifie que chaque taille est générée.
    ===================== */
 
+import { SEASONS, costumed } from './core/seasons.js';
+
 /** Largeurs des variantes produites par le générateur */
 export const VARIANT_WIDTHS = Object.freeze([64, 128, 256, 512, 1024]);
 /** Variante de chaque image gardée par le service worker pour jouer hors ligne */
@@ -95,11 +97,33 @@ const AVATARS = new Map([
 ]);
 
 /**
+ * Image costumée d'une fête : même taille, même côté, mêmes replis (les PNG classiques,
+ * gardés hors ligne), source « <source>_<fête> »
+ * @param {SpriteSpec} item
+ * @param {string} seasonId
+ * @returns {SpriteSpec}
+ */
+function seasonalSpec(item, seasonId) {
+  return { ...item, source: `${item.source}_${seasonId}` };
+}
+
+/**
+ * La même image, costumée si la fête portée (js/core/seasons.js) apporte cette famille
+ * @param {SpriteSpec} item
+ * @param {import('./core/seasons.js').CostumeFamily} family
+ * @returns {SpriteSpec}
+ */
+function wornSpec(item, family) {
+  const source = costumed(item.source, family);
+  return source === item.source ? item : { ...item, source };
+}
+
+/**
  * @param {string} name - Avatar du joueur (fox, panda, unicorn, dragon, astronaut)
- * @returns {SpriteSpec} Le renard pour un nom inconnu
+ * @returns {SpriteSpec} Le renard pour un nom inconnu ; costumé pendant une fête
  */
 export function avatarSpec(name) {
-  return AVATARS.get(name) ?? AVATARS.get('fox');
+  return wornSpec(AVATARS.get(name) ?? AVATARS.get('fox'), 'bodies');
 }
 
 /* --- Fusées de MultiInvaders --- */
@@ -123,6 +147,9 @@ const SPACESHIP_SOURCES = new Map([
 // Réductions déjà nommées d'après leur source : « renard_vaisseau_2_256x256 »
 const REDUCED_SUFFIX = /_(?:128x128|256x256)$/;
 const SHIP_SOURCES = new Set(SPACESHIP_SOURCES.values());
+// Fusées sans pilote : aucune fête ne les costume
+const UNPILOTED_SHIPS = new Set(['spaceship_default', 'vaisseau_2']);
+const PILOTED_SHIPS = [...SHIP_SOURCES].filter(source => !UNPILOTED_SHIPS.has(source));
 
 /** Source d'un nom de fichier de fusée ; null s'il n'en a pas */
 function shipSource(file) {
@@ -148,7 +175,8 @@ export function spaceshipSpec(selection) {
     .filter(Boolean);
   const source = files.map(shipSource).find(Boolean);
   if (!source) return spec('spaceship_default', ['spaceship_default_128x128.png']);
-  return spec(source, files.length ? files : ['spaceship_default_128x128.png']);
+  const ship = spec(source, files.length ? files : ['spaceship_default_128x128.png']);
+  return UNPILOTED_SHIPS.has(source) ? ship : wornSpec(ship, 'ships');
 }
 
 /* --- MultiSnake et textures --- */
@@ -171,13 +199,20 @@ const SNAKE_PARTS = new Set([
   'queue_fin_bas.png',
 ]);
 
+/** Les 14 morceaux du serpent */
+export const SNAKE_PART_FILES = Object.freeze([...SNAKE_PARTS]);
+
+/** Morceau classique du serpent */
+function snakePart(file) {
+  return spec(file.replace(/\.png$/, ''), [file], { maxWidth: SNAKE_MAX_WIDTH });
+}
+
 /**
  * @param {string} file - Morceau du serpent (« tete_droite.png »)
- * @returns {SpriteSpec}
+ * @returns {SpriteSpec} Costumé pendant une fête, le morceau classique en repli
  */
 export function snakePartSpec(file) {
-  const known = SNAKE_PARTS.has(file) ? file : 'tete_droite.png';
-  return spec(known.replace(/\.png$/, ''), [known], { maxWidth: SNAKE_MAX_WIDTH });
+  return wornSpec(snakePart(SNAKE_PARTS.has(file) ? file : 'tete_droite.png'), 'snake');
 }
 
 // Textures et pomme : source de 1024 px, petit PNG en repli (l'herbe n'en a pas)
@@ -187,13 +222,36 @@ const TEXTURES = new Map([
   ['chemin.png', spec('chemin', ['chemin_128x128.png'])],
   ['snake_apple.png', spec('snake_apple', ['snake_apple_128x128.png'])],
 ]);
+// Textures qu'une fête costume, avec leur jeu : herbe et pomme de MultiSnake, murs de MultiMiam
+const COSTUMED_TEXTURES = new Map([
+  ['herbe.png', 'snake'],
+  ['snake_apple.png', 'snake'],
+  ['mur.png', 'miam'],
+]);
 
 /**
  * @param {string} file - herbe.png, mur.png, chemin.png ou snake_apple.png
  * @returns {SpriteSpec}
  */
 export function textureSpec(file) {
-  return TEXTURES.get(file) ?? TEXTURES.get('chemin.png');
+  const texture = TEXTURES.get(file) ?? TEXTURES.get('chemin.png');
+  const family = COSTUMED_TEXTURES.get(file);
+  return family ? wornSpec(texture, family) : texture;
+}
+
+/* --- Réponses de MultiMiam --- */
+
+// Hors fête, le jeu dessine une pastille sous chaque réponse ; une fête qui costume MultiMiam
+// la remplace par une image (Halloween : un bonbon), sans repli : la pastille reste dessous
+const ANSWER_TOKEN = 'multimiam_reponse';
+
+/**
+ * @returns {SpriteSpec|null} Image posée sous les réponses de MultiMiam pendant une fête ;
+ *   null hors fête (la pastille)
+ */
+export function answerTokenSpec() {
+  const source = costumed(ANSWER_TOKEN, 'miam');
+  return source === ANSWER_TOKEN ? null : spec(source, []);
 }
 
 /* --- Toutes les images --- */
@@ -205,8 +263,39 @@ export function textureSpec(file) {
 export function arcadeSpriteSpecs() {
   const monsters = Array.from({ length: MONSTER_COUNT }, (_, i) => monsterSpec(i + 1));
   const ships = [...new Set(SPACESHIP_SOURCES.values())].map(source => spec(source, []));
-  const snake = [...SNAKE_PARTS].map(snakePartSpec);
+  const snake = [...SNAKE_PARTS].map(snakePart);
   return [...monsters, ...AVATARS.values(), ...ships, ...snake, ...TEXTURES.values()];
+}
+
+// Images classiques que chaque famille costume dans les jeux d'Arcade
+const COSTUMED_SPRITES = new Map([
+  ['bodies', () => [...AVATARS.values()]],
+  ['ships', () => PILOTED_SHIPS.map(source => spec(source, []))],
+  [
+    'snake',
+    () => [
+      ...SNAKE_PART_FILES.map(snakePart),
+      TEXTURES.get('herbe.png'),
+      TEXTURES.get('snake_apple.png'),
+    ],
+  ],
+  ['miam', () => [TEXTURES.get('mur.png'), spec(ANSWER_TOKEN, [])]],
+]);
+
+/**
+ * Images costumées des fêtes dans les jeux d'Arcade (corps des personnages, fusées pilotées,
+ * serpent, herbe et pomme de MultiSnake, murs et réponses de MultiMiam), d'après les familles
+ * de chaque fête : leurs variantes se génèrent comme
+ * celles des images classiques, mais elles restent hors du préchargement (absentes
+ * d'arcadeSpriteSpecs) ; hors ligne, l'image classique les remplace.
+ * @returns {SpriteSpec[]}
+ */
+export function seasonalSpriteSpecs() {
+  return SEASONS.flatMap(season =>
+    season.costumes
+      .flatMap(family => COSTUMED_SPRITES.get(family)?.() ?? [])
+      .map(item => seasonalSpec(item, season.id))
+  );
 }
 
 /**
