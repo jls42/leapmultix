@@ -376,6 +376,7 @@ export function buildListenPage({
   const src = item => hrefFrom(pageDir, clipFile(paths, item.key));
   const counted = `${plural(flagged.length, 'clip signalé', 'clips signalés')} (Whisper : ${byWhisper}, durée : ${flagged.length - byWhisper})`;
   const suffix = only ? '-lot' : '';
+  const batch = only ? ` (lot de ${only.size})` : '';
   const html = pageHtml({
     title: only ? `Écoute d'un lot de ${plural(only.size, 'clip', 'clips')}` : 'Écoute des clips',
     voiceLabel: `${lang} ${voice.version}`,
@@ -404,7 +405,7 @@ export function buildListenPage({
   return {
     name: `${lang}-${voice.version}${suffix}.html`,
     html,
-    summary: `Page d'écoute ${lang} ${voice.version}${only ? ` (lot de ${only.size})` : ''} : à écouter, ${counted} ; pour la forme, ${plural(said.length, 'clip', 'clips')}`,
+    summary: `Page d'écoute ${lang} ${voice.version}${batch} : à écouter, ${counted} ; pour la forme, ${plural(said.length, 'clip', 'clips')}`,
   };
 }
 
