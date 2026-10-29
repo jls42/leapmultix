@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const helpers = await import('../js/main-helpers.js');
 const { UserManager } = await import('../js/userManager.js');
-const { setTranslations } = await import('../js/i18n-store.js');
+const { setTranslations, setReady } = await import('../js/i18n-store.js');
 
 const FR = JSON.parse(readFileSync(new URL('../assets/translations/fr.json', import.meta.url)));
 /** Boutique des avatars, telle qu'index.html la pose sous la grille */
@@ -194,5 +194,38 @@ describe('Avatars : chemins filtrés et sélecteur de la personnalisation', () =
     const message = document.getElementById('welcome-message');
     expect(message.textContent).toContain('Lina');
     expect(message.querySelector('br')).toBeNull();
+  });
+});
+
+describe('Image des héros : texte de remplacement', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    document.body.replaceChildren();
+  });
+
+  const hero = () => {
+    const img = document.createElement('img');
+    img.className = 'seo-hero';
+    document.body.append(img);
+    return img;
+  };
+
+  test('avant le chargement des textes : image posée, aucun texte demandé ni avertissement', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    setTranslations({});
+    setReady(false);
+    const img = hero();
+    helpers.updateSeoHeroImage('fr');
+    expect(img.getAttribute('src')).toContain('leapmultix-social-card');
+    expect(img.hasAttribute('alt')).toBe(false);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  test('textes chargés : le texte de remplacement de la langue', () => {
+    setTranslations(FR);
+    setReady(true);
+    const img = hero();
+    helpers.updateSeoHeroImage('fr');
+    expect(img.getAttribute('alt')).toBe(FR.seo_hero_alt);
   });
 });

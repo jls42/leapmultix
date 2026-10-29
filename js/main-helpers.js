@@ -6,6 +6,7 @@ import Storage from './core/storage.js';
 import { renderAvatarShop } from './components/avatarShop.js';
 import { pickRandom } from './core/random.js';
 import { costumed, seasonWorlds, wornSeason } from './core/seasons.js';
+import { isReady as translationsReady } from './i18n-store.js';
 import {
   AVATAR_IDS,
   DEFAULT_AVATAR,
@@ -150,6 +151,9 @@ const updateHeroImageSource = (heroImg, nextSrc) => {
 };
 
 const updateHeroImageAlt = heroImg => {
+  // Costume posé avant le chargement des textes (initThemes) : l'appel qui suit leur
+  // chargement (mainInit.js) écrira le texte de remplacement
+  if (!translationsReady()) return;
   try {
     const alt = getTranslation('seo_hero_alt');
     if (typeof alt === 'string' && !alt.startsWith('[')) {
