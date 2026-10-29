@@ -20,7 +20,12 @@
       },
       "saidOverrides": {
         "Combien font 48 moins 41 ?": "Combien font quarante-huit moins quarante et un ?",
-        "Combien font 49 moins 41 ?": "Combien font quarante-neuf moins quarante et un ?"
+        "Combien font 49 moins 41 ?": "Combien font quarante-neuf moins quarante et un ?",
+        "3405 est divisible par 10": "Trois mille quatre cent cinq est divisible par dix",
+        "2213 est divisible par 9": "Deux mille deux cent treize est divisible par neuf",
+        "3501 est divisible par 5": "Trois mille cinq cent un est divisible par cinq",
+        "300 est divisible par 10": "Trois cents est divisible par dix",
+        "5372 est divisible par 2": "Cinq mille trois cent soixante-douze est divisible par deux"
       }
     },
     {
@@ -84,6 +89,12 @@
         "silenceDb": -50,
         "leadSeconds": 0.15,
         "trailSeconds": 0.08
+      },
+      "saidOverrides": {
+        "2213 is divisible by 3": "Two thousand two hundred and thirteen is divisible by three",
+        "1234 is divisible by 3": "One thousand two hundred and thirty-four is divisible by three",
+        "345 is divisible by 2": "Three hundred and forty-five is divisible by two",
+        "7041 is divisible by 3": "Seven thousand and forty-one is divisible by three"
       }
     }
   ]

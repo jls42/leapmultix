@@ -39,7 +39,9 @@ import {
 
 /** Clé factice : le faux serveur la reçoit, aucun fichier ni message ne doit la contenir */
 const FAKE_KEY = 'cle-factice-du-faux-serveur-elevenlabs';
-const VOICE = { ...loadVoice('fr'), version: 'test-1' };
+// Réglages de Lucie, sans ses textes dits propres : ils visent des phrases du vrai corpus,
+// absentes du petit corpus de ces tests
+const VOICE = { ...loadVoice('fr'), saidOverrides: {}, version: 'test-1' };
 
 const phrase = (text, family, operator = null) => ({ text, key: voiceKey(text), family, operator });
 const PHRASES = [

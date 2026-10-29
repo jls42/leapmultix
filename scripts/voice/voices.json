@@ -22,6 +22,45 @@
       "silenceDb": -50,
       "leadSeconds": 0.15,
       "trailSeconds": 0.08
+    },
+    "saidOverrides": {
+      "2709 est divisible par 9": "Deux mille sept cent neuf est divisible par neuf",
+      "7041 est divisible par 3": "Sept mille quarante et un est divisible par trois",
+      "345 est divisible par 5": "Trois cent quarante-cinq est divisible par cinq",
+      "760 est divisible par 5": "Sept cent soixante est divisible par cinq",
+      "345 est divisible par 6": "Trois cent quarante-cinq est divisible par six",
+      "1005 est divisible par 6": "Mille cinq est divisible par six",
+      "3405 est divisible par 10": "Trois mille quatre cent cinq est divisible par dix",
+      "872 est divisible par 6": "Huit cent soixante-douze est divisible par six",
+      "891 est divisible par 9": "Huit cent quatre-vingt-onze est divisible par neuf",
+      "1011 est divisible par 3": "Mille onze est divisible par trois",
+      "348 est divisible par 2": "Trois cent quarante-huit est divisible par deux",
+      "905 est divisible par 10": "Neuf cent cinq est divisible par dix",
+      "470 est divisible par 10": "Quatre cent soixante-dix est divisible par dix",
+      "1056 est divisible par 5": "Mille cinquante-six est divisible par cinq",
+      "345 est divisible par 2": "Trois cent quarante-cinq est divisible par deux",
+      "791 est divisible par 2": "Sept cent quatre-vingt-onze est divisible par deux",
+      "402 est divisible par 6": "Quatre cent deux est divisible par six",
+      "1234 est divisible par 3": "Mille deux cent trente-quatre est divisible par trois",
+      "4096 est divisible par 2": "Quatre mille quatre-vingt-seize est divisible par deux",
+      "512 est divisible par 5": "Cinq cent douze est divisible par cinq",
+      "3501 est divisible par 5": "Trois mille cinq cent un est divisible par cinq",
+      "1234 est divisible par 9": "Mille deux cent trente-quatre est divisible par neuf",
+      "3456 est divisible par 9": "Trois mille quatre cent cinquante-six est divisible par neuf",
+      "1250 est divisible par 2": "Mille deux cent cinquante est divisible par deux",
+      "567 est divisible par 2": "Cinq cent soixante-sept est divisible par deux",
+      "734 est divisible par 2": "Sept cent trente-quatre est divisible par deux",
+      "345 est divisible par 9": "Trois cent quarante-cinq est divisible par neuf",
+      "703 est divisible par 3": "Sept cent trois est divisible par trois",
+      "402 est divisible par 3": "Quatre cent deux est divisible par trois",
+      "1014 est divisible par 6": "Mille quatorze est divisible par six",
+      "576 est divisible par 6": "Cinq cent soixante-seize est divisible par six",
+      "326 est divisible par 6": "Trois cent vingt-six est divisible par six",
+      "470 est divisible par 5": "Quatre cent soixante-dix est divisible par cinq",
+      "2213 est divisible par 3": "Deux mille deux cent treize est divisible par trois",
+      "760 est divisible par 10": "Sept cent soixante est divisible par dix",
+      "5372 est divisible par 2": "Cinq mille trois cent soixante-douze est divisible par deux",
+      "2010 est divisible par 10": "Deux mille dix est divisible par dix"
     }
   },
   "en": {
@@ -40,6 +79,9 @@
       "silenceDb": -50,
       "leadSeconds": 0.15,
       "trailSeconds": 0.08
+    },
+    "saidOverrides": {
+      "1011 is divisible by 3": "One thousand and eleven is divisible by three"
     }
   },
   "es": {

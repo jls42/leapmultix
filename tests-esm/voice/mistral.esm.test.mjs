@@ -41,7 +41,8 @@ const KEY = 'cle-factice-mistral-0123456789';
  * rester celle des manifestes publiés.
  */
 const JANE = loadVoiceVersion('en', 'jane-v1-1');
-const VOICE = { ...JANE, version: 'test-en-1' };
+// Sans ses textes dits propres : ils visent des phrases du vrai corpus, absentes de celui des tests
+const VOICE = { ...JANE, saidOverrides: {}, version: 'test-en-1' };
 const fakeMp3 = text => Buffer.concat([Buffer.from([0xff, 0xfb, 0x90, 0x64]), Buffer.from(text)]);
 const json = (status, body, headers = {}) =>
   new Response(JSON.stringify(body), {
