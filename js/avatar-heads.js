@@ -146,17 +146,29 @@ export function setAvatarHead(img, avatarId, sizes) {
   armFallback(img);
 }
 
-/** Repli d'une tête, qui dit son avatar : « …/fox_head_avatar_128x128.png » */
-const HEAD_FALLBACK = /([a-z]+)_head_avatar_128x128\.png$/;
+/** Fin du repli d'une tête, qui suit son avatar : « …/fox_head_avatar_128x128.png » */
+const HEAD_FALLBACK_END = '_head_avatar_128x128.png';
+
+/**
+ * Avatar que dit le repli d'une tête, lu dans le nom du fichier (sans expression régulière : la
+ * lecture reste linéaire, quelle que soit l'adresse)
+ * @param {string} fallback
+ * @returns {string} Vide si ce n'est pas le repli d'une tête
+ */
+function avatarOfFallback(fallback) {
+  const name = fallback.slice(fallback.lastIndexOf('/') + 1);
+  return name.endsWith(HEAD_FALLBACK_END) ? name.slice(0, -HEAD_FALLBACK_END.length) : '';
+}
 
 /**
  * Repose chaque tête affichée, à sa taille, quand le costume change (thème de fête appliqué ou
- * retiré) : celles de index.html comme celles des écrans déjà montrés
+ * retiré) : celles de index.html comme celles des écrans déjà montrés. L'avatar lu passe par la
+ * liste blanche de setAvatarHead
  * @param {ParentNode} [root]
  */
 export function repaintAvatarHeads(root = document) {
-  for (const img of root.querySelectorAll('img[data-fallback$="_head_avatar_128x128.png"]')) {
-    const avatar = HEAD_FALLBACK.exec(img.dataset.fallback)?.at(1);
+  for (const img of root.querySelectorAll(`img[data-fallback$="${HEAD_FALLBACK_END}"]`)) {
+    const avatar = avatarOfFallback(img.dataset.fallback);
     if (avatar) setAvatarHead(img, avatar, img.getAttribute('sizes') ?? '');
   }
 }

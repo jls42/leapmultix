@@ -60,6 +60,7 @@ format_size() {
         carre-transparent) echo 1024x1024 ;;
         paysage) echo 1536x1024 ;;
         bandeau) echo 1200x630 ;;
+        *) return 1 ;;
     esac
 }
 
