@@ -72,12 +72,27 @@ describe('ESM: Découverte, astuces de la division', () => {
 const DIGIT_SUM_EXAMPLE =
   /(\d+)\u00a0×\u00a0(\d+)\u00a0=\u00a0(\d+), \p{L}+ (\d+(?:\u00a0\+\u00a0\d+)+)\u00a0=\u00a0(\d+)/gu;
 
+/** « de 3 × 1 à 3 × 10 », « from 9 × 1 to 9 × 10 » : la plage où l'astuce est vraie */
+const STATED_RANGE = /(\d+)\u00a0×\u00a0(\d+) (?:à|to|a) (\d+)\u00a0×\u00a0(\d+)/g;
+
 const digitSum = n => [...String(n)].reduce((total, digit) => total + Number(digit), 0);
 
 describe('ESM: Découverte, astuces de la multiplication', () => {
   test.each(LANGS)('%s : les tables de 2 et de 3 ont une seconde astuce', lang => {
     [2, 3].forEach(table => {
       expect(dictionaries[lang][`mnemonic_${table}`].split('\n')).toHaveLength(2);
+    });
+  });
+
+  // « de 3 × 1 à 3 × 10 » : la ligne numérique montre aussi 3 × 0 = 0, dont la somme des
+  // chiffres vaut 0 ; l'astuce dit donc sa plage, celle des multiplicandes du jeu
+  test.each(LANGS)('%s : les tables de 3 et de 9 disent leur plage, de 1 à 10', lang => {
+    const factors = [DISCOVERY_FACTORS.at(0), DISCOVERY_FACTORS.at(-1)];
+    [3, 9].forEach(table => {
+      const range = [...dictionaries[lang][`mnemonic_${table}`].matchAll(STATED_RANGE)];
+      expect(range.map(([, a, from, b, to]) => [a, b, from, to].map(Number))).toEqual([
+        [table, table, ...factors],
+      ]);
     });
   });
 
