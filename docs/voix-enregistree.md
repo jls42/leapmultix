@@ -427,14 +427,17 @@ Avant de générer toute une langue avec une nouvelle voix, quelques voix candid
      ramenées aux mots de la phrase avant la comparaison.
 
    - **Écoute** : `npm run voice:listen -- --lang fr --transcripts transcripts-fr.jsonl`
-     écrit une page locale (`ecoute/fr-<version>.html` dans le dépôt des voix) : les clips
-     signalés, puis un échantillon de 12 formes féminines, que Whisper ne distingue pas
-     (« un » et « une » s'écrivent « 1 »). Une case « à refaire » par clip ; les cases
+     écrit une page locale (`ecoute/fr-<version>.html` dans le dépôt des voix) en deux
+     parties marquées : « À écouter », les clips signalés ; puis « Pour la forme », un
+     échantillon facultatif de 12 clips que rien ne signale (textes imposés ; formes
+     féminines, que Whisper ne distingue pas, « un » et « une » s'écrivant « 1 » ; autres
+     clips). `--keys <fichier>` limite la page à un lot de clips. Une case « à refaire » par clip ; les cases
      cochées forment la liste à copier dans `ecartes.txt`.
    - **Qui écoute quoi** (décision du propriétaire, 27/09/2026) : un clip que Whisper juge
      juste n'est pas réécouté. Les clips signalés sont d'abord refaits en boucle, sans
      écoute, tant que Whisper doute (deux ou trois tours). Le propriétaire n'écoute ensuite
-     que ceux qu'il n'a toujours pas validés, et l'échantillon des accords.
+     que ceux qu'il n'a toujours pas validés : quand Whisper valide tout, on est bon, et
+     l'échantillon pour la forme reste facultatif (29/10/2026).
    - **Refaire** : `generate.mjs --lang fr --redo ecartes.txt --max-total-chars <plafond>`
      (seulement les clips écartés à l'écoute, dans le plafond accordé ; l'ancien de chacun
      est mis de côté dans `ecoute/avant/`). Whisper retranscrit ensuite les clips refaits

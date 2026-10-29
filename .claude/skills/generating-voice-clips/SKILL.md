@@ -165,11 +165,21 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
         Seuls ces clips sont refaits, l'ancien de chacun mis de côté dans `ecoute/avant/` ;
      3. `npm run voice:review -- --lang <l>` : Whisper retranscrit les clips refaits, et
         `a-reecouter-<tag>.txt` ne garde que ceux qui doutent encore.
-   - **Écoute du propriétaire**, la boucle finie : la page d'écoute
-     (`ecoute/<l>-<version>.html`, `xdg-open <page>`) ne montre que les clips que Whisper n'a
-     pas validés, puis un échantillon de 12 formes féminines (« une fois 7 », en fr et en es),
-     que Whisper ne distingue pas. Il coche « à refaire » ; la liste du bandeau se colle dans
-     `ecartes.txt` (racine du jeu, ignoré par git). Ne jamais cocher à sa place.
+   - **Écoute du propriétaire**, la boucle finie : seuls les clips que Whisper n'a pas
+     validés, ou de durée anormale, sont à écouter ; quand Whisper valide tout, on est bon
+     (décision du propriétaire, 29/10/2026). La page d'écoute (`ecoute/<l>-<version>.html`,
+     `xdg-open <page>`) a deux parties marquées :
+     - « À écouter » : ces clips-là ;
+     - « Pour la forme », à part et facultative : un échantillon de clips que rien ne signale
+       (textes imposés, de la langue ou de la voix ; formes féminines « une fois 7 », que
+       Whisper ne distingue pas ; autres clips).
+
+     Pour un lot de nouvelles phrases, `--keys <empreintes du lot>` fait la page de ce lot
+     seul (`<l>-<version>-lot.html`) :
+     `npm run voice:listen -- --lang <l> [--version <version>] --transcripts transcripts-<tag>.jsonl --keys <fichier>`.
+     Il coche « à refaire » ; la liste du bandeau se colle dans `ecartes.txt` (racine du jeu,
+     ignoré par git). Ne jamais cocher à sa place.
+
    - **Propriétaire loin du poste** : publier cette page en artifact, les clips joints en
      fichiers, avec des cases « à refaire » gardées dans le stockage de l'artifact. Les relire
      ensuite pour écrire `ecartes.txt`.
@@ -194,6 +204,11 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
        propre. Exemple : Sulafat en français, `{ "plus": "plusse" }` (elle disait « plu »). Un
        mot absent du corpus est refusé. Whisper n'entend pas ce genre de défaut : le vérifier
        sur un échantillon des phrases qui contiennent le mot.
+
+     Lucie (Eleven v3) lit mal un nombre de trois ou quatre chiffres en tête de phrase, près
+     d'une fois sur deux (« 345 » entendu « Très 45 » ou « 445 », 29/10/2026), et refaire
+     redonne la même erreur. Lui donner le nombre en lettres dès le premier signalement
+     (`saidOverrides`), plutôt que de payer d'autres tours de refaits.
 
 6. **Sauvegarde** : proposer au propriétaire le commit du dépôt privé (`clips/`,
    `manifests/`, registre compris), puis le pousser. `raw/` et `ecoute/` restent locaux.
@@ -222,6 +237,10 @@ sont refusées par ce service (401 `CREDENTIALS_MISSING`). Le brut se demande en
        langues sont perdues.
    - Nouvelle version : entre l'envoi de ses clips et son index, `voice:check-online` demande
      `--allow-other-version`.
+   - **Nouvelles phrases d'une voix déjà publiée** (même version) : `clips` puis
+     `voice:check-online` suffisent. L'index ne nomme que la voix, sa version et son
+     audience : il ne change pas. Les joueurs entendent ces clips dès que le code qui dit les
+     phrases est en prod.
 8. **Ouverture.** Accord à chaque étape, et la prod doit servir la balise
    `leapmultix-voice-base` à `/voice/` (variable de dépôt `VOICE_BASE`).
    - Tester sur le site avec `?voix=test`, dans la langue du jeu concernée (`?voix=off`

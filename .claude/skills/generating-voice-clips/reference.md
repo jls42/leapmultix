@@ -78,14 +78,20 @@ cette page : c'est la commande habituelle. `voice:listen` refait seulement la pa
 [--compare <fichier>] [--out <dépôt des voix>]` écrit une page HTML autonome dans
 `ecoute/` du dépôt des voix et en affiche l'adresse `file://`.
 
-- **Sans `--compare`** (`<l>-<version>.html`) : clips signalés, par les règles de
-  `voice:check` (voir l'étape « Contrôles » du skill : nombres, ressemblance et mots en trop,
-  durée rapportée au débit de la voix), puis un échantillon
-  (`--sample`, 12 par défaut) des phrases dont le texte dit diffère : textes imposés
-  (`SAID_OVERRIDES`) d'abord, puis les phrases où un nombre s'accorde en genre (« une fois 7 »,
-  « una caja »), régulièrement espacées. En espagnol, où les nombres se disent en lettres,
-  presque tous les textes dits diffèrent : seuls les accords s'écoutent. Sans
-  `--transcripts`, seules les durées signalent.
+- **Sans `--compare`** (`<l>-<version>.html`) : deux parties marquées.
+  - « À écouter » : les clips signalés par les règles de `voice:check` (voir l'étape
+    « Contrôles » du skill : nombres, ressemblance et mots en trop, durée rapportée au débit
+    de la voix), les seuls que le propriétaire écoute. Sans `--transcripts`, seules les
+    durées signalent.
+  - « Pour la forme », à part et facultative : un échantillon (`--sample`, 12 par défaut) de
+    clips que rien ne signale. D'abord les textes imposés, de la langue (`SAID_OVERRIDES`,
+    « Texte imposé ») ou de la voix (`saidOverrides`, « Texte imposé (voix) »), sur la moitié
+    au plus ; puis les phrases où un nombre s'accorde en genre (« une fois 7 », « una caja ») ;
+    puis d'autres clips. Chaque groupe est régulièrement espacé. En espagnol, où les nombres
+    se disent en lettres, seuls les accords comptent comme tels.
+- **Avec `--keys <fichier>`** (`<l>-<version>-lot.html`) : la même page, limitée aux
+  empreintes du fichier, un lot de nouvelles phrases par exemple. La durée se juge toujours
+  au débit de toute la voix. Ne va pas avec `--compare`.
 - **Avec `--compare <fichier>`** (`<l>-<version>-refaits.html`) : pour chaque empreinte de la
   liste, l'ancien clip (mis de côté par `generate.mjs` dans `ecoute/avant/`, le dernier
   remplacé seulement) et le nouveau, ce que Whisper a entendu de chacun, et son verdict sur
