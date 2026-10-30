@@ -3,7 +3,7 @@ name: dressing-for-events
 description: >-
   Habille LeapMultix pour une fête du calendrier (Halloween, Noël, Nouvel An…) : le thème par
   défaut change seul pendant ses dates (deux thèmes de couleur, clair et sombre), et le jeu se
-  costume partout (têtes, corps de l'Arcade, fusées de MultiInvaders, serpent, pommes et herbe
+  costume partout (têtes, corps et monstres de l'Arcade, fusées de MultiInvaders, serpent, pommes et herbe
   de MultiSnake, murs et réponses de MultiMiam, logos des modes et des jeux d'Arcade, plusieurs
   fonds par personnage, image des héros de l'accueil), dessiné par Codex à partir des originaux ; tout revient seul le lendemain. À utiliser quand
   le propriétaire demande un thème de fête, de « déguiser » ou « habiller » les personnages ou
@@ -113,6 +113,11 @@ consigne, mot pour mot. Noms des cibles :
   garde plusieurs (Halloween : 4) ;
 - `assets/images/arcade/<fusée>_<fête>.png` pour les dix fusées pilotées (réf. : la fusée
   d'origine + la tête costumée) ;
+- `assets/images/arcade/monstre<NN>_right_<fête>.png` pour les 155 monstres (réf. : le monstre
+  d'origine seul, au format de sa source, `carre-transparent` ou `portrait-transparent`) :
+  « habille-le, ne le redessine pas », un accessoire de la fête par monstre, varié d'un monstre
+  à l'autre (Noël : bonnet de Père Noël, de lutin, bois de renne, couronne de houx, cache-oreilles
+  et écharpe, guirlande lumineuse, cadeau ou boule tenus) ;
 - `assets/images/arcade/logo_mode_<mode>_<fête>.png` pour les six logos des modes (réf. : le
   logo d'origine ; Chrono prend aussi le corps costumé du renard). Les cartes de calcul et le
   « ? » des logos sont à garder, écrits dans la consigne (« 7×8 », « 6×9 »…) ;
@@ -206,6 +211,9 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   semaine par image, 1,5 à 3,5 min chacune (52 min en tout) : une fête tient dans une fenêtre
   neuve, pas dans une fenêtre déjà entamée à 72 %. Le refus arrive en 2 secondes et la session
   refusée écrit des fenêtres vides dans son journal (d'où la lecture de l'heure dans le message).
+  La semaine compte aussi : après les 155 monstres de Noël 2026, Codex a refusé le 30/10 jusqu'au
+  04/11 (journal de session à 67 % de la semaine), trop tard pour ceux d'Halloween la même
+  année. Une longue liste part au moins une semaine avant la fête.
 - **Ne rien modifier pendant une génération** : la boucle lit la liste qu'elle a ouverte au
   départ (un `sed -i` sur `prompts.tsv` n'y est pas vu), et bash lit son script au fil de
   l'exécution (le modifier peut casser la suite). Attendre la fin, puis relancer : les cibles
@@ -217,7 +225,7 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   où le thème ordinaire en fait alterner plusieurs. D'où les familles `logos`, `snake` et
   `miam`, et `worlds`. Avant la planche, faire le tour des écrans : tout ce qui est dessiné
   (pas une icône) a sa version de fête, ou une raison écrite de ne pas l'avoir (fusées sans
-  pilote, monstres, vidéos d'intro).
+  pilote, vidéos d'intro). Les 155 monstres de l'Arcade sont venus à Noël 2026 (`monsters`).
 - **Serpent** : 14 morceaux qui se raccordent case à case et une tête par direction, dessinés
   séparément. Un dessin refait ne garantit ni les raccords ni la taille : recoloration
   (`recolor.sh`). Un chapeau se pose sur la tête sans dépasser la case (méthode `bonnet`).
@@ -241,7 +249,10 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   gêner l'autre ; la verser ensuite dans la liste de la fête et effacer le dossier. Noël
   2026 : un lot par personnage (corps puis tête), puis, lancés chacun dès que la référence
   attendue apparaît dans le journal (« fait : … »), un lot de fonds et un lot de fusées par
-  personnage : 53 images en 15 minutes, environ 1 % de la fenêtre de 5 h chacune.
+  personnage : 53 images en 15 minutes, environ 1 % de la fenêtre de 5 h chacune. Monstres :
+  huit lots d'une vingtaine (`scripts/seasons/christmas-monstres<N>/`), 155 images sans un
+  échec, sur deux fenêtres de 5 h et environ 25 % de la semaine ; tailles comparées aux
+  originaux (boîte des pixels opaques) avant de les verser.
 - **Planche faite à la main** : jamais `ls … | xargs montage … <sortie>`. xargs place les
   fichiers après la sortie : le dernier devient la sortie de montage et il est écrasé par la
   planche (Noël 2026 : une fusée à redessiner). Passer la liste avant la sortie

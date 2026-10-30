@@ -67,6 +67,7 @@ export const SEASONS = Object.freeze([
     costumes: Object.freeze([
       'heads',
       'bodies',
+      'monsters',
       'ships',
       'snake',
       'miam',
