@@ -140,8 +140,9 @@ Ces dossiers sont imposés : `js/webp-images.js` et le catalogue d'Arcade ne lis
 `bash scripts/seasons/dress-up.sh <fête>`, lancé **en tâche de fond** (une à deux minutes par
 image). Le script est reprenable (il saute une cible conforme), contrôle taille et transparence,
 écrit son journal et la planche dans `analysis/seasons/<fête>/`. À court de quota, il lit l'heure
-de reprise dans le refus de Codex (« try again at 2:20 AM »), sinon dans le journal des sessions
-(`~/.codex/sessions`, `rate_limits`), attend, puis reprend : consigne du propriétaire, on continue
+de reprise dans le refus de Codex (`resets_at` de la limite d'images, « try again at 2:20 AM »),
+sinon dans le journal des sessions (`~/.codex/sessions`, `rate_limits`) si une fenêtre y est
+pleine, sinon réessaie dans 15 min, attend, puis reprend : consigne du propriétaire, on continue
 dès que le quota revient. Refaire une image : `bash scripts/seasons/dress-up.sh <fête> <cible>`.
 
 Recolorations : `bash scripts/seasons/recolor.sh <fête>` lit
@@ -211,9 +212,14 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   semaine par image, 1,5 à 3,5 min chacune (52 min en tout) : une fête tient dans une fenêtre
   neuve, pas dans une fenêtre déjà entamée à 72 %. Le refus arrive en 2 secondes et la session
   refusée écrit des fenêtres vides dans son journal (d'où la lecture de l'heure dans le message).
-  La semaine compte aussi : après les 155 monstres de Noël 2026, Codex a refusé le 30/10 jusqu'au
-  04/11 (journal de session à 67 % de la semaine), trop tard pour ceux d'Halloween la même
-  année. Une longue liste part au moins une semaine avant la fête.
+  La génération d'images a en plus sa propre limite, sur 24 h, absente du tableau des limites
+  de Codex comme des `rate_limits` du journal : le 30/10/2026, après 234 images en 10 h 30,
+  Codex a refusé (http 429, `"limit_window_minutes":1440`) jusqu'à l'heure de son `resets_at`,
+  23 h 22, avec les fenêtres de 5 h et de la semaine loin d'être pleines. Le script attendait
+  alors la remise à zéro de la semaine (67 %), le 04/11 : il lit désormais `resets_at`, et
+  n'attend une fenêtre du journal que si elle est pleine. Une liste de plus de 200 images
+  déborde donc sur un deuxième jour, et **la fête en cours passe avant la suivante** : les
+  155 monstres de Noël, dessinés pendant Halloween, ont pris la journée de ceux d'Halloween.
 - **Ne rien modifier pendant une génération** : la boucle lit la liste qu'elle a ouverte au
   départ (un `sed -i` sur `prompts.tsv` n'y est pas vu), et bash lit son script au fil de
   l'exécution (le modifier peut casser la suite). Attendre la fin, puis relancer : les cibles

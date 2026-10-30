@@ -6,8 +6,9 @@
 #
 # - Reprenable : une cible déjà là et conforme est sautée. Pour en refaire une, l'effacer, ou
 #   la nommer en argument (elle est alors redessinée même si elle existe).
-# - À court de quota, le script attend la remise à zéro que Codex écrit dans le journal de ses
-#   sessions (rate_limits : fenêtre de 5 h et semaine), plus une minute, puis reprend.
+# - À court de quota, le script attend l'heure de reprise du refus (« resets_at » de la limite
+#   d'images sur 24 h, « try again at ») ou la remise à zéro d'une fenêtre pleine du journal des
+#   sessions de Codex (rate_limits : 5 h et semaine), plus une minute, puis reprend.
 # - Codex travaille dans un dossier temporaire hors du dépôt (il y lirait sinon AGENTS.md) ;
 #   l'image est ensuite mise au format de sa cible (taille exacte, transparence contrôlée).
 # - Journal et planche de contact, dans l'ordre de la liste : analysis/seasons/<fête>/.
@@ -121,11 +122,18 @@ quota_summary() {
         2>/dev/null | tail -n 1
 }
 
-# Heure de reprise donnée par le refus de Codex (« try again at 2:20 AM. »), en secondes
-# depuis 1970 ; vide si le message n'en donne pas
+# Heure de reprise donnée par le refus de Codex, en secondes depuis 1970 ; vide si le message
+# n'en donne pas. Le refus de la génération d'images (http 429) la donne en clair
+# (« "resets_at":1793398951 ») : sa fenêtre de 24 h n'est pas dans les rate_limits du journal.
+# Les autres refus l'écrivent en toutes lettres (« try again at 2:20 AM. »)
 RETRY_AT=''
 retry_time_from() {
     local when epoch
+    epoch="$(grep -Eoh 'resets_at[^0-9,}]{1,4}[0-9]{9,}' "$@" 2>/dev/null | tail -n 1 | grep -Eo '[0-9]+$')"
+    if [[ -n "$epoch" ]]; then
+        echo "$epoch"
+        return 0
+    fi
     when="$(grep -Eoh 'try again at [^.]+' "$@" 2>/dev/null | tail -n 1 | sed -E 's/^try again at //; s/([0-9])(st|nd|rd|th)/\1/g')"
     [[ -n "$when" ]] || return 0
     epoch="$(date -d "$when" +%s 2>/dev/null)" || return 0
@@ -136,13 +144,15 @@ retry_time_from() {
     echo "$epoch"
 }
 
-# Attend que le quota revienne à 100 % : jusqu'à l'heure donnée par le refus, sinon jusqu'à la
-# remise à zéro du journal, plus une minute
+# Attend que le quota revienne : jusqu'à l'heure donnée par le refus, sinon jusqu'à la remise à
+# zéro du journal si sa fenêtre est pleine, plus une minute ; à défaut, un nouvel essai dans
+# DEFAULT_WAIT. Une fenêtre entamée mais pas pleine n'est pas la cause du refus : le 30/10/2026,
+# la semaine à 67 % renvoyait au 04/11 un refus d'images levé le soir même
 wait_for_quota() {
     local quota resets now delay
     now="$(date +%s)"
     resets="$RETRY_AT"
-    if [[ -z "$resets" ]]; then
+    if [[ -z "$resets" ]] && quota_exhausted; then
         quota="$(latest_quota)"
         resets="${quota#* }"
     fi
