@@ -252,7 +252,9 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
 - **Variantes** : `assets/generated-images/` n'étant pas versionné, un worktree neuf les refait
   toutes avec `npm run assets:generate` (plus de 10 min, en tâche de fond).
   `npm run assets:backgrounds` reconvertit tous les fonds, mais les WebP classiques en sortent
-  identiques à l'octet (seuls les nouveaux apparaissent dans `git status`).
+  identiques à l'octet (seuls les nouveaux apparaissent dans `git status`). Une image refaite
+  sous le même nom refait ses variantes : le générateur compare les dates. Avant Noël 2026, il
+  gardait celles du premier dessin, et les têtes du serpent restaient sans bonnet en jeu.
 - **Ordre d'initialisation** : `initThemes()` passe en tête de `runInit()` (`js/core/mainInit.js`)
   pour que le costume soit porté avant que le fond et les têtes ne se posent.
 - **Tests à la date du jour** : un test qui appelle `initThemes()` sans horloge simulée change

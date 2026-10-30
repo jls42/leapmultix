@@ -66,6 +66,15 @@ function sourceKey(sourceFile) {
   return path.relative(ASSETS_SOURCE, sourceFile).split(path.sep).join('/');
 }
 
+/**
+ * Fichier produit encore valable : présent et pas plus ancien que sa source. Une image
+ * redessinée sous le même nom refait ainsi sa copie et ses variantes, qui sinon restaient
+ * celles du premier dessin dans dist/ (têtes du serpent de Noël, restées sans leur bonnet)
+ */
+function isUpToDate(file, sourceFile) {
+  return fs.existsSync(file) && fs.statSync(file).mtimeMs >= fs.statSync(sourceFile).mtimeMs;
+}
+
 /** Fins de ligne : le « . » d'une expression régulière ne les traverse pas */
 const LINE_BREAKS = ['\n', '\r', '\u2028', '\u2029'];
 
@@ -157,7 +166,7 @@ class ResponsiveAssetGenerator {
 
         fs.mkdirSync(destDir, { recursive: true });
 
-        if (!fs.existsSync(destFile)) {
+        if (!isUpToDate(destFile, sourceFile)) {
           fs.copyFileSync(sourceFile, destFile);
         }
       });
@@ -250,7 +259,7 @@ class ResponsiveAssetGenerator {
 
     // Copier l'original (pour fallback et contributeurs)
     const originalDest = path.join(ASSETS_DIST, relativePath);
-    if (!fs.existsSync(originalDest)) {
+    if (!isUpToDate(originalDest, sourceFile)) {
       fs.copyFileSync(sourceFile, originalDest);
     }
 
@@ -319,8 +328,8 @@ class ResponsiveAssetGenerator {
   async generateResolution(sourceFile, destDir, baseName, suffix, config) {
     const webpFile = path.join(destDir, `${baseName}-${suffix}.webp`);
 
-    // Skip si déjà généré
-    if (fs.existsSync(webpFile)) {
+    // Déjà générée depuis la source actuelle
+    if (isUpToDate(webpFile, sourceFile)) {
       const stats = fs.statSync(webpFile);
       this.report.sizeAfter += stats.size;
       return;
