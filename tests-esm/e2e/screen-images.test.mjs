@@ -314,6 +314,59 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
     );
   }
 
+  /**
+   * Pendant une fête : logos des six modes de l'accueil, puis des neuf rangées du tableau de
+   * bord (cinq modes, quatre jeux d'Arcade), tous costumés et nets
+   * @param {RegExp} logo - Variante costumée attendue
+   */
+  async function expectCostumedLogos(logo) {
+    const homeLogos = await settledImages(HOME_MODE_LOGOS);
+    expect(homeLogos).toHaveLength(6);
+    expect(homeLogos.filter(img => !img.loaded || isBlurry(img) || !logo.test(img.src))).toEqual(
+      []
+    );
+    const dashboard = await openDashboard();
+    expect(dashboard.filter(img => !logo.test(img.src))).toEqual([]);
+    expect(dashboard).toHaveLength(9);
+  }
+
+  /**
+   * Thèmes affichés de la Personnalisation (display, pas l'attribut hidden seul) : ceux de la
+   * clarté en cours, quatre ordinaires et un de la fête, aucun de l'autre fête
+   * @param {string} season
+   */
+  async function expectSeasonThemesShown(season) {
+    const shown = await page.$$eval('.color-theme-btn', buttons =>
+      buttons
+        .filter(button => getComputedStyle(button).display !== 'none')
+        .map(button => button.dataset.colorTheme)
+    );
+    const otherSeason = season === 'halloween' ? ['snow', 'christmas'] : ['pumpkin', 'halloween'];
+    expect(shown).toHaveLength(5);
+    expect(shown.filter(theme => otherSeason.includes(theme))).toEqual([]);
+  }
+
+  /**
+   * Un thème ordinaire retire la fête : les têtes de la Personnalisation et les logos de
+   * l'accueil reprennent leur dessin classique
+   * @param {string} season
+   */
+  async function expectClassicAfterOrdinaryTheme(season) {
+    await page.$eval('.color-theme-btn[data-color-theme="default"]', button => button.click());
+    await page.waitForFunction(
+      (selector, id) =>
+        [...document.querySelectorAll(selector)].every(img => !img.currentSrc.includes(`_${id}`)),
+      { timeout: 10000 },
+      SLIDE6_HEADS,
+      season
+    );
+    expect(headProblems(await settledImages(SLIDE6_HEADS))).toEqual(HEADS_OK);
+    const logoSources = await page.$$eval(HOME_MODE_LOGOS, imgs =>
+      imgs.map(img => img.getAttribute('src'))
+    );
+    expect(logoSources.filter(src => src.includes(`_${season}`))).toEqual([]);
+  }
+
   describeGenerated('En WebP, aussi nettes qu’à l’écran', () => {
     test.each(SCREENS)(
       '%s : les 9 logos du tableau de bord',
@@ -442,34 +495,14 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
       'pendant la fête %s : têtes et logos costumés nets, classiques dès un thème ordinaire',
       async season => {
         const headVariant = seasonHeadVariant(season);
-        const logo = seasonLogo(season);
         await openGame(SCREENS[0][1], { season });
         const slide0 = await settledImages(SLIDE0_HEADS);
         expect(slide0).toHaveLength(8);
         expect(headProblems(slide0, headVariant)).toEqual(HEADS_OK);
         await chooseZoe();
-        // Logos des six modes de l'accueil, puis des neuf rangées du tableau de bord (cinq modes,
-        // quatre jeux d'Arcade)
-        const homeLogos = await settledImages(HOME_MODE_LOGOS);
-        expect(homeLogos).toHaveLength(6);
-        expect(
-          homeLogos.filter(img => !img.loaded || isBlurry(img) || !logo.test(img.src))
-        ).toEqual([]);
-        const dashboard = await openDashboard();
-        expect(dashboard.filter(img => !logo.test(img.src))).toEqual([]);
-        expect(dashboard).toHaveLength(9);
+        await expectCostumedLogos(seasonLogo(season));
         await openPersonalization();
-        // Thèmes affichés (display, pas l'attribut hidden seul) : ceux de la clarté en cours,
-        // quatre ordinaires et un de la fête, aucun de l'autre fête
-        const shown = await page.$$eval('.color-theme-btn', buttons =>
-          buttons
-            .filter(button => getComputedStyle(button).display !== 'none')
-            .map(button => button.dataset.colorTheme)
-        );
-        const otherSeason =
-          season === 'halloween' ? ['snow', 'christmas'] : ['pumpkin', 'halloween'];
-        expect(shown).toHaveLength(5);
-        expect(shown.filter(theme => otherSeason.includes(theme))).toEqual([]);
+        await expectSeasonThemesShown(season);
         const costumed = await settledImages(SLIDE6_HEADS);
         expect({
           problems: headProblems(costumed, headVariant),
@@ -478,22 +511,7 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
           problems: HEADS_OK,
           avatars: ['panda', 'fox', 'panda', 'unicorn', 'dragon', 'astronaut'],
         });
-        // Un thème ordinaire retire la fête : les mêmes têtes reprennent leur dessin classique
-        await page.$eval('.color-theme-btn[data-color-theme="default"]', button => button.click());
-        await page.waitForFunction(
-          (selector, id) =>
-            [...document.querySelectorAll(selector)].every(
-              img => !img.currentSrc.includes(`_${id}`)
-            ),
-          { timeout: 10000 },
-          SLIDE6_HEADS,
-          season
-        );
-        expect(headProblems(await settledImages(SLIDE6_HEADS))).toEqual(HEADS_OK);
-        const logoSources = await page.$$eval(HOME_MODE_LOGOS, imgs =>
-          imgs.map(img => img.getAttribute('src'))
-        );
-        expect(logoSources.filter(src => src.includes(`_${season}`))).toEqual([]);
+        await expectClassicAfterOrdinaryTheme(season);
       },
       90000
     );
