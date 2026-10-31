@@ -1,7 +1,8 @@
 /**
  * Images costumées des fêtes : têtes (js/avatar-heads.js), corps, fusées, serpent de l'Arcade
  * et labyrinthe de MultiMiam (js/arcade-sprite-catalog.js), logos des modes et des jeux
- * (js/logos.js), fonds de l'avatar et image des héros (js/main-helpers.js). Costumées seulement quand la fête est portée ; le repli reste
+ * (js/logos.js), cadeaux de l'Aventure (js/adventure-gifts.js), fonds de l'avatar et image des
+ * héros (js/main-helpers.js). Costumées seulement quand la fête est portée ; le repli reste
  * l'image classique, gardée hors ligne. Pour chaque fête du registre et chaque famille qu'elle
  * annonce, chaque image que le code demande existe dans le dépôt : une fête ajoutée sans ses
  * images fait échouer ce test, qui liste celles qui manquent.
@@ -12,17 +13,20 @@ import fs from 'node:fs';
 const { SEASONS, costumed, seasonWorlds, wearSeason } = await import('../js/core/seasons.js');
 const { avatarHeadImage, AVATAR_IDS } = await import('../js/avatar-heads.js');
 const {
+  MONSTER_COUNT,
   SNAKE_PART_FILES,
   answerTokenSpec,
   arcadeOfflineImages,
   arcadeSpriteSpecs,
   avatarSpec,
+  monsterSpec,
   seasonalSpriteSpecs,
   snakePartSpec,
   spaceshipSpec,
   textureSpec,
 } = await import('../js/arcade-sprite-catalog.js');
 const { ARCADE_LOGOS, MODE_LOGOS, logoSource } = await import('../js/logos.js');
+const { GIFT_FILES, giftSource } = await import('../js/adventure-gifts.js');
 const { refreshBackground, updateBackgroundByAvatar, updateSeoHeroImage } = await import(
   '../js/main-helpers.js'
 );
@@ -54,6 +58,10 @@ function heroImage() {
 const FAMILY_FILES = new Map([
   ['heads', () => AVATAR_IDS.map(avatar => sourceOf(avatarHeadImage(avatar, '56px').src))],
   ['bodies', () => AVATAR_IDS.map(avatar => arcade(avatarSpec(avatar).source))],
+  [
+    'monsters',
+    () => Array.from({ length: MONSTER_COUNT }, (_, i) => arcade(monsterSpec(i + 1).source)),
+  ],
   ['ships', () => SHIP_SELECTIONS.map(selection => arcade(spaceshipSpec(selection).source))],
   [
     'snake',
@@ -65,6 +73,7 @@ const FAMILY_FILES = new Map([
   ],
   ['miam', () => [arcade(textureSpec('mur.png').source), arcade(answerTokenSpec().source)]],
   ['logos', () => [...MODE_LOGOS.values(), ...ARCADE_LOGOS].map(file => arcade(logoSource(file)))],
+  ['gifts', () => GIFT_FILES.map(file => arcade(giftSource(file)))],
   [
     'backgrounds',
     season =>
@@ -126,6 +135,14 @@ describe('Arcade', () => {
     expect(avatarSpec('inconnu').source).toBe('fox_halloween');
   });
 
+  test('monstres : costumés quand la fête les annonce, mêmes replis classiques', () => {
+    const classic = monsterSpec(7);
+    expect(classic.source).toBe('monstre07_right');
+    wearSeason({ ...HALLOWEEN, costumes: ['monsters'] });
+    expect(monsterSpec(7)).toEqual({ ...classic, source: 'monstre07_right_halloween' });
+    expect(monsterSpec(155).source).toBe('monstre155_right_halloween');
+  });
+
   test('fusées pilotées costumées, fusées sans pilote inchangées', () => {
     wearSeason(HALLOWEEN);
     expect(spaceshipSpec('spaceship_fox_2.png|spaceship_default_2.png').source).toBe(
@@ -159,13 +176,18 @@ describe('Arcade', () => {
   test('les images costumées ont leurs variantes, mais restent hors du préchargement', () => {
     const seasonal = seasonalSpriteSpecs().map(item => item.source);
     // Corps (5), fusées pilotées (10), serpent (14 morceaux, herbe, pomme), murs et réponses
-    // de MultiMiam, par fête
-    expect(seasonal).toHaveLength(33 * SEASONS.length);
+    // de MultiMiam par fête, plus ses 155 monstres quand elle les costume
+    const expected = SEASONS.reduce(
+      (total, season) => total + 33 + (season.costumes.includes('monsters') ? MONSTER_COUNT : 0),
+      0
+    );
+    expect(seasonal).toHaveLength(expected);
     expect(seasonal).toEqual(
       expect.arrayContaining([
         'unicorn_halloween',
         'panda_vaisseau_halloween',
         'tete_bas_halloween',
+        'monstre42_right_christmas',
       ])
     );
     expect(arcadeSpriteSpecs().filter(item => seasonal.includes(item.source))).toEqual([]);
@@ -191,7 +213,9 @@ describe('Fond de l’avatar et image des héros', () => {
     expect(classic).toMatch(/background_dragon_\d{3}\.png/);
     wearSeason(HALLOWEEN);
     refreshBackground();
-    expect(background()).toMatch(/background_dragon_halloween_00[1-4]\.png/);
+    // Un des mondes costumés, de 001 à `worlds`
+    const world = Number(/background_dragon_halloween_(\d{3})\.png/.exec(background())?.[1]);
+    expect(seasonWorlds(HALLOWEEN)).toContain(world);
     // Tiré une fois par session : le même monde costumé tant qu'on ne change pas d'avatar
     const festive = background();
     refreshBackground();

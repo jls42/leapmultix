@@ -16,7 +16,7 @@ import {
   startArcadeTimer,
   showArcadeGameOver,
   stopArcadeMode,
-  monsterSprites,
+  memoryMonsterSprites,
   isArcadeActive,
 } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
@@ -538,8 +538,8 @@ class MemoryGame {
     // Dos des cartes (texture) ; chaque carte y montre un monstre (arcade.js)
     this.cardBack = spriteFor(textureSpec('chemin.png'));
 
-    // Chargement des monstres via ESM (plus de dépendance à window.monsterSprites)
-    this.monsterImages = monsterSprites;
+    // Monstres des cartes, costumés pendant une fête
+    this.monsterImages = memoryMonsterSprites();
 
     // Écart entre les cartes ; la disposition (colonnes, rangées) se choisit au lancement
     this.margin = this.isMobile ? 6 : 10;

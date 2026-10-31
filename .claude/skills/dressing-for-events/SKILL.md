@@ -3,7 +3,7 @@ name: dressing-for-events
 description: >-
   Habille LeapMultix pour une fête du calendrier (Halloween, Noël, Nouvel An…) : le thème par
   défaut change seul pendant ses dates (deux thèmes de couleur, clair et sombre), et le jeu se
-  costume partout (têtes, corps de l'Arcade, fusées de MultiInvaders, serpent, pommes et herbe
+  costume partout (têtes, corps et monstres de l'Arcade, fusées de MultiInvaders, serpent, pommes et herbe
   de MultiSnake, murs et réponses de MultiMiam, logos des modes et des jeux d'Arcade, plusieurs
   fonds par personnage, image des héros de l'accueil), dessiné par Codex à partir des originaux ; tout revient seul le lendemain. À utiliser quand
   le propriétaire demande un thème de fête, de « déguiser » ou « habiller » les personnages ou
@@ -27,10 +27,12 @@ porte dans le code chacune, toutes lues par `costumed(nom, famille)` :
 | ------------- | -------------------------------------------------------------------------------- | ----------------------- |
 | `heads`       | `assets/images/arcade/<avatar>_<fête>_head_avatar.png`                           | `js/avatar-heads.js`    |
 | `bodies`      | `assets/images/arcade/<avatar>_<fête>.png` (MultiMiam)                           | `arcade-sprite-catalog` |
+| `monsters`    | `assets/images/arcade/monstre<NN>_right_<fête>.png` (155, tournés à droite)      | `arcade-sprite-catalog` |
 | `ships`       | `assets/images/arcade/<fusée>_<fête>.png` (dix fusées)                           | `arcade-sprite-catalog` |
 | `snake`       | 14 morceaux `<morceau>_<fête>.png`, `snake_apple_<fête>.png`, `herbe_<fête>.png` | `arcade-sprite-catalog` |
 | `miam`        | `mur_<fête>.png`, `multimiam_reponse_<fête>.png` (sous chaque réponse)           | `arcade-sprite-catalog` |
 | `logos`       | `logo_mode_<mode>_<fête>.png` (six), `logo_multi<jeu>_<fête>.png` (quatre)       | `js/logos.js`           |
+| `gifts`       | `cadeau_ferme_<fête>.png`, `cadeau_ouvert_<fête>.png` (mode Aventure)            | `js/adventure-gifts.js` |
 | `backgrounds` | `img/background_<avatar>_<fête>_001.png` à `_00<worlds>`                         | `js/main-helpers.js`    |
 | `hero`        | `assets/social/leapmultix-social-card-<fête>.webp`                               | `js/main-helpers.js`    |
 
@@ -39,7 +41,7 @@ Une nouvelle famille : une porte qui appelle `costumed()`, une ligne dans `FAMIL
 suit sans autre réglage :
 
 - pendant la fête, chaque enfant reçoit le thème de la fête de même clarté que son thème
-  ordinaire (Spatial, Nuit → sombre ; les autres → clair) ; un thème ordinaire choisi pendant la
+  ordinaire (Nuit, Spatial, Forêt, Braise → sombre ; les autres → clair) ; un thème ordinaire choisi pendant la
   fête la retire jusqu'à l'édition suivante (`seasonChoice`, rattaché à l'année) ; le thème
   ordinaire n'est jamais réécrit ;
 - les images ne se costument que quand un thème de la fête est appliqué (`wearSeason`, posé
@@ -84,7 +86,9 @@ sombre) dans les trois langues, un costume par personnage. Un costume se reconna
 vignette de 56 px : un grand accessoire de forme simple (chapeau, capuche, col, casque peint),
 le même sur la tête, le corps, les fusées et le fond. Halloween 2026 : chapeau de sorcier violet
 (renard), capuche-citrouille (panda), diadème de citrouilles et cape (licorne), cape de vampire
-(dragon), casque peint en citrouille (astronaute).
+(dragon), casque peint en citrouille (astronaute). Noël 2026 : bonnet de Père Noël (renard),
+serre-tête de bois de renne (panda), couronne de houx et cape rouge (licorne), bonnet de lutin
+à grelot (dragon), casque peint en boule de sapin (astronaute).
 
 ### 2. Registre
 
@@ -107,15 +111,23 @@ consigne, mot pour mot. Noms des cibles :
 - `img/background_<avatar>_<fête>_001.png` à `_00<worlds>` (fonds, réf. : **un fond d'origine
   différent pour chacun** + le corps costumé ; consigne « le même lieu que la 1re image ») :
   en thème ordinaire, chaque avatar a 11 à 17 fonds tirés d'une session à l'autre, la fête en
-  garde plusieurs (Halloween : 4) ;
+  garde plusieurs (Halloween et Noël : 8) ;
 - `assets/images/arcade/<fusée>_<fête>.png` pour les dix fusées pilotées (réf. : la fusée
   d'origine + la tête costumée) ;
+- `assets/images/arcade/monstre<NN>_right_<fête>.png` pour les 155 monstres (réf. : le monstre
+  d'origine seul, au format de sa source, `carre-transparent` ou `portrait-transparent`) :
+  « habille-le, ne le redessine pas », un accessoire de la fête par monstre, varié d'un monstre
+  à l'autre (Noël : bonnet de Père Noël, de lutin, bois de renne, couronne de houx, cache-oreilles
+  et écharpe, guirlande lumineuse, cadeau ou boule tenus) ;
 - `assets/images/arcade/logo_mode_<mode>_<fête>.png` pour les six logos des modes (réf. : le
   logo d'origine ; Chrono prend aussi le corps costumé du renard). Les cartes de calcul et le
   « ? » des logos sont à garder, écrits dans la consigne (« 7×8 », « 6×9 »…) ;
 - `assets/images/arcade/logo_multi<jeu>_<fête>.png` pour les quatre logos des jeux d'Arcade
   (réf. : le logo d'origine + les héros costumés qu'il montre) : leur titre (« MULTI
   INVADERS »…) est le seul texte, à garder tel quel, écrit dans la consigne ;
+- `assets/images/arcade/cadeau_ferme_<fête>.png` puis `cadeau_ouvert_<fête>.png`, les trésors
+  du mode Aventure (réf. : le cadeau d'origine ; l'ouvert prend aussi le fermé costumé, pour le
+  même papier et le même ruban), au format `carre-transparent` ;
 - `assets/images/arcade/snake_apple_<fête>.png`, la nourriture du serpent, et
   `assets/images/arcade/multimiam_reponse_<fête>.png`, l'image posée sous les réponses de
   MultiMiam (hors fête, une pastille dessinée par le jeu) : un nombre blanc cerné de noir
@@ -132,8 +144,9 @@ Ces dossiers sont imposés : `js/webp-images.js` et le catalogue d'Arcade ne lis
 `bash scripts/seasons/dress-up.sh <fête>`, lancé **en tâche de fond** (une à deux minutes par
 image). Le script est reprenable (il saute une cible conforme), contrôle taille et transparence,
 écrit son journal et la planche dans `analysis/seasons/<fête>/`. À court de quota, il lit l'heure
-de reprise dans le refus de Codex (« try again at 2:20 AM »), sinon dans le journal des sessions
-(`~/.codex/sessions`, `rate_limits`), attend, puis reprend : consigne du propriétaire, on continue
+de reprise dans le refus de Codex (`resets_at` de la limite d'images, « try again at 2:20 AM »),
+sinon dans le journal des sessions (`~/.codex/sessions`, `rate_limits`) si une fenêtre y est
+pleine, sinon réessaie dans 15 min, attend, puis reprend : consigne du propriétaire, on continue
 dès que le quota revient. Refaire une image : `bash scripts/seasons/dress-up.sh <fête> <cible>`.
 
 Recolorations : `bash scripts/seasons/recolor.sh <fête>` lit
@@ -142,7 +155,11 @@ Recolorations : `bash scripts/seasons/recolor.sh <fête>` lit
 garantirait pas : les 14 morceaux du serpent (méthode `serpent`, seuls les verts tournent ;
 Halloween : `190 68`, dos violet, ventre orangé, yeux et langue gardés), l'herbe de MultiSnake
 et les murs de MultiMiam (méthode `teinte`, `-modulate` sur toute l'image). Le chemin de
-MultiMiam reste classique : orange, il effaçait le renard qui court dessus.
+MultiMiam reste classique : orange, il effaçait le renard qui court dessus. Un couvre-chef sur
+le serpent (Noël : le bonnet du logo, demandé par le propriétaire en jouant) : dessiné seul par
+Codex (`scripts/seasons/<fête>/bonnet.png`), posé par la méthode `bonnet` sur l'arrière de la
+tête de droite, dans la case, puis reporté sur les trois autres têtes par `comme` (elles sont
+cette même image retournée ou tournée, ce que le script vérifie au pixel près).
 
 Relire la planche, dans l'ordre de la liste : personnage reconnaissable, même côté que
 l'original (les sprites d'Arcade se retournent selon `facing`), accessoire lisible en petit,
@@ -199,6 +216,14 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   semaine par image, 1,5 à 3,5 min chacune (52 min en tout) : une fête tient dans une fenêtre
   neuve, pas dans une fenêtre déjà entamée à 72 %. Le refus arrive en 2 secondes et la session
   refusée écrit des fenêtres vides dans son journal (d'où la lecture de l'heure dans le message).
+  La génération d'images a en plus sa propre limite, sur 24 h, absente du tableau des limites
+  de Codex comme des `rate_limits` du journal : le 30/10/2026, après 234 images en 10 h 30,
+  Codex a refusé (http 429, `"limit_window_minutes":1440`) jusqu'à l'heure de son `resets_at`,
+  23 h 22, avec les fenêtres de 5 h et de la semaine loin d'être pleines. Le script attendait
+  alors la remise à zéro de la semaine (67 %), le 04/11 : il lit désormais `resets_at`, et
+  n'attend une fenêtre du journal que si elle est pleine. Une liste de plus de 200 images
+  déborde donc sur un deuxième jour, et **la fête en cours passe avant la suivante** : les
+  155 monstres de Noël, dessinés pendant Halloween, ont pris la journée de ceux d'Halloween.
 - **Ne rien modifier pendant une génération** : la boucle lit la liste qu'elle a ouverte au
   départ (un `sed -i` sur `prompts.tsv` n'y est pas vu), et bash lit son script au fil de
   l'exécution (le modifier peut casser la suite). Attendre la fin, puis relancer : les cibles
@@ -210,10 +235,12 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   où le thème ordinaire en fait alterner plusieurs. D'où les familles `logos`, `snake` et
   `miam`, et `worlds`. Avant la planche, faire le tour des écrans : tout ce qui est dessiné
   (pas une icône) a sa version de fête, ou une raison écrite de ne pas l'avoir (fusées sans
-  pilote, monstres, vidéos d'intro).
+  pilote, vidéos d'intro, chemin de MultiMiam). Les 155 monstres de l'Arcade sont venus à Noël
+  2026 (`monsters`), puis à Halloween ; les cadeaux de l'Aventure (`gifts`) et 8 fonds au lieu
+  de 4 aux deux fêtes, le 31/10.
 - **Serpent** : 14 morceaux qui se raccordent case à case et une tête par direction, dessinés
   séparément. Un dessin refait ne garantit ni les raccords ni la taille : recoloration
-  (`recolor.sh`). Un chapeau dépasserait la case : la couleur suffit.
+  (`recolor.sh`). Un chapeau se pose sur la tête sans dépasser la case (méthode `bonnet`).
 - **Image propre à la fête, sans image classique** (bonbon des réponses de MultiMiam) : hors
   ligne, le service worker n'a rien à servir à sa place. Il répond 404 (`classicImage` de
   `sw.js`), pas une erreur réseau, et le jeu garde son dessin (la pastille) ; vu par
@@ -231,11 +258,26 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   consigne ; aucune image d'Halloween 2026 n'a été refaite.
 - **Deux générations à la fois** : pour ne pas attendre la fin d'une liste, une liste à part
   (`scripts/seasons/<fête>-<lot>/prompts.tsv`, lancée comme une fête) tourne en parallèle sans
-  gêner l'autre ; la verser ensuite dans la liste de la fête et effacer le dossier.
+  gêner l'autre ; la verser ensuite dans la liste de la fête et effacer le dossier. Noël
+  2026 : un lot par personnage (corps puis tête), puis, lancés chacun dès que la référence
+  attendue apparaît dans le journal (« fait : … »), un lot de fonds et un lot de fusées par
+  personnage : 53 images en 15 minutes, environ 1 % de la fenêtre de 5 h chacune. Monstres :
+  huit lots d'une vingtaine (`scripts/seasons/christmas-monstres<N>/`), 155 images sans un
+  échec, sur deux fenêtres de 5 h et environ 25 % de la semaine ; tailles comparées aux
+  originaux (boîte des pixels opaques) avant de les verser.
+- **Planche faite à la main** : jamais `ls … | xargs montage … <sortie>`. xargs place les
+  fichiers après la sortie : le dernier devient la sortie de montage et il est écrasé par la
+  planche (Noël 2026 : une fusée à redessiner). Passer la liste avant la sortie
+  (`montage $(ls …) … <sortie>`).
+- **Couleurs à croiser** : la recoloration du serpent et la nourriture se voient ensemble, les
+  murs et les réponses de MultiMiam aussi. Noël : serpent rouge, donc nourriture d'une autre
+  couleur ; papillotes rouges, donc murs vert sapin.
 - **Variantes** : `assets/generated-images/` n'étant pas versionné, un worktree neuf les refait
   toutes avec `npm run assets:generate` (plus de 10 min, en tâche de fond).
   `npm run assets:backgrounds` reconvertit tous les fonds, mais les WebP classiques en sortent
-  identiques à l'octet (seuls les nouveaux apparaissent dans `git status`).
+  identiques à l'octet (seuls les nouveaux apparaissent dans `git status`). Une image refaite
+  sous le même nom refait ses variantes : le générateur compare les dates. Avant Noël 2026, il
+  gardait celles du premier dessin, et les têtes du serpent restaient sans bonnet en jeu.
 - **Ordre d'initialisation** : `initThemes()` passe en tête de `runInit()` (`js/core/mainInit.js`)
   pour que le costume soit porté avant que le fond et les têtes ne se posent.
 - **Tests à la date du jour** : un test qui appelle `initThemes()` sans horloge simulée change

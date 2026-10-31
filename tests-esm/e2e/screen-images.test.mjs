@@ -102,12 +102,14 @@ const SLIDE0_HEADS = '#slide0 .user-tile-face, #slide0 .creation-avatar-selector
 /** Personnalisation : avatar actuel, avatars du joueur et boutique */
 const SLIDE6_HEADS = '#current-avatar-img, #slide6 .avatar-btn img';
 const HEAD_VARIANT = /^\/assets\/generated-images\/arcade\/[a-z]+_head_avatar-\d+\.webp$/;
-const HALLOWEEN_HEAD_VARIANT =
-  /^\/assets\/generated-images\/arcade\/[a-z]+_halloween_head_avatar-\d+\.webp$/;
+/** Variante WebP d'une tête costumée pour une fête */
+const seasonHeadVariant = id =>
+  new RegExp(`^/assets/generated-images/arcade/[a-z]+_${id}_head_avatar-\\d+\\.webp$`);
 const HEAD_PNG = /^\/assets\/images\/arcade\/[a-z]+_head_avatar_128x128\.png$/;
 /** Logos des cartes de modes de l'accueil, et la variante costumée d'un logo (js/logos.js) */
 const HOME_MODE_LOGOS = '.mode-btn[data-mode] .mode-icon img';
-const HALLOWEEN_LOGO = /^\/assets\/generated-images\/arcade\/logo_[a-z_]+_halloween-\d+\.webp$/;
+const seasonLogo = id =>
+  new RegExp(`^/assets/generated-images/arcade/logo_[a-z_]+_${id}-\\d+\\.webp$`);
 
 /**
  * Ce qui ne va pas dans des têtes : pas la variante attendue, pas chargée, floue
@@ -126,7 +128,7 @@ const HEADS_OK = { count: true, unexpected: [], broken: [], blurry: [] };
 
 /** Avatar que montrent des têtes, lu dans l'adresse affichée (currentSrc), costumé ou non */
 const avatarsOf = heads =>
-  heads.map(img => /\/([a-z]+)(?:_halloween)?_head_avatar/.exec(img.src)?.[1]);
+  heads.map(img => /\/([a-z]+)(?:_(?:halloween|christmas))?_head_avatar/.exec(img.src)?.[1]);
 
 /** Têtes qui suivent l'avatar porté : mascotte, avatar actuel, tuile de Zoé */
 const WORN_HEADS = '#hero-mascot-img, #current-avatar-img, [data-player="Zoé"] .user-tile-face';
@@ -436,47 +438,65 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
       90000
     );
 
-    test('pendant Halloween : têtes et logos costumés nets, classiques dès un thème ordinaire', async () => {
-      await openGame(SCREENS[0][1], { season: 'halloween' });
-      const slide0 = await settledImages(SLIDE0_HEADS);
-      expect(slide0).toHaveLength(8);
-      expect(headProblems(slide0, HALLOWEEN_HEAD_VARIANT)).toEqual(HEADS_OK);
-      await chooseZoe();
-      // Logos des six modes de l'accueil, puis des neuf rangées du tableau de bord (cinq modes,
-      // quatre jeux d'Arcade)
-      const homeLogos = await settledImages(HOME_MODE_LOGOS);
-      expect(homeLogos).toHaveLength(6);
-      expect(
-        homeLogos.filter(img => !img.loaded || isBlurry(img) || !HALLOWEEN_LOGO.test(img.src))
-      ).toEqual([]);
-      const dashboard = await openDashboard();
-      expect(dashboard.filter(img => !HALLOWEEN_LOGO.test(img.src))).toEqual([]);
-      expect(dashboard).toHaveLength(9);
-      await openPersonalization();
-      const costumed = await settledImages(SLIDE6_HEADS);
-      expect({
-        problems: headProblems(costumed, HALLOWEEN_HEAD_VARIANT),
-        avatars: avatarsOf(costumed),
-      }).toEqual({
-        problems: HEADS_OK,
-        avatars: ['panda', 'fox', 'panda', 'unicorn', 'dragon', 'astronaut'],
-      });
-      // Un thème ordinaire retire la fête : les mêmes têtes reprennent leur dessin classique
-      await page.$eval('.color-theme-btn[data-color-theme="default"]', button => button.click());
-      await page.waitForFunction(
-        selector =>
-          [...document.querySelectorAll(selector)].every(
-            img => !img.currentSrc.includes('_halloween')
-          ),
-        { timeout: 10000 },
-        SLIDE6_HEADS
-      );
-      expect(headProblems(await settledImages(SLIDE6_HEADS))).toEqual(HEADS_OK);
-      const logoSources = await page.$$eval(HOME_MODE_LOGOS, imgs =>
-        imgs.map(img => img.getAttribute('src'))
-      );
-      expect(logoSources.filter(src => src.includes('_halloween'))).toEqual([]);
-    }, 90000);
+    test.each(['halloween', 'christmas'])(
+      'pendant la fête %s : têtes et logos costumés nets, classiques dès un thème ordinaire',
+      async season => {
+        const headVariant = seasonHeadVariant(season);
+        const logo = seasonLogo(season);
+        await openGame(SCREENS[0][1], { season });
+        const slide0 = await settledImages(SLIDE0_HEADS);
+        expect(slide0).toHaveLength(8);
+        expect(headProblems(slide0, headVariant)).toEqual(HEADS_OK);
+        await chooseZoe();
+        // Logos des six modes de l'accueil, puis des neuf rangées du tableau de bord (cinq modes,
+        // quatre jeux d'Arcade)
+        const homeLogos = await settledImages(HOME_MODE_LOGOS);
+        expect(homeLogos).toHaveLength(6);
+        expect(
+          homeLogos.filter(img => !img.loaded || isBlurry(img) || !logo.test(img.src))
+        ).toEqual([]);
+        const dashboard = await openDashboard();
+        expect(dashboard.filter(img => !logo.test(img.src))).toEqual([]);
+        expect(dashboard).toHaveLength(9);
+        await openPersonalization();
+        // Thèmes affichés (display, pas l'attribut hidden seul) : ceux de la clarté en cours,
+        // quatre ordinaires et un de la fête, aucun de l'autre fête
+        const shown = await page.$$eval('.color-theme-btn', buttons =>
+          buttons
+            .filter(button => getComputedStyle(button).display !== 'none')
+            .map(button => button.dataset.colorTheme)
+        );
+        const otherSeason =
+          season === 'halloween' ? ['snow', 'christmas'] : ['pumpkin', 'halloween'];
+        expect(shown).toHaveLength(5);
+        expect(shown.filter(theme => otherSeason.includes(theme))).toEqual([]);
+        const costumed = await settledImages(SLIDE6_HEADS);
+        expect({
+          problems: headProblems(costumed, headVariant),
+          avatars: avatarsOf(costumed),
+        }).toEqual({
+          problems: HEADS_OK,
+          avatars: ['panda', 'fox', 'panda', 'unicorn', 'dragon', 'astronaut'],
+        });
+        // Un thème ordinaire retire la fête : les mêmes têtes reprennent leur dessin classique
+        await page.$eval('.color-theme-btn[data-color-theme="default"]', button => button.click());
+        await page.waitForFunction(
+          (selector, id) =>
+            [...document.querySelectorAll(selector)].every(
+              img => !img.currentSrc.includes(`_${id}`)
+            ),
+          { timeout: 10000 },
+          SLIDE6_HEADS,
+          season
+        );
+        expect(headProblems(await settledImages(SLIDE6_HEADS))).toEqual(HEADS_OK);
+        const logoSources = await page.$$eval(HOME_MODE_LOGOS, imgs =>
+          imgs.map(img => img.getAttribute('src'))
+        );
+        expect(logoSources.filter(src => src.includes(`_${season}`))).toEqual([]);
+      },
+      90000
+    );
   });
 
   test('sans variantes (développement, CI) : chaque image passe à son PNG et s’affiche', async () => {

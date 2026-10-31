@@ -17,8 +17,9 @@ paths:
   fonds de l'avatar `img/background_<avatar>_NNN.png` (1536 × 1024). Le jeu ne sert jamais une
   source telle quelle : il prend ses variantes WebP.
 - `npm run assets:generate` produit `assets/generated-images/` (non versionné, refait par la CI au
-  déploiement), obligatoire dès qu'un PNG est ajouté ou modifié. Il saute une variante qui existe
-  déjà : pour essayer d'autres réglages, régénérer dans un dossier neuf.
+  déploiement), obligatoire dès qu'un PNG est ajouté ou modifié. Il garde une variante plus
+  récente que sa source (`dist/assets/images/`) et refait celle d'une image redessinée depuis :
+  pour essayer d'autres réglages, régénérer dans un dossier neuf.
 - Réglages de `scripts/generate-responsive-assets.cjs` : 256, 512 et 1024 en WebP quasi sans
   perte (niveau 40), 64 et 128 en qualité 90 avec sharp YUV. En qualité 75 à 80, les contours des
   dessins bavaient (mesuré le 09/10/2026, dessin au canevas comme dans les jeux : 36,6 à 37,8 dB

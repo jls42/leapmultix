@@ -46,8 +46,9 @@ const { chooseMazeLayout, fitMazeCells, mazeToScreen, transposeDirection } = awa
 );
 const { initPacmanControls } = await import('../js/multimiam-controls.js');
 const { default: PacmanRenderer } = await import('../js/multimiam-renderer.js');
-const { PacmanGame } = await import('../js/multimiam.js');
+const { PacmanGame, festiveWallBackground } = await import('../js/multimiam.js');
 const { showGameInstructions, getArcadeCanvasSize } = await import('../js/arcade-common.js');
+const { SEASONS, wearSeason } = await import('../js/core/seasons.js');
 
 const CELL = 20;
 const restorers = [];
@@ -421,5 +422,21 @@ describe('Labyrinthe transposé : la pastille de points se pose sur la bonne cas
     });
     // Case (3, 1) du labyrinthe : colonne 1, rangée 3 à l'écran
     expect(showArcadePoints).toHaveBeenCalledWith(100, canvas, { x: 1.5 * CELL, y: 3 * CELL });
+  });
+});
+
+describe('Bandes de mur autour du labyrinthe pendant une fête', () => {
+  afterEach(() => wearSeason(null));
+
+  test('hors fête : rien d’écrit, le mur classique de css/arcade.css', () => {
+    expect(festiveWallBackground()).toBe('');
+  });
+
+  test('pendant Noël : le mur de la fête, le mur classique dessous en repli', () => {
+    wearSeason(SEASONS.find(season => season.id === 'christmas'));
+    expect(festiveWallBackground()).toBe(
+      'url(assets/generated-images/arcade/mur_christmas-128.webp), ' +
+        'url(assets/images/arcade/mur_128x128.png)'
+    );
   });
 });

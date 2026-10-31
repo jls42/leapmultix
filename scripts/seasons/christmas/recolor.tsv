@@ -1,0 +1,24 @@
+# Recolorations de Noël : bash scripts/seasons/recolor.sh christmas
+# Colonnes séparées par une tabulation : source	méthode	réglage (sortie : <source>_christmas.png)
+# Serpent de MultiSnake : dos rouge, ventre doré
+assets/images/arcade/tete_droite.png	serpent	29 80
+# Têtes : bonnet de Père Noël sur l'arrière de la tête de droite, reporté sur les trois autres
+# (mêmes images retournées ou tournées que les originaux, vérifié par recolor.sh)
+assets/images/arcade/tete_droite.png	bonnet	scripts/seasons/christmas/bonnet.png 250 105 -25 -40
+assets/images/arcade/tete_gauche.png	comme	assets/images/arcade/tete_droite.png flop
+assets/images/arcade/tete_haut.png	comme	assets/images/arcade/tete_droite.png transverse
+assets/images/arcade/tete_bas.png	comme	assets/images/arcade/tete_droite.png rotate 90
+assets/images/arcade/corps_milieu_queue_gauche_tete_droite.png	serpent	29 80
+assets/images/arcade/corps_milieu_queue_bas_tete_haut.png	serpent	29 80
+assets/images/arcade/corps_courbe_droite_bas.png	serpent	29 80
+assets/images/arcade/corps_courbe_haut_droite.png	serpent	29 80
+assets/images/arcade/corps_courbe_gauche_haut.png	serpent	29 80
+assets/images/arcade/corps_courbe_bas_gauche.png	serpent	29 80
+assets/images/arcade/queue_fin_droite.png	serpent	29 80
+assets/images/arcade/queue_fin_gauche.png	serpent	29 80
+assets/images/arcade/queue_fin_haut.png	serpent	29 80
+assets/images/arcade/queue_fin_bas.png	serpent	29 80
+# Herbe du plateau de MultiSnake, givrée
+assets/images/arcade/herbe.png	teinte	150,25,110
+# Murs du labyrinthe de MultiMiam, en pierre vert sapin
+assets/images/arcade/mur.png	teinte	110,90,64

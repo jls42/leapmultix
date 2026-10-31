@@ -1,5 +1,6 @@
 /* ===========================================
-   Barre du haut : accueil, informations, pièces, langue, tables, son, voix, joueur
+   Barre du haut : accueil, informations, pièces, langue, progrès, personnalisation, tables,
+   mode sombre, son, voix, joueur
    (composant js/components/topBar.js, icônes js/components/icons.js)
    Les boutons réutilisent .btn-secondary (general.css) : ici, seulement la mise en
    page, la taille des cibles et les états propres à la barre.
@@ -61,6 +62,49 @@
   clip-path: inset(50%);
 }
 
+/* Mot court sous l'icône (topBar.js) : seulement sur grand écran, où la place le permet ; le
+   menu mobile montre déjà le libellé complet. Le nom accessible du bouton contient ce mot. */
+.icon-btn-caption {
+  display: none;
+}
+
+@media (min-width: 1200px) {
+  .top-bar .icon-btn:has(> .icon-btn-caption) {
+    flex-direction: column;
+    gap: 2px;
+    inline-size: auto;
+    min-inline-size: 56px;
+    block-size: auto;
+    min-block-size: 56px;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  /* « Changer de joueur » : icône et « Joueur » dessous ; la phrase entière reste son nom */
+  .top-bar .change-user-btn {
+    flex-direction: column;
+    gap: 2px;
+    min-block-size: 56px;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .top-bar .change-user-label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  .top-bar .icon-btn-caption {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    white-space: nowrap;
+  }
+}
+
 /* Première visite : état de la voix pas encore décidé (js/voice-clips.js) */
 .top-bar .voice-toggle[data-voice-pending] {
   visibility: hidden;
@@ -75,6 +119,20 @@
 }
 
 .top-bar .voice-toggle[aria-pressed='true']:active {
+  box-shadow:
+    inset 0 0 0 2px var(--color-action),
+    0 0 0 var(--color-action-edge);
+}
+
+/* Mode sombre allumé : bouton enfoncé, comme la voix active */
+.top-bar .theme-mode-btn[aria-checked='true'] {
+  background: var(--color-action-tint);
+  box-shadow:
+    inset 0 0 0 2px var(--color-action),
+    0 var(--key-edge) 0 var(--color-action-edge);
+}
+
+.top-bar .theme-mode-btn[aria-checked='true']:active {
   box-shadow:
     inset 0 0 0 2px var(--color-action),
     0 0 0 var(--color-action-edge);

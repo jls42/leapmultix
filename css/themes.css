@@ -182,6 +182,26 @@
   --color-scrim-game: oklch(96.5% 0.008 60deg / 0.8);
 }
 
+/* ========== THÈME : CIEL (Spatial, clair) ==========
+   Le pendant clair de Spatial : bleu pervenche, encre et action bleu nuit. */
+.theme-sky {
+  --color-page: oklch(93.5% 0.025 268deg);
+  --color-surface: oklch(99.5% 0.003 268deg);
+  --color-surface-sunken: oklch(96.5% 0.01 268deg);
+  --color-border: oklch(88.5% 0.016 268deg);
+  --color-border-strong: oklch(62% 0.04 268deg);
+  --color-ink: oklch(28% 0.04 268deg);
+  --color-ink-muted: oklch(47% 0.04 268deg);
+  --color-ink-heading: oklch(42% 0.13 268deg);
+  --color-action: oklch(50% 0.15 268deg);
+  --color-action-hover: oklch(45% 0.135 268deg);
+  --color-action-edge: oklch(37% 0.11 268deg);
+  --color-action-ink: oklch(46% 0.14 268deg);
+  --color-action-tint: oklch(94.5% 0.03 268deg);
+  --color-focus: oklch(55% 0.16 268deg);
+  --color-scrim-game: oklch(96.5% 0.01 268deg / 0.8);
+}
+
 /* ========== FÊTE : CITROUILLE (Halloween, clair) ==========
    Proposé du 24 octobre au 1er novembre (js/core/seasons.js) : crème orangée, encre et
    titres violets, action citrouille. */
@@ -203,10 +223,34 @@
   --color-scrim-game: oklch(96.5% 0.012 70deg / 0.8);
 }
 
+/* ========== FÊTE : NEIGE (Noël, clair) ==========
+   Proposé du 1er au 26 décembre (js/core/seasons.js) : blanc de neige bleuté, encre et
+   titres vert sapin, action rouge de Noël. */
+.theme-snow {
+  --color-page: oklch(94% 0.018 220deg);
+  --color-surface: oklch(99.5% 0.003 220deg);
+  --color-surface-sunken: oklch(96.5% 0.01 220deg);
+  --color-border: oklch(88.5% 0.016 220deg);
+  --color-border-strong: oklch(62% 0.04 160deg);
+  --color-ink: oklch(28% 0.04 160deg);
+  --color-ink-muted: oklch(47% 0.04 160deg);
+  --color-ink-heading: oklch(40% 0.1 155deg);
+  --color-action: oklch(52% 0.18 22deg);
+  --color-action-hover: oklch(47% 0.165 22deg);
+  --color-action-edge: oklch(39% 0.135 22deg);
+  --color-action-ink: oklch(48% 0.17 22deg);
+  --color-action-tint: oklch(94.5% 0.025 20deg);
+  --color-focus: oklch(50% 0.12 155deg);
+  --color-scrim-game: oklch(96.5% 0.01 220deg / 0.8);
+}
+
 /* ========== THÈMES SOMBRES : états et ombres communs ========== */
 .theme-blue,
 .theme-dark,
-.theme-halloween {
+.theme-moss,
+.theme-ember,
+.theme-halloween,
+.theme-christmas {
   color-scheme: dark;
 
   --color-scrim-modal: oklch(8% 0.01 250deg / 0.72);
@@ -287,6 +331,48 @@
   --color-scrim-game: oklch(17% 0.012 250deg / 0.82);
 }
 
+/* ========== THÈME : FORÊT (Nature, sombre) ==========
+   Le pendant sombre de Nature : sous-bois vert profond, action vert tendre. */
+.theme-moss {
+  --color-page: oklch(19% 0.035 155deg);
+  --color-surface: oklch(25% 0.04 155deg);
+  --color-surface-sunken: oklch(21.5% 0.035 155deg);
+  --color-border: oklch(35% 0.04 155deg);
+  --color-border-strong: oklch(56% 0.04 155deg);
+  --color-ink: oklch(95.5% 0.012 155deg);
+  --color-ink-muted: oklch(80% 0.03 155deg);
+  --color-ink-heading: oklch(85% 0.11 150deg);
+  --color-action: oklch(78% 0.13 155deg);
+  --color-action-hover: oklch(84% 0.1 155deg);
+  --color-action-edge: oklch(57% 0.12 155deg);
+  --color-action-ink: oklch(82% 0.11 155deg);
+  --color-action-tint: oklch(31% 0.06 155deg);
+  --color-on-action: oklch(22% 0.05 155deg);
+  --color-focus: oklch(80% 0.13 155deg);
+  --color-scrim-game: oklch(19% 0.035 155deg / 0.82);
+}
+
+/* ========== THÈME : BRAISE (Orangé, sombre) ==========
+   Le pendant sombre d'Orangé : brun chaud, action orange braise. */
+.theme-ember {
+  --color-page: oklch(19% 0.03 50deg);
+  --color-surface: oklch(25.5% 0.035 50deg);
+  --color-surface-sunken: oklch(22% 0.03 50deg);
+  --color-border: oklch(36% 0.04 50deg);
+  --color-border-strong: oklch(57% 0.04 50deg);
+  --color-ink: oklch(95.5% 0.012 60deg);
+  --color-ink-muted: oklch(80% 0.03 60deg);
+  --color-ink-heading: oklch(84% 0.11 60deg);
+  --color-action: oklch(76% 0.14 50deg);
+  --color-action-hover: oklch(82% 0.11 50deg);
+  --color-action-edge: oklch(56% 0.14 45deg);
+  --color-action-ink: oklch(80% 0.12 50deg);
+  --color-action-tint: oklch(32% 0.06 45deg);
+  --color-on-action: oklch(22% 0.05 50deg);
+  --color-focus: oklch(80% 0.13 55deg);
+  --color-scrim-game: oklch(19% 0.03 50deg / 0.82);
+}
+
 /* ========== FÊTE : NUIT D'HALLOWEEN (sombre) ==========
    Proposé du 24 octobre au 1er novembre (js/core/seasons.js) : aubergine, cartes violet
    nuit, action citrouille, encre claire. */
@@ -307,6 +393,28 @@
   --color-on-action: oklch(22% 0.05 305deg);
   --color-focus: oklch(80% 0.13 60deg);
   --color-scrim-game: oklch(19% 0.05 305deg / 0.82);
+}
+
+/* ========== FÊTE : NUIT DE NOËL (sombre) ==========
+   Proposé du 1er au 26 décembre (js/core/seasons.js) : vert sapin profond, titres dorés,
+   action rouge de Noël, encre claire. */
+.theme-christmas {
+  --color-page: oklch(20% 0.045 165deg);
+  --color-surface: oklch(26% 0.05 165deg);
+  --color-surface-sunken: oklch(22.5% 0.045 165deg);
+  --color-border: oklch(36% 0.045 165deg);
+  --color-border-strong: oklch(58% 0.045 165deg);
+  --color-ink: oklch(95.5% 0.012 165deg);
+  --color-ink-muted: oklch(80% 0.03 165deg);
+  --color-ink-heading: oklch(86% 0.11 85deg);
+  --color-action: oklch(74% 0.14 22deg);
+  --color-action-hover: oklch(80% 0.11 22deg);
+  --color-action-edge: oklch(54% 0.14 25deg);
+  --color-action-ink: oklch(80% 0.12 22deg);
+  --color-action-tint: oklch(32% 0.07 25deg);
+  --color-on-action: oklch(22% 0.05 165deg);
+  --color-focus: oklch(84% 0.12 85deg);
+  --color-scrim-game: oklch(20% 0.045 165deg / 0.82);
 }
 
 /* ========== CONTRASTE ÉLEVÉ ==========

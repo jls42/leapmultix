@@ -19,8 +19,7 @@ import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
 import { confirmDialog } from './confirm-dialog.js';
 import { keepWornAvatar } from '../core/avatar-shop.js';
-import { applyColorTheme, currentSeason, rememberColorTheme } from '../core/theme.js';
-import { seasonOfTheme } from '../core/seasons.js';
+import { chooseColorTheme, toggleColorMode } from '../core/theme.js';
 
 /** Avatars de la personnalisation (ceux de la création de profil, slide 0, sont à part) */
 const SLIDE6_AVATAR_RADIOS = '#slide6 .avatar-selector .avatar-radio';
@@ -395,6 +394,16 @@ export const Customization = {
     // natifs, le navigateur s'en charge déjà.
     this._bindArrowKeys(document.querySelector('.color-theme-selector'), '.color-theme-btn');
 
+    // Interrupteur « Mode sombre » : le thème affiché dans l'autre clarté (Classique ↔ Nuit…)
+    const modeSwitch = document.getElementById('theme-mode-switch');
+    if (modeSwitch && !modeSwitch.dataset.listenerAttached) {
+      modeSwitch.addEventListener(
+        'click',
+        singleActivation(() => toggleColorMode())
+      );
+      modeSwitch.dataset.listenerAttached = 'true';
+    }
+
     // Bouton « Vider le cache »
     const clearBtn = document.getElementById('clear-cache-btn');
     if (clearBtn && !clearBtn.dataset.listenerAttached) {
@@ -483,10 +492,7 @@ export const Customization = {
    * le thème ordinaire (gameState, profil, colorTheme) n'en garde aucune trace.
    */
   updateColorTheme(themeName) {
-    const season = currentSeason();
-    rememberColorTheme(themeName, season);
-    if (!seasonOfTheme(themeName)) gameState.colorTheme = themeName;
-    applyColorTheme(themeName, season);
+    chooseColorTheme(themeName);
 
     // Message de confirmation
     const label = tr(`color_theme_${themeName}`, themeName);

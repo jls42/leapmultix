@@ -11,9 +11,11 @@
  */
 
 /**
- * @typedef {'heads'|'bodies'|'ships'|'snake'|'miam'|'logos'|'backgrounds'|'hero'} CostumeFamily
+ * @typedef {'heads'|'bodies'|'monsters'|'ships'|'snake'|'miam'|'logos'|'gifts'|'backgrounds'|'hero'} CostumeFamily
  * heads : assets/images/arcade/<avatar>_<fête>_head_avatar.png ;
  * bodies : assets/images/arcade/<avatar>_<fête>.png (MultiMiam) ;
+ * monsters : assets/images/arcade/monstre<NN>_right_<fête>.png, les 155 monstres des jeux
+ *   d'Arcade (MultiMiam, MultiInvaders, MultiMemory), tournés à droite comme les classiques ;
  * ships : assets/images/arcade/<fusée>_<fête>.png (MultiInvaders) ;
  * snake : MultiSnake, dans assets/images/arcade : les 14 morceaux du serpent
  *   (<morceau>_<fête>.png), la nourriture des réponses (snake_apple_<fête>.png) et l'herbe du
@@ -22,6 +24,8 @@
  *   l'image posée sous les réponses (multimiam_reponse_<fête>.png) ;
  * logos : assets/images/arcade/logo_mode_<mode>_<fête>.png (six modes : cartes de l'accueil)
  *   et logo_multi<jeu>_<fête>.png (quatre jeux : menu de l'Arcade), repris au tableau de bord ;
+ * gifts : assets/images/arcade/cadeau_ferme_<fête>.png et cadeau_ouvert_<fête>.png (mode
+ *   Aventure : le trésor de la scène, puis celui de la victoire) ;
  * backgrounds : img/background_<avatar>_<fête>_<NNN>.png, de 001 à `worlds` ;
  * hero : assets/social/leapmultix-social-card-<fête>.webp (image des héros de l'accueil).
  */
@@ -38,6 +42,24 @@
  *   session comme les fonds classiques
  */
 
+/**
+ * Toutes les familles que le jeu sait costumer : Halloween et Noël les portent toutes. Une fête
+ * dont une partie reste à dessiner donne sa propre liste.
+ * @type {readonly CostumeFamily[]}
+ */
+const EVERY_COSTUME = Object.freeze([
+  'heads',
+  'bodies',
+  'monsters',
+  'ships',
+  'snake',
+  'miam',
+  'logos',
+  'gifts',
+  'backgrounds',
+  'hero',
+]);
+
 /** @type {readonly Season[]} */
 export const SEASONS = Object.freeze([
   Object.freeze({
@@ -45,17 +67,16 @@ export const SEASONS = Object.freeze([
     from: Object.freeze([10, 24]),
     to: Object.freeze([11, 1]),
     themes: Object.freeze({ light: 'pumpkin', dark: 'halloween' }),
-    costumes: Object.freeze([
-      'heads',
-      'bodies',
-      'ships',
-      'snake',
-      'miam',
-      'logos',
-      'backgrounds',
-      'hero',
-    ]),
-    worlds: 4,
+    costumes: EVERY_COSTUME,
+    worlds: 8,
+  }),
+  Object.freeze({
+    id: 'christmas',
+    from: Object.freeze([12, 1]),
+    to: Object.freeze([12, 26]),
+    themes: Object.freeze({ light: 'snow', dark: 'christmas' }),
+    costumes: EVERY_COSTUME,
+    worlds: 8,
   }),
 ]);
 

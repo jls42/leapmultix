@@ -132,7 +132,7 @@ L'interface est une scène calme et bien éclairée ; les personnages (panda, re
 
 Le système refuse explicitement les quatre anti-références de PRODUCT.md : le « bonbon » générique IA, l'appli ludo-éducative criarde, le cahier d'exercices scolaire et le jeu mobile manipulateur. Il se tient entre les deux pentes : assez joyeux pour qu'un enfant de 6 ans ait envie de jouer, assez sobre pour qu'un élève de 6e ne le trouve pas bébé. La couleur vive vient des illustrations ; l'interface garde une seule couleur d'action (le bleu du thème Classique), des neutres teintés et des couleurs d'état réservées à leur sens.
 
-Densité : généreuse. Cibles tactiles de 44 px minimum, tuiles de réponse de 56 px et plus, texte de 16 px minimum, une seule surface (la carte) par écran. Les thèmes Nature, Orangé, Spatial et Nuit ne redéfinissent que les jetons : aucun composant n'a de règle propre à un thème.
+Densité : généreuse. Cibles tactiles de 44 px minimum, tuiles de réponse de 56 px et plus, texte de 16 px minimum, une seule surface (la carte) par écran. Chaque thème existe en clair et en sombre (Classique et Nuit, Ciel et Spatial, Nature et Forêt, Orangé et Braise, et les deux thèmes de chaque fête), l'interrupteur « Mode sombre » de la Personnalisation passant de l'un à l'autre ; tous ne redéfinissent que les jetons : aucun composant n'a de règle propre à un thème.
 
 **Key Characteristics:**
 

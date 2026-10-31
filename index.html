@@ -996,8 +996,23 @@
           </div>
           <div class="customization-section">
             <h2 class="section-title" data-translate="color_theme_title">Thèmes de couleur</h2>
+            <!-- Bascule clair / sombre : chaque thème a son contraire (js/core/theme.js) -->
+            <button
+              type="button"
+              id="theme-mode-switch"
+              class="theme-mode-switch"
+              data-theme-mode-switch
+              role="switch"
+              aria-checked="false"
+            >
+              <span class="theme-mode-switch-track" aria-hidden="true">
+                <span class="theme-mode-switch-thumb"></span>
+              </span>
+              <span data-translate="theme_mode_dark">Mode sombre</span>
+            </button>
             <div class="color-theme-selector">
-              <!-- Thèmes de fête : montrés pendant leur fête seulement (js/core/seasons.js) -->
+              <!-- Seuls les thèmes de la clarté affichée se montrent ; ceux d'une fête, pendant
+                   leur fête seulement (js/core/seasons.js) -->
               <button
                 class="color-theme-btn"
                 data-color-theme="pumpkin"
@@ -1017,6 +1032,25 @@
                 Nuit d’Halloween
               </button>
               <button
+                class="color-theme-btn"
+                data-color-theme="snow"
+                data-translate="color_theme_snow"
+                aria-pressed="false"
+                hidden
+              >
+                Neige
+              </button>
+              <button
+                class="color-theme-btn"
+                data-color-theme="christmas"
+                data-translate="color_theme_christmas"
+                aria-pressed="false"
+                hidden
+              >
+                Nuit de Noël
+              </button>
+              <!-- Thèmes ordinaires, par paires : clair puis sombre -->
+              <button
                 class="color-theme-btn active"
                 data-color-theme="default"
                 data-translate="color_theme_default"
@@ -1026,9 +1060,27 @@
               </button>
               <button
                 class="color-theme-btn"
+                data-color-theme="dark"
+                data-translate="color_theme_dark"
+                aria-pressed="false"
+                hidden
+              >
+                Nuit
+              </button>
+              <button
+                class="color-theme-btn"
+                data-color-theme="sky"
+                data-translate="color_theme_sky"
+                aria-pressed="false"
+              >
+                Ciel
+              </button>
+              <button
+                class="color-theme-btn"
                 data-color-theme="blue"
                 data-translate="color_theme_blue"
                 aria-pressed="false"
+                hidden
               >
                 Spatial
               </button>
@@ -1042,6 +1094,15 @@
               </button>
               <button
                 class="color-theme-btn"
+                data-color-theme="moss"
+                data-translate="color_theme_moss"
+                aria-pressed="false"
+                hidden
+              >
+                Forêt
+              </button>
+              <button
+                class="color-theme-btn"
                 data-color-theme="orange"
                 data-translate="color_theme_orange"
                 aria-pressed="false"
@@ -1050,11 +1111,12 @@
               </button>
               <button
                 class="color-theme-btn"
-                data-color-theme="dark"
-                data-translate="color_theme_dark"
+                data-color-theme="ember"
+                data-translate="color_theme_ember"
                 aria-pressed="false"
+                hidden
               >
-                Nuit
+                Braise
               </button>
             </div>
           </div>
