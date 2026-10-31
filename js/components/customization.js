@@ -395,24 +395,30 @@ export const Customization = {
     this._bindArrowKeys(document.querySelector('.color-theme-selector'), '.color-theme-btn');
 
     // Interrupteur « Mode sombre » : le thème affiché dans l'autre clarté (Classique ↔ Nuit…)
-    const modeSwitch = document.getElementById('theme-mode-switch');
-    if (modeSwitch && !modeSwitch.dataset.listenerAttached) {
-      modeSwitch.addEventListener(
-        'click',
-        singleActivation(() => toggleColorMode())
-      );
-      modeSwitch.dataset.listenerAttached = 'true';
-    }
+    this._onClickOnce(
+      'theme-mode-switch',
+      singleActivation(() => toggleColorMode())
+    );
 
     // Bouton « Vider le cache »
-    const clearBtn = document.getElementById('clear-cache-btn');
-    if (clearBtn && !clearBtn.dataset.listenerAttached) {
-      clearBtn.addEventListener('click', () => {
-        // handleClearCacheClick rattrape ses erreurs : son repli vide les caches à la main
-        void this.handleClearCacheClick(clearBtn);
-      });
-      clearBtn.dataset.listenerAttached = 'true';
-    }
+    this._onClickOnce('clear-cache-btn', button => {
+      // handleClearCacheClick rattrape ses erreurs : son repli vide les caches à la main
+      void this.handleClearCacheClick(button);
+    });
+  },
+
+  /**
+   * Un seul écouteur de clic sur un bouton que l'écran ne refait pas, même si setupEvents
+   * repasse à chaque affichage
+   * @param {string} id - Identifiant du bouton
+   * @param {(button: HTMLElement) => void} onClick - Reçoit le bouton
+   * @private
+   */
+  _onClickOnce(id, onClick) {
+    const button = document.getElementById(id);
+    if (!button || button.dataset.listenerAttached) return;
+    button.addEventListener('click', () => onClick(button));
+    button.dataset.listenerAttached = 'true';
   },
 
   /**
