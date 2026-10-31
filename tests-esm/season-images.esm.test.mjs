@@ -1,7 +1,8 @@
 /**
  * Images costumées des fêtes : têtes (js/avatar-heads.js), corps, fusées, serpent de l'Arcade
  * et labyrinthe de MultiMiam (js/arcade-sprite-catalog.js), logos des modes et des jeux
- * (js/logos.js), fonds de l'avatar et image des héros (js/main-helpers.js). Costumées seulement quand la fête est portée ; le repli reste
+ * (js/logos.js), cadeaux de l'Aventure (js/adventure-gifts.js), fonds de l'avatar et image des
+ * héros (js/main-helpers.js). Costumées seulement quand la fête est portée ; le repli reste
  * l'image classique, gardée hors ligne. Pour chaque fête du registre et chaque famille qu'elle
  * annonce, chaque image que le code demande existe dans le dépôt : une fête ajoutée sans ses
  * images fait échouer ce test, qui liste celles qui manquent.
@@ -25,6 +26,7 @@ const {
   textureSpec,
 } = await import('../js/arcade-sprite-catalog.js');
 const { ARCADE_LOGOS, MODE_LOGOS, logoSource } = await import('../js/logos.js');
+const { GIFT_FILES, giftSource } = await import('../js/adventure-gifts.js');
 const { refreshBackground, updateBackgroundByAvatar, updateSeoHeroImage } = await import(
   '../js/main-helpers.js'
 );
@@ -71,6 +73,7 @@ const FAMILY_FILES = new Map([
   ],
   ['miam', () => [arcade(textureSpec('mur.png').source), arcade(answerTokenSpec().source)]],
   ['logos', () => [...MODE_LOGOS.values(), ...ARCADE_LOGOS].map(file => arcade(logoSource(file)))],
+  ['gifts', () => GIFT_FILES.map(file => arcade(giftSource(file)))],
   [
     'backgrounds',
     season =>
@@ -210,7 +213,9 @@ describe('Fond de l’avatar et image des héros', () => {
     expect(classic).toMatch(/background_dragon_\d{3}\.png/);
     wearSeason(HALLOWEEN);
     refreshBackground();
-    expect(background()).toMatch(/background_dragon_halloween_00[1-4]\.png/);
+    // Un des mondes costumés, de 001 à `worlds`
+    const world = Number(/background_dragon_halloween_(\d{3})\.png/.exec(background())?.[1]);
+    expect(seasonWorlds(HALLOWEEN)).toContain(world);
     // Tiré une fois par session : le même monde costumé tant qu'on ne change pas d'avatar
     const festive = background();
     refreshBackground();

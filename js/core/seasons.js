@@ -11,7 +11,7 @@
  */
 
 /**
- * @typedef {'heads'|'bodies'|'monsters'|'ships'|'snake'|'miam'|'logos'|'backgrounds'|'hero'} CostumeFamily
+ * @typedef {'heads'|'bodies'|'monsters'|'ships'|'snake'|'miam'|'logos'|'gifts'|'backgrounds'|'hero'} CostumeFamily
  * heads : assets/images/arcade/<avatar>_<fête>_head_avatar.png ;
  * bodies : assets/images/arcade/<avatar>_<fête>.png (MultiMiam) ;
  * monsters : assets/images/arcade/monstre<NN>_right_<fête>.png, les 155 monstres des jeux
@@ -24,6 +24,8 @@
  *   l'image posée sous les réponses (multimiam_reponse_<fête>.png) ;
  * logos : assets/images/arcade/logo_mode_<mode>_<fête>.png (six modes : cartes de l'accueil)
  *   et logo_multi<jeu>_<fête>.png (quatre jeux : menu de l'Arcade), repris au tableau de bord ;
+ * gifts : assets/images/arcade/cadeau_ferme_<fête>.png et cadeau_ouvert_<fête>.png (mode
+ *   Aventure : le trésor de la scène, puis celui de la victoire) ;
  * backgrounds : img/background_<avatar>_<fête>_<NNN>.png, de 001 à `worlds` ;
  * hero : assets/social/leapmultix-social-card-<fête>.webp (image des héros de l'accueil).
  */
@@ -50,14 +52,16 @@ export const SEASONS = Object.freeze([
     costumes: Object.freeze([
       'heads',
       'bodies',
+      'monsters',
       'ships',
       'snake',
       'miam',
       'logos',
+      'gifts',
       'backgrounds',
       'hero',
     ]),
-    worlds: 4,
+    worlds: 8,
   }),
   Object.freeze({
     id: 'christmas',
@@ -72,10 +76,11 @@ export const SEASONS = Object.freeze([
       'snake',
       'miam',
       'logos',
+      'gifts',
       'backgrounds',
       'hero',
     ]),
-    worlds: 4,
+    worlds: 8,
   }),
 ]);
 

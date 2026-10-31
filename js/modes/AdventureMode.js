@@ -53,6 +53,7 @@ import { gameState, updateDailyChallengeProgress } from '../game.js';
 import { chance, randomInt } from '../core/random.js';
 import { accessibilityManager } from '../accessibility.js';
 import { attachImageFallbacks, createWebpImage, webpImageAttributes } from '../webp-images.js';
+import { giftSource } from '../adventure-gifts.js';
 import { HEAD_SIZES, normalizeAvatarId, setAvatarHead } from '../avatar-heads.js';
 import { avatarSpec } from '../arcade-sprite-catalog.js';
 
@@ -218,7 +219,11 @@ export class AdventureMode extends GameMode {
   getLevelHTML() {
     // Nommé hors du gabarit : la liste hors ligne (scripts/precache-list.mjs) lit les noms
     // d'images du code, pas ceux écrits dans un ${…}
-    const closedGift = webpImageAttributes('cadeau_ferme.png', SCENE_IMAGE);
+    const closedGift = webpImageAttributes(
+      'cadeau_ferme.png',
+      SCENE_IMAGE,
+      giftSource('cadeau_ferme.png')
+    );
     return `
                 <div class="adventure-level-header">
                     <h2 class="section-title" data-translate="${this.currentLevel.nameKey}">${getTranslation(this.currentLevel.nameKey)}</h2>
@@ -676,7 +681,12 @@ export class AdventureMode extends GameMode {
     document
       .getElementById('adventure-treasure')
       ?.replaceChildren(
-        createWebpImage('cadeau_ouvert.png', SCENE_IMAGE, { width: '72', height: '72' })
+        createWebpImage(
+          'cadeau_ouvert.png',
+          SCENE_IMAGE,
+          { width: '72', height: '72' },
+          giftSource('cadeau_ouvert.png')
+        )
       );
 
     this.addTimer(() => {
@@ -842,11 +852,12 @@ export class AdventureMode extends GameMode {
       const messageEl = wrapper.querySelector('.results-message');
       wrapper.insertBefore(createStarRating(stars), messageEl);
       wrapper.insertBefore(
-        createWebpImage('cadeau_ouvert.png', RESULTS_GIFT, {
-          width: '112',
-          height: '112',
-          class: 'results-treasure',
-        }),
+        createWebpImage(
+          'cadeau_ouvert.png',
+          RESULTS_GIFT,
+          { width: '112', height: '112', class: 'results-treasure' },
+          giftSource('cadeau_ouvert.png')
+        ),
         messageEl
       );
     }

@@ -144,6 +144,7 @@ const PRECACHE_CORE = [
   '/img/background_unicorn_001.webp',
   '/index.html',
   '/js/accessibility.js',
+  '/js/adventure-gifts.js',
   '/js/arcade-common.js',
   '/js/arcade-fullscreen.js',
   '/js/arcade-invasion.js',

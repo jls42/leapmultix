@@ -32,6 +32,7 @@ porte dans le code chacune, toutes lues par `costumed(nom, famille)` :
 | `snake`       | 14 morceaux `<morceau>_<fête>.png`, `snake_apple_<fête>.png`, `herbe_<fête>.png` | `arcade-sprite-catalog` |
 | `miam`        | `mur_<fête>.png`, `multimiam_reponse_<fête>.png` (sous chaque réponse)           | `arcade-sprite-catalog` |
 | `logos`       | `logo_mode_<mode>_<fête>.png` (six), `logo_multi<jeu>_<fête>.png` (quatre)       | `js/logos.js`           |
+| `gifts`       | `cadeau_ferme_<fête>.png`, `cadeau_ouvert_<fête>.png` (mode Aventure)            | `js/adventure-gifts.js` |
 | `backgrounds` | `img/background_<avatar>_<fête>_001.png` à `_00<worlds>`                         | `js/main-helpers.js`    |
 | `hero`        | `assets/social/leapmultix-social-card-<fête>.webp`                               | `js/main-helpers.js`    |
 
@@ -110,7 +111,7 @@ consigne, mot pour mot. Noms des cibles :
 - `img/background_<avatar>_<fête>_001.png` à `_00<worlds>` (fonds, réf. : **un fond d'origine
   différent pour chacun** + le corps costumé ; consigne « le même lieu que la 1re image ») :
   en thème ordinaire, chaque avatar a 11 à 17 fonds tirés d'une session à l'autre, la fête en
-  garde plusieurs (Halloween : 4) ;
+  garde plusieurs (Halloween et Noël : 8) ;
 - `assets/images/arcade/<fusée>_<fête>.png` pour les dix fusées pilotées (réf. : la fusée
   d'origine + la tête costumée) ;
 - `assets/images/arcade/monstre<NN>_right_<fête>.png` pour les 155 monstres (réf. : le monstre
@@ -124,6 +125,9 @@ consigne, mot pour mot. Noms des cibles :
 - `assets/images/arcade/logo_multi<jeu>_<fête>.png` pour les quatre logos des jeux d'Arcade
   (réf. : le logo d'origine + les héros costumés qu'il montre) : leur titre (« MULTI
   INVADERS »…) est le seul texte, à garder tel quel, écrit dans la consigne ;
+- `assets/images/arcade/cadeau_ferme_<fête>.png` puis `cadeau_ouvert_<fête>.png`, les trésors
+  du mode Aventure (réf. : le cadeau d'origine ; l'ouvert prend aussi le fermé costumé, pour le
+  même papier et le même ruban), au format `carre-transparent` ;
 - `assets/images/arcade/snake_apple_<fête>.png`, la nourriture du serpent, et
   `assets/images/arcade/multimiam_reponse_<fête>.png`, l'image posée sous les réponses de
   MultiMiam (hors fête, une pastille dessinée par le jeu) : un nombre blanc cerné de noir
@@ -231,7 +235,9 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   où le thème ordinaire en fait alterner plusieurs. D'où les familles `logos`, `snake` et
   `miam`, et `worlds`. Avant la planche, faire le tour des écrans : tout ce qui est dessiné
   (pas une icône) a sa version de fête, ou une raison écrite de ne pas l'avoir (fusées sans
-  pilote, vidéos d'intro). Les 155 monstres de l'Arcade sont venus à Noël 2026 (`monsters`).
+  pilote, vidéos d'intro, chemin de MultiMiam). Les 155 monstres de l'Arcade sont venus à Noël
+  2026 (`monsters`), puis à Halloween ; les cadeaux de l'Aventure (`gifts`) et 8 fonds au lieu
+  de 4 aux deux fêtes, le 31/10.
 - **Serpent** : 14 morceaux qui se raccordent case à case et une tête par direction, dessinés
   séparément. Un dessin refait ne garantit ni les raccords ni la taille : recoloration
   (`recolor.sh`). Un chapeau se pose sur la tête sans dépasser la case (méthode `bonnet`).
