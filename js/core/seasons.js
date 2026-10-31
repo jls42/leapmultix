@@ -42,6 +42,24 @@
  *   session comme les fonds classiques
  */
 
+/**
+ * Toutes les familles que le jeu sait costumer : Halloween et Noël les portent toutes. Une fête
+ * dont une partie reste à dessiner donne sa propre liste.
+ * @type {readonly CostumeFamily[]}
+ */
+const EVERY_COSTUME = Object.freeze([
+  'heads',
+  'bodies',
+  'monsters',
+  'ships',
+  'snake',
+  'miam',
+  'logos',
+  'gifts',
+  'backgrounds',
+  'hero',
+]);
+
 /** @type {readonly Season[]} */
 export const SEASONS = Object.freeze([
   Object.freeze({
@@ -49,18 +67,7 @@ export const SEASONS = Object.freeze([
     from: Object.freeze([10, 24]),
     to: Object.freeze([11, 1]),
     themes: Object.freeze({ light: 'pumpkin', dark: 'halloween' }),
-    costumes: Object.freeze([
-      'heads',
-      'bodies',
-      'monsters',
-      'ships',
-      'snake',
-      'miam',
-      'logos',
-      'gifts',
-      'backgrounds',
-      'hero',
-    ]),
+    costumes: EVERY_COSTUME,
     worlds: 8,
   }),
   Object.freeze({
@@ -68,18 +75,7 @@ export const SEASONS = Object.freeze([
     from: Object.freeze([12, 1]),
     to: Object.freeze([12, 26]),
     themes: Object.freeze({ light: 'snow', dark: 'christmas' }),
-    costumes: Object.freeze([
-      'heads',
-      'bodies',
-      'monsters',
-      'ships',
-      'snake',
-      'miam',
-      'logos',
-      'gifts',
-      'backgrounds',
-      'hero',
-    ]),
+    costumes: EVERY_COSTUME,
     worlds: 8,
   }),
 ]);
