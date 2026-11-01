@@ -78,6 +78,25 @@ export const SEASONS = Object.freeze([
     costumes: EVERY_COSTUME,
     worlds: 8,
   }),
+  // Du 27 décembre au 6 janvier : passe le 31 décembre, sans année écrite dans les images.
+  // Monstres et fonds encore à dessiner : ils gardent leurs images classiques.
+  Object.freeze({
+    id: 'newyear',
+    from: Object.freeze([12, 27]),
+    to: Object.freeze([1, 6]),
+    themes: Object.freeze({ light: 'confetti', dark: 'fireworks' }),
+    costumes: Object.freeze([
+      'heads',
+      'bodies',
+      'ships',
+      'snake',
+      'miam',
+      'logos',
+      'gifts',
+      'hero',
+    ]),
+    worlds: 8,
+  }),
 ]);
 
 /** Valeur du paramètre d'essai ?saison= qui retire toute fête */
