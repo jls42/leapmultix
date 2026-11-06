@@ -23,6 +23,7 @@ import {
   toSitePath,
   totalBytes,
 } from '../../scripts/precache-list.mjs';
+import { SEASONS } from '../../js/core/seasons.js';
 
 const ROOT = path.resolve('.');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -260,9 +261,8 @@ describe('Le dépôt', () => {
   });
 
   test('aucune image de fête : quelques jours par an, l’image classique la remplace hors ligne', () => {
-    expect([...list.core, ...list.images].filter(file => /halloween|christmas/.test(file))).toEqual(
-      []
-    );
+    const seasonal = new RegExp(SEASONS.map(season => season.id).join('|'));
+    expect([...list.core, ...list.images].filter(file => seasonal.test(file))).toEqual([]);
   });
 
   test('taille bornée : le code sous 4 Mo, et jamais un dossier d’images entier', () => {

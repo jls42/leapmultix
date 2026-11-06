@@ -1,0 +1,24 @@
+# Recolorations du Nouvel An : bash scripts/seasons/recolor.sh newyear
+# Colonnes séparées par une tabulation : source	méthode	réglage (sortie : <source>_newyear.png)
+# Serpent de MultiSnake : dos bleu indigo, ventre doré
+assets/images/arcade/tete_droite.png	serpent	178 80
+# Têtes : chapeau pointu de fête sur l'arrière de la tête de droite, reporté sur les trois autres
+# (mêmes images retournées ou tournées que les originaux, vérifié par recolor.sh)
+assets/images/arcade/tete_droite.png	bonnet	scripts/seasons/newyear/chapeau.png 140 90 0 -45
+assets/images/arcade/tete_gauche.png	comme	assets/images/arcade/tete_droite.png flop
+assets/images/arcade/tete_haut.png	comme	assets/images/arcade/tete_droite.png transverse
+assets/images/arcade/tete_bas.png	comme	assets/images/arcade/tete_droite.png rotate 90
+assets/images/arcade/corps_milieu_queue_gauche_tete_droite.png	serpent	178 80
+assets/images/arcade/corps_milieu_queue_bas_tete_haut.png	serpent	178 80
+assets/images/arcade/corps_courbe_droite_bas.png	serpent	178 80
+assets/images/arcade/corps_courbe_haut_droite.png	serpent	178 80
+assets/images/arcade/corps_courbe_gauche_haut.png	serpent	178 80
+assets/images/arcade/corps_courbe_bas_gauche.png	serpent	178 80
+assets/images/arcade/queue_fin_droite.png	serpent	178 80
+assets/images/arcade/queue_fin_gauche.png	serpent	178 80
+assets/images/arcade/queue_fin_haut.png	serpent	178 80
+assets/images/arcade/queue_fin_bas.png	serpent	178 80
+# Herbe du plateau de MultiSnake, de nuit
+assets/images/arcade/herbe.png	teinte	75,80,130
+# Murs du labyrinthe de MultiMiam, en pierre framboise
+assets/images/arcade/mur.png	teinte	95,90,175
