@@ -20,14 +20,7 @@ import {
 
 const HALLOWEEN = SEASONS.find(season => season.id === 'halloween');
 const CHRISTMAS = SEASONS.find(season => season.id === 'christmas');
-// Fête d'essai qui passe le 31 décembre, comme le fera le Nouvel An
-const NEW_YEAR = Object.freeze({
-  id: 'newyear',
-  from: [12, 27],
-  to: [1, 7],
-  themes: { light: 'confetti', dark: 'fireworks' },
-  costumes: ['heads'],
-});
+const NEW_YEAR = SEASONS.find(season => season.id === 'newyear');
 
 const day = (year, month, date) => new Date(year, month - 1, date, 12);
 
@@ -71,7 +64,8 @@ describe('Noël : du 1er au 26 décembre inclus', () => {
     [day(2027, 12, 1), true],
   ])('%s → %s', (date, expected) => {
     expect(isInSeason(CHRISTMAS, date)).toBe(expected);
-    expect(findSeason(date)).toBe(expected ? CHRISTMAS : null);
+    // Le 27 décembre et le 1er janvier sont au Nouvel An
+    expect(findSeason(date) === CHRISTMAS).toBe(expected);
   });
 
   test('deux thèmes, un clair et un sombre, reconnus comme ceux de la fête', () => {
@@ -88,16 +82,32 @@ describe('Noël : du 1er au 26 décembre inclus', () => {
   });
 });
 
-describe('Fête qui passe le 31 décembre', () => {
+describe('Nouvel An : du 27 décembre au 6 janvier inclus, il passe le 31 décembre', () => {
   test.each([
     [day(2026, 12, 26), false],
     [day(2026, 12, 27), true],
     [day(2026, 12, 31), true],
     [day(2027, 1, 1), true],
-    [day(2027, 1, 7), true],
-    [day(2027, 1, 8), false],
+    [day(2027, 1, 6), true],
+    [day(2027, 1, 7), false],
+    [day(2027, 6, 15), false],
   ])('%s → %s', (date, expected) => {
     expect(isInSeason(NEW_YEAR, date)).toBe(expected);
+    expect(findSeason(date) === NEW_YEAR).toBe(expected);
+  });
+
+  test('il reste là de 23 h 59 le 31 décembre à minuit le 1er janvier', () => {
+    expect(findSeason(new Date(2026, 11, 31, 23, 59))).toBe(NEW_YEAR);
+    expect(findSeason(new Date(2027, 0, 1, 0, 0))).toBe(NEW_YEAR);
+    expect(findSeason(new Date(2027, 0, 6, 23, 59))).toBe(NEW_YEAR);
+    expect(findSeason(new Date(2027, 0, 7, 0, 0))).toBeNull();
+  });
+
+  test('deux thèmes, un clair et un sombre, reconnus comme ceux de la fête', () => {
+    expect(NEW_YEAR.themes).toEqual({ light: 'confetti', dark: 'fireworks' });
+    expect(SEASON_THEMES).toEqual(expect.arrayContaining(['confetti', 'fireworks']));
+    expect(seasonOfTheme('confetti')).toBe(NEW_YEAR);
+    expect(seasonOfTheme('fireworks')).toBe(NEW_YEAR);
   });
 
   test('son édition est l’année où elle commence', () => {
@@ -138,7 +148,8 @@ describe('Images costumées', () => {
   });
 
   test('une famille que la fête n’apporte pas reste classique', () => {
-    wearSeason(NEW_YEAR);
+    // Fête d'essai qui n'apporte que les têtes
+    wearSeason(Object.freeze({ ...NEW_YEAR, costumes: Object.freeze(['heads']) }));
     expect(costumed('fox', 'heads')).toBe('fox_newyear');
     expect(costumed('fox', 'bodies')).toBe('fox');
   });

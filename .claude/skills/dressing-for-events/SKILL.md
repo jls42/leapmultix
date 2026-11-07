@@ -88,7 +88,9 @@ le même sur la tête, le corps, les fusées et le fond. Halloween 2026 : chapea
 (renard), capuche-citrouille (panda), diadème de citrouilles et cape (licorne), cape de vampire
 (dragon), casque peint en citrouille (astronaute). Noël 2026 : bonnet de Père Noël (renard),
 serre-tête de bois de renne (panda), couronne de houx et cape rouge (licorne), bonnet de lutin
-à grelot (dragon), casque peint en boule de sapin (astronaute).
+à grelot (dragon), casque peint en boule de sapin (astronaute). Nouvel An 2026 : haut-de-forme et
+nœud papillon dorés (renard), chapeau pointu de fête (panda), serpentins arc-en-ciel sur la corne
+(licorne), lunettes en étoiles (dragon), casque en boule à facettes (astronaute).
 
 ### 2. Registre
 
@@ -224,6 +226,13 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   n'attend une fenêtre du journal que si elle est pleine. Une liste de plus de 200 images
   déborde donc sur un deuxième jour, et **la fête en cours passe avant la suivante** : les
   155 monstres de Noël, dessinés pendant Halloween, ont pris la journée de ceux d'Halloween.
+  Une fête complète (250 images environ) dépasse une semaine de quota : pour le Nouvel An 2026,
+  le propriétaire a demandé des lots lancés de temps en temps (personnages, puis le reste du
+  jeu, puis fonds et monstres), pour garder du quota à Codex entre deux.
+- **Fête qui passe le 31 décembre** (Nouvel An) : aucune année écrite, ni « Bonne année », pour
+  que les images resservent chaque année, et des noms de thèmes justes avant comme après minuit
+  (« Confettis », « Feu d'artifice », pas « Réveillon ») ; ni coupe ni bouteille, dans chaque
+  consigne, repli des monstres compris.
 - **Ne rien modifier pendant une génération** : la boucle lit la liste qu'elle a ouverte au
   départ (un `sed -i` sur `prompts.tsv` n'y est pas vu), et bash lit son script au fil de
   l'exécution (le modifier peut casser la suite). Attendre la fin, puis relancer : les cibles

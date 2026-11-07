@@ -43,8 +43,8 @@
  */
 
 /**
- * Toutes les familles que le jeu sait costumer : Halloween et Noël les portent toutes. Une fête
- * dont une partie reste à dessiner donne sa propre liste.
+ * Toutes les familles que le jeu sait costumer : Halloween, Noël et le Nouvel An les portent
+ * toutes. Une fête dont une partie reste à dessiner donne sa propre liste.
  * @type {readonly CostumeFamily[]}
  */
 const EVERY_COSTUME = Object.freeze([
@@ -75,6 +75,15 @@ export const SEASONS = Object.freeze([
     from: Object.freeze([12, 1]),
     to: Object.freeze([12, 26]),
     themes: Object.freeze({ light: 'snow', dark: 'christmas' }),
+    costumes: EVERY_COSTUME,
+    worlds: 8,
+  }),
+  // Du 27 décembre au 6 janvier : passe le 31 décembre, sans année écrite dans les images.
+  Object.freeze({
+    id: 'newyear',
+    from: Object.freeze([12, 27]),
+    to: Object.freeze([1, 6]),
+    themes: Object.freeze({ light: 'confetti', dark: 'fireworks' }),
     costumes: EVERY_COSTUME,
     worlds: 8,
   }),

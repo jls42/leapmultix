@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { answerGameDialog, pause } from '../helpers/game-session.mjs';
 import { chromeSession } from '../helpers/chrome-session.mjs';
-import { NO_SEASON } from '../../js/core/seasons.js';
+import { NO_SEASON, SEASONS } from '../../js/core/seasons.js';
 
 const ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
 // Sans les variantes du générateur actuel (CI : npm run assets:generate ne tourne qu'au
@@ -127,8 +127,10 @@ function headProblems(heads, expected = HEAD_VARIANT) {
 const HEADS_OK = { count: true, unexpected: [], broken: [], blurry: [] };
 
 /** Avatar que montrent des têtes, lu dans l'adresse affichée (currentSrc), costumé ou non */
-const avatarsOf = heads =>
-  heads.map(img => /\/([a-z]+)(?:_(?:halloween|christmas))?_head_avatar/.exec(img.src)?.[1]);
+const COSTUMED_HEAD = new RegExp(
+  `/([a-z]+)(?:_(?:${SEASONS.map(season => season.id).join('|')}))?_head_avatar`
+);
+const avatarsOf = heads => heads.map(img => COSTUMED_HEAD.exec(img.src)?.[1]);
 
 /** Têtes qui suivent l'avatar porté : mascotte, avatar actuel, tuile de Zoé */
 const WORN_HEADS = '#hero-mascot-img, #current-avatar-img, [data-player="Zoé"] .user-tile-face';
@@ -332,7 +334,7 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
 
   /**
    * Thèmes affichés de la Personnalisation (display, pas l'attribut hidden seul) : ceux de la
-   * clarté en cours, quatre ordinaires et un de la fête, aucun de l'autre fête
+   * clarté en cours, quatre ordinaires et un de la fête, aucun des autres fêtes
    * @param {string} season
    */
   async function expectSeasonThemesShown(season) {
@@ -341,7 +343,9 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
         .filter(button => getComputedStyle(button).display !== 'none')
         .map(button => button.dataset.colorTheme)
     );
-    const otherSeason = season === 'halloween' ? ['snow', 'christmas'] : ['pumpkin', 'halloween'];
+    const otherSeason = SEASONS.filter(({ id }) => id !== season).flatMap(({ themes }) =>
+      Object.values(themes)
+    );
     expect(shown).toHaveLength(5);
     expect(shown.filter(theme => otherSeason.includes(theme))).toEqual([]);
   }
@@ -491,7 +495,7 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
       90000
     );
 
-    test.each(['halloween', 'christmas'])(
+    test.each(SEASONS.map(season => season.id))(
       'pendant la fête %s : têtes et logos costumés nets, classiques dès un thème ordinaire',
       async season => {
         const headVariant = seasonHeadVariant(season);
