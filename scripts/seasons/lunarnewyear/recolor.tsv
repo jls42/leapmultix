@@ -1,0 +1,21 @@
+# Recolorations du Nouvel An chinois : bash scripts/seasons/recolor.sh lunarnewyear
+# Colonnes séparées par une tabulation : source	méthode	réglage (sortie : <source>_lunarnewyear.png)
+# Serpent de MultiSnake, en dragon de la danse : dos vermillon (plus orangé que celui de Noël, 29 80), ventre doré
+assets/images/arcade/tete_droite.png	serpent	33 78
+assets/images/arcade/tete_gauche.png	serpent	33 78
+assets/images/arcade/tete_haut.png	serpent	33 78
+assets/images/arcade/tete_bas.png	serpent	33 78
+assets/images/arcade/corps_milieu_queue_gauche_tete_droite.png	serpent	33 78
+assets/images/arcade/corps_milieu_queue_bas_tete_haut.png	serpent	33 78
+assets/images/arcade/corps_courbe_droite_bas.png	serpent	33 78
+assets/images/arcade/corps_courbe_haut_droite.png	serpent	33 78
+assets/images/arcade/corps_courbe_gauche_haut.png	serpent	33 78
+assets/images/arcade/corps_courbe_bas_gauche.png	serpent	33 78
+assets/images/arcade/queue_fin_droite.png	serpent	33 78
+assets/images/arcade/queue_fin_gauche.png	serpent	33 78
+assets/images/arcade/queue_fin_haut.png	serpent	33 78
+assets/images/arcade/queue_fin_bas.png	serpent	33 78
+# Herbe du plateau de MultiSnake, vert jade
+assets/images/arcade/herbe.png	teinte	100,75,133
+# Murs du labyrinthe de MultiMiam, en pierre de jade
+assets/images/arcade/mur.png	teinte	120,90,75

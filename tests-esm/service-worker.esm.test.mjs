@@ -672,6 +672,21 @@ describe('Service worker : images hors ligne', () => {
     expect(await body.text()).toBe(`contenu de ${generated}/panda-128.webp`);
   });
 
+  test('Nouvel An chinois : son image classique, sans le confondre avec le Nouvel An', async () => {
+    const { worker } = await installedOffline();
+    // « _newyear_ » n'est pas dans « _lunarnewyear_ » : le nom entier de la fête est retiré
+    const head = await request(
+      worker,
+      '/assets/generated-images/arcade/fox_lunarnewyear_head_avatar-1024.webp',
+      { destination: 'image' }
+    );
+    expect(await head.text()).toMatch(/^contenu de .+\/fox_head_avatar-(?:128|256|512)\.webp$/);
+    const hero = await request(worker, '/assets/social/leapmultix-social-card-lunarnewyear.webp', {
+      destination: 'image',
+    });
+    expect(await hero.text()).toBe('contenu de /assets/social/leapmultix-social-card.webp');
+  });
+
   test('une image propre à la fête, sans image classique : absente, pas une erreur réseau', async () => {
     const { worker } = await installedOffline();
     const token = '/assets/generated-images/arcade/multimiam_reponse_halloween-128.webp';

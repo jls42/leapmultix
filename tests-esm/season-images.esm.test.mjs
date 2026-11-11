@@ -176,9 +176,16 @@ describe('Arcade', () => {
   test('les images costumées ont leurs variantes, mais restent hors du préchargement', () => {
     const seasonal = seasonalSpriteSpecs().map(item => item.source);
     // Corps (5), fusées pilotées (10), serpent (14 morceaux, herbe, pomme), murs et réponses
-    // de MultiMiam par fête, plus ses 155 monstres quand elle les costume
-    const expected = SEASONS.reduce(
-      (total, season) => total + 33 + (season.costumes.includes('monsters') ? MONSTER_COUNT : 0),
+    // de MultiMiam, 155 monstres : pour chaque fête, les familles qu'elle costume
+    const spritesOf = new Map([
+      ['bodies', AVATAR_IDS.length],
+      ['ships', 2 * AVATAR_IDS.length],
+      ['snake', SNAKE_PART_FILES.length + 2],
+      ['miam', 2],
+      ['monsters', MONSTER_COUNT],
+    ]);
+    const expected = SEASONS.flatMap(season => season.costumes).reduce(
+      (total, family) => total + (spritesOf.get(family) ?? 0),
       0
     );
     expect(seasonal).toHaveLength(expected);

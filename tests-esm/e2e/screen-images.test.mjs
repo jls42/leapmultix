@@ -110,6 +110,16 @@ const HEAD_PNG = /^\/assets\/images\/arcade\/[a-z]+_head_avatar_128x128\.png$/;
 const HOME_MODE_LOGOS = '.mode-btn[data-mode] .mode-icon img';
 const seasonLogo = id =>
   new RegExp(`^/assets/generated-images/arcade/logo_[a-z_]+_${id}-\\d+\\.webp$`);
+/** Variante d'un logo classique (« logo_mode_defi-128.webp », « logo_multisnake-256.webp ») */
+const CLASSIC_LOGO = /^\/assets\/generated-images\/arcade\/logo_(?:mode_)?[a-z]+-\d+\.webp$/;
+/**
+ * Logos attendus pendant une fête : costumés si elle costume les logos, classiques sinon
+ * (une fête dont les logos restent à dessiner)
+ */
+const festiveLogo = id =>
+  SEASONS.find(season => season.id === id).costumes.includes('logos')
+    ? seasonLogo(id)
+    : CLASSIC_LOGO;
 
 /**
  * Ce qui ne va pas dans des têtes : pas la variante attendue, pas chargée, floue
@@ -318,10 +328,10 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
 
   /**
    * Pendant une fête : logos des six modes de l'accueil, puis des neuf rangées du tableau de
-   * bord (cinq modes, quatre jeux d'Arcade), tous costumés et nets
-   * @param {RegExp} logo - Variante costumée attendue
+   * bord (cinq modes, quatre jeux d'Arcade), tous de la variante attendue et nets
+   * @param {RegExp} logo - Variante attendue (festiveLogo)
    */
-  async function expectCostumedLogos(logo) {
+  async function expectFestiveLogos(logo) {
     const homeLogos = await settledImages(HOME_MODE_LOGOS);
     expect(homeLogos).toHaveLength(6);
     expect(homeLogos.filter(img => !img.loaded || isBlurry(img) || !logo.test(img.src))).toEqual(
@@ -504,7 +514,7 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
         expect(slide0).toHaveLength(8);
         expect(headProblems(slide0, headVariant)).toEqual(HEADS_OK);
         await chooseZoe();
-        await expectCostumedLogos(seasonLogo(season));
+        await expectFestiveLogos(festiveLogo(season));
         await openPersonalization();
         await expectSeasonThemesShown(season);
         const costumed = await settledImages(SLIDE6_HEADS);

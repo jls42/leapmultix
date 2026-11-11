@@ -9,7 +9,7 @@ import { describe, test, expect } from '@jest/globals';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const { SEASONS, findSeason, isInSeason } = await import('../../js/core/seasons.js');
+const { SEASONS, findSeason, isInSeason, seasonDays } = await import('../../js/core/seasons.js');
 
 const css = fs.readFileSync('css/themes.css', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
@@ -23,8 +23,17 @@ const ORDINARY_THEMES = ['default', 'blue', 'dark', 'green', 'orange', 'pink'];
 const darkBlock = /((?:\.theme-[a-z]+,\s*)+\.theme-[a-z]+)\s*\{\s*color-scheme: dark;/.exec(css);
 const DARK_THEMES = darkBlock[1].split(/,\s*/).map(selector => selector.replace('.theme-', ''));
 
-/** Chaque jour d'une année bissextile, pour que le 29 février compte aussi */
-const EVERY_DAY = Array.from({ length: 366 }, (_, index) => new Date(2028, 0, 1 + index, 12));
+/**
+ * Les années que couvre la table du Nouvel An chinois (js/core/seasons.js), et chaque jour de
+ * ces années, bissextiles comprises : une fête mobile ne tombe pas le même jour d'une année à
+ * l'autre
+ */
+const YEARS = Array.from({ length: 14 }, (_, index) => 2027 + index);
+const EVERY_DAY = YEARS.flatMap(year =>
+  Array.from({ length: 366 }, (_, index) => new Date(year, 0, 1 + index, 12)).filter(
+    date => date.getFullYear() === year
+  )
+);
 const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const validDay = ([month, day]) =>
   Number.isInteger(month) &&
@@ -68,10 +77,16 @@ describe('Registre', () => {
 });
 
 describe.each(SEASONS.map(season => [season.id, season]))('%s', (id, season) => {
-  test('dates valides, chaque jour de la fête la trouve', () => {
-    expect(validDay(season.from)).toBe(true);
-    expect(validDay(season.to)).toBe(true);
-    expect(EVERY_DAY.some(date => findSeason(date) === season)).toBe(true);
+  test('dates valides chaque année, chaque année la fête a ses jours', () => {
+    const invalid = YEARS.filter(year => {
+      const days = seasonDays(season, year);
+      return !days || !validDay(days.from) || !validDay(days.to);
+    });
+    expect(invalid).toEqual([]);
+    const yearsWithout = YEARS.filter(
+      year => !EVERY_DAY.some(date => date.getFullYear() === year && findSeason(date) === season)
+    );
+    expect(yearsWithout).toEqual([]);
   });
 
   test('fonds costumés : un nombre entier d’au moins un', () => {

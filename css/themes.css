@@ -265,6 +265,27 @@
   --color-scrim-game: oklch(96.5% 0.012 90deg / 0.8);
 }
 
+/* ========== FÊTE : LANTERNES (Nouvel An chinois, clair) ==========
+   Proposé de la veille du Nouvel An lunaire à la fête des Lanternes (js/core/seasons.js) :
+   papier de riz ivoire, encre brun-rouge, titres laque rouge, action vermillon. */
+.theme-lanterns {
+  --color-page: oklch(94% 0.03 85deg);
+  --color-surface: oklch(99.5% 0.005 85deg);
+  --color-surface-sunken: oklch(96.5% 0.014 85deg);
+  --color-border: oklch(88.5% 0.025 75deg);
+  --color-border-strong: oklch(62% 0.05 30deg);
+  --color-ink: oklch(28% 0.045 30deg);
+  --color-ink-muted: oklch(47% 0.05 30deg);
+  --color-ink-heading: oklch(40% 0.13 25deg);
+  --color-action: oklch(52% 0.19 32deg);
+  --color-action-hover: oklch(47% 0.175 32deg);
+  --color-action-edge: oklch(39% 0.145 32deg);
+  --color-action-ink: oklch(48% 0.18 32deg);
+  --color-action-tint: oklch(94.5% 0.03 40deg);
+  --color-focus: oklch(50% 0.11 70deg);
+  --color-scrim-game: oklch(96.5% 0.014 85deg / 0.8);
+}
+
 /* ========== THÈMES SOMBRES : états et ombres communs ========== */
 .theme-blue,
 .theme-dark,
@@ -272,7 +293,8 @@
 .theme-ember,
 .theme-halloween,
 .theme-christmas,
-.theme-fireworks {
+.theme-fireworks,
+.theme-dragondance {
   color-scheme: dark;
 
   --color-scrim-modal: oklch(8% 0.01 250deg / 0.72);
@@ -459,6 +481,28 @@
   --color-on-action: oklch(22% 0.05 285deg);
   --color-focus: oklch(87% 0.12 90deg);
   --color-scrim-game: oklch(18% 0.05 285deg / 0.82);
+}
+
+/* ========== FÊTE : DANSE DU DRAGON (Nouvel An chinois, sombre) ==========
+   Proposé de la veille du Nouvel An lunaire à la fête des Lanternes (js/core/seasons.js) :
+   nuit rouge laque, titres or pâle, action or, encre claire. */
+.theme-dragondance {
+  --color-page: oklch(19% 0.055 22deg);
+  --color-surface: oklch(25.5% 0.06 22deg);
+  --color-surface-sunken: oklch(22% 0.055 22deg);
+  --color-border: oklch(36% 0.06 22deg);
+  --color-border-strong: oklch(58% 0.06 22deg);
+  --color-ink: oklch(95.5% 0.012 60deg);
+  --color-ink-muted: oklch(80% 0.03 50deg);
+  --color-ink-heading: oklch(90% 0.08 90deg);
+  --color-action: oklch(80% 0.15 78deg);
+  --color-action-hover: oklch(85% 0.12 80deg);
+  --color-action-edge: oklch(60% 0.13 70deg);
+  --color-action-ink: oklch(84% 0.13 80deg);
+  --color-action-tint: oklch(32% 0.07 50deg);
+  --color-on-action: oklch(22% 0.055 22deg);
+  --color-focus: oklch(90% 0.08 90deg);
+  --color-scrim-game: oklch(19% 0.055 22deg / 0.82);
 }
 
 /* ========== CONTRASTE ÉLEVÉ ==========
