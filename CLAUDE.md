@@ -187,8 +187,8 @@ régénérées dans un job sans droit AWS, puis jeton OIDC et `deploy.sh`, sans 
   elle change l'adresse de chaque module et renouvelle la copie du service worker, qui sert les
   modules de sa version avant le réseau.
 - `assets/generated-images/` n'est pas versionné : la CI le reconstruit avant d'envoyer.
-- Après chaque fusion, vérifier que la prod sert la version fusionnée (25 à 35 minutes, dont 15 à
-  25 pour la régénération des images) :
+- Après chaque fusion, vérifier que la prod sert la version fusionnée (45 à 60 minutes, dont 35 à
+  50 pour la régénération des images, qui s'allonge à chaque fête ajoutée) :
 
 ```bash
 gh api "repos/jls42/leapmultix/actions/runs?head_sha=$(git rev-parse origin/main)" \

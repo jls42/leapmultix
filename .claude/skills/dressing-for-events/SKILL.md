@@ -51,8 +51,8 @@ suit sans autre réglage :
 
 ## Règles, toujours
 
-- **Calendrier** : la PR fusionnée et déployée **au moins deux jours avant** le début (25 à
-  35 min de déploiement après la fusion, plus la relecture des images). Les images se lancent
+- **Calendrier** : la PR fusionnée et déployée **au moins deux jours avant** le début (45 à
+  60 min de déploiement après la fusion, plus la relecture des images). Les images se lancent
   dès l'accord sur les costumes : c'est le chemin critique.
 - **Jamais effrayant** (enfants de 6 à 12 ans) : ni sang, ni crocs, ni squelette. **Aucun
   texte** dans une image, sauf ceux des originaux, demandés à l'identique dans la consigne :
