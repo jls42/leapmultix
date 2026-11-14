@@ -2,9 +2,10 @@
 # Colonnes séparées par une tabulation : source	méthode	réglage (sortie : <source>_lunarnewyear.png)
 # Serpent de MultiSnake, en dragon de la danse : dos vermillon (plus orangé que celui de Noël, 29 80), ventre doré
 assets/images/arcade/tete_droite.png	serpent	33 78
-assets/images/arcade/tete_gauche.png	serpent	33 78
-assets/images/arcade/tete_haut.png	serpent	33 78
-assets/images/arcade/tete_bas.png	serpent	33 78
+assets/images/arcade/tete_droite.png	bonnet	scripts/seasons/lunarnewyear/criniere.png 220 45 -25 -10
+assets/images/arcade/tete_gauche.png	comme	assets/images/arcade/tete_droite.png flop
+assets/images/arcade/tete_haut.png	comme	assets/images/arcade/tete_droite.png transverse
+assets/images/arcade/tete_bas.png	comme	assets/images/arcade/tete_droite.png rotate 90
 assets/images/arcade/corps_milieu_queue_gauche_tete_droite.png	serpent	33 78
 assets/images/arcade/corps_milieu_queue_bas_tete_haut.png	serpent	33 78
 assets/images/arcade/corps_courbe_droite_bas.png	serpent	33 78

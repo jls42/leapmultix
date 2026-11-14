@@ -131,12 +131,13 @@ export const SEASONS = Object.freeze([
     worlds: 8,
   }),
   // De la veille du Nouvel An lunaire à la fête des Lanternes (15e jour) : 16 jours, date
-  // nouvelle chaque année. Fusées, fonds, monstres et logos des jeux d'Arcade à venir.
+  // nouvelle chaque année.
   Object.freeze({
     id: 'lunarnewyear',
     movable: Object.freeze({ day: lunarNewYearDay, before: 1, after: 14 }),
     themes: Object.freeze({ light: 'lanterns', dark: 'dragondance' }),
-    costumes: Object.freeze(['heads', 'bodies', 'snake', 'miam', 'gifts', 'hero']),
+    costumes: EVERY_COSTUME,
+    worlds: 8,
   }),
 ]);
 
