@@ -834,12 +834,13 @@ export function startMultiplicationInvasion() {
     avatarErrorPulse = 0;
   }
 
-  // Chaque tir touche au plus un monstre ; la liste parcourue est une copie, les tirs
-  // touchés en sortent pendant le parcours
+  // Chaque tir touche au plus un monstre ; parcours à rebours, car les tirs touchés
+  // sortent de la liste pendant le parcours
   function updateBullets(step) {
     advanceBullets(bullets, step, 10 * (displayHeight / baseHeight));
     const correctVal = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
-    for (const bullet of [...bullets]) {
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const bullet = bullets.at(i);
       const alien = aliens.find(candidate => bulletHits(bullet, candidate, alienWidth));
       if (alien?.value === correctVal) handleCorrectAlienHit(alien, bullet);
       else if (alien) handleWrongAlienHit(bullet, alien);
