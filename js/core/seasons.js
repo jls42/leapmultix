@@ -6,8 +6,10 @@
  * préchargement : inutile de les télécharger toute l'année).
  *
  * Une fête dure du jour `from` au jour `to` inclus ([mois, jour], date de l'appareil) ; un `to`
- * plus tôt dans l'année que `from` passe le 31 décembre. Marche à suivre pour en ajouter une :
- * skill dressing-for-events (.claude/skills/).
+ * plus tôt dans l'année que `from` passe le 31 décembre. Une fête dont la date change chaque
+ * année donne `movable` à la place : son jour de chaque année, et combien de jours elle dure
+ * avant et après lui. Marche à suivre pour en ajouter une : skill dressing-for-events
+ * (.claude/skills/).
  */
 
 /**
@@ -31,10 +33,19 @@
  */
 
 /**
+ * @typedef {Object} MovableDates
+ * @property {(year: number) => (readonly [number, number]|undefined)} day - Jour de la fête
+ *   [mois, jour] une année donnée ; undefined quand il n'est pas connu
+ * @property {number} before - Jours de fête avant ce jour
+ * @property {number} after - Jours de fête après ce jour
+ */
+
+/**
  * @typedef {Object} Season
  * @property {string} id - Identifiant, aussi suffixe des images costumées
- * @property {readonly [number, number]} from - Premier jour [mois, jour], inclus
- * @property {readonly [number, number]} to - Dernier jour [mois, jour], inclus
+ * @property {readonly [number, number]} [from] - Premier jour [mois, jour], inclus (dates fixes)
+ * @property {readonly [number, number]} [to] - Dernier jour [mois, jour], inclus (dates fixes)
+ * @property {MovableDates} [movable] - Dates qui changent chaque année, à la place de from et to
  * @property {{light: string, dark: string}} themes - Thèmes de couleur de la fête
  * @property {readonly CostumeFamily[]} costumes - Images costumées que la fête apporte ; une
  *   famille absente garde ses images classiques
@@ -59,6 +70,38 @@ const EVERY_COSTUME = Object.freeze([
   'backgrounds',
   'hero',
 ]);
+
+/**
+ * Premier jour de l'an lunaire, année par année, relevé dans les tables de conversion de
+ * l'observatoire de Hong Kong (hko.gov.hk/en/gts/time/calendar/text/files/T<année>e.txt). Le
+ * calendrier `chinese` d'Intl s'y trompe : 7 février 2027 au lieu du 6. À prolonger avant 2040
+ * depuis les mêmes tables : une année absente n'a pas de Nouvel An chinois.
+ */
+const LUNAR_NEW_YEAR_DAYS = new Map([
+  [2027, Object.freeze([2, 6])],
+  [2028, Object.freeze([1, 26])],
+  [2029, Object.freeze([2, 13])],
+  [2030, Object.freeze([2, 3])],
+  [2031, Object.freeze([1, 23])],
+  [2032, Object.freeze([2, 11])],
+  [2033, Object.freeze([1, 31])],
+  [2034, Object.freeze([2, 19])],
+  [2035, Object.freeze([2, 8])],
+  [2036, Object.freeze([1, 28])],
+  [2037, Object.freeze([2, 15])],
+  [2038, Object.freeze([2, 4])],
+  [2039, Object.freeze([1, 24])],
+  [2040, Object.freeze([2, 12])],
+]);
+
+/**
+ * Jour du Nouvel An chinois une année donnée
+ * @param {number} year
+ * @returns {readonly [number, number]|undefined} [mois, jour], undefined hors de la table
+ */
+export function lunarNewYearDay(year) {
+  return LUNAR_NEW_YEAR_DAYS.get(year);
+}
 
 /** @type {readonly Season[]} */
 export const SEASONS = Object.freeze([
@@ -87,6 +130,15 @@ export const SEASONS = Object.freeze([
     costumes: EVERY_COSTUME,
     worlds: 8,
   }),
+  // De la veille du Nouvel An lunaire à la fête des Lanternes (15e jour) : 16 jours, date
+  // nouvelle chaque année.
+  Object.freeze({
+    id: 'lunarnewyear',
+    movable: Object.freeze({ day: lunarNewYearDay, before: 1, after: 14 }),
+    themes: Object.freeze({ light: 'lanterns', dark: 'dragondance' }),
+    costumes: EVERY_COSTUME,
+    worlds: 8,
+  }),
 ]);
 
 /** Valeur du paramètre d'essai ?saison= qui retire toute fête */
@@ -102,8 +154,28 @@ const rank = (month, day) => month * 100 + day;
 
 const todayRank = date => rank(date.getMonth() + 1, date.getDate());
 
-/** La fête passe-t-elle le 31 décembre ? */
-const crossesNewYear = season => rank(...season.from) > rank(...season.to);
+/** Ces dates passent-elles le 31 décembre ? */
+const crossesNewYear = ({ from, to }) => rank(...from) > rank(...to);
+
+/**
+ * Premier et dernier jour de la fête une année donnée ([mois, jour], inclus)
+ * @param {Season} season
+ * @param {number} year
+ * @returns {{from: readonly [number, number], to: readonly [number, number]}|null} null quand
+ *   le jour d'une fête mobile n'est pas connu cette année-là
+ */
+export function seasonDays(season, year) {
+  if (!season.movable) return { from: season.from, to: season.to };
+  const { day, before, after } = season.movable;
+  const anchor = day(year);
+  if (!anchor) return null;
+  const [month, date] = anchor;
+  const shifted = offset => {
+    const shiftedDate = new Date(year, month - 1, date + offset);
+    return Object.freeze([shiftedDate.getMonth() + 1, shiftedDate.getDate()]);
+  };
+  return { from: shifted(-before), to: shifted(after) };
+}
 
 /**
  * La fête s'applique-t-elle ce jour-là ?
@@ -112,10 +184,12 @@ const crossesNewYear = season => rank(...season.from) > rank(...season.to);
  * @returns {boolean}
  */
 export function isInSeason(season, date) {
+  const days = seasonDays(season, date.getFullYear());
+  if (!days) return false;
   const today = todayRank(date);
-  const from = rank(...season.from);
-  const to = rank(...season.to);
-  return crossesNewYear(season) ? today >= from || today <= to : today >= from && today <= to;
+  const from = rank(...days.from);
+  const to = rank(...days.to);
+  return crossesNewYear(days) ? today >= from || today <= to : today >= from && today <= to;
 }
 
 /**
@@ -140,7 +214,9 @@ export function findSeason(date = new Date(), forced = null) {
  * @returns {string}
  */
 export function seasonEdition(season, date) {
-  const startedLastYear = crossesNewYear(season) && todayRank(date) <= rank(...season.to);
+  const days = seasonDays(season, date.getFullYear());
+  const startedLastYear =
+    days !== null && crossesNewYear(days) && todayRank(date) <= rank(...days.to);
   return `${season.id}-${date.getFullYear() - (startedLastYear ? 1 : 0)}`;
 }
 

@@ -1,7 +1,7 @@
 ---
 name: dressing-for-events
 description: >-
-  Habille LeapMultix pour une fête du calendrier (Halloween, Noël, Nouvel An…) : le thème par
+  Habille LeapMultix pour une fête du calendrier (Halloween, Noël, Nouvel An, Nouvel An chinois…) : le thème par
   défaut change seul pendant ses dates (deux thèmes de couleur, clair et sombre), et le jeu se
   costume partout (têtes, corps et monstres de l'Arcade, fusées de MultiInvaders, serpent, pommes et herbe
   de MultiSnake, murs et réponses de MultiMiam, logos des modes et des jeux d'Arcade, plusieurs
@@ -18,7 +18,9 @@ allowed-tools: Read, Grep, Glob
 
 Socle posé pour Halloween 2026. Le thème par défaut suit le calendrier : chaque fête est une
 entrée de `SEASONS` dans `js/core/seasons.js`, avec ses dates (bornes incluses, date de
-l'appareil, passage d'année géré), ses deux thèmes de couleur, les familles d'images qu'elle
+l'appareil, passage d'année géré ; `movable` pour une fête dont la date change chaque année :
+son jour de chaque année, lu dans une table, et ses jours `before` et `after`, bornes de l'année
+par `seasonDays`), ses deux thèmes de couleur, les familles d'images qu'elle
 costume et son nombre de fonds par avatar (`worlds`). Deux fêtes ne se chevauchent jamais
 (test) : un jour donné a au plus un thème de fête, sinon le thème ordinaire. Familles, une
 porte dans le code chacune, toutes lues par `costumed(nom, famille)` :
@@ -90,7 +92,10 @@ le même sur la tête, le corps, les fusées et le fond. Halloween 2026 : chapea
 serre-tête de bois de renne (panda), couronne de houx et cape rouge (licorne), bonnet de lutin
 à grelot (dragon), casque peint en boule de sapin (astronaute). Nouvel An 2026 : haut-de-forme et
 nœud papillon dorés (renard), chapeau pointu de fête (panda), serpentins arc-en-ciel sur la corne
-(licorne), lunettes en étoiles (dragon), casque en boule à facettes (astronaute).
+(licorne), lunettes en étoiles (dragon), casque en boule à facettes (astronaute). Nouvel An
+chinois 2027 : capuche en tête de lion de la danse (renard), serre-tête à deux lanternes 福
+(panda), ruban rouge et or sur la corne et couronne de fleurs de prunier (licorne), crinière de
+dragon de parade (dragon), casque peint en lanterne (astronaute).
 
 ### 2. Registre
 
@@ -158,7 +163,8 @@ garantirait pas : les 14 morceaux du serpent (méthode `serpent`, seuls les vert
 Halloween : `190 68`, dos violet, ventre orangé, yeux et langue gardés), l'herbe de MultiSnake
 et les murs de MultiMiam (méthode `teinte`, `-modulate` sur toute l'image). Le chemin de
 MultiMiam reste classique : orange, il effaçait le renard qui court dessus. Un couvre-chef sur
-le serpent (Noël : le bonnet du logo, demandé par le propriétaire en jouant) : dessiné seul par
+le serpent (Noël : le bonnet du logo, demandé par le propriétaire en jouant ; Nouvel An
+chinois : la crinière de dragon de parade, rouge et or, du dragon costumé) : dessiné seul par
 Codex (`scripts/seasons/<fête>/bonnet.png`), posé par la méthode `bonnet` sur l'arrière de la
 tête de droite, dans la case, puis reporté sur les trois autres têtes par `comme` (elles sont
 cette même image retournée ou tournée, ce que le script vérifie au pixel près).
@@ -228,7 +234,27 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   155 monstres de Noël, dessinés pendant Halloween, ont pris la journée de ceux d'Halloween.
   Une fête complète (250 images environ) dépasse une semaine de quota : pour le Nouvel An 2026,
   le propriétaire a demandé des lots lancés de temps en temps (personnages, puis le reste du
-  jeu, puis fonds et monstres), pour garder du quota à Codex entre deux.
+  jeu, puis fonds et monstres), pour garder du quota à Codex entre deux. Un gros lot part de
+  préférence la veille de la remise à zéro de la semaine, sur un reste qui serait perdu : le
+  lot 2 du Nouvel An chinois (207 images, 13 au 14/11/2026) a mené la semaine finissante de 57
+  à 72 %, puis n'a pris que 14 % de la nouvelle.
+- **Fête à date mobile** (Nouvel An chinois) : son jour de chaque année vient des tables de
+  l'observatoire de Hong Kong (`hko.gov.hk/en/gts/time/calendar/text/files/T<année>e.txt`),
+  recopiées de 2027 à 2040 dans `js/core/seasons.js`, à prolonger avant 2040 (une année absente
+  n'a pas de fête). Le calendrier `chinese` d'Intl s'y trompe (7 février 2027 au lieu du 6).
+  Le registre vérifie chaque jour de chaque année de la table : aucun chevauchement.
+- **Signes du Nouvel An chinois** : la première planche, sans caractère ni animal par prudence,
+  « manque de signe chinois » et « de dragon » (propriétaire, 11/11/2026). Choix : des 福
+  (bonheur, doré ou rouge, à l'endroit) sur les lanternes, les cadeaux, les fusées et les fonds,
+  jamais au centre d'une réponse où s'écrit le nombre ; dragons et lions de la danse, souriants,
+  sans croc ; les douze animaux du zodiaque toujours ensemble, chacun une fois, jamais un seul
+  (les images resservent chaque année). Chaque 福 et chaque roue se vérifient à la loupe. Aucune
+  caricature dans les consignes : ni chapeau conique, ni natte, ni moustache tombante.
+- **Fête en partie dessinée** : `costumes` ne liste que les familles finies (Nouvel An chinois,
+  entre ses deux lots : têtes, corps, serpent, MultiMiam, cadeaux, accueil ; les logos ont
+  attendu ceux de MultiSnake et MultiInvaders). Les tests suivent la liste : `season-images`
+  compte les sprites par famille costumée, et `screen-images` attend des logos classiques quand
+  la fête ne costume pas `logos`.
 - **Fête qui passe le 31 décembre** (Nouvel An) : aucune année écrite, ni « Bonne année », pour
   que les images resservent chaque année, et des noms de thèmes justes avant comme après minuit
   (« Confettis », « Feu d'artifice », pas « Réveillon ») ; ni coupe ni bouteille, dans chaque
