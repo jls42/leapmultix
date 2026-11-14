@@ -29,10 +29,14 @@ const SANTA_RED = '#d42a2a';
 const PARTY_STRIPES = Object.freeze(['#ff5fa2', '#4fc3f7', '#ffd54f', '#ff5fa2', '#4fc3f7']);
 const PARTY_POMPOM = '#ffd54f';
 // Tête, dans son repère (x devant, y sur le côté) : ovale et yeux
-const HEAD = Object.freeze({ x: 0.1, rx: 0.6, ry: 0.5 });
-const EYE = Object.freeze({ x: 0.24, y: 0.24, r: 0.2 });
+// Tête ronde, à peine plus large que le corps, et grands yeux rapprochés sur le dessus
+const HEAD = Object.freeze({ x: 0.06, rx: 0.46, ry: 0.42 });
+const EYE = Object.freeze({ x: 0.14, y: 0.17, r: 0.17 });
+// Joues roses, un peu devant les yeux, sur les côtés
+const CHEEK = Object.freeze({ x: 0.35, y: 0.25, rx: 0.075, ry: 0.06 });
+const BLUSH = 'rgb(255 110 140 / 0.75)';
 // Tête du dragon, plus longue, et sa crinière autour de l'arrière
-const DRAGON_HEAD = Object.freeze({ x: 0.14, rx: 0.64, ry: 0.5 });
+const DRAGON_HEAD = Object.freeze({ x: 0.1, rx: 0.54, ry: 0.44 });
 const MANE_TUFTS = 5;
 // Clignement et langue : période et durée (ms)
 const BLINK_PERIOD = 3400;
@@ -257,12 +261,26 @@ function drawTailTuft(ctx, view) {
 
 /** Œil fermé : paupière de la couleur du dos, fente */
 function drawClosedEye(ctx, eye, skin) {
-  fillEllipse(ctx, { ...eye, rx: EYE.r - 0.04, ry: EYE.r - 0.04 }, skin.back);
+  fillEllipse(ctx, { ...eye, rx: EYE.r - 0.035, ry: EYE.r - 0.035 }, skin.back);
   ctx.strokeStyle = skin.outline;
-  ctx.lineWidth = 0.045;
+  ctx.lineWidth = 0.04;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(eye.x - 0.12, eye.y);
-  ctx.lineTo(eye.x + 0.12, eye.y);
+  ctx.moveTo(eye.x - 0.1, eye.y);
+  ctx.lineTo(eye.x + 0.1, eye.y);
+  ctx.stroke();
+}
+
+/** Joues roses et petit sourire au bout du museau */
+function drawSmile(ctx, head, front) {
+  for (const side of [1, -1]) {
+    fillEllipse(ctx, { x: CHEEK.x, y: CHEEK.y * side, rx: CHEEK.rx, ry: CHEEK.ry }, BLUSH);
+  }
+  ctx.strokeStyle = head.skin.outline;
+  ctx.lineWidth = 0.04;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(front - 0.15, 0, 0.1, -1, 1);
   ctx.stroke();
 }
 
@@ -276,57 +294,68 @@ function drawEyes(ctx, head) {
       drawClosedEye(ctx, eye, skin);
       continue;
     }
-    fillEllipse(ctx, { ...eye, rx: EYE.r - 0.04, ry: EYE.r - 0.04 }, WHITE);
-    const pupil = { x: eye.x + 0.05, y: eye.y };
+    fillEllipse(ctx, { ...eye, rx: EYE.r - 0.035, ry: EYE.r - 0.035 }, WHITE);
+    const pupil = { x: eye.x + 0.035, y: eye.y };
     fillEllipse(ctx, { ...pupil, rx: 0.1, ry: 0.1 }, PUPIL);
-    fillEllipse(
-      ctx,
-      { x: pupil.x + light.x * 0.5, y: pupil.y + light.y * 0.5, rx: 0.038, ry: 0.038 },
-      WHITE
-    );
+    // Deux reflets, un grand vers la lumière et un petit à l'opposé : un regard qui pétille
+    const sparkle = { x: pupil.x + light.x * 0.45, y: pupil.y + light.y * 0.45 };
+    fillEllipse(ctx, { ...sparkle, rx: 0.04, ry: 0.04 }, WHITE);
+    const glint = { x: pupil.x - light.x * 0.35, y: pupil.y - light.y * 0.35 };
+    fillEllipse(ctx, { ...glint, rx: 0.018, ry: 0.018 }, WHITE);
   }
 }
 
 /** Langue fourchue qui sort un instant, de temps en temps */
 function drawTongue(ctx, flick) {
   if (flick <= 0) return;
-  const reach = 0.6 + 0.34 * flick;
+  const reach = 0.5 + 0.26 * flick;
   ctx.strokeStyle = TONGUE;
   ctx.lineCap = 'round';
-  ctx.lineWidth = 0.06;
+  ctx.lineWidth = 0.05;
   ctx.beginPath();
-  ctx.moveTo(0.55, 0);
+  ctx.moveTo(0.46, 0);
   ctx.lineTo(reach, 0);
-  ctx.lineTo(reach + 0.09, -0.07);
+  ctx.lineTo(reach + 0.07, -0.06);
   ctx.moveTo(reach, 0);
-  ctx.lineTo(reach + 0.09, 0.07);
+  ctx.lineTo(reach + 0.07, 0.06);
   ctx.stroke();
 }
 
-/** Bonnet de Père Noël, couché sur l'arrière de la tête : bord de fourrure, pointe qui
- * retombe, pompon */
+/** Bonnet de Père Noël vu de dessus : dôme rouge sur l'arrière de la tête, bord de fourrure
+ * blanc juste derrière les yeux, pointe qui retombe sur le côté, pompon */
 function drawSantaHat(ctx, head) {
   const { skin } = head;
   inkPolygon(
     ctx,
     [
-      { x: -0.14, y: -0.34 },
-      { x: -0.14, y: 0.34 },
-      { x: -0.72, y: 0.34 },
-      { x: -1.04, y: 0.62 },
-      { x: -0.86, y: 0.08 },
+      { x: -0.24, y: -0.24 },
+      { x: -0.24, y: 0.24 },
+      { x: -0.6, y: 0.3 },
+      { x: -0.86, y: 0.52 },
+      { x: -0.7, y: 0.04 },
     ],
     SANTA_RED,
     skin.outline
   );
-  inkEllipse(ctx, { x: -0.14, y: 0, rx: 0.13, ry: 0.37 }, WHITE, skin.outline);
-  inkEllipse(ctx, { x: -1.06, y: 0.64, rx: 0.16, ry: 0.16 }, WHITE, skin.outline);
+  inkEllipse(ctx, { x: -0.14, y: 0, rx: 0.27, ry: 0.36 }, SANTA_RED, skin.outline);
+  ctx.lineCap = 'round';
+  for (const [color, width] of [
+    [skin.outline, 0.15],
+    [WHITE, 0.095],
+  ]) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.arc(-0.3, 0, 0.38, -0.95, 0.95);
+    ctx.stroke();
+  }
+  inkEllipse(ctx, { x: -0.88, y: 0.54, rx: 0.13, ry: 0.13 }, WHITE, skin.outline);
 }
 
 /** Chapeau pointu de fête, à rayures, couché sur l'arrière de la tête, pompon doré */
 function drawPartyHat(ctx, head) {
-  const tip = { x: -1, y: 0 };
-  const base = { x: -0.2, half: 0.32 };
+  const tip = { x: -0.88, y: 0 };
+  const base = { x: -0.2, half: 0.27 };
   // Point du cône, de la base (0) à la pointe (1), sur un bord ou l'autre
   const at = (k, side) => ({ x: base.x + (tip.x - base.x) * k, y: base.half * side * (1 - k) });
   PARTY_STRIPES.forEach((color, index) => {
@@ -339,7 +368,7 @@ function drawPartyHat(ctx, head) {
   ctx.strokeStyle = head.skin.outline;
   polygon(ctx, [at(0, -1), at(0, 1), tip]);
   ctx.stroke();
-  inkEllipse(ctx, { ...tip, rx: 0.12, ry: 0.12 }, PARTY_POMPOM, head.skin.outline);
+  inkEllipse(ctx, { ...tip, rx: 0.1, ry: 0.1 }, PARTY_POMPOM, head.skin.outline);
 }
 
 /** Chapeau de chaque fête qui en porte un */
@@ -365,13 +394,11 @@ function drawSkull(ctx, head, shape) {
   ctx.globalAlpha = 1;
 }
 
-/** Tête du serpent, vue de dessus : ovale, narines, yeux */
+/** Tête du serpent, vue de dessus : ronde, joues roses, sourire, grands yeux */
 function drawSnakeHead(ctx, head) {
   drawTongue(ctx, head.flick);
   drawSkull(ctx, head, HEAD);
-  for (const side of [1, -1]) {
-    fillEllipse(ctx, { x: 0.6, y: 0.09 * side, rx: 0.032, ry: 0.024 }, head.skin.outline);
-  }
+  drawSmile(ctx, head, HEAD.x + HEAD.rx);
   const drawHat = HATS.get(head.skin.hat ?? '');
   if (drawHat) drawHat(ctx, head);
   drawEyes(ctx, head);
@@ -384,7 +411,7 @@ function drawMane(ctx, head) {
     const spread = (index / (MANE_TUFTS - 1) - 0.5) * 2.4;
     const wave = Math.sin(time / 200 + index) * 0.07;
     const angle = Math.PI + spread + wave;
-    const tuft = { ...toward({ x: -0.05, y: 0 }, angle, 0.55), rx: 0.34, ry: 0.19, angle };
+    const tuft = { ...toward({ x: -0.05, y: 0 }, angle, 0.5), rx: 0.31, ry: 0.17, angle };
     inkEllipse(ctx, tuft, index % 2 === 0 ? skin.trim : skin.back, skin.outline);
   }
 }
@@ -396,14 +423,14 @@ function drawWhiskers(ctx, head) {
   for (const side of [1, -1]) {
     const sway = Math.sin(time / 260 + (side > 0 ? 0 : 1.3)) * 0.12;
     ctx.beginPath();
-    ctx.moveTo(0.64, 0.22 * side);
+    ctx.moveTo(0.55, 0.2 * side);
     ctx.bezierCurveTo(
-      0.72,
-      (0.62 + sway) * side,
-      0.2,
-      (0.62 - sway) * side,
-      -0.1,
-      (0.86 + sway) * side
+      0.62,
+      (0.56 + sway) * side,
+      0.15,
+      (0.56 - sway) * side,
+      -0.12,
+      (0.78 + sway) * side
     );
     ctx.strokeStyle = skin.outline;
     ctx.lineWidth = 0.08;
@@ -419,9 +446,10 @@ function drawDragonHead(ctx, head) {
   const { skin } = head;
   drawMane(ctx, head);
   drawSkull(ctx, head, DRAGON_HEAD);
-  inkEllipse(ctx, { x: 0.58, y: 0, rx: 0.2, ry: 0.3 }, skin.shine, skin.outline);
+  inkEllipse(ctx, { x: 0.5, y: 0, rx: 0.17, ry: 0.25 }, skin.shine, skin.outline);
   for (const side of [1, -1]) {
-    inkEllipse(ctx, { x: 0.66, y: 0.12 * side, rx: 0.04, ry: 0.035 }, skin.outline, skin.trim);
+    inkEllipse(ctx, { x: 0.57, y: 0.1 * side, rx: 0.035, ry: 0.03 }, skin.outline, skin.trim);
+    fillEllipse(ctx, { x: CHEEK.x, y: CHEEK.y * side, rx: CHEEK.rx, ry: CHEEK.ry }, BLUSH);
   }
   drawWhiskers(ctx, head);
   drawEyes(ctx, head);
