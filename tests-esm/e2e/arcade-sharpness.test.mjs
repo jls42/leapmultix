@@ -44,8 +44,6 @@ const SCREENS = [
   ],
 ];
 const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory'];
-// Morceaux du serpent : chacun remplit sa case pour se raccorder aux voisins
-const SNAKE_TILE = /\/(?:tete|corps|queue)_[a-z_]+[-.]/;
 // Mur et couloirs de MultiMiam : ils suivent ses cases, presque carrées (au plus 1,25 fois plus
 // hautes que larges ou l'inverse : MAX_CELL_STRETCH de js/multimiam-layout.js). Ailleurs (dos
 // des cartes de MultiMemory), les mêmes textures ne se déforment pas.
@@ -126,7 +124,6 @@ function stretchOf({ natural, drawn }) {
  * s'étire au plus de MAX_CELL_STRETCH
  */
 function isDistortedIn(game, sprite) {
-  if (game === 'multisnake' && SNAKE_TILE.test(sprite.src)) return false;
   const stretch = stretchOf(sprite);
   const allowed = game === 'multimiam' && MAZE_TILE.test(sprite.src) ? MAX_CELL_STRETCH : 1;
   return Math.max(stretch, 1 / stretch) > allowed * 1.03;

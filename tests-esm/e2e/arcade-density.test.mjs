@@ -16,6 +16,8 @@ import {
   pressButton,
   launchArcadeGame,
   backToArcadeMenu,
+  snakeHead,
+  snakeTurnedUp,
 } from '../helpers/game-session.mjs';
 import { chromeSession } from '../helpers/chrome-session.mjs';
 // Hors fête, quel que soit le jour : les images s'y reconnaissent à leur nom classique
@@ -215,25 +217,10 @@ describe('Plateaux d’Arcade à la densité de l’écran (E2E)', () => {
     async (_name, viewport) => {
       await openArcade(viewport);
       await launchArcadeGame(page, 'multisnake');
-      await page.waitForFunction(
-        () => globalThis.__client.images.some(d => d.src.startsWith('tete_')),
-        { timeout: 8000 }
-      );
-      const head = await page.evaluate(
-        () => globalThis.__client.images.filter(d => d.src.startsWith('tete_')).slice(-1)[0]
-      );
+      const head = await snakeHead(page);
       await pointAt(page, viewport, { x: head.x, y: head.y - 90 });
-      // La tête, redessinée vers le haut, au-dessus de sa place de départ (relevé à chaque
-      // image : sur une machine chargée, le serpent finirait par faire le tour du plateau)
-      const turned = await page.waitForFunction(
-        startY => {
-          const last = globalThis.__client.images.filter(d => d.src.startsWith('tete_')).at(-1);
-          return last?.src === 'tete_haut.png' && last.y < startY && last;
-        },
-        { timeout: 3000 },
-        head.y
-      );
-      expect((await turned.jsonValue()).src).toBe('tete_haut.png');
+      // La tête, tournée vers le haut, au-dessus de sa place de départ
+      expect(await snakeTurnedUp(page, head.y)).toBe(true);
     },
     40000
   );

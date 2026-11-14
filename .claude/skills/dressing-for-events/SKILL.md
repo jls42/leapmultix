@@ -25,18 +25,18 @@ costume et son nombre de fonds par avatar (`worlds`). Deux fêtes ne se chevauch
 (test) : un jour donné a au plus un thème de fête, sinon le thème ordinaire. Familles, une
 porte dans le code chacune, toutes lues par `costumed(nom, famille)` :
 
-| Famille       | Images                                                                           | Porte                   |
-| ------------- | -------------------------------------------------------------------------------- | ----------------------- |
-| `heads`       | `assets/images/arcade/<avatar>_<fête>_head_avatar.png`                           | `js/avatar-heads.js`    |
-| `bodies`      | `assets/images/arcade/<avatar>_<fête>.png` (MultiMiam)                           | `arcade-sprite-catalog` |
-| `monsters`    | `assets/images/arcade/monstre<NN>_right_<fête>.png` (155, tournés à droite)      | `arcade-sprite-catalog` |
-| `ships`       | `assets/images/arcade/<fusée>_<fête>.png` (dix fusées)                           | `arcade-sprite-catalog` |
-| `snake`       | 14 morceaux `<morceau>_<fête>.png`, `snake_apple_<fête>.png`, `herbe_<fête>.png` | `arcade-sprite-catalog` |
-| `miam`        | `mur_<fête>.png`, `multimiam_reponse_<fête>.png` (sous chaque réponse)           | `arcade-sprite-catalog` |
-| `logos`       | `logo_mode_<mode>_<fête>.png` (six), `logo_multi<jeu>_<fête>.png` (quatre)       | `js/logos.js`           |
-| `gifts`       | `cadeau_ferme_<fête>.png`, `cadeau_ouvert_<fête>.png` (mode Aventure)            | `js/adventure-gifts.js` |
-| `backgrounds` | `img/background_<avatar>_<fête>_001.png` à `_00<worlds>`                         | `js/main-helpers.js`    |
-| `hero`        | `assets/social/leapmultix-social-card-<fête>.webp`                               | `js/main-helpers.js`    |
+| Famille       | Images                                                                                    | Porte                                       |
+| ------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `heads`       | `assets/images/arcade/<avatar>_<fête>_head_avatar.png`                                    | `js/avatar-heads.js`                        |
+| `bodies`      | `assets/images/arcade/<avatar>_<fête>.png` (MultiMiam)                                    | `arcade-sprite-catalog`                     |
+| `monsters`    | `assets/images/arcade/monstre<NN>_right_<fête>.png` (155, tournés à droite)               | `arcade-sprite-catalog`                     |
+| `ships`       | `assets/images/arcade/<fusée>_<fête>.png` (dix fusées)                                    | `arcade-sprite-catalog`                     |
+| `snake`       | habit du serpent (`js/multisnake-skins.js`), `snake_apple_<fête>.png`, `herbe_<fête>.png` | `js/multisnake.js`, `arcade-sprite-catalog` |
+| `miam`        | `mur_<fête>.png`, `multimiam_reponse_<fête>.png` (sous chaque réponse)                    | `arcade-sprite-catalog`                     |
+| `logos`       | `logo_mode_<mode>_<fête>.png` (six), `logo_multi<jeu>_<fête>.png` (quatre)                | `js/logos.js`                               |
+| `gifts`       | `cadeau_ferme_<fête>.png`, `cadeau_ouvert_<fête>.png` (mode Aventure)                     | `js/adventure-gifts.js`                     |
+| `backgrounds` | `img/background_<avatar>_<fête>_001.png` à `_00<worlds>`                                  | `js/main-helpers.js`                        |
+| `hero`        | `assets/social/leapmultix-social-card-<fête>.webp`                                        | `js/main-helpers.js`                        |
 
 Une nouvelle famille : une porte qui appelle `costumed()`, une ligne dans `FAMILY_FILES` de
 `tests-esm/season-images.esm.test.mjs`, une ligne dans la table ci-dessus. Le reste du jeu
@@ -141,7 +141,8 @@ consigne, mot pour mot. Noms des cibles :
   s'écrit dessus, d'où un centre uni assez foncé. Halloween : une citrouille et un bonbon
   violet couché, dont le corps fait 55 % de la largeur et 30 % de la hauteur du cadre
   (`drawAnswerToken` de `js/multimiam-renderer.js` règle sa taille là-dessus) ;
-- les morceaux du serpent, l'herbe et les murs ne se dessinent pas : étape 4.
+- l'herbe et les murs ne se dessinent pas : étape 4 ; le serpent non plus, il est dessiné par
+  le code (son habit : étape 4).
 
 Ces dossiers sont imposés : `js/webp-images.js` et le catalogue d'Arcade ne lisent que
 `assets/images/arcade/`, et `scripts/convert-backgrounds.cjs` ne lit que `img/` à plat.
@@ -159,15 +160,17 @@ dès que le quota revient. Refaire une image : `bash scripts/seasons/dress-up.sh
 Recolorations : `bash scripts/seasons/recolor.sh <fête>` lit
 `scripts/seasons/<fête>/recolor.tsv` (source, méthode, réglage) et écrit `<source>_<fête>.png`
 à la même taille, pour ce qui doit se raccorder case à case et qu'un dessin refait ne
-garantirait pas : les 14 morceaux du serpent (méthode `serpent`, seuls les verts tournent ;
-Halloween : `190 68`, dos violet, ventre orangé, yeux et langue gardés), l'herbe de MultiSnake
-et les murs de MultiMiam (méthode `teinte`, `-modulate` sur toute l'image). Le chemin de
-MultiMiam reste classique : orange, il effaçait le renard qui court dessus. Un couvre-chef sur
-le serpent (Noël : le bonnet du logo, demandé par le propriétaire en jouant ; Nouvel An
-chinois : la crinière de dragon de parade, rouge et or, du dragon costumé) : dessiné seul par
-Codex (`scripts/seasons/<fête>/bonnet.png`), posé par la méthode `bonnet` sur l'arrière de la
-tête de droite, dans la case, puis reporté sur les trois autres têtes par `comme` (elles sont
-cette même image retournée ou tournée, ce que le script vérifie au pixel près).
+garantirait pas : l'herbe de MultiSnake et les murs de MultiMiam (méthode `teinte`,
+`-modulate` sur toute l'image). Le chemin de MultiMiam reste classique : orange, il effaçait le
+renard qui court dessus.
+
+Serpent : depuis la v63, il est dessiné par le code d'un seul tenant (`js/multisnake-renderer.js`,
+géométrie dans `js/multisnake-path.js`), plus par 14 morceaux d'image. Une fête lui donne son
+habit dans `js/multisnake-skins.js` : contour, flanc, dos, reflet, taches, et au besoin un
+chapeau (bonnet de Noël, chapeau pointu du Nouvel An) ou le costume du dragon de la danse
+(Nouvel An chinois). Couleurs reprises des dessins validés de la fête ; un test exige un habit
+pour chaque fête qui costume le serpent. Les morceaux recolorés des fêtes passées (méthodes
+`serpent`, `bonnet`, `comme`) ne sont plus affichés, à retirer.
 
 Relire la planche, dans l'ordre de la liste : personnage reconnaissable, même côté que
 l'original (les sprites d'Arcade se retournent selon `facing`), accessoire lisible en petit,
@@ -273,9 +276,10 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   pilote, vidéos d'intro, chemin de MultiMiam). Les 155 monstres de l'Arcade sont venus à Noël
   2026 (`monsters`), puis à Halloween ; les cadeaux de l'Aventure (`gifts`) et 8 fonds au lieu
   de 4 aux deux fêtes, le 31/10.
-- **Serpent** : 14 morceaux qui se raccordent case à case et une tête par direction, dessinés
-  séparément. Un dessin refait ne garantit ni les raccords ni la taille : recoloration
-  (`recolor.sh`). Un chapeau se pose sur la tête sans dépasser la case (méthode `bonnet`).
+- **Serpent** : 14 morceaux d'image collés case par case (recolorés pour chaque fête) donnaient
+  un corps en blocs, des trous dans les virages et une tête qui sautait entre quatre dessins
+  (« ça fait codé à l'ancienne », propriétaire, 14/11/2026). Il est dessiné par le code depuis
+  la v63 : corps continu, virages arrondis, tête qui tourne en douceur, habit par fête.
 - **Image propre à la fête, sans image classique** (bonbon des réponses de MultiMiam) : hors
   ligne, le service worker n'a rien à servir à sa place. Il répond 404 (`classicImage` de
   `sw.js`), pas une erreur réseau, et le jeu garde son dessin (la pastille) ; vu par
@@ -321,8 +325,9 @@ boucle des analyseurs. Après la fusion, vérifier la version servie, puis la f�
   sans `assets/generated-images/`, il n'a échoué qu'une fois les variantes produites, pendant
   la fête (têtes `fox_halloween_head_avatar-…` là où il attendait `fox_head_avatar-…`). Il
   ouvre le jeu en `?saison=aucune` et a un test qui force la fête : faire de même pour tout
-  test qui reconnaît une image à son nom. Une famille de plus en touche d'autres : avec le
-  serpent costumé, `arcade-screen`, `arcade-density` et `arcade-mobile` attendaient
-  `tete_haut.png` ; eux, `arcade-sharpness` et `image-requests` s'ouvrent désormais hors fête.
+  test qui reconnaît une image à son nom. Une famille de plus en touche d'autres :
+  `arcade-sharpness` et `image-requests` s'ouvrent désormais hors fête. Le serpent n'a plus
+  d'image de tête : `arcade-screen`, `arcade-density` et `arcade-mobile` lisent sa direction
+  sur le plateau (`data-snake-heading`, publié par le jeu à chaque pas).
   Pour une famille ajoutée, chercher son nom dans `tests-esm/e2e/`. Lancer la batterie
   **après** `npm run assets:generate`, pendant les dates de la fête ou avec `?saison=`.
