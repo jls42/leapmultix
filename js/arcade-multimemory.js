@@ -33,6 +33,7 @@ import {
   sizeArcadeCanvas,
   getArcadeCanvasSize,
   canvasPixelScale,
+  isTouchFirstDevice,
 } from './arcade-common.js';
 import { getDifficultySettings } from './difficulty.js';
 import { TablePreferences } from './core/tablePreferences.js';
@@ -468,10 +469,7 @@ function showMemoryInstructions(canvas, game) {
 
 // Consigne du jeu, selon l'appareil (doigt ou souris)
 function getMemoryInstructions() {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    globalThis.navigator?.userAgent || ''
-  );
-  if (isMobile) {
+  if (isTouchFirstDevice()) {
     return (
       getTranslation('arcade.multiMemory.controls.mobile') ||
       'Touche les cartes pour les retourner et trouver les paires\u00a0!'
@@ -502,9 +500,7 @@ class MemoryGame {
     this.canvasId = canvasId;
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
-    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      globalThis.navigator?.userAgent || ''
-    );
+    this.isMobile = isTouchFirstDevice();
 
     // Options et difficulté
     this.difficulty = options.difficulty || 'moyen';
@@ -1014,14 +1010,11 @@ class MemoryGame {
         }
       }
 
-      if (stillAnimating) {
-        const animId = requestAnimationFrame(animate);
-        this.animations.push(animId);
-      }
+      // Une seule image demandée à la fois : son identifiant remplace le précédent
+      if (stillAnimating) this.animations = [requestAnimationFrame(animate)];
     };
 
-    const animId = requestAnimationFrame(animate);
-    this.animations.push(animId);
+    this.animations = [requestAnimationFrame(animate)];
   }
 
   // Dessine le jeu
@@ -1257,8 +1250,9 @@ class MemoryGame {
   gameLoop() {
     if (!this.isGameOver && isArcadeActive()) {
       this.drawIfChanged();
+      // Arrêtée par stopGameLoop : l'identifiant de chaque image n'était jamais retiré de
+      // this.animations, qui gagnait soixante entrées par seconde
       this.gameLoopId = requestAnimationFrame(() => this.gameLoop());
-      this.animations.push(this.gameLoopId);
     }
   }
 

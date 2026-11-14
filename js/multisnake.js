@@ -13,6 +13,7 @@ import {
   watchArcadeViewport,
   sizeArcadeCanvas,
   getArcadeCanvasSize,
+  isTouchFirstDevice,
 } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
 import { recordOperationResult } from './core/operation-stats.js';
@@ -186,9 +187,7 @@ class SnakeGame {
     this.tableNumber = options.tableNumber || null;
     this.operator = options.operator || '×'; // R4.4: Support multi-opérations (+, −, ×, ÷)
     this.isDefi = mode === 'defi';
-    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      globalThis.navigator?.userAgent || ''
-    );
+    this.isMobile = isTouchFirstDevice();
 
     // Questions du niveau : tables (×) et nombres (+, −, ÷)
     Object.assign(this, questionSettingsOf(options));
@@ -541,11 +540,7 @@ class SnakeGame {
    * @private
    */
   showInstructions() {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      globalThis.navigator?.userAgent || ''
-    );
-
-    const instructions = isMobile
+    const instructions = this.isMobile
       ? getTranslation('arcade.multiSnake.controls.mobile') ||
         'Glisse dans la direction désirée pour déplacer le serpent'
       : getTranslation('arcade.multiSnake.controls.desktop') ||

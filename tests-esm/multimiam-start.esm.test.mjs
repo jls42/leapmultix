@@ -64,6 +64,7 @@ jest.unstable_mockModule('../js/core/eventBus.js', () => ({
 jest.unstable_mockModule('../js/arcade-common.js', () => ({
   showGameInstructions: (canvas, text) => note('showGameInstructions')(canvas.id, text),
   prepareArcadeStage: canvas => note('prepareArcadeStage')(canvas.id),
+  isTouchFirstDevice: () => false,
 }));
 jest.unstable_mockModule('../js/components/infoBar.js', () => ({
   InfoBar: {

@@ -49,6 +49,7 @@ import {
   watchArcadeViewport,
   setArcadeCanvasSize,
   canvasPixelScale,
+  isTouchFirstDevice,
 } from './arcade-common.js';
 import { UserState } from './core/userState.js';
 import { pickRandom, shuffleInPlace } from './core/random.js';
@@ -219,6 +220,50 @@ function setupAbandonButton(gameVars) {
   };
 }
 
+/**
+ * Le plateau prend le focus du clavier sans faire défiler la page (le bandeau du score
+ * resterait caché), et la fin d'un toucher n'y déclenche ni clic simulé ni zoom
+ * @param {HTMLCanvasElement} canvas
+ */
+function prepareBoardInput(canvas) {
+  canvas.setAttribute('tabindex', '0');
+  const swallowTouchEnd = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  };
+  canvas.addEventListener('touchend', swallowTouchEnd, { passive: false });
+  try {
+    canvas.focus({ preventScroll: true });
+  } catch {
+    // Navigateur sans l'option preventScroll : le focus simple
+    try {
+      canvas.focus();
+    } catch {
+      /* plateau retiré entre-temps : rien à faire */
+    }
+  }
+}
+
+/**
+ * Arrêt de l'Arcade par « Accueil » : nettoyage complet de la partie, sans écran de fin
+ * @param {Object} gameVars
+ * @param {Object} spaceshipImg
+ * @param {Function} handleSpaceDown
+ * @param {() => {score: number, avatarImg: Object}} getLiveState - lu au moment de l'arrêt
+ */
+function cleanupOnArcadeStop(gameVars, spaceshipImg, handleSpaceDown, getLiveState) {
+  const cleanup = () => {
+    const { score, avatarImg } = getLiveState();
+    cleanupInvasionGame({ gameVars, spaceshipImg, avatarImg, handleSpaceDown, score });
+  };
+  try {
+    eventBus.on('arcade:stop', cleanup, { once: true });
+  } catch {
+    // Bus indisponible : « Abandonner » et la fin de partie nettoient quand même
+  }
+}
+
 // Proportions du plateau (hauteur / largeur) : sur téléphone, toute la place, plus haut que
 // large en portrait (le temps de viser) et plus large que haut une fois tourné, dans ces
 // bornes ; sur ordinateur, les 4:3 de toujours
@@ -232,7 +277,7 @@ const MOBILE_RATIO_RANGE = [0.5, 1.8];
  * @returns {{displayWidth: number, displayHeight: number, isMobile: boolean}}
  */
 export function calculateCanvasDimensions(canvas) {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(globalThis.navigator?.userAgent || '');
+  const isMobile = isTouchFirstDevice();
   const box = getArcadeCanvasBox(canvas);
   const [low, high] = MOBILE_RATIO_RANGE;
   const ratio = isMobile
@@ -295,6 +340,116 @@ export function drawInvasionQuestion(operator, settings, excludeTables = []) {
     excludeTables: isMultiplication ? excludeTables : [],
     distractorDistance: settings.distractorDistance,
   });
+}
+
+// Vitesse d'un tir : unités du plateau par image à 60 images/s
+const BULLET_SPEED = 7;
+
+/**
+ * Fait monter les tirs et retire ceux sortis par le haut du plateau : un tir qui ne touchait
+ * rien restait dans la liste toute la partie, comparé à chaque monstre et dessiné à chaque
+ * image hors du plateau
+ * @param {Array<{y: number}>} bullets - modifiée sur place
+ * @param {number} step - images de 1/60 s écoulées
+ * @param {number} height - hauteur d'un tir
+ */
+export function advanceBullets(bullets, step, height) {
+  for (const bullet of bullets) bullet.y -= BULLET_SPEED * step;
+  const kept = bullets.filter(bullet => bullet.y + height > 0);
+  bullets.splice(0, bullets.length, ...kept);
+}
+
+/**
+ * Le tir est-il dans le carré du monstre ?
+ * @param {{x: number, y: number}} bullet
+ * @param {{x: number, y: number}} alien
+ * @param {number} size - côté du monstre
+ */
+function bulletHits(bullet, alien, size) {
+  const inX = bullet.x > alien.x && bullet.x < alien.x + size;
+  return inX && bullet.y > alien.y && bullet.y < alien.y + size;
+}
+
+/** Résultat du calcul posé, selon l'opération */
+function computeCorrectAnswer(op, a, b) {
+  switch (op) {
+    case '+':
+      return a + b;
+    case '−':
+      return a - b;
+    case '÷':
+      return a / b;
+    default:
+      return a * b;
+  }
+}
+
+/** Félicitations dites tous les 1000 points, dans la langue du joueur */
+const congratsMessages = () =>
+  ['congrats1', 'congrats2', 'congrats3', 'congrats4', 'congrats5'].map(key => getTranslation(key));
+
+// Marge de chaque côté de la rangée de monstres
+const ROW_MARGIN = 20;
+
+/**
+ * Taille des monstres et écart entre eux, selon la largeur du plateau
+ * @param {number} boardWidth
+ * @param {number} count - monstres de la rangée
+ * @param {boolean} isMobile
+ * @returns {{alienWidth: number, spacing: number}}
+ */
+export function alienRowLayout(boardWidth, count, isMobile) {
+  const available = boardWidth - 2 * ROW_MARGIN;
+  // Téléphone : monstres et écarts plus petits ; ordinateur : jusqu'à 100 et 50
+  const [maxSize, sizeGap, minSpacing, maxSpacing] = isMobile
+    ? [70, 10, 10, 20]
+    : [100, 15, 20, 50];
+  const size = Math.min(maxSize, available / count - sizeGap);
+  const free = (available - count * size) / (count - 1);
+  const spacing = Math.max(minSpacing, Math.min(maxSpacing, free));
+  // Jamais plus large que le plateau : sur ordinateur, les monstres faisaient au moins 70 et
+  // ceux des bords sortaient d'une fenêtre étroite
+  return { alienWidth: Math.min(size, (available - (count - 1) * spacing) / count), spacing };
+}
+
+/**
+ * Échelle du dessin de la fusée : 1,5 fois sa taille sur téléphone ; 3,5 fois sur
+ * ordinateur, réduite avec un plateau plus étroit que 800
+ * @param {boolean} isMobile
+ * @param {number} boardWidth
+ */
+export function shipDrawScale(isMobile, boardWidth) {
+  return isMobile ? 1.5 : 3.5 * Math.min(1, boardWidth / baseWidth);
+}
+
+// Monstres d'une vague
+const ALIENS_PER_WAVE = 5;
+
+/**
+ * Distance du bord du plateau au centre des monstres des bords (rangée centrée)
+ * @param {number} boardWidth
+ * @param {number} [alienWidth]
+ * @param {number} [spacing]
+ */
+export function rowEdgeReach(boardWidth, alienWidth = 0, spacing = 0) {
+  const total = ALIENS_PER_WAVE * alienWidth + (ALIENS_PER_WAVE - 1) * spacing;
+  return (boardWidth - total) / 2 + alienWidth / 2;
+}
+
+/**
+ * Position de la fusée : son dessin reste entier dans le plateau (au clavier comme à la
+ * souris, elle sortait à moitié par la droite), sauf ce qu'il faut pour que le tir parte
+ * sous le centre des monstres des bords
+ * @param {number} x - bord gauche de la fusée (le tir part de son milieu)
+ * @param {number} width - largeur de la fusée
+ * @param {number} scale - échelle de son dessin
+ * @param {number} boardWidth
+ * @param {number} [reach] - distance du bord au centre des monstres des bords
+ */
+export function clampShipX(x, width, scale, boardWidth, reach = Infinity) {
+  const edge = Math.min((scale * width) / 2, reach);
+  const center = Math.max(edge, Math.min(boardWidth - edge, x + width / 2));
+  return center - width / 2;
 }
 
 function computeBaseAlienSpeed(isMobile, difficulty, enemySpeed) {
@@ -449,16 +604,14 @@ export function startMultiplicationInvasion() {
     return sprites;
   }
 
-  // Pré-chargement des sons (supprimé si non utilisé)
-
-  const congratsMessages = [
-    getTranslation('congrats1'),
-    getTranslation('congrats2'),
-    getTranslation('congrats3'),
-    getTranslation('congrats4'),
-    getTranslation('congrats5'),
-  ];
   let lastCongratsScore = 0;
+  // La vague a déjà donné son résultat au calcul : un seul par vague, raté ou réussi
+  let waveCounted = false;
+  function countWave(correct) {
+    if (waveCounted) return;
+    waveCounted = true;
+    recordOperationResult(operator, currentProblem.a, currentProblem.b, correct);
+  }
 
   // Variables globales pour la taille et l'espacement des aliens
   let alienWidth, spacing;
@@ -469,8 +622,14 @@ export function startMultiplicationInvasion() {
   function aimAt(canvasX) {
     // En pause, la fusée ne bouge pas
     if (isArcadePaused()) return;
-    const x = canvasX - bulletOffset();
-    player.x = Math.max(5, Math.min(displayWidth - player.width - 5, x));
+    player.x = keepShipInBoard(canvasX - bulletOffset());
+  }
+
+  // La fusée dans le plateau, à portée des monstres des bords
+  function keepShipInBoard(x) {
+    const scale = shipDrawScale(isMobile, displayWidth);
+    const reach = rowEdgeReach(displayWidth, alienWidth, spacing);
+    return clampShipX(x, player.width, scale, displayWidth, reach);
   }
 
   // Monstre dont l'enfant a touché la colonne : toute la largeur dessinée du monstre,
@@ -517,40 +676,12 @@ export function startMultiplicationInvasion() {
     { passive: false }
   );
 
-  // Ajouter touchend pour s'assurer que les événements ne se propagent pas
-  canvas.addEventListener(
-    'touchend',
-    e => {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      // Ne pas faire d'action spécifique, juste empêcher la propagation
-    },
-    { passive: false }
-  );
-
   // Avatars
   // Liste d'avatars disponibles (chargés lors de la libération aléatoire)
 
   // Taille des monstres et écart entre eux, selon la largeur du plateau
   function layoutAliens(nbAliens) {
-    // Marge de sécurité sur les bords pour éviter les monstres coupés
-    const safeMargin = 20;
-    const availableWidth = displayWidth - safeMargin * 2;
-    if (isMobile) {
-      // Petits écrans : monstres et écarts réduits, tous entièrement visibles
-      alienWidth = Math.min(70, availableWidth / nbAliens - 10);
-      spacing = Math.max(
-        10,
-        Math.min(20, (availableWidth - nbAliens * alienWidth) / (nbAliens - 1))
-      );
-    } else {
-      alienWidth = Math.max(70, Math.min(100, availableWidth / nbAliens - 15));
-      spacing = Math.max(
-        20,
-        Math.min(50, (availableWidth - nbAliens * alienWidth) / (nbAliens - 1))
-      );
-    }
+    ({ alienWidth, spacing } = alienRowLayout(displayWidth, nbAliens, isMobile));
   }
 
   function generateProblem() {
@@ -568,9 +699,10 @@ export function startMultiplicationInvasion() {
     const q = drawInvasionQuestion(operator, difficultySettings, excluded);
     currentProblem.a = q.a;
     currentProblem.b = q.b;
+    waveCounted = false;
     const correctAnswer = q.answer;
     aliens = [];
-    const nbAliens = 5;
+    const nbAliens = ALIENS_PER_WAVE;
     layoutAliens(nbAliens);
     const spritesForWave = takeWaveSprites(nbAliens);
     const totalWidth = nbAliens * alienWidth + (nbAliens - 1) * spacing;
@@ -646,64 +778,40 @@ export function startMultiplicationInvasion() {
   document.addEventListener('keydown', handleSpaceDown);
 
   // Setup abandon button handler now that all variables are available
-  setupAbandonButtonHandler(
-    autoRestartTimeout,
-    spaceshipImg,
-    () => ({ score, avatarImg }),
-    handleSpaceDown
-  );
+  const liveState = () => ({ score, avatarImg });
+  setupAbandonButtonHandler(autoRestartTimeout, spaceshipImg, liveState, handleSpaceDown);
 
   function updatePlayerPosition(step) {
     if (arcadeControls.leftPressed) player.x -= player.speed * step;
     if (arcadeControls.rightPressed) player.x += player.speed * step;
-    player.x = Math.max(
-      64 * (displayWidth / baseWidth),
-      Math.min(displayWidth - 64 * (displayWidth / baseWidth), player.x)
-    );
+    player.x = keepShipInBoard(player.x);
   }
-
-  // Helper function to compute correct answer based on operator
-  const computeCorrectAnswer = (op, a, b) => {
-    switch (op) {
-      case '+':
-        return a + b;
-      case '−':
-        return a - b;
-      case '÷':
-        return a / b;
-      case '×':
-      default:
-        return a * b;
-    }
-  };
 
   // Point du plateau où poser la pastille de points : au-dessus du monstre touché
   function alienPoint(alien) {
     return { x: alien.x + alienWidth / 2, y: Math.max(0, alien.y - 0.5 * alienWidth) };
   }
 
-  function handleWrongAlienHit(bIndex, aIndex) {
+  function handleWrongAlienHit(bullet, alien) {
     if (!isArcadeActive()) return;
     noteArcadePlay();
     score += 100;
     if (typeof showArcadePoints === 'function') {
-      showArcadePoints(100, canvas, alienPoint(aliens[aIndex]));
+      showArcadePoints(100, canvas, alienPoint(alien));
     }
     refreshInfoBar();
-
-    bullets.splice(bIndex, 1);
-
-    aliens.splice(aIndex, 1);
+    bullets.splice(bullets.indexOf(bullet), 1);
+    aliens.splice(aliens.indexOf(alien), 1);
   }
 
-  function handleCorrectAlienHit(alien, bIndex) {
+  function handleCorrectAlienHit(alien, bullet) {
     if (!isArcadeActive()) return;
     noteArcadePlay();
-    bullets.splice(bIndex, 1);
+    bullets.splice(bullets.indexOf(bullet), 1);
     // Tir absorbé pendant que l'ami apparaît : une seule erreur ne coûte qu'une vie
     if (avatarErrorAnim > 0) return;
 
-    recordOperationResult(operator, currentProblem.a, currentProblem.b, false);
+    countWave(false);
     // La pastille montre les points vraiment retirés (50, 75 ou 100 selon le niveau)
     const removed = Math.min(score, difficultySettings.penalty);
     score -= removed;
@@ -726,31 +834,22 @@ export function startMultiplicationInvasion() {
     avatarErrorPulse = 0;
   }
 
+  // Chaque tir touche au plus un monstre ; la liste parcourue est une copie, les tirs
+  // touchés en sortent pendant le parcours
   function updateBullets(step) {
-    bullets.forEach((bullet, bIndex) => {
-      bullet.y -= 7 * step;
-
-      aliens.forEach((alien, aIndex) => {
-        if (
-          bullet.x > alien.x &&
-          bullet.x < alien.x + alienWidth &&
-          bullet.y > alien.y &&
-          bullet.y < alien.y + alienWidth
-        ) {
-          const correctVal = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
-          if (alien.value !== correctVal) {
-            handleWrongAlienHit(bIndex, aIndex);
-          } else {
-            handleCorrectAlienHit(alien, bIndex);
-          }
-        }
-      });
-    });
+    advanceBullets(bullets, step, 10 * (displayHeight / baseHeight));
+    const correctVal = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
+    for (const bullet of [...bullets]) {
+      const alien = aliens.find(candidate => bulletHits(bullet, candidate, alienWidth));
+      if (alien?.value === correctVal) handleCorrectAlienHit(alien, bullet);
+      else if (alien) handleWrongAlienHit(bullet, alien);
+    }
   }
 
   function checkAlienCollision() {
     if (aliens.some(alien => alien.y + 40 >= player.y)) {
       if (!isArcadeActive()) return;
+      countWave(false);
       lives--;
       aliens = [];
       refreshInfoBar();
@@ -764,7 +863,7 @@ export function startMultiplicationInvasion() {
     const correctAnswer = computeCorrectAnswer(operator, currentProblem.a, currentProblem.b);
 
     if (aliens.length === 1 && aliens[0].value === correctAnswer && !showingAvatar && lives > 0) {
-      recordOperationResult(operator, currentProblem.a, currentProblem.b, true);
+      countWave(true);
       showingAvatar = true;
 
       // L'ami libéré : un avatar autre que celui du joueur (image chargée d'avance)
@@ -774,7 +873,8 @@ export function startMultiplicationInvasion() {
       avatarW = alienWidth;
       avatarDisplayTime = 0;
 
-      setTimeout(() => {
+      // Gardée pour être annulée si la partie s'arrête avant (cleanupInvasionGame)
+      gameVars.arcadeAvatarTimeoutId = setTimeout(() => {
         showingAvatar = false;
         aliens.length = 0;
         wave++;
@@ -798,7 +898,7 @@ export function startMultiplicationInvasion() {
     if (isVoiceEnabled() && score >= 1000 && score - lastCongratsScore >= 1000) {
       lastCongratsScore = score;
 
-      const msg = pickRandom(congratsMessages);
+      const msg = pickRandom(congratsMessages());
       speak(msg);
     }
   }
@@ -838,16 +938,17 @@ export function startMultiplicationInvasion() {
   function draw() {
     ctx.clearRect(0, 0, displayWidth, displayHeight);
     drawShip();
-    if (avatarErrorAnim > 0 && avatarErrorImg) drawHiddenFriend();
-    else if (showingAvatar && avatarImg) drawFreedFriend();
+    if (showingAvatar && avatarImg) drawFreedFriend();
     else drawAliens();
+    // L'ami caché apparaît par-dessus son monstre : les autres restent visibles et touchables
+    if (avatarErrorAnim > 0 && avatarErrorImg) drawHiddenFriend();
     drawBullets();
   }
 
   // Fusée posée au bas du plateau, à ses proportions (plus grande sur ordinateur) ; un
   // rectangle tant que son image n'est pas arrivée
   function drawShip() {
-    const size = isMobile ? 1.5 : 3.5;
+    const size = shipDrawScale(isMobile, displayWidth);
     const shipWidth = player.width * size;
     const shipHeight = player.height * size;
     const box = {
@@ -970,21 +1071,8 @@ export function startMultiplicationInvasion() {
     }
   }
 
-  // Contrôles
-  canvas.setAttribute('tabindex', '0');
-  // Éviter de provoquer un scroll vers le canvas au démarrage (cachant le bandeau score)
-  try {
-    if (canvas.focus) {
-      canvas.focus({ preventScroll: true });
-    }
-  } catch {
-    // fallback silencieux
-    try {
-      canvas.focus();
-    } catch {
-      /* no-op */
-    }
-  }
+  // Contrôles : focus du clavier sur le plateau, sans défilement
+  prepareBoardInput(canvas);
 
   // Souris : la balle part exactement sous le curseur, quelle que soit la taille
   // d'affichage du canevas (bandes comprises)
@@ -1035,33 +1123,12 @@ export function startMultiplicationInvasion() {
   watchArcadeViewport(canvas, refitBoard);
 
   // Lancer le jeu
-  score = 0;
-  lives = 3;
-  wave = 1;
-  gameOver = false;
   generateProblem();
   refreshInfoBar();
   gameLoop();
 
-  // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup complet sans game over
-  try {
-    eventBus.on(
-      'arcade:stop',
-      () => {
-        cleanupInvasionGame({
-          gameVars,
-          autoRestartTimeout,
-          spaceshipImg,
-          avatarImg,
-          handleSpaceDown,
-          score,
-        });
-      },
-      { once: true }
-    );
-  } catch {
-    // Erreur ignorée (non-critique)
-  }
+  // Arrêt de l'Arcade par « Accueil » : nettoyage complet, sans écran de fin
+  cleanupOnArcadeStop(gameVars, spaceshipImg, handleSpaceDown, liveState);
 }
 
 // No global export; ES module named export is used by ArcadeMode and retry button

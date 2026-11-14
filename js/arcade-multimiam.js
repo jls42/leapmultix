@@ -13,7 +13,7 @@ import { getTranslation, cleanupGameResources } from './utils-es6.js';
 import { setStartingMode } from './mode-orchestrator.js';
 import { startArcadeTimer, showArcadeGameOver, stopArcadeMode } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
-import { showGameInstructions, prepareArcadeStage } from './arcade-common.js';
+import { showGameInstructions, prepareArcadeStage, isTouchFirstDevice } from './arcade-common.js';
 import { InfoBar } from './components/infoBar.js';
 import { UserState } from './core/userState.js';
 // Utilise les helpers ESM
@@ -77,10 +77,7 @@ function attachAbandonHandler() {
 }
 
 function getInstructions() {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    globalThis.navigator?.userAgent || ''
-  );
-  if (isMobile) {
+  if (isTouchFirstDevice()) {
     return (
       getTranslation('arcade.multiMiam.controls.mobile') ||
       'Glisse avec ton doigt dans la direction souhaitée pour déplacer le personnage'
