@@ -11,8 +11,15 @@ import {
   useAndroidUserAgent,
 } from './helpers/arcade-screen-helpers.mjs';
 
-const { calculateCanvasDimensions, alienRowLayout, clampShipX, rowEdgeReach, shipDrawScale } =
-  await import('../js/arcade-invasion.js');
+const {
+  calculateCanvasDimensions,
+  alienRowLayout,
+  clampShipX,
+  rowEdgeReach,
+  shipDrawScale,
+  TOUCH_BOARD,
+  DESKTOP_BOARD,
+} = await import('../js/arcade-invasion.js');
 const { showGameInstructions } = await import('../js/arcade-common.js');
 
 const restorers = [];
@@ -64,7 +71,11 @@ describe('MultiInvaders sur ordinateur', () => {
 describe('MultiInvaders : la rangée de monstres tient dans le plateau', () => {
   /** Bords de la rangée, centrée, avec la taille et l'écart donnés */
   function rowEdges(boardWidth, count, isMobile) {
-    const { alienWidth, spacing } = alienRowLayout(boardWidth, count, isMobile);
+    const { alienWidth, spacing } = alienRowLayout(
+      boardWidth,
+      count,
+      isMobile ? TOUCH_BOARD : DESKTOP_BOARD
+    );
     const total = count * alienWidth + (count - 1) * spacing;
     const startX = (boardWidth - total) / 2;
     return { alienWidth, spacing, left: startX, right: startX + total };
@@ -91,9 +102,9 @@ describe('MultiInvaders : la fusée vise chaque monstre', () => {
   test.each([733, 530, 374])(
     'plateau de %i : le tir part sous le centre des monstres des bords',
     width => {
-      const { alienWidth, spacing } = alienRowLayout(width, 5, false);
+      const { alienWidth, spacing } = alienRowLayout(width, 5, DESKTOP_BOARD);
       const reach = rowEdgeReach(width, alienWidth, spacing);
-      const scale = shipDrawScale(false, width);
+      const scale = shipDrawScale(DESKTOP_BOARD, width);
       const center = x => clampShipX(x - SHIP / 2, SHIP, scale, width, reach) + SHIP / 2;
       expect(center(reach)).toBeCloseTo(reach, 6);
       expect(center(width - reach)).toBeCloseTo(width - reach, 6);
@@ -101,9 +112,9 @@ describe('MultiInvaders : la fusée vise chaque monstre', () => {
   );
 
   test('plateau de 800 : la fusée reste entière contre les bords', () => {
-    const { alienWidth, spacing } = alienRowLayout(800, 5, false);
+    const { alienWidth, spacing } = alienRowLayout(800, 5, DESKTOP_BOARD);
     const reach = rowEdgeReach(800, alienWidth, spacing);
-    const scale = shipDrawScale(false, 800);
+    const scale = shipDrawScale(DESKTOP_BOARD, 800);
     const left = clampShipX(-1000, SHIP, scale, 800, reach) + SHIP / 2 - (scale * SHIP) / 2;
     const right = clampShipX(5000, SHIP, scale, 800, reach) + SHIP / 2 + (scale * SHIP) / 2;
     expect(left).toBeGreaterThanOrEqual(0);

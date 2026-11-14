@@ -312,14 +312,15 @@ function showInvadersInstructions(canvas) {
  * que la partie change.
  * @param {HTMLCanvasElement} canvas
  * @returns {{displayWidth: number, displayHeight: number, isMobile: boolean,
- *   fitBoard: () => number}}
+ *   profile: BoardProfile, fitBoard: () => number}}
  */
 function sizeInvadersBoard(canvas) {
   const dimensions = calculateCanvasDimensions(canvas);
   setArcadeCanvasSize(canvas, dimensions.displayWidth, dimensions.displayHeight);
   const fitBoard = () => fitArcadeCanvas(canvas, getArcadeCanvasBox(canvas));
   fitBoard();
-  return { ...dimensions, fitBoard };
+  const profile = dimensions.isMobile ? TOUCH_BOARD : DESKTOP_BOARD;
+  return { ...dimensions, profile, fitBoard };
 }
 
 /**
@@ -392,18 +393,40 @@ const congratsMessages = () =>
 const ROW_MARGIN = 20;
 
 /**
+ * Réglages du plateau selon l'appareil : monstres (taille au plus, retrait, écart),
+ * dessin de la fusée (échelle, et largeur de plateau sous laquelle elle rétrécit)
+ * @typedef {{maxSize: number, sizeGap: number, minSpacing: number, maxSpacing: number,
+ *   shipScale: number, shipShrinkBelow: number}} BoardProfile
+ */
+/** Au doigt : monstres et écarts plus petits, fusée 1,5 fois sa taille */
+export const TOUCH_BOARD = Object.freeze({
+  maxSize: 70,
+  sizeGap: 10,
+  minSpacing: 10,
+  maxSpacing: 20,
+  shipScale: 1.5,
+  shipShrinkBelow: 0,
+});
+/** À la souris ou au clavier : monstres jusqu'à 100, fusée 3,5 fois, réduite sous 800 */
+export const DESKTOP_BOARD = Object.freeze({
+  maxSize: 100,
+  sizeGap: 15,
+  minSpacing: 20,
+  maxSpacing: 50,
+  shipScale: 3.5,
+  shipShrinkBelow: baseWidth,
+});
+
+/**
  * Taille des monstres et écart entre eux, selon la largeur du plateau
  * @param {number} boardWidth
  * @param {number} count - monstres de la rangée
- * @param {boolean} isMobile
+ * @param {BoardProfile} profile
  * @returns {{alienWidth: number, spacing: number}}
  */
-export function alienRowLayout(boardWidth, count, isMobile) {
+export function alienRowLayout(boardWidth, count, profile) {
   const available = boardWidth - 2 * ROW_MARGIN;
-  // Téléphone : monstres et écarts plus petits ; ordinateur : jusqu'à 100 et 50
-  const [maxSize, sizeGap, minSpacing, maxSpacing] = isMobile
-    ? [70, 10, 10, 20]
-    : [100, 15, 20, 50];
+  const { maxSize, sizeGap, minSpacing, maxSpacing } = profile;
   const size = Math.min(maxSize, available / count - sizeGap);
   const free = (available - count * size) / (count - 1);
   const spacing = Math.max(minSpacing, Math.min(maxSpacing, free));
@@ -413,13 +436,13 @@ export function alienRowLayout(boardWidth, count, isMobile) {
 }
 
 /**
- * Échelle du dessin de la fusée : 1,5 fois sa taille sur téléphone ; 3,5 fois sur
- * ordinateur, réduite avec un plateau plus étroit que 800
- * @param {boolean} isMobile
+ * Échelle du dessin de la fusée, réduite avec un plateau plus étroit que le seuil du réglage
+ * @param {BoardProfile} profile
  * @param {number} boardWidth
  */
-export function shipDrawScale(isMobile, boardWidth) {
-  return isMobile ? 1.5 : 3.5 * Math.min(1, boardWidth / baseWidth);
+export function shipDrawScale(profile, boardWidth) {
+  const shrink = Math.min(1, boardWidth / (profile.shipShrinkBelow || boardWidth));
+  return profile.shipScale * shrink;
 }
 
 // Monstres d'une vague
@@ -525,7 +548,7 @@ export function startMultiplicationInvasion() {
   prepareArcadeStage(canvas);
   showInvadersInstructions(canvas);
   const board = sizeInvadersBoard(canvas);
-  const { isMobile } = board;
+  const { isMobile, profile } = board;
   let { displayWidth, displayHeight } = board;
 
   // Ajout de la classe pour appliquer les styles communs
@@ -627,7 +650,7 @@ export function startMultiplicationInvasion() {
 
   // La fusée dans le plateau, à portée des monstres des bords
   function keepShipInBoard(x) {
-    const scale = shipDrawScale(isMobile, displayWidth);
+    const scale = shipDrawScale(profile, displayWidth);
     const reach = rowEdgeReach(displayWidth, alienWidth, spacing);
     return clampShipX(x, player.width, scale, displayWidth, reach);
   }
@@ -681,7 +704,7 @@ export function startMultiplicationInvasion() {
 
   // Taille des monstres et écart entre eux, selon la largeur du plateau
   function layoutAliens(nbAliens) {
-    ({ alienWidth, spacing } = alienRowLayout(displayWidth, nbAliens, isMobile));
+    ({ alienWidth, spacing } = alienRowLayout(displayWidth, nbAliens, profile));
   }
 
   function generateProblem() {
@@ -949,7 +972,7 @@ export function startMultiplicationInvasion() {
   // Fusée posée au bas du plateau, à ses proportions (plus grande sur ordinateur) ; un
   // rectangle tant que son image n'est pas arrivée
   function drawShip() {
-    const size = shipDrawScale(isMobile, displayWidth);
+    const size = shipDrawScale(profile, displayWidth);
     const shipWidth = player.width * size;
     const shipHeight = player.height * size;
     const box = {
