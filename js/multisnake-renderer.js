@@ -1,8 +1,10 @@
 /**
  * Dessin du serpent de MultiSnake, d'un seul tenant : un corps souple qui suit sa ligne
- * médiane (virages arrondis, queue effilée, ombre, reflet, taches), une tête qui tourne en
- * douceur, cligne des yeux et sort la langue, et, selon la fête, un bonnet, un chapeau
- * pointu ou le costume du dragon de la danse (crinière, moustaches, pattes, franges, perles).
+ * médiane (virages arrondis, queue effilée, ombre, reflet, taches) et, pour tête, l'avatar
+ * du joueur sous sa capuche de serpent (une image, fournie par le jeu). Tant qu'elle n'est
+ * pas chargée, une tête dessinée qui tourne en douceur, cligne des yeux et sort la langue,
+ * et, selon la fête, un bonnet, un chapeau pointu ou le costume du dragon de la danse
+ * (crinière, moustaches, pattes, franges, perles).
  * Tout se dessine en cases : le contexte est mis à l'échelle d'une case, centre de la case
  * (0, 0) en (0, 0).
  */
@@ -47,6 +49,11 @@ const FLICK_MS = 380;
 const STILL_FACE = Object.freeze({ blink: false, flick: 0 });
 // Rien à dessiner : cap nul
 const NO_HEADING = Object.freeze({ heading: 0 });
+// Tête-image (l'avatar sous sa capuche) : taille en cases, avance sur le bout du corps,
+// inclinaison quand le serpent monte ou descend (radians)
+export const IMAGE_HEAD_SIZE = 1.5;
+const IMAGE_HEAD_AHEAD = 0.12;
+const IMAGE_HEAD_LEAN = 0.25;
 
 /* --- Outils de tracé --- */
 
@@ -464,8 +471,36 @@ function liveliness(time, motion) {
   return { blink: blinkPhase >= BLINK_PERIOD - BLINK_MS, flick };
 }
 
-/** Tête au bout du corps, tournée selon son cap, et son chapeau */
+/**
+ * Tête-image au bout du corps : toujours debout, tournée du côté où va le serpent, un peu
+ * penchée quand il monte ou descend. Le contexte repasse en unités du jeu, pour que l'image
+ * se charge à sa taille à l'écran.
+ * @returns {boolean} Faux tant que l'image n'est pas là
+ */
+function drawImageHead(ctx, view) {
+  const { samples, heading, cell, facing } = view;
+  const tip = samples.at(0);
+  const side = facing === 'left' ? -1 : 1;
+  const size = IMAGE_HEAD_SIZE * cell;
+  ctx.save();
+  ctx.translate(
+    tip.x + Math.cos(heading) * IMAGE_HEAD_AHEAD,
+    tip.y + Math.sin(heading) * IMAGE_HEAD_AHEAD
+  );
+  ctx.rotate(Math.sin(heading) * IMAGE_HEAD_LEAN * side);
+  ctx.scale(1 / cell, 1 / cell);
+  const drawn = view.headImage(
+    ctx,
+    { x: -size / 2, y: -size / 2, width: size, height: size },
+    facing
+  );
+  ctx.restore();
+  return drawn;
+}
+
+/** Tête au bout du corps : l'image de l'avatar, sinon la tête dessinée et son chapeau */
 function drawHead(ctx, view) {
+  if (view.headImage && drawImageHead(ctx, view)) return;
   const { samples, heading, skin, time, motion } = view;
   const tip = samples.at(0);
   const head = { skin, time, light: toHeadFrame(LIGHT, heading), ...liveliness(time, motion) };
@@ -489,6 +524,11 @@ function drawHead(ctx, view) {
  * @param {number} scene.time - Horloge de l'animation (ms)
  * @param {number[]} [scene.bulges] - Pommes en train de descendre (distance à la tête, cases)
  * @param {boolean} [scene.motion] - Faux : ni clignement, ni langue, ni ondulation
+ * @param {(ctx: CanvasRenderingContext2D, box: {x: number, y: number, width: number,
+ *   height: number}, facing: 'left'|'right') => boolean} [scene.headImage] - Dessine la
+ *   tête-image dans sa boîte (unités du jeu, centrée sur la tête) ; faux tant qu'elle n'est
+ *   pas chargée : la tête dessinée la remplace
+ * @param {'left'|'right'} [scene.facing] - Côté où regarde la tête-image (droite par défaut)
  * @returns {{heading: number}} Cap de la tête (radians)
  */
 export function drawSnakeScene(ctx, scene) {
@@ -504,6 +544,9 @@ export function drawSnakeScene(ctx, scene) {
     motion,
     radiusAt: s => bodyRadius(s, length, scene.bulges),
     heading: headingOf(samples, scene.direction),
+    cell: scene.cell,
+    headImage: scene.headImage,
+    facing: scene.facing ?? 'right',
   };
   for (const shift of wrapCopies(samples, scene.board)) {
     ctx.save();

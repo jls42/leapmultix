@@ -19,6 +19,8 @@ jest.unstable_mockModule('../js/utils-es6.js', () => ({
   getTranslation: key => key,
 }));
 jest.unstable_mockModule('../js/arcade.js', () => ({ showArcadeGameOver: jest.fn() }));
+const gameState = { avatar: 'fox' };
+jest.unstable_mockModule('../js/game.js', () => ({ gameState }));
 jest.unstable_mockModule('../js/arcade-points.js', () => ({ showArcadePenalty }));
 jest.unstable_mockModule('../js/game-cleanup.js', () => ({ cleanupGameResources: jest.fn() }));
 jest.unstable_mockModule('../js/components/infoBar.js', () => ({ InfoBar: { update: updateBar } }));
@@ -35,7 +37,10 @@ jest.unstable_mockModule('../js/core/GameMode.js', () => ({
 }));
 
 const drawSnakeScene = jest.fn(() => ({ heading: 0 }));
-jest.unstable_mockModule('../js/multisnake-renderer.js', () => ({ drawSnakeScene }));
+jest.unstable_mockModule('../js/multisnake-renderer.js', () => ({
+  drawSnakeScene,
+  IMAGE_HEAD_SIZE: 1.5,
+}));
 
 const { SnakeGame } = await import('../js/multisnake.js');
 const { SEASONS, wearSeason } = await import('../js/core/seasons.js');
@@ -46,8 +51,8 @@ const UP = { x: 0, y: -1 };
 let game;
 
 /** Partie figée sur une grille 14 × 11 : le serpent ne bouge que pas à pas */
-function frozenGame() {
-  game = new SnakeGame('multisnake-canvas', 'operation', { operator: '×' });
+function frozenGame(options = {}) {
+  game = new SnakeGame('multisnake-canvas', 'operation', { operator: '×', ...options });
   game.start();
   cancelAnimationFrame(game.animationId);
   game.multisnake = [
@@ -279,5 +284,33 @@ describe('MultiSnake : habit du serpent', () => {
   test('une fête qui ne costume pas le serpent le laisse vert', () => {
     wearSeason(Object.freeze({ id: 'lunarnewyear', costumes: Object.freeze(['heads']) }));
     expect(frozenGame().skin).toBe(snakeSkin(null));
+  });
+
+  test('sa tête : l’avatar du joueur sous sa capuche, costumée pendant une fête', () => {
+    expect(game.headSprite.spec.source).toBe('fox_snake_head');
+    expect(frozenGame({ avatar: 'panda' }).headSprite.spec.source).toBe('panda_snake_head');
+    // Sans avatar donné : celui de la partie
+    gameState.avatar = 'dragon';
+    expect(frozenGame().headSprite.spec.source).toBe('dragon_snake_head');
+    gameState.avatar = 'fox';
+    wearSeason(SEASONS.find(season => season.id === 'christmas'));
+    expect(frozenGame({ avatar: 'unicorn' }).headSprite.spec.source).toBe(
+      'unicorn_snake_head_christmas'
+    );
+  });
+
+  test('sa tête regarde où va le serpent, et garde ce côté quand il monte ou descend', () => {
+    const facingAfter = key => {
+      press(key);
+      game.updateGameLogic();
+      game.drawSnake();
+      return drawSnakeScene.mock.lastCall[1].facing;
+    };
+    game.drawSnake();
+    expect(drawSnakeScene.mock.lastCall[1].facing).toBe('right');
+    expect(facingAfter('ArrowUp')).toBe('right');
+    expect(facingAfter('ArrowLeft')).toBe('left');
+    expect(facingAfter('ArrowDown')).toBe('left');
+    expect(typeof drawSnakeScene.mock.lastCall[1].headImage).toBe('function');
   });
 });

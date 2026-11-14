@@ -25,18 +25,18 @@ costume et son nombre de fonds par avatar (`worlds`). Deux fêtes ne se chevauch
 (test) : un jour donné a au plus un thème de fête, sinon le thème ordinaire. Familles, une
 porte dans le code chacune, toutes lues par `costumed(nom, famille)` :
 
-| Famille       | Images                                                                                    | Porte                                       |
-| ------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `heads`       | `assets/images/arcade/<avatar>_<fête>_head_avatar.png`                                    | `js/avatar-heads.js`                        |
-| `bodies`      | `assets/images/arcade/<avatar>_<fête>.png` (MultiMiam)                                    | `arcade-sprite-catalog`                     |
-| `monsters`    | `assets/images/arcade/monstre<NN>_right_<fête>.png` (155, tournés à droite)               | `arcade-sprite-catalog`                     |
-| `ships`       | `assets/images/arcade/<fusée>_<fête>.png` (dix fusées)                                    | `arcade-sprite-catalog`                     |
-| `snake`       | habit du serpent (`js/multisnake-skins.js`), `snake_apple_<fête>.png`, `herbe_<fête>.png` | `js/multisnake.js`, `arcade-sprite-catalog` |
-| `miam`        | `mur_<fête>.png`, `multimiam_reponse_<fête>.png` (sous chaque réponse)                    | `arcade-sprite-catalog`                     |
-| `logos`       | `logo_mode_<mode>_<fête>.png` (six), `logo_multi<jeu>_<fête>.png` (quatre)                | `js/logos.js`                               |
-| `gifts`       | `cadeau_ferme_<fête>.png`, `cadeau_ouvert_<fête>.png` (mode Aventure)                     | `js/adventure-gifts.js`                     |
-| `backgrounds` | `img/background_<avatar>_<fête>_001.png` à `_00<worlds>`                                  | `js/main-helpers.js`                        |
-| `hero`        | `assets/social/leapmultix-social-card-<fête>.webp`                                        | `js/main-helpers.js`                        |
+| Famille       | Images                                                                                                                                | Porte                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `heads`       | `assets/images/arcade/<avatar>_<fête>_head_avatar.png`                                                                                | `js/avatar-heads.js`                        |
+| `bodies`      | `assets/images/arcade/<avatar>_<fête>.png` (MultiMiam)                                                                                | `arcade-sprite-catalog`                     |
+| `monsters`    | `assets/images/arcade/monstre<NN>_right_<fête>.png` (155, tournés à droite)                                                           | `arcade-sprite-catalog`                     |
+| `ships`       | `assets/images/arcade/<fusée>_<fête>.png` (dix fusées)                                                                                | `arcade-sprite-catalog`                     |
+| `snake`       | habit du serpent (`js/multisnake-skins.js`), `<avatar>_snake_head_<fête>.png` (sa tête), `snake_apple_<fête>.png`, `herbe_<fête>.png` | `js/multisnake.js`, `arcade-sprite-catalog` |
+| `miam`        | `mur_<fête>.png`, `multimiam_reponse_<fête>.png` (sous chaque réponse)                                                                | `arcade-sprite-catalog`                     |
+| `logos`       | `logo_mode_<mode>_<fête>.png` (six), `logo_multi<jeu>_<fête>.png` (quatre)                                                            | `js/logos.js`                               |
+| `gifts`       | `cadeau_ferme_<fête>.png`, `cadeau_ouvert_<fête>.png` (mode Aventure)                                                                 | `js/adventure-gifts.js`                     |
+| `backgrounds` | `img/background_<avatar>_<fête>_001.png` à `_00<worlds>`                                                                              | `js/main-helpers.js`                        |
+| `hero`        | `assets/social/leapmultix-social-card-<fête>.webp`                                                                                    | `js/main-helpers.js`                        |
 
 Une nouvelle famille : une porte qui appelle `costumed()`, une ligne dans `FAMILY_FILES` de
 `tests-esm/season-images.esm.test.mjs`, une ligne dans la table ci-dessus. Le reste du jeu
@@ -141,8 +141,13 @@ consigne, mot pour mot. Noms des cibles :
   s'écrit dessus, d'où un centre uni assez foncé. Halloween : une citrouille et un bonbon
   violet couché, dont le corps fait 55 % de la largeur et 30 % de la hauteur du cadre
   (`drawAnswerToken` de `js/multimiam-renderer.js` règle sa taille là-dessus) ;
-- l'herbe et les murs ne se dessinent pas : étape 4 ; le serpent non plus, il est dessiné par
-  le code (son habit : étape 4).
+- `assets/images/arcade/<avatar>_snake_head_<fête>.png`, la tête du serpent : l'avatar sous sa
+  capuche de serpent (réf. : `<avatar>_snake_head.png`, sa tête classique). Seuls changent les
+  couleurs de la capuche, celles de l'habit du serpent (étape 4), et un accessoire de la fête
+  posé sur la tête du serpent ; au Nouvel An chinois, la capuche devient un dragon de la danse.
+  Consignes : `scripts/seasons/serpent-capuches/prompts.tsv` ;
+- l'herbe et les murs ne se dessinent pas : étape 4 ; le corps du serpent non plus, il est
+  dessiné par le code (son habit : étape 4).
 
 Ces dossiers sont imposés : `js/webp-images.js` et le catalogue d'Arcade ne lisent que
 `assets/images/arcade/`, et `scripts/convert-backgrounds.cjs` ne lit que `img/` à plat.
@@ -170,7 +175,10 @@ habit dans `js/multisnake-skins.js` : contour, flanc, dos, reflet, taches, et au
 chapeau (bonnet de Noël, chapeau pointu du Nouvel An) ou le costume du dragon de la danse
 (Nouvel An chinois). Couleurs reprises des dessins validés de la fête ; un test exige un habit
 pour chaque fête qui costume le serpent. Les morceaux d'image des fêtes passées et leurs
-méthodes de recoloration (`serpent`, `bonnet`, `comme`) ont été retirés en v64.
+méthodes de recoloration (`serpent`, `bonnet`, `comme`) ont été retirés en v64. Depuis la v65,
+sa tête est une image : l'avatar du joueur sous une capuche de serpent (`<avatar>_snake_head.png`,
+`snakeHeadSpec`), toujours debout, tournée du côté où il va ; la tête dessinée par le code ne
+sert plus qu'en attendant qu'elle se charge.
 
 Relire la planche, dans l'ordre de la liste : personnage reconnaissable, même côté que
 l'original (les sprites d'Arcade se retournent selon `facing`), accessoire lisible en petit,

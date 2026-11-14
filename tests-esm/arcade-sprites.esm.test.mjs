@@ -146,6 +146,21 @@ describe('source haute définition de chaque image', () => {
     expect(catalog.avatarSpec('licorne-inconnue').source).toBe('fox');
   });
 
+  test('tête du serpent : l’avatar sous sa capuche, sans repli (la tête dessinée)', () => {
+    expect(catalog.snakeHeadSpec('panda')).toEqual({
+      source: 'panda_snake_head',
+      maxWidth: 1024,
+      fallbacks: [],
+      facing: 'right',
+    });
+    expect(catalog.snakeHeadSpec(undefined).source).toBe('fox_snake_head');
+    expect(catalog.snakeHeadSpec('licorne-inconnue').source).toBe('fox_snake_head');
+    const sources = new Set(catalog.arcadeSpriteSpecs().map(spec => spec.source));
+    for (const id of ['fox', 'panda', 'unicorn', 'dragon', 'astronaut']) {
+      expect(sources.has(`${id}_snake_head`)).toBe(true);
+    }
+  });
+
   test('textures : variantes jusqu’à 1024 px, petit PNG en repli', () => {
     expect(catalog.textureSpec('herbe.png')).toMatchObject({ source: 'herbe', maxWidth: 1024 });
     expect(catalog.textureSpec('mur.png').fallbacks).toEqual(['mur_128x128.png']);

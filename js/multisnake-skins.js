@@ -1,19 +1,21 @@
 /**
  * Habits du serpent de MultiSnake : ses couleurs, ses taches et ce qu'il porte, pour chaque
- * fête qui costume le serpent (famille « snake » de js/core/seasons.js). Les couleurs viennent
- * des dessins validés de chaque fête : vert et ventre jaune, violet et orange (Halloween),
- * rouge et or avec un bonnet (Noël), violet et or avec un chapeau pointu (Nouvel An) ; au
- * Nouvel An chinois, il devient un dragon de la danse.
+ * fête qui costume le serpent (famille « snake » de js/core/seasons.js). Le corps prolonge la
+ * capuche de sa tête (assets/images/arcade/<avatar>_snake_head[_<fête>].png) : dos de la
+ * couleur du tissu, bords de celle du ventre, taches de celle des losanges. Vert et jaune,
+ * violet et orange (Halloween), rouge et or (Noël), violet et or (Nouvel An) ; au Nouvel An
+ * chinois, un dragon de la danse. Le chapeau ne sert qu'à la tête dessinée, en attendant
+ * l'image.
  */
 
 /**
  * @typedef {object} SnakeSkin
  * @property {'snake'|'dragon'} kind - Serpent, ou dragon (cornes, crinière, pattes, crête)
  * @property {string} outline - Contour
- * @property {string} shade - Bord du corps, dans l'ombre
+ * @property {string} shade - Bord du corps (le ventre de la capuche)
  * @property {string} back - Dos
  * @property {string} shine - Reflet le long du dos
- * @property {string} spots - Taches du dos
+ * @property {string} spots - Taches du dos (les losanges de la capuche)
  * @property {string} [trim] - Dorures du dragon (crête, franges, cornes, moustaches)
  * @property {'santa'|'party'|null} hat - Chapeau sur la tête
  */
@@ -21,11 +23,11 @@
 /** @type {Readonly<SnakeSkin>} */
 const CLASSIC = Object.freeze({
   kind: 'snake',
-  outline: '#0b3b1c',
-  shade: '#0c6e30',
-  back: '#1ba234',
-  shine: '#7fdc5a',
-  spots: '#c9d84b',
+  outline: '#3c5410',
+  shade: '#e2be3a',
+  back: '#8fd014',
+  shine: '#cdf27a',
+  spots: '#2d6a1a',
   hat: null,
 });
 
@@ -35,11 +37,11 @@ const SKINS = new Map([
     'halloween',
     Object.freeze({
       kind: 'snake',
-      outline: '#2d0730',
-      shade: '#650e4f',
-      back: '#9717a4',
-      shine: '#c46ae0',
-      spots: '#f08c2e',
+      outline: '#3d0a40',
+      shade: '#f58a12',
+      back: '#b218d8',
+      shine: '#d77df0',
+      spots: '#5e0786',
       hat: null,
     }),
   ],
@@ -47,11 +49,11 @@ const SKINS = new Map([
     'christmas',
     Object.freeze({
       kind: 'snake',
-      outline: '#3a0d06',
-      shade: '#6a2409',
-      back: '#c42731',
-      shine: '#f0705f',
-      spots: '#f2c230',
+      outline: '#4a1208',
+      shade: '#f5b03a',
+      back: '#e01e22',
+      shine: '#ff7a6a',
+      spots: '#8a0f14',
       hat: 'santa',
     }),
   ],
@@ -60,10 +62,10 @@ const SKINS = new Map([
     Object.freeze({
       kind: 'snake',
       outline: '#22073a',
-      shade: '#4a0b70',
+      shade: '#f2c230',
       back: '#6c22b8',
       shine: '#a77df0',
-      spots: '#f2c230',
+      spots: '#3a0a6a',
       hat: 'party',
     }),
   ],

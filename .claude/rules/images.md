@@ -45,5 +45,6 @@ paths:
   que les classiques, et restent hors du préchargement ; leur repli est l'image classique.
   Dessinées par Codex (`scripts/seasons/dress-up.sh`), sauf ce qui se raccorde case à case
   (herbe, murs), recoloré (`scripts/seasons/recolor.sh`) : skill `dressing-for-events`. Le
-  serpent de MultiSnake n'a pas d'image : il est dessiné par le code, son habit de fête dans
-  `js/multisnake-skins.js`.
+  corps du serpent de MultiSnake est dessiné par le code, son habit de fête dans
+  `js/multisnake-skins.js` ; sa tête est une image, l'avatar sous une capuche de serpent
+  (`<avatar>_snake_head.png`, `<avatar>_snake_head_<fête>.png`).
