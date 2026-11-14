@@ -11,7 +11,7 @@
 // - les polices des feuilles de style ;
 // - les sons, traductions et images que nomment ces modules : chemin écrit en entier,
 //   gabarit rapproché des fichiers présents (« assets/images/arcade/${avatar}_head… »),
-//   nom de fichier seul (« tete_haut.png ») ou nom de sprite (loadSpriteSync('chemin'))
+//   nom de fichier seul (« snake_apple.png ») ou nom de sprite (loadSpriteSync('chemin'))
 //   cherchés dans assets/images ;
 // - un fond illustré par avatar : le jeu en tire un au hasard, et hors ligne le service
 //   worker sert celui qu'il a gardé ;
@@ -74,7 +74,7 @@ const HOLE = '\uFFFC';
  * la marque ; l'extension se vérifie ensuite (ASSET), sans retour en arrière.
  */
 const PATH_RUN = /[\w\uFFFC./-]+/g;
-/** Nom de sprite passé à un chargeur (« loadSprite('tete_haut.png') »), extension facultative */
+/** Nom de sprite passé à un chargeur (« loadSprite('chemin.png') »), extension facultative */
 const SPRITE_CALL = /\bloadSprite(?:Sync)?\(\s*([\x22\x27\x60])([^\x22\x27\x60]+)\1/g;
 /** Attributs d'adresse d'une page ; srcset en porte plusieurs */
 const URL_ATTRIBUTE = /\b(?:src|href|srcset)=\x22([^\x22]*)\x22/g;

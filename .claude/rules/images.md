@@ -44,5 +44,6 @@ paths:
   (`fox_halloween_head_avatar.png`, `background_fox_halloween_001.png`), dans les mêmes dossiers
   que les classiques, et restent hors du préchargement ; leur repli est l'image classique.
   Dessinées par Codex (`scripts/seasons/dress-up.sh`), sauf ce qui se raccorde case à case
-  (morceaux du serpent, herbe, murs), recoloré (`scripts/seasons/recolor.sh`) : skill
-  `dressing-for-events`.
+  (herbe, murs), recoloré (`scripts/seasons/recolor.sh`) : skill `dressing-for-events`. Le
+  serpent de MultiSnake n'a pas d'image : il est dessiné par le code, son habit de fête dans
+  `js/multisnake-skins.js`.

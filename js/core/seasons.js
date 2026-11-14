@@ -19,8 +19,8 @@
  * monsters : assets/images/arcade/monstre<NN>_right_<fête>.png, les 155 monstres des jeux
  *   d'Arcade (MultiMiam, MultiInvaders, MultiMemory), tournés à droite comme les classiques ;
  * ships : assets/images/arcade/<fusée>_<fête>.png (MultiInvaders) ;
- * snake : MultiSnake, dans assets/images/arcade : les 14 morceaux du serpent
- *   (<morceau>_<fête>.png), la nourriture des réponses (snake_apple_<fête>.png) et l'herbe du
+ * snake : MultiSnake : l'habit du serpent, dessiné par le code (js/multisnake-skins.js), et
+ *   dans assets/images/arcade la nourriture des réponses (snake_apple_<fête>.png) et l'herbe du
  *   plateau (herbe_<fête>.png) ;
  * miam : MultiMiam, dans assets/images/arcade : les murs du labyrinthe (mur_<fête>.png) et
  *   l'image posée sous les réponses (multimiam_reponse_<fête>.png) ;

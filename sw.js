@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v63'; // bump to trigger client update
+const VERSION = 'v64'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -490,12 +490,6 @@ const PRECACHE_IMAGES = [
   '/assets/images/arcade/cadeau_ouvert.png',
   '/assets/images/arcade/chemin_128x128.png',
   '/assets/images/arcade/chemin.png',
-  '/assets/images/arcade/corps_courbe_bas_gauche.png',
-  '/assets/images/arcade/corps_courbe_droite_bas.png',
-  '/assets/images/arcade/corps_courbe_gauche_haut.png',
-  '/assets/images/arcade/corps_courbe_haut_droite.png',
-  '/assets/images/arcade/corps_milieu_queue_bas_tete_haut.png',
-  '/assets/images/arcade/corps_milieu_queue_gauche_tete_droite.png',
   '/assets/images/arcade/dragon_head_avatar_128x128.png',
   '/assets/images/arcade/dragon_right_128x128.png',
   '/assets/images/arcade/dragon_vaisseau_2_256x256.png',
@@ -676,10 +670,6 @@ const PRECACHE_IMAGES = [
   '/assets/images/arcade/panda_right_128x128.png',
   '/assets/images/arcade/panda_vaisseau_2_256x256.png',
   '/assets/images/arcade/panda_vaisseau_256x256.png',
-  '/assets/images/arcade/queue_fin_bas.png',
-  '/assets/images/arcade/queue_fin_droite.png',
-  '/assets/images/arcade/queue_fin_gauche.png',
-  '/assets/images/arcade/queue_fin_haut.png',
   '/assets/images/arcade/renard_vaisseau_2_256x256.png',
   '/assets/images/arcade/renard_vaisseau_256x256.png',
   '/assets/images/arcade/snake_apple_128x128.png',
@@ -697,10 +687,6 @@ const PRECACHE_IMAGES = [
   '/assets/images/arcade/spaceship_panda.png',
   '/assets/images/arcade/spaceship_unicorn_2.png',
   '/assets/images/arcade/spaceship_unicorn.png',
-  '/assets/images/arcade/tete_bas.png',
-  '/assets/images/arcade/tete_droite.png',
-  '/assets/images/arcade/tete_gauche.png',
-  '/assets/images/arcade/tete_haut.png',
   '/assets/images/arcade/unicorn_head_avatar_128x128.png',
   '/assets/images/arcade/unicorn_right_128x128.png',
 ];

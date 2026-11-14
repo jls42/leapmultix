@@ -14,14 +14,12 @@ const { SEASONS, costumed, seasonWorlds, wearSeason } = await import('../js/core
 const { avatarHeadImage, AVATAR_IDS } = await import('../js/avatar-heads.js');
 const {
   MONSTER_COUNT,
-  SNAKE_PART_FILES,
   answerTokenSpec,
   arcadeOfflineImages,
   arcadeSpriteSpecs,
   avatarSpec,
   monsterSpec,
   seasonalSpriteSpecs,
-  snakePartSpec,
   spaceshipSpec,
   textureSpec,
 } = await import('../js/arcade-sprite-catalog.js');
@@ -65,11 +63,7 @@ const FAMILY_FILES = new Map([
   ['ships', () => SHIP_SELECTIONS.map(selection => arcade(spaceshipSpec(selection).source))],
   [
     'snake',
-    () => [
-      ...SNAKE_PART_FILES.map(file => arcade(snakePartSpec(file).source)),
-      arcade(textureSpec('snake_apple.png').source),
-      arcade(textureSpec('herbe.png').source),
-    ],
+    () => [arcade(textureSpec('snake_apple.png').source), arcade(textureSpec('herbe.png').source)],
   ],
   ['miam', () => [arcade(textureSpec('mur.png').source), arcade(answerTokenSpec().source)]],
   ['logos', () => [...MODE_LOGOS.values(), ...ARCADE_LOGOS].map(file => arcade(logoSource(file)))],
@@ -152,12 +146,10 @@ describe('Arcade', () => {
     expect(spaceshipSpec('').source).toBe('spaceship_default');
   });
 
-  test('serpent, pomme, herbe et murs costumés, mêmes replis ; chemin inchangé', () => {
-    const head = snakePartSpec('tete_haut.png');
+  test('pomme, herbe et murs costumés, mêmes replis ; chemin inchangé', () => {
     const apple = textureSpec('snake_apple.png');
     const wall = textureSpec('mur.png');
     wearSeason(HALLOWEEN);
-    expect(snakePartSpec('tete_haut.png')).toEqual({ ...head, source: 'tete_haut_halloween' });
     expect(textureSpec('snake_apple.png')).toEqual({ ...apple, source: 'snake_apple_halloween' });
     expect(textureSpec('herbe.png').source).toBe('herbe_halloween');
     expect(textureSpec('mur.png')).toEqual({ ...wall, source: 'mur_halloween' });
@@ -175,12 +167,12 @@ describe('Arcade', () => {
 
   test('les images costumées ont leurs variantes, mais restent hors du préchargement', () => {
     const seasonal = seasonalSpriteSpecs().map(item => item.source);
-    // Corps (5), fusées pilotées (10), serpent (14 morceaux, herbe, pomme), murs et réponses
-    // de MultiMiam, 155 monstres : pour chaque fête, les familles qu'elle costume
+    // Corps (5), fusées pilotées (10), herbe et pomme de MultiSnake, murs et réponses de
+    // MultiMiam, 155 monstres : pour chaque fête, les familles qu'elle costume
     const spritesOf = new Map([
       ['bodies', AVATAR_IDS.length],
       ['ships', 2 * AVATAR_IDS.length],
-      ['snake', SNAKE_PART_FILES.length + 2],
+      ['snake', 2],
       ['miam', 2],
       ['monsters', MONSTER_COUNT],
     ]);
@@ -193,7 +185,7 @@ describe('Arcade', () => {
       expect.arrayContaining([
         'unicorn_halloween',
         'panda_vaisseau_halloween',
-        'tete_bas_halloween',
+        'herbe_halloween',
         'monstre42_right_christmas',
       ])
     );
