@@ -20,7 +20,7 @@ const SAMPLE_STEP = 0.1;
 /** Recul du point qui donne le cap de la tête : la tête tourne pendant le pas */
 const HEADING_LOOKBACK = 0.45;
 /** Écart sous lequel deux points du corps se confondent, en cases */
-const MIN_GAP = 0.000001;
+const MIN_GAP = 1 / 1000000;
 /** Contour sans décalage */
 const NO_OFFSET = Object.freeze({ x: 0, y: 0 });
 /** Marge du dessin au-delà de la ligne médiane (tête, crinière), pour les copies au bord */
