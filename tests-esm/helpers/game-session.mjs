@@ -93,3 +93,43 @@ export async function backToArcadeMenu(page) {
   await answerGameDialog(page, true);
   await pressButton(page, '#arcade-back-btn');
 }
+
+/**
+ * Tête du serpent de MultiSnake, publiée par le jeu sur son plateau à chaque pas : direction
+ * (up, down, left, right), centre de sa case et taille d'une case, en pixels de la fenêtre
+ * @param {import('puppeteer').Page} page
+ * @returns {Promise<{heading: string, x: number, y: number, cell: number}>}
+ */
+export async function snakeHead(page) {
+  await page.waitForFunction(
+    () => document.querySelector('#multisnake-canvas')?.dataset.snakeHeading,
+    { timeout: 8000 }
+  );
+  return page.$eval('#multisnake-canvas', canvas => ({
+    heading: canvas.dataset.snakeHeading,
+    x: Number(canvas.dataset.snakeHeadX),
+    y: Number(canvas.dataset.snakeHeadY),
+    cell: Number(canvas.dataset.snakeCell),
+  }));
+}
+
+/**
+ * Attend que le serpent monte, la tête au-dessus d'une hauteur (relevé à chaque pas : sur une
+ * machine chargée, il finirait par faire le tour du plateau)
+ * @param {import('puppeteer').Page} page
+ * @param {number} startY - Hauteur de la tête au départ (pixels de la fenêtre)
+ * @returns {Promise<boolean>} Vrai si la tête est montée à temps
+ */
+export function snakeTurnedUp(page, startY) {
+  return page
+    .waitForFunction(
+      y => {
+        const data = document.querySelector('#multisnake-canvas')?.dataset;
+        return data?.snakeHeading === 'up' && Number(data.snakeHeadY) < y;
+      },
+      { timeout: 3000 },
+      startY
+    )
+    .then(() => true)
+    .catch(() => false);
+}

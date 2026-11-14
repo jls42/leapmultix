@@ -87,10 +87,11 @@ Deux points à connaître avant d'y toucher :
   `tests-esm/scripts/ci-npm.test.mjs`.
 
 Après chaque fusion, vérifier en ligne que la prod sert la version fusionnée.
-Le déploiement attend la fin de `verify` (8 minutes) puis la régénération des images (35 à 50) :
-compter 45 à 60 minutes après la fusion. Chaque fête ajoutée allonge la régénération : de 15 à 25
+Le déploiement attend la fin de `verify` (8 minutes) puis la régénération des images (35 à 60) :
+compter 45 à 75 minutes après la fusion. Chaque fête ajoutée allonge la régénération : de 15 à 25
 minutes le 14/10/2026 (déploiements de 24 à 33 minutes, une fois 62), 36 avec Halloween et Noël
-(v59 et v60 : 47 et 45 minutes en tout), 47 avec le Nouvel An (v61 : 58 minutes).
+(v59 et v60 : 47 et 45 minutes en tout), 47 avec le Nouvel An (v61 : 58 minutes), 58 avec le
+Nouvel An chinois (v62 : 70 minutes).
 
 ```bash
 # Le run de la fusion : attendre que verify et Déploiement soient terminés

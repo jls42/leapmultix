@@ -34,7 +34,12 @@ jest.unstable_mockModule('../js/core/GameMode.js', () => ({
   plausibleWrongAnswers: ({ answer }) => [answer + 1, answer + 2, answer + 3],
 }));
 
+const drawSnakeScene = jest.fn(() => ({ heading: 0 }));
+jest.unstable_mockModule('../js/multisnake-renderer.js', () => ({ drawSnakeScene }));
+
 const { SnakeGame } = await import('../js/multisnake.js');
+const { SEASONS, wearSeason } = await import('../js/core/seasons.js');
+const { snakeSkin } = await import('../js/multisnake-skins.js');
 
 const RIGHT = { x: 1, y: 0 };
 const UP = { x: 0, y: -1 };
@@ -218,8 +223,7 @@ describe('MultiSnake : focus et dessin', () => {
     expect(document.activeElement).toBe(game.canvas);
   });
 
-  test('entre deux cases, chaque segment est dessiné à mi-chemin, bord franchi compris', () => {
-    const draw = jest.spyOn(game, 'drawSnakeAtPositions').mockImplementation(() => {});
+  test('entre deux cases, le serpent est dessiné à mi-chemin, bord franchi compris', () => {
     game.multisnake = [
       { x: 0, y: 5 },
       { x: game.cols - 1, y: 5 },
@@ -230,58 +234,50 @@ describe('MultiSnake : focus et dessin', () => {
     ];
     game.animationProgress = 0.5;
     game.drawSnake();
-    expect(draw).toHaveBeenCalledWith([
-      { x: game.cols - 0.5, y: 5 },
-      { x: game.cols - 1.5, y: 5 },
+    // D'un seul tenant : la tête sort à gauche, le corps la suit au-delà du bord
+    expect(drawSnakeScene.mock.lastCall[1].centerline).toEqual([
+      { x: -0.5, y: 5 },
+      { x: -1, y: 5 },
+      { x: -1.5, y: 5 },
     ]);
     game.animationProgress = 1;
     game.drawSnake();
-    expect(draw).toHaveBeenLastCalledWith(game.multisnake);
+    expect(drawSnakeScene.mock.lastCall[1].centerline).toEqual([
+      { x: 0, y: 5 },
+      { x: -1, y: 5 },
+    ]);
+  });
+
+  test('après chaque pas, la direction de la tête est publiée sur le plateau', () => {
+    expect(game.canvas.dataset.snakeHeading).toBe('right');
+    press('ArrowUp');
+    game.updateGameLogic();
+    expect(game.canvas.dataset.snakeHeading).toBe('up');
+    expect(Number.isFinite(Number(game.canvas.dataset.snakeHeadY))).toBe(true);
+  });
+
+  test('une bonne pomme avalée descend le long du corps', () => {
+    game.eatGoodApple({ x: 6, y: 5 }, { x: 6, y: 5, isCorrect: true });
+    expect(game.swallowedApples()).toEqual([0.6]);
+    game.clock += 1000;
+    expect(game.swallowedApples()[0]).toBeCloseTo(6.6);
+    // Arrivée au bout de tout serpent : oubliée
+    game.clock += 20000;
+    expect(game.swallowedApples()).toEqual([]);
   });
 });
 
-describe('MultiSnake : dessin du corps', () => {
-  const DIRS = [
-    { x: 0, y: -1 },
-    { x: 1, y: 0 },
-    { x: 0, y: 1 },
-    { x: -1, y: 0 },
-  ];
-  // Virage du corps pour chaque paire de directions (entrée, sortie), dans les deux sens
-  const CURVES = new Map([
-    ['0,-1|1,0', 'haut-droite'],
-    ['1,0|0,-1', 'haut-droite'],
-    ['1,0|0,1', 'droite-bas'],
-    ['0,1|1,0', 'droite-bas'],
-    ['0,1|-1,0', 'bas-gauche'],
-    ['-1,0|0,1', 'bas-gauche'],
-    ['-1,0|0,-1', 'gauche-haut'],
-    ['0,-1|-1,0', 'gauche-haut'],
-  ]);
+describe('MultiSnake : habit du serpent', () => {
+  afterEach(() => wearSeason(null));
 
-  test('chaque virage a son image, une ligne droite ou un demi-tour aucune', () => {
-    for (const dirIn of DIRS) {
-      for (const dirOut of DIRS) {
-        const key = `${dirIn.x},${dirIn.y}|${dirOut.x},${dirOut.y}`;
-        expect({ key, curve: game.getCurveKey(dirIn, dirOut) }).toEqual({
-          key,
-          curve: CURVES.get(key) ?? null,
-        });
-      }
-    }
+  test('sans fête, le serpent vert ; au Nouvel An chinois, le dragon', () => {
+    expect(game.skin).toBe(snakeSkin(null));
+    wearSeason(SEASONS.find(season => season.id === 'lunarnewyear'));
+    expect(frozenGame().skin).toBe(snakeSkin('lunarnewyear'));
   });
 
-  test('directions d’un segment vers ses voisins, par le bord opposé compris', () => {
-    const last = game.cols - 1;
-    expect(game.calculateSegmentDirections({ x: 6, y: 5 }, { x: 5, y: 5 }, { x: 5, y: 6 })).toEqual(
-      { dirIn: { x: 0, y: 1 }, dirOut: { x: 1, y: 0 } }
-    );
-    // Voisin de l'autre côté du plateau : un pas vers le bord franchi
-    expect(
-      game.calculateSegmentDirections({ x: 1, y: 5 }, { x: 0, y: 5 }, { x: last, y: 5 })
-    ).toEqual({ dirIn: { x: -1, y: 0 }, dirOut: { x: 1, y: 0 } });
-    expect(
-      game.calculateSegmentDirections({ x: 3, y: game.rows - 1 }, { x: 3, y: 0 }, { x: 3, y: 1 })
-    ).toEqual({ dirIn: { x: 0, y: 1 }, dirOut: { x: 0, y: -1 } });
+  test('une fête qui ne costume pas le serpent le laisse vert', () => {
+    wearSeason(Object.freeze({ id: 'lunarnewyear', costumes: Object.freeze(['heads']) }));
+    expect(frozenGame().skin).toBe(snakeSkin(null));
   });
 });

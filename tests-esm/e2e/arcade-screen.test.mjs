@@ -16,6 +16,8 @@ import {
   pressButton,
   launchArcadeGame,
   backToArcadeMenu,
+  snakeHead,
+  snakeTurnedUp,
 } from '../helpers/game-session.mjs';
 // Hors fête, quel que soit le jour : les images s'y reconnaissent à leur nom classique
 import { NO_SEASON } from '../../js/core/seasons.js';
@@ -36,8 +38,8 @@ const ANDROID_USER_AGENT =
 const ARCADE_GAMES = ['invasion', 'multimiam', 'multimemory', 'multisnake'];
 
 // Dessins des canevas, en unités du jeu, avec la transformation du dessin (t : échelle et
-// décalage vers les pixels internes, à la densité de l'écran) : images (tête du serpent, dos
-// des cartes, monstres), textes (faces des cartes, nombres des monstres) et tirs de
+// décalage vers les pixels internes, à la densité de l'écran) : images (dos des cartes,
+// monstres), textes (faces des cartes, nombres des monstres) et tirs de
 // MultiInvaders
 const CANVAS_SPY_SOURCE = `(() => {
   const proto = CanvasRenderingContext2D.prototype;
@@ -47,7 +49,7 @@ const CANVAS_SPY_SOURCE = `(() => {
   const drawImage = proto.drawImage;
   proto.drawImage = function spyImage(image, ...rest) {
     if (rest.length >= 4) {
-      // Nom de l'image quelle que soit sa variante (« tete_haut-128.webp » : « tete_haut.png »)
+      // Nom de l'image quelle que soit sa variante (« chemin-128.webp » : « chemin.png »)
       const src = ((image && image.src) || '').split('/').pop().replace(/-\\d+\\.webp$/, '.png');
       draws.images.push({ src, x: rest[0], y: rest[1], w: rest[2], h: rest[3], t: scaleOf(this), canvas: this.canvas.id });
       keep(draws.images);
@@ -438,23 +440,10 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     await openArcade(PORTRAIT);
     await launchArcadeGame(page, 'multisnake');
     await enterFullscreen(page);
-    const [head] = await lastImages(page, 'multisnake-canvas', 'tete_', 1);
-    const point = await toScreen(page, head, head.x + head.w / 2, head.y - 2.5 * head.h);
-    await page.touchscreen.tap(point.x, point.y);
-    await page.waitForFunction(
-      startY => {
-        const last = globalThis.__draws.images
-          .filter(d => d.canvas === 'multisnake-canvas' && d.src.includes('tete_'))
-          .slice(-1)[0];
-        return last?.src === 'tete_haut.png' && last.y < startY;
-      },
-      { timeout: 3000 },
-      head.y
-    );
-    // La tête redessinée regarde vers le haut, au-dessus de sa place de départ
-    const [turned] = await lastImages(page, 'multisnake-canvas', 'tete_', 1);
-    expect(turned.src).toBe('tete_haut.png');
-    expect(turned.y).toBeLessThan(head.y);
+    const head = await snakeHead(page);
+    await page.touchscreen.tap(head.x, head.y - 2.5 * head.cell);
+    // La tête regarde vers le haut, au-dessus de sa place de départ
+    expect(await snakeTurnedUp(page, head.y)).toBe(true);
   }, 40000);
 
   test('plein écran, téléphone tourné : MultiInvaders vise la colonne touchée', async () => {

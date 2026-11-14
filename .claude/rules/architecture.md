@@ -95,7 +95,7 @@ paths:
 - `multimiam-controls.js` - Input handling
 - `multimiam-questions.js` - Question generation
 - `multimiam-ui.js` - UI elements
-- `multisnake.js` - Snake game implementation
+- `multisnake.js` - Snake game implementation; the snake is drawn by code in one piece (`multisnake-renderer.js`: body following its centerline, rounded turns, tapered tail, head that turns smoothly, blinks and flicks its tongue, nothing animated under `prefers-reduced-motion`), from the geometry of `multisnake-path.js` (centerline during a step, wrap across the edges); its holiday skin comes from `multisnake-skins.js` (colors, hat, or the Lunar New Year dance dragon); the head's direction and cell are published on the board (`data-snake-heading`, `data-snake-head-x/y`) for the end-to-end tests
 
 **User Interface and Feedback:**
 

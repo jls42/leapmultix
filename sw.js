@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v62'; // bump to trigger client update
+const VERSION = 'v63'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -249,6 +249,9 @@ const PRECACHE_CORE = [
   '/js/multimiam-renderer.js',
   '/js/multimiam-ui.js',
   '/js/multimiam.js',
+  '/js/multisnake-path.js',
+  '/js/multisnake-renderer.js',
+  '/js/multisnake-skins.js',
   '/js/multisnake.js',
   '/js/notifications.js',
   '/js/optional-styles-loader.js',
