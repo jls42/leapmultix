@@ -20,10 +20,8 @@ export const OFFLINE_VARIANT_WIDTH = 128;
 
 const GENERATED_DIR = 'assets/generated-images/arcade';
 const IMAGE_DIR = 'assets/images/arcade';
-// Sources haute définition (1024 px) : toutes les variantes ; morceaux du serpent : 256 au
-// plus (sources de 368 à 558 px, dessinés à la taille d'une case)
+// Sources haute définition (1024 px) : toutes les variantes
 const HD_MAX_WIDTH = 1024;
-const SNAKE_MAX_WIDTH = 256;
 
 /**
  * Description d'une image d'Arcade.
@@ -186,40 +184,6 @@ export function spaceshipSpec(selection) {
 
 /* --- MultiSnake et textures --- */
 
-// Morceaux du serpent : leur source sert aussi de repli (comportement d'avant)
-const SNAKE_PARTS = new Set([
-  'tete_droite.png',
-  'tete_gauche.png',
-  'tete_haut.png',
-  'tete_bas.png',
-  'corps_milieu_queue_gauche_tete_droite.png',
-  'corps_milieu_queue_bas_tete_haut.png',
-  'corps_courbe_droite_bas.png',
-  'corps_courbe_haut_droite.png',
-  'corps_courbe_gauche_haut.png',
-  'corps_courbe_bas_gauche.png',
-  'queue_fin_droite.png',
-  'queue_fin_gauche.png',
-  'queue_fin_haut.png',
-  'queue_fin_bas.png',
-]);
-
-/** Les 14 morceaux du serpent */
-export const SNAKE_PART_FILES = Object.freeze([...SNAKE_PARTS]);
-
-/** Morceau classique du serpent */
-function snakePart(file) {
-  return spec(file.replace(/\.png$/, ''), [file], { maxWidth: SNAKE_MAX_WIDTH });
-}
-
-/**
- * @param {string} file - Morceau du serpent (« tete_droite.png »)
- * @returns {SpriteSpec} Costumé pendant une fête, le morceau classique en repli
- */
-export function snakePartSpec(file) {
-  return wornSpec(snakePart(SNAKE_PARTS.has(file) ? file : 'tete_droite.png'), 'snake');
-}
-
 // Textures et pomme : source de 1024 px, petit PNG en repli (l'herbe n'en a pas)
 const TEXTURES = new Map([
   ['herbe.png', spec('herbe', ['herbe.png'])],
@@ -268,8 +232,7 @@ export function answerTokenSpec() {
 export function arcadeSpriteSpecs() {
   const monsters = Array.from({ length: MONSTER_COUNT }, (_, i) => classicMonster(i + 1));
   const ships = [...new Set(SPACESHIP_SOURCES.values())].map(source => spec(source, []));
-  const snake = [...SNAKE_PARTS].map(snakePart);
-  return [...monsters, ...AVATARS.values(), ...ships, ...snake, ...TEXTURES.values()];
+  return [...monsters, ...AVATARS.values(), ...ships, ...TEXTURES.values()];
 }
 
 // Images classiques que chaque famille costume dans les jeux d'Arcade
@@ -277,20 +240,13 @@ const COSTUMED_SPRITES = new Map([
   ['monsters', () => Array.from({ length: MONSTER_COUNT }, (_, i) => classicMonster(i + 1))],
   ['bodies', () => [...AVATARS.values()]],
   ['ships', () => PILOTED_SHIPS.map(source => spec(source, []))],
-  [
-    'snake',
-    () => [
-      ...SNAKE_PART_FILES.map(snakePart),
-      TEXTURES.get('herbe.png'),
-      TEXTURES.get('snake_apple.png'),
-    ],
-  ],
+  ['snake', () => [TEXTURES.get('herbe.png'), TEXTURES.get('snake_apple.png')]],
   ['miam', () => [TEXTURES.get('mur.png'), spec(ANSWER_TOKEN, [])]],
 ]);
 
 /**
  * Images costumées des fêtes dans les jeux d'Arcade (corps des personnages, fusées pilotées,
- * serpent, herbe et pomme de MultiSnake, murs et réponses de MultiMiam), d'après les familles
+ * herbe et pomme de MultiSnake, murs et réponses de MultiMiam), d'après les familles
  * de chaque fête : leurs variantes se génèrent comme
  * celles des images classiques, mais elles restent hors du préchargement (absentes
  * d'arcadeSpriteSpecs) ; hors ligne, l'image classique les remplace.
@@ -306,8 +262,8 @@ export function seasonalSpriteSpecs() {
 
 /**
  * Variantes à garder pour jouer hors ligne (scripts/precache-list.mjs) : une par image de
- * 1024 px (monstres, personnages, fusées). Les morceaux du serpent et les textures sont
- * gardés par leur nom de fichier, avec toutes leurs variantes, légères.
+ * 1024 px (monstres, personnages, fusées). Les textures sont gardées par leur nom de fichier,
+ * avec toutes leurs variantes, légères.
  * @returns {string[]} Chemins du site
  */
 export function arcadeOfflineImages() {

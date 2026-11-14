@@ -243,7 +243,7 @@ describe('Le dépôt', () => {
         '/assets/images/arcade/fox_head_avatar_128x128.png',
         '/assets/images/arcade/monstre01_right_128x128.png',
         '/assets/images/arcade/spaceship_default.png',
-        '/assets/images/arcade/tete_haut.png',
+        '/assets/images/arcade/snake_apple.png',
         '/assets/images/arcade/chemin.png',
         '/assets/images/arcade/herbe.png',
         // Cadeaux de l'Aventure, servis en WebP : le service worker garde leurs variantes

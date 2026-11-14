@@ -169,8 +169,8 @@ géométrie dans `js/multisnake-path.js`), plus par 14 morceaux d'image. Une fê
 habit dans `js/multisnake-skins.js` : contour, flanc, dos, reflet, taches, et au besoin un
 chapeau (bonnet de Noël, chapeau pointu du Nouvel An) ou le costume du dragon de la danse
 (Nouvel An chinois). Couleurs reprises des dessins validés de la fête ; un test exige un habit
-pour chaque fête qui costume le serpent. Les morceaux recolorés des fêtes passées (méthodes
-`serpent`, `bonnet`, `comme`) ne sont plus affichés, à retirer.
+pour chaque fête qui costume le serpent. Les morceaux d'image des fêtes passées et leurs
+méthodes de recoloration (`serpent`, `bonnet`, `comme`) ont été retirés en v64.
 
 Relire la planche, dans l'ordre de la liste : personnage reconnaissable, même côté que
 l'original (les sprites d'Arcade se retournent selon `facing`), accessoire lisible en petit,

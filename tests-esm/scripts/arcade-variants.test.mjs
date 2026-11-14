@@ -119,7 +119,6 @@ describe('variantes des images d’Arcade produites par le générateur', () => 
       expect(sizes(`assets/images/arcade/${other}.png`)).toEqual(['64', '128', '256']);
     }
     expect(sizes('assets/images/arcade/logo_mode_quizz.png')).toEqual(['128', '256', '512']);
-    expect(sizes('assets/images/arcade/tete_droite.png')).toEqual(['64', '128', '256']);
     // Hors de l'Arcade, une source de plus de 1024 px garde aussi ses trois tailles
     expect(sizes('assets/images/social/leapmultix-social-card-fr.png')).toEqual([
       '64',

@@ -146,12 +146,7 @@ describe('source haute définition de chaque image', () => {
     expect(catalog.avatarSpec('licorne-inconnue').source).toBe('fox');
   });
 
-  test('serpent et textures : sources de moins de 1024 px bornées à leurs variantes', () => {
-    expect(catalog.snakePartSpec('tete_droite.png')).toMatchObject({
-      source: 'tete_droite',
-      maxWidth: 256,
-      fallbacks: ['tete_droite.png'],
-    });
+  test('textures : variantes jusqu’à 1024 px, petit PNG en repli', () => {
     expect(catalog.textureSpec('herbe.png')).toMatchObject({ source: 'herbe', maxWidth: 1024 });
     expect(catalog.textureSpec('mur.png').fallbacks).toEqual(['mur_128x128.png']);
   });
@@ -320,8 +315,8 @@ describe('dessin : proportions gardées, taille à l’écran', () => {
     expect(ctx.calls.find(([name]) => name === 'drawImage').slice(2)).toEqual([0, 0, 300, 300]);
   });
 
-  test('morceau du serpent : remplit sa case (les morceaux se raccordent)', () => {
-    const sprite = loadedSprite(catalog.snakePartSpec('queue_fin_gauche.png'), 200, 256);
+  test('une image qui remplit sa case s’y étire (fit: fill)', () => {
+    const sprite = loadedSprite(catalog.textureSpec('mur.png'), 200, 256);
     const ctx = recordingContext(canvasAtScale(1));
     drawArcadeSprite(ctx, sprite, { x: 30, y: 30, width: 30, height: 30 }, { fit: 'fill' });
     expect(ctx.calls.find(([name]) => name === 'drawImage').slice(2)).toEqual([30, 30, 30, 30]);
