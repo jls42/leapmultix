@@ -22,15 +22,16 @@ import { cleanupGameResources } from './game-cleanup.js';
 import { InfoBar } from './components/infoBar.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
+import { gameState } from './game.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
 import { getDifficultySettings } from './difficulty.js';
 import { plausibleWrongAnswers } from './core/GameMode.js';
 import { isArcadePaused } from './arcade-time.js';
-import { spriteFor, drawArcadeSprite } from './arcade-sprites.js';
-import { textureSpec } from './arcade-sprite-catalog.js';
+import { spriteFor, drawArcadeSprite, prefetchArcadeSprite } from './arcade-sprites.js';
+import { snakeHeadSpec, textureSpec } from './arcade-sprite-catalog.js';
 import { wornSeason } from './core/seasons.js';
 import { snakeCenterline } from './multisnake-path.js';
-import { drawSnakeScene } from './multisnake-renderer.js';
+import { drawSnakeScene, IMAGE_HEAD_SIZE } from './multisnake-renderer.js';
 import { snakeSkin } from './multisnake-skins.js';
 // UserState removed - unused import
 
@@ -106,18 +107,35 @@ function boardSettingsOf(isMobile) {
 }
 
 /**
- * Habit du serpent (vert, ou celui de la fête : dragon au Nouvel An chinois) et horloge de
- * ses animations (clignement, langue, pommes avalées), arrêtée en pause ; rien ne s'anime
- * quand l'appareil demande moins d'animations
+ * Habit du serpent (vert, ou celui de la fête : dragon au Nouvel An chinois), sa tête (l'avatar
+ * du joueur sous sa capuche, regardant d'abord à droite) et horloge de ses animations
+ * (clignement, langue, pommes avalées), arrêtée en pause ; rien ne s'anime quand l'appareil
+ * demande moins d'animations
+ * @param {string} [avatar] - Avatar du joueur (sinon celui de la partie, sinon le renard)
  */
-function snakeLookOf() {
+function snakeLookOf(avatar) {
   const reduce = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
   return {
     skin: snakeSkin(snakeSeasonId()),
+    avatar: avatar || gameState?.avatar || 'fox',
+    headFacing: 'right',
     clock: 0,
     swallows: [],
     reducedMotion: reduce?.matches === true,
   };
+}
+
+/**
+ * Côté où regarde la tête-image : celui où va le serpent ; quand il monte ou descend, le
+ * dernier pris
+ * @param {{x: number, y: number}} direction
+ * @param {'left'|'right'} previous
+ * @returns {'left'|'right'}
+ */
+export function headFacingOf(direction, previous) {
+  if (direction.x < 0) return 'left';
+  if (direction.x > 0) return 'right';
+  return previous;
 }
 
 /**
@@ -201,7 +219,7 @@ class SnakeGame {
 
     // Couleur des pommes sans image ; habit du serpent et horloge de ses animations
     this.numberBubbleColor = '#2196F3';
-    Object.assign(this, snakeLookOf());
+    Object.assign(this, snakeLookOf(options.avatar));
 
     // Initialiser les positions
     this.numberPositions = [];
@@ -253,11 +271,14 @@ class SnakeGame {
     this.nextDirection = { x: 1, y: 0 };
   }
 
-  // Images du plateau : l'herbe et les pommes (le serpent, lui, est dessiné)
+  // Images : l'herbe du plateau, les pommes des réponses et la tête du serpent, chargée dès
+  // maintenant à sa taille (le corps, lui, est dessiné)
   loadSnakeImages() {
-    // Herbe du plateau et pommes des réponses
     this.grassTexture = spriteFor(textureSpec('herbe.png'));
     this.appleTexture = spriteFor(textureSpec('snake_apple.png'));
+    this.headSprite = spriteFor(snakeHeadSpec(this.avatar));
+    const headSize = IMAGE_HEAD_SIZE * this.cellSize;
+    prefetchArcadeSprite(this.canvas, this.headSprite, headSize, headSize);
   }
 
   // Grille du plateau, choisie au lancement pour toute la place : sur téléphone, plus haute
@@ -962,6 +983,7 @@ class SnakeGame {
   // Le serpent d'un seul tenant, à sa place du moment entre deux cases (js/multisnake-renderer.js)
   drawSnake() {
     const board = { cols: this.cols, rows: this.rows };
+    this.headFacing = headFacingOf(this.direction, this.headFacing);
     drawSnakeScene(this.ctx, {
       centerline: snakeCenterline({
         last: this.lastPositions,
@@ -976,7 +998,15 @@ class SnakeGame {
       time: this.clock,
       bulges: this.swallowedApples(),
       motion: !this.reducedMotion,
+      headImage: (ctx, box, facing) => this.drawHeadImage(ctx, box, facing),
+      facing: this.headFacing,
     });
+  }
+
+  // Tête du serpent (l'avatar sous sa capuche) dans sa boîte, tournée du côté voulu ; faux tant
+  // qu'elle n'est pas chargée
+  drawHeadImage(ctx, box, facing) {
+    return drawArcadeSprite(ctx, this.headSprite, box, { facing });
   }
 
   // Distance à la tête (cases) de chaque pomme en train de descendre ; les arrivées s'oublient

@@ -20,6 +20,7 @@ const {
   avatarSpec,
   monsterSpec,
   seasonalSpriteSpecs,
+  snakeHeadSpec,
   spaceshipSpec,
   textureSpec,
 } = await import('../js/arcade-sprite-catalog.js');
@@ -63,7 +64,11 @@ const FAMILY_FILES = new Map([
   ['ships', () => SHIP_SELECTIONS.map(selection => arcade(spaceshipSpec(selection).source))],
   [
     'snake',
-    () => [arcade(textureSpec('snake_apple.png').source), arcade(textureSpec('herbe.png').source)],
+    () => [
+      arcade(textureSpec('snake_apple.png').source),
+      arcade(textureSpec('herbe.png').source),
+      ...AVATAR_IDS.map(avatar => arcade(snakeHeadSpec(avatar).source)),
+    ],
   ],
   ['miam', () => [arcade(textureSpec('mur.png').source), arcade(answerTokenSpec().source)]],
   ['logos', () => [...MODE_LOGOS.values(), ...ARCADE_LOGOS].map(file => arcade(logoSource(file)))],
@@ -167,12 +172,13 @@ describe('Arcade', () => {
 
   test('les images costumées ont leurs variantes, mais restent hors du préchargement', () => {
     const seasonal = seasonalSpriteSpecs().map(item => item.source);
-    // Corps (5), fusées pilotées (10), herbe et pomme de MultiSnake, murs et réponses de
-    // MultiMiam, 155 monstres : pour chaque fête, les familles qu'elle costume
+    // Corps (5), fusées pilotées (10), herbe, pomme et têtes (5) du serpent de MultiSnake,
+    // murs et réponses de MultiMiam, 155 monstres : pour chaque fête, les familles qu'elle
+    // costume
     const spritesOf = new Map([
       ['bodies', AVATAR_IDS.length],
       ['ships', 2 * AVATAR_IDS.length],
-      ['snake', 2],
+      ['snake', 2 + AVATAR_IDS.length],
       ['miam', 2],
       ['monsters', MONSTER_COUNT],
     ]);

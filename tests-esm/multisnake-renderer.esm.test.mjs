@@ -3,10 +3,11 @@
  * (js/multisnake-skins.js) : chaque habit se dessine, aux couleurs de sa fête ; chaque fête
  * qui costume le serpent a son habit ; la langue sort et l'œil cligne au temps qui passe,
  * jamais quand l'appareil demande moins d'animations ; un serpent au bord se dessine aussi
- * de l'autre côté.
+ * de l'autre côté ; la tête-image (l'avatar sous sa capuche) remplace la tête dessinée une
+ * fois chargée, debout, tournée du côté où va le serpent.
  */
 import { describe, test, expect } from '@jest/globals';
-import { drawSnakeScene } from '../js/multisnake-renderer.js';
+import { drawSnakeScene, IMAGE_HEAD_SIZE } from '../js/multisnake-renderer.js';
 import { SKINNED_SEASONS, snakeSkin } from '../js/multisnake-skins.js';
 import { SEASONS } from '../js/core/seasons.js';
 
@@ -23,11 +24,13 @@ const LONG = [
 ];
 
 /**
- * Contexte qui retient chaque appel et chaque couleur posée, et compte les save/restore
- * @returns {{ctx: object, calls: string[], fills: Set<string>, strokes: Set<string>, depth: () => number}}
+ * Contexte qui retient chaque appel (et ses arguments) et chaque couleur posée, et compte les
+ * save/restore
+ * @returns {{ctx: object, calls: string[], args: unknown[][], fills: Set<string>, strokes: Set<string>, depth: () => number}}
  */
 function recordingContext() {
   const calls = [];
+  const args = [];
   const fills = new Set();
   const strokes = new Set();
   let depth = 0;
@@ -35,8 +38,9 @@ function recordingContext() {
   const ctx = new Proxy(state, {
     get: (target, prop) => {
       if (prop in target) return target[prop];
-      return () => {
+      return (...values) => {
         calls.push(String(prop));
+        args.push([String(prop), ...values]);
         if (prop === 'save') depth++;
         if (prop === 'restore') depth--;
       };
@@ -48,7 +52,7 @@ function recordingContext() {
       return true;
     },
   });
-  return { ctx, calls, fills, strokes, depth: () => depth };
+  return { ctx, calls, args, fills, strokes, depth: () => depth };
 }
 
 function draw(skin, options = {}) {
@@ -62,13 +66,15 @@ function draw(skin, options = {}) {
     time: options.time ?? 1000,
     bulges: [2],
     motion: options.motion,
+    headImage: options.headImage,
+    facing: options.facing,
   });
   return record;
 }
 
 describe('habits du serpent', () => {
-  test('sans fête : le serpent vert', () => {
-    expect(snakeSkin(null)).toMatchObject({ kind: 'snake', back: '#1ba234', hat: null });
+  test('sans fête : le serpent vert, aux couleurs de la capuche', () => {
+    expect(snakeSkin(null)).toMatchObject({ kind: 'snake', back: '#8fd014', hat: null });
     expect(snakeSkin('inconnue')).toBe(snakeSkin(null));
   });
 
@@ -137,5 +143,59 @@ describe('dessin', () => {
         { x: -2, y: 5 },
       ])
     ).toBe(2);
+  });
+});
+
+describe('tête-image : l’avatar du joueur sous sa capuche', () => {
+  // Langue dehors à 1900 ms : la tête dessinée se reconnaît à elle
+  const TONGUE_OUT = 1900;
+  // Serpent qui descend, tête en bas
+  const DOWN = [
+    { x: 5, y: 6 },
+    { x: 5, y: 5 },
+    { x: 5, y: 4 },
+  ];
+
+  function withImage(loaded, options = {}) {
+    const boxes = [];
+    const headImage = (_ctx, box, facing) => {
+      boxes.push({ box, facing });
+      return loaded;
+    };
+    const record = draw(snakeSkin(null), { time: TONGUE_OUT, ...options, headImage });
+    return { ...record, boxes };
+  }
+
+  test('chargée, elle remplace la tête dessinée, à sa taille, centrée sur la tête', () => {
+    const { boxes, strokes, depth } = withImage(true);
+    const size = IMAGE_HEAD_SIZE * 40;
+    expect(boxes).toEqual([
+      { box: { x: -size / 2, y: -size / 2, width: size, height: size }, facing: 'right' },
+    ]);
+    expect(strokes.has(TONGUE)).toBe(false);
+    expect(depth()).toBe(0);
+  });
+
+  test('pas encore chargée, la tête dessinée la remplace', () => {
+    const { boxes, strokes, depth } = withImage(false);
+    expect(boxes).toHaveLength(1);
+    expect(strokes.has(TONGUE)).toBe(true);
+    expect(depth()).toBe(0);
+  });
+
+  test('elle se dessine en unités du jeu, pour se charger à sa taille à l’écran', () => {
+    const { args } = withImage(true);
+    expect(args).toContainEqual(['scale', 1 / 40, 1 / 40]);
+  });
+
+  test('debout à l’horizontale, un peu penchée vers où elle va quand le serpent descend', () => {
+    const turns = record => record.args.filter(([name]) => name === 'rotate').map(([, a]) => a);
+    expect(turns(withImage(true))).toEqual([0]);
+    const right = withImage(true, { centerline: DOWN, facing: 'right' });
+    const left = withImage(true, { centerline: DOWN, facing: 'left' });
+    expect(turns(right)).toHaveLength(1);
+    expect(turns(right).at(0)).toBeCloseTo(0.25);
+    expect(turns(left).at(0)).toBeCloseTo(-0.25);
+    expect(left.boxes.at(0).facing).toBe('left');
   });
 });

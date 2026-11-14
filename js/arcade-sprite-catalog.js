@@ -198,6 +198,20 @@ const COSTUMED_TEXTURES = new Map([
   ['mur.png', 'miam'],
 ]);
 
+// Tête du serpent : l'avatar du joueur sous une capuche de serpent, dessinée de face ou
+// tournée vers la droite (fox_snake_head.png, panda_snake_head.png, unicorn_snake_head.png,
+// dragon_snake_head.png, astronaut_snake_head.png). Sans repli : tant qu'elle n'est pas là,
+// le jeu dessine une tête.
+const SNAKE_HEADS = new Map([...AVATARS.keys()].map(id => [id, spec(`${id}_snake_head`, [])]));
+
+/**
+ * @param {string} name - Avatar du joueur (fox, panda, unicorn, dragon, astronaut)
+ * @returns {SpriteSpec} Le renard pour un nom inconnu ; costumé pendant une fête
+ */
+export function snakeHeadSpec(name) {
+  return wornSpec(SNAKE_HEADS.get(name) ?? SNAKE_HEADS.get('fox'), 'snake');
+}
+
 /**
  * @param {string} file - herbe.png, mur.png, chemin.png ou snake_apple.png
  * @returns {SpriteSpec}
@@ -232,7 +246,13 @@ export function answerTokenSpec() {
 export function arcadeSpriteSpecs() {
   const monsters = Array.from({ length: MONSTER_COUNT }, (_, i) => classicMonster(i + 1));
   const ships = [...new Set(SPACESHIP_SOURCES.values())].map(source => spec(source, []));
-  return [...monsters, ...AVATARS.values(), ...ships, ...TEXTURES.values()];
+  return [
+    ...monsters,
+    ...AVATARS.values(),
+    ...SNAKE_HEADS.values(),
+    ...ships,
+    ...TEXTURES.values(),
+  ];
 }
 
 // Images classiques que chaque famille costume dans les jeux d'Arcade
@@ -240,13 +260,16 @@ const COSTUMED_SPRITES = new Map([
   ['monsters', () => Array.from({ length: MONSTER_COUNT }, (_, i) => classicMonster(i + 1))],
   ['bodies', () => [...AVATARS.values()]],
   ['ships', () => PILOTED_SHIPS.map(source => spec(source, []))],
-  ['snake', () => [TEXTURES.get('herbe.png'), TEXTURES.get('snake_apple.png')]],
+  [
+    'snake',
+    () => [TEXTURES.get('herbe.png'), TEXTURES.get('snake_apple.png'), ...SNAKE_HEADS.values()],
+  ],
   ['miam', () => [TEXTURES.get('mur.png'), spec(ANSWER_TOKEN, [])]],
 ]);
 
 /**
  * Images costumées des fêtes dans les jeux d'Arcade (corps des personnages, fusées pilotées,
- * herbe et pomme de MultiSnake, murs et réponses de MultiMiam), d'après les familles
+ * herbe, pomme et têtes du serpent de MultiSnake, murs et réponses de MultiMiam), d'après les familles
  * de chaque fête : leurs variantes se génèrent comme
  * celles des images classiques, mais elles restent hors du préchargement (absentes
  * d'arcadeSpriteSpecs) ; hors ligne, l'image classique les remplace.
@@ -262,7 +285,7 @@ export function seasonalSpriteSpecs() {
 
 /**
  * Variantes à garder pour jouer hors ligne (scripts/precache-list.mjs) : une par image de
- * 1024 px (monstres, personnages, fusées). Les textures sont gardées par leur nom de fichier,
+ * 1024 px (monstres, personnages, têtes du serpent, fusées). Les textures sont gardées par leur nom de fichier,
  * avec toutes leurs variantes, légères.
  * @returns {string[]} Chemins du site
  */

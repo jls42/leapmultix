@@ -1,7 +1,7 @@
 /**
  * Tests E2E - Netteté des images des jeux d'Arcade : sur un ordinateur (densité 1 et 2) et un
- * téléphone (densité 3), chaque image dessinée garde ses proportions (sauf les morceaux du
- * serpent, qui remplissent leur case pour se raccorder), et, avec les variantes WebP
+ * téléphone (densité 3), chaque image dessinée garde ses proportions (sauf les cases du
+ * labyrinthe de MultiMiam, un peu étirées), tête du serpent comprise, et, avec les variantes WebP
  * produites par npm run assets:generate, elle a au moins autant de pixels qu'elle en occupe
  * à l'écran, sans jamais venir d'un PNG du dépôt.
  * Avant : fusée de 128 px dessinée sur 175 × 140 (étirée de 25 %), monstres de 128 px sur

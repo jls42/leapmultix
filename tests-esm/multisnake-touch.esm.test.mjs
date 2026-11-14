@@ -17,6 +17,7 @@ jest.unstable_mockModule('../js/utils-es6.js', () => ({
   getTranslation: key => key,
 }));
 jest.unstable_mockModule('../js/arcade.js', () => ({ showArcadeGameOver: jest.fn() }));
+jest.unstable_mockModule('../js/game.js', () => ({ gameState: { avatar: 'fox' } }));
 jest.unstable_mockModule('../js/arcade-points.js', () => ({ showArcadePenalty: jest.fn() }));
 jest.unstable_mockModule('../js/game-cleanup.js', () => ({ cleanupGameResources: jest.fn() }));
 jest.unstable_mockModule('../js/components/infoBar.js', () => ({
