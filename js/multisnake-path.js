@@ -19,6 +19,10 @@ const BULGE_SPREAD = 0.42;
 const SAMPLE_STEP = 0.1;
 /** Recul du point qui donne le cap de la tête : la tête tourne pendant le pas */
 const HEADING_LOOKBACK = 0.45;
+/** Écart sous lequel deux points du corps se confondent, en cases */
+const MIN_GAP = 0.000001;
+/** Contour sans décalage */
+const NO_OFFSET = Object.freeze({ x: 0, y: 0 });
 /** Marge du dessin au-delà de la ligne médiane (tête, crinière), pour les copies au bord */
 const DRAW_MARGIN = 1.3;
 
@@ -91,7 +95,7 @@ export function stepKind(last, current) {
 export function snakeCenterline({ last, current, progress, board }) {
   const cells = unwrapCells(current, board);
   const kind = stepKind(last, current);
-  if (kind === 'still' || !(progress < 1)) return cells;
+  if (kind === 'still' || progress >= 1) return cells;
   const line = [lerpPoint(cells.at(1), cells.at(0), progress), ...cells.slice(1)];
   if (kind === 'grew') return line;
   const tail = cells.at(-1);
@@ -107,7 +111,7 @@ export function snakeCenterline({ last, current, progress, board }) {
 function withoutRepeats(points) {
   return points.filter((point, index) => {
     const prev = points.at(index - 1);
-    return index === 0 || Math.hypot(point.x - prev.x, point.y - prev.y) > 1e-6;
+    return index === 0 || Math.hypot(point.x - prev.x, point.y - prev.y) > MIN_GAP;
   });
 }
 
@@ -163,7 +167,7 @@ export function sampleCenterline(points, step = SAMPLE_STEP) {
       const point = bezierPoint(piece, index / count);
       const prev = samples.at(-1);
       const length = Math.hypot(point.x - prev.x, point.y - prev.y);
-      if (length > 1e-6) samples.push({ ...point, s: prev.s + length });
+      if (length > MIN_GAP) samples.push({ ...point, s: prev.s + length });
     }
   }
   return samples;
@@ -228,7 +232,7 @@ export function normalsOf(samples) {
  * @param {{x: number, y: number}} [offset] - Décalage (ombre, reflet)
  * @returns {{x: number, y: number}[]}
  */
-export function bodyOutline(samples, radiusAt, offset = { x: 0, y: 0 }) {
+export function bodyOutline(samples, radiusAt, offset = NO_OFFSET) {
   const normals = normalsOf(samples);
   const side = sign =>
     samples.map((point, index) => {
