@@ -26,7 +26,14 @@ const PHONE_VIEWPORT = {
 };
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
-const ARCADE_GAMES = ['invasion', 'multimiam', 'multimemory', 'multisnake', 'multipop'];
+const ARCADE_GAMES = [
+  'invasion',
+  'multimiam',
+  'multimemory',
+  'multisnake',
+  'multipop',
+  'multigoal',
+];
 
 /**
  * Ce qui dépasse de l'écran du téléphone, en pixels (0 : la page ne défile pas).

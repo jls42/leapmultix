@@ -56,7 +56,7 @@
 
 ## Opis
 
-LeapMultix to interaktywna edukacyjna aplikacja internetowa przeznaczona dla dzieci w wieku od 6 do 12 lat, pomagająca opanować 4 działania arytmetyczne: mnożenie (×), dodawanie (+), odejmowanie (−) i dzielenie (÷). Oferuje **6 trybów gry** i **5 minigier zręcznościowych (arcade)** w intuicyjnym, dostępnym i wielojęzycznym interfejsie.
+LeapMultix to interaktywna edukacyjna aplikacja internetowa przeznaczona dla dzieci w wieku od 6 do 12 lat, pomagająca opanować 4 działania arytmetyczne: mnożenie (×), dodawanie (+), odejmowanie (−) i dzielenie (÷). Oferuje **6 trybów gry** i **6 minigier zręcznościowych (arcade)** w intuicyjnym, dostępnym i wielojęzycznym interfejsie.
 
 **Obsługa wielu działań:** wszystkie tryby obsługują cztery działania. Wyboru dokonuje się na ekranie głównym i obowiązuje on przez całą rozgrywkę.
 
@@ -76,25 +76,25 @@ LeapMultix to interaktywna edukacyjna aplikacja internetowa przeznaczona dla dzi
 |            **Odkrywanie** — każde równanie jest przedstawiane za pomocą punktów, skoków lub liczenia, wraz ze wskazówką dotyczącą tabliczki.             | **Quiz** — wybór dziecka pozostaje widoczny obok prawidłowej odpowiedzi, a objaśnienie szczegółowo przedstawia obliczenie. |
 |                                          ![Tryb Wyzwanie: odliczanie i bieżąca seria](docs/media/05-defi.webp)                                           |              ![Tryb Przygoda: mapa dziesięciu poziomów, kolejne są zablokowane](docs/media/06-aventure.webp)               |
 |                    **Wyzwanie** — wyścig z czasem. Po błędzie stoper zatrzymuje się, aby można było przeczytać prawidłową odpowiedź.                     |                       **Przygoda** — dziesięć poziomów odblokowywanych kolejno w zamian za gwiazdki.                       |
-|                                  ![Tryb Na czas: rozgrywka z odejmowaniem, stoper i postęp](docs/media/14-chrono.webp)                                   |                                  ![Menu Arcade: pięć minigier](docs/media/07-arcade.webp)                                  |
-| **Na czas** — dziesięć prawidłowych odpowiedzi w wyścigu z czasem, dla wybranego działania; błędnie rozwiązane obliczenia trafiają na listę do powtórki. |                   **Arcade** — pięć minigier z regulacją poziomu trudności i wyborem statku kosmicznego.                   |
+|                                  ![Tryb Na czas: rozgrywka z odejmowaniem, stoper i postęp](docs/media/14-chrono.webp)                                   |                                 ![Menu Arcade: sześć minigier](docs/media/07-arcade.webp)                                  |
+| **Na czas** — dziesięć prawidłowych odpowiedzi w wyścigu z czasem, dla wybranego działania; błędnie rozwiązane obliczenia trafiają na listę do powtórki. |                  **Arcade** — sześć minigier z regulacją poziomu trudności i wyborem statku kosmicznego.                   |
 |             ![Panel wyników: rozgrywki, rekordy i odpowiedzi w każdym trybie, z podziałem na działania](docs/media/08-tableau-de-bord.webp)              |                ![Personalizacja: awatary, motywy, ułatwienia dostępu](docs/media/09-personnalisation.webp)                 |
 |             **Panel wyników** — rozgrywki i rekordy w każdym trybie, z podziałem na działania; gwiazdki i tabliczki do powtórki w mnożeniu.              |        **Personalizacja** — awatary odblokowywane za monety, motyw kolorystyczny, rozmiar tekstu i wysoki kontrast.        |
 
 ### Minigry arcade
 
-Pięć gier, które zadają to samo pytanie — wyświetlane nad obszarem
+Sześć gier, które zadają to samo pytanie — wyświetlane nad obszarem
 gry, wraz z pozostałym czasem i liczbą żyć — lecz każda z nich wymaga
 innego działania.
 
-|                                                                                                                                            |                                                                                                   |
-| :----------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------: |
-|                       ![MultiInvaders: potwory z liczbami i statek u dołu ekranu](docs/media/10-multiinvaders.webp)                        | ![MultiMiam: labirynt, w którym kulki zawierają możliwe odpowiedzi](docs/media/11-multimiam.webp) |
-|       **MultiInvaders** — strzelaj do błędnych odpowiedzi, oszczędzając prawidłową: ukrywa ona przyjaciela, którego trzeba uwolnić.        |       **MultiMiam** — przemierzaj labirynt, aby złapać prawidłowy wynik, unikając potworów.       |
-|                  ![MultiMemory: siatka kart, dwie odwrócone pokazują działanie i liczbę](docs/media/12-multimemory.webp)                   |          ![MultiSnake: wąż i ponumerowane jabłka na łące](docs/media/13-multisnake.webp)          |
-|                       **MultiMemory** — przypomnij sobie, na której karcie znajduje się wynik odwróconego działania.                       |      **MultiSnake** — rośnij, połykając prawidłowe liczby, i unikaj wszystkich pozostałych.       |
-| ![MultiPop: potwory wychodzą ze swoich norek, każdy z liczbą na tabliczce, a z nimi przyjaciel z serduszkiem](docs/media/15-multipop.webp) |                                                                                                   |
-|           **MultiPop** — uderz potwora z prawidłową odpowiedzią, zanim schowa się z powrotem do norki, nie dotykając przyjaciół.           |                                                                                                   |
+|                                                                                                                                            |                                                                                                                                                     |
+| :----------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------: |
+|                       ![MultiInvaders: potwory z liczbami i statek u dołu ekranu](docs/media/10-multiinvaders.webp)                        |                          ![MultiMiam: labirynt, w którym kulki zawierają możliwe odpowiedzi](docs/media/11-multimiam.webp)                          |
+|       **MultiInvaders** — strzelaj do błędnych odpowiedzi, oszczędzając prawidłową: ukrywa ona przyjaciela, którego trzeba uwolnić.        |                                **MultiMiam** — przemierzaj labirynt, aby złapać prawidłowy wynik, unikając potworów.                                |
+|                  ![MultiMemory: siatka kart, dwie odwrócone pokazują działanie i liczbę](docs/media/12-multimemory.webp)                   |                                   ![MultiSnake: wąż i ponumerowane jabłka na łące](docs/media/13-multisnake.webp)                                   |
+|                       **MultiMemory** — przypomnij sobie, na której karcie znajduje się wynik odwróconego działania.                       |                               **MultiSnake** — rośnij, połykając prawidłowe liczby, i unikaj wszystkich pozostałych.                                |
+| ![MultiPop: potwory wychodzą ze swoich norek, każdy z liczbą na tabliczce, a z nimi przyjaciel z serduszkiem](docs/media/15-multipop.webp) | ![MultiGoal: bramka z tarczami, z których każda ma liczbę, przed nimi potwór bramkarz, piłka i lis na punkcie karnym](docs/media/16-multigoal.webp) |
+|           **MultiPop** — uderz potwora z prawidłową odpowiedzią, zanim schowa się z powrotem do norki, nie dotykając przyjaciół.           |                          **MultiGoal** — strzel w tarczę z prawidłową odpowiedzią, gdy potwór bramkarz nie stoi przed nią.                          |
 
 ## ✨ Funkcje
 
@@ -113,6 +113,7 @@ innego działania.
 - **MultiMemory**: gra pamięciowa — dopasowywanie działań do wyników
 - **MultiSnake**: edukacyjna gra typu Snake — rośnięcie poprzez zjadanie prawidłowych liczb
 - **MultiPop**: Gra na refleks — traf w potwora z poprawną odpowiedzią, nigdy w przyjaciela
+- **MultiGoal**: Rzuty karne — strzel w tarczę z poprawną odpowiedzią, gdy bramkarz nie stoi przed nią
 
 ### ➕ Obsługa wielu działań
 
@@ -266,6 +267,7 @@ leapmultix/
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
 │   ├── multipop-*.js       # Mini-jeu des monstres qui surgissent (moteur, rendu ; partie : arcade-multipop.js)
+│   ├── multigoal-*.js      # Mini-jeu des tirs au but (moteur, rendu ; partie : arcade-multigoal.js)
 │   ├── i18n.js, i18n-store.js                # Internationalisation
 │   ├── security-utils.js, error-handlers.js, logger.js
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
@@ -489,7 +491,7 @@ LeapMultix jest kompletną aplikacją PWA z obsługą trybu offline i możliwoś
 
 - Instalacja: wstępne ładowanie (preload) wszystkiego, czego wymaga gra, lista generowana z kodu
   przez `scripts/precache-list.mjs` (`npm run precache:update`, zweryfikowana testami): po
-  pierwszej wizycie 6 trybów i 5 gier Arcade uruchamia się offline
+  pierwszej wizycie 6 trybów i 6 gier Arcade uruchamia się offline
 - Nawigacja: Network-first z limitem 4 s: po jego przekroczeniu (sieć, która nie odpowiada: szkolne Wi-Fi, portal przechwytujący) lub offline używana jest strona gry z pamięci podręcznej (`offline.html` tylko dla strony, która nigdy nie została zapisana)
 - Obrazy: Cache-first; offline używany jest inny rozmiar tego samego sprite’a lub inne tło tego samego awatara
 - Tłumaczenia: Stale-while-revalidate w celu aktualizacji w tle

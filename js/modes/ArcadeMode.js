@@ -46,49 +46,26 @@ const CONTROL_ICON_PATHS = {
   ],
 };
 
-/** Lignes d'aide de chaque jeu : type de commande et clé de traduction */
-const CONTROL_LINES = new Map([
-  [
-    'invasion',
-    [
-      ['keyboard', 'arcade.controls.invasion.keyboard'],
-      ['mouse', 'arcade.controls.invasion.mouse'],
-      ['touch', 'arcade.controls.invasion.touch'],
-    ],
-  ],
-  [
-    'multimiam',
-    [
-      ['keyboard', 'arcade.controls.multimiam.keyboard'],
-      ['mouse', 'arcade.controls.multimiam.mouse'],
-      ['touch', 'arcade.controls.multimiam.touch'],
-    ],
-  ],
-  [
-    'multimemory',
-    [
-      ['keyboard', 'arcade.controls.multimemory.keyboard'],
-      ['mouse', 'arcade.controls.multimemory.mouse'],
-      ['touch', 'arcade.controls.multimemory.touch'],
-    ],
-  ],
-  [
-    'multisnake',
-    [
-      ['keyboard', 'arcade.controls.multisnake.keyboard'],
-      ['mouse', 'arcade.controls.multisnake.mouse'],
-      ['touch', 'arcade.controls.multisnake.touch'],
-    ],
-  ],
-  [
-    'multipop',
-    [
-      ['keyboard', 'arcade.controls.multipop.keyboard'],
-      ['mouse', 'arcade.controls.multipop.mouse'],
-      ['touch', 'arcade.controls.multipop.touch'],
-    ],
-  ],
-]);
+// Les trois façons de jouer, dans l'ordre des lignes d'aide
+const CONTROL_INPUTS = ['keyboard', 'mouse', 'touch'];
+const GAMES_WITH_CONTROLS = [
+  'invasion',
+  'multimiam',
+  'multimemory',
+  'multisnake',
+  'multipop',
+  'multigoal',
+];
+/**
+ * Lignes d'aide de chaque jeu : type de commande et clé de traduction
+ * (arcade.controls.<jeu>.keyboard, .mouse et .touch)
+ */
+const CONTROL_LINES = new Map(
+  GAMES_WITH_CONTROLS.map(game => [
+    game,
+    CONTROL_INPUTS.map(input => [input, `arcade.controls.${game}.${input}`]),
+  ])
+);
 
 // Émoji placé en tête d'un ancien texte de traduction (🕹️, ⌨️…) : l'icône est dessinée
 const LEADING_EMOJI = /^(?:[\p{Extended_Pictographic}\uFE0F\u200D]+\s*)+/u;
@@ -108,6 +85,7 @@ const TITRES_DE_JEU = {
     getTranslation('arcade.multiMiam.title') || getTranslation('arcade_pacman_title'),
   multimemory: () => getTranslation('arcade.multiMemory.title'),
   multipop: () => getTranslation('arcade_pop_title'),
+  multigoal: () => getTranslation('arcade_goal_title'),
 };
 
 // Éléments de réglage d'une tuile : un clic dedans ne referme pas la tuile
@@ -130,6 +108,10 @@ const ARCADE_LOADERS = {
   multipop: {
     charger: () => import('../arcade-multipop.js'),
     demarrer: 'startPopArcade',
+  },
+  multigoal: {
+    charger: () => import('../arcade-multigoal.js'),
+    demarrer: 'startGoalArcade',
   },
 };
 
@@ -225,6 +207,13 @@ export class ArcadeMode extends GameMode {
         descKey: 'arcade_pop_desc',
         logo: 'logo_multipop.png',
         startFunction: 'startPopArcade',
+      },
+      {
+        id: 'multigoal',
+        nameKey: 'arcade_goal_title',
+        descKey: 'arcade_goal_desc',
+        logo: 'logo_multigoal.png',
+        startFunction: 'startGoalArcade',
       },
     ];
 
@@ -343,6 +332,8 @@ export class ArcadeMode extends GameMode {
         return getTranslation('arcade.multiMemory.description');
       case 'multipop':
         return getTranslation('arcade_pop_desc');
+      case 'multigoal':
+        return getTranslation('arcade_goal_desc');
       default:
         return '';
     }

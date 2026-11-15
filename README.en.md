@@ -56,7 +56,7 @@
 
 ## Description
 
-LeapMultix is an interactive educational web application designed for children aged 6 to 12 to master the 4 arithmetic operations: multiplication (×), addition (+), subtraction (−), and division (÷). It offers **6 game modes** and **5 arcade mini-games** through an intuitive, accessible, multilingual interface.
+LeapMultix is an interactive educational web application designed for children aged 6 to 12 to master the 4 arithmetic operations: multiplication (×), addition (+), subtraction (−), and division (÷). It offers **6 game modes** and **6 arcade mini-games** through an intuitive, accessible, multilingual interface.
 
 **Multi-operation support:** all modes support all four operations. The operation is selected on the home screen and applies throughout the entire experience.
 
@@ -76,24 +76,24 @@ LeapMultix is an interactive educational web application designed for children a
 |           **Discovery** — each equation is illustrated with dots, jumps, or counting, along with a tip for the table.            | **Quiz** — the child's choice remains displayed next to the correct answer, and the explanation breaks down the calculation. |
 |                             ![Challenge Mode: countdown and current streak](docs/media/05-defi.webp)                             |              ![Adventure Mode: map of the ten levels, with upcoming levels locked](docs/media/06-aventure.webp)              |
 |       **Challenge** — a race against the clock. After an error, the timer freezes long enough to read the correct answer.        |                       **Adventure** — ten levels that unlock one after another in exchange for stars.                        |
-|                        ![Chrono Mode: a subtraction race, timer, and progress](docs/media/14-chrono.webp)                        |                                ![Arcade menu: the five mini-games](docs/media/07-arcade.webp)                                |
-| **Chrono** — ten correct answers against the clock using the selected operation; missed calculations are added to a review list. |                          **Arcade** — five mini-games, with difficulty settings and ship selection.                          |
+|                        ![Chrono Mode: a subtraction race, timer, and progress](docs/media/14-chrono.webp)                        |                                ![Arcade menu: the six mini-games](docs/media/07-arcade.webp)                                 |
+| **Chrono** — ten correct answers against the clock using the selected operation; missed calculations are added to a review list. |                          **Arcade** — six mini-games, with difficulty settings and ship selection.                           |
 |      ![Dashboard: games, records, and answers for each mode, broken down by operation](docs/media/08-tableau-de-bord.webp)       |                    ![Customization: avatars, themes, accessibility](docs/media/09-personnalisation.webp)                     |
 |      **Dashboard** — games and records for each mode, broken down by operation; stars and multiplication tables to review.       |                   **Customization** — avatars unlocked with coins, color theme, text size, high contrast.                    |
 
 ### Arcade Mini-Games
 
-Five games asking the same question — shown above the play area, along with
+Six games asking the same question — shown above the play area, along with
 remaining time and lives — but each requiring a different action.
 
-|                                                                                                                                       |                                                                                            |
-| :-----------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------: |
-|        ![MultiInvaders: monsters carrying numbers, with a ship at the bottom of the screen](docs/media/10-multiinvaders.webp)         |   ![MultiMiam: a maze where dots display possible answers](docs/media/11-multimiam.webp)   |
-|              **MultiInvaders** — shoot the incorrect answers and spare the correct one: it is hiding a friend to rescue.              | **MultiMiam** — navigate the maze to catch the correct result while avoiding the monsters. |
-|       ![MultiMemory: a grid of cards, with two flipped over showing a calculation and a number](docs/media/12-multimemory.webp)       |   ![MultiSnake: a snake and numbered apples in a meadow](docs/media/13-multisnake.webp)    |
-|                          **MultiMemory** — remember which card holds the result of the revealed calculation.                          |       **MultiSnake** — grow by eating the correct numbers and avoid all the others.        |
-| ![MultiPop: monsters popping out of holes, each holding a sign with a number, and a friend with a heart](docs/media/15-multipop.webp) |                                                                                            |
-|      **MultiPop** — bop the monster carrying the correct answer before it hides back in its hole, without touching the friends.       |                                                                                            |
+|                                                                                                                                       |                                                                                                                                                                                 |
+| :-----------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|        ![MultiInvaders: monsters carrying numbers, with a ship at the bottom of the screen](docs/media/10-multiinvaders.webp)         |                                             ![MultiMiam: a maze where dots display possible answers](docs/media/11-multimiam.webp)                                              |
+|              **MultiInvaders** — shoot the incorrect answers and spare the correct one: it is hiding a friend to rescue.              |                                           **MultiMiam** — navigate the maze to catch the correct result while avoiding the monsters.                                            |
+|       ![MultiMemory: a grid of cards, with two flipped over showing a calculation and a number](docs/media/12-multimemory.webp)       |                                              ![MultiSnake: a snake and numbered apples in a meadow](docs/media/13-multisnake.webp)                                              |
+|                          **MultiMemory** — remember which card holds the result of the revealed calculation.                          |                                                  **MultiSnake** — grow by eating the correct numbers and avoid all the others.                                                  |
+| ![MultiPop: monsters popping out of holes, each holding a sign with a number, and a friend with a heart](docs/media/15-multipop.webp) | ![MultiGoal: a football goal with targets each showing a number, a monster goalkeeper in front of them, the ball and the fox at the penalty spot](docs/media/16-multigoal.webp) |
+|      **MultiPop** — bop the monster carrying the correct answer before it hides back in its hole, without touching the friends.       |                               **MultiGoal** — shoot at the target carrying the correct answer when the monster goalkeeper is not in front of it.                                |
 
 ## ✨ Features
 
@@ -112,6 +112,7 @@ remaining time and lives — but each requiring a different action.
 - **MultiMemory**: Memory game — Match operations with their results
 - **MultiSnake**: Educational Snake — Grow by eating the correct numbers
 - **MultiPop**: Reflex game — Bop the monster holding the correct answer, never a friend
+- **MultiGoal**: Penalty shootout — Shoot at the target with the correct answer when the goalkeeper is not in front of it
 
 ### ➕ Multi-Operation Support
 
@@ -265,6 +266,7 @@ leapmultix/
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
 │   ├── multipop-*.js       # Mini-jeu des monstres qui surgissent (moteur, rendu ; partie : arcade-multipop.js)
+│   ├── multigoal-*.js      # Mini-jeu des tirs au but (moteur, rendu ; partie : arcade-multigoal.js)
 │   ├── i18n.js, i18n-store.js                # Internationalisation
 │   ├── security-utils.js, error-handlers.js, logger.js
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
@@ -488,7 +490,7 @@ LeapMultix is a complete PWA with offline support and installation capabilities.
 
 - Installation: preloading of everything the game requires, list generated from the code
   by `scripts/precache-list.mjs` (`npm run precache:update`, verified by tests): after
-  a first visit, all 6 modes and 5 Arcade games start offline
+  a first visit, all 6 modes and 6 Arcade games start offline
 - Navigation: Network-first, with a 4-second deadline: past it (a network that does not
   answer: school Wi-Fi, captive portal) or when offline, the cached game page
   (`offline.html` only for a page that has never been cached)

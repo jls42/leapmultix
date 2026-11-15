@@ -6,10 +6,23 @@
  * leur case, centrés ; un toucher entre deux cases compte pour la plus proche. Un personnage
  * se cale sur le contour de son dessin : large ou haut, il sort du trou à la même hauteur.
  */
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect, jest } from '@jest/globals';
 
-const { popLayout, cellRect, cellParts, holeAt, figureRect, alphaBounds, BOARD_MARGIN } =
-  await import('../js/multipop-renderer.js');
+const {
+  popLayout,
+  cellRect,
+  cellParts,
+  holeAt,
+  figureRect,
+  alphaBounds,
+  malletAngle,
+  malletParts,
+  malletImageRect,
+  drawMallet,
+  drawPopBoard,
+  BOARD_MARGIN,
+} = await import('../js/multipop-renderer.js');
+const { MonsterField } = await import('../js/multipop-engine.js');
 
 const PORTRAIT = { width: 366, height: 640 };
 const LANDSCAPE = { width: 800, height: 260 };
@@ -111,5 +124,142 @@ describe('MultiPop : un personnage calé sur le contour de son dessin', () => {
 
   test('une image vide n’a pas de contour', () => {
     expect(alphaBounds(new Uint8ClampedArray(4 * 4 * 4), 4, 4)).toBeNull();
+  });
+});
+
+// jsdom ne dessine pas : le contour d'une image est alors l'image entière
+HTMLCanvasElement.prototype.getContext = () => null;
+
+describe('MultiPop : le maillet', () => {
+  const malletSprite = () => ({
+    image: { naturalWidth: 400, naturalHeight: 500 },
+    request: jest.fn(),
+  });
+
+  /** Contexte de dessin qui note chaque appel */
+  function recordingContext() {
+    const calls = [];
+    const ctx = new Proxy(
+      { canvas: document.createElement('canvas') },
+      {
+        get(target, prop) {
+          if (prop in target) return Reflect.get(target, prop);
+          return (...args) => {
+            calls.push({ name: prop, args });
+            return { width: 40 };
+          };
+        },
+        set: (target, prop, value) => Reflect.set(target, prop, value),
+      }
+    );
+    return { ctx, calls };
+  }
+  const named = (calls, name) => calls.filter(call => call.name === name);
+
+  test('levé au repos, abattu au moment de la frappe, puis il se relève', () => {
+    expect(malletAngle(1)).toBeLessThan(malletAngle(0.5));
+    expect(malletAngle(0.5)).toBeLessThan(malletAngle(0));
+    // Jamais au-delà de ses deux positions
+    expect(malletAngle(3)).toBe(malletAngle(1));
+    expect(malletAngle(-1)).toBe(malletAngle(0));
+  });
+
+  test.each([PORTRAIT, LANDSCAPE, DESKTOP])(
+    'sa tête tombe sur le point visé, sa poignée part en bas à droite (%o)',
+    box => {
+      const layout = popLayout(box);
+      const point = { x: 120, y: 90 };
+      const { size, length, pivot } = malletParts(layout, point);
+      const angle = malletAngle(1);
+      expect(pivot.x + length * Math.sin(angle)).toBeCloseTo(point.x);
+      expect(pivot.y - length * Math.cos(angle)).toBeCloseTo(point.y);
+      expect(pivot.x).toBeGreaterThan(point.x);
+      expect(pivot.y).toBeGreaterThan(point.y);
+      // À la taille des cases, sans devenir minuscule ni énorme
+      expect(size).toBeGreaterThanOrEqual(30);
+      expect(size).toBeLessThanOrEqual(64);
+      expect(size).toBeLessThanOrEqual(
+        Math.max(30, Math.min(layout.cellWidth, layout.cellHeight) * 0.3)
+      );
+    }
+  );
+
+  test('dessiné autour de sa poignée, à l’angle de la frappe en cours', () => {
+    const layout = popLayout(DESKTOP);
+    const mallet = { x: 200, y: 150, swing: 0.5, impact: false };
+    const { ctx, calls } = recordingContext();
+    drawMallet(ctx, layout, mallet);
+    const { pivot } = malletParts(layout, mallet);
+    expect(named(calls, 'translate').map(call => call.args)).toEqual([[pivot.x, pivot.y]]);
+    expect(named(calls, 'rotate').map(call => call.args)).toEqual([[malletAngle(0.5)]]);
+  });
+
+  test('son image : le bas du manche sur la poignée, la tête au point visé, dans l’axe', () => {
+    const rect = malletImageRect(100, 0.8);
+    expect(rect.y + rect.height).toBeCloseTo(0);
+    expect(rect.x + rect.width / 2).toBeCloseTo(0);
+    expect(rect.width / rect.height).toBeCloseTo(0.8);
+    // Le milieu de la tête (à 21 % du haut de l'image) est à 100 de la poignée
+    expect(rect.y + rect.height * 0.21).toBeCloseTo(-100);
+
+    const layout = popLayout(DESKTOP);
+    const sprite = malletSprite();
+    const { ctx, calls } = recordingContext();
+    drawMallet(ctx, layout, { x: 200, y: 150, swing: 0, impact: false }, sprite);
+    const { length } = malletParts(layout, { x: 200, y: 150 });
+    const [image] = named(calls, 'drawImage');
+    expect(image.args.slice(5)).toEqual(Object.values(malletImageRect(length, 0.8)));
+    expect(sprite.request).toHaveBeenCalled();
+    // L'image là, plus de maillet dessiné par le code
+    expect(named(calls, 'stroke')).toHaveLength(0);
+  });
+
+  test('sans image encore chargée : un maillet dessiné par le code, et l’image est demandée', () => {
+    const layout = popLayout(DESKTOP);
+    const sprite = { image: null, request: jest.fn() };
+    const { ctx, calls } = recordingContext();
+    drawMallet(ctx, layout, { x: 200, y: 150, swing: 0, impact: false }, sprite);
+    expect(sprite.request).toHaveBeenCalled();
+    expect(named(calls, 'drawImage')).toHaveLength(0);
+    expect(named(calls, 'stroke')).toHaveLength(2);
+  });
+
+  test('un éclat à l’endroit frappé quand il touche un personnage ; sinon son ombre', () => {
+    const layout = popLayout(DESKTOP);
+    const drawn = mallet => {
+      const { ctx, calls } = recordingContext();
+      drawMallet(ctx, layout, { x: 200, y: 150, ...mallet });
+      return { burst: named(calls, 'lineTo').length, shadow: named(calls, 'ellipse').length };
+    };
+    expect(drawn({ swing: 1, impact: true })).toEqual({ burst: 16, shadow: 0 });
+    expect(drawn({ swing: 1, impact: false })).toEqual({ burst: 0, shadow: 1 });
+    // La frappe retombée, il ne reste que l'ombre du point visé
+    expect(drawn({ swing: 0, impact: true })).toEqual({ burst: 0, shadow: 1 });
+  });
+
+  test('le plateau ne le dessine que s’il est là, par-dessus les terriers', () => {
+    const view = {
+      layout: popLayout(DESKTOP),
+      field: new MonsterField({ count: 3, upMs: 3000, solvedMs: 1500 }),
+      sprites: new Map(),
+      grassSprite: null,
+      cursorHole: null,
+      reducedMotion: false,
+    };
+    const without = recordingContext();
+    drawPopBoard(without.ctx, view);
+    expect(named(without.calls, 'rotate')).toHaveLength(0);
+    const withMallet = recordingContext();
+    const sprite = malletSprite();
+    drawPopBoard(withMallet.ctx, {
+      ...view,
+      mallet: { x: 50, y: 60, swing: 0, impact: false },
+      malletSprite: sprite,
+    });
+    expect(named(withMallet.calls, 'rotate')).toHaveLength(1);
+    expect(named(withMallet.calls, 'drawImage')).toHaveLength(1);
+    // Après le dernier terrier : rien ne le cache
+    const names = withMallet.calls.map(call => call.name);
+    expect(names.lastIndexOf('rotate')).toBeGreaterThan(names.lastIndexOf('closePath'));
   });
 });

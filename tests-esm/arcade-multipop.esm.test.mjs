@@ -8,54 +8,43 @@
  * compter comme une erreur de calcul. L'horloge du jeu est avancée à la main (step).
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import fs from 'node:fs';
-import { fakeCanvasContext } from './helpers/touch-test-helpers.mjs';
-
-const showArcadeGameOver = jest.fn();
-const startArcadeTimer = jest.fn();
-jest.unstable_mockModule('../js/arcade.js', () => ({
-  startArcadeTimer,
-  stopArcadeMode: jest.fn(),
+import {
+  FR,
+  AudioManager,
+  gameState,
   showArcadeGameOver,
-  isArcadeActive: () => false,
-}));
-const noteArcadePlay = jest.fn();
-jest.unstable_mockModule('../js/arcade-session.js', () => ({
   noteArcadePlay,
-  noteArcadeMiss: jest.fn(),
-}));
-const recordArcadeAnswer = jest.fn();
-const showSolvedQuestion = jest.fn();
-jest.unstable_mockModule('../js/arcade-learning.js', () => ({
   recordArcadeAnswer,
   showSolvedQuestion,
-  SOLVED_PAUSE_MS: 1500,
-  weakTablesFor: () => [],
-}));
+  mountBoard,
+  placeBoard,
+  unmountBoard,
+  keyOn,
+  tapAt,
+  pauseArcadeGame,
+} from './helpers/board-game-bench.mjs';
 
-const store = await import('../js/i18n-store.js');
-const pause = await import('../js/arcade-time.js');
-const { AudioManager } = await import('../js/core/audio.js');
-const { InfoBar } = await import('../js/components/infoBar.js');
-const { gameState } = await import('../js/game.js');
-const { PopGame, CORRECT_POINTS, MISS_PENALTY, FRIEND_PENALTY } = await import(
+const { PopGame, CORRECT_POINTS, MISS_PENALTY, FRIEND_PENALTY, MALLET_SWING_MS } = await import(
   '../js/arcade-multipop.js'
 );
 const { GAP_MS, RISE_MS } = await import('../js/multipop-engine.js');
 const { cellParts, cellRect } = await import('../js/multipop-renderer.js');
 
-const FR = JSON.parse(fs.readFileSync('assets/translations/fr.json', 'utf8'));
-
 let game;
 let canvas;
 
-const press = key =>
-  canvas.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+const press = key => keyOn(canvas, key);
 const status = () => document.querySelector('.multipop-announcer[role="status"]').textContent;
 const banner = () => document.querySelector('.arcade-question').textContent;
 const shownScore = () => document.getElementById('multipop-info-score').textContent;
 const rightMonster = () => game.field.upMonsters().find(monster => monster.correct);
 const wrongMonster = () => game.field.upMonsters().find(monster => !monster.correct);
+
+/** Flèche droite jusqu'au monstre voulu : un tour des monstres levés au plus */
+function aim(hole) {
+  for (let step = 0; step < 9 && game.cursorHole !== hole; step++) press('ArrowRight');
+  expect(game.cursorHole).toBe(hole);
+}
 
 /** Les monstres sortent et finissent de monter */
 function raiseMonsters() {
@@ -66,53 +55,19 @@ function raiseMonsters() {
 /** Toucher le milieu de la pancarte d'un terrier */
 function tapHole(hole, pointerType = 'mouse') {
   const { sign } = cellParts(cellRect(game.layout, hole));
-  const event = new MouseEvent('pointerdown', {
-    clientX: sign.x + sign.width / 2,
-    clientY: sign.y + sign.height / 2,
-    bubbles: true,
-    cancelable: true,
-  });
-  Object.defineProperty(event, 'pointerType', { value: pointerType });
-  canvas.dispatchEvent(event);
-  return event;
+  return tapAt(canvas, { x: sign.x + sign.width / 2, y: sign.y + sign.height / 2 }, pointerType);
 }
 
 beforeEach(() => {
-  store.setTranslations(FR);
-  store.setCurrentLanguage('fr');
+  canvas = mountBoard('multipop');
   jest.spyOn(AudioManager, 'isMuted').mockReturnValue(true);
-  HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();
-  document.body.replaceChildren(
-    InfoBar.createArcadeTemplateElement({
-      mode: 'multipop',
-      canvasId: 'multipop-canvas',
-      scoreId: 'multipop-info-score',
-      showLives: false,
-      showScore: true,
-    })
-  );
-  canvas = document.getElementById('multipop-canvas');
-  canvas.tabIndex = 0;
   // Sans ami, sauf dans les tests qui le font sortir
   game = new PopGame(canvas.id, { difficulty: 'moyen', operator: '×', friendChance: 0 });
   game.start();
-  // Plateau affiché à sa taille de jeu, en haut à gauche de l'écran
-  jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
-    left: 0,
-    top: 0,
-    width: game.layout.width,
-    height: game.layout.height,
-    right: game.layout.width,
-    bottom: game.layout.height,
-  });
-  for (const mock of [noteArcadePlay, recordArcadeAnswer, showSolvedQuestion]) mock.mockClear();
+  placeBoard(canvas, game.layout);
 });
 
-afterEach(() => {
-  game.cleanup();
-  pause.unmountArcadePause();
-  jest.restoreAllMocks();
-});
+afterEach(() => unmountBoard(game));
 
 describe('MultiPop : une partie', () => {
   test('le calcul au bandeau ; les monstres du niveau sortent après les terriers vides', () => {
@@ -214,10 +169,7 @@ describe('MultiPop : une partie', () => {
 
   test('en pause : aucun monstre ne se tape, et ils ne bougent pas', () => {
     raiseMonsters();
-    const time = document.createElement('span');
-    document.body.appendChild(time);
-    pause.mountArcadePause(time);
-    pause.pauseArcade();
+    pauseArcadeGame();
     tapHole(rightMonster().hole);
     press('Enter');
     expect(game.score).toBe(0);
@@ -249,7 +201,7 @@ describe('MultiPop au clavier', () => {
     const right = monsters.findIndex(monster => monster.correct);
     // Une mauvaise d'abord (Espace), puis la bonne (Entrée)
     const wrong = monsters.findIndex(monster => !monster.correct);
-    while (game.cursorHole !== monsters[wrong].hole) press('ArrowRight');
+    aim(monsters[wrong].hole);
     press(' ');
     expect(recordArcadeAnswer).toHaveBeenLastCalledWith(
       '×',
@@ -257,7 +209,7 @@ describe('MultiPop au clavier', () => {
       game.question.b,
       false
     );
-    while (game.cursorHole !== monsters[right].hole) press('ArrowRight');
+    aim(monsters[right].hole);
     press('Enter');
     expect(game.score).toBe(CORRECT_POINTS);
   });
@@ -343,7 +295,175 @@ describe('MultiPop : l’ami qui sort avec les monstres', () => {
   });
 });
 
+describe('MultiPop : le maillet', () => {
+  /** La souris (ou le doigt) bouge au-dessus d'un point du plateau */
+  function moveTo(x, y, pointerType = 'mouse') {
+    const event = new MouseEvent('pointermove', { clientX: x, clientY: y, bubbles: true });
+    Object.defineProperty(event, 'pointerType', { value: pointerType });
+    canvas.dispatchEvent(event);
+  }
+  const leave = () => canvas.dispatchEvent(new MouseEvent('pointerleave'));
+  const signPoint = hole => {
+    const { sign } = cellParts(cellRect(game.layout, hole));
+    return { x: sign.x + sign.width / 2, y: sign.y + sign.height / 2 };
+  };
+
+  test('à la souris, il prend la place du curseur sur le plateau et la suit', () => {
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+    moveTo(40, 55);
+    expect(game.malletView()).toEqual({ x: 40, y: 55, swing: 0, impact: false });
+    expect(canvas.classList.contains('has-mallet')).toBe(true);
+    moveTo(120, 80);
+    expect(game.malletView()).toMatchObject({ x: 120, y: 80 });
+    // La souris quitte le plateau : plus de maillet, le curseur revient
+    leave();
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+  });
+
+  test('un doigt qui glisse ne le fait pas apparaître', () => {
+    moveTo(40, 55, 'touch');
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+  });
+
+  test('il s’abat à chaque clic, se relève avec l’horloge du jeu, et reste sous la souris', () => {
+    raiseMonsters();
+    const point = signPoint(wrongMonster().hole);
+    moveTo(point.x, point.y);
+    tapHole(wrongMonster().hole);
+    expect(game.malletView()).toEqual({ ...point, swing: 1, impact: true });
+    game.step(MALLET_SWING_MS / 2);
+    expect(game.malletView().swing).toBeCloseTo(0.5);
+    game.step(MALLET_SWING_MS / 2);
+    expect(game.malletView()).toEqual({ ...point, swing: 0, impact: false });
+  });
+
+  test('dans le vide : il s’abat sans éclat', () => {
+    const empty = signPoint(4);
+    tapHole(4);
+    expect(game.malletView()).toEqual({ ...empty, swing: 1, impact: false });
+  });
+
+  test('au doigt : il apparaît le temps de la frappe, sans cacher de curseur', () => {
+    raiseMonsters();
+    const hole = rightMonster().hole;
+    tapHole(hole, 'touch');
+    expect(game.malletView()).toEqual({ ...signPoint(hole), swing: 1, impact: true });
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+    game.step(MALLET_SWING_MS);
+    expect(game.malletView()).toBeNull();
+  });
+
+  test('au clavier : il s’abat sur le monstre visé, puis s’en va', () => {
+    raiseMonsters();
+    const hole = game.cursorHole;
+    const { centerX } = cellParts(cellRect(game.layout, hole));
+    press('Enter');
+    const view = game.malletView();
+    expect(view).toMatchObject({ x: centerX, swing: 1, impact: true });
+    expect(view.y).toBeLessThan(signPoint(hole).y);
+    game.step(MALLET_SWING_MS);
+    expect(game.malletView()).toBeNull();
+    // Personne à viser : pas de frappe
+    game.cursorHole = null;
+    press('Enter');
+    expect(game.malletView()).toBeNull();
+  });
+
+  test('souris sur le plateau, puis une tape au clavier : le curseur revient avec le maillet parti', () => {
+    raiseMonsters();
+    moveTo(40, 55);
+    expect(canvas.classList.contains('has-mallet')).toBe(true);
+    press('Enter');
+    game.step(MALLET_SWING_MS);
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+    // La souris bouge de nouveau : le maillet reprend sa place
+    moveTo(42, 57);
+    expect(game.malletView()).toMatchObject({ x: 42, y: 57 });
+    expect(canvas.classList.contains('has-mallet')).toBe(true);
+  });
+
+  test('en pause : il ne frappe pas', () => {
+    raiseMonsters();
+    pauseArcadeGame();
+    tapHole(rightMonster().hole);
+    press('Enter');
+    expect(game.malletView()).toBeNull();
+  });
+
+  test('mouvements réduits : abattu puis levé, sans les positions entre les deux', () => {
+    game.reducedMotion = true;
+    tapHole(4);
+    game.step(MALLET_SWING_MS / 2);
+    expect(game.malletView().swing).toBe(1);
+    game.step(MALLET_SWING_MS / 2);
+    expect(game.malletView().swing).toBe(0);
+  });
+
+  test('il est dessiné avec le plateau', () => {
+    const drawn = [];
+    game.ctx = new Proxy(
+      { canvas },
+      {
+        get(target, prop) {
+          if (prop in target) return Reflect.get(target, prop);
+          return (...args) => {
+            drawn.push([prop, args]);
+            return { width: 0 };
+          };
+        },
+        set: (target, prop, value) => Reflect.set(target, prop, value),
+      }
+    );
+    game.draw();
+    expect(drawn.filter(([name]) => name === 'rotate')).toHaveLength(0);
+    moveTo(60, 70);
+    game.draw();
+    expect(drawn.filter(([name]) => name === 'rotate')).toHaveLength(1);
+    // Son image arrivée, c'est elle qui est dessinée
+    expect(drawn.filter(([name]) => name === 'drawImage')).toHaveLength(0);
+    game.malletSprite = {
+      image: { naturalWidth: 40, naturalHeight: 50 },
+      request: () => undefined,
+    };
+    game.draw();
+    expect(drawn.filter(([name]) => name === 'drawImage')).toHaveLength(1);
+  });
+
+  test('son image est celle du jeu (maillet.png), chargée d’avance', () => {
+    expect(game.malletSprite.spec.source).toBe('maillet');
+    // Demandée dès que le plateau prend sa taille, avant la première tape
+    const request = jest.spyOn(game.malletSprite, 'request');
+    const other = new PopGame(canvas.id, { difficulty: 'moyen', operator: '×' });
+    other.start();
+    expect(other.malletSprite).toBe(game.malletSprite);
+    expect(request).toHaveBeenCalled();
+    other.cleanup();
+  });
+
+  test('la partie rendue : plus de maillet, le curseur revient, la souris n’est plus suivie', () => {
+    moveTo(40, 55);
+    game.cleanup();
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+    moveTo(60, 70);
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+  });
+});
+
 describe('MultiPop : réglages du niveau', () => {
+  test('sans opération donnée : la multiplication', () => {
+    const other = new PopGame(canvas.id, { difficulty: 'moyen' });
+    other.start();
+    expect(other.operator).toBe('×');
+    expect(banner()).toMatch(/^\d+ × \d+ = \?$/);
+    other.cleanup();
+  });
+
   test('les tables du niveau en ×', () => {
     for (const [level, tables] of [
       ['debutant', [2, 3, 4, 5]],

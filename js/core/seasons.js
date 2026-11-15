@@ -25,7 +25,7 @@
  * miam : MultiMiam, dans assets/images/arcade : les murs du labyrinthe (mur_<fête>.png) et
  *   l'image posée sous les réponses (multimiam_reponse_<fête>.png) ;
  * logos : assets/images/arcade/logo_mode_<mode>_<fête>.png (six modes : cartes de l'accueil)
- *   et logo_multi<jeu>_<fête>.png (cinq jeux : menu de l'Arcade), repris au tableau de bord ;
+ *   et logo_multi<jeu>_<fête>.png (six jeux : menu de l'Arcade), repris au tableau de bord ;
  * gifts : assets/images/arcade/cadeau_ferme_<fête>.png et cadeau_ouvert_<fête>.png (mode
  *   Aventure : le trésor de la scène, puis celui de la victoire) ;
  * backgrounds : img/background_<avatar>_<fête>_<NNN>.png, de 001 à `worlds` ;

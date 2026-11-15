@@ -201,6 +201,7 @@ describe('Tableau de bord : Zoé, × seulement, depuis 2025', () => {
         ],
       ],
       ['MultiPop', NO_SCORE],
+      ['MultiGoal', NO_SCORE],
     ]);
   });
 });
@@ -291,6 +292,7 @@ describe('Tableau de bord : Léa, × et +, surnom changé', () => {
         ],
       ],
       ['MultiPop', NO_SCORE],
+      ['MultiGoal', NO_SCORE],
     ]);
   });
 });

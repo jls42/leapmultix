@@ -171,6 +171,9 @@ async function restartArcadeGame(mode) {
     } else if (mode === 'multipop') {
       const mod = await import('./arcade-multipop.js');
       return mod.startPopArcade?.();
+    } else if (mode === 'multigoal') {
+      const mod = await import('./arcade-multigoal.js');
+      return mod.startGoalArcade?.();
     }
     const mod = await import('./arcade-invasion.js');
     return mod.startMultiplicationInvasion?.();
@@ -200,6 +203,7 @@ const GAME_TITLES = new Map([
   ['multimiam', ['arcade_pacman_title', 'MultiMiam']],
   ['multimemory', ['arcade.multiMemory.title', 'MultiMemory']],
   ['multipop', ['arcade_pop_title', 'MultiPop']],
+  ['multigoal', ['arcade_goal_title', 'MultiGoal']],
   ['invasion', ['arcade_invasion_title', 'MultiInvaders']],
 ]);
 

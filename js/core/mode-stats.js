@@ -32,8 +32,8 @@ export const LEGACY_ARCADE_GAMES = Object.freeze([
   'multimemory',
   'multisnake',
 ]);
-/** Jeux d'Arcade (MultiPop depuis la v75) */
-export const ARCADE_GAMES = Object.freeze([...LEGACY_ARCADE_GAMES, 'multipop']);
+/** Jeux d'Arcade (MultiPop depuis la v75, MultiGoal depuis la v77) */
+export const ARCADE_GAMES = Object.freeze([...LEGACY_ARCADE_GAMES, 'multipop', 'multigoal']);
 export const CHALLENGE_DIFFICULTIES = Object.freeze(['easy', 'medium', 'hard']);
 
 const OPERATORS = new Set(['×', '+', '−', '÷']);

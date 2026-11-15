@@ -258,7 +258,7 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
   async function openDashboard() {
     await pressShown(page, '.top-bar .dashboard-btn');
     await page.waitForFunction(
-      selector => document.querySelectorAll(selector).length === 10,
+      selector => document.querySelectorAll(selector).length === 11,
       { timeout: 10000 },
       DASHBOARD_LOGOS
     );
@@ -327,8 +327,8 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
   }
 
   /**
-   * Pendant une fête : logos des six modes de l'accueil, puis des dix rangées du tableau de
-   * bord (cinq modes, cinq jeux d'Arcade), tous de la variante attendue et nets
+   * Pendant une fête : logos des six modes de l'accueil, puis des onze rangées du tableau de
+   * bord (cinq modes, six jeux d'Arcade), tous de la variante attendue et nets
    * @param {RegExp} logo - Variante attendue (festiveLogo)
    */
   async function expectFestiveLogos(logo) {
@@ -339,7 +339,7 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
     );
     const dashboard = await openDashboard();
     expect(dashboard.filter(img => !logo.test(img.src))).toEqual([]);
-    expect(dashboard).toHaveLength(10);
+    expect(dashboard).toHaveLength(11);
   }
 
   /**
@@ -383,11 +383,11 @@ describe('Illustrations du tableau de bord et de l’Aventure (E2E)', () => {
 
   describeGenerated('En WebP, aussi nettes qu’à l’écran', () => {
     test.each(SCREENS)(
-      '%s : les 10 logos du tableau de bord',
+      '%s : les 11 logos du tableau de bord',
       async (_name, viewport) => {
         await openAsZoe(viewport);
         const logos = await openDashboard();
-        expect(logos).toHaveLength(10);
+        expect(logos).toHaveLength(11);
         const notWebp = logos.filter(img => !img.src.startsWith('/assets/generated-images/'));
         expect({
           notWebp,

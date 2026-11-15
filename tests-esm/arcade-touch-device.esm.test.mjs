@@ -46,6 +46,7 @@ describe('Aucun jeu ne se fie au seul nom du navigateur', () => {
     'js/arcade-multimemory.js',
     'js/arcade-multimiam.js',
     'js/arcade-multipop.js',
+    'js/arcade-multigoal.js',
     'js/multisnake.js',
   ];
 

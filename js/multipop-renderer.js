@@ -8,6 +8,9 @@
 import { GRID } from './multipop-engine.js';
 import { drawArcadeSprite, devicePixelsPerUnit } from './arcade-sprites.js';
 import { getCanvasFont, readableCanvasFontSize } from './arcade-common.js';
+import { contentBounds } from './arcade-sprite-bounds.js';
+
+export { alphaBounds } from './arcade-sprite-bounds.js';
 
 /** Hauteur du dessin d'un terrier rapportée à sa largeur (la pancarte passe sous le trou) */
 export const CELL_RATIO = 1.1;
@@ -138,70 +141,6 @@ export function figureRect(parts, aspect) {
     width,
     height,
   };
-}
-
-const FULL_IMAGE = Object.freeze({ x: 0, y: 0, width: 1, height: 1 });
-// Largeur de la copie réduite où le contour du dessin est cherché
-const SCAN_WIDTH = 64;
-// Opacité à partir de laquelle un point fait partie du dessin (sur 255)
-const ALPHA_MIN = 16;
-// Contour du dessin de chaque image, cherché une seule fois
-const boundsBySprite = new WeakMap();
-
-/**
- * Contour des points visibles d'une image, en parts de sa largeur et de sa hauteur
- * @param {Uint8ClampedArray} data - points RGBA, ligne par ligne
- * @param {number} width
- * @param {number} height
- * @returns {{x: number, y: number, width: number, height: number}|null} null : image vide
- */
-export function alphaBounds(data, width, height) {
-  let left = width;
-  let right = -1;
-  let top = height;
-  let bottom = -1;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (data.at((y * width + x) * 4 + 3) < ALPHA_MIN) continue;
-      left = Math.min(left, x);
-      right = Math.max(right, x);
-      top = Math.min(top, y);
-      bottom = Math.max(bottom, y);
-    }
-  }
-  if (right < 0) return null;
-  return {
-    x: left / width,
-    y: top / height,
-    width: (right - left + 1) / width,
-    height: (bottom - top + 1) / height,
-  };
-}
-
-function measureBounds(image) {
-  try {
-    const height = Math.max(1, Math.round((SCAN_WIDTH * image.naturalHeight) / image.naturalWidth));
-    const canvas = document.createElement('canvas');
-    canvas.width = SCAN_WIDTH;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    ctx.drawImage(image, 0, 0, SCAN_WIDTH, height);
-    const { data } = ctx.getImageData(0, 0, SCAN_WIDTH, height);
-    return alphaBounds(data, SCAN_WIDTH, height) ?? FULL_IMAGE;
-  } catch {
-    // Points de l'image illisibles (pas de canevas) : l'image entière sert de contour
-    return FULL_IMAGE;
-  }
-}
-
-// Contour du dessin d'une image chargée, sans ses marges transparentes
-function contentBounds(sprite) {
-  let bounds = boundsBySprite.get(sprite);
-  if (!bounds) {
-    bounds = measureBounds(sprite.image);
-    boundsBySprite.set(sprite, bounds);
-  }
-  return bounds;
 }
 
 function ellipse(ctx, x, y, rx, ry, fill) {
@@ -419,12 +358,175 @@ function drawBurrow(ctx, cell, { figure, view }) {
   if (view.cursorHole === figure.hole && figure.downAt === null) drawCursor(ctx, parts.sign);
 }
 
+// Le maillet : sa taille en parts d'une case, l'angle où il frappe et celui où il attend,
+// et dans son image (sans ses marges) le milieu de sa tête, en part de la hauteur
+const MALLET = Object.freeze({
+  share: 0.3,
+  min: 30,
+  max: 64,
+  hitAngle: -1.03,
+  raise: 0.4,
+  headCenter: 0.21,
+});
+const MALLET_COLORS = Object.freeze({
+  head: '#e03131',
+  handle: '#f5b70a',
+  edge: '#3b2414',
+  burst: '#ffe066',
+});
+
+/**
+ * Angle du maillet autour de sa poignée : levé au repos (swing 0), abattu sur le point visé
+ * au moment de la frappe (swing 1), puis il se relève
+ * @param {number} swing - de 1 (il vient de frapper) à 0 (au repos)
+ * @returns {number} radians
+ */
+export function malletAngle(swing) {
+  const struck = Math.min(1, Math.max(0, swing));
+  return MALLET.hitAngle + MALLET.raise * (1 - struck);
+}
+
+/**
+ * Taille et place du maillet : sa tête frappe le point visé, sa poignée part en bas à droite
+ * @param {ReturnType<typeof popLayout>} layout
+ * @param {{x: number, y: number}} point - point visé (souris, doigt ou monstre du clavier)
+ * @returns {{size: number, length: number, pivot: {x: number, y: number}}} size : épaisseur
+ *   de la tête ; length : de la poignée au milieu de la tête ; pivot : bout de la poignée
+ */
+export function malletParts(layout, point) {
+  const cell = Math.min(layout.cellWidth, layout.cellHeight);
+  const size = Math.min(MALLET.max, Math.max(MALLET.min, cell * MALLET.share));
+  const length = size * 1.6;
+  return {
+    size,
+    length,
+    // À l'angle de frappe, le milieu de la tête tombe pile sur le point visé
+    pivot: {
+      x: point.x - length * Math.sin(MALLET.hitAngle),
+      y: point.y + length * Math.cos(MALLET.hitAngle),
+    },
+  };
+}
+
+// L'ombre du maillet sur le point visé : la souris n'a plus de curseur, on voit où il tape
+function drawAim(ctx, point, size) {
+  ctx.save();
+  ctx.globalAlpha = 0.28;
+  ctx.fillStyle = MALLET_COLORS.edge;
+  ctx.beginPath();
+  ctx.ellipse(point.x, point.y, size * 0.62, size * 0.3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// Éclat jaune à l'endroit frappé, le temps de la frappe
+function drawImpact(ctx, point, size, swing) {
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, swing * 1.4);
+  ctx.fillStyle = MALLET_COLORS.burst;
+  ctx.beginPath();
+  for (let tip = 0; tip < 16; tip++) {
+    const radius = tip % 2 === 0 ? size * 0.95 : size * 0.45;
+    const angle = (tip * Math.PI) / 8;
+    ctx.lineTo(point.x + Math.cos(angle) * radius, point.y + Math.sin(angle) * radius);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+// Le maillet dessiné par le code, tant que son image n'est pas arrivée : un manche et une
+// tête en travers, autour de la poignée (0, 0), la tête vers le haut
+function drawMalletShape(ctx, size, length) {
+  const head = { x: -size * 0.8, y: -length - size / 2, width: size * 1.6, height: size };
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(2, size * 0.09);
+  ctx.strokeStyle = MALLET_COLORS.edge;
+  roundedRect(
+    ctx,
+    { x: -size * 0.14, y: -length, width: size * 0.28, height: length },
+    size * 0.12
+  );
+  ctx.fillStyle = MALLET_COLORS.handle;
+  ctx.fill();
+  ctx.stroke();
+  roundedRect(ctx, head, size * 0.24);
+  ctx.fillStyle = MALLET_COLORS.head;
+  ctx.fill();
+  ctx.stroke();
+}
+
+/**
+ * Rectangle de l'image du maillet autour de sa poignée (0, 0) : le bas du manche sur la
+ * poignée, le milieu de la tête à la distance voulue, le manche dans l'axe
+ * @param {number} length - de la poignée au milieu de la tête
+ * @param {number} aspect - largeur / hauteur du dessin (sans ses marges)
+ * @returns {{x: number, y: number, width: number, height: number}}
+ */
+export function malletImageRect(length, aspect) {
+  const height = length / (1 - MALLET.headCenter);
+  const width = height * aspect;
+  return { x: -width / 2, y: -height, width, height };
+}
+
+// L'image du maillet, sans ses marges ; false tant qu'elle n'est pas là
+function paintMalletImage(ctx, sprite, length) {
+  if (typeof sprite?.request !== 'function') return false;
+  const scale = devicePixelsPerUnit(ctx.canvas);
+  sprite.request(length * 2 * scale, length * 2 * scale);
+  const image = sprite.image;
+  if (!image) return false;
+  const bounds = contentBounds(sprite);
+  const source = {
+    x: bounds.x * image.naturalWidth,
+    y: bounds.y * image.naturalHeight,
+    width: bounds.width * image.naturalWidth,
+    height: bounds.height * image.naturalHeight,
+  };
+  const rect = malletImageRect(length, source.width / source.height);
+  ctx.drawImage(
+    image,
+    source.x,
+    source.y,
+    source.width,
+    source.height,
+    rect.x,
+    rect.y,
+    rect.width,
+    rect.height
+  );
+  return true;
+}
+
+/**
+ * Le maillet qui tape les monstres : il suit la souris à la place du curseur et s'abat à
+ * chaque tape (au doigt et au clavier, il n'apparaît que le temps de la frappe)
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {ReturnType<typeof popLayout>} layout
+ * @param {{x: number, y: number, swing: number, impact: boolean}} mallet - swing : de 1 (il
+ *   vient de frapper) à 0 (au repos) ; impact : il a touché un personnage
+ * @param {import('./arcade-sprites.js').ArcadeSprite|null} [sprite] - son image (maillet.png)
+ */
+export function drawMallet(ctx, layout, mallet, sprite = null) {
+  const { size, length, pivot } = malletParts(layout, mallet);
+  if (mallet.impact && mallet.swing > 0) drawImpact(ctx, mallet, size, mallet.swing);
+  else drawAim(ctx, mallet, size);
+  ctx.save();
+  ctx.translate(pivot.x, pivot.y);
+  ctx.rotate(malletAngle(mallet.swing));
+  if (!paintMalletImage(ctx, sprite, length)) drawMalletShape(ctx, size, length);
+  ctx.restore();
+}
+
 /**
  * Tout le plateau
  * @param {CanvasRenderingContext2D} ctx
  * @param {{layout: ReturnType<typeof popLayout>, field: import('./multipop-engine.js').MonsterField,
  *   sprites: Map<number, Object>, grassSprite: Object|null, cursorHole: number|null,
- *   reducedMotion: boolean}} view - sprites : l'image du personnage de chaque terrier
+ *   reducedMotion: boolean, mallet?: {x: number, y: number, swing: number, impact: boolean}
+ *   |null, malletSprite?: Object|null}} view - sprites : l'image du personnage de chaque
+ *   terrier ; mallet : le maillet à dessiner par-dessus, s'il est sur le plateau, et
+ *   malletSprite son image
  */
 export function drawPopBoard(ctx, view) {
   const { layout, field } = view;
@@ -437,4 +539,5 @@ export function drawPopBoard(ctx, view) {
   for (let hole = 0; hole < GRID * GRID; hole++) {
     drawBurrow(ctx, cellRect(layout, hole), { figure: figures.get(hole), view });
   }
+  if (view.mallet) drawMallet(ctx, layout, view.mallet, view.malletSprite);
 }

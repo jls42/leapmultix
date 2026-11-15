@@ -10,7 +10,8 @@
 // Rythme de l'Arcade : une vague de MultiInvaders met waveSeconds à descendre jusqu'à la
 // fusée, sur tous les écrans ; le serpent de MultiSnake avance d'une case toutes les
 // snakeStepMs au départ (sur ordinateur) ; monstersUp monstres de MultiPop sortent ensemble et
-// restent monsterSeconds. Les monstres de MultiMiam suivent le niveau dans
+// restent monsterSeconds ; la cage de MultiGoal porte goalTargets cibles et son gardien avance
+// de keeperSpeed largeurs de cage par seconde. Les monstres de MultiMiam suivent le niveau dans
 // js/multimiam-engine.js (ghostsOfLevel).
 
 const DIFFICULTY_SETTINGS = {
@@ -22,6 +23,8 @@ const DIFFICULTY_SETTINGS = {
     snakeStepMs: 500,
     monstersUp: 3,
     monsterSeconds: 3,
+    goalTargets: 3,
+    keeperSpeed: 0.22,
     tables: [2, 3, 4, 5],
     questionDifficulty: 'easy',
     distractorDistance: 'far',
@@ -35,6 +38,8 @@ const DIFFICULTY_SETTINGS = {
     snakeStepMs: 400,
     monstersUp: 4,
     monsterSeconds: 2.5,
+    goalTargets: 4,
+    keeperSpeed: 0.35,
     tables: [2, 3, 4, 5, 6, 7, 8],
     questionDifficulty: 'medium',
     distractorDistance: 'medium',
@@ -48,6 +53,8 @@ const DIFFICULTY_SETTINGS = {
     snakeStepMs: 320,
     monstersUp: 5,
     monsterSeconds: 1.8,
+    goalTargets: 6,
+    keeperSpeed: 0.5,
     tables: [2, 3, 4, 5, 6, 7, 8, 9, 10], // pondération à gérer plus tard
     questionDifficulty: 'hard',
     distractorDistance: 'close',
