@@ -6,7 +6,7 @@
  * leur case, centrés ; un toucher entre deux cases compte pour la plus proche. Un personnage
  * se cale sur le contour de son dessin : large ou haut, il sort du trou à la même hauteur.
  */
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect, jest } from '@jest/globals';
 
 const {
   popLayout,
@@ -17,6 +17,7 @@ const {
   alphaBounds,
   malletAngle,
   malletParts,
+  malletImageRect,
   drawMallet,
   drawPopBoard,
   BOARD_MARGIN,
@@ -126,7 +127,15 @@ describe('MultiPop : un personnage calé sur le contour de son dessin', () => {
   });
 });
 
+// jsdom ne dessine pas : le contour d'une image est alors l'image entière
+HTMLCanvasElement.prototype.getContext = () => null;
+
 describe('MultiPop : le maillet', () => {
+  const malletSprite = () => ({
+    image: { naturalWidth: 400, naturalHeight: 500 },
+    request: jest.fn(),
+  });
+
   /** Contexte de dessin qui note chaque appel */
   function recordingContext() {
     const calls = [];
@@ -185,6 +194,36 @@ describe('MultiPop : le maillet', () => {
     expect(named(calls, 'rotate').map(call => call.args)).toEqual([[malletAngle(0.5)]]);
   });
 
+  test('son image : le bas du manche sur la poignée, la tête au point visé, dans l’axe', () => {
+    const rect = malletImageRect(100, 0.8);
+    expect(rect.y + rect.height).toBeCloseTo(0);
+    expect(rect.x + rect.width / 2).toBeCloseTo(0);
+    expect(rect.width / rect.height).toBeCloseTo(0.8);
+    // Le milieu de la tête (à 21 % du haut de l'image) est à 100 de la poignée
+    expect(rect.y + rect.height * 0.21).toBeCloseTo(-100);
+
+    const layout = popLayout(DESKTOP);
+    const sprite = malletSprite();
+    const { ctx, calls } = recordingContext();
+    drawMallet(ctx, layout, { x: 200, y: 150, swing: 0, impact: false }, sprite);
+    const { length } = malletParts(layout, { x: 200, y: 150 });
+    const [image] = named(calls, 'drawImage');
+    expect(image.args.slice(5)).toEqual(Object.values(malletImageRect(length, 0.8)));
+    expect(sprite.request).toHaveBeenCalled();
+    // L'image là, plus de maillet dessiné par le code
+    expect(named(calls, 'stroke')).toHaveLength(0);
+  });
+
+  test('sans image encore chargée : un maillet dessiné par le code, et l’image est demandée', () => {
+    const layout = popLayout(DESKTOP);
+    const sprite = { image: null, request: jest.fn() };
+    const { ctx, calls } = recordingContext();
+    drawMallet(ctx, layout, { x: 200, y: 150, swing: 0, impact: false }, sprite);
+    expect(sprite.request).toHaveBeenCalled();
+    expect(named(calls, 'drawImage')).toHaveLength(0);
+    expect(named(calls, 'stroke')).toHaveLength(2);
+  });
+
   test('un éclat à l’endroit frappé quand il touche un personnage ; sinon son ombre', () => {
     const layout = popLayout(DESKTOP);
     const drawn = mallet => {
@@ -211,8 +250,14 @@ describe('MultiPop : le maillet', () => {
     drawPopBoard(without.ctx, view);
     expect(named(without.calls, 'rotate')).toHaveLength(0);
     const withMallet = recordingContext();
-    drawPopBoard(withMallet.ctx, { ...view, mallet: { x: 50, y: 60, swing: 0, impact: false } });
+    const sprite = malletSprite();
+    drawPopBoard(withMallet.ctx, {
+      ...view,
+      mallet: { x: 50, y: 60, swing: 0, impact: false },
+      malletSprite: sprite,
+    });
     expect(named(withMallet.calls, 'rotate')).toHaveLength(1);
+    expect(named(withMallet.calls, 'drawImage')).toHaveLength(1);
     // Après le dernier terrier : rien ne le cache
     const names = withMallet.calls.map(call => call.name);
     expect(names.lastIndexOf('rotate')).toBeGreaterThan(names.lastIndexOf('closePath'));

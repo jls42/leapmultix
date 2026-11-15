@@ -123,6 +123,7 @@ export class PopGame extends ArcadeBoardGame {
     /** Image du personnage de chaque terrier, pour la sortie en cours */
     this.sprites = new Map();
     this.grassSprite = spriteFor(textureSpec('herbe.png'));
+    this.malletSprite = spriteFor(textureSpec('maillet.png'));
     this.layout = popLayout({ width: 300, height: 315 });
   }
 
@@ -157,7 +158,7 @@ export class PopGame extends ArcadeBoardGame {
   // Monstres et amis de la partie, chargés à la taille du plateau avant de sortir
   prefetchFigures() {
     const { figure } = cellParts(cellRect(this.layout, 0));
-    for (const sprite of [...this.cast, ...this.friends]) {
+    for (const sprite of [...this.cast, ...this.friends, this.malletSprite]) {
       prefetchArcadeSprite(this.canvas, sprite, figure.width, figure.height);
     }
   }
@@ -223,6 +224,7 @@ export class PopGame extends ArcadeBoardGame {
       cursorHole: this.keyboardCursor ? this.cursorHole : null,
       reducedMotion: this.reducedMotion,
       mallet: this.malletView(),
+      malletSprite: this.malletSprite,
     });
   }
 
@@ -264,12 +266,13 @@ export class PopGame extends ArcadeBoardGame {
   }
 
   // La frappe retombe avec l'horloge du jeu ; au doigt et au clavier, le maillet s'en va
+  // ensuite (et le curseur revient, si la souris était restée sur le plateau)
   swingMallet(dt) {
     if (this.malletSwing <= 0) return;
     this.malletSwing = Math.max(0, this.malletSwing - dt);
     if (this.malletSwing > 0 || !this.mallet) return;
     if (this.mallet.held) this.mallet.impact = false;
-    else this.mallet = null;
+    else this.dropMallet();
   }
 
   // Souris, doigt ou stylet : le terrier sous le point

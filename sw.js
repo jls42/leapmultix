@@ -527,6 +527,7 @@ const PRECACHE_IMAGES = [
   '/assets/images/arcade/logo_multimiam.png',
   '/assets/images/arcade/logo_multipop.png',
   '/assets/images/arcade/logo_multisnake.png',
+  '/assets/images/arcade/maillet.png',
   '/assets/images/arcade/monstre01_right_128x128.png',
   '/assets/images/arcade/monstre02_right_128x128.png',
   '/assets/images/arcade/monstre03_right_128x128.png',

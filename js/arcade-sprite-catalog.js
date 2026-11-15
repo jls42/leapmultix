@@ -184,9 +184,11 @@ export function spaceshipSpec(selection) {
 
 /* --- MultiSnake et textures --- */
 
-// Textures et pomme : source de 1024 px, petit PNG en repli (l'herbe n'en a pas)
+// Textures, pomme et maillet : source de 1024 px, petit PNG en repli (l'herbe n'en a pas ;
+// le maillet non plus, MultiPop le dessine lui-même tant que son image n'est pas là)
 const TEXTURES = new Map([
   ['herbe.png', spec('herbe', ['herbe.png'])],
+  ['maillet.png', spec('maillet', [])],
   ['mur.png', spec('mur', ['mur_128x128.png'])],
   ['chemin.png', spec('chemin', ['chemin_128x128.png'])],
   ['snake_apple.png', spec('snake_apple', ['snake_apple_128x128.png'])],
@@ -213,7 +215,7 @@ export function snakeHeadSpec(name) {
 }
 
 /**
- * @param {string} file - herbe.png, mur.png, chemin.png ou snake_apple.png
+ * @param {string} file - herbe.png, mur.png, chemin.png, snake_apple.png ou maillet.png
  * @returns {SpriteSpec}
  */
 export function textureSpec(file) {

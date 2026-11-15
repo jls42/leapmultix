@@ -426,6 +426,20 @@ describe('MultiPop : le maillet', () => {
     expect(game.malletView()).toBeNull();
   });
 
+  test('souris sur le plateau, puis une tape au clavier : le curseur revient avec le maillet parti', () => {
+    raiseMonsters();
+    moveTo(40, 55);
+    expect(canvas.classList.contains('has-mallet')).toBe(true);
+    press('Enter');
+    game.step(MALLET_SWING_MS);
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+    // La souris bouge de nouveau : le maillet reprend sa place
+    moveTo(42, 57);
+    expect(game.malletView()).toMatchObject({ x: 42, y: 57 });
+    expect(canvas.classList.contains('has-mallet')).toBe(true);
+  });
+
   test('en pause : il ne frappe pas', () => {
     raiseMonsters();
     const time = document.createElement('span');
@@ -451,8 +465,13 @@ describe('MultiPop : le maillet', () => {
     game.ctx = new Proxy(
       { canvas },
       {
-        get: (target, prop) =>
-          prop in target ? target[prop] : (...args) => (drawn.push([prop, args]), { width: 0 }),
+        get(target, prop) {
+          if (prop in target) return Reflect.get(target, prop);
+          return (...args) => {
+            drawn.push([prop, args]);
+            return { width: 0 };
+          };
+        },
         set: (target, prop, value) => Reflect.set(target, prop, value),
       }
     );
@@ -461,6 +480,25 @@ describe('MultiPop : le maillet', () => {
     moveTo(60, 70);
     game.draw();
     expect(drawn.filter(([name]) => name === 'rotate')).toHaveLength(1);
+    // Son image arrivée, c'est elle qui est dessinée
+    expect(drawn.filter(([name]) => name === 'drawImage')).toHaveLength(0);
+    game.malletSprite = {
+      image: { naturalWidth: 40, naturalHeight: 50 },
+      request: () => undefined,
+    };
+    game.draw();
+    expect(drawn.filter(([name]) => name === 'drawImage')).toHaveLength(1);
+  });
+
+  test('son image est celle du jeu (maillet.png), chargée d’avance', () => {
+    expect(game.malletSprite.spec.source).toBe('maillet');
+    // Demandée dès que le plateau prend sa taille, avant la première tape
+    const request = jest.spyOn(game.malletSprite, 'request');
+    const other = new PopGame(canvas.id, { difficulty: 'moyen', operator: '×' });
+    other.start();
+    expect(other.malletSprite).toBe(game.malletSprite);
+    expect(request).toHaveBeenCalled();
+    other.cleanup();
   });
 
   test('la partie rendue : plus de maillet, le curseur revient, la souris n’est plus suivie', () => {

@@ -358,12 +358,19 @@ function drawBurrow(ctx, cell, { figure, view }) {
   if (view.cursorHole === figure.hole && figure.downAt === null) drawCursor(ctx, parts.sign);
 }
 
-// Le maillet : sa taille en parts d'une case, l'angle où il frappe et celui où il attend
-const MALLET = Object.freeze({ share: 0.3, min: 30, max: 64, hitAngle: -1.03, raise: 0.4 });
+// Le maillet : sa taille en parts d'une case, l'angle où il frappe et celui où il attend,
+// et dans son image (sans ses marges) le milieu de sa tête, en part de la hauteur
+const MALLET = Object.freeze({
+  share: 0.3,
+  min: 30,
+  max: 64,
+  hitAngle: -1.03,
+  raise: 0.4,
+  headCenter: 0.21,
+});
 const MALLET_COLORS = Object.freeze({
   head: '#e03131',
-  band: '#ffd43b',
-  handle: '#d9a05b',
+  handle: '#f5b70a',
   edge: '#3b2414',
   burst: '#ffe066',
 });
@@ -389,7 +396,7 @@ export function malletAngle(swing) {
 export function malletParts(layout, point) {
   const cell = Math.min(layout.cellWidth, layout.cellHeight);
   const size = Math.min(MALLET.max, Math.max(MALLET.min, cell * MALLET.share));
-  const length = size * 1.9;
+  const length = size * 1.6;
   return {
     size,
     length,
@@ -428,26 +435,13 @@ function drawImpact(ctx, point, size, swing) {
   ctx.restore();
 }
 
-/**
- * Le maillet qui tape les monstres : il suit la souris à la place du curseur et s'abat à
- * chaque tape (au doigt et au clavier, il n'apparaît que le temps de la frappe)
- * @param {CanvasRenderingContext2D} ctx
- * @param {ReturnType<typeof popLayout>} layout
- * @param {{x: number, y: number, swing: number, impact: boolean}} mallet - swing : de 1 (il
- *   vient de frapper) à 0 (au repos) ; impact : il a touché un personnage
- */
-export function drawMallet(ctx, layout, mallet) {
-  const { size, length, pivot } = malletParts(layout, mallet);
-  if (mallet.impact && mallet.swing > 0) drawImpact(ctx, mallet, size, mallet.swing);
-  else drawAim(ctx, mallet, size);
+// Le maillet dessiné par le code, tant que son image n'est pas arrivée : un manche et une
+// tête en travers, autour de la poignée (0, 0), la tête vers le haut
+function drawMalletShape(ctx, size, length) {
   const head = { x: -size * 0.8, y: -length - size / 2, width: size * 1.6, height: size };
-  ctx.save();
-  ctx.translate(pivot.x, pivot.y);
-  ctx.rotate(malletAngle(mallet.swing));
   ctx.lineJoin = 'round';
   ctx.lineWidth = Math.max(2, size * 0.09);
   ctx.strokeStyle = MALLET_COLORS.edge;
-  // Le manche, de la poignée à la tête
   roundedRect(
     ctx,
     { x: -size * 0.14, y: -length, width: size * 0.28, height: length },
@@ -456,15 +450,71 @@ export function drawMallet(ctx, layout, mallet) {
   ctx.fillStyle = MALLET_COLORS.handle;
   ctx.fill();
   ctx.stroke();
-  // La tête, en travers du manche, avec ses deux bandes
   roundedRect(ctx, head, size * 0.24);
   ctx.fillStyle = MALLET_COLORS.head;
   ctx.fill();
-  ctx.fillStyle = MALLET_COLORS.band;
-  ctx.fillRect(head.x + size * 0.2, head.y, size * 0.16, head.height);
-  ctx.fillRect(head.x + head.width - size * 0.36, head.y, size * 0.16, head.height);
-  roundedRect(ctx, head, size * 0.24);
   ctx.stroke();
+}
+
+/**
+ * Rectangle de l'image du maillet autour de sa poignée (0, 0) : le bas du manche sur la
+ * poignée, le milieu de la tête à la distance voulue, le manche dans l'axe
+ * @param {number} length - de la poignée au milieu de la tête
+ * @param {number} aspect - largeur / hauteur du dessin (sans ses marges)
+ * @returns {{x: number, y: number, width: number, height: number}}
+ */
+export function malletImageRect(length, aspect) {
+  const height = length / (1 - MALLET.headCenter);
+  const width = height * aspect;
+  return { x: -width / 2, y: -height, width, height };
+}
+
+// L'image du maillet, sans ses marges ; false tant qu'elle n'est pas là
+function paintMalletImage(ctx, sprite, length) {
+  if (typeof sprite?.request !== 'function') return false;
+  const scale = devicePixelsPerUnit(ctx.canvas);
+  sprite.request(length * 2 * scale, length * 2 * scale);
+  const image = sprite.image;
+  if (!image) return false;
+  const bounds = contentBounds(sprite);
+  const source = {
+    x: bounds.x * image.naturalWidth,
+    y: bounds.y * image.naturalHeight,
+    width: bounds.width * image.naturalWidth,
+    height: bounds.height * image.naturalHeight,
+  };
+  const rect = malletImageRect(length, source.width / source.height);
+  ctx.drawImage(
+    image,
+    source.x,
+    source.y,
+    source.width,
+    source.height,
+    rect.x,
+    rect.y,
+    rect.width,
+    rect.height
+  );
+  return true;
+}
+
+/**
+ * Le maillet qui tape les monstres : il suit la souris à la place du curseur et s'abat à
+ * chaque tape (au doigt et au clavier, il n'apparaît que le temps de la frappe)
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {ReturnType<typeof popLayout>} layout
+ * @param {{x: number, y: number, swing: number, impact: boolean}} mallet - swing : de 1 (il
+ *   vient de frapper) à 0 (au repos) ; impact : il a touché un personnage
+ * @param {import('./arcade-sprites.js').ArcadeSprite|null} [sprite] - son image (maillet.png)
+ */
+export function drawMallet(ctx, layout, mallet, sprite = null) {
+  const { size, length, pivot } = malletParts(layout, mallet);
+  if (mallet.impact && mallet.swing > 0) drawImpact(ctx, mallet, size, mallet.swing);
+  else drawAim(ctx, mallet, size);
+  ctx.save();
+  ctx.translate(pivot.x, pivot.y);
+  ctx.rotate(malletAngle(mallet.swing));
+  if (!paintMalletImage(ctx, sprite, length)) drawMalletShape(ctx, size, length);
   ctx.restore();
 }
 
@@ -474,8 +524,9 @@ export function drawMallet(ctx, layout, mallet) {
  * @param {{layout: ReturnType<typeof popLayout>, field: import('./multipop-engine.js').MonsterField,
  *   sprites: Map<number, Object>, grassSprite: Object|null, cursorHole: number|null,
  *   reducedMotion: boolean, mallet?: {x: number, y: number, swing: number, impact: boolean}
- *   |null}} view - sprites : l'image du personnage de chaque terrier ; mallet : le maillet à
- *   dessiner par-dessus, s'il est sur le plateau
+ *   |null, malletSprite?: Object|null}} view - sprites : l'image du personnage de chaque
+ *   terrier ; mallet : le maillet à dessiner par-dessus, s'il est sur le plateau, et
+ *   malletSprite son image
  */
 export function drawPopBoard(ctx, view) {
   const { layout, field } = view;
@@ -488,5 +539,5 @@ export function drawPopBoard(ctx, view) {
   for (let hole = 0; hole < GRID * GRID; hole++) {
     drawBurrow(ctx, cellRect(layout, hole), { figure: figures.get(hole), view });
   }
-  if (view.mallet) drawMallet(ctx, layout, view.mallet);
+  if (view.mallet) drawMallet(ctx, layout, view.mallet, view.malletSprite);
 }
