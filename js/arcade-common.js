@@ -577,7 +577,10 @@ export function fitArcadeCanvas(canvas, box) {
 
 /**
  * Appelle `onChange` quand la place du plateau peut avoir changé : fenêtre redimensionnée
- * ou tournée, plein écran, bouton plein écran arrivé, bandeau qui change de hauteur.
+ * ou tournée, plein écran, bouton plein écran arrivé, bandeau qui change de hauteur ; et
+ * quand le navigateur rend un dessin qu'il avait perdu (contextrestored : appareil à court
+ * de mémoire, onglet longtemps caché), revenu à son état par défaut, sans l'échelle de la
+ * densité de l'écran : chaque jeu refait alors son plateau et le redessine.
  * Une seule fois par image ; la surveillance s'arrête d'elle-même quand le jeu a quitté la
  * page.
  * @param {HTMLCanvasElement} canvas
@@ -607,6 +610,7 @@ export function watchArcadeViewport(canvas, onChange) {
     [globalThis.visualViewport, 'resize'],
     [document, 'fullscreenchange'],
     [stage, STAGE_CHANGE_EVENT],
+    [canvas, 'contextrestored'],
   ];
   for (const [target, type] of targets) {
     if (!target) continue;

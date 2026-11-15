@@ -47,39 +47,33 @@ function cleanupSnakeGame() {
   return score;
 }
 
-export function startSnakeArcade() {
+/** Quitte le jeu d'Arcade en cours et ouvre l'écran de MultiSnake */
+function enterSnakeScreen() {
   // Couper proprement toute instance arcade précédente
   try {
     stopArcadeMode();
   } catch {
     // Attendu : le mode arcade peut ne pas être actif
-    // Erreur ignorée (non-critique)
   }
   // Définir le mode avant le changement de slide pour éviter les auto-stop
   setStartingMode('multisnake');
   gameState.gameMode = 'multisnake';
   void goToSlide(4);
+}
 
-  // Récupérer l'opérateur sélectionné (support multi-opérations R4.4)
-  const userData = UserState.getCurrentUserData();
-  const operator = userData.preferredOperator || '×';
+/** Une partie restée d'un lancement précédent est rendue (boucle, écouteurs, minuteries) */
+function disposePreviousSnake() {
+  if (!_snakeInstance) return;
+  cleanupGameResources(_snakeInstance, {
+    cleanAnimations: true,
+    cleanEvents: true,
+    cleanTimers: true,
+  });
+  _snakeInstance = null;
+}
 
-  console.log('MultiSnake lancé avec opérateur:', operator);
-
-  // Nettoyer les anciennes instances de jeux et leurs ressources
-  if (_snakeInstance) {
-    // Utiliser la fonction utilitaire centralisée pour un nettoyage complet
-    cleanupGameResources(_snakeInstance, {
-      cleanAnimations: true,
-      cleanEvents: true,
-      cleanTimers: true,
-    });
-    _snakeInstance = null;
-  }
-
-  // Nettoyage préventif centralisé via stopArcadeMode (déjà appelé)
-
-  // Nettoyer l'écran jeu
+/** Écran du jeu : bandeau, plateau et « Abandonner », du gabarit commun de l'Arcade */
+function renderSnakeScreen() {
   const gameScreen = document.getElementById('game');
   while (gameScreen.firstChild) gameScreen.firstChild.remove();
   const frag = InfoBar.createArcadeTemplateElement({
@@ -99,49 +93,43 @@ export function startSnakeArcade() {
   // Haut de page et zone de jeu sans hauteur imposée : le plateau se dimensionne
   // ensuite pour tenir dans l'écran
   prepareArcadeStage(document.getElementById('multisnake-canvas'));
-  // Utilisation des paramètres de difficulté (Cascade 2025)
-  const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
-  // Durée de la partie selon le niveau
+}
+
+/** Minuteur du niveau, score à zéro, « Abandonner » (écran de fin avec le score) */
+function startSnakeRound(difficultySettings) {
   startArcadeTimer(difficultySettings.timeSeconds);
-
-  // Forcer la mise à zéro du score
-
-  try {
-    setTimeout(() => setStartingMode(null), 0);
-  } catch {
-    // Opération asynchrone non-critique
-    // Erreur ignorée (non-critique)
-  }
+  // Le lancement est fini : le mode « en cours de lancement » se retire
+  setTimeout(() => setStartingMode(null), 0);
   const scoreElement = document.getElementById('multisnake-info-score');
-  if (scoreElement) {
-    scoreElement.textContent = '0';
-  }
-
-  // Bouton abandon → cleanup + afficher game over
+  if (scoreElement) scoreElement.textContent = '0';
   document.getElementById('multisnake-abandon-btn').addEventListener('click', function () {
     const score = cleanupSnakeGame();
     showArcadeGameOver(score);
   });
+}
 
-  // Initialiser le jeu Snake via le module multisnake
-  console.log('Initialisation du jeu Snake');
+/**
+ * Lance MultiSnake : écran du jeu, minuteur du niveau, puis la partie, avec les réglages du
+ * niveau et l'opération choisie à l'accueil ; l'arrêt de l'Arcade (Accueil) la rend sans
+ * écran de fin
+ */
+export function startSnakeArcade() {
+  enterSnakeScreen();
+  const operator = UserState.getCurrentUserData().preferredOperator || '×';
+  disposePreviousSnake();
+  renderSnakeScreen();
+  const difficulty = gameState.difficulty || 'moyen';
+  const difficultySettings = getDifficultySettings(difficulty);
+  startSnakeRound(difficultySettings);
   _snakeInstance = new SnakeGame('multisnake-canvas', 'operation', {
-    difficulty: gameState.difficulty || 'moyen',
+    difficulty,
     penaltyPoints: difficultySettings.penalty,
     tables: difficultySettings.tables,
     distractorDistance: difficultySettings.distractorDistance,
-    operator, // R4.4: Support multi-opérations (+, −, ×, ÷)
+    operator,
   });
-  console.log('Jeu Snake démarré avec le niveau:', gameState.difficulty || 'moyen');
   _snakeInstance.start();
-
-  // Écouter l'arrêt arcade via EventBus (bouton accueil) → cleanup sans game over
-  try {
-    eventBus.on('arcade:stop', cleanupSnakeGame, { once: true });
-  } catch {
-    // Enregistrement d'événement non-critique
-    // Erreur ignorée (non-critique)
-  }
+  eventBus.on('arcade:stop', cleanupSnakeGame, { once: true });
 }
 
 // ESM export uniquement
