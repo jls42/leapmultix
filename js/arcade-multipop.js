@@ -29,6 +29,7 @@ import { pickRandom, shuffleInPlace } from './core/random.js';
 import {
   showGameInstructions,
   INSTRUCTIONS_MS,
+  INSTRUCTIONS_FADE_MS,
   prepareArcadeStage,
   getArcadeCanvasBox,
   clientToCanvasPoint,
@@ -40,7 +41,7 @@ import { getDifficultySettings } from './difficulty.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { UserState } from './core/userState.js';
-import { MonsterField, monsterRhythm, GAP_MS } from './multipop-engine.js';
+import { MonsterField, monsterRhythm, GAP_MS, BOTTOM_HOLES } from './multipop-engine.js';
 import { popLayout, cellRect, cellParts, holeAt, drawPopBoard } from './multipop-renderer.js';
 
 /** Points d'une bonne réponse */
@@ -51,6 +52,11 @@ export const MISS_PENALTY = 50;
 export const FRIEND_PENALTY = 50;
 /** Chance qu'un ami sorte avec les monstres d'une sortie */
 export const FRIEND_CHANCE = 1 / 3;
+/** Attente avant la première sortie : le temps de lire le calcul du bandeau */
+export const FIRST_RAISE_MS = 1500;
+// La consigne du début est posée sur la rangée du bas, le temps de la lire puis de
+// s'effacer : jusque-là, les monstres sortent des deux autres rangées
+const INSTRUCTIONS_COVER_MS = INSTRUCTIONS_MS + INSTRUCTIONS_FADE_MS;
 // Monstres d'une partie, tirés parmi tous ceux du jeu et chargés d'avance
 const CAST_SIZE = 12;
 // Amis qui peuvent sortir : tous les héros sauf celui du joueur
@@ -105,11 +111,15 @@ function friendSprites() {
 export class PopGame {
   /**
    * @param {string} canvasId
-   * @param {{difficulty: string, operator: string, introMs?: number, friendChance?: number}}
-   *   options - introMs : temps laissé à la consigne du début avant la première sortie de
-   *   monstres ; friendChance : chance qu'un ami sorte avec eux
+   * @param {{difficulty: string, operator: string, introMs?: number, coveredMs?: number,
+   *   friendChance?: number}} options - introMs : attente avant la première sortie de
+   *   monstres ; coveredMs : temps où la consigne du début couvre la rangée du bas, laissée
+   *   vide jusque-là ; friendChance : chance qu'un ami sorte avec eux
    */
-  constructor(canvasId, { difficulty, operator, introMs = 0, friendChance = FRIEND_CHANCE }) {
+  constructor(
+    canvasId,
+    { difficulty, operator, introMs = 0, coveredMs = 0, friendChance = FRIEND_CHANCE }
+  ) {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
     this.operator = operator || '×';
@@ -121,6 +131,7 @@ export class PopGame {
       friendChance,
     });
     this.introMs = introMs;
+    this.coveredMs = coveredMs;
     this.score = 0;
     this.question = null;
     this.cursorHole = null;
@@ -225,6 +236,8 @@ export class PopGame {
    * @param {number} dt
    */
   step(dt) {
+    this.coveredMs = Math.max(0, this.coveredMs - dt);
+    this.field.reserved = this.coveredMs > 0 ? BOTTOM_HOLES : [];
     const event = this.field.tick(dt);
     if (event === 'solved-done') this.nextQuestion();
     else if (event === 'raised') this.onRaised();
@@ -470,11 +483,12 @@ export function startPopArcade() {
   renderPopScreen();
   const difficulty = gameState.difficulty || 'moyen';
   startPopRound(getDifficultySettings(difficulty));
-  // Les premiers monstres attendent que la consigne, posée sur le plateau, soit partie
+  // Les premiers monstres sortent vite, hors de la rangée du bas tant que la consigne y est
   _popInstance = new PopGame('multipop-canvas', {
     difficulty,
     operator,
-    introMs: INSTRUCTIONS_MS,
+    introMs: FIRST_RAISE_MS,
+    coveredMs: INSTRUCTIONS_COVER_MS,
   });
   _popInstance.start();
   showPopInstructions(_popInstance.canvas);

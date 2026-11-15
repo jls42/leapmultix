@@ -31,8 +31,10 @@ const { UserState } = await import('../js/core/userState.js');
 const { gameState } = await import('../js/game.js');
 const { eventBus } = await import('../js/core/eventBus.js');
 const { INSTRUCTIONS_MS } = await import('../js/arcade-common.js');
-const { RISE_MS } = await import('../js/multipop-engine.js');
-const { startPopArcade, PopGame, CORRECT_POINTS } = await import('../js/arcade-multipop.js');
+const { RISE_MS, BOTTOM_HOLES } = await import('../js/multipop-engine.js');
+const { startPopArcade, PopGame, CORRECT_POINTS, FIRST_RAISE_MS } = await import(
+  '../js/arcade-multipop.js'
+);
 
 const FR = JSON.parse(fs.readFileSync('assets/translations/fr.json', 'utf8'));
 
@@ -43,9 +45,9 @@ const status = () => document.querySelector('.multipop-announcer').textContent;
 const banner = () => document.querySelector('.arcade-question').textContent;
 const instructions = () => document.querySelector('.game-instructions p').textContent;
 
-/** La consigne part, les monstres sortent et finissent de monter */
+/** Les premiers monstres sortent et finissent de monter */
 function waitForMonsters() {
-  jest.advanceTimersByTime(INSTRUCTIONS_MS + RISE_MS + 200);
+  jest.advanceTimersByTime(FIRST_RAISE_MS + RISE_MS + 200);
 }
 
 beforeEach(() => {
@@ -98,19 +100,37 @@ describe('MultiPop : lancement depuis le menu de l’Arcade', () => {
     expect(setStartingMode).toHaveBeenLastCalledWith(null);
   });
 
-  test('la consigne à la souris ; les cinq monstres du niveau sortent quand elle est partie', () => {
+  test('la consigne à la souris ; les cinq monstres du niveau sortent après 1,5 s', () => {
+    expect(FIRST_RAISE_MS).toBe(1500);
     startPopArcade();
     expect(instructions()).toBe(FR.arcade_pop_instructions_desktop);
-    // Sans consigne, les monstres seraient déjà sortis (400 ms d'attente, 250 ms de montée)
+    // Le temps de lire le calcul : rien avant 1,5 s (sans attente, ils sortiraient à 400 ms)
     jest.advanceTimersByTime(1000);
     press('ArrowRight');
     expect(status()).toBe('');
-    jest.advanceTimersByTime(INSTRUCTIONS_MS - 1200);
-    press('ArrowRight');
-    expect(status()).toBe('');
-    jest.advanceTimersByTime(RISE_MS + 400);
+    jest.advanceTimersByTime(FIRST_RAISE_MS - 1000 + RISE_MS + 200);
     press('ArrowRight');
     expect(status()).toMatch(/^Monstre 2 sur 5\s: \d+$/);
+  });
+
+  test('tant que la consigne est affichée, personne ne sort de la rangée du bas', () => {
+    const raised = jest.spyOn(PopGame.prototype, 'onRaised');
+    const holes = [];
+    raised.mockImplementation(function onRaised() {
+      const { monsters, friend } = this.field;
+      holes.push({
+        shown: !document.querySelector('.game-instructions').hidden,
+        bottom: [...monsters, friend].some(figure => figure && BOTTOM_HOLES.includes(figure.hole)),
+      });
+    });
+    startPopArcade();
+    // Difficile : une sortie toutes les 2,2 s ; la consigne reste 5 s puis s'efface
+    jest.advanceTimersByTime(INSTRUCTIONS_MS + 60_000);
+    const covered = holes.filter(sortie => sortie.shown);
+    expect(covered.length).toBeGreaterThanOrEqual(2);
+    expect(covered.every(sortie => !sortie.bottom)).toBe(true);
+    // Ensuite, la rangée du bas sert comme les autres
+    expect(holes.some(sortie => !sortie.shown && sortie.bottom)).toBe(true);
   });
 
   test('sur un appareil tactile : la consigne du doigt', () => {

@@ -4,7 +4,7 @@
    ===================== */
 
 // Durée du fondu de sortie de la consigne : suit le jeton --dur-slow (css/themes.css)
-const INSTRUCTIONS_FADE_MS = 320;
+export const INSTRUCTIONS_FADE_MS = 320;
 // Durée d'affichage de la consigne, sauf demande du jeu
 export const INSTRUCTIONS_MS = 5000;
 const INSTRUCTION_TONES = new Set(['neutral', 'success', 'warning']);
