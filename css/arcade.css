@@ -792,6 +792,13 @@
   color: var(--color-ink);
 }
 
+/* Niveau dont la liste donne les meilleurs scores */
+.arcade-top-scores .arcade-top-level {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
 .arcade-top-scores ol {
   display: inline-block;
   margin: 0;

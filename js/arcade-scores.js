@@ -11,18 +11,20 @@ import { UserState } from './core/userState.js';
 import { recordArcadeGame, arcadeTopScores, resetArcadeGame } from './core/mode-stats.js';
 
 /**
- * Enregistre une partie jouée : score, opération du lancement
+ * Enregistre une partie jouée : score, opération du lancement, niveau
  * @param {number} score
  * @param {string} [game] - invasion, multimiam, multimemory, multisnake
  * @param {string} [operator] - Opération de la partie (celle du profil par défaut)
+ * @param {string} [level] - debutant, moyen, difficile : ses meilleurs scores
  */
-export function saveArcadeScore(score, game = 'invasion', operator = null) {
+export function saveArcadeScore(score, game = 'invasion', operator = null, level = undefined) {
   try {
     const userData = UserState.getCurrentUserData();
     recordArcadeGame(userData, {
       game,
       operator: operator || userData.preferredOperator || '×',
       score,
+      level,
     });
     UserState.updateUserData(userData);
   } catch (error) {
@@ -31,10 +33,16 @@ export function saveArcadeScore(score, game = 'invasion', operator = null) {
   }
 }
 
-/** Les 5 meilleurs scores d'un jeu, du plus grand au plus petit */
-export function getArcadeScores(game = 'invasion') {
+/**
+ * Les 5 meilleurs scores d'un jeu, du plus grand au plus petit : ceux du niveau donné, sinon
+ * ceux de tous les niveaux
+ * @param {string} [game]
+ * @param {string} [level]
+ * @returns {number[]}
+ */
+export function getArcadeScores(game = 'invasion', level = undefined) {
   try {
-    return arcadeTopScores(UserState.getCurrentUserData(), game);
+    return arcadeTopScores(UserState.getCurrentUserData(), game, level);
   } catch {
     return [];
   }

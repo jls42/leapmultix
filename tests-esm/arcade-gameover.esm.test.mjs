@@ -11,6 +11,8 @@ import {
 const saveArcadeScore = jest.fn();
 const resetArcadeScores = jest.fn();
 let storedScores = [120, 80];
+// Scores lus par l'écran de fin, selon le jeu et le niveau
+let scoresFor = () => storedScores;
 const noop = () => undefined;
 const speak = jest.fn();
 let voiceOn = false;
@@ -30,7 +32,7 @@ jest.unstable_mockModule('../js/utils-es6.js', () => ({
   speak,
   isVoiceEnabled: () => voiceOn,
   saveArcadeScore,
-  getArcadeScores: () => storedScores,
+  getArcadeScores: (...args) => scoresFor(...args),
   resetArcadeScores,
   saveArcadeScoreSnake: noop,
   getArcadeScoresSnake: () => [],
@@ -90,7 +92,7 @@ describe('Écran de fin d’arcade', () => {
     expect(reset.className).toBe('btn btn-quiet btn-danger btn-sm');
     expect(reset.closest('.arcade-top-scores')).toBeTruthy();
     expect(saveArcadeScore).toHaveBeenCalledTimes(1);
-    expect(saveArcadeScore).toHaveBeenCalledWith(120, 'invasion', '×');
+    expect(saveArcadeScore).toHaveBeenCalledWith(120, 'invasion', '×', 'moyen');
   });
 
   test('une partie lancée puis finie sans aucun coup ne compte pas', () => {
@@ -105,7 +107,7 @@ describe('Écran de fin d’arcade', () => {
     arcade.stopArcadeMode();
     arcade.stopArcadeMode();
     expect(saveArcadeScore).toHaveBeenCalledTimes(1);
-    expect(saveArcadeScore).toHaveBeenCalledWith(340, 'invasion', '×');
+    expect(saveArcadeScore).toHaveBeenCalledWith(340, 'invasion', '×', 'moyen');
   });
 
   test('la voix félicite sans dire le score, qui reste affiché', () => {
@@ -243,5 +245,39 @@ describe('Écran de fin : ce que la partie apprend', () => {
   test('aucun calcul raté : pas de liste', () => {
     arcade.showArcadeGameOver(100);
     expect(document.querySelector('#game .arcade-review')).toBeNull();
+  });
+});
+
+describe('Écran de fin : les meilleurs scores du niveau joué', () => {
+  afterEach(() => {
+    game.gameState.difficulty = undefined;
+    scoresFor = () => storedScores;
+  });
+
+  test('liste, record et score enregistré : ceux du niveau de la partie, nommé sous le titre', () => {
+    game.gameState.difficulty = 'difficile';
+    const lists = new Map([
+      ['moyen', [900]],
+      ['difficile', [100]],
+    ]);
+    scoresFor = (gameName, level) => (gameName === 'invasion' ? (lists.get(level) ?? []) : []);
+    arcade.showArcadeGameOver(200);
+    expect(saveArcadeScore).toHaveBeenCalledWith(200, 'invasion', '×', 'difficile');
+    // 200 bat le meilleur score de Difficile (100), pas celui de Moyen (900)
+    expect(document.querySelector('#game .arcade-new-record')).toBeTruthy();
+    const top = document.querySelector('.arcade-top-scores');
+    expect(top.querySelector('.arcade-top-level').dataset.translate).toBe('difficulty_hard');
+    expect([...top.querySelectorAll('li')].map(li => li.textContent)).toEqual(['100']);
+  });
+
+  test('chaque niveau porte son nom', () => {
+    const names = ['debutant', 'moyen', 'difficile'].map(level => {
+      game.gameState.difficulty = level;
+      openArcadeSession('multiinvaders');
+      noteArcadePlay();
+      arcade.showArcadeGameOver(10);
+      return document.querySelector('.arcade-top-level').dataset.translate;
+    });
+    expect(names).toEqual(['difficulty_beginner', 'difficulty_medium', 'difficulty_hard']);
   });
 });

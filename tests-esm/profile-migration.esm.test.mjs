@@ -273,6 +273,7 @@ describe('Profils anciens : compteurs du tableau de bord amorcés depuis l’exi
       modes: {},
       imported: { questions: 0, correct: 0 },
       arcadeTop5: {},
+      arcadeTop5ByLevel: {},
       review: {},
       countedUntil: 0,
     });

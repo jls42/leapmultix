@@ -108,6 +108,63 @@ describe('mode-stats : records et Arcade', () => {
     expect(arcadeTopScores(user, 'multimiam')).toEqual([40]);
   });
 
+  test('chaque niveau a ses 5 meilleurs scores ; la liste de tous les niveaux reste tenue', () => {
+    const user = profile();
+    const games = [
+      ['debutant', 300],
+      ['difficile', 900],
+      ['debutant', 500],
+      ['moyen', 400],
+    ];
+    for (const [level, score] of games) {
+      recordArcadeGame(user, { game: 'invasion', operator: '×', score, level });
+    }
+    expect(arcadeTopScores(user, 'invasion', 'debutant')).toEqual([500, 300]);
+    expect(arcadeTopScores(user, 'invasion', 'moyen')).toEqual([400]);
+    expect(arcadeTopScores(user, 'invasion', 'difficile')).toEqual([900]);
+    // Lue par une version précédente du jeu : rien ne s'y perd
+    expect(arcadeTopScores(user, 'invasion')).toEqual([900, 500, 400, 300]);
+  });
+
+  test('un niveau inconnu ou absent ne range le score que dans la liste de tous les niveaux', () => {
+    const user = profile();
+    recordArcadeGame(user, { game: 'multimiam', operator: '×', score: 70, level: 'expert' });
+    recordArcadeGame(user, { game: 'multimiam', operator: '×', score: 60 });
+    expect(user.modeStats.arcadeTop5ByLevel).toEqual({});
+    expect(arcadeTopScores(user, 'multimiam')).toEqual([70, 60]);
+  });
+
+  test('« Remettre à zéro » vide aussi les scores de chaque niveau de ce jeu', () => {
+    const user = profile();
+    recordArcadeGame(user, { game: 'invasion', operator: '×', score: 100, level: 'moyen' });
+    recordArcadeGame(user, { game: 'multisnake', operator: '×', score: 80, level: 'moyen' });
+    resetArcadeGame(user, 'invasion');
+    expect(arcadeTopScores(user, 'invasion', 'moyen')).toEqual([]);
+    expect(arcadeTopScores(user, 'multisnake', 'moyen')).toEqual([80]);
+  });
+
+  test('scores par niveau relus : triés, 5 au plus, niveaux et jeux inconnus écartés', () => {
+    const stats = normalizeModeStats({
+      modeStats: {
+        ...emptyModeStats(),
+        arcadeTop5ByLevel: {
+          invasion: { moyen: [10, 60, 'x', 30, 50, 40, 20], expert: [999] },
+          pong: { moyen: [5] },
+          multisnake: {},
+        },
+      },
+    });
+    expect(stats.arcadeTop5ByLevel).toEqual({ invasion: { moyen: [60, 50, 40, 30, 20] } });
+  });
+
+  test('un profil d’avant les scores par niveau se relit à l’identique', () => {
+    const before = { ...emptyModeStats(), arcadeTop5: { invasion: [800, 300] } };
+    Reflect.deleteProperty(before, 'arcadeTop5ByLevel');
+    const stats = normalizeModeStats({ modeStats: before });
+    expect(stats.arcadeTop5).toEqual({ invasion: [800, 300] });
+    expect(stats.arcadeTop5ByLevel).toEqual({});
+  });
+
   test('l’historique réponse par réponse reste borné', () => {
     const user = { progressHistory: [] };
     for (let i = 0; i < PROGRESS_HISTORY_LIMIT + 7; i += 1) appendProgressHistory(user, { i });

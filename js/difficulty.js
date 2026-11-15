@@ -49,19 +49,26 @@ const DIFFICULTY_SETTINGS = {
 };
 
 /**
+ * Nom d'un niveau, alias compris : 'debutant', 'moyen' ou 'difficile' (Moyen si inconnu)
+ * @param {string} level - 'debutant'/'facile'/'easy', 'moyen'/'medium', 'difficile'/'hard'
+ * @returns {'debutant'|'moyen'|'difficile'}
+ */
+function difficultyKey(level) {
+  const lvl = String(level ?? '')
+    .toLowerCase()
+    .trim();
+  if (['debutant', 'facile', 'easy'].includes(lvl)) return 'debutant';
+  if (['difficile', 'hard'].includes(lvl)) return 'difficile';
+  return 'moyen';
+}
+
+/**
  * Récupère les paramètres pour un niveau donné, avec alias supportés.
  * @param {string} level - 'debutant'/'facile'/'easy', 'moyen'/'medium', 'difficile'/'hard'
  * @returns {object} Paramètres du niveau
  */
 function getDifficultySettings(level) {
-  const lvl = (level || '').toLowerCase().trim();
-  let key;
-  if (['debutant', 'facile', 'easy'].includes(lvl)) key = 'debutant';
-  else if (['moyen', 'medium'].includes(lvl)) key = 'moyen';
-  else if (['difficile', 'hard'].includes(lvl)) key = 'difficile';
-  else key = 'moyen';
-
-  return DIFFICULTY_SETTINGS[key];
+  return DIFFICULTY_SETTINGS[difficultyKey(level)];
 }
 
-export { getDifficultySettings, DIFFICULTY_SETTINGS };
+export { difficultyKey, getDifficultySettings, DIFFICULTY_SETTINGS };
