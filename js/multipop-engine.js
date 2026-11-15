@@ -19,9 +19,15 @@ export const RISE_MS = 250;
 /** Terriers vides entre deux sorties */
 export const GAP_MS = 400;
 
-// Terriers tirés au hasard, tous différents
-function drawHoles(count) {
-  const holes = shuffleInPlace(Array.from({ length: HOLES }, (_, hole) => hole));
+/** Terriers de la rangée du bas : la consigne du début est posée dessus */
+export const BOTTOM_HOLES = Array.from({ length: GRID }, (_, column) => HOLES - GRID + column);
+
+// Terriers tirés au hasard, tous différents, hors des terriers réservés tant qu'il en reste
+// assez (sinon tous servent : la sortie passe avant ce qui les couvre)
+function drawHoles(count, reserved = []) {
+  const all = Array.from({ length: HOLES }, (_, hole) => hole);
+  const free = all.filter(hole => !reserved.includes(hole));
+  const holes = shuffleInPlace(free.length >= count ? free : all);
   return holes.slice(0, Math.min(count, HOLES));
 }
 
@@ -83,6 +89,8 @@ export class MonsterField {
     this.drawAnswers = () => [];
     /** Attente des terriers vides avant la prochaine sortie */
     this.gapMs = GAP_MS;
+    /** @type {number[]} Terriers laissés vides aux prochaines sorties (consigne posée dessus) */
+    this.reserved = [];
   }
 
   /**
@@ -91,7 +99,7 @@ export class MonsterField {
    * @param {() => number[]} drawAnswers - nombres d'une sortie, la bonne comprise, tirés à
    *   chaque sortie
    * @param {number} [waitMs] - attente avant la première sortie (plus longue au début de la
-   *   partie, le temps de lire la consigne)
+   *   partie, le temps de lire le calcul)
    */
   ask(correct, drawAnswers, waitMs = GAP_MS) {
     this.correct = correct;
@@ -130,7 +138,7 @@ export class MonsterField {
     const values = this.drawAnswers();
     // L'ami prend un terrier de plus, quand il en reste un et que le hasard le veut
     const withFriend = values.length < HOLES && this.friendChance > 0 && chance(this.friendChance);
-    const holes = drawHoles(values.length + (withFriend ? 1 : 0));
+    const holes = drawHoles(values.length + (withFriend ? 1 : 0), this.reserved);
     this.friend = withFriend ? { hole: holes.pop(), downAt: null } : null;
     holes.sort((a, b) => a - b);
     this.monsters = holes.map((hole, index) => {

@@ -124,13 +124,44 @@ describe('MultiPop : une partie', () => {
     expect(rightMonster().value).toBe(a * b);
   });
 
-  test('au lancement, les premiers monstres attendent que la consigne soit partie', () => {
-    const other = new PopGame(canvas.id, { difficulty: 'moyen', operator: '×', introMs: 5000 });
+  test('au lancement, les premiers monstres attendent le temps demandé', () => {
+    const other = new PopGame(canvas.id, { difficulty: 'moyen', operator: '×', introMs: 1500 });
     other.start();
     other.step(GAP_MS);
     expect(other.field.monsters).toEqual([]);
-    other.step(5000 - GAP_MS);
+    other.step(1500 - GAP_MS);
     expect(other.field.upMonsters()).toHaveLength(4);
+    other.cleanup();
+  });
+
+  test('tant que la consigne couvre la rangée du bas, les monstres sortent des autres', () => {
+    const other = new PopGame(canvas.id, {
+      difficulty: 'difficile',
+      operator: '×',
+      coveredMs: 5320,
+      friendChance: 1,
+    });
+    other.start();
+    const holesUp = () => [...other.field.monsters, other.field.friend].map(figure => figure.hole);
+    // Difficile : une sortie toutes les 2,2 s (400 ms d'attente, 1,8 s levés)
+    other.step(GAP_MS);
+    expect(holesUp().sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5]);
+    other.step(1800);
+    other.step(GAP_MS);
+    expect(holesUp().sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5]);
+    other.step(1800);
+    // 4,4 s de jeu : encore couverte à la troisième sortie, plus après 5,32 s
+    other.step(GAP_MS);
+    expect(holesUp().every(hole => hole < 6)).toBe(true);
+    other.step(1800);
+    expect(other.field.reserved).toEqual([]);
+    const seen = new Set();
+    for (let sortie = 0; sortie < 40; sortie++) {
+      other.step(GAP_MS);
+      for (const hole of holesUp()) seen.add(hole);
+      other.step(1800);
+    }
+    expect([6, 7, 8].every(hole => seen.has(hole))).toBe(true);
     other.cleanup();
   });
 

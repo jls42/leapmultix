@@ -9,9 +9,8 @@
 import { describe, test, expect } from '@jest/globals';
 
 const { getDifficultySettings } = await import('../js/difficulty.js');
-const { HOLES, GAP_MS, RISE_MS, pickHoles, monsterRhythm, MonsterField } = await import(
-  '../js/multipop-engine.js'
-);
+const { HOLES, GAP_MS, RISE_MS, BOTTOM_HOLES, pickHoles, monsterRhythm, MonsterField } =
+  await import('../js/multipop-engine.js');
 
 const SOLVED_MS = 1500;
 /** Réponses d'un tour : la bonne (12) et des mauvaises, autant que de monstres */
@@ -67,7 +66,7 @@ describe('MultiPop : une sortie de monstres', () => {
     expect(field.monsters).toEqual([]);
   });
 
-  test('une attente plus longue avant la première sortie (le temps de lire la consigne)', () => {
+  test('une attente plus longue avant la première sortie (le temps de lire le calcul)', () => {
     const field = new MonsterField({ count: 3, upMs: 3000, solvedMs: SOLVED_MS });
     field.ask(12, answersOf(3), 5000);
     expect(field.tick(4999)).toBeNull();
@@ -75,6 +74,38 @@ describe('MultiPop : une sortie de monstres', () => {
     // Les sorties suivantes reprennent l'attente habituelle
     expect(field.tick(3000)).toBe('escaped');
     expect(field.tick(GAP_MS)).toBe('raised');
+  });
+
+  test('terriers réservés (la rangée du bas, sous la consigne) : personne n’en sort', () => {
+    expect(BOTTOM_HOLES).toEqual([6, 7, 8]);
+    const field = new MonsterField({ count: 5, upMs: 1800, solvedMs: SOLVED_MS, friendChance: 1 });
+    field.reserved = BOTTOM_HOLES;
+    field.ask(12, answersOf(5));
+    const used = new Set();
+    for (let sortie = 0; sortie < 40; sortie++) {
+      raise(field);
+      // Cinq monstres et l'ami : les six terriers libres servent tous
+      expect(field.monsters).toHaveLength(5);
+      for (const figure of [...field.monsters, field.friend]) used.add(figure.hole);
+      expect(field.tick(1800)).toBe('escaped');
+    }
+    expect([...used].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5]);
+    // La réserve levée, la rangée du bas sert de nouveau
+    field.reserved = [];
+    for (let sortie = 0; sortie < 40; sortie++) {
+      raise(field);
+      for (const figure of [...field.monsters, field.friend]) used.add(figure.hole);
+      field.tick(1800);
+    }
+    expect(used.size).toBe(9);
+  });
+
+  test('trop de terriers réservés pour la sortie : tous servent, les monstres sortent', () => {
+    const field = new MonsterField({ count: 5, upMs: 1800, solvedMs: SOLVED_MS });
+    field.reserved = [0, 1, 2, 3, 4, 5, 6];
+    field.ask(12, answersOf(5));
+    raise(field);
+    expect(new Set(field.monsters.map(monster => monster.hole)).size).toBe(5);
   });
 
   test('les monstres du niveau sortent ensemble, un seul porte la bonne réponse', () => {
