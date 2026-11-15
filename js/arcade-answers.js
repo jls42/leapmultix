@@ -1,6 +1,6 @@
 /**
  * Calculs et réponses proposées des jeux d'Arcade qui montrent plusieurs réponses à la fois
- * (MultiInvaders, MultiPop) : les tables et les nombres du niveau, les tables à revoir
+ * (MultiInvaders, MultiPop, MultiGoal) : les tables et les nombres du niveau, les tables à revoir
  * du joueur tirées plus souvent, et des mauvaises réponses proches ou éloignées selon le
  * niveau.
  */
@@ -41,7 +41,7 @@ const CLOSE_WRONG_SHARE = new Map([
 const MAX_FAR_DRAWS = 40;
 
 /**
- * Réponses proposées pour un calcul (monstres d'une vague de MultiInvaders ou d'une sortie de MultiPop) : la bonne réponse et des mauvaises, proches
+ * Réponses proposées pour un calcul (monstres d'une vague de MultiInvaders ou d'une sortie de MultiPop, cibles de MultiGoal) : la bonne réponse et des mauvaises, proches
  * (erreurs plausibles d'un enfant : la table à côté, un de plus…) ou éloignées (résultats
  * d'autres calculs du niveau), selon le niveau ; toutes différentes, jamais négatives
  * @param {{a: number, b: number, answer: number}} question

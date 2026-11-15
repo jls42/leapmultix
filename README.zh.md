@@ -56,7 +56,7 @@
 
 ## 说明
 
-LeapMultix 是一款面向 6 至 12 岁儿童的交互式教育 Web 应用，旨在帮助他们掌握四则算术运算：乘法（×）、加法（+）、减法（−）和除法（÷）。它通过直观、无障碍且支持多语言的界面，提供 **6 种游戏模式**和 **5 款街机迷你游戏**。
+LeapMultix 是一款面向 6 至 12 岁儿童的交互式教育 Web 应用，旨在帮助他们掌握四则算术运算：乘法（×）、加法（+）、减法（−）和除法（÷）。它通过直观、无障碍且支持多语言的界面，提供 **6 种游戏模式**和 **6 款街机迷你游戏**。
 
 **支持多种运算：**所有模式均支持四种运算。可在主屏幕上选择运算类型，该选择将应用于整个游戏流程。
 
@@ -76,23 +76,23 @@ LeapMultix 是一款面向 6 至 12 岁儿童的交互式教育 Web 应用，旨
 |       **探索** — 每个等式都通过圆点、跳跃或计数进行展示，并附有该乘法表的记忆技巧。       |   **测验** — 孩子选择的答案会与正确答案并排保留显示，同时提供详细的计算讲解。    |
 |              ![挑战模式：倒计时和当前连续答对次数](docs/media/05-defi.webp)               | ![冒险模式：十个关卡的地图，后续关卡仍处于锁定状态](docs/media/06-aventure.webp) |
 |              **挑战** — 与时间赛跑。答错时，计时器会暂停，以便查看正确答案。              |                **冒险** — 十个依次解锁的关卡，需要使用星星开启。                 |
-|          ![计时模式：一场减法竞赛，以及计时器和进度](docs/media/14-chrono.webp)           |               ![街机菜单：五款迷你游戏](docs/media/07-arcade.webp)               |
-|         **计时** — 在所选运算中与时间赛跑，答对十题；答错的算式会加入待复习列表。         |                  **街机**——五款迷你游戏，可调节难度并选择飞船。                  |
+|          ![计时模式：一场减法竞赛，以及计时器和进度](docs/media/14-chrono.webp)           |               ![街机菜单：六款迷你游戏](docs/media/07-arcade.webp)               |
+|         **计时** — 在所选运算中与时间赛跑，答对十题；答错的算式会加入待复习列表。         |                  **街机**——六款迷你游戏，可调节难度并选择飞船。                  |
 | ![仪表板：按运算详细列出各模式的对局、纪录和答题情况](docs/media/08-tableau-de-bord.webp) |    ![个性化设置：头像、主题和无障碍选项](docs/media/09-personnalisation.webp)    |
 |   **仪表板** — 按运算详细列出各模式的对局和纪录；乘法模式还会显示星星和待复习的乘法表。   |    **个性化设置** — 使用金币解锁头像，并可调整配色主题、文字大小和高对比度。     |
 
 ### 街机小游戏
 
-五款回答相同问题的游戏——题目显示在游戏区域上方，伴随剩余时间和生命值——但每次都需要不同的操作方式。
+六款回答相同问题的游戏——题目显示在游戏区域上方，伴随剩余时间和生命值——但每次都需要不同的操作方式。
 
-|                                                                                                          |                                                                              |
-| :------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
-|        ![MultiInvaders：携带数字的怪物，以及屏幕底部的一艘飞船](docs/media/10-multiinvaders.webp)        |   ![MultiMiam：迷宫中的圆点上标有可能的答案](docs/media/11-multimiam.webp)   |
-|           **MultiInvaders** — 射击错误答案并放过正确答案：正确答案背后藏着一位等待解救的朋友。           |             **MultiMiam** — 穿过迷宫抓取正确结果，同时避开怪物。             |
-|  ![MultiMemory：卡片网格，其中两张翻开的卡片分别显示一道算式和一个数字](docs/media/12-multimemory.webp)  | ![MultiSnake：草地上的一条蛇和带有数字的苹果](docs/media/13-multisnake.webp) |
-|                        **MultiMemory** — 凭记忆找出哪张卡片写有已翻开算式的结果。                        |        **MultiSnake** — 吃下正确数字让身体变长，并避开其他所有数字。         |
-| ![MultiPop：怪物从洞里钻出，每只标牌上都有一个数字，还有一位举着爱心的朋友](docs/media/15-multipop.webp) |                                                                              |
-|                 **MultiPop**—在怪物缩回洞中之前，击打带有正确答案的怪物，不要碰到朋友。                  |                                                                              |
+|                                                                                                          |                                                                                                                    |
+| :------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------: |
+|        ![MultiInvaders：携带数字的怪物，以及屏幕底部的一艘飞船](docs/media/10-multiinvaders.webp)        |                      ![MultiMiam：迷宫中的圆点上标有可能的答案](docs/media/11-multimiam.webp)                      |
+|           **MultiInvaders** — 射击错误答案并放过正确答案：正确答案背后藏着一位等待解救的朋友。           |                                **MultiMiam** — 穿过迷宫抓取正确结果，同时避开怪物。                                |
+|  ![MultiMemory：卡片网格，其中两张翻开的卡片分别显示一道算式和一个数字](docs/media/12-multimemory.webp)  |                    ![MultiSnake：草地上的一条蛇和带有数字的苹果](docs/media/13-multisnake.webp)                    |
+|                        **MultiMemory** — 凭记忆找出哪张卡片写有已翻开算式的结果。                        |                           **MultiSnake** — 吃下正确数字让身体变长，并避开其他所有数字。                            |
+| ![MultiPop：怪物从洞里钻出，每只标牌上都有一个数字，还有一位举着爱心的朋友](docs/media/15-multipop.webp) | ![MultiGoal：足球球门里挂着带数字的靶子，前面有一只怪物守门员，点球点上是足球和狐狸](docs/media/16-multigoal.webp) |
+|                 **MultiPop**—在怪物缩回洞中之前，击打带有正确答案的怪物，不要碰到朋友。                  |                         **MultiGoal**—趁怪物守门员不在面前时，把球射向带有正确答案的靶子。                         |
 
 ## ✨ 功能
 
@@ -111,6 +111,7 @@ LeapMultix 是一款面向 6 至 12 岁儿童的交互式教育 Web 应用，旨
 - **MultiMemory**：记忆游戏——匹配运算与结果
 - **MultiSnake**：教育版 Snake——吃下正确数字，让身体变长
 - **MultiPop**：反应游戏——敲击带有正确答案的怪物，千万别敲朋友
+- **MultiGoal**：点球大战——趁守门员不在面前时，射向带有正确答案的靶子
 
 ### ➕ 支持多种运算
 
@@ -264,6 +265,7 @@ leapmultix/
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
 │   ├── multipop-*.js       # Mini-jeu des monstres qui surgissent (moteur, rendu ; partie : arcade-multipop.js)
+│   ├── multigoal-*.js      # Mini-jeu des tirs au but (moteur, rendu ; partie : arcade-multigoal.js)
 │   ├── i18n.js, i18n-store.js                # Internationalisation
 │   ├── security-utils.js, error-handlers.js, logger.js
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
@@ -478,7 +480,7 @@ LeapMultix 是一款完整的 PWA，支持离线使用和安装。
 
 - 安装：预加载游戏所需的一切资源，该列表由 `scripts/precache-list.mjs` 从代码中生成
   （`npm run precache:update`，经过测试验证）：初次
-  访问后，全部 6 种模式和 5 款街机游戏均可离线启动
+  访问后，全部 6 种模式和 6 款街机游戏均可离线启动
 - 导航：Network-first，并设有 4 秒时限：超过时限（网络无响应：学校 Wi-Fi、强制门户）或离线时，使用缓存中的游戏页面（仅从未缓存过页面时使用 `offline.html`）
 - 图片：Cache-first；离线时使用同一 sprite 的其他尺寸，或同一头像的其他背景
 - 翻译：使用 Stale-while-revalidate 在后台更新

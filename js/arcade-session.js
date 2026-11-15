@@ -8,11 +8,12 @@
  */
 import { UserState } from './core/userState.js';
 
-const GAMES = new Set(['multimiam', 'multimemory', 'multisnake', 'multipop']);
+const GAMES = new Set(['multimiam', 'multimemory', 'multisnake', 'multipop', 'multigoal']);
 let session = null;
 
 /**
- * Jeu d'Arcade d'un gameMode : multimiam, multimemory, multisnake, multipop, sinon invasion
+ * Jeu d'Arcade d'un gameMode : multimiam, multimemory, multisnake, multipop, multigoal, sinon
+ * invasion
  * @param {string} mode
  * @returns {string}
  */

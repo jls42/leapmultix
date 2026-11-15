@@ -59,6 +59,10 @@ const popStartMock = jest.fn();
 jest.unstable_mockModule('../js/arcade-multipop.js', () => ({
   startPopArcade: popStartMock,
 }));
+const goalStartMock = jest.fn();
+jest.unstable_mockModule('../js/arcade-multigoal.js', () => ({
+  startGoalArcade: goalStartMock,
+}));
 jest.unstable_mockModule('../js/arcade-invasion.js', () => ({
   startMultiplicationInvasion: jest.fn(),
 }));
@@ -109,6 +113,15 @@ describe('ESM: Arcade retry button', () => {
     document.getElementById('arcade-retry-btn').click();
     await new Promise(r => setTimeout(r, 100));
     expect(popStartMock).toHaveBeenCalled();
+  });
+
+  test('relance MultiGoal, pas MultiInvaders', async () => {
+    game.gameState.gameMode = 'multigoal';
+    arcade.showArcadeGameOver(0);
+    await new Promise(r => setTimeout(r, 100));
+    document.getElementById('arcade-retry-btn').click();
+    await new Promise(r => setTimeout(r, 100));
+    expect(goalStartMock).toHaveBeenCalled();
   });
 });
 /* eslint-env jest, node */

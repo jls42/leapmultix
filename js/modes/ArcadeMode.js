@@ -88,6 +88,14 @@ const CONTROL_LINES = new Map([
       ['touch', 'arcade.controls.multipop.touch'],
     ],
   ],
+  [
+    'multigoal',
+    [
+      ['keyboard', 'arcade.controls.multigoal.keyboard'],
+      ['mouse', 'arcade.controls.multigoal.mouse'],
+      ['touch', 'arcade.controls.multigoal.touch'],
+    ],
+  ],
 ]);
 
 // Émoji placé en tête d'un ancien texte de traduction (🕹️, ⌨️…) : l'icône est dessinée
@@ -108,6 +116,7 @@ const TITRES_DE_JEU = {
     getTranslation('arcade.multiMiam.title') || getTranslation('arcade_pacman_title'),
   multimemory: () => getTranslation('arcade.multiMemory.title'),
   multipop: () => getTranslation('arcade_pop_title'),
+  multigoal: () => getTranslation('arcade_goal_title'),
 };
 
 // Éléments de réglage d'une tuile : un clic dedans ne referme pas la tuile
@@ -130,6 +139,10 @@ const ARCADE_LOADERS = {
   multipop: {
     charger: () => import('../arcade-multipop.js'),
     demarrer: 'startPopArcade',
+  },
+  multigoal: {
+    charger: () => import('../arcade-multigoal.js'),
+    demarrer: 'startGoalArcade',
   },
 };
 
@@ -225,6 +238,13 @@ export class ArcadeMode extends GameMode {
         descKey: 'arcade_pop_desc',
         logo: 'logo_multipop.png',
         startFunction: 'startPopArcade',
+      },
+      {
+        id: 'multigoal',
+        nameKey: 'arcade_goal_title',
+        descKey: 'arcade_goal_desc',
+        logo: 'logo_multigoal.png',
+        startFunction: 'startGoalArcade',
       },
     ];
 
@@ -343,6 +363,8 @@ export class ArcadeMode extends GameMode {
         return getTranslation('arcade.multiMemory.description');
       case 'multipop':
         return getTranslation('arcade_pop_desc');
+      case 'multigoal':
+        return getTranslation('arcade_goal_desc');
       default:
         return '';
     }

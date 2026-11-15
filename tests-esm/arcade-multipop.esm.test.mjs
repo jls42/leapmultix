@@ -38,7 +38,7 @@ const pause = await import('../js/arcade-time.js');
 const { AudioManager } = await import('../js/core/audio.js');
 const { InfoBar } = await import('../js/components/infoBar.js');
 const { gameState } = await import('../js/game.js');
-const { PopGame, CORRECT_POINTS, MISS_PENALTY, FRIEND_PENALTY } = await import(
+const { PopGame, CORRECT_POINTS, MISS_PENALTY, FRIEND_PENALTY, MALLET_SWING_MS } = await import(
   '../js/arcade-multipop.js'
 );
 const { GAP_MS, RISE_MS } = await import('../js/multipop-engine.js');
@@ -56,6 +56,12 @@ const banner = () => document.querySelector('.arcade-question').textContent;
 const shownScore = () => document.getElementById('multipop-info-score').textContent;
 const rightMonster = () => game.field.upMonsters().find(monster => monster.correct);
 const wrongMonster = () => game.field.upMonsters().find(monster => !monster.correct);
+
+/** Flèche droite jusqu'au monstre voulu : un tour des monstres levés au plus */
+function aim(hole) {
+  for (let step = 0; step < 9 && game.cursorHole !== hole; step++) press('ArrowRight');
+  expect(game.cursorHole).toBe(hole);
+}
 
 /** Les monstres sortent et finissent de monter */
 function raiseMonsters() {
@@ -249,7 +255,7 @@ describe('MultiPop au clavier', () => {
     const right = monsters.findIndex(monster => monster.correct);
     // Une mauvaise d'abord (Espace), puis la bonne (Entrée)
     const wrong = monsters.findIndex(monster => !monster.correct);
-    while (game.cursorHole !== monsters[wrong].hole) press('ArrowRight');
+    aim(monsters[wrong].hole);
     press(' ');
     expect(recordArcadeAnswer).toHaveBeenLastCalledWith(
       '×',
@@ -257,7 +263,7 @@ describe('MultiPop au clavier', () => {
       game.question.b,
       false
     );
-    while (game.cursorHole !== monsters[right].hole) press('ArrowRight');
+    aim(monsters[right].hole);
     press('Enter');
     expect(game.score).toBe(CORRECT_POINTS);
   });
@@ -343,7 +349,140 @@ describe('MultiPop : l’ami qui sort avec les monstres', () => {
   });
 });
 
+describe('MultiPop : le maillet', () => {
+  /** La souris (ou le doigt) bouge au-dessus d'un point du plateau */
+  function moveTo(x, y, pointerType = 'mouse') {
+    const event = new MouseEvent('pointermove', { clientX: x, clientY: y, bubbles: true });
+    Object.defineProperty(event, 'pointerType', { value: pointerType });
+    canvas.dispatchEvent(event);
+  }
+  const leave = () => canvas.dispatchEvent(new MouseEvent('pointerleave'));
+  const signPoint = hole => {
+    const { sign } = cellParts(cellRect(game.layout, hole));
+    return { x: sign.x + sign.width / 2, y: sign.y + sign.height / 2 };
+  };
+
+  test('à la souris, il prend la place du curseur sur le plateau et la suit', () => {
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+    moveTo(40, 55);
+    expect(game.malletView()).toEqual({ x: 40, y: 55, swing: 0, impact: false });
+    expect(canvas.classList.contains('has-mallet')).toBe(true);
+    moveTo(120, 80);
+    expect(game.malletView()).toMatchObject({ x: 120, y: 80 });
+    // La souris quitte le plateau : plus de maillet, le curseur revient
+    leave();
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+  });
+
+  test('un doigt qui glisse ne le fait pas apparaître', () => {
+    moveTo(40, 55, 'touch');
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+  });
+
+  test('il s’abat à chaque clic, se relève avec l’horloge du jeu, et reste sous la souris', () => {
+    raiseMonsters();
+    const point = signPoint(wrongMonster().hole);
+    moveTo(point.x, point.y);
+    tapHole(wrongMonster().hole);
+    expect(game.malletView()).toEqual({ ...point, swing: 1, impact: true });
+    game.step(MALLET_SWING_MS / 2);
+    expect(game.malletView().swing).toBeCloseTo(0.5);
+    game.step(MALLET_SWING_MS / 2);
+    expect(game.malletView()).toEqual({ ...point, swing: 0, impact: false });
+  });
+
+  test('dans le vide : il s’abat sans éclat', () => {
+    const empty = signPoint(4);
+    tapHole(4);
+    expect(game.malletView()).toEqual({ ...empty, swing: 1, impact: false });
+  });
+
+  test('au doigt : il apparaît le temps de la frappe, sans cacher de curseur', () => {
+    raiseMonsters();
+    const hole = rightMonster().hole;
+    tapHole(hole, 'touch');
+    expect(game.malletView()).toEqual({ ...signPoint(hole), swing: 1, impact: true });
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+    game.step(MALLET_SWING_MS);
+    expect(game.malletView()).toBeNull();
+  });
+
+  test('au clavier : il s’abat sur le monstre visé, puis s’en va', () => {
+    raiseMonsters();
+    const hole = game.cursorHole;
+    const { centerX } = cellParts(cellRect(game.layout, hole));
+    press('Enter');
+    const view = game.malletView();
+    expect(view).toMatchObject({ x: centerX, swing: 1, impact: true });
+    expect(view.y).toBeLessThan(signPoint(hole).y);
+    game.step(MALLET_SWING_MS);
+    expect(game.malletView()).toBeNull();
+    // Personne à viser : pas de frappe
+    game.cursorHole = null;
+    press('Enter');
+    expect(game.malletView()).toBeNull();
+  });
+
+  test('en pause : il ne frappe pas', () => {
+    raiseMonsters();
+    const time = document.createElement('span');
+    document.body.appendChild(time);
+    pause.mountArcadePause(time);
+    pause.pauseArcade();
+    tapHole(rightMonster().hole);
+    press('Enter');
+    expect(game.malletView()).toBeNull();
+  });
+
+  test('mouvements réduits : abattu puis levé, sans les positions entre les deux', () => {
+    game.reducedMotion = true;
+    tapHole(4);
+    game.step(MALLET_SWING_MS / 2);
+    expect(game.malletView().swing).toBe(1);
+    game.step(MALLET_SWING_MS / 2);
+    expect(game.malletView().swing).toBe(0);
+  });
+
+  test('il est dessiné avec le plateau', () => {
+    const drawn = [];
+    game.ctx = new Proxy(
+      { canvas },
+      {
+        get: (target, prop) =>
+          prop in target ? target[prop] : (...args) => (drawn.push([prop, args]), { width: 0 }),
+        set: (target, prop, value) => Reflect.set(target, prop, value),
+      }
+    );
+    game.draw();
+    expect(drawn.filter(([name]) => name === 'rotate')).toHaveLength(0);
+    moveTo(60, 70);
+    game.draw();
+    expect(drawn.filter(([name]) => name === 'rotate')).toHaveLength(1);
+  });
+
+  test('la partie rendue : plus de maillet, le curseur revient, la souris n’est plus suivie', () => {
+    moveTo(40, 55);
+    game.cleanup();
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+    moveTo(60, 70);
+    expect(game.malletView()).toBeNull();
+    expect(canvas.classList.contains('has-mallet')).toBe(false);
+  });
+});
+
 describe('MultiPop : réglages du niveau', () => {
+  test('sans opération donnée : la multiplication', () => {
+    const other = new PopGame(canvas.id, { difficulty: 'moyen' });
+    other.start();
+    expect(other.operator).toBe('×');
+    expect(banner()).toMatch(/^\d+ × \d+ = \?$/);
+    other.cleanup();
+  });
+
   test('les tables du niveau en ×', () => {
     for (const [level, tables] of [
       ['debutant', [2, 3, 4, 5]],

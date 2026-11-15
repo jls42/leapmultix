@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v76'; // bump to trigger client update
+const VERSION = 'v77'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -146,11 +146,13 @@ const PRECACHE_CORE = [
   '/js/accessibility.js',
   '/js/adventure-gifts.js',
   '/js/arcade-answers.js',
+  '/js/arcade-board-game.js',
   '/js/arcade-common.js',
   '/js/arcade-fullscreen.js',
   '/js/arcade-invasion.js',
   '/js/arcade-learning.js',
   '/js/arcade-message.js',
+  '/js/arcade-multigoal.js',
   '/js/arcade-multimemory.js',
   '/js/arcade-multimiam.js',
   '/js/arcade-multipop.js',
@@ -158,6 +160,7 @@ const PRECACHE_CORE = [
   '/js/arcade-points.js',
   '/js/arcade-scores.js',
   '/js/arcade-session.js',
+  '/js/arcade-sprite-bounds.js',
   '/js/arcade-sprite-catalog.js',
   '/js/arcade-sprites.js',
   '/js/arcade-time.js',
@@ -246,6 +249,8 @@ const PRECACHE_CORE = [
   '/js/modes/discovery-data.js',
   '/js/modes/DiscoveryMode.js',
   '/js/modes/QuizMode.js',
+  '/js/multigoal-engine.js',
+  '/js/multigoal-renderer.js',
   '/js/multimiam-controls.js',
   '/js/multimiam-engine.js',
   '/js/multimiam-layout.js',
@@ -516,6 +521,7 @@ const PRECACHE_IMAGES = [
   '/assets/images/arcade/logo_mode_decouverte.png',
   '/assets/images/arcade/logo_mode_defi.png',
   '/assets/images/arcade/logo_mode_quizz.png',
+  '/assets/images/arcade/logo_multigoal.png',
   '/assets/images/arcade/logo_multiinvaders.png',
   '/assets/images/arcade/logo_multimemory.png',
   '/assets/images/arcade/logo_multimiam.png',

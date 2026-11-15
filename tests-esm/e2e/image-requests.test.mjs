@@ -35,7 +35,14 @@ const GENERATED = fs.existsSync(
 const PHONE = { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
-const ARCADE_GAMES = ['invasion', 'multimiam', 'multimemory', 'multisnake', 'multipop'];
+const ARCADE_GAMES = [
+  'invasion',
+  'multimiam',
+  'multimemory',
+  'multisnake',
+  'multipop',
+  'multigoal',
+];
 
 /** Une partie lancée depuis le menu de l'Arcade, puis abandonnée */
 async function playAndLeave(page, game) {

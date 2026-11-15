@@ -26,6 +26,7 @@ const ARCADE_MODES = new Set([
   'multimemory',
   'multiinvaders',
   'multipop',
+  'multigoal',
 ]);
 const MAX_LIVES = 3;
 
@@ -80,6 +81,7 @@ const ARCADE_TITLES = new Map([
   ['multisnake', ['arcade_snake_title', 'MultiSnake']],
   ['multimemory', ['arcade.multiMemory.title', 'MultiMemory']],
   ['multipop', ['arcade_pop_title', 'MultiPop']],
+  ['multigoal', ['arcade_goal_title', 'MultiGoal']],
 ]);
 
 export const InfoBar = {
@@ -210,6 +212,7 @@ export const InfoBar = {
     multimiam: ['score', 'lives'],
     multimemory: ['score', 'lives'],
     multipop: ['score'],
+    multigoal: ['score'],
     multiinvaders: ['score', 'lives', 'time'],
   },
 

@@ -532,6 +532,12 @@ body:has(.adventure-container) {
   --accent-tint: var(--mode-adventure-tint);
 }
 
+.arcade-game-card[data-game='multigoal'] {
+  --accent: var(--mode-chrono);
+  --accent-edge: var(--mode-chrono-edge);
+  --accent-tint: var(--mode-chrono-tint);
+}
+
 body:has(.arcade-container) {
   --accent: var(--mode-arcade);
   --accent-edge: var(--mode-arcade-edge);

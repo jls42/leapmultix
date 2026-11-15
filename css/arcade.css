@@ -700,6 +700,11 @@
   -webkit-touch-callout: none;
 }
 
+/* MultiPop à la souris : le maillet dessiné par le jeu remplace le curseur */
+.arcade-game-ui > canvas.has-mallet {
+  cursor: none;
+}
+
 /* MultiMiam : quand le labyrinthe est plus large que la place (téléphone en portrait), le
    plateau prend quand même toute la hauteur ; les bandes autour du labyrinthe sont du même
    mur (js/multimiam.js aligne la texture sur ses cases). Noir, comme le mur de repli du

@@ -13,7 +13,7 @@ import { recordArcadeGame, arcadeTopScores, resetArcadeGame } from './core/mode-
 /**
  * Enregistre une partie jouée : score, opération du lancement, niveau
  * @param {number} score
- * @param {string} [game] - invasion, multimiam, multimemory, multisnake, multipop
+ * @param {string} [game] - invasion, multimiam, multimemory, multisnake, multipop, multigoal
  * @param {string} [operator] - Opération de la partie (celle du profil par défaut)
  * @param {string} [level] - debutant, moyen, difficile : ses meilleurs scores
  */

@@ -8,8 +8,20 @@
  */
 import { describe, test, expect } from '@jest/globals';
 
-const { popLayout, cellRect, cellParts, holeAt, figureRect, alphaBounds, BOARD_MARGIN } =
-  await import('../js/multipop-renderer.js');
+const {
+  popLayout,
+  cellRect,
+  cellParts,
+  holeAt,
+  figureRect,
+  alphaBounds,
+  malletAngle,
+  malletParts,
+  drawMallet,
+  drawPopBoard,
+  BOARD_MARGIN,
+} = await import('../js/multipop-renderer.js');
+const { MonsterField } = await import('../js/multipop-engine.js');
 
 const PORTRAIT = { width: 366, height: 640 };
 const LANDSCAPE = { width: 800, height: 260 };
@@ -111,5 +123,98 @@ describe('MultiPop : un personnage calé sur le contour de son dessin', () => {
 
   test('une image vide n’a pas de contour', () => {
     expect(alphaBounds(new Uint8ClampedArray(4 * 4 * 4), 4, 4)).toBeNull();
+  });
+});
+
+describe('MultiPop : le maillet', () => {
+  /** Contexte de dessin qui note chaque appel */
+  function recordingContext() {
+    const calls = [];
+    const ctx = new Proxy(
+      { canvas: document.createElement('canvas') },
+      {
+        get(target, prop) {
+          if (prop in target) return Reflect.get(target, prop);
+          return (...args) => {
+            calls.push({ name: prop, args });
+            return { width: 40 };
+          };
+        },
+        set: (target, prop, value) => Reflect.set(target, prop, value),
+      }
+    );
+    return { ctx, calls };
+  }
+  const named = (calls, name) => calls.filter(call => call.name === name);
+
+  test('levé au repos, abattu au moment de la frappe, puis il se relève', () => {
+    expect(malletAngle(1)).toBeLessThan(malletAngle(0.5));
+    expect(malletAngle(0.5)).toBeLessThan(malletAngle(0));
+    // Jamais au-delà de ses deux positions
+    expect(malletAngle(3)).toBe(malletAngle(1));
+    expect(malletAngle(-1)).toBe(malletAngle(0));
+  });
+
+  test.each([PORTRAIT, LANDSCAPE, DESKTOP])(
+    'sa tête tombe sur le point visé, sa poignée part en bas à droite (%o)',
+    box => {
+      const layout = popLayout(box);
+      const point = { x: 120, y: 90 };
+      const { size, length, pivot } = malletParts(layout, point);
+      const angle = malletAngle(1);
+      expect(pivot.x + length * Math.sin(angle)).toBeCloseTo(point.x);
+      expect(pivot.y - length * Math.cos(angle)).toBeCloseTo(point.y);
+      expect(pivot.x).toBeGreaterThan(point.x);
+      expect(pivot.y).toBeGreaterThan(point.y);
+      // À la taille des cases, sans devenir minuscule ni énorme
+      expect(size).toBeGreaterThanOrEqual(30);
+      expect(size).toBeLessThanOrEqual(64);
+      expect(size).toBeLessThanOrEqual(
+        Math.max(30, Math.min(layout.cellWidth, layout.cellHeight) * 0.3)
+      );
+    }
+  );
+
+  test('dessiné autour de sa poignée, à l’angle de la frappe en cours', () => {
+    const layout = popLayout(DESKTOP);
+    const mallet = { x: 200, y: 150, swing: 0.5, impact: false };
+    const { ctx, calls } = recordingContext();
+    drawMallet(ctx, layout, mallet);
+    const { pivot } = malletParts(layout, mallet);
+    expect(named(calls, 'translate').map(call => call.args)).toEqual([[pivot.x, pivot.y]]);
+    expect(named(calls, 'rotate').map(call => call.args)).toEqual([[malletAngle(0.5)]]);
+  });
+
+  test('un éclat à l’endroit frappé quand il touche un personnage ; sinon son ombre', () => {
+    const layout = popLayout(DESKTOP);
+    const drawn = mallet => {
+      const { ctx, calls } = recordingContext();
+      drawMallet(ctx, layout, { x: 200, y: 150, ...mallet });
+      return { burst: named(calls, 'lineTo').length, shadow: named(calls, 'ellipse').length };
+    };
+    expect(drawn({ swing: 1, impact: true })).toEqual({ burst: 16, shadow: 0 });
+    expect(drawn({ swing: 1, impact: false })).toEqual({ burst: 0, shadow: 1 });
+    // La frappe retombée, il ne reste que l'ombre du point visé
+    expect(drawn({ swing: 0, impact: true })).toEqual({ burst: 0, shadow: 1 });
+  });
+
+  test('le plateau ne le dessine que s’il est là, par-dessus les terriers', () => {
+    const view = {
+      layout: popLayout(DESKTOP),
+      field: new MonsterField({ count: 3, upMs: 3000, solvedMs: 1500 }),
+      sprites: new Map(),
+      grassSprite: null,
+      cursorHole: null,
+      reducedMotion: false,
+    };
+    const without = recordingContext();
+    drawPopBoard(without.ctx, view);
+    expect(named(without.calls, 'rotate')).toHaveLength(0);
+    const withMallet = recordingContext();
+    drawPopBoard(withMallet.ctx, { ...view, mallet: { x: 50, y: 60, swing: 0, impact: false } });
+    expect(named(withMallet.calls, 'rotate')).toHaveLength(1);
+    // Après le dernier terrier : rien ne le cache
+    const names = withMallet.calls.map(call => call.name);
+    expect(names.lastIndexOf('rotate')).toBeGreaterThan(names.lastIndexOf('closePath'));
   });
 });

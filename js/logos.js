@@ -18,13 +18,14 @@ export const MODE_LOGOS = new Map([
   ['chrono', 'logo_mode_chrono.png'],
   ['arcade', 'logo_mode_arcade.png'],
 ]);
-/** Logos des cinq jeux d'Arcade */
+/** Logos des six jeux d'Arcade */
 export const ARCADE_LOGOS = Object.freeze([
   'logo_multiinvaders.png',
   'logo_multimiam.png',
   'logo_multimemory.png',
   'logo_multisnake.png',
   'logo_multipop.png',
+  'logo_multigoal.png',
 ]);
 const LOGO_FILES = new Set([...MODE_LOGOS.values(), ...ARCADE_LOGOS]);
 

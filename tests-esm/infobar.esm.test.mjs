@@ -171,6 +171,7 @@ describe('ESM: bandeau des mini-jeux d’Arcade', () => {
     ['multisnake', 'arcade_snake_title'],
     ['multimemory', 'arcade.multiMemory.title'],
     ['multipop', 'arcade_pop_title'],
+    ['multigoal', 'arcade_goal_title'],
   ])('%s : un titre de niveau 1, le nom du jeu, pour les lecteurs d’écran', (mode, key) => {
     document.body.replaceChildren(InfoBar.createArcadeTemplateElement({ mode }));
     const titles = document.querySelectorAll('h1');

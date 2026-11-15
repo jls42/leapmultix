@@ -48,7 +48,7 @@ describe('Menu Arcade', () => {
 
   test('chaque tuile regroupe ses réglages et un « Jouer » sur la touche commune', () => {
     const cards = screen.querySelectorAll('.arcade-game-card');
-    expect(cards).toHaveLength(5);
+    expect(cards).toHaveLength(6);
     cards.forEach(card => {
       const settings = card.querySelector('.arcade-game-settings');
       expect(settings).toBeTruthy();
@@ -64,7 +64,7 @@ describe('Menu Arcade', () => {
   test('la difficulté choisie est la même dans toutes les tuiles', () => {
     mode.setDifficulty('difficile', 'invasion');
     const selected = screen.querySelectorAll('.difficulty-btn.selected');
-    expect(selected).toHaveLength(5);
+    expect(selected).toHaveLength(6);
     selected.forEach(btn => {
       expect(btn.dataset.difficulty).toBe('difficile');
       expect(btn.getAttribute('aria-pressed')).toBe('true');
@@ -196,5 +196,16 @@ describe('Menu Arcade', () => {
     const lines = [...card.querySelectorAll('.arcade-control')];
     expect(lines.map(li => li.dataset.input)).toEqual(['keyboard', 'mouse', 'touch']);
     expect(card.querySelector('[data-action="arcade-play"]').dataset.game).toBe('multipop');
+  });
+
+  test('MultiGoal : sa tuile, son logo, sa description et ses trois commandes', () => {
+    const card = screen.querySelector('.arcade-game-card[data-game="multigoal"]');
+    expect(card).not.toBeNull();
+    expect(card.querySelector('.arcade-game-toggle').textContent.trim()).toBe('arcade_goal_title');
+    expect(card.querySelector('.game-desc').textContent.trim()).toBe('arcade_goal_desc');
+    expect(card.querySelector('img.arcade-logo').getAttribute('src')).toContain('logo_multigoal');
+    const lines = [...card.querySelectorAll('.arcade-control')];
+    expect(lines.map(li => li.dataset.input)).toEqual(['keyboard', 'mouse', 'touch']);
+    expect(card.querySelector('[data-action="arcade-play"]').dataset.game).toBe('multigoal');
   });
 });

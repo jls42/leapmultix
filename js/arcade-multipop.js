@@ -7,40 +7,40 @@
  * du jeu, un cœur sur sa pancarte) sort avec eux : le taper coûte aussi jusqu'à 50 points.
  *
  * Souris, doigt ou clavier (flèches : monstre levé suivant ou précédent ; Entrée ou Espace :
- * le taper ; le clavier ne vise jamais l'ami). Le nombre du monstre visé est annoncé aux
+ * le taper ; le clavier ne vise jamais l'ami). À la souris, un maillet remplace le curseur
+ * sur le plateau et s'abat à chaque tape ; au doigt et au clavier, il apparaît le temps de la
+ * frappe. Le nombre du monstre visé est annoncé aux
  * lecteurs d'écran.
  */
-import { goToSlide } from './slides.js';
 import { gameState } from './game.js';
 import { getTranslation, showArcadePoints } from './utils-es6.js';
 import { showArcadePenalty } from './arcade-points.js';
-import { setStartingMode } from './mode-orchestrator.js';
-import { InfoBar } from './components/infoBar.js';
-import { startArcadeTimer, showArcadeGameOver, stopArcadeMode, isArcadeActive } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { recordArcadeAnswer, SOLVED_PAUSE_MS, showSolvedQuestion } from './arcade-learning.js';
 import { drawArcadeQuestion, arcadeAnswers } from './arcade-answers.js';
-import { isArcadePaused } from './arcade-time.js';
 import { spriteFor, prefetchArcadeSprite } from './arcade-sprites.js';
-import { monsterSpec, avatarSpec, textureSpec, MONSTER_COUNT } from './arcade-sprite-catalog.js';
+import { avatarSpec, textureSpec } from './arcade-sprite-catalog.js';
 import { normalizeAvatarId } from './avatar-heads.js';
 import { pickRandom, shuffleInPlace } from './core/random.js';
 import {
   showGameInstructions,
   INSTRUCTIONS_MS,
   INSTRUCTIONS_FADE_MS,
-  prepareArcadeStage,
   getArcadeCanvasBox,
   clientToCanvasPoint,
-  watchArcadeViewport,
   sizeArcadeCanvas,
   isTouchFirstDevice,
 } from './arcade-common.js';
 import { getDifficultySettings } from './difficulty.js';
-import { TablePreferences } from './core/tablePreferences.js';
-import { UserManager } from './userManager.js';
 import { UserState } from './core/userState.js';
+import {
+  ArcadeBoardGame,
+  monsterCast,
+  openBoardGameScreen,
+  renderBoardGameScreen,
+  startBoardGameRound,
+} from './arcade-board-game.js';
 import { MonsterField, monsterRhythm, GAP_MS, BOTTOM_HOLES } from './multipop-engine.js';
 import { popLayout, cellRect, cellParts, holeAt, drawPopBoard } from './multipop-renderer.js';
 
@@ -50,6 +50,8 @@ export const CORRECT_POINTS = 100;
 export const MISS_PENALTY = 50;
 /** Points retirés au plus pour un ami tapé (jamais plus que le score) */
 export const FRIEND_PENALTY = 50;
+/** Durée de la frappe du maillet : abattu à la tape, puis il se relève */
+export const MALLET_SWING_MS = 220;
 /** Chance qu'un ami sorte avec les monstres d'une sortie */
 export const FRIEND_CHANCE = 1 / 3;
 /** Attente avant la première sortie : le temps de lire le calcul du bandeau */
@@ -61,10 +63,6 @@ const INSTRUCTIONS_COVER_MS = INSTRUCTIONS_MS + INSTRUCTIONS_FADE_MS;
 const CAST_SIZE = 12;
 // Amis qui peuvent sortir : tous les héros sauf celui du joueur
 const FRIEND_AVATARS = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
-// Image la plus longue prise en compte entre deux images (onglet ralenti) : le jeu ne saute
-// pas une sortie entière d'un coup
-const MAX_FRAME_MS = 100;
-
 // Clavier : monstre levé suivant ou précédent, et taper celui qui est visé
 const CURSOR_STEPS = new Map([
   ['ArrowLeft', -1],
@@ -73,31 +71,9 @@ const CURSOR_STEPS = new Map([
   ['ArrowDown', 1],
 ]);
 const WHACK_KEYS = new Set(['Enter', ' ']);
-const KEYBOARD_HELP_KEY = 'arcade.controls.multipop.keyboard';
 
 // Partie en cours (une seule à la fois)
 let _popInstance = null;
-
-function hiddenText(parent, tag, text) {
-  const element = document.createElement(tag);
-  element.className = 'sr-only';
-  element.textContent = text;
-  parent?.appendChild(element);
-  return element;
-}
-
-/** Tables retirées par le joueur (multiplication seulement) */
-function excludedTables(operator) {
-  if (operator !== '×') return [];
-  const user = UserManager.getCurrentUser();
-  return TablePreferences.isGlobalEnabled(user) ? TablePreferences.getActiveExclusions(user) : [];
-}
-
-/** Images des monstres d'une partie : quelques-uns des monstres du jeu, tous différents */
-function drawCast() {
-  const numbers = shuffleInPlace(Array.from({ length: MONSTER_COUNT }, (_, index) => index + 1));
-  return numbers.slice(0, CAST_SIZE).map(number => spriteFor(monsterSpec(number)));
-}
 
 /** Images des amis : les héros du jeu, sauf celui du joueur */
 function friendSprites() {
@@ -108,7 +84,7 @@ function friendSprites() {
 }
 
 /** Une partie de MultiPop sur son canevas */
-export class PopGame {
+export class PopGame extends ArcadeBoardGame {
   /**
    * @param {string} canvasId
    * @param {{difficulty: string, operator: string, introMs?: number, coveredMs?: number,
@@ -120,11 +96,12 @@ export class PopGame {
     canvasId,
     { difficulty, operator, introMs = 0, coveredMs = 0, friendChance = FRIEND_CHANCE }
   ) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.operator = operator || '×';
-    this.settings = getDifficultySettings(difficulty);
-    this.excluded = excludedTables(this.operator);
+    super(canvasId, {
+      mode: 'multipop',
+      difficulty,
+      operator,
+      keyboardHelpKey: 'arcade.controls.multipop.keyboard',
+    });
     this.field = new MonsterField({
       ...monsterRhythm(this.settings),
       solvedMs: SOLVED_PAUSE_MS,
@@ -132,21 +109,20 @@ export class PopGame {
     });
     this.introMs = introMs;
     this.coveredMs = coveredMs;
-    this.score = 0;
-    this.question = null;
     this.cursorHole = null;
-    this.keyboardCursor = false;
-    this.disposed = false;
-    this.frameId = 0;
-    this.lastFrame = null;
-    this.cast = drawCast();
+    /**
+     * Le maillet sur le plateau : son point visé, tenu (il suit la souris) ou non (doigt,
+     * clavier : il ne reste que le temps de la frappe), et s'il vient de toucher quelqu'un
+     * @type {{x: number, y: number, held: boolean, impact: boolean}|null}
+     */
+    this.mallet = null;
+    /** Temps de frappe qui reste au maillet */
+    this.malletSwing = 0;
+    this.cast = monsterCast(CAST_SIZE);
     this.friends = friendSprites();
     /** Image du personnage de chaque terrier, pour la sortie en cours */
     this.sprites = new Map();
     this.grassSprite = spriteFor(textureSpec('herbe.png'));
-    this.reducedMotion = Boolean(
-      globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    );
     this.layout = popLayout({ width: 300, height: 315 });
   }
 
@@ -157,7 +133,16 @@ export class PopGame {
     this.setupKeyboard();
     this.nextQuestion(Math.max(GAP_MS, this.introMs));
     this.focusBoard();
-    this.frameId = requestAnimationFrame(now => this.frame(now));
+    this.run();
+  }
+
+  // En plus du socle : le maillet suit la souris sur le plateau et le quitte avec elle
+  listen() {
+    super.listen();
+    this.onPointerMove = event => this.handlePointerMove(event);
+    this.onPointerLeave = () => this.dropMallet();
+    this.canvas.addEventListener('pointermove', this.onPointerMove);
+    this.canvas.addEventListener('pointerleave', this.onPointerLeave);
   }
 
   // Taille du plateau pour la place sous le bandeau ; à chaque changement d'écran
@@ -177,58 +162,18 @@ export class PopGame {
     }
   }
 
-  listen() {
-    this.onPointerDown = event => this.handlePointer(event);
-    this.onKeyDown = event => this.handleKeyDown(event);
-    this.canvas.addEventListener('pointerdown', this.onPointerDown);
-    this.canvas.addEventListener('keydown', this.onKeyDown);
-    this.stopWatchingViewport = watchArcadeViewport(this.canvas, () => this.resize());
-  }
-
-  // Annonces aux lecteurs d'écran, et aide du clavier liée au plateau
-  setupKeyboard() {
-    const stage = this.canvas.parentElement;
-    this.liveRegion = hiddenText(stage, 'p', '');
-    this.liveRegion.classList.add('multipop-announcer');
-    this.liveRegion.setAttribute('role', 'status');
-    const help = hiddenText(stage, 'span', getTranslation(KEYBOARD_HELP_KEY));
-    help.id = `${this.canvas.id}-keyboard-help`;
-    help.dataset.translate = KEYBOARD_HELP_KEY;
-    this.canvas.setAttribute('aria-describedby', help.id);
-  }
-
-  focusBoard() {
-    try {
-      this.canvas.focus({ preventScroll: true });
-    } catch {
-      // Focus impossible : la souris et le doigt jouent toujours
-    }
-  }
-
   /**
    * Calcul suivant : au bandeau, puis ses monstres sortent
    * @param {number} [waitMs] - attente avant la première sortie
    */
   nextQuestion(waitMs = GAP_MS) {
     const question = drawArcadeQuestion(this.operator, this.settings, this.excluded);
-    this.question = question;
     this.field.ask(
       question.answer,
       () => arcadeAnswers(question, this.operator, this.settings, this.field.count),
       waitMs
     );
-    const banner = document.querySelector('.arcade-question');
-    if (banner) banner.textContent = `${question.a} ${this.operator} ${question.b} = ?`;
-  }
-
-  /** Une image : l'horloge du jeu avance hors pause, puis le plateau se redessine */
-  frame(now) {
-    if (this.disposed || !isArcadeActive()) return;
-    const dt = this.lastFrame === null ? 0 : Math.min(MAX_FRAME_MS, now - this.lastFrame);
-    this.lastFrame = now;
-    if (!isArcadePaused()) this.step(dt);
-    this.draw();
-    this.frameId = requestAnimationFrame(next => this.frame(next));
+    this.showQuestion(question);
   }
 
   /**
@@ -236,6 +181,7 @@ export class PopGame {
    * @param {number} dt
    */
   step(dt) {
+    this.swingMallet(dt);
     this.coveredMs = Math.max(0, this.coveredMs - dt);
     this.field.reserved = this.coveredMs > 0 ? BOTTOM_HOLES : [];
     const event = this.field.tick(dt);
@@ -276,16 +222,65 @@ export class PopGame {
       grassSprite: this.grassSprite,
       cursorHole: this.keyboardCursor ? this.cursorHole : null,
       reducedMotion: this.reducedMotion,
+      mallet: this.malletView(),
     });
+  }
+
+  /**
+   * Le maillet à dessiner : où il vise et où en est sa frappe (1 à l'impact, 0 au repos)
+   * @returns {{x: number, y: number, swing: number, impact: boolean}|null}
+   */
+  malletView() {
+    if (!this.mallet) return null;
+    const swing = this.malletSwing / MALLET_SWING_MS;
+    const { x, y, impact } = this.mallet;
+    // Mouvements réduits : abattu puis levé, sans les positions entre les deux
+    return { x, y, impact, swing: this.reducedMotion ? Math.ceil(swing) : swing };
+  }
+
+  // La souris ou le stylet sur le plateau : le maillet prend la place du curseur
+  handlePointerMove(event) {
+    if (event.pointerType === 'touch') return;
+    const point = clientToCanvasPoint(this.canvas, event.clientX, event.clientY);
+    this.mallet = { x: point.x, y: point.y, held: true, impact: this.mallet?.impact ?? false };
+    this.canvas.classList.add('has-mallet');
+  }
+
+  // La souris quitte le plateau (ou la partie est rendue) : plus de maillet, le curseur revient
+  dropMallet() {
+    this.mallet = null;
+    this.canvas?.classList.remove('has-mallet');
+  }
+
+  /**
+   * Abat le maillet sur un point du plateau
+   * @param {{x: number, y: number}} point
+   * @param {{held: boolean, impact: boolean}} how - held : il reste ensuite sur le plateau
+   *   (souris) ; impact : il a touché un personnage
+   */
+  strike(point, { held, impact }) {
+    this.mallet = { x: point.x, y: point.y, held, impact };
+    this.malletSwing = MALLET_SWING_MS;
+  }
+
+  // La frappe retombe avec l'horloge du jeu ; au doigt et au clavier, le maillet s'en va
+  swingMallet(dt) {
+    if (this.malletSwing <= 0) return;
+    this.malletSwing = Math.max(0, this.malletSwing - dt);
+    if (this.malletSwing > 0 || !this.mallet) return;
+    if (this.mallet.held) this.mallet.impact = false;
+    else this.mallet = null;
   }
 
   // Souris, doigt ou stylet : le terrier sous le point
   handlePointer(event) {
     if (event.pointerType === 'touch') event.preventDefault();
     this.keyboardCursor = false;
+    if (!this.canPlay()) return;
     const point = clientToCanvasPoint(this.canvas, event.clientX, event.clientY);
     const hole = holeAt(this.layout, point);
-    if (hole >= 0) this.whack(hole);
+    const impact = hole >= 0 && this.whack(hole);
+    this.strike(point, { held: event.pointerType !== 'touch', impact });
   }
 
   handleKeyDown(event) {
@@ -296,8 +291,16 @@ export class PopGame {
     } else if (WHACK_KEYS.has(event.key)) {
       event.preventDefault();
       this.keyboardCursor = true;
-      if (this.cursorHole !== null) this.whack(this.cursorHole);
+      this.whackAimed();
     }
+  }
+
+  // Clavier : le maillet s'abat sur le monstre visé
+  whackAimed() {
+    if (this.cursorHole === null || !this.canPlay()) return;
+    const at = this.headPoint(this.cursorHole);
+    const impact = this.whack(this.cursorHole);
+    this.strike(at, { held: false, impact });
   }
 
   /**
@@ -329,17 +332,19 @@ export class PopGame {
   /**
    * Tape un terrier ; rien en pause ni sur un terrier sans personnage levé
    * @param {number} hole
+   * @returns {boolean} true si un personnage a été tapé
    */
   whack(hole) {
-    if (this.disposed || isArcadePaused()) return;
+    if (!this.canPlay()) return false;
     const result = this.field.whack(hole);
-    if (!result) return;
+    if (!result) return false;
     // Un personnage tapé : la partie est jouée (tableau de bord)
     noteArcadePlay();
     const at = this.headPoint(hole);
     if (result.friend) this.onFriend(at);
     else this.onMonster(result, at);
     this.updateScore();
+    return true;
   }
 
   // Un monstre tapé : sa réponse compte pour le calcul du bandeau
@@ -386,22 +391,12 @@ export class PopGame {
     return { x: centerX, y: figure.y + figure.height * 0.28 };
   }
 
-  updateScore() {
-    try {
-      InfoBar.update({ score: this.score }, 'multipop');
-    } catch {
-      // Bandeau absent (écran quitté) : le score reste dans la partie
-    }
-  }
-
-  /** Arrête la boucle et retire les écouteurs ; un second appel ne fait rien */
+  /** En plus du socle : le maillet s'en va et la souris n'est plus suivie */
   cleanup() {
-    if (this.disposed) return;
-    this.disposed = true;
-    cancelAnimationFrame(this.frameId);
-    this.canvas?.removeEventListener('pointerdown', this.onPointerDown);
-    this.canvas?.removeEventListener('keydown', this.onKeyDown);
-    this.stopWatchingViewport?.();
+    this.canvas?.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
+    this.dropMallet();
+    super.cleanup();
   }
 }
 
@@ -414,53 +409,6 @@ function cleanupPopGame() {
   _popInstance?.cleanup();
   _popInstance = null;
   return score;
-}
-
-/** Quitte le jeu d'Arcade en cours et ouvre l'écran de MultiPop */
-function enterPopScreen() {
-  try {
-    stopArcadeMode();
-  } catch {
-    // Attendu : le mode arcade peut ne pas être actif
-  }
-  // Le mode est posé avant le changement d'écran, qui sinon arrêterait le lancement
-  setStartingMode('multipop');
-  gameState.gameMode = 'multipop';
-  void goToSlide(4);
-}
-
-/** Écran du jeu : bandeau, plateau et « Abandonner », du gabarit commun de l'Arcade */
-function renderPopScreen() {
-  const gameScreen = document.getElementById('game');
-  while (gameScreen.firstChild) gameScreen.firstChild.remove();
-  const frag = InfoBar.createArcadeTemplateElement({
-    mode: 'multipop',
-    canvasId: 'multipop-canvas',
-    operationId: 'arcade-mult-display',
-    scoreId: 'multipop-info-score',
-    livesId: 'multipop-info-lives',
-    timerId: 'arcade-info-timer',
-    abandonId: 'multipop-abandon-btn',
-    operationLabel: '',
-    abandonLabel: getTranslation('abandon_arcade_button'),
-    showLives: false,
-    showScore: true,
-  });
-  gameScreen.appendChild(frag);
-  prepareArcadeStage(document.getElementById('multipop-canvas'));
-}
-
-/** Minuteur du niveau, score à zéro, « Abandonner » (écran de fin avec le score) */
-function startPopRound(settings) {
-  startArcadeTimer(settings.timeSeconds);
-  // Le lancement est fini : le mode « en cours de lancement » se retire
-  setTimeout(() => setStartingMode(null), 0);
-  const scoreElement = document.getElementById('multipop-info-score');
-  if (scoreElement) scoreElement.textContent = '0';
-  document.getElementById('multipop-abandon-btn').addEventListener('click', () => {
-    const score = cleanupPopGame();
-    showArcadeGameOver(score);
-  });
 }
 
 // Consigne du début, selon l'appareil (elle n'est pas lue à voix haute)
@@ -477,12 +425,12 @@ function showPopInstructions(canvas) {
  * écran de fin
  */
 export function startPopArcade() {
-  enterPopScreen();
+  openBoardGameScreen('multipop');
   const operator = UserState.getCurrentUserData().preferredOperator || '×';
   cleanupPopGame();
-  renderPopScreen();
+  renderBoardGameScreen('multipop');
   const difficulty = gameState.difficulty || 'moyen';
-  startPopRound(getDifficultySettings(difficulty));
+  startBoardGameRound('multipop', getDifficultySettings(difficulty), cleanupPopGame);
   // Les premiers monstres sortent vite, hors de la rangée du bas tant que la consigne y est
   _popInstance = new PopGame('multipop-canvas', {
     difficulty,
