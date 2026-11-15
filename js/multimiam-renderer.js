@@ -65,11 +65,8 @@ export default class PacmanRenderer {
 
     this.drawLabyrinth();
 
-    if (g.answerPositions && g.answerPositions.length > 0) {
-      this.drawAnswers();
-    } else {
-      console.error('CRITIQUE: Aucune réponse à afficher!');
-    }
+    // Aucune réponse pendant la lecture du calcul complet, entre deux calculs
+    this.drawAnswers();
 
     this.drawPacman();
     this.drawGhosts();

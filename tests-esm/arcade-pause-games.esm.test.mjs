@@ -14,6 +14,7 @@ const { SnakeGame } = await import('../js/multisnake.js');
 const { initPacmanEngine } = await import('../js/multimiam-engine.js');
 const { initPacmanControls } = await import('../js/multimiam-controls.js');
 const { cleanupGameResources } = await import('../js/game-cleanup.js');
+const { SOLVED_PAUSE_MS } = await import('../js/arcade-learning.js');
 
 let canvas;
 
@@ -137,5 +138,70 @@ describe('MultiMiam en pause', () => {
     space(document.body);
     expect(pause.isArcadePaused()).toBe(false);
     expect(game.start).not.toHaveBeenCalled();
+  });
+});
+
+describe('Calcul complet au bandeau : le temps de la pause ne compte pas', () => {
+  test('MultiSnake : les pommes du calcul suivant attendent le temps de lecture joué', () => {
+    const game = new SnakeGame(canvas.id, 'operation', { operator: '×' });
+    game.start();
+    game.gameLoop(1000);
+    game.numberPositions = [{ ...game.nextHeadPosition(), value: 1, isCorrect: true }];
+    game.updateGameLogic();
+    const generate = jest.spyOn(game, 'generateOperation');
+    pause.pauseArcade();
+    game.gameLoop(11000);
+    pause.resumeArcade();
+    game.gameLoop(11100);
+    expect(generate).not.toHaveBeenCalled();
+    expect(game.numberPositions).toEqual([]);
+    game.gameLoop(11100 + SOLVED_PAUSE_MS);
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(game.numberPositions).toHaveLength(4);
+    game.cleanup();
+  });
+
+  /** MultiMiam sur la bonne réponse, sans pas du personnage ni des monstres */
+  function miamOnAnswer() {
+    const game = {
+      running: true,
+      gameOver: false,
+      moveInterval: 1e6,
+      multimiam: { x: 1, y: 0 },
+      ghosts: [],
+      updatePlayerAvatar: () => undefined,
+      operator: '×',
+      currentOperation: { num1: 3, num2: 4 },
+      answerPositions: [{ x: 1, y: 0, value: 12, isCorrect: true }],
+      labyrinth: [[0, 3]],
+      score: 0,
+      goodAnswersCount: 0,
+      updateUI: jest.fn(),
+      checkAndActivateGhost: jest.fn(),
+      generateOperation: jest.fn(),
+    };
+    initPacmanEngine(game);
+    return game;
+  }
+
+  test('MultiMiam : le calcul suivant attend le temps de lecture joué', () => {
+    const now = jest.spyOn(performance, 'now').mockReturnValue(1000);
+    const game = miamOnAnswer();
+    game.update();
+    game.checkAnswerCollision();
+    pause.pauseArcade();
+    now.mockReturnValue(20000);
+    game.update();
+    pause.resumeArcade();
+    now.mockReturnValue(20100);
+    game.update();
+    expect(game.generateOperation).not.toHaveBeenCalled();
+    now.mockReturnValue(20100 + SOLVED_PAUSE_MS);
+    game.update();
+    expect(game.generateOperation).toHaveBeenCalledWith(1, 0);
+    // Une seule fois
+    now.mockReturnValue(30000);
+    game.update();
+    expect(game.generateOperation).toHaveBeenCalledTimes(1);
   });
 });

@@ -16,7 +16,12 @@ import {
   isTouchFirstDevice,
 } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
-import { recordArcadeAnswer, weakTablesFor } from './arcade-learning.js';
+import {
+  recordArcadeAnswer,
+  showSolvedQuestion,
+  SOLVED_PAUSE_MS,
+  weakTablesFor,
+} from './arcade-learning.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { showArcadeGameOver } from './arcade.js';
 import { cleanupGameResources } from './game-cleanup.js';
@@ -496,8 +501,9 @@ class SnakeGame {
     this.moveTime = 0;
     this.animationProgress = 1;
 
-    // Réinitialiser les nombres
+    // Réinitialiser les nombres ; aucun calcul suivant en attente
     this.numberPositions = [];
+    this.nextQuestionAt = Infinity;
   }
 
   /**
@@ -703,6 +709,7 @@ class SnakeGame {
 
   // Fait avancer le serpent du temps écoulé, d'une case à chaque intervalle
   advance(deltaTime) {
+    this.askNextQuestionWhenDue();
     // Mettre à jour le temps écoulé depuis le dernier mouvement
     this.moveTime += deltaTime;
 
@@ -793,7 +800,19 @@ class SnakeGame {
     // Faire grandir le serpent ; la pomme descend le long du corps
     this.multisnake.unshift(head);
     this.swallows.push(this.clock);
-    // Générer une nouvelle opération
+    // Le calcul complet au bandeau, le temps de le lire ; le plateau se vide (une vie perdue
+    // entre-temps n'y remet rien), puis viennent les pommes du calcul suivant
+    const { num1, num2 } = this.currentOperation;
+    showSolvedQuestion({ operator: this.operator, a: num1, b: num2 });
+    this.answers = [];
+    this.numberPositions = [];
+    this.nextQuestionAt = this.clock + SOLVED_PAUSE_MS;
+  }
+
+  // Calcul suivant, une fois le calcul complet lu (horloge du jeu : la pause l'arrête)
+  askNextQuestionWhenDue() {
+    if (this.clock < this.nextQuestionAt) return;
+    this.nextQuestionAt = Infinity;
     this.generateOperation();
     this.placeNumbers();
   }

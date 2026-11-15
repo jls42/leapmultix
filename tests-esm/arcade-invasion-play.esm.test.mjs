@@ -190,6 +190,49 @@ describe('MultiInvaders : tirer sur la bonne réponse', () => {
   });
 });
 
+describe('MultiInvaders : le calcul complet en fin de vague', () => {
+  /** Bandeau lu avec des espaces ordinaires (le calcul complet garde ses espaces insécables) */
+  const banner = () => question().replaceAll('\u00a0', ' ');
+  const solved = (a, b) => `${a} × ${b} = ${a * b}`;
+  const operands = () => question().match(/\d+/g).slice(0, 2).map(Number);
+
+  beforeEach(() => {
+    jest.useFakeTimers({ doNotFake: ['requestAnimationFrame', 'performance'] });
+  });
+
+  test('ami libéré : le calcul complet, puis la vague suivante', () => {
+    const [a, b] = operands();
+    const answer = a * b;
+    for (const label of labels().filter(l => l.value !== answer)) {
+      expect(banner()).toBe(`${a} × ${b} = ?`);
+      shootAt(label.x);
+      for (let i = 0; i < 120 && labels().some(l => l.value === label.value); i++) play(1);
+    }
+    play(2);
+    expect(banner()).toBe(solved(a, b));
+    jest.advanceTimersByTime(1500);
+    play(1);
+    expect(banner()).toMatch(/^\d+ × \d+ = \?$/);
+    expect(labels()).toHaveLength(5);
+  });
+
+  test('monstres arrivés en bas : le calcul complet, plateau vide, puis la vague suivante', () => {
+    const [a, b] = operands();
+    for (let i = 0; i < 20000 && recordOperationResult.mock.calls.length === 0; i++) {
+      expect(banner()).toBe(`${a} × ${b} = ?`);
+      play(1);
+    }
+    expect(recordOperationResult.mock.calls.map(call => call[3])).toEqual([false]);
+    play(30);
+    expect(banner()).toBe(solved(a, b));
+    expect(labels()).toHaveLength(0);
+    jest.advanceTimersByTime(1500);
+    play(1);
+    expect(banner()).toMatch(/^\d+ × \d+ = \?$/);
+    expect(labels()).toHaveLength(5);
+  });
+});
+
 describe('MultiInvaders : d’une partie à l’autre', () => {
   test('une flèche tenue à la fin d’une partie ne fait pas dériver la suivante', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));

@@ -11,7 +11,7 @@
 import { showArcadeMessage, showArcadePoints } from './utils-es6.js';
 import { showArcadePenalty } from './arcade-points.js';
 import { chance, pickRandom } from './core/random.js';
-import { recordArcadeAnswer } from './arcade-learning.js';
+import { recordArcadeAnswer, showSolvedQuestion, SOLVED_PAUSE_MS } from './arcade-learning.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { mazeToScreen } from './multimiam-layout.js';
 import { isArcadePaused } from './arcade-time.js';
@@ -25,6 +25,29 @@ function holdMoveClocks(ctx) {
   const now = globalThis.performance ? globalThis.performance.now() : Date.now();
   ctx.lastMoveTime = now;
   ctx.lastGhostMoveTime = now;
+  ctx.lastFrameTime = now;
+}
+
+/**
+ * Horloge de la partie : le temps joué depuis l'image précédente s'y ajoute, jamais celui
+ * de la pause (holdMoveClocks garde lastFrameTime à l'heure)
+ * @param {Object} ctx Instance de PacmanGame
+ * @param {number} now Heure de l'image (performance.now)
+ */
+function tickPlayClock(ctx, now) {
+  ctx.playClock = (ctx.playClock ?? 0) + now - (ctx.lastFrameTime ?? now);
+  ctx.lastFrameTime = now;
+}
+
+/**
+ * Calcul complet lu (SOLVED_PAUSE_MS de jeu) : le calcul suivant, ses réponses posées loin de
+ * la case où est MultiMiam
+ * @param {Object} game Instance de PacmanGame
+ */
+function askNextQuestionWhenDue(game) {
+  if (game.playClock < (game.nextQuestionAt ?? Infinity)) return;
+  game.nextQuestionAt = Infinity;
+  game.generateOperation(game.multimiam.x, game.multimiam.y);
 }
 
 /**
@@ -114,10 +137,11 @@ function noteEatenAnswer(game, answer) {
 }
 
 /**
- * Bonne réponse croquée : 100 points, un monstre de plus peut entrer, et un nouveau calcul
- * part de la case de MultiMiam
+ * Bonne réponse croquée : 100 points, un monstre de plus peut entrer ; le calcul complet
+ * reste au bandeau le temps de le lire, réponses retirées, puis vient le calcul suivant
+ * (askNextQuestionWhenDue)
  */
-function eatCorrectAnswer(game, answer, fromX, fromY) {
+function eatCorrectAnswer(game, answer) {
   game.score += 100;
   if (game.canvas) {
     showArcadePoints(100, game.canvas, cellPoint(game, answer));
@@ -129,11 +153,10 @@ function eatCorrectAnswer(game, answer, fromX, fromY) {
 
   // Vérifier si on doit activer un nouveau monstre (tous les 5 points)
   game.checkAndActivateGhost();
-  game.generateOperation(fromX, fromY);
-  // Met à jour l'affichage de la multiplication via l'UI si disponible
-  if (typeof game.displayOperationUI === 'function') {
-    game.displayOperationUI();
-  }
+  const { num1, num2 } = game.currentOperation;
+  showSolvedQuestion({ operator: game.operator, a: num1, b: num2 });
+  game.answerPositions = [];
+  game.nextQuestionAt = (game.playClock ?? 0) + SOLVED_PAUSE_MS;
 }
 
 /** Mauvaise réponse croquée : jusqu'à 50 points de moins, et la réponse disparaît */
@@ -220,6 +243,8 @@ function respawnAfterLifeLost(game) {
   }));
   Object.assign(game.ghosts, respawned);
   console.log('Respawn at', game.multimiam.x, game.multimiam.y);
+  // Un calcul neuf tout de suite : celui qui attendait la fin de la lecture n'a plus lieu
+  game.nextQuestionAt = Infinity;
   game.generateOperation(game.multimiam.x, game.multimiam.y);
   // Met à jour l'affichage de la multiplication via l'UI si disponible
   if (typeof game.displayOperationUI === 'function') {
@@ -454,11 +479,9 @@ export function initPacmanEngine(game) {
       const answer = this.answerPositions[i];
       if (this.multimiam.x !== answer.x || this.multimiam.y !== answer.y) continue;
       this.labyrinth[answer.y][answer.x] = 0;
-      const multimiamPosX = this.multimiam.x;
-      const multimiamPosY = this.multimiam.y;
       noteEatenAnswer(this, answer);
       if (answer.isCorrect) {
-        eatCorrectAnswer(this, answer, multimiamPosX, multimiamPosY);
+        eatCorrectAnswer(this, answer);
       } else {
         eatWrongAnswer(this, answer, i);
       }
@@ -491,6 +514,8 @@ export function initPacmanEngine(game) {
 
     // Initialiser les variables de temps et de position si nécessaire
     ensureTimingState(this, now);
+    tickPlayClock(this, now);
+    askNextQuestionWhenDue(this);
 
     // Calcul des intervalles de temps écoulés
     const deltaTime = now - this.lastMoveTime;

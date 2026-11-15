@@ -186,10 +186,12 @@ describe('MultiSnake : un pas du serpent', () => {
 });
 
 describe('MultiSnake : pommes mangées', () => {
-  test('la bonne pomme : 100 points, le serpent grandit, un autre calcul, plus vite', () => {
+  test('la bonne pomme : 100 points, le serpent grandit, plus vite, les pommes partent', () => {
     const { num1, num2 } = game.currentOperation;
-    game.numberPositions = [{ x: 6, y: 5, value: 7, isCorrect: true }];
-    const generate = jest.spyOn(game, 'generateOperation');
+    game.numberPositions = [
+      { x: 6, y: 5, value: 7, isCorrect: true },
+      { x: 2, y: 2, value: 9, isCorrect: false },
+    ];
     game.updateGameLogic();
     expect(game.score).toBe(100);
     expect(game.multisnake).toHaveLength(3);
@@ -198,8 +200,35 @@ describe('MultiSnake : pommes mangées', () => {
     expect(noteArcadePlay).toHaveBeenCalledTimes(1);
     expect(recordOperationResult).toHaveBeenCalledWith('×', num1, num2, true);
     expect(showArcadePoints).toHaveBeenCalledWith(100, game.canvas, game.cellPoint({ x: 6, y: 5 }));
+    expect(game.numberPositions).toEqual([]);
+  });
+
+  test('la bonne pomme : le calcul complet au bandeau, puis les pommes du calcul suivant', () => {
+    const banner = document.createElement('span');
+    banner.className = 'arcade-question';
+    document.body.append(banner);
+    game.currentOperation = { num1: 7, num2: 5, operator: '×', result: 35 };
+    game.numberPositions = [{ x: 6, y: 5, value: 35, isCorrect: true }];
+    const generate = jest.spyOn(game, 'generateOperation');
+    game.lastUpdateTime = 0;
+    game.updateGameLogic();
+    expect(banner.textContent).toBe('7\u00a0×\u00a05\u00a0=\u00a035');
+    // Le temps de lire : ni question ni pomme
+    game.gameLoop(1400);
+    expect(generate).not.toHaveBeenCalled();
+    expect(game.numberPositions).toEqual([]);
+    expect(banner.textContent).toBe('7\u00a0×\u00a05\u00a0=\u00a035');
+    game.gameLoop(1600);
     expect(generate).toHaveBeenCalledTimes(1);
     expect(game.numberPositions).toHaveLength(4);
+    expect(banner.textContent).toMatch(/^\d+ × \d+ = \?$/);
+  });
+
+  test('une vie perdue pendant la lecture du calcul ne remet pas les pommes du calcul résolu', () => {
+    game.numberPositions = [{ x: 6, y: 5, value: 7, isCorrect: true }];
+    game.updateGameLogic();
+    game.loseLife();
+    expect(game.numberPositions).toEqual([]);
   });
 
   test('une mauvaise pomme : au plus 50 points retirés, la pomme part, le serpent attend', () => {

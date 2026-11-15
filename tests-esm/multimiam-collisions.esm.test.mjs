@@ -32,6 +32,7 @@ jest.unstable_mockModule('../js/core/userState.js', () => ({
 }));
 
 const { initPacmanEngine } = await import('../js/multimiam-engine.js');
+const { SOLVED_PAUSE_MS } = await import('../js/arcade-learning.js');
 
 const NOW = 1_000_000;
 const ghost = (x, y, extra = {}) => ({
@@ -168,6 +169,16 @@ describe('MultiMiam : collision avec un monstre', () => {
     ]);
   });
 
+  test('une vie perdue pendant la lecture du calcul complet : un seul calcul neuf', () => {
+    const game = newGame({ ghosts: [ghost(5, 5)], nextQuestionAt: SOLVED_PAUSE_MS });
+    game.checkGhostCollision();
+    expect(log.filter(entry => entry.startsWith('generateOperation'))).toEqual([
+      'generateOperation(2, 1)',
+    ]);
+    // Le calcul qui attendait la fin de la lecture n'a plus lieu
+    expect(game.nextQuestionAt).toBe(Infinity);
+  });
+
   test('un monstre croqué puis un autre sur la même case : 20 points, puis une vie perdue', () => {
     const game = newGame({ ghosts: [ghost(5, 5, { vulnerable: true }), ghost(5, 5)] });
     game.checkGhostCollision();
@@ -208,23 +219,23 @@ describe('MultiMiam : collision avec un monstre', () => {
 });
 
 describe('MultiMiam : collision avec une réponse', () => {
-  test('la bonne réponse : 100 points affichés, monstre peut-être activé, nouveau calcul', () => {
+  test('la bonne réponse : 100 points affichés, monstre peut-être activé, réponses retirées', () => {
     const canvas = { id: 'board' };
     const game = newGame({ canvas, multimiam: { x: 2, y: 1, direction: 'RIGHT' } });
     game.checkAnswerCollision();
+    // Le calcul suivant attend que le calcul complet soit lu (horloge de la partie)
     expect(log).toEqual([
       'noteArcadePlay()',
       'recordOperationResult("×", 3, 4, true)',
       'showArcadePoints(100, {"id":"board"}, {"x":25,"y":20})',
       'updateUI()',
       'checkAndActivateGhost()',
-      'generateOperation(2, 1)',
-      'displayOperationUI()',
     ]);
     expect(game.score).toBe(140);
     expect(game.goodAnswersCount).toBe(1);
     expect(game.labyrinth[1][2]).toBe(0);
-    expect(game.answerPositions).toHaveLength(2);
+    expect(game.answerPositions).toEqual([]);
+    expect(game.nextQuestionAt).toBe(SOLVED_PAUSE_MS);
   });
 
   test('une mauvaise réponse : seuls les points vraiment retirés, réponse retirée', () => {
@@ -268,14 +279,14 @@ describe('MultiMiam : collision avec une réponse', () => {
     const game = newGame({ answerPositions: [...answerPositions], multimiam: { x: 4, y: 4 } });
     game.checkAnswerCollision();
     expect(game.score).toBe(140);
-    expect(game.answerPositions).toEqual(answerPositions);
+    expect(game.answerPositions).toEqual([]);
     expect(log.filter(entry => entry.startsWith('recordOperationResult'))).toHaveLength(1);
   });
 
   test('sans affichage du calcul ni plateau : la bonne réponse compte sans erreur', () => {
     const game = newGame({ displayOperationUI: undefined, multimiam: { x: 2, y: 1 } });
     game.checkAnswerCollision();
-    expect(log.slice(-2)).toEqual(['checkAndActivateGhost()', 'generateOperation(2, 1)']);
+    expect(log.at(-1)).toBe('checkAndActivateGhost()');
     expect(game.score).toBe(140);
   });
 });

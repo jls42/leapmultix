@@ -37,6 +37,10 @@ const RESULT_OF = new Map([
   ['×', (a, b) => a * b],
 ]);
 
+/** Temps laissé pour lire le calcul complet avant la question suivante (MultiSnake, MultiMiam,
+ * vague perdue de MultiInvaders) */
+export const SOLVED_PAUSE_MS = 1500;
+
 /**
  * Calcul complet, « 7 × 5 = 35 », sans retour à la ligne au milieu
  * @param {{operator: string, a: number, b: number}} calculation
@@ -45,6 +49,16 @@ const RESULT_OF = new Map([
 export function solvedCalculation({ operator, a, b }) {
   const result = (RESULT_OF.get(operator) ?? RESULT_OF.get('×'))(a, b);
   return [a, operator, b, '=', result].join('\u00a0');
+}
+
+/**
+ * Le calcul complet au bandeau de la partie, une fois la question finie, jamais pendant ; il
+ * n'est pas lu à voix haute
+ * @param {{operator: string, a: number, b: number}} calculation
+ */
+export function showSolvedQuestion(calculation) {
+  const banner = document.querySelector('.arcade-question');
+  if (banner) banner.textContent = solvedCalculation(calculation);
 }
 
 /**
