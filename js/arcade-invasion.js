@@ -378,7 +378,8 @@ export function waveAnswers(question, operator, settings, count = ALIENS_PER_WAV
   }
   // Niveau aux résultats peu variés : toujours une vague complète, de voisins proches
   plausibleWrongAnswers(near, count).forEach(add);
-  for (let next = question.answer + 1; answers.length < count; next++) add(next);
+  let next = question.answer;
+  while (answers.length < count) add(++next);
   return shuffleInPlace(answers.slice(0, count));
 }
 
