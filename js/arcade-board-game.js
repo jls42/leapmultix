@@ -12,6 +12,7 @@ import { setStartingMode } from './mode-orchestrator.js';
 import { InfoBar } from './components/infoBar.js';
 import { startArcadeTimer, showArcadeGameOver, stopArcadeMode, isArcadeActive } from './arcade.js';
 import { isArcadePaused } from './arcade-time.js';
+import { writeArcadeQuestion } from './arcade-question.js';
 import { spriteFor } from './arcade-sprites.js';
 import { monsterSpec, MONSTER_COUNT } from './arcade-sprite-catalog.js';
 import { shuffleInPlace } from './core/random.js';
@@ -126,8 +127,7 @@ export class ArcadeBoardGame {
    */
   showQuestion(question) {
     this.question = question;
-    const banner = document.querySelector('.arcade-question');
-    if (banner) banner.textContent = `${question.a} ${this.operator} ${question.b} = ?`;
+    writeArcadeQuestion(`${question.a} ${this.operator} ${question.b} = ?`);
   }
 
   /** Une action n'est possible que sur une partie en cours, hors pause */

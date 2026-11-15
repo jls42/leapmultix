@@ -80,6 +80,8 @@
   "arcade_pause_key_hint": "Touche P : pause ou reprise",
   "arcade_no_time_limit": "Sans limite de temps",
   "arcade_no_time_limit_short": "Sans limite",
+  "arcade_banner_score": "Score",
+  "arcade_banner_time": "Temps",
   "avatar_choice_title": "Choix de l'avatar",
   "average_score_label": "Score moyen",
   "back_to_arcade_menu": "Retour au menu Arcade",

@@ -141,12 +141,70 @@ describe('ESM: bandeau des mini-jeux d’Arcade', () => {
     expect(EMOJI.test(document.body.textContent)).toBe(false);
   });
 
-  test('le score et le temps portent un libellé pour les lecteurs d’écran', () => {
+  test('une ligne : le score et les vies, le calcul, puis le temps et la place des boutons', () => {
+    const banner = document.querySelector('.arcade-mult-display');
+    expect([...banner.children].map(child => child.className)).toEqual([
+      'arcade-banner-side arcade-banner-score',
+      'arcade-banner-calc',
+      'arcade-banner-side arcade-banner-time',
+    ]);
+    const [score, calc, time] = banner.children;
+    expect([...score.children].map(child => child.id)).toEqual([
+      '',
+      'multimiam-info-score',
+      'multimiam-info-lives',
+    ]);
+    expect(calc.firstElementChild.className).toBe('arcade-question');
+    expect([...time.children].map(child => child.id || child.className)).toEqual([
+      'arcade-banner-label',
+      'multimiam-info-timer',
+      'arcade-banner-tools',
+    ]);
+  });
+
+  test('le score et le temps portent un libellé visible, retraduit avec la page', () => {
     const score = document.getElementById('multimiam-info-score');
-    expect(score.previousElementSibling.className).toBe('sr-only');
-    expect(score.previousElementSibling.getAttribute('data-translate')).toBe('info_score_label');
+    expect(score.previousElementSibling.className).toBe('arcade-banner-label');
+    expect(score.previousElementSibling.dataset.translate).toBe('arcade_banner_score');
+    expect(score.previousElementSibling.textContent).toBe('arcade_banner_score');
     const timer = document.getElementById('multimiam-info-timer');
-    expect(timer.previousElementSibling.getAttribute('data-translate')).toBe('info_time_label');
+    expect(timer.previousElementSibling.className).toBe('arcade-banner-label');
+    expect(timer.previousElementSibling.dataset.translate).toBe('arcade_banner_time');
+  });
+
+  test('la partie commence à zéro, avec la place des boutons encore vide', () => {
+    expect(document.getElementById('multimiam-info-score').textContent).toBe('0');
+    expect(document.querySelector('.arcade-banner-tools').children).toHaveLength(0);
+  });
+
+  test('le calcul de départ a son « ? » dans une case, et se lit tel quel', () => {
+    const question = document.querySelector('.arcade-question');
+    expect(question.textContent).toBe('3 × 4 = ?');
+    expect(question.querySelector('.arcade-answer-box').textContent).toBe('?');
+  });
+
+  test('sans calcul de départ, la place du calcul est vide (le cadre attend)', () => {
+    document.body.replaceChildren(InfoBar.createArcadeTemplateElement({ mode: 'multipop' }));
+    expect(document.querySelector('.arcade-question').childNodes).toHaveLength(0);
+  });
+
+  // La mise en page vient de css/arcade.css : un style posé en ligne la battrait (téléphone
+  // tourné, portrait). Seul le calcul porte le nombre de ses chiffres
+  test('aucun style en ligne dans le bandeau, hors le compte des chiffres du calcul', () => {
+    const banner = document.querySelector('.arcade-mult-display');
+    const styled = [banner, ...banner.querySelectorAll('*')].filter(el => el.getAttribute('style'));
+    expect(styled.map(el => el.className)).toEqual(['arcade-question']);
+    expect(styled[0].getAttribute('style')).toBe('--question-glyphs: 3;');
+  });
+
+  test('un jeu sans vies ni score n’en montre pas', () => {
+    document.body.replaceChildren(
+      InfoBar.createArcadeTemplateElement({ mode: 'multipop', showLives: false, showScore: false })
+    );
+    expect(document.getElementById('multipop-info-lives')).toBeNull();
+    expect(document.getElementById('multipop-info-score')).toBeNull();
+    expect(document.querySelector('.arcade-banner-score').children).toHaveLength(0);
+    expect(document.getElementById('multipop-info-timer')).not.toBeNull();
   });
 
   test('seule la question est annoncée (pas le chrono qui change chaque seconde)', () => {

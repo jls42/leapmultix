@@ -470,22 +470,33 @@
   }
 }
 
-/* Bandeau de partie : score, calcul, temps et vies, toujours visible */
+/* Bandeau de partie, toujours visible, sur une ligne : le score (et les vies) à gauche, le
+   calcul en grand au centre, le temps et ses boutons à droite. Sa hauteur ne dépend ni du
+   calcul affiché ni de sa longueur : les jeux dimensionnent leur plateau avant le premier
+   calcul, et un bandeau qui grandirait ensuite ferait déborder la page. */
 .arcade-mult-display {
+  /* Taille du calcul quand il tient ; un calcul long rétrécit pour rester sur sa ligne */
+  --calc-size: 2.75rem;
+  /* Marge entre le cadre et le calcul */
+  --calc-pad: var(--space-2);
+
   position: sticky;
   top: var(--space-2);
   z-index: var(--z-sticky);
+  box-sizing: border-box;
+  display: grid;
+  /* Deux côtés de même largeur tant qu'ils tiennent : le calcul reste au milieu */
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, 24rem) minmax(max-content, 1fr);
+  align-items: center;
+  gap: var(--space-4);
   flex-shrink: 0;
-  min-width: 320px;
-  max-width: 90vw;
+  inline-size: min(100% - 2 * var(--space-2), 46rem);
   margin: 0 auto var(--space-3);
-  padding: var(--space-2) var(--space-6);
+  padding: var(--space-2) var(--space-4);
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: var(--leading-tight);
-  text-align: center;
   color: var(--color-ink);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -493,91 +504,186 @@
   box-shadow: var(--shadow-md);
 }
 
+.arcade-banner-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+  white-space: nowrap;
+}
+
+.arcade-banner-score {
+  align-items: flex-start;
+}
+
+.arcade-banner-time {
+  align-items: flex-end;
+}
+
+.arcade-banner-label {
+  font-family: var(--font-text);
+  font-size: var(--text-sm);
+  line-height: 1;
+  color: var(--color-ink-muted);
+}
+
+.arcade-mult-display .game-stat-display {
+  font-size: var(--text-xl);
+  line-height: 1.1;
+}
+
+.arcade-mult-display .arcade-banner-lives {
+  display: flex;
+  font-size: var(--text-lg);
+}
+
+/* Place de « Pause » et du plein écran, réservée avant leur arrivée */
+.arcade-banner-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-block-size: 44px;
+}
+
+/* « Pause » en bouton carré : l'icône seule, son nom reste lu par les lecteurs d'écran */
+.arcade-banner-tools > .btn.arcade-pause-btn {
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  margin: 0;
+  padding: 0;
+}
+
+.arcade-banner-tools > .arcade-pause-btn > span {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.arcade-banner-tools .arcade-pause-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Case du calcul : sa largeur vient du bandeau, jamais du texte, qui se règle sur elle */
+.arcade-banner-calc {
+  container-type: inline-size;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  block-size: calc(var(--calc-size) * 1.2 + 2 * var(--space-2));
+}
+
 .arcade-mult-display .arcade-question {
-  /* Une ligne réservée même vide : les jeux dimensionnent leur plateau avant d'afficher le
-     premier calcul, et le bandeau qui grandissait ensuite faisait déborder la page */
-  min-height: 1lh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: 100%;
+  padding-inline: var(--calc-pad);
+  overflow: hidden;
+  /* Navigateur sans unités de conteneur : une taille sûre sur téléphone */
+  font-size: clamp(1.25rem, 6vw, var(--calc-size));
+  /* Le plus grand possible dans la case. Largeur d'un calcul en Baloo 2 gras : 0,6em par
+     chiffre (tous de même largeur) et pour le « ? », 2,4em pour le signe, le « = », les
+     espaces et les marges de la case de la réponse (mesuré de « 3 × 4 = ? » à
+     « 100 − 100 = ? ») */
+  font-size: min(
+    var(--calc-size),
+    (100cqi - 2 * var(--calc-pad) - 4px) / (var(--question-glyphs, 7) * 0.6 + 2.4)
+  );
+  line-height: 1;
+  /* Les espaces du calcul comptent, jusqu'à celle qui précède la case de la réponse */
+  white-space: pre;
   color: var(--color-ink-heading);
+  background: var(--color-warning-tint);
+  border: 2px solid var(--color-warning-edge);
+  border-radius: var(--radius-md);
+}
+
+/* Pas encore de calcul (ou jamais : MultiMemory) : la place reste, le cadre attend */
+.arcade-mult-display .arcade-question:empty {
+  visibility: hidden;
+}
+
+/* Le « ? », puis la réponse une fois le calcul fini, dans leur case */
+.arcade-answer-box {
+  box-sizing: border-box;
+  min-inline-size: 1.04em;
+  padding: 0.08em 0.22em;
+  text-align: center;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
 }
 
 @media (max-width: 767px) {
   .arcade-mult-display {
-    display: flex;
-    flex-direction: column;
+    --calc-size: 2.5rem;
+
+    gap: var(--space-2);
+    padding: var(--space-2);
+  }
+}
+
+/* Téléphone en portrait : toute la largeur va au calcul. Les libellés ne restent que pour
+   les lecteurs d'écran, et les deux boutons se partagent les côtés au lieu de tenir à deux
+   sous le temps : « Pause » sous le temps, le plein écran sous le score. */
+@media (max-width: 480px) and (orientation: portrait) {
+  .arcade-mult-display {
+    --calc-pad: var(--space-1);
+
     align-items: stretch;
-    gap: 2px;
-    min-width: 120px;
-    padding: 6px 2vw;
-    font-size: var(--text-base);
+    gap: 6px;
+    inline-size: 100%;
+    padding: var(--space-1) 6px;
   }
 
-  .arcade-mobile-top {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .arcade-mobile-top .game-stat-display {
-    min-width: 60px;
-    font-size: 1em;
-    text-align: left;
-  }
-
-  .arcade-mobile-top .arcade-question {
-    display: block;
-    flex: 1;
-    margin: 0 auto;
-    font-size: 1.1em;
-    text-align: center;
+  .arcade-banner-label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 
   .arcade-mult-display .game-stat-display {
-    min-width: 36px;
-    font-size: 1em;
+    font-size: var(--text-lg);
   }
 
-  .arcade-mult-display .arcade-question {
-    margin: 0 var(--space-2);
+  .arcade-mult-display .arcade-banner-lives {
+    font-size: var(--text-base);
   }
 
-  .arcade-mult-display .arcade-mobile-bottom {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--space-3);
-    width: 100%;
-    margin-top: 2px;
+  .arcade-banner-score {
+    min-inline-size: 44px;
   }
 
-  .arcade-mult-display #arcade-info-timer,
-  .arcade-mult-display #arcade-info-lives {
-    flex: 1;
-    min-width: 60px;
-    text-align: center;
+  .arcade-banner-time {
+    justify-content: space-between;
   }
-}
 
-#arcade-mult-display .arcade-mobile-bottom {
-  justify-content: center;
-}
+  .arcade-banner-calc {
+    align-self: center;
+  }
 
-#arcade-mult-display .arcade-mobile-bottom .game-stat-display {
-  flex: 0 0 auto;
-  margin: 0 var(--space-2);
-  text-align: center;
+  /* Le plein écran, quand l'appareil le permet (js/arcade-fullscreen.js), prend sa place
+     en bas à gauche, réservée sous le score et les vies */
+  .arcade-mult-display.has-fullscreen .arcade-banner-score {
+    padding-block-end: 46px;
+  }
+
+  .arcade-banner-tools > .btn.arcade-fullscreen-btn {
+    position: absolute;
+    inset-block-end: var(--space-1);
+    inset-inline-start: 6px;
+  }
 }
 
 @media (max-width: 896px) and (orientation: landscape) {
-  #arcade-mult-display {
-    width: 100%;
-    margin: 0 auto var(--space-2);
-    padding: var(--space-1) 6px;
-    font-size: var(--text-lg);
-    text-align: center;
-  }
-
   .arcade-game-ui > button {
     display: block;
     width: 100%;
@@ -587,13 +693,6 @@
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
-  #arcade-mult-display {
-    width: 90%;
-    margin: 0 auto var(--space-3);
-    font-size: var(--text-xl);
-    text-align: center;
-  }
-
   .arcade-game-ui > button {
     display: block;
     width: 90%;
@@ -608,37 +707,38 @@
    dans une colonne à côté. js/arcade-common.js lit --arcade-stage-flow et retire cette
    colonne, de largeur fixe, de la place du plateau. */
 @media (orientation: landscape) and (max-height: 540px) {
-  .arcade-mult-display,
-  #arcade-mult-display {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    /* Hauteur du bouton plein écran réservée : il arrive juste après le calcul du plateau */
+  .arcade-mult-display {
+    --calc-size: 2rem;
+
+    inline-size: 100%;
+    /* Hauteur des boutons réservée : ils arrivent juste après le calcul du plateau */
     min-block-size: calc(44px + 2 * var(--space-1));
     margin-bottom: var(--space-2);
     padding-block: var(--space-1);
   }
 
-  .arcade-mult-display > .arcade-mobile-top {
-    flex: 3 1 0;
+  /* Score et vies côte à côte, temps et boutons aussi : rien ne s'empile */
+  .arcade-banner-side {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-2);
   }
 
-  .arcade-mult-display > .arcade-mobile-bottom {
-    flex: 2 1 0;
-    margin-top: 0;
+  .arcade-banner-time {
+    justify-content: flex-end;
   }
 
-  /* Sur une seule ligne, le bouton plein écran prend sa place au bout de la ligne */
-  .arcade-mult-display > .btn.arcade-fullscreen-btn {
-    position: static;
-    flex: none;
+  /* Les libellés ne restent que pour les lecteurs d'écran */
+  .arcade-banner-label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 
-  /* Les cases vides qui centrent le calcul sur deux rangées (téléphone en portrait)
-     n'ont rien à centrer sur une seule : elles prenaient sa place au calcul, écrit alors
-     un signe par ligne, et le bandeau trop haut recouvrait le plateau */
-  .arcade-mult-display .arcade-placeholder {
-    display: none;
+  .arcade-banner-calc {
+    block-size: 44px;
   }
 
   .arcade-game-ui {
@@ -1133,12 +1233,9 @@
   background-size: cover;
 }
 
-/* Bouton plein écran : dans le coin du bandeau, par-dessus l'espace réservé à droite du
-   calcul, qui reste centré. Cible de 44 px, icône au trait de la couleur du texte. */
+/* Bouton plein écran : sous le temps, à côté de « Pause ». Cible de 44 px, icône au trait
+   de la couleur du texte. */
 .btn.arcade-fullscreen-btn {
-  position: absolute;
-  inset-block-start: var(--space-1);
-  inset-inline-end: var(--space-1);
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -239,6 +239,69 @@ function lastImages(page, canvasId, part, count) {
   );
 }
 
+/** Calculs du plus court au plus long que le bandeau doit montrer en grand, sur sa ligne */
+const BANNER_CALCULATIONS = [
+  '3 × 4 = ?',
+  '12 × 12 = ?',
+  '144 ÷ 12 = ?',
+  '100 − 100 = ?',
+  '12\u00a0×\u00a012\u00a0=\u00a0144',
+];
+
+/**
+ * Bandeau de la partie : ses trois colonnes, ses boutons, et pour chaque calcul écrit par
+ * l'écrivain du jeu (js/arcade-question.js) la taille du texte et la place qu'il prend
+ */
+function bannerLayout(page) {
+  return page.evaluate(async calculations => {
+    const { writeArcadeQuestion } = await import('/js/arcade-question.js');
+    const frame = () =>
+      new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const banner = document.querySelector('#arcade-mult-display');
+    const box = selector => banner.querySelector(selector)?.getBoundingClientRect() ?? null;
+    const overlap = (a, b) =>
+      Boolean(a && b) &&
+      a.left < b.right &&
+      b.left < a.right &&
+      a.top < b.bottom &&
+      b.top < a.bottom;
+    const [score, calc, time] = [
+      '.arcade-banner-score',
+      '.arcade-banner-calc',
+      '.arcade-banner-time',
+    ].map(box);
+    const buttons = ['.arcade-pause-btn', '.arcade-fullscreen-btn'].map(box);
+    const texts = ['[id$="-info-score"]', '.info-hearts', '#arcade-info-timer'].map(box);
+    const question = banner.querySelector('.arcade-question');
+    const shown = question.textContent;
+    const sizes = [];
+    for (const text of calculations) {
+      writeArcadeQuestion(text, question);
+      await frame();
+      sizes.push({
+        text,
+        px: Math.floor(Number.parseFloat(getComputedStyle(question).fontSize)),
+        fits: question.scrollWidth <= question.clientWidth,
+        bannerHeight: Math.round(banner.getBoundingClientRect().height),
+        calcHeight: Math.round(question.getBoundingClientRect().height),
+      });
+    }
+    writeArcadeQuestion(shown, question);
+    await frame();
+    return {
+      inOrder: score.right <= calc.left && calc.right <= time.left,
+      onOneLine: [score, time].every(side => side.top < calc.bottom && calc.top < side.bottom),
+      buttonSides: buttons.map(button => Math.round(Math.min(button.width, button.height))),
+      buttonsOverText: buttons.some(button => texts.some(text => overlap(button, text))),
+      buttonsOverCalc: buttons.some(button => overlap(button, calc)),
+      buttonsOverEachOther: overlap(...buttons),
+      heights: [...new Set(sizes.map(size => size.bannerHeight))].length,
+      calcHeights: [...new Set(sizes.map(size => size.calcHeight))].length,
+      sizes: sizes.map(({ text, px, fits }) => ({ text, px, fits })),
+    };
+  }, BANNER_CALCULATIONS);
+}
+
 describe('Écran des jeux d’Arcade (E2E)', () => {
   let browser;
   let page;
@@ -294,9 +357,18 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
       await settle(page);
       const layout = await page.evaluate(() => {
         const bar = document.querySelector('#arcade-mult-display').getBoundingClientRect();
-        const range = document.createRange();
-        range.selectNodeContents(document.querySelector('#arcade-mult-display .arcade-question'));
-        const lines = new Set([...range.getClientRects()].map(rect => Math.round(rect.top))).size;
+        // Sur une ligne : chaque morceau (le calcul, puis la case de sa réponse) commence à
+        // droite du précédent. Un retour à la ligne ramènerait le suivant vers la gauche
+        const question = document.querySelector('#arcade-mult-display .arcade-question');
+        const pieces = [...question.childNodes].flatMap(node => {
+          if (node.nodeType !== Node.TEXT_NODE) return [node.getBoundingClientRect()];
+          const range = document.createRange();
+          range.selectNode(node);
+          return [...range.getClientRects()];
+        });
+        const lines = pieces.every((rect, i) => i === 0 || rect.left >= pieces.at(i - 1).right - 1)
+          ? 1
+          : 2;
         const top = selector => document.querySelector(selector).getBoundingClientRect().top;
         // MultiMemory n'écrit pas de calcul dans le bandeau : aucune ligne
         return {
@@ -311,9 +383,52 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
         barAboveBoard: true,
         barAboveAbandon: true,
       });
+      // Le plateau tient dans la hauteur qui reste : la page ne défile pas (MultiPop et
+      // MultiGoal gardaient un plateau plus haut que la place, de 8 et 38 px)
+      const { overflow } = await screenState(page);
+      expect({ game, ...overflow }).toEqual({ game, x: 0, y: 0 });
       await backToArcadeMenu(page);
     }
   }, 90000);
+
+  // Le calcul se lisait mal : 31 px sur un téléphone de 390 px, 22 px téléphone tourné, entre
+  // le score, le temps, « Pause » et les vies sur deux rangées. Il a sa case au centre d'une
+  // seule ligne, en grand, et un calcul long y tient sans changer la hauteur du bandeau
+  test.each([
+    ['téléphone en portrait', PORTRAIT, 32, true],
+    ['téléphone tourné', SHORT_LANDSCAPE, 30, true],
+    ['ordinateur', DESKTOP, 40, false],
+  ])(
+    '%s : score, calcul en grand et temps sur une ligne, quel que soit le calcul',
+    async (_name, viewport, minimum, phone) => {
+      await openArcade(viewport, { phone });
+      // Un jeu avec des vies, un jeu sans
+      for (const game of ['multisnake', 'multigoal']) {
+        await launchArcadeGame(page, game);
+        await settle(page);
+        const layout = await bannerLayout(page);
+        expect({ game, ...layout, sizes: undefined }).toEqual({
+          game,
+          inOrder: true,
+          onOneLine: true,
+          buttonSides: [44, 44],
+          buttonsOverText: false,
+          buttonsOverCalc: false,
+          buttonsOverEachOther: false,
+          heights: 1,
+          calcHeights: 1,
+          sizes: undefined,
+        });
+        const small = layout.sizes.filter(size => size.px < minimum || !size.fits);
+        expect({ game, small }).toEqual({ game, small: [] });
+        // Sur ordinateur, la barre de défilement de la page prend sa largeur : jamais plus
+        const { overflow } = await screenState(page);
+        expect({ game, x: Math.max(0, overflow.x), y: overflow.y }).toEqual({ game, x: 0, y: 0 });
+        await backToArcadeMenu(page);
+      }
+    },
+    60000
+  );
 
   test('téléphone en portrait : plateaux plus hauts que larges, sans défilement', async () => {
     await openArcade(PORTRAIT);

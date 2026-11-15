@@ -33,6 +33,7 @@ import { randomInt, shuffleInPlace } from './core/random.js';
 import { getDifficultySettings } from './difficulty.js';
 import { plausibleWrongAnswers } from './core/GameMode.js';
 import { isArcadePaused } from './arcade-time.js';
+import { writeArcadeQuestion } from './arcade-question.js';
 import { spriteFor, drawArcadeSprite, prefetchArcadeSprite } from './arcade-sprites.js';
 import { snakeHeadSpec, textureSpec } from './arcade-sprite-catalog.js';
 import { wornSeason } from './core/seasons.js';
@@ -1053,10 +1054,9 @@ class SnakeGame {
 
   // Afficher l'opération mathématique
   displayOperation() {
-    const questionSpan = document.querySelector('.arcade-question');
-    if (questionSpan && this.currentOperation) {
-      questionSpan.textContent = `${this.currentOperation.num1} ${this.currentOperation.operator} ${this.currentOperation.num2} = ?`;
-    }
+    if (!this.currentOperation) return;
+    const { num1, operator, num2 } = this.currentOperation;
+    writeArcadeQuestion(`${num1} ${operator} ${num2} = ?`);
   }
 
   // Mettre à jour l'affichage du score

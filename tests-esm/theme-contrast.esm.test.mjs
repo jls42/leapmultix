@@ -77,6 +77,8 @@ const TEXT_PAIRS = [
   ['--color-success-ink', '--color-success-tint'],
   ['--color-danger-ink', '--color-danger-tint'],
   ['--color-warning-ink', '--color-warning-tint'],
+  // Calcul du bandeau des jeux d'Arcade, dans son cadre
+  ['--color-ink-heading', '--color-warning-tint'],
   ...MODES.flatMap(mode => [
     [`--mode-${mode}`, `--mode-${mode}-tint`],
     [`--mode-${mode}`, '--color-surface'],
@@ -89,6 +91,8 @@ const UI_PAIRS = [
   // Pastille de l'interrupteur « Mode sombre » éteint, sur son rail
   ['--color-border-strong', '--color-surface-sunken'],
   ['--color-action', '--color-surface'],
+  // Cadre du calcul, sur le bandeau des jeux d'Arcade
+  ['--color-warning-edge', '--color-surface'],
 ];
 
 /** Paires d'un thème sous leur minimum : « encre / page : 3.10 < 4.5 » */

@@ -9,6 +9,7 @@ import { recordOperationResult } from './core/operation-stats.js';
 import { recordReviewAnswer, weakTablesFrom } from './core/mode-stats.js';
 import { UserState } from './core/userState.js';
 import { noteArcadeMiss } from './arcade-session.js';
+import { writeArcadeQuestion } from './arcade-question.js';
 
 /**
  * Une réponse de la partie : `a` est la table du calcul, comme dans le Quiz
@@ -57,8 +58,7 @@ export function solvedCalculation({ operator, a, b }) {
  * @param {{operator: string, a: number, b: number}} calculation
  */
 export function showSolvedQuestion(calculation) {
-  const banner = document.querySelector('.arcade-question');
-  if (banner) banner.textContent = solvedCalculation(calculation);
+  writeArcadeQuestion(solvedCalculation(calculation));
 }
 
 /**

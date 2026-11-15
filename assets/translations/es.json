@@ -76,6 +76,8 @@
   "arcade_pause_key_hint": "Tecla P: pausa o reanudar",
   "arcade_no_time_limit": "Sin límite de tiempo",
   "arcade_no_time_limit_short": "Sin límite",
+  "arcade_banner_score": "Puntos",
+  "arcade_banner_time": "Tiempo",
   "avatar_choice_title": "Elección de avatar",
   "average_score_label": "Puntuación media",
   "back_to_arcade_menu": "Volver al menú Arcade",

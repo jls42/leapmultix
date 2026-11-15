@@ -246,7 +246,7 @@ function onVisibilityChange() {
 }
 
 /**
- * Pause d'une partie chronométrée : bouton juste après le temps, touche P, onglet masqué
+ * Pause d'une partie chronométrée : bouton sous le temps, touche P, onglet masqué
  * @param {HTMLElement|null} timerElement - Temps affiché dans le bandeau
  */
 export function mountArcadePause(timerElement) {
@@ -257,7 +257,10 @@ export function mountArcadePause(timerElement) {
     PAUSE_LABEL,
     toggleArcadePause
   );
-  timerElement.after(button);
+  // Dans le bandeau, à la place des boutons, avant le plein écran ; sinon après le temps
+  const tools = timerElement.parentElement?.querySelector('.arcade-banner-tools');
+  if (tools) tools.prepend(button);
+  else timerElement.after(button);
   document.addEventListener('keydown', onPauseKey);
   document.addEventListener('visibilitychange', onVisibilityChange);
   controls = { button, overlay: null };

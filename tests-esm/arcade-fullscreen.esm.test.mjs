@@ -16,6 +16,9 @@ jest.unstable_mockModule('../js/i18n.js', () => ({
 const { mountArcadeFullscreenButton, isFullscreenAvailable } = await import(
   '../js/arcade-fullscreen.js'
 );
+const { InfoBar } = await import('../js/components/infoBar.js');
+const { mountArcadePause, unmountArcadePause } = await import('../js/arcade-time.js');
+const { prepareArcadeStage, STAGE_CHANGE_EVENT } = await import('../js/arcade-common.js');
 
 let fullscreenElement = null;
 let game;
@@ -35,30 +38,16 @@ function renderGame() {
   return renderPlayScreen();
 }
 
-/** Bandeau (score, calcul, espace réservé à droite) et zone de jeu, comme une nouvelle partie */
+/** Bandeau et zone de jeu du gabarit commun, comme une nouvelle partie */
 function renderPlayScreen() {
-  const banner = document.createElement('div');
-  banner.className = 'arcade-mult-display';
-  const top = document.createElement('div');
-  top.className = 'arcade-mobile-top';
-  const score = document.createElement('span');
-  score.className = 'game-stat-display';
-  const question = document.createElement('span');
-  question.className = 'arcade-question';
-  const placeholder = document.createElement('span');
-  placeholder.className = 'game-stat-display arcade-placeholder';
-  top.append(score, question, placeholder);
-  banner.append(top);
-  stage = document.createElement('div');
-  stage.className = 'arcade-game-ui';
-  canvas = document.createElement('canvas');
-  canvas.tabIndex = 0;
-  const abandon = document.createElement('button');
-  abandon.textContent = 'Abandonner';
-  stage.append(canvas, abandon);
-  game.replaceChildren(banner, stage);
+  game.replaceChildren(InfoBar.createArcadeTemplateElement({ mode: 'multisnake' }));
+  stage = game.querySelector('.arcade-game-ui');
+  canvas = stage.querySelector('canvas');
   return stage;
 }
+
+const banner = () => document.querySelector('.arcade-mult-display');
+const tools = () => document.querySelector('.arcade-banner-tools');
 
 /** API plein écran telle que la fournit un navigateur qui l'accepte */
 function provideFullscreenApi() {
@@ -116,22 +105,46 @@ describe('Sans API plein écran (iPhone, cadre sans permission)', () => {
     expect(isFullscreenAvailable(game)).toBe(false);
     expect(mountArcadeFullscreenButton(stage)).toBeNull();
     expect(document.querySelector('.arcade-fullscreen-btn')).toBeNull();
-    expect(document.querySelector('.arcade-mobile-top').children).toHaveLength(3);
+    expect(tools().children).toHaveLength(0);
+    // Aucune place gardée pour lui sur téléphone (css/arcade.css)
+    expect(banner().classList.contains('has-fullscreen')).toBe(false);
   });
 });
 
 describe('Bouton plein écran', () => {
   beforeEach(provideFullscreenApi);
 
-  test('il apparaît dans le bandeau, nommé « Plein écran », sans décentrer le calcul', () => {
+  test('il apparaît dans le bandeau, sous le temps, nommé « Plein écran »', () => {
     const button = mountArcadeFullscreenButton(stage);
-    expect(button.closest('.arcade-mult-display')).not.toBeNull();
+    expect(button.parentElement).toBe(tools());
+    expect(tools().closest('.arcade-banner-time')).not.toBeNull();
     expect(button.type).toBe('button');
     expect(button.getAttribute('aria-label')).toBe('Plein écran');
     expect(button.dataset.translateAriaLabel).toBe('arcade_fullscreen_enter');
     expect(button.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
-    // L'espace réservé à droite du calcul reste : le calcul reste centré
-    expect(document.querySelector('.arcade-mobile-top .arcade-placeholder')).not.toBeNull();
+    // Sur téléphone, le bandeau lui garde sa place (css/arcade.css)
+    expect(banner().classList.contains('has-fullscreen')).toBe(true);
+  });
+
+  test.each([
+    ['le plein écran arrive d’abord', ['fullscreen', 'pause']],
+    ['« Pause » arrive d’abord', ['pause', 'fullscreen']],
+  ])('%s : « Pause » reste devant le plein écran', (_name, order) => {
+    const mount = new Map([
+      ['fullscreen', () => mountArcadeFullscreenButton(stage)],
+      ['pause', () => mountArcadePause(document.getElementById('multisnake-info-timer'))],
+    ]);
+    for (const step of order) mount.get(step)();
+    expect(
+      [...tools().children].map(button => button.classList.item(button.classList.length - 1))
+    ).toEqual(['arcade-pause-btn', 'arcade-fullscreen-btn']);
+    unmountArcadePause();
+  });
+
+  test('sans la place des boutons (bandeau d’une autre forme), il reste dans le bandeau', () => {
+    tools().remove();
+    const button = mountArcadeFullscreenButton(stage);
+    expect(button.parentElement).toBe(banner());
   });
 
   test('un clic met toute la partie en plein écran ; le bouton dit alors comment en sortir', async () => {
@@ -168,6 +181,48 @@ describe('Bouton plein écran', () => {
     const buttons = document.querySelectorAll('.arcade-fullscreen-btn');
     expect(buttons).toHaveLength(1);
     expect(buttons[0].getAttribute('aria-label')).toBe('Quitter le plein écran');
+  });
+});
+
+// Le bouton arrive après le calcul du plateau, le temps de charger son module. Sur téléphone,
+// le bandeau grandissait alors de 16 px et la page défilait jusqu'à l'image suivante
+describe('Place du bouton dans le bandeau, à l’ouverture de la partie', () => {
+  /** Le module du bouton est chargé et sa suite a tourné */
+  async function buttonModuleLoaded() {
+    await import('../js/arcade-fullscreen.js');
+    for (let i = 0; i < 10; i++) await flush();
+  }
+
+  test('gardée dès la préparation de la zone de jeu, avant l’arrivée du bouton', async () => {
+    provideFullscreenApi();
+    prepareArcadeStage(canvas);
+    expect(banner().classList.contains('has-fullscreen')).toBe(true);
+    expect(document.querySelector('.arcade-fullscreen-btn')).toBeNull();
+    await buttonModuleLoaded();
+    expect(tools().querySelector('.arcade-fullscreen-btn')).not.toBeNull();
+    expect(banner().classList.contains('has-fullscreen')).toBe(true);
+  });
+
+  test('sans API plein écran, aucune place gardée', async () => {
+    prepareArcadeStage(canvas);
+    // Ni tout de suite (le plateau se dimensionne maintenant), ni ensuite
+    expect(banner().classList.contains('has-fullscreen')).toBe(false);
+    await buttonModuleLoaded();
+    expect(banner().classList.contains('has-fullscreen')).toBe(false);
+  });
+
+  test('rendue si le bouton ne peut pas venir, et la zone de jeu est prévenue', async () => {
+    provideFullscreenApi();
+    Reflect.deleteProperty(game, 'requestFullscreen');
+    game.requestFullscreen = undefined;
+    const relayout = jest.fn();
+    stage.addEventListener(STAGE_CHANGE_EVENT, relayout);
+    prepareArcadeStage(canvas);
+    expect(banner().classList.contains('has-fullscreen')).toBe(true);
+    await buttonModuleLoaded();
+    expect(document.querySelector('.arcade-fullscreen-btn')).toBeNull();
+    expect(banner().classList.contains('has-fullscreen')).toBe(false);
+    expect(relayout).toHaveBeenCalled();
   });
 });
 
