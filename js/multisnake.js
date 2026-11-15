@@ -101,15 +101,18 @@ function snakeSeasonId() {
 }
 
 /**
- * Grille de base et vitesses (ms par pas) : plateau plus petit et serpent plus lent sur
- * téléphone
+ * Grille de base et vitesses (ms par pas) : le pas du niveau au départ (snakeStepMs de
+ * difficulty.js), jusqu'à 1,6 fois plus rapide ; plateau plus petit et serpent plus lent sur
+ * téléphone (Moyen : 400 puis 250 ms sur ordinateur, 450 puis 300 sur téléphone)
  * @param {boolean} isMobile
+ * @param {string} [difficulty]
  * @returns {{baseCols: number, baseRows: number, initialSpeed: number, minSpeed: number}}
  */
-function boardSettingsOf(isMobile) {
+function boardSettingsOf(isMobile, difficulty) {
+  const step = getDifficultySettings(difficulty).snakeStepMs;
   return isMobile
-    ? { baseCols: 8, baseRows: 8, initialSpeed: 450, minSpeed: 300 }
-    : { baseCols: 14, baseRows: 11, initialSpeed: 400, minSpeed: 250 };
+    ? { baseCols: 8, baseRows: 8, initialSpeed: Math.round(step * 1.125), minSpeed: step * 0.75 }
+    : { baseCols: 14, baseRows: 11, initialSpeed: step, minSpeed: Math.round(step * 0.625) };
 }
 
 /**
@@ -206,9 +209,8 @@ class SnakeGame {
     this.canvas.classList.add('arcade-canvas', 'multisnake-canvas');
 
     // Grille de base et vitesses, selon l'appareil
-    Object.assign(this, boardSettingsOf(this.isMobile));
+    Object.assign(this, boardSettingsOf(this.isMobile, options.difficulty));
     this.speedIncrement = 5;
-    this.speed = this.initialSpeed;
     this.score = 0;
     this.lives = 3;
     this.gameOver = false;

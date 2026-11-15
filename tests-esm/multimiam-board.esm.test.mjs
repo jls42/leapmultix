@@ -425,6 +425,23 @@ describe('Labyrinthe transposé : la pastille de points se pose sur la bonne cas
   });
 });
 
+describe('MultiMiam : les monstres selon le niveau', () => {
+  test.each([
+    [1, 1],
+    [2, 2],
+    [3, 3],
+  ])('niveau %i : %i monstre(s) au départ', (level, count) => {
+    jest.useFakeTimers();
+    HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();
+    restorers.push(simulateArcadeScreen({ width: 1234, height: 800, top: 202 }));
+    renderArcadeStage('multimiam-canvas');
+    const game = new PacmanGame('multimiam-canvas', level, 'operation', null, 0, '×');
+    game.start();
+    game.pause();
+    expect(game.ghosts.filter(ghost => ghost.active)).toHaveLength(count);
+  });
+});
+
 describe('Bandes de mur autour du labyrinthe pendant une fête', () => {
   afterEach(() => wearSeason(null));
 

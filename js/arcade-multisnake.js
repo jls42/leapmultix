@@ -127,7 +127,6 @@ export function startSnakeArcade() {
   console.log('Initialisation du jeu Snake');
   _snakeInstance = new SnakeGame('multisnake-canvas', 'operation', {
     difficulty: gameState.difficulty || 'moyen',
-    speed: 100 + difficultySettings.enemySpeed * 50,
     penaltyPoints: difficultySettings.penalty,
     tables: difficultySettings.tables,
     distractorDistance: difficultySettings.distractorDistance,

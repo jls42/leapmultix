@@ -16,6 +16,24 @@ import { noteArcadePlay } from './arcade-session.js';
 import { mazeToScreen } from './multimiam-layout.js';
 import { isArcadePaused } from './arcade-time.js';
 
+// Monstres selon le niveau de la partie (1 Débutant, 2 Moyen, 3 Difficile) : combien sont
+// là au départ (un de plus entre ensuite toutes les 5 bonnes réponses), et la lenteur de leurs
+// pas, en pas du personnage (4,5 : lents ; 3 : un peu plus rapides)
+const GHOSTS_BY_LEVEL = new Map([
+  [1, { startGhosts: 1, ghostPace: 4.5 }],
+  [2, { startGhosts: 2, ghostPace: 3.5 }],
+  [3, { startGhosts: 3, ghostPace: 3 }],
+]);
+
+/**
+ * Monstres d'un niveau de MultiMiam (Moyen si le niveau est inconnu)
+ * @param {number} level - 1, 2 ou 3
+ * @returns {{startGhosts: number, ghostPace: number}}
+ */
+export function ghostsOfLevel(level) {
+  return GHOSTS_BY_LEVEL.get(level) ?? GHOSTS_BY_LEVEL.get(2);
+}
+
 /**
  * Pause de l'Arcade : les horloges des déplacements restent à l'heure, pour que rien ne
  * saute d'une case à la reprise
@@ -524,10 +542,9 @@ export function initPacmanEngine(game) {
     // Calcul de la progression de l'animation pour Pacman entre 0 et 1
     this.animationProgress = Math.min(1, deltaTime / this.moveInterval);
 
-    // Calcul de la progression de l'animation pour les fantômes entre 0 et 1
-    // Le paramètre ghostIntervalMultiplier détermine la vitesse relative des fantômes par rapport à Pacman
-    const ghostIntervalMultiplier = 3.5; // 3.5x plus lent que Pacman (valeur ajustée pour éviter l'effet de clignotement)
-    const ghostMoveInterval = this.moveInterval * ghostIntervalMultiplier;
+    // Calcul de la progression de l'animation pour les fantômes entre 0 et 1 : un pas de
+    // monstre vaut tant de pas du personnage, selon le niveau
+    const ghostMoveInterval = this.moveInterval * ghostsOfLevel(this.difficulty).ghostPace;
     this.ghostAnimationProgress = Math.min(1, ghostDeltaTime / ghostMoveInterval);
 
     // IMPORTANT: Les deux pas suivants sont indépendants - l'un pour Pacman, l'autre pour les fantômes

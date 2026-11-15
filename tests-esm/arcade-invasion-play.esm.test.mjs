@@ -12,6 +12,7 @@
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { placeCanvasAtOrigin } from './helpers/touch-test-helpers.mjs';
+import { useCoarsePointer } from './helpers/arcade-screen-helpers.mjs';
 
 const noop = () => undefined;
 const recordOperationResult = jest.fn();
@@ -66,6 +67,7 @@ jest.unstable_mockModule('../js/arcade-sprites.js', () => ({
 const { startMultiplicationInvasion } = await import('../js/arcade-invasion.js');
 const { stopArcadeMode, arcadeControls } = await import('../js/arcade.js');
 const { getArcadeCanvasSize } = await import('../js/arcade-common.js');
+const { gameState } = await import('../js/game.js');
 
 const YELLOW = '#ffff00';
 /** Ce que la dernière image a dessiné */
@@ -145,6 +147,7 @@ beforeEach(() => {
 
 afterEach(() => {
   stopArcadeMode();
+  gameState.difficulty = undefined;
   jest.useRealTimers();
   jest.restoreAllMocks();
 });
@@ -286,5 +289,43 @@ describe('MultiInvaders : tout reste dans le plateau', () => {
     play(300);
     const box = ship();
     expect(box.x + box.width).toBeLessThanOrEqual(width);
+  });
+});
+
+describe('MultiInvaders : une vague met le temps de son niveau à descendre, sur tout écran', () => {
+  /** Secondes de jeu (images à 60 par seconde) avant que la vague n'arrive à la fusée */
+  function secondsToReachShip() {
+    let frames = 0;
+    while (recordOperationResult.mock.calls.length === 0 && frames < 10000) {
+      play(1);
+      frames++;
+    }
+    return frames / 60;
+  }
+
+  function startAt(level) {
+    stopArcadeMode();
+    recordOperationResult.mockClear();
+    gameState.difficulty = level;
+    startGame();
+  }
+
+  test.each([
+    ['debutant', 60],
+    ['moyen', 40],
+    ['difficile', 25],
+  ])('%s : %i s', (level, seconds) => {
+    startAt(level);
+    expect(secondsToReachShip()).toBeCloseTo(seconds, 0);
+  });
+
+  test('sur une tablette, plateau d’autres proportions : le même temps', () => {
+    const restore = useCoarsePointer();
+    try {
+      startAt('moyen');
+      expect(secondsToReachShip()).toBeCloseTo(40, 0);
+    } finally {
+      restore();
+    }
   });
 });
