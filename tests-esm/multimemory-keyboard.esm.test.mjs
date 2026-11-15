@@ -26,7 +26,7 @@ jest.unstable_mockModule('../js/arcade-session.js', () => ({
 const store = await import('../js/i18n-store.js');
 const pause = await import('../js/arcade-time.js');
 const { AudioManager } = await import('../js/core/audio.js');
-const { MemoryGame } = await import('../js/arcade-multimemory.js');
+const { MemoryGame, memoryWinBonus } = await import('../js/arcade-multimemory.js');
 
 const FR = JSON.parse(fs.readFileSync('assets/translations/fr.json', 'utf8'));
 const COLS = 4;
@@ -148,5 +148,45 @@ describe('MultiMemory au clavier', () => {
     jest.advanceTimersByTime(1000);
     expect(first.isFlipped || other.isFlipped).toBe(false);
     expect(status()).toBe(FR.arcade.multiMemory.mismatch);
+  });
+});
+
+describe('MultiMemory : le bonus d’une partie gagnée', () => {
+  /** Retourne au clavier deux cartes qui ne vont pas ensemble, puis attend qu’elles se retournent */
+  const missPair = () => {
+    const first = game.cards.find(card => !card.isMatched);
+    const other = game.cards.find(card => !card.isMatched && card.result !== first.result);
+    for (const card of [first, other]) {
+      moveTo(game.cards.indexOf(card));
+      press('Enter');
+    }
+    jest.advanceTimersByTime(1000);
+  };
+  const findAllPairs = () => {
+    for (let pairId = 0; pairId < game.pairs; pairId++) {
+      for (const card of game.cards.filter(c => c.pairId === pairId)) {
+        moveTo(game.cards.indexOf(card));
+        press('Enter');
+      }
+      jest.advanceTimersByTime(1000);
+    }
+    jest.advanceTimersByTime(2000);
+  };
+
+  test('60 points, moins 5 par paire ratée, jamais en dessous de 0', () => {
+    expect([0, 1, 2, 11, 12, 13, 40].map(memoryWinBonus)).toEqual([60, 55, 50, 5, 0, 0, 0]);
+  });
+
+  test('deux paires ratées avant la victoire : 10 points par paire et 50 de bonus', () => {
+    missPair();
+    missPair();
+    findAllPairs();
+    expect(showArcadeGameOver).toHaveBeenCalledWith(game.pairs * 10 + 50);
+  });
+
+  test('treize paires ratées : le bonus reste à 0, le score ne baisse pas', () => {
+    for (let miss = 0; miss < 13; miss++) missPair();
+    findAllPairs();
+    expect(showArcadeGameOver).toHaveBeenCalledWith(game.pairs * 10);
   });
 });

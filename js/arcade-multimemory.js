@@ -263,6 +263,21 @@ function isMemoryPair(card1, card2) {
   return card1.result === card2.result && card1.type !== card2.type;
 }
 
+/** Bonus d'une partie gagnée sans paire ratée */
+const WIN_BONUS = 60;
+/** Ce que chaque paire ratée retire au bonus */
+const MISSED_PAIR_COST = 5;
+
+/**
+ * Bonus d'une partie gagnée : 60 points, moins 5 par paire ratée, jamais en dessous de 0
+ * (le score ne baisse jamais)
+ * @param {number} missedPairs
+ * @returns {number}
+ */
+export function memoryWinBonus(missedPairs) {
+  return Math.max(0, WIN_BONUS - MISSED_PAIR_COST * missedPairs);
+}
+
 /**
  * Écart entre un point et une carte (0 dedans), sur l'axe le plus éloigné.
  * @param {{x: number, y: number, width: number, height: number}} card
@@ -429,7 +444,6 @@ export function startMemoryArcade() {
     difficulty: gameState.difficulty || 'moyen',
     tables: tablesForGame,
     excludedTables: globalExclusions,
-    lives: difficultySettings.lives || 3,
     pairs: difficultySettings.pairs,
     operator, // R4.3: Support multi-opérations (+, −, ×, ÷)
   });
@@ -524,7 +538,8 @@ class MemoryGame {
       this.pairs = this.getPairsCount();
     }
 
-    this.lives = options.lives || 3;
+    // Paires ratées : chacune retire 5 points au bonus de la victoire
+    this.missedPairs = 0;
 
     // État du jeu
     this.score = 0;
@@ -941,6 +956,7 @@ class MemoryGame {
 
   // Pas une paire, retourner les cartes
   onPairMissed(card1, card2) {
+    this.missedPairs++;
     for (const card of [card1, card2]) {
       card.isFlipped = false;
       card.showsResult = false;
@@ -957,9 +973,8 @@ class MemoryGame {
   gameWon() {
     this.isGameOver = true;
 
-    // Bonus pour avoir terminé avec des vies restantes
-    const livesBonus = this.lives * 20;
-    this.score += livesBonus;
+    // Bonus de la victoire, selon les paires ratées
+    this.score += memoryWinBonus(this.missedPairs);
 
     // Mettre à jour le score final
     try {
