@@ -25,18 +25,18 @@ costume et son nombre de fonds par avatar (`worlds`). Deux fêtes ne se chevauch
 (test) : un jour donné a au plus un thème de fête, sinon le thème ordinaire. Familles, une
 porte dans le code chacune, toutes lues par `costumed(nom, famille)` :
 
-| Famille       | Images                                                                                                                                | Porte                                       |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `heads`       | `assets/images/arcade/<avatar>_<fête>_head_avatar.png`                                                                                | `js/avatar-heads.js`                        |
-| `bodies`      | `assets/images/arcade/<avatar>_<fête>.png` (MultiMiam)                                                                                | `arcade-sprite-catalog`                     |
-| `monsters`    | `assets/images/arcade/monstre<NN>_right_<fête>.png` (155, tournés à droite)                                                           | `arcade-sprite-catalog`                     |
-| `ships`       | `assets/images/arcade/<fusée>_<fête>.png` (dix fusées)                                                                                | `arcade-sprite-catalog`                     |
-| `snake`       | habit du serpent (`js/multisnake-skins.js`), `<avatar>_snake_head_<fête>.png` (sa tête), `snake_apple_<fête>.png`, `herbe_<fête>.png` | `js/multisnake.js`, `arcade-sprite-catalog` |
-| `miam`        | `mur_<fête>.png`, `multimiam_reponse_<fête>.png` (sous chaque réponse)                                                                | `arcade-sprite-catalog`                     |
-| `logos`       | `logo_mode_<mode>_<fête>.png` (six), `logo_multi<jeu>_<fête>.png` (quatre)                                                            | `js/logos.js`                               |
-| `gifts`       | `cadeau_ferme_<fête>.png`, `cadeau_ouvert_<fête>.png` (mode Aventure)                                                                 | `js/adventure-gifts.js`                     |
-| `backgrounds` | `img/background_<avatar>_<fête>_001.png` à `_00<worlds>`                                                                              | `js/main-helpers.js`                        |
-| `hero`        | `assets/social/leapmultix-social-card-<fête>.webp`                                                                                    | `js/main-helpers.js`                        |
+| Famille       | Images                                                                                                                                                            | Porte                                       |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `heads`       | `assets/images/arcade/<avatar>_<fête>_head_avatar.png`                                                                                                            | `js/avatar-heads.js`                        |
+| `bodies`      | `assets/images/arcade/<avatar>_<fête>.png` (MultiMiam, héros de MultiPop et MultiGoal)                                                                            | `arcade-sprite-catalog`                     |
+| `monsters`    | `assets/images/arcade/monstre<NN>_right_<fête>.png` (155, tournés à droite)                                                                                       | `arcade-sprite-catalog`                     |
+| `ships`       | `assets/images/arcade/<fusée>_<fête>.png` (dix fusées)                                                                                                            | `arcade-sprite-catalog`                     |
+| `snake`       | habit du serpent (`js/multisnake-skins.js`), `<avatar>_snake_head_<fête>.png` (sa tête), `snake_apple_<fête>.png`, `herbe_<fête>.png` (aussi l'herbe de MultiPop) | `js/multisnake.js`, `arcade-sprite-catalog` |
+| `miam`        | `mur_<fête>.png`, `multimiam_reponse_<fête>.png` (sous chaque réponse)                                                                                            | `arcade-sprite-catalog`                     |
+| `logos`       | `logo_mode_<mode>_<fête>.png` (six), `logo_multi<jeu>_<fête>.png` (six)                                                                                           | `js/logos.js`                               |
+| `gifts`       | `cadeau_ferme_<fête>.png`, `cadeau_ouvert_<fête>.png` (mode Aventure)                                                                                             | `js/adventure-gifts.js`                     |
+| `backgrounds` | `img/background_<avatar>_<fête>_001.png` à `_00<worlds>`                                                                                                          | `js/main-helpers.js`                        |
+| `hero`        | `assets/social/leapmultix-social-card-<fête>.webp`                                                                                                                | `js/main-helpers.js`                        |
 
 Une nouvelle famille : une porte qui appelle `costumed()`, une ligne dans `FAMILY_FILES` de
 `tests-esm/season-images.esm.test.mjs`, une ligne dans la table ci-dessus. Le reste du jeu
@@ -129,7 +129,7 @@ consigne, mot pour mot. Noms des cibles :
 - `assets/images/arcade/logo_mode_<mode>_<fête>.png` pour les six logos des modes (réf. : le
   logo d'origine ; Chrono prend aussi le corps costumé du renard). Les cartes de calcul et le
   « ? » des logos sont à garder, écrits dans la consigne (« 7×8 », « 6×9 »…) ;
-- `assets/images/arcade/logo_multi<jeu>_<fête>.png` pour les quatre logos des jeux d'Arcade
+- `assets/images/arcade/logo_multi<jeu>_<fête>.png` pour les six logos des jeux d'Arcade
   (réf. : le logo d'origine + les héros costumés qu'il montre) : leur titre (« MULTI
   INVADERS »…) est le seul texte, à garder tel quel, écrit dans la consigne ;
 - `assets/images/arcade/cadeau_ferme_<fête>.png` puis `cadeau_ouvert_<fête>.png`, les trésors
@@ -218,7 +218,9 @@ costumées, `avatarsOf`).
 Batterie complète du CLAUDE.md, puis Chrome avec `?saison=<fête>` (`?saison=aucune` pour la
 retirer) : accueil (logos des modes), menu de l'Arcade (logos des jeux), « Qui joue ? »,
 Personnalisation (les deux thèmes, puis un thème ordinaire), tableau de bord, une partie,
-MultiMiam (murs, réponses), MultiSnake (serpent, nourriture, herbe), MultiInvaders (les deux fusées), deux sessions pour voir les fonds changer,
+MultiMiam (murs, réponses), MultiSnake (serpent, nourriture, herbe), MultiInvaders (les deux fusées),
+MultiPop (monstres, amis, herbe ; le maillet reste classique), MultiGoal (gardien, héros ; cage,
+cibles et ballon sont dessinés par le code), deux sessions pour voir les fonds changer,
 clavier, 390 px, contraste élevé par-dessus. Aucun test ne doit dépendre du jour : horloge
 simulée (`jest.useFakeTimers({ now })`).
 
