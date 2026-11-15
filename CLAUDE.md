@@ -56,8 +56,8 @@ Avant tout commit : `npm run format:check` (sinon `npm run format`), `npm run li
   `js/slides.js`) ; `js/main.js` démarre le jeu ; `js/bootstrap.js` branche les événements (aucun
   `onclick` dans le HTML) ; `js/game.js` garde l'état de la partie (`gameState`).
 - `js/core/` : services (`Storage`, `UserState`, `eventBus`, audio, statistiques) ; `js/modes/` :
-  les six modes ; `js/components/` : l'interface ; Arcade : `js/arcade-*.js`, `js/multimiam*.js`,
-  `js/multisnake.js`.
+  les six modes ; `js/components/` : l'interface ; Arcade (six jeux) : `js/arcade-*.js` et
+  `js/multi*.js`.
 - Conventions : modules ES, camelCase et PascalCase, composants reliés par `eventBus`, modes chargés
   à la demande par `js/lazy-loader.js` ; importer `utils-es6.js` ou `core/utils.js`, jamais
   `./utils.js`.
