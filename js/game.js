@@ -37,7 +37,7 @@ export const gameState = {
   wrongAnswers: {},
   streak: 0, // Compteur de bonnes réponses consécutives
   // Mode en cours : 'adventure', 'discovery', 'quiz', 'challenge', 'chrono', 'arcade', ou un
-  // mini-jeu ('invasion', 'multimiam', 'multimemory', 'multisnake')
+  // mini-jeu ('invasion', 'multimiam', 'multimemory', 'multisnake', 'multipop')
   gameMode: 'adventure',
   avatar: 'fox', // Avatar du joueur: 'fox', 'unicorn', 'dragon', 'panda', 'astronaut'
   nickname: '', // Surnom du joueur

@@ -33,6 +33,7 @@ async function stopActiveModes(targetSlideId = null) {
     ['multimiam', () => import('./arcade.js').then(m => m.stopArcadeMode?.())],
     ['multimemory', () => import('./arcade.js').then(m => m.stopArcadeMode?.())],
     ['multisnake', () => import('./arcade.js').then(m => m.stopArcadeMode?.())],
+    ['multipop', () => import('./arcade.js').then(m => m.stopArcadeMode?.())],
     ['quiz', () => import('./modes/QuizMode.js').then(m => m.stopQuizMode?.())],
     ['challenge', () => import('./modes/ChallengeMode.js').then(m => m.stopChallengeMode?.())],
     ['adventure', () => import('./modes/AdventureMode.js').then(m => m.stopAdventureMode?.())],

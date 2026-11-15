@@ -101,9 +101,10 @@ describe('tirage avec les tables à revoir', () => {
   });
 });
 
-describe('les quatre jeux tirent avec les tables à revoir', () => {
+describe('les cinq jeux tirent avec les tables à revoir', () => {
+  // arcade-answers.js : le tirage de MultiInvaders et de MultiPop
   test.each([
-    'js/arcade-invasion.js',
+    'js/arcade-answers.js',
     'js/arcade-multimemory.js',
     'js/multimiam-questions.js',
     'js/multisnake.js',

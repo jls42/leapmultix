@@ -33,7 +33,7 @@ const SCREENS = [
   ['ordinateur, densité 2', DESKTOP_2],
   ['téléphone, densité 3', PHONE_3],
 ];
-const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory'];
+const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory', 'multipop'];
 
 // Ce que dessinent les jeux, en coordonnées de la fenêtre (transformation du contexte et
 // affichage du canevas compris) et, pour les textes, en unités du jeu (gx, gy) : images,

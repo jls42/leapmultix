@@ -80,6 +80,14 @@ const CONTROL_LINES = new Map([
       ['touch', 'arcade.controls.multisnake.touch'],
     ],
   ],
+  [
+    'multipop',
+    [
+      ['keyboard', 'arcade.controls.multipop.keyboard'],
+      ['mouse', 'arcade.controls.multipop.mouse'],
+      ['touch', 'arcade.controls.multipop.touch'],
+    ],
+  ],
 ]);
 
 // Émoji placé en tête d'un ancien texte de traduction (🕹️, ⌨️…) : l'icône est dessinée
@@ -99,6 +107,7 @@ const TITRES_DE_JEU = {
   multimiam: () =>
     getTranslation('arcade.multiMiam.title') || getTranslation('arcade_pacman_title'),
   multimemory: () => getTranslation('arcade.multiMemory.title'),
+  multipop: () => getTranslation('arcade_pop_title'),
 };
 
 // Éléments de réglage d'une tuile : un clic dedans ne referme pas la tuile
@@ -118,6 +127,10 @@ const ARCADE_LOADERS = {
     demarrer: 'startMemoryArcade',
   },
   multisnake: { charger: () => import('../arcade-multisnake.js'), demarrer: 'startSnakeArcade' },
+  multipop: {
+    charger: () => import('../arcade-multipop.js'),
+    demarrer: 'startPopArcade',
+  },
 };
 
 /**
@@ -205,6 +218,13 @@ export class ArcadeMode extends GameMode {
         descKey: 'arcade_snake_desc',
         logo: 'logo_multisnake.png',
         startFunction: 'startSnakeArcade',
+      },
+      {
+        id: 'multipop',
+        nameKey: 'arcade_pop_title',
+        descKey: 'arcade_pop_desc',
+        logo: 'logo_multipop.png',
+        startFunction: 'startPopArcade',
       },
     ];
 
@@ -321,6 +341,8 @@ export class ArcadeMode extends GameMode {
         return getTranslation('arcade.multiMiam.description');
       case 'multimemory':
         return getTranslation('arcade.multiMemory.description');
+      case 'multipop':
+        return getTranslation('arcade_pop_desc');
       default:
         return '';
     }

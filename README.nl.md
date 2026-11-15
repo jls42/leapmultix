@@ -56,7 +56,7 @@
 
 ## Beschrijving
 
-LeapMultix is een interactieve educatieve webapplicatie voor kinderen van 6 tot 12 jaar waarmee ze de 4 rekenbewerkingen onder de knie kunnen krijgen: vermenigvuldigen (×), optellen (+), aftrekken (−) en delen (÷). De applicatie biedt **6 spelmodi** en **4 arcade-minigames** in een intuïtieve, toegankelijke en meertalige interface.
+LeapMultix is een interactieve educatieve webapplicatie voor kinderen van 6 tot 12 jaar waarmee ze de 4 rekenbewerkingen onder de knie kunnen krijgen: vermenigvuldigen (×), optellen (+), aftrekken (−) en delen (÷). De applicatie biedt **6 spelmodi** en **5 arcade-minigames** in een intuïtieve, toegankelijke en meertalige interface.
 
 **Ondersteuning voor meerdere bewerkingen:** alle modi ondersteunen de vier bewerkingen. De keuze wordt op het startscherm gemaakt en geldt voor het volledige traject.
 
@@ -76,16 +76,14 @@ LeapMultix is een interactieve educatieve webapplicatie voor kinderen van 6 tot 
 |           **Ontdekking** — elke gelijkheid wordt weergegeven met stippen, sprongen of tellen, samen met het tafeltrucje.            |    **Quiz** — de keuze van het kind blijft naast het juiste antwoord staan en de uitleg licht de berekening toe.    |
 |                               ![Uitdagingsmodus: aftellen en huidige reeks](docs/media/05-defi.webp)                                |     ![Avontuurmodus: kaart met tien niveaus, waarbij de volgende vergrendeld zijn](docs/media/06-aventure.webp)     |
 |       **Uitdaging** — race tegen de klok. Bij een fout stopt de timer tijdelijk zodat het juiste antwoord kan worden gelezen.       |                   **Avontuur** — tien niveaus die na elkaar worden geopend in ruil voor sterren.                    |
-|                          ![Tijdmodus: een aftrekrace, de timer en de voortgang](docs/media/14-chrono.webp)                          |                             ![Arcademenu: de vier minigames](docs/media/07-arcade.webp)                             |
-| **Tijd** — tien juiste antwoorden tegen de klok, met de gekozen bewerking; gemiste sommen komen op een lijst om opnieuw te oefenen. |         **Arcade** — vier minigames, met instelling van de moeilijkheidsgraad en keuze van het ruimteschip.         |
+|                          ![Tijdmodus: een aftrekrace, de timer en de voortgang](docs/media/14-chrono.webp)                          |                             ![Arcademenu: de vijf minigames](docs/media/07-arcade.webp)                             |
+| **Tijd** — tien juiste antwoorden tegen de klok, met de gekozen bewerking; gemiste sommen komen op een lijst om opnieuw te oefenen. |            **Arcade** — vijf minigames, met instelbare moeilijkheidsgraad en keuze van het ruimteschip.             |
 |     ![Dashboard: spellen, records en antwoorden van elke modus, uitgesplitst per bewerking](docs/media/08-tableau-de-bord.webp)     |             ![Personalisatie: avatars, thema's, toegankelijkheid](docs/media/09-personnalisation.webp)              |
 | **Dashboard** — spellen en records van elke modus, uitgesplitst per bewerking; sterren en te herhalen tafels voor vermenigvuldigen. | **Personalisatie** — avatars die met munten kunnen worden ontgrendeld, kleurenthema, tekstgrootte en hoog contrast. |
 
 ### De arcade-minigames
 
-Vier spellen die dezelfde vraag stellen — die boven het speelveld wordt
-weergegeven, samen met de resterende tijd en de levens — maar telkens een andere
-handeling vereisen.
+Vijf spellen die dezelfde vraag stellen — weergegeven boven het speelveld, met de resterende tijd en levens — maar telkens een andere actie vereisen.
 
 |                                                                                                                                              |                                                                                                        |
 | :------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
@@ -93,6 +91,8 @@ handeling vereisen.
 |          **MultiInvaders** — schiet op de foute antwoorden en spaar het juiste: daarachter zit een vriend die bevrijd moet worden.           |    **MultiMiam** — doorkruis het doolhof om het juiste resultaat te pakken en ontwijk de monsters.     |
 | ![MultiMemory: een raster met kaarten, waarvan er twee zijn omgedraaid en een berekening en een getal tonen](docs/media/12-multimemory.webp) |       ![MultiSnake: een slang en genummerde appels in een weide](docs/media/13-multisnake.webp)        |
 |                           **MultiMemory** — onthoud welke kaart het resultaat van de omgedraaide berekening bevat.                           |           **MultiSnake** — groei door de juiste getallen op te eten en vermijd alle andere.            |
+|    ![MultiPop: monsters komen uit hun holen, elk met een getal op hun bordje, en een vriend met een hartje](docs/media/15-multipop.webp)     |                                                                                                        |
+|        **MultiPop** — sla op het monster met het juiste antwoord voordat het weer in zijn hol verdwijnt, zonder de vrienden te raken.        |                                                                                                        |
 
 ## ✨ Functies
 
@@ -110,6 +110,7 @@ handeling vereisen.
 - **MultiMiam**: wiskundige Pac-Man - Verzamel de juiste antwoorden
 - **MultiMemory**: geheugenspel - Koppel bewerkingen aan resultaten
 - **MultiSnake**: educatieve Snake - Groei door de juiste getallen te eten
+- **MultiPop**: Reactiespel - Sla op het monster dat het juiste antwoord draagt, nooit op een vriend
 
 ### ➕ Ondersteuning voor meerdere bewerkingen
 
@@ -262,6 +263,7 @@ leapmultix/
 │   │                       #   arcade-time.js ; plein écran : arcade-fullscreen.js)
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
+│   ├── multipop-*.js       # Mini-jeu des monstres qui surgissent (moteur, rendu ; partie : arcade-multipop.js)
 │   ├── i18n.js, i18n-store.js                # Internationalisation
 │   ├── security-utils.js, error-handlers.js, logger.js
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
@@ -484,9 +486,9 @@ LeapMultix is een volledige PWA met offlineondersteuning en installatiemogelijkh
 
 **Service Worker** (`sw.js`):
 
-- Installatie: vooraf laden van alles wat het spel nodig heeft, met een lijst die op basis van de code
-  wordt gegenereerd door `scripts/precache-list.mjs` (`npm run precache:update`, gecontroleerd door de tests): na
-  een eerste bezoek starten de 6 modi en de 4 Arcade-spellen offline
+- Installatie: vooraf laden van alles wat het spel vereist, lijst gegenereerd uit de code
+  door `scripts/precache-list.mjs` (`npm run precache:update`, geverifieerd door de tests): na
+  een eerste bezoek starten de 6 modi en de 5 arcadespellen offline
 - Navigatie: Network-first, met een termijn van 4 s: daarna (een netwerk dat niet antwoordt: schoolwifi, captive portal) of offline wordt de gecachte spelpagina gebruikt (`offline.html` alleen voor een pagina die nooit is opgeslagen)
 - Afbeeldingen: Cache-first; offline wordt een ander formaat van dezelfde sprite of een andere achtergrond van dezelfde avatar gebruikt
 - Vertalingen: Stale-while-revalidate voor updates op de achtergrond

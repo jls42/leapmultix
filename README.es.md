@@ -56,7 +56,7 @@
 
 ## Descripción
 
-LeapMultix es una aplicación web educativa e interactiva destinada a niños de 6 a 12 años para dominar las 4 operaciones aritméticas: multiplicación (×), suma (+), resta (−) y división (÷). Ofrece **6 modos de juego** y **4 minijuegos arcade** en una interfaz intuitiva, accesible y multilingüe.
+LeapMultix es una aplicación web educativa e interactiva destinada a niños de 6 a 12 años para dominar las 4 operaciones aritméticas: multiplicación (×), suma (+), resta (−) y división (÷). Ofrece **6 modos de juego** y **5 minijuegos de arcade** en una interfaz intuitiva, accesible y multilingüe.
 
 **Compatibilidad con múltiples operaciones:** todos los modos admiten las cuatro operaciones. La elección se realiza en la pantalla de inicio y se mantiene durante todo el recorrido.
 
@@ -76,23 +76,25 @@ LeapMultix es una aplicación web educativa e interactiva destinada a niños de 
 |            **Descubrimiento** — cada igualdad se representa mediante puntos, saltos o conteo, junto con el truco de la tabla.             | **Quiz** — la elección del niño permanece visible junto a la respuesta correcta y la explicación detalla el cálculo. |
 |                                   ![Modo Desafío: cuenta atrás y racha actual](docs/media/05-defi.webp)                                   |        ![Modo Aventura: mapa de los diez niveles, con los siguientes bloqueados](docs/media/06-aventure.webp)        |
 |  **Desafío** — carrera contrarreloj. Cuando se produce un error, el cronómetro se detiene para dar tiempo a leer la respuesta correcta.   |                 **Aventura** — diez niveles que se desbloquean uno tras otro a cambio de estrellas.                  |
-|                       ![Modo Crono: una carrera de restas, el cronómetro y el progreso](docs/media/14-chrono.webp)                        |                           ![Menú Arcade: los cuatro minijuegos](docs/media/07-arcade.webp)                           |
-| **Crono** — diez respuestas correctas contrarreloj con la operación elegida; los cálculos fallados se añaden a una lista para repasarlos. |                    **Arcade** — cuatro minijuegos, con ajuste de dificultad y selección de nave.                     |
+|                       ![Modo Crono: una carrera de restas, el cronómetro y el progreso](docs/media/14-chrono.webp)                        |                           ![Menú Arcade: los cinco minijuegos](docs/media/07-arcade.webp)                            |
+| **Crono** — diez respuestas correctas contrarreloj con la operación elegida; los cálculos fallados se añaden a una lista para repasarlos. |                     **Arcade** — cinco minijuegos, con ajuste de dificultad y elección de nave.                      |
 |      ![Panel de control: partidas, récords y respuestas de cada modo, desglosados por operación](docs/media/08-tableau-de-bord.webp)      |               ![Personalización: avatares, temas y accesibilidad](docs/media/09-personnalisation.webp)               |
 |    **Panel de control** — partidas y récords de cada modo, desglosados por operación; estrellas y tablas de multiplicar para repasar.     |    **Personalización** — avatares desbloqueables con monedas, tema de colores, tamaño del texto y contraste alto.    |
 
 ### Los minijuegos arcade
 
-Cuatro juegos que plantean la misma pregunta —la que aparece sobre la zona de
-juego, junto con el tiempo restante y las vidas—, pero que requieren un gesto
-diferente en cada ocasión.
+Cinco juegos que plantean la misma pregunta —la mostrada sobre la zona de
+juego, con el tiempo restante y las vidas—, pero exigen cada vez una acción
+diferente.
 
-|                                                                                                                                   |                                                                                                            |
-| :-------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------: |
-|     ![MultiInvaders: monstruos con números y una nave en la parte inferior de la pantalla](docs/media/10-multiinvaders.webp)      | ![MultiMiam: un laberinto donde los puntos muestran las posibles respuestas](docs/media/11-multimiam.webp) |
-|  **MultiInvaders** — disparar a las respuestas incorrectas y dejar intacta la correcta: esconde a un amigo que hay que liberar.   |     **MultiMiam** — recorrer el laberinto para atrapar el resultado correcto evitando a los monstruos.     |
-| ![MultiMemory: una cuadrícula de cartas, con dos boca arriba que muestran un cálculo y un número](docs/media/12-multimemory.webp) |      ![MultiSnake: una serpiente y manzanas numeradas en una pradera](docs/media/13-multisnake.webp)       |
-|                         **MultiMemory** — recordar qué carta contiene el resultado del cálculo mostrado.                          |              **MultiSnake** — crecer comiendo los números correctos y evitar todos los demás.              |
+|                                                                                                                                              |                                                                                                            |
+| :------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------: |
+|           ![MultiInvaders: monstruos con números y una nave en la parte inferior de la pantalla](docs/media/10-multiinvaders.webp)           | ![MultiMiam: un laberinto donde los puntos muestran las posibles respuestas](docs/media/11-multimiam.webp) |
+|        **MultiInvaders** — disparar a las respuestas incorrectas y dejar intacta la correcta: esconde a un amigo que hay que liberar.        |     **MultiMiam** — recorrer el laberinto para atrapar el resultado correcto evitando a los monstruos.     |
+|      ![MultiMemory: una cuadrícula de cartas, con dos boca arriba que muestran un cálculo y un número](docs/media/12-multimemory.webp)       |      ![MultiSnake: una serpiente y manzanas numeradas en una pradera](docs/media/13-multisnake.webp)       |
+|                               **MultiMemory** — recordar qué carta contiene el resultado del cálculo mostrado.                               |              **MultiSnake** — crecer comiendo los números correctos y evitar todos los demás.              |
+| ![MultiPop: monstruos saliendo de sus agujeros, cada uno con un número en su cartel, y un amigo con un corazón](docs/media/15-multipop.webp) |                                                                                                            |
+|        **MultiPop** — golpear al monstruo que lleva la respuesta correcta antes de que regrese a su agujero, sin tocar a los amigos.         |                                                                                                            |
 
 ## ✨ Características
 
@@ -110,6 +112,7 @@ diferente en cada ocasión.
 - **MultiMiam**: Pac-Man matemático - Recoger las respuestas correctas
 - **MultiMemory**: juego de memoria - Emparejar operaciones y resultados
 - **MultiSnake**: Snake educativo - Crecer comiendo los números correctos
+- **MultiPop**: Juego de reflejos - Golpear al monstruo que lleva la respuesta correcta, nunca a un amigo
 
 ### ➕ Compatibilidad con múltiples operaciones
 
@@ -262,6 +265,7 @@ leapmultix/
 │   │                       #   arcade-time.js ; plein écran : arcade-fullscreen.js)
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
+│   ├── multipop-*.js       # Mini-jeu des monstres qui surgissent (moteur, rendu ; partie : arcade-multipop.js)
 │   ├── i18n.js, i18n-store.js                # Internationalisation
 │   ├── security-utils.js, error-handlers.js, logger.js
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
@@ -483,9 +487,9 @@ LeapMultix es una PWA completa con soporte sin conexión y posibilidad de instal
 
 **Service Worker** (`sw.js`):
 
-- Instalación: precarga de todo lo que necesita el juego, lista generada a partir del código
-  por `scripts/precache-list.mjs` (`npm run precache:update`, verificada mediante las pruebas): después
-  de una primera visita, los 6 modos y los 4 juegos de Arcade se inician sin conexión
+- Instalación: precarga de todo lo que el juego requiere, lista generada a partir del código
+  por `scripts/precache-list.mjs` (`npm run precache:update`, verificada por las pruebas): tras
+  una primera visita, los 6 modos y los 5 juegos de Arcade se inician sin conexión
 - Navegación: Network-first, con un plazo de 4 s: pasado ese plazo (una red que no responde: wifi escolar, portal cautivo) o sin conexión, la página del juego en caché (`offline.html` solamente para una página que nunca se haya guardado)
 - Imágenes: Cache-first; sin conexión, otro tamaño del mismo sprite u otro fondo del mismo avatar
 - Traducciones: Stale-while-revalidate para la actualización en segundo plano

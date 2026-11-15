@@ -51,7 +51,7 @@ beforeEach(async () => {
 describe('Menu de l’Arcade : images à la taille affichée', () => {
   test('logos des jeux : WebP 128, 256 et 512 pour 144 px affichés (120 sur téléphone)', () => {
     const logos = [...screen.querySelectorAll('img.arcade-logo')];
-    expect(logos).toHaveLength(4);
+    expect(logos).toHaveLength(5);
     for (const logo of logos) {
       const name = /logo_multi[a-z]+(?=-256\.webp$)/.exec(logo.getAttribute('src'))?.[0];
       expect(logo.getAttribute('src')).toBe(`${GENERATED}${name}-256.webp`);

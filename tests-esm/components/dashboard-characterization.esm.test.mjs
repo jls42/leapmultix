@@ -200,6 +200,7 @@ describe('Tableau de bord : Zoé, × seulement, depuis 2025', () => {
           ['Score moyen', '483'],
         ],
       ],
+      ['MultiPop', NO_SCORE],
     ]);
   });
 });
@@ -289,6 +290,7 @@ describe('Tableau de bord : Léa, × et +, surnom changé', () => {
           ['Score moyen', '200'],
         ],
       ],
+      ['MultiPop', NO_SCORE],
     ]);
   });
 });

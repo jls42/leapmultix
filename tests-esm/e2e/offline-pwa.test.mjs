@@ -1,7 +1,7 @@
 /**
  * Tests E2E - Hors ligne après une première visite (wifi d'école coupé) : le service worker a
  * tout gardé, sans qu'aucun mode n'ait été ouvert en ligne. Sans réseau, recharger affiche le
- * jeu (pas « Tu es hors ligne »), chacun des 6 modes et des 4 jeux d'Arcade démarre, et un
+ * jeu (pas « Tu es hors ligne »), chacun des 6 modes et des 5 jeux d'Arcade démarre, et un
  * bruitage se charge. Réseau coupé pour de bon : le serveur ferme toute connexion, et la
  * page se croit hors ligne (navigator.onLine).
  * @jest-environment node
@@ -60,7 +60,7 @@ const MODES = [
     },
   ],
 ];
-const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory'];
+const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory', 'multipop'];
 
 async function goHome(page) {
   await page.evaluate(() => {

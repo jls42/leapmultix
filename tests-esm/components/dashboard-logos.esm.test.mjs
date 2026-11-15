@@ -22,6 +22,7 @@ const LOGOS = [
   'logo_multimiam',
   'logo_multimemory',
   'logo_multisnake',
+  'logo_multipop',
 ];
 
 /** Candidats d'un srcset, dans l'ordre */

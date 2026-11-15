@@ -22,7 +22,18 @@ export const PROGRESS_HISTORY_LIMIT = 100;
 /** Données d'avant la v37 dont l'opération n'a pas été enregistrée */
 export const UNKNOWN_OPERATOR = '?';
 export const ANSWER_MODES = Object.freeze(['quiz', 'challenge', 'adventure', 'chrono']);
-export const ARCADE_GAMES = Object.freeze(['invasion', 'multimiam', 'multimemory', 'multisnake']);
+/**
+ * Jeux d'Arcade d'avant la v37 : seuls à avoir rangé des scores hors du profil
+ * (arcadeScores_<jeu>_<surnom>), relus une fois à l'amorçage
+ */
+export const LEGACY_ARCADE_GAMES = Object.freeze([
+  'invasion',
+  'multimiam',
+  'multimemory',
+  'multisnake',
+]);
+/** Jeux d'Arcade (MultiPop depuis la v75) */
+export const ARCADE_GAMES = Object.freeze([...LEGACY_ARCADE_GAMES, 'multipop']);
 export const CHALLENGE_DIFFICULTIES = Object.freeze(['easy', 'medium', 'hard']);
 
 const OPERATORS = new Set(['×', '+', '−', '÷']);
@@ -384,7 +395,7 @@ function seedChrono(stats, profile) {
 }
 
 function seedArcade(stats, readLegacyArcade, operator) {
-  for (const game of ARCADE_GAMES) {
+  for (const game of LEGACY_ARCADE_GAMES) {
     const top = cleanTop5(readLegacyArcade(game));
     if (top.length === 0) continue;
     const entry = entryOf(stats, game, operator);

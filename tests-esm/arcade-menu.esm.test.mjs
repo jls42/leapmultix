@@ -48,7 +48,7 @@ describe('Menu Arcade', () => {
 
   test('chaque tuile regroupe ses réglages et un « Jouer » sur la touche commune', () => {
     const cards = screen.querySelectorAll('.arcade-game-card');
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(5);
     cards.forEach(card => {
       const settings = card.querySelector('.arcade-game-settings');
       expect(settings).toBeTruthy();
@@ -64,7 +64,7 @@ describe('Menu Arcade', () => {
   test('la difficulté choisie est la même dans toutes les tuiles', () => {
     mode.setDifficulty('difficile', 'invasion');
     const selected = screen.querySelectorAll('.difficulty-btn.selected');
-    expect(selected).toHaveLength(4);
+    expect(selected).toHaveLength(5);
     selected.forEach(btn => {
       expect(btn.dataset.difficulty).toBe('difficile');
       expect(btn.getAttribute('aria-pressed')).toBe('true');
@@ -185,5 +185,16 @@ describe('Menu Arcade', () => {
   test('MultiMemory se joue aussi au clavier, et son aide le dit', () => {
     const lines = [...screen.querySelectorAll('#multimemory-arcade-card .arcade-control')];
     expect(lines.map(li => li.dataset.input)).toEqual(['keyboard', 'mouse', 'touch']);
+  });
+
+  test('MultiPop : sa tuile, son logo, sa description et ses trois commandes', () => {
+    const card = screen.querySelector('.arcade-game-card[data-game="multipop"]');
+    expect(card).not.toBeNull();
+    expect(card.querySelector('.arcade-game-toggle').textContent.trim()).toBe('arcade_pop_title');
+    expect(card.querySelector('.game-desc').textContent.trim()).toBe('arcade_pop_desc');
+    expect(card.querySelector('img.arcade-logo').getAttribute('src')).toContain('logo_multipop');
+    const lines = [...card.querySelectorAll('.arcade-control')];
+    expect(lines.map(li => li.dataset.input)).toEqual(['keyboard', 'mouse', 'touch']);
+    expect(card.querySelector('[data-action="arcade-play"]').dataset.game).toBe('multipop');
   });
 });

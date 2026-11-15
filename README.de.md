@@ -56,7 +56,7 @@
 
 ## Beschreibung
 
-LeapMultix ist eine interaktive Lern-Webanwendung für Kinder im Alter von 6 bis 12 Jahren, mit der sie die vier Grundrechenarten beherrschen lernen: Multiplikation (×), Addition (+), Subtraktion (−) und Division (÷). Sie bietet **6 Spielmodi** und **4 Arcade-Minispiele** in einer intuitiven, barrierefreien und mehrsprachigen Benutzeroberfläche.
+LeapMultix ist eine interaktive Lern-Webanwendung für Kinder im Alter von 6 bis 12 Jahren, mit der sie die vier Grundrechenarten beherrschen lernen: Multiplikation (×), Addition (+), Subtraktion (−) und Division (÷). Sie bietet **6 Spielmodi** und **5 Arcade-Minispiele** in einer intuitiven, barrierefreien und mehrsprachigen Benutzeroberfläche.
 
 **Unterstützung mehrerer Rechenarten:** Alle Modi unterstützen die vier Rechenarten. Die Auswahl erfolgt auf dem Startbildschirm und gilt für den gesamten Spielverlauf.
 
@@ -76,23 +76,25 @@ LeapMultix ist eine interaktive Lern-Webanwendung für Kinder im Alter von 6 bis
 |           **Entdeckung** — jede Gleichung wird als Punkte, Sprünge oder Zählvorgang dargestellt, zusammen mit dem Trick für die Reihe.            | **Quiz** — die Auswahl des Kindes bleibt neben der richtigen Antwort sichtbar, und die Erklärung erläutert die Berechnung. |
 |                                  ![Herausforderungsmodus: Countdown und aktuelle Serie](docs/media/05-defi.webp)                                  |              ![Abenteuermodus: Karte der zehn Level, die nächsten sind gesperrt](docs/media/06-aventure.webp)              |
 | **Herausforderung** — ein Wettlauf gegen die Zeit. Bei einem Fehler wird die Stoppuhr angehalten, damit die richtige Antwort gelesen werden kann. |                      **Abenteuer** — zehn Level, die nacheinander gegen Sterne freigeschaltet werden.                      |
-|                          ![Zeitmodus: ein Subtraktionslauf, die Stoppuhr und der Fortschritt](docs/media/14-chrono.webp)                          |                               ![Arcade-Menü: die vier Minispiele](docs/media/07-arcade.webp)                               |
-| **Zeitmodus** — zehn richtige Antworten gegen die Zeit in der ausgewählten Rechenart; falsch gelöste Aufgaben kommen auf eine Wiederholungsliste. |               **Arcade** — vier Minispiele mit einstellbarem Schwierigkeitsgrad und Auswahl des Raumschiffs.               |
+|                          ![Zeitmodus: ein Subtraktionslauf, die Stoppuhr und der Fortschritt](docs/media/14-chrono.webp)                          |                               ![Arcade-Menü: die fünf Minispiele](docs/media/07-arcade.webp)                               |
+| **Zeitmodus** — zehn richtige Antworten gegen die Zeit in der ausgewählten Rechenart; falsch gelöste Aufgaben kommen auf eine Wiederholungsliste. |                  **Arcade** — fünf Minispiele mit einstellbarem Schwierigkeitsgrad und Raumschiffauswahl.                  |
 |            ![Dashboard: Spiele, Rekorde und Antworten jedes Modus, nach Rechenart aufgeschlüsselt](docs/media/08-tableau-de-bord.webp)            |                ![Personalisierung: Avatare, Designs, Barrierefreiheit](docs/media/09-personnalisation.webp)                |
 |    **Dashboard** — Spiele und Rekorde jedes Modus, nach Rechenart aufgeschlüsselt; Sterne und zu wiederholende Reihen bei der Multiplikation.     |            **Personalisierung** — mit Münzen freischaltbare Avatare, Farbschema, Textgröße und hoher Kontrast.             |
 
 ### Die Arcade-Minispiele
 
-Vier Spiele, die dieselbe Frage stellen — sie wird oberhalb des Spielfelds
-zusammen mit der verbleibenden Zeit und den Leben angezeigt —, aber jeweils eine andere
-Aktion erfordern.
+Fünf Spiele, die dieselbe Frage stellen – diejenige, die über dem Spielbereich
+zusammen mit der verbleibenden Zeit und den Leben angezeigt wird –, aber jedes
+Mal eine andere Aktion erfordern.
 
-|                                                                                                                                                    |                                                                                                                       |
-| :------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------: |
-|                ![MultiInvaders: Monster mit Zahlen und ein Raumschiff am unteren Bildschirmrand](docs/media/10-multiinvaders.webp)                 |        ![MultiMiam: ein Labyrinth, in dem Punkte die möglichen Antworten tragen](docs/media/11-multimiam.webp)        |
-| **MultiInvaders** — auf die falschen Antworten schießen und die richtige verschonen: Hinter ihr verbirgt sich ein Freund, der befreit werden muss. | **MultiMiam** — durch das Labyrinth laufen, um das richtige Ergebnis einzusammeln, und dabei den Monstern ausweichen. |
-|         ![MultiMemory: ein Kartenraster, in dem zwei aufgedeckte Karten eine Aufgabe und eine Zahl zeigen](docs/media/12-multimemory.webp)         |           ![MultiSnake: eine Schlange und nummerierte Äpfel auf einer Wiese](docs/media/13-multisnake.webp)           |
-|                              **MultiMemory** — sich merken, welche Karte das Ergebnis der aufgedeckten Aufgabe trägt.                              |              **MultiSnake** — durch das Fressen der richtigen Zahlen wachsen und alle anderen vermeiden.              |
+|                                                                                                                                                         |                                                                                                                       |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------: |
+|                   ![MultiInvaders: Monster mit Zahlen und ein Raumschiff am unteren Bildschirmrand](docs/media/10-multiinvaders.webp)                   |        ![MultiMiam: ein Labyrinth, in dem Punkte die möglichen Antworten tragen](docs/media/11-multimiam.webp)        |
+|   **MultiInvaders** — auf die falschen Antworten schießen und die richtige verschonen: Hinter ihr verbirgt sich ein Freund, der befreit werden muss.    | **MultiMiam** — durch das Labyrinth laufen, um das richtige Ergebnis einzusammeln, und dabei den Monstern ausweichen. |
+|           ![MultiMemory: ein Kartenraster, in dem zwei aufgedeckte Karten eine Aufgabe und eine Zahl zeigen](docs/media/12-multimemory.webp)            |           ![MultiSnake: eine Schlange und nummerierte Äpfel auf einer Wiese](docs/media/13-multisnake.webp)           |
+|                                **MultiMemory** — sich merken, welche Karte das Ergebnis der aufgedeckten Aufgabe trägt.                                 |              **MultiSnake** — durch das Fressen der richtigen Zahlen wachsen und alle anderen vermeiden.              |
+| ![MultiPop: Monster tauchen aus ihren Löchern auf, jedes mit einer Zahl auf seinem Schild, dazu ein Freund mit einem Herz](docs/media/15-multipop.webp) |                                                                                                                       |
+|        **MultiPop** — das Monster mit der richtigen Antwort treffen, bevor es wieder in seinem Loch verschwindet, ohne die Freunde zu berühren.         |                                                                                                                       |
 
 ## ✨ Funktionen
 
@@ -110,6 +112,7 @@ Aktion erfordern.
 - **MultiMiam**: Mathematisches Pac-Man – die richtigen Antworten einsammeln
 - **MultiMemory**: Gedächtnisspiel – Rechenaufgaben und Ergebnisse einander zuordnen
 - **MultiSnake**: Lernspiel im Stil von Snake – durch das Fressen der richtigen Zahlen wachsen
+- **MultiPop**: Reaktionsspiel – Das Monster mit der richtigen Antwort treffen, niemals einen Freund
 
 ### ➕ Unterstützung mehrerer Rechenarten
 
@@ -262,6 +265,7 @@ leapmultix/
 │   │                       #   arcade-time.js ; plein écran : arcade-fullscreen.js)
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
+│   ├── multipop-*.js       # Mini-jeu des monstres qui surgissent (moteur, rendu ; partie : arcade-multipop.js)
 │   ├── i18n.js, i18n-store.js                # Internationalisation
 │   ├── security-utils.js, error-handlers.js, logger.js
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
@@ -483,9 +487,9 @@ LeapMultix ist eine vollständige PWA mit Offline-Unterstützung und Installatio
 
 **Service Worker** (`sw.js`):
 
-- Installation: Vorladen aller vom Spiel benötigten Ressourcen anhand einer aus dem Code
-  durch `scripts/precache-list.mjs` erzeugten Liste (`npm run precache:update`, durch Tests überprüft): Nach
-  einem ersten Besuch starten die 6 Modi und die 4 Arcade-Spiele offline
+- Installation: Vorabladen aller vom Spiel benötigten Ressourcen, Liste aus dem Code
+  durch `scripts/precache-list.mjs` erzeugt (`npm run precache:update`, durch Tests verifiziert): nach
+  einem ersten Besuch starten die 6 Modi und die 5 Arcade-Spiele offline
 - Navigation: Network-first mit einer Frist von 4 Sekunden: danach (ein Netz, das nicht antwortet: Schul-WLAN, Captive Portal) oder offline wird die zwischengespeicherte Spielseite verwendet (`offline.html` nur für eine Seite, die nie gespeichert wurde)
 - Bilder: Cache-first; offline eine andere Größe desselben Sprites oder ein anderer Hintergrund desselben Avatars
 - Übersetzungen: Stale-while-revalidate für Aktualisierungen im Hintergrund

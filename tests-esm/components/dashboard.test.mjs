@@ -36,7 +36,7 @@ describe('Dashboard.generateScoresSection (ESM)', () => {
     expect(subs.length).toBe(2);
     const arcadeGrid = section.querySelector('.arcade-games-grid');
     expect(arcadeGrid).toBeTruthy();
-    expect(arcadeGrid.querySelectorAll('.arcade-game-stats').length).toBe(4);
+    expect(arcadeGrid.querySelectorAll('.arcade-game-stats').length).toBe(5);
   });
 
   test('rangées à plat : logo décoratif, nom, faits « libellé → valeur » ou « Aucun score »', () => {
@@ -49,7 +49,7 @@ describe('Dashboard.generateScoresSection (ESM)', () => {
     Dashboard.generateScoresSection();
 
     const rows = document.querySelectorAll('.arcade-games-grid > li.score-row');
-    expect(rows.length).toBe(4);
+    expect(rows.length).toBe(5);
     for (const row of rows) {
       expect(row.querySelector('img.score-logo').getAttribute('alt')).toBe('');
       expect(row.querySelector('.score-row-title').textContent).toBeTruthy();
@@ -58,7 +58,7 @@ describe('Dashboard.generateScoresSection (ESM)', () => {
     // Les scores arcade de ce test sont rangés sous l'utilisateur « default »
     const facts = document.querySelectorAll('.arcade-games-grid .score-facts');
     const empties = document.querySelectorAll('.arcade-games-grid .score-empty');
-    expect(facts.length + empties.length).toBe(4);
+    expect(facts.length + empties.length).toBe(5);
     for (const empty of empties) expect(empty.textContent).toBe('Aucun score');
     for (const list of facts) {
       expect([...list.querySelectorAll('dt')].map(dt => dt.textContent)).toEqual([
