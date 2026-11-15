@@ -1,6 +1,7 @@
 /* eslint-env jest, node */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { AVATAR_IDS } from '../js/core/avatars.js';
 
 const helpers = await import('../js/main-helpers.js');
 const { UserManager } = await import('../js/userManager.js');
@@ -52,6 +53,35 @@ describe('Fond illustré : un monde fixe par avatar, sans rotation', () => {
 
     helpers.updateBackgroundByAvatar('licorne');
     expect(currentBackground()).toBe(unicornWorld);
+  });
+});
+
+describe('Mondes illustrés : chacun existe, en PNG et en WebP', () => {
+  const fileOf = (avatar, world, extension) =>
+    new URL(
+      `../img/background_${avatar}_${String(world).padStart(3, '0')}.${extension}`,
+      import.meta.url
+    );
+
+  test('chaque monde que le tirage peut donner a son image et sa variante WebP', () => {
+    const missing = AVATAR_IDS.flatMap(avatar =>
+      helpers
+        .avatarWorlds(avatar)
+        .flatMap(world => ['png', 'webp'].map(extension => fileOf(avatar, world, extension)))
+        .filter(file => !existsSync(file))
+        .map(file => file.pathname.split('/').pop())
+    );
+    expect(missing).toEqual([]);
+    for (const avatar of AVATAR_IDS) expect(helpers.avatarWorlds(avatar).length).toBeGreaterThan(0);
+  });
+
+  test('le renard tire parmi ses 17 mondes, dont les six dessinés en novembre 2026 (4 à 9)', () => {
+    expect(helpers.avatarWorlds('fox')).toEqual(Array.from({ length: 17 }, (_, i) => i + 1));
+  });
+
+  test('la liste rendue est une copie : la modifier ne change pas le tirage', () => {
+    helpers.avatarWorlds('fox').length = 0;
+    expect(helpers.avatarWorlds('fox').length).toBe(17);
   });
 });
 
