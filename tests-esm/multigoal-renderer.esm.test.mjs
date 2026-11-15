@@ -29,9 +29,12 @@ HTMLCanvasElement.prototype.getContext = () => null;
 const PORTRAIT = { width: 366, height: 576 };
 const LANDSCAPE = { width: 620, height: 250 };
 const DESKTOP = { width: 1182, height: 519 };
+// Téléphone tourné, barres du navigateur affichées (iPhone 13 : 750 × 342 utiles)
+const SHORT_LANDSCAPE = { width: 453, height: 186 };
 const BOXES = [
   ['téléphone en portrait', PORTRAIT],
   ['téléphone tourné', LANDSCAPE],
+  ['téléphone tourné, barres du navigateur affichées', SHORT_LANDSCAPE],
   ['ordinateur', DESKTOP],
 ];
 const COUNTS = [3, 4, 6];
@@ -124,7 +127,7 @@ describe('MultiGoal : la disposition du terrain', () => {
   test('un écran minuscule garde un plateau jouable', () => {
     const layout = goalLayout({ width: 80, height: 60 }, 6);
     expect(layout.width).toBe(200);
-    expect(layout.height).toBe(220);
+    expect(layout.height).toBe(150);
   });
 });
 
