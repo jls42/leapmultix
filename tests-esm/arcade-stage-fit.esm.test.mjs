@@ -385,6 +385,21 @@ describe('Le plateau suit l’écran', () => {
     }
   });
 
+  test('dessin rendu par le navigateur après une perte (contextrestored) : plateau refait', () => {
+    jest.useFakeTimers();
+    const { canvas } = renderStage();
+    const onChange = jest.fn();
+    const stop = watchArcadeViewport(canvas, onChange);
+    // Le contexte revient à son état par défaut : échelle et dessin sont à reposer
+    canvas.dispatchEvent(new Event('contextrestored'));
+    jest.advanceTimersByTime(50);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    stop();
+    canvas.dispatchEvent(new Event('contextrestored'));
+    jest.advanceTimersByTime(50);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
   test('une fois le jeu retiré de la page, plus aucun recalcul', () => {
     jest.useFakeTimers();
     const { canvas } = renderStage();
