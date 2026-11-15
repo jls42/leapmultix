@@ -8,50 +8,33 @@
  * en pause. L'horloge du jeu est avancée à la main (step).
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import fs from 'node:fs';
-import { fakeCanvasContext } from './helpers/touch-test-helpers.mjs';
-
-const showArcadeGameOver = jest.fn();
-// L'Arcade n'est « en cours » qu'une fois la partie lancée et sa boucle d'images arrêtée :
-// les tests avancent l'horloge à la main (step), les pastilles de points jouent leur son
-let arcadeActive = false;
-jest.unstable_mockModule('../js/arcade.js', () => ({
-  startArcadeTimer: jest.fn(),
-  stopArcadeMode: jest.fn(),
+import {
+  FR,
+  AudioManager,
+  gameState,
+  pause,
   showArcadeGameOver,
-  isArcadeActive: () => arcadeActive,
-}));
-const noteArcadePlay = jest.fn();
-jest.unstable_mockModule('../js/arcade-session.js', () => ({
   noteArcadePlay,
-  noteArcadeMiss: jest.fn(),
-}));
-const recordArcadeAnswer = jest.fn();
-const showSolvedQuestion = jest.fn();
-jest.unstable_mockModule('../js/arcade-learning.js', () => ({
   recordArcadeAnswer,
   showSolvedQuestion,
-  SOLVED_PAUSE_MS: 1500,
-  weakTablesFor: () => [],
-}));
+  setArcadeActive,
+  mountBoard,
+  placeBoard,
+  unmountBoard,
+  keyOn,
+  tapAt,
+  pauseArcadeGame,
+} from './helpers/board-game-bench.mjs';
 
-const store = await import('../js/i18n-store.js');
-const pause = await import('../js/arcade-time.js');
-const { AudioManager } = await import('../js/core/audio.js');
-const { InfoBar } = await import('../js/components/infoBar.js');
-const { gameState } = await import('../js/game.js');
 const { GoalGame, GOAL_POINTS, MISS_PENALTY } = await import('../js/arcade-multigoal.js');
 const { FLIGHT_MS, REPLAY_MS } = await import('../js/multigoal-engine.js');
 const { goalPoint } = await import('../js/multigoal-renderer.js');
-
-const FR = JSON.parse(fs.readFileSync('assets/translations/fr.json', 'utf8'));
 
 let game;
 let canvas;
 let playSound;
 
-const press = key =>
-  canvas.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+const press = key => keyOn(canvas, key);
 const status = () => document.querySelector('.multigoal-announcer[role="status"]').textContent;
 const banner = () => document.querySelector('.arcade-question').textContent;
 const shownScore = () => document.getElementById('multigoal-info-score').textContent;
@@ -69,16 +52,7 @@ function keeperAwayFrom(target) {
 
 /** Souris ou doigt au milieu d'une cible */
 function tapTarget(target, pointerType = 'mouse') {
-  const point = goalPoint(game.layout, target);
-  const event = new MouseEvent('pointerdown', {
-    clientX: point.x,
-    clientY: point.y,
-    bubbles: true,
-    cancelable: true,
-  });
-  Object.defineProperty(event, 'pointerType', { value: pointerType });
-  canvas.dispatchEvent(event);
-  return event;
+  return tapAt(canvas, goalPoint(game.layout, target), pointerType);
 }
 
 /** Le ballon arrive sur sa cible */
@@ -93,47 +67,21 @@ function scoreGoal() {
 }
 
 beforeEach(() => {
-  store.setTranslations(FR);
-  store.setCurrentLanguage('fr');
+  canvas = mountBoard('multigoal');
   // Le son n'est pas coupé : les sons demandés se comptent, sans rien jouer
   jest.spyOn(AudioManager, 'isMuted').mockReturnValue(false);
   playSound = jest.spyOn(AudioManager, 'playSound').mockImplementation(() => undefined);
-  HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();
-  document.body.replaceChildren(
-    InfoBar.createArcadeTemplateElement({
-      mode: 'multigoal',
-      canvasId: 'multigoal-canvas',
-      scoreId: 'multigoal-info-score',
-      showLives: false,
-      showScore: true,
-    })
-  );
-  canvas = document.getElementById('multigoal-canvas');
-  canvas.tabIndex = 0;
-  arcadeActive = false;
   game = new GoalGame(canvas.id, { difficulty: 'moyen', operator: '×' });
   game.start();
+  // La boucle d'images arrêtée, l'Arcade est « en cours » : les tests avancent l'horloge à
+  // la main (step) et les pastilles de points jouent leur son
   cancelAnimationFrame(game.frameId);
-  arcadeActive = true;
-  // Terrain affiché à sa taille de jeu, en haut à gauche de l'écran
-  jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
-    left: 0,
-    top: 0,
-    width: game.layout.width,
-    height: game.layout.height,
-    right: game.layout.width,
-    bottom: game.layout.height,
-  });
-  for (const mock of [noteArcadePlay, recordArcadeAnswer, showSolvedQuestion, playSound]) {
-    mock.mockClear();
-  }
+  setArcadeActive(true);
+  placeBoard(canvas, game.layout);
+  playSound.mockClear();
 });
 
-afterEach(() => {
-  game.cleanup();
-  pause.unmountArcadePause();
-  jest.restoreAllMocks();
-});
+afterEach(() => unmountBoard(game));
 
 describe('MultiGoal : une partie', () => {
   test('le calcul au bandeau ; les quatre cibles du niveau, une seule avec la bonne réponse', () => {
@@ -252,10 +200,7 @@ describe('MultiGoal : une partie', () => {
   });
 
   test('en pause : aucun tir, et le gardien ne bouge pas', () => {
-    const time = document.createElement('span');
-    document.body.appendChild(time);
-    pause.mountArcadePause(time);
-    pause.pauseArcade();
+    pauseArcadeGame();
     keeperAwayFrom(rightTarget());
     tapTarget(rightTarget());
     press('Enter');
@@ -293,9 +238,9 @@ describe('MultiGoal au clavier', () => {
     press('ArrowRight');
     expect(game.cursorSlot).toBe(1);
     // Le gardien est devant la deuxième colonne
-    expect(status()).toBe(`Cible 2 sur 4 : ${values.at(1)}, le gardien est devant`);
+    expect(status()).toBe(`Cible 2 sur 4\u00a0: ${values.at(1)}, le gardien est devant`);
     press('ArrowDown');
-    expect(status()).toBe(`Cible 3 sur 4 : ${values.at(2)}`);
+    expect(status()).toBe(`Cible 3 sur 4\u00a0: ${values.at(2)}`);
     press('ArrowRight');
     press('ArrowRight');
     expect(game.cursorSlot).toBe(0);

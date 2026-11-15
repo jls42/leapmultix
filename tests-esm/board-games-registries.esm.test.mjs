@@ -1,8 +1,8 @@
 /* eslint-env jest, node */
 /**
- * MultiPop est connu de chaque registre des jeux d'Arcade. Plusieurs retombent en silence
- * sur MultiInvaders pour un jeu inconnu : statistiques et meilleurs scores mis au compte d'un
- * autre jeu, partie laissée tourner en quittant l'écran.
+ * MultiPop et MultiGoal sont connus de chaque registre des jeux d'Arcade. Plusieurs retombent
+ * en silence sur MultiInvaders pour un jeu inconnu : statistiques et meilleurs scores mis au
+ * compte d'un autre jeu, partie laissée tourner en quittant l'écran.
  */
 import { describe, test, expect, jest } from '@jest/globals';
 
@@ -16,28 +16,32 @@ const { InfoBar } = await import('../js/components/infoBar.js');
 const { goToSlide } = await import('../js/slides.js');
 const { gameState } = await import('../js/game.js');
 
-describe('MultiPop dans les registres de l’Arcade', () => {
-  test('une partie compte pour MultiPop, pas pour MultiInvaders', () => {
-    expect(arcadeGameOf('multipop')).toBe('multipop');
+describe.each([
+  ['MultiPop', 'multipop', 'arcade_pop_title'],
+  ['MultiGoal', 'multigoal', 'arcade_goal_title'],
+])('%s dans les registres de l’Arcade', (_name, game, titleKey) => {
+  test('une partie compte pour ce jeu, pas pour MultiInvaders', () => {
+    expect(arcadeGameOf(game)).toBe(game);
   });
 
   test('statistiques et meilleurs scores : un jeu de plus, sans anciennes clés', () => {
-    expect(ARCADE_GAMES).toContain('multipop');
-    expect(LEGACY_ARCADE_GAMES).not.toContain('multipop');
+    expect(ARCADE_GAMES).toContain(game);
+    expect(LEGACY_ARCADE_GAMES).not.toContain(game);
   });
 
   test('son logo est parmi ceux des jeux (menu, tableau de bord, costumes de fête)', () => {
-    expect(ARCADE_LOGOS).toContain('logo_multipop.png');
+    expect(ARCADE_LOGOS).toContain(`logo_${game}.png`);
   });
 
   test('le bandeau du jeu : le score, et le titre du jeu pour les lecteurs d’écran', () => {
-    expect(InfoBar.templates.multipop).toEqual(['score']);
-    document.body.replaceChildren(InfoBar.createArcadeTemplateElement({ mode: 'multipop' }));
-    expect(document.querySelector('h1').dataset.translate).toBe('arcade_pop_title');
+    expect(InfoBar.templates[game]).toEqual(['score']);
+    document.body.replaceChildren(InfoBar.createArcadeTemplateElement({ mode: game }));
+    expect(document.querySelector('h1').dataset.translate).toBe(titleKey);
   });
 
   test('quitter l’écran pendant une partie l’arrête', async () => {
-    gameState.gameMode = 'multipop';
+    stopArcadeMode.mockClear();
+    gameState.gameMode = game;
     await goToSlide(1);
     expect(stopArcadeMode).toHaveBeenCalled();
   });

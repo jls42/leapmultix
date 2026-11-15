@@ -46,57 +46,26 @@ const CONTROL_ICON_PATHS = {
   ],
 };
 
-/** Lignes d'aide de chaque jeu : type de commande et clé de traduction */
-const CONTROL_LINES = new Map([
-  [
-    'invasion',
-    [
-      ['keyboard', 'arcade.controls.invasion.keyboard'],
-      ['mouse', 'arcade.controls.invasion.mouse'],
-      ['touch', 'arcade.controls.invasion.touch'],
-    ],
-  ],
-  [
-    'multimiam',
-    [
-      ['keyboard', 'arcade.controls.multimiam.keyboard'],
-      ['mouse', 'arcade.controls.multimiam.mouse'],
-      ['touch', 'arcade.controls.multimiam.touch'],
-    ],
-  ],
-  [
-    'multimemory',
-    [
-      ['keyboard', 'arcade.controls.multimemory.keyboard'],
-      ['mouse', 'arcade.controls.multimemory.mouse'],
-      ['touch', 'arcade.controls.multimemory.touch'],
-    ],
-  ],
-  [
-    'multisnake',
-    [
-      ['keyboard', 'arcade.controls.multisnake.keyboard'],
-      ['mouse', 'arcade.controls.multisnake.mouse'],
-      ['touch', 'arcade.controls.multisnake.touch'],
-    ],
-  ],
-  [
-    'multipop',
-    [
-      ['keyboard', 'arcade.controls.multipop.keyboard'],
-      ['mouse', 'arcade.controls.multipop.mouse'],
-      ['touch', 'arcade.controls.multipop.touch'],
-    ],
-  ],
-  [
-    'multigoal',
-    [
-      ['keyboard', 'arcade.controls.multigoal.keyboard'],
-      ['mouse', 'arcade.controls.multigoal.mouse'],
-      ['touch', 'arcade.controls.multigoal.touch'],
-    ],
-  ],
-]);
+// Les trois façons de jouer, dans l'ordre des lignes d'aide
+const CONTROL_INPUTS = ['keyboard', 'mouse', 'touch'];
+const GAMES_WITH_CONTROLS = [
+  'invasion',
+  'multimiam',
+  'multimemory',
+  'multisnake',
+  'multipop',
+  'multigoal',
+];
+/**
+ * Lignes d'aide de chaque jeu : type de commande et clé de traduction
+ * (arcade.controls.<jeu>.keyboard, .mouse et .touch)
+ */
+const CONTROL_LINES = new Map(
+  GAMES_WITH_CONTROLS.map(game => [
+    game,
+    CONTROL_INPUTS.map(input => [input, `arcade.controls.${game}.${input}`]),
+  ])
+);
 
 // Émoji placé en tête d'un ancien texte de traduction (🕹️, ⌨️…) : l'icône est dessinée
 const LEADING_EMOJI = /^(?:[\p{Extended_Pictographic}\uFE0F\u200D]+\s*)+/u;

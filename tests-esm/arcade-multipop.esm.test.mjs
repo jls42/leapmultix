@@ -8,49 +8,32 @@
  * compter comme une erreur de calcul. L'horloge du jeu est avancée à la main (step).
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import fs from 'node:fs';
-import { fakeCanvasContext } from './helpers/touch-test-helpers.mjs';
-
-const showArcadeGameOver = jest.fn();
-const startArcadeTimer = jest.fn();
-jest.unstable_mockModule('../js/arcade.js', () => ({
-  startArcadeTimer,
-  stopArcadeMode: jest.fn(),
+import {
+  FR,
+  AudioManager,
+  gameState,
   showArcadeGameOver,
-  isArcadeActive: () => false,
-}));
-const noteArcadePlay = jest.fn();
-jest.unstable_mockModule('../js/arcade-session.js', () => ({
   noteArcadePlay,
-  noteArcadeMiss: jest.fn(),
-}));
-const recordArcadeAnswer = jest.fn();
-const showSolvedQuestion = jest.fn();
-jest.unstable_mockModule('../js/arcade-learning.js', () => ({
   recordArcadeAnswer,
   showSolvedQuestion,
-  SOLVED_PAUSE_MS: 1500,
-  weakTablesFor: () => [],
-}));
+  mountBoard,
+  placeBoard,
+  unmountBoard,
+  keyOn,
+  tapAt,
+  pauseArcadeGame,
+} from './helpers/board-game-bench.mjs';
 
-const store = await import('../js/i18n-store.js');
-const pause = await import('../js/arcade-time.js');
-const { AudioManager } = await import('../js/core/audio.js');
-const { InfoBar } = await import('../js/components/infoBar.js');
-const { gameState } = await import('../js/game.js');
 const { PopGame, CORRECT_POINTS, MISS_PENALTY, FRIEND_PENALTY, MALLET_SWING_MS } = await import(
   '../js/arcade-multipop.js'
 );
 const { GAP_MS, RISE_MS } = await import('../js/multipop-engine.js');
 const { cellParts, cellRect } = await import('../js/multipop-renderer.js');
 
-const FR = JSON.parse(fs.readFileSync('assets/translations/fr.json', 'utf8'));
-
 let game;
 let canvas;
 
-const press = key =>
-  canvas.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+const press = key => keyOn(canvas, key);
 const status = () => document.querySelector('.multipop-announcer[role="status"]').textContent;
 const banner = () => document.querySelector('.arcade-question').textContent;
 const shownScore = () => document.getElementById('multipop-info-score').textContent;
@@ -72,53 +55,19 @@ function raiseMonsters() {
 /** Toucher le milieu de la pancarte d'un terrier */
 function tapHole(hole, pointerType = 'mouse') {
   const { sign } = cellParts(cellRect(game.layout, hole));
-  const event = new MouseEvent('pointerdown', {
-    clientX: sign.x + sign.width / 2,
-    clientY: sign.y + sign.height / 2,
-    bubbles: true,
-    cancelable: true,
-  });
-  Object.defineProperty(event, 'pointerType', { value: pointerType });
-  canvas.dispatchEvent(event);
-  return event;
+  return tapAt(canvas, { x: sign.x + sign.width / 2, y: sign.y + sign.height / 2 }, pointerType);
 }
 
 beforeEach(() => {
-  store.setTranslations(FR);
-  store.setCurrentLanguage('fr');
+  canvas = mountBoard('multipop');
   jest.spyOn(AudioManager, 'isMuted').mockReturnValue(true);
-  HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();
-  document.body.replaceChildren(
-    InfoBar.createArcadeTemplateElement({
-      mode: 'multipop',
-      canvasId: 'multipop-canvas',
-      scoreId: 'multipop-info-score',
-      showLives: false,
-      showScore: true,
-    })
-  );
-  canvas = document.getElementById('multipop-canvas');
-  canvas.tabIndex = 0;
   // Sans ami, sauf dans les tests qui le font sortir
   game = new PopGame(canvas.id, { difficulty: 'moyen', operator: '×', friendChance: 0 });
   game.start();
-  // Plateau affiché à sa taille de jeu, en haut à gauche de l'écran
-  jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
-    left: 0,
-    top: 0,
-    width: game.layout.width,
-    height: game.layout.height,
-    right: game.layout.width,
-    bottom: game.layout.height,
-  });
-  for (const mock of [noteArcadePlay, recordArcadeAnswer, showSolvedQuestion]) mock.mockClear();
+  placeBoard(canvas, game.layout);
 });
 
-afterEach(() => {
-  game.cleanup();
-  pause.unmountArcadePause();
-  jest.restoreAllMocks();
-});
+afterEach(() => unmountBoard(game));
 
 describe('MultiPop : une partie', () => {
   test('le calcul au bandeau ; les monstres du niveau sortent après les terriers vides', () => {
@@ -220,10 +169,7 @@ describe('MultiPop : une partie', () => {
 
   test('en pause : aucun monstre ne se tape, et ils ne bougent pas', () => {
     raiseMonsters();
-    const time = document.createElement('span');
-    document.body.appendChild(time);
-    pause.mountArcadePause(time);
-    pause.pauseArcade();
+    pauseArcadeGame();
     tapHole(rightMonster().hole);
     press('Enter');
     expect(game.score).toBe(0);
@@ -442,10 +388,7 @@ describe('MultiPop : le maillet', () => {
 
   test('en pause : il ne frappe pas', () => {
     raiseMonsters();
-    const time = document.createElement('span');
-    document.body.appendChild(time);
-    pause.mountArcadePause(time);
-    pause.pauseArcade();
+    pauseArcadeGame();
     tapHole(rightMonster().hole);
     press('Enter');
     expect(game.malletView()).toBeNull();
