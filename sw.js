@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v67'; // bump to trigger client update
+const VERSION = 'v68'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -148,6 +148,7 @@ const PRECACHE_CORE = [
   '/js/arcade-common.js',
   '/js/arcade-fullscreen.js',
   '/js/arcade-invasion.js',
+  '/js/arcade-learning.js',
   '/js/arcade-message.js',
   '/js/arcade-multimemory.js',
   '/js/arcade-multimiam.js',
@@ -219,6 +220,7 @@ const PRECACHE_CORE = [
   '/js/core/utils.js',
   '/js/core/voice-activation.js',
   '/js/core/voice-index.js',
+  '/js/core/wrong-answers.js',
   '/js/difficulty.js',
   '/js/error-handlers.js',
   '/js/game-cleanup.js',

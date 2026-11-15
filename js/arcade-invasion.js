@@ -35,7 +35,8 @@ import {
   stopArcadeMode,
   isArcadeActive,
 } from './arcade.js';
-import { recordOperationResult } from './core/operation-stats.js';
+import { recordArcadeAnswer, weakTablesFor } from './arcade-learning.js';
+import { plausibleWrongAnswers } from './core/wrong-answers.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { isArcadePaused, isKeyFromButton } from './arcade-time.js';
 import {
@@ -339,8 +340,46 @@ export function drawInvasionQuestion(operator, settings, excludeTables = []) {
     difficulty: settings.questionDifficulty,
     tables: isMultiplication ? settings.tables : undefined,
     excludeTables: isMultiplication ? excludeTables : [],
-    distractorDistance: settings.distractorDistance,
+    // Tables à revoir du joueur : tirées plus souvent (jamais une table retirée)
+    weakTables: weakTablesFor(operator),
   });
+}
+
+// Part des mauvaises réponses proches de la bonne, selon le niveau (difficulty.js) :
+// éloignées en Débutant (la bonne se repère), moitié-moitié en Moyen, proches en Difficile
+const CLOSE_WRONG_SHARE = new Map([
+  ['far', 0],
+  ['medium', 0.5],
+  ['close', 1],
+]);
+// Tirages au plus pour trouver les mauvaises réponses éloignées d'une vague
+const MAX_FAR_DRAWS = 40;
+
+/**
+ * Nombres portés par les monstres d'une vague : la bonne réponse et des mauvaises, proches
+ * (erreurs plausibles d'un enfant : la table à côté, un de plus…) ou éloignées (résultats
+ * d'autres calculs du niveau), selon le niveau ; toutes différentes, jamais négatives
+ * @param {{a: number, b: number, answer: number}} question
+ * @param {string} operator
+ * @param {{distractorDistance?: string}} settings - réglages du niveau
+ * @param {number} [count]
+ * @returns {number[]} Mélangés
+ */
+export function waveAnswers(question, operator, settings, count = ALIENS_PER_WAVE) {
+  const answers = [question.answer];
+  const add = value => {
+    if (Number.isFinite(value) && value >= 0 && !answers.includes(value)) answers.push(value);
+  };
+  const share = CLOSE_WRONG_SHARE.get(settings.distractorDistance) ?? 0;
+  const near = { answer: question.answer, operator, a: question.a, b: question.b };
+  plausibleWrongAnswers(near, Math.round((count - 1) * share)).forEach(add);
+  for (let draw = 0; answers.length < count && draw < MAX_FAR_DRAWS; draw++) {
+    add(drawInvasionQuestion(operator, settings).answer);
+  }
+  // Niveau aux résultats peu variés : toujours une vague complète, de voisins proches
+  plausibleWrongAnswers(near, count).forEach(add);
+  for (let next = question.answer + 1; answers.length < count; next++) add(next);
+  return shuffleInPlace(answers.slice(0, count));
 }
 
 // Vitesse d'un tir : unités du plateau par image à 60 images/s
@@ -633,7 +672,7 @@ export function startMultiplicationInvasion() {
   function countWave(correct) {
     if (waveCounted) return;
     waveCounted = true;
-    recordOperationResult(operator, currentProblem.a, currentProblem.b, correct);
+    recordArcadeAnswer(operator, currentProblem.a, currentProblem.b, correct);
   }
 
   // Variables globales pour la taille et l'espacement des aliens
@@ -723,21 +762,13 @@ export function startMultiplicationInvasion() {
     currentProblem.a = q.a;
     currentProblem.b = q.b;
     waveCounted = false;
-    const correctAnswer = q.answer;
     aliens = [];
     const nbAliens = ALIENS_PER_WAVE;
     layoutAliens(nbAliens);
     const spritesForWave = takeWaveSprites(nbAliens);
     const totalWidth = nbAliens * alienWidth + (nbAliens - 1) * spacing;
     const startX = (displayWidth - totalWidth) / 2;
-    const options = [correctAnswer];
-    while (options.length < nbAliens) {
-      // Génération des distracteurs selon le niveau de difficulté (Cascade 2025)
-      // Réutilisation des paramètres de difficulté + support multi-opérations
-      const wrong = drawInvasionQuestion(operator, difficultySettings).answer;
-      if (!options.includes(wrong)) options.push(wrong);
-    }
-    shuffleInPlace(options);
+    const options = waveAnswers(q, operator, difficultySettings, nbAliens);
     for (let i = 0; i < nbAliens; i++) {
       // Position verticale de départ ajustée selon le device
       // Sur mobile, commencer plus haut pour donner plus de temps

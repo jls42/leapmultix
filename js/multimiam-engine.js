@@ -11,7 +11,7 @@
 import { showArcadeMessage, showArcadePoints } from './utils-es6.js';
 import { showArcadePenalty } from './arcade-points.js';
 import { chance, pickRandom } from './core/random.js';
-import { recordOperationResult } from './core/operation-stats.js';
+import { recordArcadeAnswer } from './arcade-learning.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { mazeToScreen } from './multimiam-layout.js';
 import { isArcadePaused } from './arcade-time.js';
@@ -110,7 +110,7 @@ function cellPoint(ctx, cell) {
 function noteEatenAnswer(game, answer) {
   noteArcadePlay();
   const { num1, num2 } = game.currentOperation ?? {};
-  recordOperationResult(game.operator, num1, num2, Boolean(answer.isCorrect));
+  recordArcadeAnswer(game.operator, num1, num2, Boolean(answer.isCorrect));
 }
 
 /**

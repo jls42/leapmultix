@@ -25,7 +25,10 @@ jest.unstable_mockModule('../js/arcade-points.js', () => ({ showArcadePenalty })
 jest.unstable_mockModule('../js/game-cleanup.js', () => ({ cleanupGameResources: jest.fn() }));
 jest.unstable_mockModule('../js/components/infoBar.js', () => ({ InfoBar: { update: updateBar } }));
 jest.unstable_mockModule('../js/core/operation-stats.js', () => ({ recordOperationResult }));
-jest.unstable_mockModule('../js/arcade-session.js', () => ({ noteArcadePlay }));
+jest.unstable_mockModule('../js/arcade-session.js', () => ({
+  noteArcadePlay,
+  noteArcadeMiss: jest.fn(),
+}));
 jest.unstable_mockModule('../js/userManager.js', () => ({
   UserManager: { getCurrentUser: () => null },
 }));

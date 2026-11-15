@@ -46,7 +46,10 @@ jest.unstable_mockModule('../js/core/tablePreferences.js', () => ({
 jest.unstable_mockModule('../js/core/operation-stats.js', () => ({
   recordOperationResult: jest.fn(),
 }));
-jest.unstable_mockModule('../js/arcade-session.js', () => ({ noteArcadePlay: jest.fn() }));
+jest.unstable_mockModule('../js/arcade-session.js', () => ({
+  noteArcadePlay: jest.fn(),
+  noteArcadeMiss: jest.fn(),
+}));
 // Gabarit commun : bandeau, puis zone de jeu (canevas, « Abandonner »)
 jest.unstable_mockModule('../js/components/infoBar.js', () => ({
   InfoBar: {

@@ -41,6 +41,7 @@ import { UserManager } from './userManager.js';
 import { UserState } from './core/userState.js';
 import { randomInt, shuffleInPlace } from './core/random.js';
 import { isArcadePaused, isNoTimeLimit } from './arcade-time.js';
+import { weakTablesFor } from './arcade-learning.js';
 // Dépend des helpers ESM (plus d'assignations window.*)
 
 const FULL_TABLE_SET = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -187,6 +188,8 @@ export function drawMemoryCalculation({ operator, level, tables, excludedTables 
     difficulty: getDifficultySettings(level).questionDifficulty,
     tables: isMultiplication ? tables : undefined,
     excludeTables: isMultiplication ? excludedTables : [],
+    // Tables à revoir du joueur : tirées plus souvent (jamais une table retirée)
+    weakTables: weakTablesFor(operator),
     minNum: 1,
     maxNum: 10,
   });
