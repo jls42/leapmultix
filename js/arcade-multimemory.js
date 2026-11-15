@@ -258,6 +258,11 @@ function createMemoryCard(calculation, pairId, type, monsterIndex) {
   };
 }
 
+/** Une paire : le même résultat, sur une carte calcul et une carte résultat */
+function isMemoryPair(card1, card2) {
+  return card1.result === card2.result && card1.type !== card2.type;
+}
+
 /**
  * Écart entre un point et une carte (0 dedans), sur l'axe le plus éloigné.
  * @param {{x: number, y: number, width: number, height: number}} card
@@ -885,15 +890,18 @@ class MemoryGame {
     const [card1, card2] = this.flippedCards;
     // Deux cartes retournées : la partie est jouée (tableau de bord)
     noteArcadePlay();
+    // Pas une paire : pendant cette seconde, chaque carte calcul montre aussi son résultat
+    if (!isMemoryPair(card1, card2)) {
+      for (const card of this.flippedCards) card.showsResult = card.type === 'operation';
+    }
 
     // Attendre un peu pour montrer les deux cartes
     const timer = setTimeout(() => this.resolvePair(card1, card2), 1000);
     this.timers.push(timer);
   }
 
-  // Une paire : le même résultat, sur une carte calcul et une carte résultat
   resolvePair(card1, card2) {
-    if (card1.result === card2.result && card1.type !== card2.type) {
+    if (isMemoryPair(card1, card2)) {
       this.onPairFound(card1, card2);
     } else {
       this.onPairMissed(card1, card2);
@@ -933,8 +941,10 @@ class MemoryGame {
 
   // Pas une paire, retourner les cartes
   onPairMissed(card1, card2) {
-    card1.isFlipped = false;
-    card2.isFlipped = false;
+    for (const card of [card1, card2]) {
+      card.isFlipped = false;
+      card.showsResult = false;
+    }
 
     // Son d'erreur adouci par le gestionnaire audio, comme dans tous les modes
     AudioManager.playSound('bad');
@@ -1167,19 +1177,34 @@ class MemoryGame {
     }
   }
 
+  // Face d'une carte : son calcul ou son résultat ; sous le calcul d'une paire ratée, son
+  // résultat (« = 30 ») pendant la seconde où la paire reste visible
   drawCardFront(card, cardX, cardY, cardWidth, cardHeight) {
     // Une carte montrée : sa place compte désormais pour l'enfant, la disposition est fixée
     this.cardsSeen = true;
     this.ctx.fillStyle = '#FFFFFF';
-    let fontSize = Math.floor(card.type === 'operation' ? cardHeight / 3 : cardHeight / 2.5);
+    const lines = card.showsResult ? [card.content, `= ${card.result}`] : [card.content];
+    const largest = card.type === 'operation' ? cardHeight / 3 : cardHeight / 2.5;
+    const fontSize = this.fitCardFont(lines, largest, cardWidth * 0.8);
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    const lineHeight = fontSize * 1.15;
+    const firstY = cardY + cardHeight / 2 - ((lines.length - 1) * lineHeight) / 2;
+    lines.forEach((line, i) => {
+      this.ctx.fillText(line, cardX + cardWidth / 2, firstY + i * lineHeight);
+    });
+  }
+
+  // Police la plus grande (au plus `largest`, au moins 10) où chaque ligne tient en largeur
+  fitCardFont(lines, largest, maxWidth) {
+    let fontSize = Math.floor(largest);
     this.ctx.font = getCanvasFont(fontSize);
-    while (this.ctx.measureText(card.content).width > cardWidth * 0.8 && fontSize > 10) {
+    const widest = () => Math.max(...lines.map(line => this.ctx.measureText(line).width));
+    while (widest() > maxWidth && fontSize > 10) {
       fontSize--;
       this.ctx.font = getCanvasFont(fontSize);
     }
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(card.content, cardX + cardWidth / 2, cardY + cardHeight / 2);
+    return fontSize;
   }
 
   /**

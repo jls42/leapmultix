@@ -63,6 +63,18 @@ describe('MultiMiam : une réponse croquée compte', () => {
     expect(game.score).toBe(100);
   });
 
+  test('une bonne réponse : le calcul complet au bandeau, les réponses retirées, rien de neuf', () => {
+    const banner = document.createElement('span');
+    banner.className = 'arcade-question';
+    document.body.replaceChildren(banner);
+    const game = boardWith({ x: 1, y: 0, value: 8, isCorrect: true }, 1);
+    game.answerPositions.push({ x: 2, y: 0, value: 9, isCorrect: false });
+    game.checkAnswerCollision();
+    expect(banner.textContent).toBe('15\u00a0−\u00a07\u00a0=\u00a08');
+    expect(game.answerPositions).toEqual([]);
+    expect(game.generateOperation).not.toHaveBeenCalled();
+  });
+
   test('une mauvaise réponse : partie jouée, calcul compté faux, réponse retirée', () => {
     const game = boardWith({ x: 1, y: 0, value: 9, isCorrect: false }, 1);
     game.checkAnswerCollision();

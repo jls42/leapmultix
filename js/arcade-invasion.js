@@ -35,7 +35,12 @@ import {
   stopArcadeMode,
   isArcadeActive,
 } from './arcade.js';
-import { recordArcadeAnswer, weakTablesFor } from './arcade-learning.js';
+import {
+  recordArcadeAnswer,
+  SOLVED_PAUSE_MS,
+  solvedCalculation,
+  weakTablesFor,
+} from './arcade-learning.js';
 import { plausibleWrongAnswers } from './core/wrong-answers.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { isArcadePaused, isKeyFromButton } from './arcade-time.js';
@@ -566,8 +571,7 @@ export function startMultiplicationInvasion() {
   const difficultySettings = setupGameUI();
 
   // Récupérer l'opérateur sélectionné (support multi-opérations R4)
-  const userData = UserState.getCurrentUserData();
-  const operator = userData.preferredOperator || '×';
+  const operator = UserState.getCurrentUserData().preferredOperator || '×';
 
   // Variables that are reassigned
   let {
@@ -792,16 +796,27 @@ export function startMultiplicationInvasion() {
     updateMultiplicationDisplay();
   }
 
+  // Bandeau : la question pendant la vague, jamais sa réponse ; le calcul complet
+  // (« 7 × 5 = 35 ») pendant la pause qui suit la vague
   function updateMultiplicationDisplay() {
-    // Met à jour la question dans la structure responsive (score/question centrée)
     const questionSpan = document.querySelector('.arcade-mobile-top .arcade-question');
-    if (questionSpan) {
-      if (currentProblem?.a !== undefined && currentProblem.b !== undefined) {
-        questionSpan.textContent = `${currentProblem.a} ${operator} ${currentProblem.b} = ?`;
-      } else {
-        questionSpan.textContent = '';
-      }
-    }
+    if (!questionSpan) return;
+    const { a, b } = currentProblem;
+    questionSpan.textContent = showingAvatar
+      ? solvedCalculation({ operator, a, b })
+      : `${a} ${operator} ${b} = ?`;
+  }
+
+  // Fin de vague : le calcul complet reste au bandeau, puis la vague suivante arrive (minuterie
+  // gardée pour être annulée si la partie s'arrête avant : cleanupInvasionGame)
+  function nextWaveAfter(ms) {
+    showingAvatar = true;
+    updateMultiplicationDisplay();
+    gameVars.arcadeAvatarTimeoutId = setTimeout(() => {
+      showingAvatar = false;
+      aliens.length = 0;
+      generateProblem();
+    }, ms);
   }
 
   function shoot() {
@@ -911,7 +926,11 @@ export function startMultiplicationInvasion() {
       refreshInfoBar();
       // Une vie perdue n'est pas une faute grave : ton neutre, jamais rouge
       showArcadeMessage('arcade_life_lost', 'neutral');
-      if (lives > 0) generateProblem();
+      // Plateau vide le temps de lire le calcul complet (aucun ami à montrer)
+      if (lives > 0) {
+        avatarImg = null;
+        nextWaveAfter(SOLVED_PAUSE_MS);
+      }
     }
   }
 
@@ -920,7 +939,6 @@ export function startMultiplicationInvasion() {
 
     if (aliens.length === 1 && aliens[0].value === correctAnswer && !showingAvatar && lives > 0) {
       countWave(true);
-      showingAvatar = true;
 
       // L'ami libéré : un avatar autre que celui du joueur (image chargée d'avance)
       avatarImg = spriteFor(avatarSpec(pickRandom(friendAvatars())));
@@ -928,15 +946,9 @@ export function startMultiplicationInvasion() {
       avatarY = aliens[0].y;
       avatarW = alienWidth;
       avatarDisplayTime = 0;
-
-      // Gardée pour être annulée si la partie s'arrête avant (cleanupInvasionGame)
-      gameVars.arcadeAvatarTimeoutId = setTimeout(() => {
-        showingAvatar = false;
-        aliens.length = 0;
-        wave++;
-        currentAlienSpeed = baseAlienSpeed + (wave - 1) * alienSpeedIncrement;
-        generateProblem();
-      }, 1200);
+      wave++;
+      currentAlienSpeed = baseAlienSpeed + (wave - 1) * alienSpeedIncrement;
+      nextWaveAfter(1200);
     }
   }
 
