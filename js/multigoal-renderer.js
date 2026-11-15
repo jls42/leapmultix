@@ -14,8 +14,9 @@ export const GOAL_RATIO = 2;
 // Part de la hauteur du plateau que la cage peut prendre, et marge autour d'elle
 const GOAL_HEIGHT_SHARE = 0.6;
 const BOARD_MARGIN = 10;
-// Plus petit plateau dessiné, même sur un écran minuscule
-const MIN_BOARD = Object.freeze({ width: 200, height: 220 });
+// Plus petit plateau dessiné, même sur un écran minuscule ; sous la place que laisse un
+// téléphone tourné dont le navigateur montre ses barres (186 px de haut), sinon la page défile
+const MIN_BOARD = Object.freeze({ width: 200, height: 150 });
 // Rayon d'une cible, en parts de sa case ; un doigt qui tombe un peu à côté la touche quand même
 const TARGET_SHARE = 0.4;
 const TOUCH_SLACK = 1.25;

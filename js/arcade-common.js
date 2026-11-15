@@ -286,17 +286,28 @@ export function prepareArcadeStage(canvas) {
   return stage;
 }
 
+/** Classe du bandeau qui garde une place au bouton plein écran (css/arcade.css) */
+const FULLSCREEN_PLACE_CLASS = 'has-fullscreen';
+
 /**
  * Bouton plein écran dans le bandeau de la partie (js/arcade-fullscreen.js). Sans l'API
  * (iPhone, cadre sans permission), rien n'est chargé et aucun bouton n'apparaît.
+ * Le bouton arrive après le calcul du plateau, le temps de charger son module : le bandeau
+ * lui garde sa place tout de suite, sinon il grandirait ensuite et la page défilerait.
  * @param {HTMLElement} stage - Zone de jeu
  */
 function offerFullscreen(stage) {
   if (!document.fullscreenEnabled) return;
+  const banner = stage.parentElement?.querySelector('.arcade-mult-display');
+  banner?.classList.add(FULLSCREEN_PLACE_CLASS);
   import('./arcade-fullscreen.js')
     .then(module => {
-      // Le bouton arrive après le calcul du plateau : la place est revue s'il l'a changée
-      if (module.mountArcadeFullscreenButton(stage)) notifyStageChange(stage);
+      // Pas de bouton en fin de compte : la place gardée est rendue
+      if (!module.mountArcadeFullscreenButton(stage)) {
+        banner?.classList.remove(FULLSCREEN_PLACE_CLASS);
+      }
+      // La place du plateau est revue si l'arrivée du bouton l'a changée
+      notifyStageChange(stage);
     })
     .catch(error => console.warn('[Arcade] Plein écran indisponible', error));
 }

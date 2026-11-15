@@ -82,6 +82,11 @@ afterEach(() => {
 });
 
 describe('Arcade : pause du temps', () => {
+  test('sans la place des boutons du bandeau, « Pause » suit le temps', () => {
+    arcade.startArcadeTimer(120);
+    expect(document.getElementById('arcade-info-timer').nextElementSibling).toBe(pauseButton());
+  });
+
   test('« Pause » arrête le temps et cache le plateau ; « Reprendre » relance la partie', () => {
     arcade.startArcadeTimer(120);
     seconds(3);

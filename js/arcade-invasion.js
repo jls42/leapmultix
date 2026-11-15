@@ -38,6 +38,7 @@ import {
 import { recordArcadeAnswer, SOLVED_PAUSE_MS, solvedCalculation } from './arcade-learning.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { isArcadePaused, isKeyFromButton } from './arcade-time.js';
+import { writeArcadeQuestion } from './arcade-question.js';
 import {
   showGameInstructions,
   getCanvasFont,
@@ -759,12 +760,10 @@ export function startMultiplicationInvasion() {
   // Bandeau : la question pendant la vague, jamais sa réponse ; le calcul complet
   // (« 7 × 5 = 35 ») pendant la pause qui suit la vague
   function updateMultiplicationDisplay() {
-    const questionSpan = document.querySelector('.arcade-mobile-top .arcade-question');
-    if (!questionSpan) return;
     const { a, b } = currentProblem;
-    questionSpan.textContent = showingAvatar
-      ? solvedCalculation({ operator, a, b })
-      : `${a} ${operator} ${b} = ?`;
+    writeArcadeQuestion(
+      showingAvatar ? solvedCalculation({ operator, a, b }) : `${a} ${operator} ${b} = ?`
+    );
   }
 
   // Fin de vague : le calcul complet reste au bandeau, puis la vague suivante arrive (minuterie

@@ -27,11 +27,14 @@ const { MonsterField } = await import('../js/multipop-engine.js');
 const PORTRAIT = { width: 366, height: 640 };
 const LANDSCAPE = { width: 800, height: 260 };
 const DESKTOP = { width: 900, height: 520 };
+// Téléphone tourné, barres du navigateur affichées (iPhone 13 : 750 × 342 utiles)
+const SHORT_LANDSCAPE = { width: 453, height: 186 };
 
 describe('MultiPop : la disposition des terriers', () => {
   test.each([
     ['téléphone en portrait', PORTRAIT],
     ['téléphone tourné', LANDSCAPE],
+    ['téléphone tourné, barres du navigateur affichées', SHORT_LANDSCAPE],
     ['ordinateur', DESKTOP],
   ])('%s : le plateau prend toute la place', (_name, box) => {
     const layout = popLayout(box);

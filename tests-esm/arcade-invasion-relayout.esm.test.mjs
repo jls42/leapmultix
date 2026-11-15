@@ -57,12 +57,12 @@ jest.unstable_mockModule('../js/components/infoBar.js', () => ({
       const frag = document.createDocumentFragment();
       const banner = document.createElement('div');
       banner.className = 'arcade-mult-display';
-      const top = document.createElement('div');
-      top.className = 'arcade-mobile-top';
+      const calc = document.createElement('div');
+      calc.className = 'arcade-banner-calc';
       const question = document.createElement('span');
       question.className = 'arcade-question';
-      top.append(question);
-      banner.append(top);
+      calc.append(question);
+      banner.append(calc);
       const stage = document.createElement('div');
       stage.className = 'arcade-game-ui';
       const canvas = document.createElement('canvas');

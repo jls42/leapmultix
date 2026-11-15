@@ -76,6 +76,8 @@
   "arcade_pause_key_hint": "P key: pause or resume",
   "arcade_no_time_limit": "No time limit",
   "arcade_no_time_limit_short": "No limit",
+  "arcade_banner_score": "Score",
+  "arcade_banner_time": "Time",
   "avatar_choice_title": "Avatar choice",
   "average_score_label": "Average score",
   "back_to_arcade_menu": "Back to Arcade Menu",

@@ -11,6 +11,7 @@
 import { getTranslation as _getTranslation } from '../i18n.js';
 import { getCurrentLanguage } from '../i18n-store.js';
 import { createPathIcon } from './icons.js';
+import { writeArcadeQuestion } from '../arcade-question.js';
 
 /** Libellé traduit, avec un texte de repli si la clé manque */
 function trLabel(key, fallback, params = {}) {
@@ -85,86 +86,76 @@ const ARCADE_TITLES = new Map([
 ]);
 
 export const InfoBar = {
-  // DOM helpers for arcade template element
-  _createPlaceholderSpan() {
-    const ph = document.createElement('span');
-    ph.className = 'game-stat-display arcade-placeholder';
-    ph.style.minWidth = '60px';
-    ph.style.opacity = '0';
-    ph.setAttribute('aria-hidden', 'true');
-    ph.textContent = '0';
-    return ph;
+  /**
+   * Libellé visible d'une colonne du bandeau d'Arcade, retraduit avec la page
+   * @param {string} key
+   * @param {string} fallback
+   * @returns {HTMLElement}
+   */
+  _createBannerLabel(key, fallback) {
+    const label = document.createElement('span');
+    label.className = 'arcade-banner-label';
+    label.dataset.translate = key;
+    label.textContent = trLabel(key, fallback);
+    return label;
   },
-  _createTopRow(showScore, scoreId, operationLabel) {
-    const top = document.createElement('div');
-    top.className = 'arcade-mobile-top';
-    top.style.display = 'flex';
-    top.style.flexDirection = 'row';
-    top.style.alignItems = 'center';
-    top.style.justifyContent = 'center';
-    top.style.width = '100%';
-
-    // Le score porte un libellé pour les lecteurs d'écran (« Score : 120 »)
-    if (showScore) top.appendChild(createHiddenLabel('info_score_label', 'Score'));
-
-    const left = document.createElement('span');
-    left.className = `game-stat-display${showScore ? '' : ' arcade-placeholder'}`;
-    left.style.minWidth = '60px';
-    left.style.textAlign = 'left';
-    if (showScore) left.id = scoreId;
-    else left.setAttribute('aria-hidden', 'true');
-    left.textContent = '0';
-
-    // Seule la question est annoncée quand elle change (pas le chrono, chaque seconde)
-    const question = document.createElement('span');
-    question.className = 'arcade-question';
-    question.setAttribute('aria-live', 'polite');
-    question.style.flex = '1';
-    question.style.textAlign = 'center';
-    question.style.display = 'block';
-    question.textContent = operationLabel;
-
-    const rightPlaceholder = this._createPlaceholderSpan();
-
-    top.appendChild(left);
-    top.appendChild(question);
-    top.appendChild(rightPlaceholder);
-    return top;
-  },
-  _createBottomRow(showLives, livesId, timerId) {
-    const bottom = document.createElement('div');
-    bottom.className = 'arcade-mobile-bottom';
-    bottom.style.display = 'flex';
-    bottom.style.flexDirection = 'row';
-    bottom.style.alignItems = 'center';
-    bottom.style.justifyContent = 'center';
-    bottom.style.width = '100%';
-
-    const ph1 = this._createPlaceholderSpan();
-    const timer = document.createElement('span');
-    timer.id = timerId;
-    timer.className = 'game-stat-display';
-    timer.style.minWidth = showLives ? '60px' : '120px';
-    timer.style.textAlign = 'center';
-    timer.textContent = '05:00';
-
-    bottom.appendChild(ph1);
-    bottom.appendChild(createHiddenLabel('info_time_label', 'Temps'));
-    bottom.appendChild(timer);
-
+  /**
+   * Colonne de gauche du bandeau d'Arcade : le score sous son libellé, puis les vies
+   * @param {{showScore: boolean, scoreId: string, showLives: boolean, livesId: string}} ids
+   * @returns {HTMLElement}
+   */
+  _createScoreSide({ showScore, scoreId, showLives, livesId }) {
+    const side = document.createElement('div');
+    side.className = 'arcade-banner-side arcade-banner-score';
+    if (showScore) {
+      const score = document.createElement('span');
+      score.className = 'game-stat-display';
+      score.id = scoreId;
+      score.textContent = '0';
+      side.append(this._createBannerLabel('arcade_banner_score', 'Score'), score);
+    }
     if (showLives) {
       const lives = document.createElement('span');
       lives.id = livesId;
-      lives.className = 'game-stat-display';
-      lives.style.minWidth = '60px';
-      lives.style.textAlign = 'center';
+      lives.className = 'game-stat-display arcade-banner-lives';
       this.renderLives(lives, MAX_LIVES);
-      bottom.appendChild(lives);
+      side.appendChild(lives);
     }
-
-    const ph2 = this._createPlaceholderSpan();
-    bottom.appendChild(ph2);
-    return bottom;
+    return side;
+  },
+  /**
+   * Centre du bandeau d'Arcade : le calcul en grand dans sa case. Seul le calcul est
+   * annoncé quand il change (pas le chrono, chaque seconde)
+   * @param {string} operationLabel
+   * @returns {HTMLElement}
+   */
+  _createCalc(operationLabel) {
+    const calc = document.createElement('div');
+    calc.className = 'arcade-banner-calc';
+    const question = document.createElement('span');
+    question.className = 'arcade-question';
+    question.setAttribute('aria-live', 'polite');
+    writeArcadeQuestion(operationLabel, question);
+    calc.appendChild(question);
+    return calc;
+  },
+  /**
+   * Colonne de droite du bandeau d'Arcade : le temps sous son libellé, puis la place des
+   * boutons Pause (js/arcade-time.js) et plein écran (js/arcade-fullscreen.js)
+   * @param {string} timerId
+   * @returns {HTMLElement}
+   */
+  _createTimeSide(timerId) {
+    const side = document.createElement('div');
+    side.className = 'arcade-banner-side arcade-banner-time';
+    const timer = document.createElement('span');
+    timer.id = timerId;
+    timer.className = 'game-stat-display';
+    timer.textContent = '05:00';
+    const tools = document.createElement('div');
+    tools.className = 'arcade-banner-tools';
+    side.append(this._createBannerLabel('arcade_banner_time', 'Temps'), timer, tools);
+    return side;
   },
   _createGameUI(canvasId, abandonId, abandonLabel, abandonKey) {
     const gameUI = document.createElement('div');
@@ -485,8 +476,9 @@ export const InfoBar = {
   },
 
   /**
-   * Crée une structure DOM (sans innerHTML) pour la zone arcade : bandeau (score,
-   * calcul, temps, vies) puis canevas et « Abandonner ».
+   * Crée une structure DOM (sans innerHTML) pour la zone arcade : bandeau sur une ligne
+   * (score et vies à gauche, calcul au centre, temps et boutons à droite) puis canevas et
+   * « Abandonner ».
    * @param {Object} config Configuration { mode, canvasId, operationId, etc. }
    * @returns {DocumentFragment} Fragment prêt à être inséré
    */
@@ -510,14 +502,15 @@ export const InfoBar = {
     const title = ARCADE_TITLES.get(mode);
     if (title) frag.appendChild(createHiddenLabel(...title, 'h1'));
 
-    // Bandeau : aria-live est posé sur la question seule (voir _createTopRow)
+    // Bandeau sur une ligne : score et vies, calcul, temps et boutons
     const display = document.createElement('div');
     display.className = 'arcade-mult-display';
     display.id = operationId;
-    const top = this._createTopRow(showScore, scoreId, operationLabel);
-    const bottom = this._createBottomRow(showLives, livesId, timerId);
-    display.appendChild(top);
-    display.appendChild(bottom);
+    display.append(
+      this._createScoreSide({ showScore, scoreId, showLives, livesId }),
+      this._createCalc(operationLabel),
+      this._createTimeSide(timerId)
+    );
 
     // Game UI container
     const gameUI = this._createGameUI(canvasId, abandonId, abandonLabel, abandonKey);

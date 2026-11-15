@@ -16,8 +16,10 @@ export { alphaBounds } from './arcade-sprite-bounds.js';
 export const CELL_RATIO = 1.1;
 /** Écart entre les cases et autour d'elles */
 export const BOARD_MARGIN = 8;
-// Plus petite case dessinée, même sur un écran minuscule
-const MIN_CELL = 48;
+// Plus petite case dessinée, même sur un écran minuscule ; trois rangées tiennent dans la
+// place que laisse un téléphone tourné dont le navigateur montre ses barres (186 px de haut),
+// sinon la page défile
+const MIN_CELL = 40;
 // Personnage, en parts de la largeur du terrier : largeur et hauteur au plus, et part de sa
 // hauteur qui dépasse du trou (le reste est caché dedans)
 const FIGURE = Object.freeze({ maxWidth: 0.96, maxHeight: 1.1, shown: 0.8 });

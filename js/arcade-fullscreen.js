@@ -190,7 +190,10 @@ export function mountArcadeFullscreenButton(stage) {
   button.className = `btn btn-secondary ${BUTTON_CLASS}`;
   renderButton(button, Boolean(fullscreenRoot()));
   button.addEventListener('click', () => toggleFullscreen(root, stage));
-  banner.append(button);
+  // À la place des boutons du bandeau, après « Pause »
+  (banner.querySelector('.arcade-banner-tools') ?? banner).append(button);
+  // Le bandeau lui garde sa place sur téléphone (css/arcade.css)
+  banner.classList.add('has-fullscreen');
   listenOnce();
   return button;
 }

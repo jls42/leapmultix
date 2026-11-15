@@ -1,6 +1,7 @@
 // multimiam-ui.js - Gestion de l'affichage (score, vies, opération) (ESM)
 // (c) LeapMultix - 2025
 import { InfoBar } from './components/infoBar.js';
+import { writeArcadeQuestion } from './arcade-question.js';
 
 /**
  * Initialise l'interface utilisateur pour Pacman.
@@ -24,10 +25,9 @@ export function initPacmanUI(game) {
   }
 
   function updateOperation() {
-    const questionSpan = document.querySelector('.arcade-question');
-    if (questionSpan && game.currentOperation) {
-      questionSpan.textContent = `${game.currentOperation.num1} ${game.currentOperation.operator} ${game.currentOperation.num2} = ?`;
-    }
+    if (!game.currentOperation) return;
+    const { num1, operator, num2 } = game.currentOperation;
+    writeArcadeQuestion(`${num1} ${operator} ${num2} = ?`);
   }
 
   // Exposer les méthodes sur l'instance du jeu
