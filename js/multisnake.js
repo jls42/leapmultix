@@ -16,7 +16,7 @@ import {
   isTouchFirstDevice,
 } from './arcade-common.js';
 import { attachDirectionalTouch } from './arcade-touch.js';
-import { recordOperationResult } from './core/operation-stats.js';
+import { recordArcadeAnswer, weakTablesFor } from './arcade-learning.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { showArcadeGameOver } from './arcade.js';
 import { cleanupGameResources } from './game-cleanup.js';
@@ -615,6 +615,8 @@ class SnakeGame {
       operator: this.operator, // Support +, −, ×, ÷
       difficulty: this.questionDifficulty,
       excludeTables: isMultiplication ? excludedTablesOfCurrentUser() : [],
+      // Tables à revoir du joueur : tirées plus souvent (jamais une table retirée)
+      weakTables: weakTablesFor(this.operator),
       tables: isMultiplication && this.tables.length > 0 ? this.tables : undefined,
       forceTable:
         isMultiplication && this.mode === 'table' && this.tableNumber ? this.tableNumber : null,
@@ -809,7 +811,7 @@ class SnakeGame {
   // Calcul en cours compté juste ou faux dans les statistiques
   recordAnswer(correct) {
     const { num1, num2 } = this.currentOperation;
-    recordOperationResult(this.operator, num1, num2, correct);
+    recordArcadeAnswer(this.operator, num1, num2, correct);
   }
 
   // Méthode centralisée pour nettoyer toutes les ressources du jeu

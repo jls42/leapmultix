@@ -18,7 +18,10 @@ jest.unstable_mockModule('../js/arcade.js', () => ({
   isArcadeActive: () => false,
   memoryMonsterSprites: () => Array.from({ length: 16 }, () => ({ complete: false })),
 }));
-jest.unstable_mockModule('../js/arcade-session.js', () => ({ noteArcadePlay }));
+jest.unstable_mockModule('../js/arcade-session.js', () => ({
+  noteArcadePlay,
+  noteArcadeMiss: jest.fn(),
+}));
 
 const store = await import('../js/i18n-store.js');
 const pause = await import('../js/arcade-time.js');

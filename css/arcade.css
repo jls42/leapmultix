@@ -737,6 +737,45 @@
   color: var(--color-ink-heading);
 }
 
+/* Record battu : sous la phrase du score, sans couleur d'alerte */
+.arcade-new-record {
+  margin: calc(-1 * var(--space-3)) 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-ink-heading);
+}
+
+/* Calculs ratés de la partie, avec leur réponse : à revoir, en ton neutre */
+.arcade-review {
+  max-width: 24rem;
+  margin: 0 auto var(--space-5);
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-ink);
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
+}
+
+.arcade-review h2 {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+}
+
+.arcade-review ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+}
+
 .arcade-top-scores {
   max-width: 20rem;
   margin: var(--space-6) auto 0;

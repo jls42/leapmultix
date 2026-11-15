@@ -449,6 +449,20 @@ export function recordModeAnswer(userData, { mode, operator, table, isCorrect, s
 }
 
 /**
+ * Réponse d'un jeu d'Arcade : en multiplication, elle entre dans la fenêtre « À revoir » de
+ * sa table, comme une réponse du Quiz ; elle ne compte dans aucun mode (le tableau de bord
+ * compte l'Arcade en parties, pas en réponses)
+ * @param {Object} userData - Profil que l'appelant enregistre ensuite
+ * @param {{operator: string, table: number, isCorrect: boolean}} answer
+ */
+export function recordReviewAnswer(userData, { operator, table, isCorrect }) {
+  const reviewed = reviewTable(operator, table);
+  if (reviewed === null) return;
+  const stats = statsOf(userData);
+  if (stats) pushReview(stats.review, reviewed, isCorrect);
+}
+
+/**
  * Meilleur score d'un Défi terminé (pas d'un abandon), dans sa difficulté
  * @param {Object} userData
  * @param {{operator: string, difficulty: string, score: number}} result

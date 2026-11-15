@@ -51,7 +51,9 @@ jest.unstable_mockModule('../js/arcade-invasion.js', () => ({
 }));
 
 const arcade = await import('../js/arcade.js');
-const { openArcadeSession, noteArcadePlay } = await import('../js/arcade-session.js');
+const { openArcadeSession, noteArcadePlay, noteArcadeMiss } = await import(
+  '../js/arcade-session.js'
+);
 const game = await import('../js/game.js');
 const { eventBus } = await import('../js/core/eventBus.js');
 
@@ -192,5 +194,54 @@ describe('Écran de fin d’arcade', () => {
     document.getElementById('arcade-retry-btn').click();
     await new Promise(r => setTimeout(r, 50));
     expect(invasionStart).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Écran de fin : ce que la partie apprend', () => {
+  const NBSP = '\u00a0';
+  const record = () => document.querySelector('#game .arcade-new-record');
+
+  test('un score plus haut que tous les précédents est annoncé comme un record', () => {
+    arcade.showArcadeGameOver(150);
+    expect(record()?.textContent).toBe('arcade_new_record');
+  });
+
+  test('un score sous le meilleur : pas de record', () => {
+    arcade.showArcadeGameOver(100);
+    expect(record()).toBeNull();
+  });
+
+  test('le premier score est un record ; une partie à 0 point jamais', () => {
+    storedScores = [];
+    arcade.showArcadeGameOver(50);
+    expect(record()).toBeTruthy();
+    openArcadeSession('multiinvaders');
+    noteArcadePlay();
+    arcade.showArcadeGameOver(0);
+    expect(record()).toBeNull();
+  });
+
+  test('réaffiché après « Remettre à zéro » : pas de record annoncé', () => {
+    arcade.showArcadeGameOver(150, { persist: false });
+    expect(record()).toBeNull();
+  });
+
+  test('les calculs ratés de la partie, avec leur réponse, avant les boutons', () => {
+    noteArcadeMiss({ operator: '×', a: 7, b: 5 });
+    noteArcadeMiss({ operator: '÷', a: 48, b: 6 });
+    arcade.showArcadeGameOver(100);
+    const review = document.querySelector('#game .arcade-review');
+    const items = [...review.querySelectorAll('li')].map(li => li.textContent);
+    expect(items).toEqual([
+      `7${NBSP}×${NBSP}5${NBSP}=${NBSP}35`,
+      `48${NBSP}÷${NBSP}6${NBSP}=${NBSP}8`,
+    ]);
+    expect(review.querySelector('h2').textContent).toBe('arcade_review_title');
+    expect(review.nextElementSibling.classList.contains('arcade-gameover-actions')).toBe(true);
+  });
+
+  test('aucun calcul raté : pas de liste', () => {
+    arcade.showArcadeGameOver(100);
+    expect(document.querySelector('#game .arcade-review')).toBeNull();
   });
 });

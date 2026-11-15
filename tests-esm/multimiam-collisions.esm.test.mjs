@@ -20,11 +20,16 @@ jest.unstable_mockModule('../js/arcade-points.js', () => ({
 }));
 jest.unstable_mockModule('../js/arcade-session.js', () => ({
   noteArcadePlay: jest.fn(note('noteArcadePlay')),
+  noteArcadeMiss: jest.fn(),
 }));
 jest.unstable_mockModule('../js/core/operation-stats.js', () => ({
   recordOperationResult: jest.fn(note('recordOperationResult')),
 }));
 jest.unstable_mockModule('../js/arcade-time.js', () => ({ isArcadePaused: () => false }));
+// Sans joueur : la fenêtre « À revoir » n'est pas écrite (arcade-learning.js)
+jest.unstable_mockModule('../js/core/userState.js', () => ({
+  UserState: { getCurrentUserData: () => null, updateUserData: () => false },
+}));
 
 const { initPacmanEngine } = await import('../js/multimiam-engine.js');
 

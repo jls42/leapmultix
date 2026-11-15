@@ -10,6 +10,8 @@ jest.unstable_mockModule('../js/arcade-session.js', () => ({
   arcadeGameOf: jest.fn(),
   openArcadeSession: jest.fn(),
   noteArcadePlay: jest.fn(),
+  noteArcadeMiss: jest.fn(),
+  arcadeMisses: () => [],
   closeArcadeSession: jest.fn(),
 }));
 jest.unstable_mockModule('../js/core/operation-stats.js', () => ({

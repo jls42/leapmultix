@@ -27,7 +27,13 @@ import { AudioManager } from './core/audio.js';
 import { goToSlide } from './slides.js';
 import { setGameMode } from './mode-orchestrator.js';
 import { eventBus } from './core/eventBus.js';
-import { openArcadeSession, closeArcadeSession, arcadeGameOf } from './arcade-session.js';
+import {
+  openArcadeSession,
+  closeArcadeSession,
+  arcadeGameOf,
+  arcadeMisses,
+} from './arcade-session.js';
+import { solvedCalculation } from './arcade-learning.js';
 import { isArcadePaused, mountArcadePause, unmountArcadePause } from './arcade-time.js';
 import { confirmDialog } from './components/confirm-dialog.js';
 
@@ -118,11 +124,14 @@ export function showArcadeGameOver(score, { persist = true } = {}) {
 
   // Scores du profil : une partie jouée (au moins un coup) compte avec son score
   const mode = globalGameState?.gameMode ?? 'arcade';
+  // Record : comparé aux scores d'avant celui-ci, jamais sur un écran réaffiché
+  const isRecord = beatsBestScore(played, mode, score);
   if (played) saveScoreForMode(played.game, score, played.operator);
   const arcadeScores = getScoresForMode(mode);
   const { key: endMessageKey, text: endMessage, spoken } = gameOverMessage(score);
 
   renderGameOverScreen({ mode, score, endMessageKey, endMessage, arcadeScores, persist });
+  addLearningRecap(isRecord);
   if (persist && isVoiceEnabled()) speak(spoken);
 }
 
@@ -342,6 +351,62 @@ function buildResultSentence(score, endMessageKey, endMessage) {
     ` ${translated('points_label', 'points')}`
   );
   return result;
+}
+
+/**
+ * Une partie jouée bat-elle tous les scores gardés jusque-là ? (0 point : jamais)
+ * @param {Object|null} played - partie fermée et jouée, null sinon
+ * @param {string} mode
+ * @param {number} score
+ */
+function beatsBestScore(played, mode, score) {
+  if (!played) return false;
+  const scores = getScoresForMode(mode);
+  const values = Array.isArray(scores) ? scores.map(Number).filter(Number.isFinite) : [];
+  return score > Math.max(0, ...values);
+}
+
+/**
+ * Ce que la partie apprend, posé sur l'écran de fin : « Nouveau record ! » sous le score, et
+ * les calculs ratés avec leur réponse avant les boutons (rien de neuf n'est lu à voix haute)
+ * @param {boolean} isRecord
+ */
+function addLearningRecap(isRecord) {
+  const wrapper = document.querySelector('#game .arcade-gameover');
+  if (!wrapper) return;
+  if (isRecord) wrapper.querySelector('.arcade-final-score')?.after(buildRecordBadge());
+  const review = buildMissedCalculations(arcadeMisses());
+  if (review) wrapper.querySelector('.arcade-gameover-actions')?.before(review);
+}
+
+function buildRecordBadge() {
+  const badge = document.createElement('p');
+  badge.className = 'arcade-new-record';
+  badge.dataset.translate = 'arcade_new_record';
+  badge.textContent = translated('arcade_new_record', 'Nouveau record !');
+  return badge;
+}
+
+/**
+ * Calculs ratés de la partie, chacun avec sa réponse
+ * @param {Array<{operator: string, a: number, b: number}>} misses
+ * @returns {HTMLElement|null} null sans calcul raté
+ */
+function buildMissedCalculations(misses) {
+  if (misses.length === 0) return null;
+  const section = document.createElement('section');
+  section.className = 'arcade-review';
+  const title = document.createElement('h2');
+  title.dataset.translate = 'arcade_review_title';
+  title.textContent = translated('arcade_review_title', 'Calculs à revoir');
+  const list = document.createElement('ul');
+  for (const miss of misses) {
+    const item = document.createElement('li');
+    item.textContent = solvedCalculation(miss);
+    list.appendChild(item);
+  }
+  section.append(title, list);
+  return section;
 }
 
 /**

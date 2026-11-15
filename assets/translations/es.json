@@ -67,6 +67,8 @@
   "arcade_pacman_title": "MultiMiam",
   "arcade_snake_title": "MultiSnake",
   "arcade_top_scores": "Mejores puntuaciones",
+  "arcade_new_record": "¡Nuevo récord!",
+  "arcade_review_title": "Cálculos para repasar",
   "arcade_pause_button": "Pausa",
   "arcade_resume_button": "Reanudar",
   "arcade_paused_title": "Pausa",

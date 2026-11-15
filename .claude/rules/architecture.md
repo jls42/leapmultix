@@ -43,6 +43,7 @@ paths:
 - `chrono-input.js` - Chrono typed-answer check (validates as soon as the answer is right or can no longer be)
 - `daily-challenge.js` - Daily challenge management
 - `utils.js` - Core utility functions (canonical source)
+- `wrong-answers.js` - Plausible wrong answers of a question (a child's real slips: one more or less, the next row of the table, swapped digits), used by the modes (re-exported by `GameMode.js`) and by MultiInvaders, which mixes them with far answers by level (`waveAnswers`: far in Débutant, half in Moyen, close in Difficile)
 - `random.js` - Single source of randomness (Web Crypto): `randomInt`, `chance`, `pickRandom`, `shuffleInPlace`
 
 ### Game Modes (`js/modes/`)
@@ -85,6 +86,7 @@ paths:
 - Arcade canvases at the device pixel ratio (`arcade-common.js`): games draw in game units (board size), the backing store follows the displayed size × `devicePixelRatio` (capped at 3, 4096 px per side) with a context transform. Read board sizes with `getArcadeCanvasSize()`, never `canvas.width`; convert pointers with `clientToCanvasPoint()`; size boards with `sizeArcadeCanvas()` (element = drawing), `renderArcadeCanvas()` (the game sets the element size itself: MultiMiam's maze fills the board with near-square cells, at most 1.25:1, chosen by `js/multimiam-layout.js`; only the remainder beyond that cap is padded with wall bands, centred by object-fit) or `fitArcadeCanvas()` (MultiInvaders: fixed game size shown in the available space); multiply `shadowBlur`/`shadowOffset` by `canvasPixelScale()` (shadows ignore the transform)
 - `arcade-sprites.js` - Arcade images loaded at their on-screen size (drawn size × canvas display scale × device pixel ratio, capped at 3), upgraded when the board grows, drawn at their proportions (`drawArcadeSprite`: contain, cover for textures, fill for snake tiles; mirrored to face the other way)
 - `arcade-message.js`, `arcade-points.js` - Arcade UI components
+- `arcade-learning.js` - What an Arcade game teaches: `recordArcadeAnswer` (calculation stats, then in × the « À revoir » window of its table, `recordReviewAnswer` of `core/mode-stats.js`, never a mode counter; missed calculations kept by `arcade-session.js` for the end screen, which shows them with their answer and « Nouveau record ! »), `arcadeWeakTables` (tables to review, drawn more often by the four games). MultiMemory records nothing: a missed pair is a memory slip, not a calculation error
 - `arcade-scores.js`, `arcade-session.js` - Arcade scores stored in the player profile; a game counts from its first move, abandon included
 - `arcade-time.js` - Arcade time: pause (button next to the time, P key, hidden tab; never resumes on its own) and MultiMemory's no-time-limit option, kept on the device like the difficulty; the games read `isArcadePaused()` at each step
 

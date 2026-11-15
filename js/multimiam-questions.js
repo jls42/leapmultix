@@ -6,6 +6,7 @@ import { safeShuffleArray } from './arcade-utils.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
 import { chance, randomInt } from './core/random.js';
+import { weakTablesFor } from './arcade-learning.js';
 
 const isValidIndex = (value, size) => Number.isInteger(value) && value >= 0 && value < size;
 
@@ -73,6 +74,8 @@ export const PacmanQuestions = {
         operator, // Support multi-opérations (+, −, ×, ÷)
         difficulty: getQuestionDifficulty(game),
         excludeTables: operator === '×' ? excluded : [],
+        // Tables à revoir du joueur : tirées plus souvent (jamais une table retirée)
+        weakTables: weakTablesFor(operator),
         tables: getTablesForQuestion(game, operator),
         forceTable: getForceTable(game, operator),
       });

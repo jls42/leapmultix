@@ -16,7 +16,10 @@ jest.unstable_mockModule('../js/arcade.js', () => ({
   isArcadeActive: () => false,
   memoryMonsterSprites: () => Array.from({ length: 16 }, () => ({ complete: false })),
 }));
-jest.unstable_mockModule('../js/arcade-session.js', () => ({ noteArcadePlay: jest.fn() }));
+jest.unstable_mockModule('../js/arcade-session.js', () => ({
+  noteArcadePlay: jest.fn(),
+  noteArcadeMiss: jest.fn(),
+}));
 
 const store = await import('../js/i18n-store.js');
 const { AudioManager } = await import('../js/core/audio.js');

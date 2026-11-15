@@ -9,6 +9,7 @@ import {
   normalizeModeStats,
   seedModeStats,
   recordModeAnswer,
+  recordReviewAnswer,
   recordChallengeBest,
   recordArcadeGame,
   resetArcadeGame,
@@ -256,5 +257,30 @@ describe('mode-stats : filet de sécurité', () => {
     expect(user.modeStats.v).toBeUndefined();
     expect(user.progressHistory).toHaveLength(151);
     jest.restoreAllMocks();
+  });
+});
+
+describe('mode-stats : réponses de l’Arcade', () => {
+  test('en ×, la fenêtre « À revoir » de leur table, sans compter dans aucun mode', () => {
+    const user = profile();
+    recordReviewAnswer(user, { operator: '×', table: 7, isCorrect: false });
+    recordReviewAnswer(user, { operator: '×', table: 7, isCorrect: true });
+    expect(user.modeStats.review['7']).toBe('01');
+    expect(user.modeStats.modes).toEqual(emptyModeStats().modes);
+  });
+
+  test('hors ×, ou hors des tables 1 à 10 : rien', () => {
+    const user = profile();
+    recordReviewAnswer(user, { operator: '+', table: 7, isCorrect: false });
+    recordReviewAnswer(user, { operator: '×', table: 12, isCorrect: false });
+    expect(user.modeStats.review).toEqual({});
+  });
+
+  test('trois erreurs de l’Arcade font de la table une table à revoir', () => {
+    const user = profile();
+    for (let i = 0; i < 3; i += 1) {
+      recordReviewAnswer(user, { operator: '×', table: 8, isCorrect: false });
+    }
+    expect(weakTablesFrom(user.modeStats)).toEqual([8]);
   });
 });

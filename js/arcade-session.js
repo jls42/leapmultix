@@ -28,7 +28,7 @@ export function openArcadeSession(mode) {
   } catch {
     // Sans profil lisible, l'opération par défaut du jeu
   }
-  session = { game: arcadeGameOf(mode), operator, played: false, closed: false };
+  session = { game: arcadeGameOf(mode), operator, played: false, closed: false, misses: [] };
 }
 
 /** Premier coup (ou suivant) de la partie en cours */
@@ -44,4 +44,25 @@ export function closeArcadeSession() {
   if (!session || session.closed) return null;
   session.closed = true;
   return session.played ? { game: session.game, operator: session.operator } : null;
+}
+
+// Calculs ratés gardés pour l'écran de fin : assez pour revoir, pas une liste à rallonge
+const MAX_MISSES = 6;
+
+/**
+ * Un calcul raté pendant la partie en cours, gardé une fois pour l'écran de fin
+ * @param {{operator: string, a: number, b: number}} miss
+ */
+export function noteArcadeMiss({ operator, a, b }) {
+  if (!session || session.closed) return;
+  const known = session.misses.some(m => m.operator === operator && m.a === a && m.b === b);
+  if (!known && session.misses.length < MAX_MISSES) session.misses.push({ operator, a, b });
+}
+
+/**
+ * Calculs ratés de la dernière partie, dans l'ordre où ils l'ont été
+ * @returns {Array<{operator: string, a: number, b: number}>}
+ */
+export function arcadeMisses() {
+  return session ? session.misses.map(miss => ({ ...miss })) : [];
 }

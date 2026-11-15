@@ -19,7 +19,9 @@ const {
   shipDrawScale,
   TOUCH_BOARD,
   DESKTOP_BOARD,
+  waveAnswers,
 } = await import('../js/arcade-invasion.js');
+const { getDifficultySettings } = await import('../js/difficulty.js');
 const { showGameInstructions } = await import('../js/arcade-common.js');
 
 const restorers = [];
@@ -119,5 +121,48 @@ describe('MultiInvaders : la fusée vise chaque monstre', () => {
     const right = clampShipX(5000, SHIP, scale, 800, reach) + SHIP / 2 + (scale * SHIP) / 2;
     expect(left).toBeGreaterThanOrEqual(0);
     expect(right).toBeLessThanOrEqual(800);
+  });
+});
+
+describe('MultiInvaders : les mauvaises réponses suivent le niveau', () => {
+  /** Écarts à la bonne réponse des mauvaises réponses de 30 vagues */
+  function gaps(level, a, b) {
+    const settings = getDifficultySettings(level);
+    const question = { a, b, answer: a * b };
+    return Array.from({ length: 30 }, () => waveAnswers(question, '×', settings))
+      .flat()
+      .filter(value => value !== a * b)
+      .map(value => Math.abs(value - a * b));
+  }
+
+  test('Difficile : toutes proches de la bonne, même pour 2 × 2', () => {
+    expect(Math.max(...gaps('difficile', 2, 2))).toBeLessThanOrEqual(10);
+    expect(Math.max(...gaps('difficile', 6, 7))).toBeLessThanOrEqual(10);
+  });
+
+  test('Moyen : au moins deux proches par vague', () => {
+    const settings = getDifficultySettings('moyen');
+    for (let i = 0; i < 30; i++) {
+      const wrong = waveAnswers({ a: 6, b: 7, answer: 42 }, '×', settings).filter(v => v !== 42);
+      expect(wrong.filter(v => Math.abs(v - 42) <= 10).length).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  test.each(['debutant', 'moyen', 'difficile'])(
+    '%s : cinq nombres différents, la bonne réponse comprise, aucun négatif',
+    level => {
+      const settings = getDifficultySettings(level);
+      for (let i = 0; i < 30; i++) {
+        const answers = waveAnswers({ a: 3, b: 4, answer: 12 }, '×', settings);
+        expect(new Set(answers).size).toBe(5);
+        expect(answers).toContain(12);
+        expect(Math.min(...answers)).toBeGreaterThanOrEqual(0);
+      }
+    }
+  );
+
+  test('un niveau aux résultats peu variés donne quand même une vague complète', () => {
+    const answers = waveAnswers({ a: 1, b: 1, answer: 1 }, '×', { tables: [1] });
+    expect(new Set(answers).size).toBe(5);
   });
 });
