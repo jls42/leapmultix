@@ -27,6 +27,21 @@ const instructionObservers = new WeakMap();
  */
 export const STAGE_CHANGE_EVENT = 'arcade:stagechange';
 
+// Navigateurs de téléphone et de tablette qui se nomment comme tels
+const TOUCH_USER_AGENTS = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+
+/**
+ * Appareil qu'on joue au doigt : un téléphone ou une tablette qui se nomme comme tel, ou tout
+ * écran dont le pointeur principal est un doigt. Un iPad se présente comme un Mac et une
+ * tablette Windows comme un ordinateur : à leur seul nom, ils recevaient la consigne des
+ * flèches du clavier et le plateau d'un ordinateur.
+ * @returns {boolean}
+ */
+export function isTouchFirstDevice() {
+  if (TOUCH_USER_AGENTS.test(globalThis.navigator?.userAgent || '')) return true;
+  return globalThis.matchMedia?.('(pointer: coarse)')?.matches === true;
+}
+
 function notifyStageChange(stage) {
   stage?.dispatchEvent(new Event(STAGE_CHANGE_EVENT));
 }

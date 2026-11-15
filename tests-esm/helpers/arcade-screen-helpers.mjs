@@ -73,6 +73,29 @@ export function simulateArcadeScreen(screen) {
 }
 
 /**
+ * Écran dont le pointeur principal est un doigt, sous un navigateur qui se nomme comme un
+ * ordinateur : un iPad (Safari se présente comme un Mac) ou une tablette Windows.
+ * @returns {() => void} Retour au matchMedia de jsdom
+ */
+export function useCoarsePointer() {
+  const saved = Object.getOwnPropertyDescriptor(globalThis, 'matchMedia');
+  Object.defineProperty(globalThis, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: query => ({
+      matches: query === '(pointer: coarse)',
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+    }),
+  });
+  return () => {
+    if (saved) Object.defineProperty(globalThis, 'matchMedia', saved);
+    else Reflect.deleteProperty(globalThis, 'matchMedia');
+  };
+}
+
+/**
  * Agent utilisateur d'un téléphone Android (les jeux reconnaissent un mobile ainsi).
  * @returns {() => void} Retour à l'agent de jsdom
  */

@@ -11,12 +11,14 @@ import {
   renderArcadeStage,
   simulateArcadeScreen,
   useAndroidUserAgent,
+  useCoarsePointer,
 } from './helpers/arcade-screen-helpers.mjs';
 
 const { chooseMemoryGrid, memoryCardSize, MemoryGame } = await import(
   '../js/arcade-multimemory.js'
 );
 const { showGameInstructions, canvasToClientPoint } = await import('../js/arcade-common.js');
+const { setArcadeActive } = await import('../js/arcade.js');
 
 const restorers = [];
 let game;
@@ -156,6 +158,16 @@ describe('MultiMemory sur un téléphone de 390 × 844', () => {
   });
 });
 
+describe('MultiMemory sur un iPad (Safari se présente comme un Mac)', () => {
+  test('la disposition d’un téléphone : 12 cartes en 3 × 4', () => {
+    restorers.push(useCoarsePointer());
+    restorers.push(simulateArcadeScreen({ width: 363, height: 844 }));
+    startGame();
+    expect([game.cols, game.rows]).toEqual([3, 4]);
+    expect(game.isMobile).toBe(true);
+  });
+});
+
 describe('MultiMemory sur ordinateur', () => {
   test('4 colonnes comme avant, mais des cartes plus grandes que les bandes de 79 px', () => {
     restorers.push(simulateArcadeScreen({ width: 1234, height: 800, top: 200 }));
@@ -165,5 +177,17 @@ describe('MultiMemory sur ordinateur', () => {
     expect(game.instructionPlacement()).toBe('bottom');
     expect(game.cardWidth).toBeGreaterThan(79);
     expect(game.cardWidth / game.cardHeight).toBeGreaterThanOrEqual(0.74);
+  });
+});
+
+describe('MultiMemory : la boucle d’animation', () => {
+  test('une seconde de jeu ne garde pas une soixantaine d’animations à annuler', () => {
+    restorers.push(simulateArcadeScreen({ width: 1234, height: 800, top: 200 }));
+    setArcadeActive(true);
+    restorers.push(() => setArcadeActive(false));
+    startGame();
+    jest.advanceTimersByTime(1000);
+    // Une boucle en cours : un seul identifiant suffit pour l'arrêter
+    expect(game.animations.length).toBeLessThanOrEqual(1);
   });
 });

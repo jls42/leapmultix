@@ -78,8 +78,6 @@ export class PacmanGame {
     // this.avatarName = window.gameState ? window.gameState.avatar : 'fox';
     // console.log('Avatar récupéré dans le constructeur PacmanGame:', this.avatarName);
 
-    this.isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(globalThis.navigator?.userAgent || '');
-
     // Éléments du jeu
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');

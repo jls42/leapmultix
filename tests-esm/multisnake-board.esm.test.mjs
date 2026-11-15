@@ -11,6 +11,7 @@ import {
   renderArcadeStage,
   simulateArcadeScreen,
   useAndroidUserAgent,
+  useCoarsePointer,
 } from './helpers/arcade-screen-helpers.mjs';
 
 jest.unstable_mockModule('../js/utils-es6.js', () => ({
@@ -168,6 +169,18 @@ describe('MultiSnake : plein écran juste après le lancement', () => {
     const before = partie(game);
     goFullscreen();
     expect(partie(game)).toEqual(before);
+  });
+});
+
+describe('MultiSnake sur un iPad (Safari se présente comme un Mac)', () => {
+  test('le plateau d’un téléphone, plus haut que large, et la consigne du doigt', () => {
+    restorers.push(useCoarsePointer());
+    restorers.push(simulateArcadeScreen({ width: 363, height: 844 }));
+    startFrozenGame();
+    expect(game.isMobile).toBe(true);
+    expect(game.rows).toBeGreaterThan(game.cols);
+    const consigne = document.querySelector('.arcade-instructions, .game-instructions');
+    expect(consigne?.textContent).toBe('arcade.multiSnake.controls.mobile');
   });
 });
 

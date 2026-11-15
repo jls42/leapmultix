@@ -454,6 +454,10 @@ export function stopArcadeMode() {
   // les sous-jeux retirent les leurs (arcade:stop)
   document.removeEventListener('keydown', arcadeKeyDown);
   document.removeEventListener('keyup', arcadeKeyUp);
+  // Une flèche tenue à l'arrêt ne sera plus relâchée pour le jeu : la partie suivante
+  // partirait avec la fusée en train de dériver
+  arcadeControls.leftPressed = false;
+  arcadeControls.rightPressed = false;
   announceArcadeStop();
   // Autres nettoyages éventuels (sons, etc.)
   try {
