@@ -56,7 +56,7 @@
 
 ## Descriere
 
-LeapMultix este o aplicație web educațională interactivă destinată copiilor cu vârste între 6 și 12 ani, pentru a stăpâni cele 4 operații aritmetice: înmulțirea (×), adunarea (+), scăderea (−) și împărțirea (÷). Aceasta oferă **6 moduri de joc** și **4 minijocuri arcade** într-o interfață intuitivă, accesibilă și multilingvă.
+LeapMultix este o aplicație web educațională interactivă destinată copiilor cu vârste între 6 și 12 ani, pentru a stăpâni cele 4 operații aritmetice: înmulțirea (×), adunarea (+), scăderea (−) și împărțirea (÷). Aceasta oferă **6 moduri de joc** și **5 mini-jocuri arcade** într-o interfață intuitivă, accesibilă și multilingvă.
 
 **Compatibilitate cu mai multe operații:** toate modurile acceptă cele patru operații. Alegerea se face pe ecranul de pornire și se aplică întregului parcurs.
 
@@ -76,23 +76,25 @@ LeapMultix este o aplicație web educațională interactivă destinată copiilor
 |               **Descoperire** — fiecare egalitate este reprezentată prin puncte, salturi sau numărare, împreună cu trucul pentru tablă.               |  **Quiz** — alegerea copilului rămâne afișată lângă răspunsul corect, iar explicația detaliază calculul.   |
 |                               ![Modul Provocare: numărătoare inversă și serie în desfășurare](docs/media/05-defi.webp)                                |    ![Modul Aventură: harta celor zece niveluri, următoarele fiind blocate](docs/media/06-aventure.webp)    |
 |                 **Provocare** — cursă contra cronometru. La o greșeală, cronometrul se oprește cât timp este citit răspunsul corect.                  |            **Aventură** — zece niveluri care se deschid unul după altul, în schimbul stelelor.             |
-|                             ![Modul Cronometru: o cursă de scădere, cronometrul și progresul](docs/media/14-chrono.webp)                              |                     ![Meniul Arcade: cele patru minijocuri](docs/media/07-arcade.webp)                     |
-| **Cronometru** — zece răspunsuri corecte contra cronometru, pentru operația aleasă; calculele greșite sunt adăugate într-o listă pentru recapitulare. |                 **Arcade** — patru minijocuri, cu reglarea dificultății și alegerea navei.                 |
+|                             ![Modul Cronometru: o cursă de scădere, cronometrul și progresul](docs/media/14-chrono.webp)                              |                     ![Meniu Arcade: cele cinci mini-jocuri](docs/media/07-arcade.webp)                     |
+| **Cronometru** — zece răspunsuri corecte contra cronometru, pentru operația aleasă; calculele greșite sunt adăugate într-o listă pentru recapitulare. |                **Arcade** — cinci mini-jocuri, cu reglarea dificultății și alegerea navei.                 |
 |          ![Tablou de bord: partide, recorduri și răspunsuri pentru fiecare mod, detaliate după operație](docs/media/08-tableau-de-bord.webp)          |            ![Personalizare: avatare, teme, accesibilitate](docs/media/09-personnalisation.webp)            |
 |         **Tablou de bord** — partidele și recordurile fiecărui mod, detaliate după operație; stelele și tablele de recapitulat la înmulțire.          | **Personalizare** — avatare de deblocat cu monede, temă de culori, dimensiunea textului, contrast ridicat. |
 
 ### Minijocurile arcade
 
-Patru jocuri care adresează aceeași întrebare — cea afișată deasupra zonei de
-joc, împreună cu timpul rămas și viețile — dar solicită de fiecare dată o acțiune
+Cinci jocuri care pun aceeași întrebare — cea afișată deasupra zonei de
+joc, împreună cu timpul rămas și viețile — dar necesită de fiecare dată o acțiune
 diferită.
 
-|                                                                                                                                 |                                                                                                          |
-| :-----------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------: |
-|       ![MultiInvaders: monștri care poartă numere, o navă în partea de jos a ecranului](docs/media/10-multiinvaders.webp)       | ![MultiMiam: un labirint în care pastilele afișează răspunsurile posibile](docs/media/11-multimiam.webp) |
-|  **MultiInvaders** — trage în răspunsurile greșite și cruță-l pe cel corect: acesta ascunde un prieten care trebuie eliberat.   |         **MultiMiam** — străbate labirintul pentru a prinde rezultatul corect, evitând monștrii.         |
-| ![MultiMemory: o grilă de cărți, dintre care două sunt întoarse și arată un calcul și un număr](docs/media/12-multimemory.webp) |          ![MultiSnake: un șarpe și mere numerotate pe o pajiște](docs/media/13-multisnake.webp)          |
-|                         **MultiMemory** — amintește-ți care carte conține rezultatul calculului întors.                         |            **MultiSnake** — crește înghițind numerele corecte și evită-le pe toate celelalte.            |
+|                                                                                                                                   |                                                                                                          |
+| :-------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------: |
+|        ![MultiInvaders: monștri care poartă numere, o navă în partea de jos a ecranului](docs/media/10-multiinvaders.webp)        | ![MultiMiam: un labirint în care pastilele afișează răspunsurile posibile](docs/media/11-multimiam.webp) |
+|   **MultiInvaders** — trage în răspunsurile greșite și cruță-l pe cel corect: acesta ascunde un prieten care trebuie eliberat.    |         **MultiMiam** — străbate labirintul pentru a prinde rezultatul corect, evitând monștrii.         |
+|  ![MultiMemory: o grilă de cărți, dintre care două sunt întoarse și arată un calcul și un număr](docs/media/12-multimemory.webp)  |          ![MultiSnake: un șarpe și mere numerotate pe o pajiște](docs/media/13-multisnake.webp)          |
+|                          **MultiMemory** — amintește-ți care carte conține rezultatul calculului întors.                          |            **MultiSnake** — crește înghițind numerele corecte și evită-le pe toate celelalte.            |
+| ![MultiPop: monștri care ies din vizuini, fiecare cu un număr pe pancartă, și un prieten cu o inimă](docs/media/15-multipop.webp) |                                                                                                          |
+|     **MultiPop** — lovește monstrul care poartă răspunsul corect înainte să se întoarcă în vizuină, fără să atingi prietenii.     |                                                                                                          |
 
 ## ✨ Funcționalități
 
@@ -110,6 +112,7 @@ diferită.
 - **MultiMiam**: Pac-Man matematic - Colectează răspunsurile corecte
 - **MultiMemory**: Joc de memorie - Asociază operațiile cu rezultatele
 - **MultiSnake**: Snake educațional - Crește mâncând numerele corecte
+- **MultiPop**: Joc de reflexe - Lovește monstrul care poartă răspunsul corect, niciodată un prieten
 
 ### ➕ Compatibilitate cu mai multe operații
 
@@ -262,6 +265,7 @@ leapmultix/
 │   │                       #   arcade-time.js ; plein écran : arcade-fullscreen.js)
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
+│   ├── multipop-*.js       # Mini-jeu des monstres qui surgissent (moteur, rendu ; partie : arcade-multipop.js)
 │   ├── i18n.js, i18n-store.js                # Internationalisation
 │   ├── security-utils.js, error-handlers.js, logger.js
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
@@ -483,9 +487,9 @@ LeapMultix este o PWA completă, cu funcționare offline și posibilitate de ins
 
 **Service Worker** (`sw.js`):
 
-- Instalare: preîncărcarea tuturor resurselor necesare jocului, pe baza unei liste generate din cod
+- Instalare: preîncărcarea a tot ceea ce jocul solicită, listă generată din cod
   de `scripts/precache-list.mjs` (`npm run precache:update`, verificată prin teste): după
-  o primă vizită, cele 6 moduri și cele 4 jocuri Arcade pornesc offline
+  o primă vizită, cele 6 moduri și cele 5 jocuri Arcade pornesc offline
 - Navigare: Network-first, cu un termen de 4 s: după acest termen (o rețea care nu răspunde: wifi-ul școlii, portal captiv) sau offline, pagina jocului din cache (`offline.html` doar pentru o pagină care nu a fost salvată niciodată)
 - Imagini: Cache-first; offline, o altă dimensiune a aceluiași sprite sau un alt fundal al aceluiași avatar
 - Traduceri: Stale-while-revalidate pentru actualizare în fundal

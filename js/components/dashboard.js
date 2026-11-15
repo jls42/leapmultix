@@ -861,6 +861,7 @@ export const Dashboard = {
       ['multimiam', 'logo_multimiam.png', 'arcade_pacman_title', 'MultiMiam'],
       ['multimemory', 'logo_multimemory.png', 'arcade.multiMemory.title', 'MultiMemory'],
       ['multisnake', 'logo_multisnake.png', 'arcade_snake_title', 'MultiSnake'],
+      ['multipop', 'logo_multipop.png', 'arcade_pop_title', 'MultiPop'],
     ];
     return games.map(([game, logo, nameKey, fallback]) =>
       this._buildScoreRow({

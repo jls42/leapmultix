@@ -228,6 +228,15 @@ describe('mode-stats : amorçage et relecture', () => {
     expect(invasionOperators(['easy'])).toEqual(['?']);
   });
 
+  test('anciens scores : seuls les quatre jeux d’avant la v37 sont lus, jamais MultiPop', () => {
+    const read = [];
+    seedModeStats({}, game => {
+      read.push(game);
+      return game === 'multipop' ? [999] : [];
+    });
+    expect(read).toEqual(['invasion', 'multimiam', 'multimemory', 'multisnake']);
+  });
+
   test('les courses de Chrono hors multiplication sont comptées dans leur opération', () => {
     const stats = seedModeStats({
       chronoStats: { buckets: [{ count: 2 }] },

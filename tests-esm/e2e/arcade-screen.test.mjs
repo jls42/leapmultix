@@ -35,7 +35,7 @@ const SHORT_LANDSCAPE = {
 const DESKTOP = { width: 1280, height: 800, deviceScaleFactor: 1 };
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36';
-const ARCADE_GAMES = ['invasion', 'multimiam', 'multimemory', 'multisnake'];
+const ARCADE_GAMES = ['invasion', 'multimiam', 'multimemory', 'multisnake', 'multipop'];
 
 // Dessins des canevas, en unités du jeu, avec la transformation du dessin (t : échelle et
 // décalage vers les pixels internes, à la densité de l'écran) : images (dos des cartes,
@@ -325,7 +325,7 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   // Le plateau garde sa taille du premier au dernier instant : la consigne, posée dessus
   // (à côté sur un téléphone tourné), ne lui prend pas de place et part sans rien déplacer.
   // Dans les deux cas, elle laisse passer le doigt (au plateau, ou à la zone de jeu à côté).
-  // Les quatre jeux sur chaque écran : chacun pose sa consigne à sa place (MultiMemory sur
+  // Les cinq jeux sur chaque écran : chacun pose sa consigne à sa place (MultiMemory sur
   // ordinateur a trois rangées, consigne en bas), et chacun a montré le défaut sur ordinateur.
   // Sous le plateau, « Abandonner » reste en bas de l'écran dès le lancement, et le dessin du
   // jeu couvre le plateau (à une case près) : tous les plateaux prennent la place, MultiMiam

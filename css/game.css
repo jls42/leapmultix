@@ -574,7 +574,7 @@ body:has(.chrono-container) {
   box-shadow: 0 0 0 var(--accent-edge, var(--color-action-edge));
 }
 
-/* Arcade : chaque mini-jeu reprend une des cinq teintes */
+/* Arcade : chaque mini-jeu reprend la teinte d'un mode */
 .arcade-game-card[data-game='invasion'] {
   --accent: var(--mode-arcade);
   --accent-edge: var(--mode-arcade-edge);
@@ -597,4 +597,10 @@ body:has(.chrono-container) {
   --accent: var(--mode-discovery);
   --accent-edge: var(--mode-discovery-edge);
   --accent-tint: var(--mode-discovery-tint);
+}
+
+.arcade-game-card[data-game='multipop'] {
+  --accent: var(--mode-adventure);
+  --accent-edge: var(--mode-adventure-edge);
+  --accent-tint: var(--mode-adventure-tint);
 }

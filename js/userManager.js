@@ -19,7 +19,7 @@ import { createVirtualKeyboard } from './virtual-keyboard.js';
 import { goToSlide } from './slides.js';
 import { gameState, displayDailyChallenge } from './game.js';
 import { normalizeAdventureProgressByOperator } from './core/adventure-progress.js';
-import { normalizeModeStats, emptyModeStats, ARCADE_GAMES } from './core/mode-stats.js';
+import { normalizeModeStats, emptyModeStats, LEGACY_ARCADE_GAMES } from './core/mode-stats.js';
 import { eventBus } from './core/eventBus.js';
 import {
   normalizeChronoStats,
@@ -378,7 +378,7 @@ export const UserManager = {
    */
   _removeLegacyArcadeScores(owners, protectedKeys = new Set()) {
     for (const owner of new Set(owners.filter(Boolean))) {
-      for (const game of ARCADE_GAMES) {
+      for (const game of LEGACY_ARCADE_GAMES) {
         const key = legacyArcadeKey(game, owner);
         if (protectedKeys.has(key)) continue;
         try {
@@ -598,7 +598,7 @@ export const UserManager = {
     // le surnom (et donc le prénom en clair), partent avec le profil, sauf ceux d'un autre
     // profil qui porte le même nom, dans la liste ou dans la corbeille
     const inUse = [...this._legacyOwnersInUse(kept)].flatMap(owner =>
-      ARCADE_GAMES.map(game => legacyArcadeKey(game, owner))
+      LEGACY_ARCADE_GAMES.map(game => legacyArcadeKey(game, owner))
     );
     const owners = expired.flatMap(entry => [
       entry.name,

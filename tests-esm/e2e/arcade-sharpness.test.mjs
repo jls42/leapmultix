@@ -43,7 +43,7 @@ const SCREENS = [
     { width: 390, height: 844, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
   ],
 ];
-const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory'];
+const ARCADE_GAMES = ['invasion', 'multimiam', 'multisnake', 'multimemory', 'multipop'];
 // Mur et couloirs de MultiMiam : ils suivent ses cases, presque carrées (au plus 1,25 fois plus
 // hautes que larges ou l'inverse : MAX_CELL_STRETCH de js/multimiam-layout.js). Ailleurs (dos
 // des cartes de MultiMemory), les mêmes textures ne se déforment pas.
@@ -220,7 +220,7 @@ describe('Images des jeux d’Arcade (E2E)', () => {
             screen: [contentWidth(img) * devicePixelRatio, contentWidth(img) * devicePixelRatio],
           }));
         }, shown);
-        expect(images).toHaveLength(6);
+        expect(images).toHaveLength(7);
         expect(images.filter(img => !img.src.endsWith('.webp'))).toEqual([]);
         expect(images.filter(isBlurry)).toEqual([]);
       },

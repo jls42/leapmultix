@@ -56,7 +56,7 @@
 
 ## Beskrivning
 
-LeapMultix är en interaktiv pedagogisk webbapplikation för barn mellan 6 och 12 år som vill lära sig de fyra räknesätten: multiplikation (×), addition (+), subtraktion (−) och division (÷). Den erbjuder **6 spellägen** och **4 minispel i arkadstil** i ett intuitivt, tillgängligt och flerspråkigt gränssnitt.
+LeapMultix är en interaktiv pedagogisk webbapplikation för barn mellan 6 och 12 år som vill lära sig de fyra räknesätten: multiplikation (×), addition (+), subtraktion (−) och division (÷). Den erbjuder **6 spellägen** och **5 arkadminispel** i ett intuitivt, tillgängligt och flerspråkigt gränssnitt.
 
 **Stöd för flera räknesätt:** alla lägen stöder de fyra räknesätten. Valet görs på startskärmen och gäller under hela spelsessionen.
 
@@ -76,23 +76,25 @@ LeapMultix är en interaktiv pedagogisk webbapplikation för barn mellan 6 och 1
 |                        **Upptäck** — varje likhet visas med punkter, hopp eller räkning samt ett knep för tabellen.                         | **Quiz** — barnets val visas bredvid det rätta svaret och förklaringen beskriver uträkningen i detalj. |
 |                                  ![Utmaningsläget: nedräkning och pågående svit](docs/media/05-defi.webp)                                   |    ![Äventyrsläget: karta över de tio nivåerna, de följande är låsta](docs/media/06-aventure.webp)     |
 |                   **Utmaning** — tävla mot klockan. Vid ett fel stannar tiden så att barnet hinner läsa det rätta svaret.                   |                 **Äventyr** — tio nivåer som öppnas en efter en i utbyte mot stjärnor.                 |
-|                        ![Tidtagarläget: ett subtraktionslopp med tidtagning och framsteg](docs/media/14-chrono.webp)                        |                      ![Arkadmeny: de fyra minispelen](docs/media/07-arcade.webp)                       |
-|       **Tidtagning** — tio rätta svar mot klockan i det valda räknesättet; missade uträkningar läggs till i en lista för repetition.        |           **Arkad** — fyra minispel med inställning av svårighetsgrad och val av rymdskepp.            |
+|                        ![Tidtagarläget: ett subtraktionslopp med tidtagning och framsteg](docs/media/14-chrono.webp)                        |                       ![Arkadmeny: de fem minispelen](docs/media/07-arcade.webp)                       |
+|       **Tidtagning** — tio rätta svar mot klockan i det valda räknesättet; missade uträkningar läggs till i en lista för repetition.        |                **Arkad** – fem minispel med svårighetsinställning och val av rymdskepp.                |
 |         ![Instrumentpanel: omgångar, rekord och svar för varje läge, uppdelade efter räknesätt](docs/media/08-tableau-de-bord.webp)         |         ![Anpassning: avatarer, teman och tillgänglighet](docs/media/09-personnalisation.webp)         |
 | **Instrumentpanel** — omgångar och rekord för varje läge, uppdelade efter räknesätt; stjärnor och tabeller att repetera för multiplikation. |       **Anpassning** — avatarer som låses upp med mynt, färgtema, textstorlek och hög kontrast.        |
 
 ### Minispelen i arkadstil
 
-Fyra spel som ställer samma fråga — den som visas ovanför spelområdet
-tillsammans med återstående tid och liv — men som varje gång kräver en
-annan handling.
+Fem spel som ställer samma fråga – den som visas ovanför spelytan,
+tillsammans med återstående tid och liv – men som varje gång kräver en ny
+handling.
 
-|                                                                                                                         |                                                                                          |
-| :---------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------: |
-|     ![MultiInvaders: monster med siffror och ett rymdskepp längst ned på skärmen](docs/media/10-multiinvaders.webp)     |  ![MultiMiam: en labyrint där prickar visar möjliga svar](docs/media/11-multimiam.webp)  |
-|      **MultiInvaders** — skjut på de felaktiga svaren och skona det rätta: där gömmer sig en vän som ska befrias.       | **MultiMiam** — ta dig genom labyrinten för att fånga rätt resultat och undvik monstren. |
-| ![MultiMemory: ett rutnät med kort där två är vända och visar en uträkning och ett tal](docs/media/12-multimemory.webp) |   ![MultiSnake: en orm och numrerade äpplen på en äng](docs/media/13-multisnake.webp)    |
-|                **MultiMemory** — kom ihåg vilket kort som visar resultatet av den uppvända uträkningen.                 |            **MultiSnake** — väx genom att äta rätt tal och undvik alla andra.            |
+|                                                                                                                                              |                                                                                          |
+| :------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------: |
+|               ![MultiInvaders: monster med siffror och ett rymdskepp längst ned på skärmen](docs/media/10-multiinvaders.webp)                |  ![MultiMiam: en labyrint där prickar visar möjliga svar](docs/media/11-multimiam.webp)  |
+|                 **MultiInvaders** — skjut på de felaktiga svaren och skona det rätta: där gömmer sig en vän som ska befrias.                 | **MultiMiam** — ta dig genom labyrinten för att fånga rätt resultat och undvik monstren. |
+|           ![MultiMemory: ett rutnät med kort där två är vända och visar en uträkning och ett tal](docs/media/12-multimemory.webp)            |   ![MultiSnake: en orm och numrerade äpplen på en äng](docs/media/13-multisnake.webp)    |
+|                           **MultiMemory** — kom ihåg vilket kort som visar resultatet av den uppvända uträkningen.                           |            **MultiSnake** — väx genom att äta rätt tal och undvik alla andra.            |
+| ![MultiPop: monster tittar upp ur sina hålor, vart och ett med en skylt med ett tal, och en vän med ett hjärta](docs/media/15-multipop.webp) |                                                                                          |
+|              **MultiPop** – slå monstret som bär det rätta svaret innan det försvinner ner i sitt hål, utan att röra vännerna.               |                                                                                          |
 
 ## ✨ Funktioner
 
@@ -110,6 +112,7 @@ annan handling.
 - **MultiMiam**: Matematiskt Pac-Man-spel – samla in de rätta svaren
 - **MultiMemory**: Memoryspel – para ihop räkneoperationer och resultat
 - **MultiSnake**: Pedagogiskt Snake-spel – väx genom att äta rätt tal
+- **MultiPop**: Reflexspel – Slå monstret som visar det rätta svaret, aldrig en vän
 
 ### ➕ Stöd för flera räknesätt
 
@@ -262,6 +265,7 @@ leapmultix/
 │   │                       #   arcade-time.js ; plein écran : arcade-fullscreen.js)
 │   ├── multimiam*.js       # Mini-jeu Pac-Man (moteur, rendu, contrôles…)
 │   ├── multisnake.js       # Mini-jeu Snake
+│   ├── multipop-*.js       # Mini-jeu des monstres qui surgissent (moteur, rendu ; partie : arcade-multipop.js)
 │   ├── i18n.js, i18n-store.js                # Internationalisation
 │   ├── security-utils.js, error-handlers.js, logger.js
 │   ├── accessibility.js, keyboard-navigation.js, touch-support.js, speech.js
@@ -483,9 +487,9 @@ LeapMultix är en komplett PWA med offlinestöd och möjlighet till installation
 
 **Service Worker** (`sw.js`):
 
-- Installation: förinläsning av allt som spelet behöver, med en lista som skapas från koden
+- Installation: förinläsning av allt som spelet behöver, lista genererad från koden
   av `scripts/precache-list.mjs` (`npm run precache:update`, verifierad av testerna): efter
-  ett första besök kan de 6 lägena och de 4 Arcade-spelen startas offline
+  ett första besök startar de 6 lägena och de 5 arkadspelen offline
 - Navigering: Network-first med en tidsgräns på 4 s: efter den (ett nätverk som inte svarar: skolans wifi, inloggningsportal) eller offline används den cachade spelsidan (`offline.html` endast för en sida som aldrig har sparats)
 - Bilder: Cache-first; offline används en annan storlek av samma sprite eller en annan bakgrund för samma avatar
 - Översättningar: Stale-while-revalidate för uppdatering i bakgrunden

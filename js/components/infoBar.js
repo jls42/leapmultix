@@ -20,7 +20,13 @@ function trLabel(key, fallback, params = {}) {
 
 const HEART_PATH =
   'M12 20.3s-7.6-4.5-9.3-9.4C1.5 7.6 3.6 4.5 7 4.5c2.2 0 3.9 1.2 5 3 1.1-1.8 2.8-3 5-3 3.4 0 5.5 3.1 4.3 6.4-1.7 4.9-9.3 9.4-9.3 9.4z';
-const ARCADE_MODES = new Set(['multisnake', 'multimiam', 'multimemory', 'multiinvaders']);
+const ARCADE_MODES = new Set([
+  'multisnake',
+  'multimiam',
+  'multimemory',
+  'multiinvaders',
+  'multipop',
+]);
 const MAX_LIVES = 3;
 
 /**
@@ -73,6 +79,7 @@ const ARCADE_TITLES = new Map([
   ['multimiam', ['arcade_pacman_title', 'MultiMiam']],
   ['multisnake', ['arcade_snake_title', 'MultiSnake']],
   ['multimemory', ['arcade.multiMemory.title', 'MultiMemory']],
+  ['multipop', ['arcade_pop_title', 'MultiPop']],
 ]);
 
 export const InfoBar = {
@@ -202,6 +209,7 @@ export const InfoBar = {
     multisnake: ['score', 'lives'],
     multimiam: ['score', 'lives'],
     multimemory: ['score', 'lives'],
+    multipop: ['score'],
     multiinvaders: ['score', 'lives', 'time'],
   },
 

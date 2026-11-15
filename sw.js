@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v74'; // bump to trigger client update
+const VERSION = 'v75'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -145,6 +145,7 @@ const PRECACHE_CORE = [
   '/index.html',
   '/js/accessibility.js',
   '/js/adventure-gifts.js',
+  '/js/arcade-answers.js',
   '/js/arcade-common.js',
   '/js/arcade-fullscreen.js',
   '/js/arcade-invasion.js',
@@ -152,6 +153,7 @@ const PRECACHE_CORE = [
   '/js/arcade-message.js',
   '/js/arcade-multimemory.js',
   '/js/arcade-multimiam.js',
+  '/js/arcade-multipop.js',
   '/js/arcade-multisnake.js',
   '/js/arcade-points.js',
   '/js/arcade-scores.js',
@@ -251,6 +253,8 @@ const PRECACHE_CORE = [
   '/js/multimiam-renderer.js',
   '/js/multimiam-ui.js',
   '/js/multimiam.js',
+  '/js/multipop-engine.js',
+  '/js/multipop-renderer.js',
   '/js/multisnake-path.js',
   '/js/multisnake-renderer.js',
   '/js/multisnake-skins.js',
@@ -515,6 +519,7 @@ const PRECACHE_IMAGES = [
   '/assets/images/arcade/logo_multiinvaders.png',
   '/assets/images/arcade/logo_multimemory.png',
   '/assets/images/arcade/logo_multimiam.png',
+  '/assets/images/arcade/logo_multipop.png',
   '/assets/images/arcade/logo_multisnake.png',
   '/assets/images/arcade/monstre01_right_128x128.png',
   '/assets/images/arcade/monstre02_right_128x128.png',

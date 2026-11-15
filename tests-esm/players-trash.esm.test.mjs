@@ -196,6 +196,18 @@ describe(`Au bout de ${TRASH_DAYS} jours, effacé pour de bon`, () => {
     expect(localStorage.getItem('arcadeScores_Tom')).toBe('[100]');
   });
 
+  test('la clé de MultiInvaders d’un joueur nommé « multipop_Léa » reste à lui', () => {
+    seedClass();
+    // MultiPop n'a jamais rangé de scores hors du profil : cette clé n'est pas celle de Léa
+    localStorage.setItem('arcadeScores_multipop_Léa', '[700]');
+    const now = jest.spyOn(Date, 'now').mockReturnValue(NOW - 31 * DAY);
+    UserManager.deleteUser('Léa');
+    now.mockReturnValue(NOW);
+
+    UserManager.purgeExpiredTrash(NOW);
+    expect(localStorage.getItem('arcadeScores_multipop_Léa')).toBe('[700]');
+  });
+
   test('les scores d’un homonyme, dans la liste ou dans la corbeille, sont gardés', () => {
     seedClass();
     const now = jest.spyOn(Date, 'now').mockReturnValue(NOW - 40 * DAY);
