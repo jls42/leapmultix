@@ -192,13 +192,25 @@ export function updateSeoHeroImage(preferredLang) {
    chaque avatar, la première fois qu'on l'affiche dans la session, puis elle
    ne change plus : ni minuterie, ni changement pendant une question. */
 const avatarAvailableImages = {
-  fox: [1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17],
+  fox: Array.from({ length: 17 }, (_, i) => i + 1),
   panda: Array.from({ length: 17 }, (_, i) => i + 1),
   unicorn: [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
   dragon: Array.from({ length: 17 }, (_, i) => i + 1),
   astronaut: Array.from({ length: 17 }, (_, i) => i + 1),
   default: [1],
 };
+
+/**
+ * Mondes illustrés que le tirage peut donner à un avatar (img/background_<avatar>_NNN), en
+ * copie : aucun pour un avatar inconnu
+ * @param {string} avatarId
+ * @returns {number[]}
+ */
+export function avatarWorlds(avatarId) {
+  const worlds = new Map(Object.entries(avatarAvailableImages)).get(resolveAvatarAlias(avatarId));
+  return worlds ? [...worlds] : [];
+}
+
 const _chosenImageByAvatar = {};
 let _appliedBackgroundKey = null;
 let _appliedBackgroundAvatar = null;
