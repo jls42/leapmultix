@@ -6,13 +6,19 @@
 // (tables), les plages facile, moyenne et difficile des opérations en +, − et ÷
 // (questionDifficulty, lue par generateQuestion). Le niveau moyen garde les plages moyennes,
 // celles de tous les niveaux avant octobre 2026.
+//
+// Rythme de l'Arcade : une vague de MultiInvaders met waveSeconds à descendre jusqu'à la
+// fusée, sur tous les écrans ; le serpent de MultiSnake avance d'une case toutes les
+// snakeStepMs au départ (sur ordinateur). Les monstres de MultiMiam suivent le niveau dans
+// js/multimiam-engine.js (ghostsOfLevel).
 
 const DIFFICULTY_SETTINGS = {
   debutant: {
     label: 'Débutant',
     timeSeconds: 120, // 2 min
     penalty: 50,
-    enemySpeed: 1,
+    waveSeconds: 60,
+    snakeStepMs: 500,
     tables: [2, 3, 4, 5],
     questionDifficulty: 'easy',
     distractorDistance: 'far',
@@ -22,7 +28,8 @@ const DIFFICULTY_SETTINGS = {
     label: 'Moyen',
     timeSeconds: 180, // 3 min
     penalty: 75,
-    enemySpeed: 1.3,
+    waveSeconds: 40,
+    snakeStepMs: 400,
     tables: [2, 3, 4, 5, 6, 7, 8],
     questionDifficulty: 'medium',
     distractorDistance: 'medium',
@@ -32,7 +39,8 @@ const DIFFICULTY_SETTINGS = {
     label: 'Difficile',
     timeSeconds: 300, // 5 min
     penalty: 100,
-    enemySpeed: 1.6,
+    waveSeconds: 25,
+    snakeStepMs: 320,
     tables: [2, 3, 4, 5, 6, 7, 8, 9, 10], // pondération à gérer plus tard
     questionDifficulty: 'hard',
     distractorDistance: 'close',

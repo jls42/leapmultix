@@ -520,17 +520,26 @@ export function clampShipX(x, width, scale, boardWidth, reach = Infinity) {
   return center - width / 2;
 }
 
-function computeBaseAlienSpeed(isMobile, difficulty, enemySpeed) {
-  // Calcule une vitesse de base des aliens en fonction du device et de la difficulté
-  const diff = difficulty || 'moyen';
-  if (isMobile) {
-    if (diff === 'debutant' || diff === 'facile') return 0.04 * enemySpeed;
-    if (diff === 'moyen') return 0.05 * enemySpeed;
-    return 0.055 * enemySpeed;
-  }
-  if (diff === 'debutant' || diff === 'facile') return 0.05 * enemySpeed;
-  if (diff === 'moyen') return 0.07 * enemySpeed;
-  return 0.09 * enemySpeed;
+// Un monstre arrivé à cette distance au-dessus de la fusée la touche
+const ALIEN_REACH = 40;
+// Après chaque ami libéré, la vague suivante descend 3 % plus vite
+const WAVE_SPEEDUP = 0.03;
+
+/** Ligne de départ des monstres : un peu plus haut sur un écran tactile */
+function waveStartY(isMobile, boardHeight) {
+  return (isMobile ? 30 : 50) * (boardHeight / baseHeight);
+}
+
+/**
+ * Vitesse d'une vague, en unités du plateau par image à 60 images par seconde : partie de
+ * startY, elle atteint reachY en `seconds` secondes, quelle que soit la taille du plateau
+ * @param {number} seconds
+ * @param {number} startY
+ * @param {number} reachY
+ * @returns {number}
+ */
+export function waveDescentSpeed(seconds, startY, reachY) {
+  return Math.max(0, reachY - startY) / (seconds * 60);
 }
 
 /**
@@ -620,18 +629,15 @@ export function startMultiplicationInvasion() {
   let lives = 3;
   let wave = 1;
   let gameOver = false;
-  // Vitesse réduite pour une meilleure jouabilité sur mobile
-  // Vitesse des aliens selon le niveau de difficulté mais avec une base plus lente
-  // Réutilisation de difficultySettings déjà déclaré
-  const baseAlienSpeed = computeBaseAlienSpeed(
-    isMobile,
-    globalGameState.difficulty,
-    difficultySettings.enemySpeed
-  );
-
-  // Augmentation progressive très douce pour limiter la pression
-  const alienSpeedIncrement = baseAlienSpeed * 0.03;
-  let currentAlienSpeed = baseAlienSpeed;
+  // Une vague met le temps de son niveau à descendre jusqu'à la fusée, sur tous les écrans,
+  // un peu moins après chaque ami libéré (le plateau peut changer avant la 1re vague)
+  const waveSpeed = () =>
+    waveDescentSpeed(
+      difficultySettings.waveSeconds,
+      waveStartY(isMobile, displayHeight),
+      player.y - ALIEN_REACH
+    ) *
+    (1 + WAVE_SPEEDUP * (wave - 1));
   const autoRestartTimeout = null;
   let showingAvatar = false;
   let avatarImg = null,
@@ -774,20 +780,16 @@ export function startMultiplicationInvasion() {
     const totalWidth = nbAliens * alienWidth + (nbAliens - 1) * spacing;
     const startX = (displayWidth - totalWidth) / 2;
     const options = waveAnswers(q, operator, difficultySettings, nbAliens);
+    const startY = waveStartY(isMobile, displayHeight);
+    const speed = waveSpeed();
     for (let i = 0; i < nbAliens; i++) {
-      // Position verticale de départ ajustée selon le device
-      // Sur mobile, commencer plus haut pour donner plus de temps
-      const startY = isMobile
-        ? 30 * (displayHeight / baseHeight) // Plus haut sur mobile
-        : 50 * (displayHeight / baseHeight); // Position standard sur desktop
-
       const alien = {
         x: startX + i * (alienWidth + spacing),
         y: startY,
 
         value: options[i],
         color: '#ff5252',
-        speed: currentAlienSpeed,
+        speed,
 
         sprite: spritesForWave[i],
       };
@@ -918,7 +920,7 @@ export function startMultiplicationInvasion() {
   }
 
   function checkAlienCollision() {
-    if (aliens.some(alien => alien.y + 40 >= player.y)) {
+    if (aliens.some(alien => alien.y + ALIEN_REACH >= player.y)) {
       if (!isArcadeActive()) return;
       countWave(false);
       lives--;
@@ -947,7 +949,6 @@ export function startMultiplicationInvasion() {
       avatarW = alienWidth;
       avatarDisplayTime = 0;
       wave++;
-      currentAlienSpeed = baseAlienSpeed + (wave - 1) * alienSpeedIncrement;
       nextWaveAfter(1200);
     }
   }
@@ -1171,15 +1172,17 @@ export function startMultiplicationInvasion() {
     placeWaveAgain();
   }
 
-  // Les monstres de la vague, replacés dans le plateau refait : mêmes nombres, mêmes images
+  // Les monstres de la vague, replacés dans le plateau refait : mêmes nombres, mêmes images,
+  // la vitesse du nouveau plateau
   function placeWaveAgain() {
     if (aliens.length === 0) return;
     layoutAliens(aliens.length);
     const totalWidth = aliens.length * alienWidth + (aliens.length - 1) * spacing;
     const startX = (displayWidth - totalWidth) / 2;
-    const startY = (isMobile ? 30 : 50) * (displayHeight / baseHeight);
+    const y = waveStartY(isMobile, displayHeight);
+    const speed = waveSpeed();
     aliens.forEach((alien, i) => {
-      Object.assign(alien, { x: startX + i * (alienWidth + spacing), y: startY });
+      Object.assign(alien, { x: startX + i * (alienWidth + spacing), y, speed });
     });
   }
 

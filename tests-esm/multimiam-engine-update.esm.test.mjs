@@ -116,6 +116,20 @@ describe('MultiMiam : boucle du moteur', () => {
     expect(game.movePacman).not.toHaveBeenCalled();
   });
 
+  test.each([
+    [1, 4.5],
+    [2, 3.5],
+    [3, 3],
+  ])('niveau %i : un pas des monstres tous les %f pas du personnage', (level, pace) => {
+    game.difficulty = level;
+    clocksBehindBy(0, MOVE_MS * pace - 1);
+    game.update();
+    expect(game.moveGhosts).not.toHaveBeenCalled();
+    clocksBehindBy(0, MOVE_MS * pace);
+    game.update();
+    expect(game.moveGhosts).toHaveBeenCalledTimes(1);
+  });
+
   test('partie arrêtée : rien ne se passe', () => {
     clocksBehindBy(MOVE_MS, MOVE_MS * 3.5);
     game.running = false;

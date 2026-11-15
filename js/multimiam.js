@@ -15,7 +15,7 @@ import {
 } from './arcade-sprite-catalog.js';
 import PacmanQuestions from './multimiam-questions.js';
 import PacmanRenderer from './multimiam-renderer.js';
-import { initPacmanEngine } from './multimiam-engine.js';
+import { ghostsOfLevel, initPacmanEngine } from './multimiam-engine.js';
 import { shuffleInPlace } from './core/random.js';
 import { initPacmanControls } from './multimiam-controls.js';
 import { initPacmanUI } from './multimiam-ui.js';
@@ -124,10 +124,6 @@ export class PacmanGame {
     // Période de grâce au début de la partie
     this.graceStartTime = 0;
     this.graceDuration = 2000; // 2 secondes de grâce au début
-
-    // Vitesse des fantômes (plus la valeur est élevée, plus ils sont lents)
-    this.ghostSpeed = 6; // Vitesse initiale plus lente (6 au lieu de 2)
-    this.ghostMoveCounter = 0;
 
     // Opération mathématique
     this.currentOperation = null;
@@ -256,13 +252,14 @@ export class PacmanGame {
     };
   }
 
-  /** Fantômes au point de départ : seuls les deux premiers sont actifs */
+  /** Fantômes au point de départ : seuls ceux du niveau sont actifs (1 à 3) */
   createGhosts() {
+    const { startGhosts } = ghostsOfLevel(this.difficulty);
     return INITIAL_GHOSTS.map((ghost, i) => ({
       ...ghost,
       direction: 'UP',
       vulnerable: false,
-      active: i < 2,
+      active: i < startGhosts,
     }));
   }
 
@@ -352,7 +349,6 @@ export class PacmanGame {
     this.running = true;
     this.goodAnswersCount = 0; // Compteur de bonnes réponses
     this.lastMoveTime = globalThis.performance?.now?.() ?? Date.now();
-    this.ghostMoveCounter = 0;
 
     // Activer la période de grâce au début de la partie
     this.graceStartTime = Date.now();
@@ -361,10 +357,6 @@ export class PacmanGame {
     // Réinitialiser Pacman et les fantômes
     this.multimiam = this.createPlayer();
     this.ghosts = this.createGhosts();
-
-    // Réinitialiser la vitesse des fantômes
-    this.ghostSpeed = 6;
-    this.ghostMoveCounter = 0;
 
     // Initialiser le jeu
     this.init();

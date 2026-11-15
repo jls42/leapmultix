@@ -6,6 +6,7 @@
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { fakeCanvasContext } from './helpers/touch-test-helpers.mjs';
+import { useCoarsePointer } from './helpers/arcade-screen-helpers.mjs';
 
 const showArcadePoints = jest.fn();
 const showArcadePenalty = jest.fn();
@@ -252,6 +253,37 @@ describe('MultiSnake : pommes mangées', () => {
       { x: 5, y: 5 },
       { x: 4, y: 5 },
     ]);
+  });
+});
+
+describe('MultiSnake : vitesse selon le niveau', () => {
+  test.each([
+    ['debutant', 500, 313],
+    ['moyen', 400, 250],
+    ['difficile', 320, 200],
+  ])('%s : un pas toutes les %i ms au départ, %i au plus vite', (difficulty, start, fastest) => {
+    game.cleanup();
+    frozenGame({ difficulty });
+    expect(game.moveInterval).toBe(start);
+    expect(game.minSpeed).toBe(fastest);
+  });
+
+  test('sur téléphone, un peu plus lent à chaque niveau (Moyen comme avant)', () => {
+    const restore = useCoarsePointer();
+    try {
+      const steps = ['debutant', 'moyen', 'difficile'].map(difficulty => {
+        game.cleanup();
+        frozenGame({ difficulty });
+        return [game.moveInterval, game.minSpeed];
+      });
+      expect(steps).toEqual([
+        [563, 375],
+        [450, 300],
+        [360, 240],
+      ]);
+    } finally {
+      restore();
+    }
   });
 });
 
