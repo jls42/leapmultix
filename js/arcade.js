@@ -8,16 +8,8 @@ import {
   saveArcadeScore,
   getArcadeScores,
   resetArcadeScores,
-  saveArcadeScoreSnake,
-  getArcadeScoresSnake,
-  resetArcadeScoresSnake,
-  saveArcadeScorePacman,
-  getArcadeScoresPacman,
-  resetArcadeScoresPacman,
-  saveArcadeScoreMemory,
-  getArcadeScoresMemory,
-  resetArcadeScoresMemory,
 } from './utils-es6.js';
+import { difficultyKey } from './difficulty.js';
 import { cancelSpeech } from './speech.js';
 import { spriteFor } from './arcade-sprites.js';
 import { monsterSpec } from './arcade-sprite-catalog.js';
@@ -257,17 +249,11 @@ function bindGameOverActions(wrapper, mode, score) {
 }
 
 // --- Helpers (réduisent la complexité de showArcadeGameOver) ---
+// Niveau de la partie (choisi dans le menu de l'Arcade) : chacun a ses meilleurs scores
+const playedLevel = () => difficultyKey(globalGameState?.difficulty);
+
 function saveScoreForMode(mode, score, operator) {
-  switch (arcadeGameOf(mode)) {
-    case 'multisnake':
-      return saveArcadeScoreSnake(score, operator);
-    case 'multimiam':
-      return saveArcadeScorePacman(score, operator);
-    case 'multimemory':
-      return saveArcadeScoreMemory(score, operator);
-    default:
-      return saveArcadeScore(score, 'invasion', operator);
-  }
+  saveArcadeScore(score, arcadeGameOf(mode), operator, playedLevel());
 }
 
 /** Score affiché par le jeu en cours (barre d'infos), comme le lit la fin du temps */
@@ -279,29 +265,12 @@ function displayedArcadeScore() {
 }
 
 function getScoresForMode(mode) {
-  switch (mode) {
-    case 'multisnake':
-      return getArcadeScoresSnake();
-    case 'multimiam':
-      return getArcadeScoresPacman();
-    case 'multimemory':
-      return getArcadeScoresMemory();
-    default:
-      return getArcadeScores();
-  }
+  return getArcadeScores(arcadeGameOf(mode), playedLevel());
 }
 
+// « Remettre à zéro » : les scores du jeu, à tous les niveaux
 function resetScoresForMode(mode) {
-  switch (mode) {
-    case 'multisnake':
-      return resetArcadeScoresSnake();
-    case 'multimiam':
-      return resetArcadeScoresPacman();
-    case 'multimemory':
-      return resetArcadeScoresMemory();
-    default:
-      return resetArcadeScores();
-  }
+  resetArcadeScores(arcadeGameOf(mode));
 }
 
 /**
@@ -409,8 +378,15 @@ function buildMissedCalculations(misses) {
   return section;
 }
 
+// Nom de chaque niveau sous « Meilleurs scores » (clé de traduction, repli)
+const LEVEL_NAMES = new Map([
+  ['debutant', ['difficulty_beginner', 'Débutant']],
+  ['moyen', ['difficulty_medium', 'Moyen']],
+  ['difficile', ['difficulty_hard', 'Difficile']],
+]);
+
 /**
- * Meilleurs scores de ce jeu, avec la remise à zéro juste dessous (discrète).
+ * Meilleurs scores de ce jeu au niveau joué, avec la remise à zéro juste dessous (discrète).
  * @returns {HTMLElement|null} null s'il n'y a encore aucun score
  */
 function buildTopScores(arcadeScores) {
@@ -424,6 +400,12 @@ function buildTopScores(arcadeScores) {
   const title = document.createElement('h2');
   title.dataset.translate = 'arcade_top_scores';
   title.textContent = translated('arcade_top_scores', 'Meilleurs scores');
+  // Les scores du niveau joué : son nom sous le titre
+  const [levelKey, levelName] = LEVEL_NAMES.get(playedLevel());
+  const level = document.createElement('p');
+  level.className = 'arcade-top-level';
+  level.dataset.translate = levelKey;
+  level.textContent = translated(levelKey, levelName);
   const ol = document.createElement('ol');
   bestScores.forEach(s => {
     const li = document.createElement('li');
@@ -436,7 +418,7 @@ function buildTopScores(arcadeScores) {
     key: 'reset_scores_button',
     fallback: 'Remettre à zéro les scores',
   });
-  topWrap.append(title, ol, resetBtn);
+  topWrap.append(title, level, ol, resetBtn);
   return topWrap;
 }
 

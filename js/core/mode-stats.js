@@ -28,6 +28,8 @@ export const CHALLENGE_DIFFICULTIES = Object.freeze(['easy', 'medium', 'hard']);
 const OPERATORS = new Set(['×', '+', '−', '÷']);
 const OPERATOR_KEYS = new Set([...OPERATORS, UNKNOWN_OPERATOR]);
 const ARCADE_TOP = 5;
+// Niveaux de l'Arcade (difficulty.js) : chacun a ses meilleurs scores
+const ARCADE_LEVELS = Object.freeze(['debutant', 'moyen', 'difficile']);
 const TABLE_MIN = 1;
 const TABLE_MAX = 10;
 // Énoncé d'un calcul : « 7 × 8 = ? ». Les gardes autour du premier nombre l'épinglent sur une
@@ -82,6 +84,9 @@ const emptyContainers = () => ({
   modes: {},
   imported: { questions: 0, correct: 0 },
   arcadeTop5: {},
+  // Meilleurs scores par jeu et par niveau ; arcadeTop5 garde ceux de tous les niveaux, que
+  // lit une version précédente du jeu
+  arcadeTop5ByLevel: {},
   review: {},
 });
 
@@ -141,6 +146,16 @@ function cleanArcadeTop5(raw) {
   return Object.fromEntries(tops.filter(([, top]) => top.length > 0));
 }
 
+function cleanTop5ByLevel(raw) {
+  const levels = ARCADE_LEVELS.map(level => [level, cleanTop5(ownValue(raw, level))]);
+  return Object.fromEntries(levels.filter(([, top]) => top.length > 0));
+}
+
+function cleanArcadeTop5ByLevel(raw) {
+  const games = ARCADE_GAMES.map(game => [game, cleanTop5ByLevel(ownValue(raw, game))]);
+  return Object.fromEntries(games.filter(([, byLevel]) => Object.keys(byLevel).length > 0));
+}
+
 function cleanReview(raw) {
   const review = [];
   for (let table = TABLE_MIN; table <= TABLE_MAX; table += 1) {
@@ -185,6 +200,7 @@ function cleanModeStats(raw) {
     modes: cleanModes(raw.modes),
     imported: { questions: count(raw.imported?.questions), correct: count(raw.imported?.correct) },
     arcadeTop5: cleanArcadeTop5(raw.arcadeTop5),
+    arcadeTop5ByLevel: cleanArcadeTop5ByLevel(raw.arcadeTop5ByLevel),
     review: cleanReview(raw.review),
     countedUntil: count(raw.countedUntil),
   };
@@ -475,11 +491,12 @@ export function recordChallengeBest(userData, { operator, difficulty, score }) {
 
 /**
  * Une partie d'Arcade jouée (au moins un coup), terminée ou abandonnée : son score compte
- * pour la moyenne, le record et les 5 meilleurs scores de l'écran de fin.
+ * pour la moyenne, le record et les 5 meilleurs scores de l'écran de fin, ceux de son niveau
+ * (un niveau inconnu : seulement la liste de tous les niveaux).
  * @param {Object} userData
- * @param {{game: string, operator: string, score: number}} result
+ * @param {{game: string, operator: string, score: number, level?: string}} result
  */
-export function recordArcadeGame(userData, { game, operator, score }) {
+export function recordArcadeGame(userData, { game, operator, score, level }) {
   const stats = statsOf(userData);
   if (!stats || !ARCADE_GAMES.includes(game)) return;
   const points = Math.max(0, Number(score) || 0);
@@ -489,19 +506,33 @@ export function recordArcadeGame(userData, { game, operator, score }) {
   entry.best = Math.max(entry.best, points);
   const top = cleanTop5([...(ownValue(stats.arcadeTop5, game) ?? []), points]);
   putOwn(stats.arcadeTop5, game, top);
+  if (!ARCADE_LEVELS.includes(level)) return;
+  const byLevel =
+    ownValue(stats.arcadeTop5ByLevel, game) ?? putOwn(stats.arcadeTop5ByLevel, game, {});
+  putOwn(byLevel, level, cleanTop5([...(ownValue(byLevel, level) ?? []), points]));
 }
 
-/** « Remettre à zéro » un jeu d'Arcade : ses meilleurs scores et ses compteurs */
+/** « Remettre à zéro » un jeu d'Arcade : ses meilleurs scores, à tous les niveaux, et ses compteurs */
 export function resetArcadeGame(userData, game) {
   const stats = statsOf(userData);
   if (!stats) return;
   Reflect.deleteProperty(stats.modes, game);
   Reflect.deleteProperty(stats.arcadeTop5, game);
+  Reflect.deleteProperty(stats.arcadeTop5ByLevel, game);
 }
 
-/** Les 5 meilleurs scores d'un jeu d'Arcade */
-export function arcadeTopScores(userData, game) {
-  return [...(ownValue(userData?.modeStats?.arcadeTop5, game) ?? [])];
+/**
+ * Les 5 meilleurs scores d'un jeu d'Arcade : ceux du niveau donné, sinon ceux de tous les
+ * niveaux
+ * @param {Object} userData
+ * @param {string} game
+ * @param {string} [level]
+ * @returns {number[]}
+ */
+export function arcadeTopScores(userData, game, level) {
+  const stats = userData?.modeStats;
+  if (level === undefined) return [...(ownValue(stats?.arcadeTop5, game) ?? [])];
+  return [...(ownValue(ownValue(stats?.arcadeTop5ByLevel, game), level) ?? [])];
 }
 
 /**
