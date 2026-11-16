@@ -465,13 +465,14 @@ export function startMemoryArcade() {
 }
 
 /**
- * Durée d'une partie : celle du niveau, ou sans limite (Infinity) si le joueur l'a choisi
- * dans la tuile du jeu
- * @param {{timeSeconds: number}} difficultySettings
+ * Durée d'une partie : celle du niveau pour MultiMemory (memorySeconds, plus longue que celle
+ * des autres jeux : il faut retourner toute la grille), ou sans limite (Infinity) si le joueur
+ * l'a choisi dans la tuile du jeu
+ * @param {{memorySeconds: number}} difficultySettings
  * @returns {number}
  */
-function memoryDuration(difficultySettings) {
-  return isNoTimeLimit('multimemory') ? Infinity : difficultySettings.timeSeconds;
+export function memoryDuration(difficultySettings) {
+  return isNoTimeLimit('multimemory') ? Infinity : difficultySettings.memorySeconds;
 }
 
 /**

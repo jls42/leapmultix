@@ -105,7 +105,7 @@ export function commonLaunchTests({ mode, start, Game, bench, touchKey, ready, s
     expect(document.activeElement).toBe(board());
     expect(document.getElementById(`${mode}-info-score`).textContent).toBe('0');
     expect(document.getElementById(`${mode}-info-lives`)).toBeNull();
-    expect(startArcadeTimer).toHaveBeenCalledWith(300);
+    expect(startArcadeTimer).toHaveBeenCalledWith(120);
     expect(banner()).toMatch(/^\d+ \+ \d+ = \?$/);
     // Le mode « en cours de lancement » se retire juste après
     expect(setStartingMode).not.toHaveBeenCalledWith(null);
@@ -126,7 +126,7 @@ export function commonLaunchTests({ mode, start, Game, bench, touchKey, ready, s
   test('sans niveau choisi : Moyen', () => {
     gameState.difficulty = undefined;
     start();
-    expect(startArcadeTimer).toHaveBeenCalledWith(180);
+    expect(startArcadeTimer).toHaveBeenCalledWith(90);
     ready();
     press('ArrowRight');
     expect(status()).toMatch(second(4));

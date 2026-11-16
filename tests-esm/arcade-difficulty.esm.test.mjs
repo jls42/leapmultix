@@ -9,7 +9,8 @@ import { describe, test, expect, beforeAll } from '@jest/globals';
 import { fakeCanvasContext } from './helpers/touch-test-helpers.mjs';
 
 const { getDifficultySettings } = await import('../js/difficulty.js');
-const { drawMemoryCalculation } = await import('../js/arcade-multimemory.js');
+const { drawMemoryCalculation, memoryDuration } = await import('../js/arcade-multimemory.js');
+const { setNoTimeLimit } = await import('../js/arcade-time.js');
 const { drawInvasionQuestion } = await import('../js/arcade-invasion.js');
 const { PacmanQuestions } = await import('../js/multimiam-questions.js');
 const { SnakeGame } = await import('../js/multisnake.js');
@@ -79,6 +80,24 @@ function drawMany(game, operator, level) {
   draw.cleanup?.();
   return draws;
 }
+
+describe('Arcade : durée d’une partie selon le niveau', () => {
+  test('1 min, 1 min 30 et 2 min : un enfant décrochait avant la fin des parties plus longues', () => {
+    expect(LEVELS.map(level => getDifficultySettings(level).timeSeconds)).toEqual([60, 90, 120]);
+  });
+
+  test('MultiMemory garde 2, 3 et 5 min pour retourner toute sa grille, ou pas de limite', () => {
+    expect(LEVELS.map(level => memoryDuration(getDifficultySettings(level)))).toEqual([
+      120, 180, 300,
+    ]);
+    setNoTimeLimit('multimemory', true);
+    try {
+      expect(memoryDuration(getDifficultySettings('moyen'))).toBe(Infinity);
+    } finally {
+      setNoTimeLimit('multimemory', false);
+    }
+  });
+});
 
 describe('Arcade : niveau et plages de nombres', () => {
   test('chaque niveau donne sa plage aux opérations +, − et ÷', () => {

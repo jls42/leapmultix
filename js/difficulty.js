@@ -7,6 +7,10 @@
 // (questionDifficulty, lue par generateQuestion). Le niveau moyen garde les plages moyennes,
 // celles de tous les niveaux avant octobre 2026.
 //
+// Durée d'une partie d'Arcade : timeSeconds (1 min, 1 min 30, 2 min : au-delà, un enfant
+// décroche avant la fin, vu en novembre 2026) ; MultiMemory, où l'on retourne toute une grille,
+// garde memorySeconds (2, 3 et 5 min, ses durées d'avant).
+//
 // Rythme de l'Arcade : une vague de MultiInvaders met waveSeconds à descendre jusqu'à la
 // fusée, sur tous les écrans ; le serpent de MultiSnake avance d'une case toutes les
 // snakeStepMs au départ (sur ordinateur) ; monstersUp monstres de MultiPop sortent ensemble et
@@ -17,7 +21,8 @@
 const DIFFICULTY_SETTINGS = {
   debutant: {
     label: 'Débutant',
-    timeSeconds: 120, // 2 min
+    timeSeconds: 60, // 1 min
+    memorySeconds: 120, // 2 min
     penalty: 50,
     waveSeconds: 60,
     snakeStepMs: 500,
@@ -32,7 +37,8 @@ const DIFFICULTY_SETTINGS = {
   },
   moyen: {
     label: 'Moyen',
-    timeSeconds: 180, // 3 min
+    timeSeconds: 90, // 1 min 30
+    memorySeconds: 180, // 3 min
     penalty: 75,
     waveSeconds: 40,
     snakeStepMs: 400,
@@ -47,7 +53,8 @@ const DIFFICULTY_SETTINGS = {
   },
   difficile: {
     label: 'Difficile',
-    timeSeconds: 300, // 5 min
+    timeSeconds: 120, // 2 min
+    memorySeconds: 300, // 5 min
     penalty: 100,
     waveSeconds: 25,
     snakeStepMs: 320,
