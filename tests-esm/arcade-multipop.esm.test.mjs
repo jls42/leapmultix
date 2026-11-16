@@ -378,6 +378,7 @@ describe('MultiPop : le maillet', () => {
   test('au doigt : on le voit taper, rester sur le monstre, puis s’effacer', () => {
     raiseMonsters();
     const hole = rightMonster().hole;
+    // Le doigt se lève aussitôt (pointerup puis pointerleave) : la frappe continue sans lui
     tapHole(hole, 'touch');
     expect(game.malletView()).toEqual({ ...signPoint(hole), impact: true, ...RAISED });
     expect(canvas.classList.contains('has-mallet')).toBe(false);

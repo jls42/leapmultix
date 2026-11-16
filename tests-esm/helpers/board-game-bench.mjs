@@ -104,22 +104,35 @@ export function keyOn(canvas, key) {
   canvas.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
 }
 
-/**
- * Souris ou doigt sur un point du plateau
- * @param {HTMLCanvasElement} canvas
- * @param {{x: number, y: number}} point
- * @param {string} [pointerType]
- * @returns {MouseEvent} l'événement envoyé
- */
-export function tapAt(canvas, point, pointerType = 'mouse') {
-  const event = new MouseEvent('pointerdown', {
+// Un événement de pointeur (jsdom n'a pas PointerEvent : un MouseEvent et son pointerType)
+function pointerAt(type, point, pointerType) {
+  const event = new MouseEvent(type, {
     clientX: point.x,
     clientY: point.y,
-    bubbles: true,
+    bubbles: type !== 'pointerleave',
     cancelable: true,
   });
   Object.defineProperty(event, 'pointerType', { value: pointerType });
+  return event;
+}
+
+// Ce qu'envoie un doigt qui se lève, mesuré dans Chrome au vrai toucher (16/11/2026) : son
+// pointeur cesse d'exister, il « quitte » donc le plateau aussitôt
+const FINGER_LIFT = ['pointerup', 'pointerout', 'pointerleave'];
+
+/**
+ * Souris ou doigt sur un point du plateau ; le doigt se lève ensuite, comme un vrai
+ * @param {HTMLCanvasElement} canvas
+ * @param {{x: number, y: number}} point
+ * @param {string} [pointerType]
+ * @returns {MouseEvent} l'événement envoyé à l'appui (pointerdown)
+ */
+export function tapAt(canvas, point, pointerType = 'mouse') {
+  const event = pointerAt('pointerdown', point, pointerType);
   canvas.dispatchEvent(event);
+  if (pointerType === 'touch') {
+    for (const type of FINGER_LIFT) canvas.dispatchEvent(pointerAt(type, point, pointerType));
+  }
   return event;
 }
 
