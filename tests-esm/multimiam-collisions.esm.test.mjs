@@ -26,6 +26,10 @@ jest.unstable_mockModule('../js/core/operation-stats.js', () => ({
   recordOperationResult: jest.fn(note('recordOperationResult')),
 }));
 jest.unstable_mockModule('../js/arcade-time.js', () => ({ isArcadePaused: () => false }));
+// Le bruit de la bouchée (js/core/audio.js) : noté à sa place dans l'ordre des appels
+jest.unstable_mockModule('../js/core/audio.js', () => ({
+  AudioManager: { playSound: jest.fn(note('playSound')) },
+}));
 // Sans joueur : la fenêtre « À revoir » n'est pas écrite (arcade-learning.js)
 jest.unstable_mockModule('../js/core/userState.js', () => ({
   UserState: { getCurrentUserData: () => null, updateUserData: () => false },
@@ -227,6 +231,7 @@ describe('MultiMiam : collision avec une réponse', () => {
     expect(log).toEqual([
       'noteArcadePlay()',
       'recordOperationResult("×", 3, 4, true)',
+      'playSound("munch")',
       'showArcadePoints(100, {"id":"board"}, {"x":25,"y":20})',
       'updateUI()',
       'checkAndActivateGhost()',

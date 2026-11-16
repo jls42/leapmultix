@@ -3,6 +3,7 @@
 
 import { generateQuestion } from './questionGenerator.js';
 import { showArcadeMessage, showArcadePoints, getTranslation } from './utils-es6.js';
+import { AudioManager } from './core/audio.js';
 import { showArcadePenalty } from './arcade-points.js';
 import {
   showGameInstructions,
@@ -796,6 +797,8 @@ class SnakeGame {
   eatGoodApple(head, pos) {
     this.recordAnswer(true);
     this.score += 100;
+    // La pomme croquée, avec le son de la bonne réponse que jouent les points
+    AudioManager.playSound('munch');
     // Affichage du gain de points, au-dessus de la pomme mangée
     showArcadePoints(100, this.canvas, this.cellPoint(pos));
     // Augmenter la vitesse

@@ -47,6 +47,7 @@ jest.unstable_mockModule('../js/multisnake-renderer.js', () => ({
 }));
 
 const { SnakeGame } = await import('../js/multisnake.js');
+const { AudioManager } = await import('../js/core/audio.js');
 const { SEASONS, wearSeason } = await import('../js/core/seasons.js');
 const { snakeSkin } = await import('../js/multisnake-skins.js');
 
@@ -202,6 +203,24 @@ describe('MultiSnake : pommes mangées', () => {
     expect(recordOperationResult).toHaveBeenCalledWith('×', num1, num2, true);
     expect(showArcadePoints).toHaveBeenCalledWith(100, game.canvas, game.cellPoint({ x: 6, y: 5 }));
     expect(game.numberPositions).toEqual([]);
+  });
+
+  test('la bonne pomme est croquée (son « munch ») ; une mauvaise, jamais', () => {
+    const sound = jest.spyOn(AudioManager, 'playSound').mockImplementation(() => undefined);
+    const munches = () => sound.mock.calls.filter(([name]) => name === 'munch').length;
+    try {
+      game.numberPositions = [
+        { x: 6, y: 5, value: 9, isCorrect: false },
+        { x: 2, y: 2, value: 7, isCorrect: true },
+      ];
+      game.updateGameLogic();
+      expect(munches()).toBe(0);
+      game.numberPositions = [{ x: 6, y: 5, value: 7, isCorrect: true }];
+      game.updateGameLogic();
+      expect(munches()).toBe(1);
+    } finally {
+      sound.mockRestore();
+    }
   });
 
   test('la bonne pomme : le calcul complet au bandeau, puis les pommes du calcul suivant', () => {

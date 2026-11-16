@@ -118,6 +118,22 @@ describe('MultiGoal : une partie', () => {
     expect(game.keeperSprite).not.toBe(keeper);
   });
 
+  test('le ballon frappé sonne dès la tape, une fois ; rien pendant son vol, ni en pause', () => {
+    const kicks = () => playSound.mock.calls.filter(([name]) => name === 'kick').length;
+    keeperAwayFrom(rightTarget());
+    // Dans le geste du joueur, sans attendre la boucle du jeu
+    tapTarget(rightTarget());
+    expect(kicks()).toBe(1);
+    // Le ballon vole : une autre tape ne tire pas
+    tapTarget(rightTarget());
+    expect(kicks()).toBe(1);
+    land();
+    game.step(1500);
+    pauseArcadeGame();
+    tapTarget(rightTarget());
+    expect(kicks()).toBe(1);
+  });
+
   test('bonne réponse sur le gardien : arrêtée, ni point, ni erreur, ni son d’erreur', () => {
     scoreGoal();
     recordArcadeAnswer.mockClear();
@@ -129,7 +145,8 @@ describe('MultiGoal : une partie', () => {
     expect(game.score).toBe(GOAL_POINTS);
     expect(recordArcadeAnswer).not.toHaveBeenCalled();
     expect(showSolvedQuestion).toHaveBeenCalledTimes(1);
-    expect(playSound).not.toHaveBeenCalled();
+    // Seule la frappe du ballon a sonné : ni son d'erreur, ni bonne réponse
+    expect(playSound.mock.calls.map(([name]) => name)).toEqual(['kick']);
     expect(status()).toBe(FR.arcade_goal_saved);
     // On retire : la cible est toujours là, le gardien parti le but compte
     const { a, b } = game.question;

@@ -9,6 +9,8 @@ import { fakeCanvasContext } from './helpers/touch-test-helpers.mjs';
 
 const noop = () => undefined;
 const playSound = jest.fn();
+// La lecture à voix haute : elle ne règle pas le bruit du tir
+let voiceEnabled = true;
 jest.unstable_mockModule('../js/utils-es6.js', () => ({
   // Lus par game.js (importé par arcade.js)
   addArrowKeyNavigation: noop,
@@ -23,7 +25,7 @@ jest.unstable_mockModule('../js/utils-es6.js', () => ({
   cleanupGameResources: noop,
   speak: noop,
   // Le tir se fait entendre : c'est lui que le test compte
-  isVoiceEnabled: () => true,
+  isVoiceEnabled: () => voiceEnabled,
   playSound,
   showArcadePoints: noop,
   updateInfoBar: noop,
@@ -51,7 +53,7 @@ const pause = await import('../js/arcade-time.js');
 
 const space = target =>
   target.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
-const shots = () => playSound.mock.calls.filter(([name]) => name === 'shoot').length;
+const shots = () => playSound.mock.calls.filter(([name]) => name === 'bubbleShot').length;
 
 beforeEach(() => {
   HTMLCanvasElement.prototype.getContext = () => fakeCanvasContext();
@@ -66,10 +68,17 @@ beforeEach(() => {
 afterEach(() => {
   stopArcadeMode();
   jest.restoreAllMocks();
+  voiceEnabled = true;
 });
 
 describe('MultiInvaders : la barre d’espace', () => {
   test('tire depuis le plateau', () => {
+    space(document.getElementById('arcade-canvas'));
+    expect(shots()).toBe(1);
+  });
+
+  test('voix coupée : le tir se fait quand même entendre (un bruitage, pas une parole)', () => {
+    voiceEnabled = false;
     space(document.getElementById('arcade-canvas'));
     expect(shots()).toBe(1);
   });
