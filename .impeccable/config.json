@@ -16,6 +16,20 @@
         "files": ["js/modes/DiscoveryMode.js", "js/modes/AdventureMode.js"],
         "createdAt": "2026-10-28T20:32:25.640Z",
         "reason": "Claude : faux positif, le détecteur ne lit pas les attributs écrits par ${…}. La tête de la mascotte (Découverte) reçoit src, srcset, sizes et data-fallback de avatarHeadAttributes(), le cadeau et le personnage de la scène (Aventure) de webpImageAttributes() (js/webp-images.js, webpImage), vérifiés par tests-esm/modes/discovery-mode.esm.test.mjs et tests-esm/modes/adventure-gifts.esm.test.mjs"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "andika",
+        "files": [".claude/skills/generating-sound-effects/page.html"],
+        "createdAt": "2026-11-16T00:46:19.836Z",
+        "reason": "Claude : DESIGN.md donne LeapMultix Lecture, dérivée d'Andika, servie par le site ; une page d'artifact ne charge de polices que depuis Google Fonts, d'où Andika"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "baloo 2",
+        "files": [".claude/skills/generating-sound-effects/page.html"],
+        "createdAt": "2026-11-16T00:46:19.842Z",
+        "reason": "Claude : police d'affichage de DESIGN.md (Baloo2 servie par le site), chargée depuis Google Fonts dans une page d'artifact"
       }
     ]
   }

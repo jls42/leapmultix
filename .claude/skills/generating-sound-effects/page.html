@@ -1,0 +1,499 @@
+<title>__TITRE__</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600&display=swap"
+/>
+<style>
+  /* Une colonne de sons : chaque candidat est une pancarte de bois sur l'herbe de MultiPop */
+  :root {
+    --grass: #eaf3df;
+    --grass-deep: #cfe3b8;
+    --ink: #22301b;
+    --muted: #55634c;
+    --wood: #fbefdc;
+    --wood-edge: #c99a5b;
+    --accent: #c92a2a;
+    --accent-ink: #ffffff;
+    --badge: #f5b70a;
+    --badge-ink: #2b1d00;
+    --wave: #6a8f4e;
+    --focus: #1c64d8;
+    /* Les polices du jeu (DESIGN.md) : Baloo 2 pour les titres, Andika pour le texte */
+    --font-display: 'Baloo 2', system-ui, sans-serif;
+    --font-text: 'Andika', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --grass: #131a10;
+      --grass-deep: #1f2b19;
+      --ink: #e6efdc;
+      --muted: #a7b69b;
+      --wood: #2a2218;
+      --wood-edge: #8a6a3e;
+      --accent: #ff6b6b;
+      --accent-ink: #1a0d0d;
+      --badge: #f5c542;
+      --wave: #9cc47a;
+      --focus: #7fb0ff;
+
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    --grass: #131a10;
+    --grass-deep: #1f2b19;
+    --ink: #e6efdc;
+    --muted: #a7b69b;
+    --wood: #2a2218;
+    --wood-edge: #8a6a3e;
+    --accent: #ff6b6b;
+    --accent-ink: #1a0d0d;
+    --badge: #f5c542;
+    --wave: #9cc47a;
+    --focus: #7fb0ff;
+
+    color-scheme: dark;
+  }
+  body {
+    background: var(--grass);
+    color: var(--ink);
+    font: 400 1rem/1.5 var(--font-text);
+  }
+  main {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 1.5rem 3rem;
+    display: grid;
+    gap: 1.25rem;
+  }
+  .eyebrow {
+    font: 600 0.75rem/1 var(--font-text);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+  h1 {
+    font: 600 clamp(1.7rem, 6vw, 2.3rem) / 1.1 var(--font-display);
+    margin: 0.35rem 0 0;
+    text-wrap: balance;
+  }
+  .how {
+    margin: 0;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+  .sons {
+    display: grid;
+    gap: 0.9rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .son {
+    background: var(--wood);
+    border: 2px solid var(--wood-edge);
+    border-radius: 14px;
+    padding: 0.9rem 1rem 1rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .son.chosen {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  .son-name {
+    font: 600 1.25rem/1.2 var(--font-display);
+    margin: 0;
+  }
+  .desc {
+    margin: 0;
+    color: var(--muted);
+    min-width: 0;
+  }
+  .wave {
+    position: relative;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--grass-deep);
+    overflow: hidden;
+  }
+  .wave svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .wave rect {
+    fill: var(--wave);
+  }
+  .playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    background: var(--accent);
+    opacity: 0;
+  }
+  .wave.playing .playhead {
+    animation: sweep 0.52s linear forwards;
+  }
+  @keyframes sweep {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(var(--w));
+      opacity: 1;
+    }
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  button.play {
+    font: 600 0.95rem/1 var(--font-text);
+    border: 2px solid var(--accent);
+    background: transparent;
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 0.6rem 0.95rem;
+    cursor: pointer;
+  }
+  button.play:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .pick {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pick input {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: var(--accent);
+  }
+  button:focus-visible,
+  .pick input:focus-visible,
+  textarea:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .none {
+    display: grid;
+    gap: 0.5rem;
+    border-top: 2px dashed var(--wood-edge);
+    padding-top: 1rem;
+  }
+  .none .pick {
+    margin-left: 0;
+  }
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 4.5rem;
+    resize: vertical;
+    font: 400 1rem/1.4 var(--font-text);
+    color: var(--ink);
+    background: var(--wood);
+    border: 2px solid var(--wood-edge);
+    border-radius: 10px;
+    padding: 0.6rem 0.7rem;
+  }
+  textarea::placeholder {
+    color: var(--muted);
+    opacity: 1;
+  }
+  .saved {
+    font-weight: 600;
+    min-height: 1.5em;
+    margin: 0;
+  }
+  .fallback {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .fallback p {
+    margin: 0;
+    color: var(--muted);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wave.playing .playhead {
+      animation: none;
+    }
+  }
+  @media (max-width: 420px) {
+    .pick {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Bruitages · LeapMultix</p>
+    <h1 id="title">__TITRE__</h1>
+  </header>
+  <p class="how" id="how">
+    ▶ pour écouter, la case pour choisir. Les sons sont ramenés à la même force : on compare le
+    son, pas le volume. Ton choix s'enregistre tout seul.
+  </p>
+  <ul class="sons" id="sons"></ul>
+  <section class="none">
+    <label class="pick"
+      ><input type="radio" name="choix" id="choix-aucun" value="aucun" /> Aucun ne va, j'en veux
+      d'autres</label
+    >
+    <label for="note">Ce qui ne va pas, ou ce que tu aimerais (facultatif)</label>
+    <textarea id="note" placeholder="Par exemple : plus doux, plus rigolo…"></textarea>
+  </section>
+  <p class="saved" id="saved" aria-live="polite">Pas encore de choix.</p>
+  <section class="fallback" id="fallback" hidden>
+    <p>Cette vue ne peut pas enregistrer : copie ce texte et colle-le-moi.</p>
+    <textarea id="fallback-text" readonly></textarea>
+  </section>
+</main>
+
+<script>
+  (async () => {
+    const SVG = 'http://www.w3.org/2000/svg';
+    const state = { choix: null, note: '' };
+    let page = { lot: 'sons', sounds: [], reference: null };
+    let db = null;
+    let saveTimer = null;
+    let writing = Promise.resolve();
+    let restored = false;
+    const playing = new Set();
+    const timers = new Set();
+    const say = text => {
+      document.getElementById('saved').textContent = text;
+    };
+    const draftKey = () => 'leapmultix-choix-' + page.lot;
+
+    function stopAll() {
+      for (const audio of playing) audio.pause();
+      playing.clear();
+      for (const t of timers) clearTimeout(t);
+      timers.clear();
+    }
+
+    function play(file, volume) {
+      const audio = new Audio('a/' + file + '.mp3');
+      audio.volume = volume;
+      playing.add(audio);
+      audio.addEventListener('ended', () => playing.delete(audio));
+      audio.play().catch(() => say("Le son n'a pas pu partir : touche encore le bouton."));
+    }
+
+    function sweep(wave) {
+      wave.classList.remove('playing');
+      wave.style.setProperty('--w', wave.clientWidth + 'px');
+      void wave.offsetWidth;
+      wave.classList.add('playing');
+    }
+
+    function waveform(levels) {
+      const wrap = document.createElement('div');
+      wrap.className = 'wave';
+      const svg = document.createElementNS(SVG, 'svg');
+      svg.setAttribute('viewBox', '0 0 400 44');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('aria-hidden', 'true');
+      levels.forEach((level, i) => {
+        const h = Math.max(1.5, level * 40);
+        const bar = document.createElementNS(SVG, 'rect');
+        bar.setAttribute('x', String(i * 10 + 1));
+        bar.setAttribute('width', '8');
+        bar.setAttribute('y', String(22 - h / 2));
+        bar.setAttribute('height', String(h));
+        bar.setAttribute('rx', '2');
+        svg.appendChild(bar);
+      });
+      const head = document.createElement('span');
+      head.className = 'playhead';
+      wrap.append(svg, head);
+      return wrap;
+    }
+
+    function button(label, onClick) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'play';
+      b.textContent = label;
+      b.addEventListener('click', onClick);
+      return b;
+    }
+
+    function playWithReference(sound, wave) {
+      const ref = page.reference;
+      stopAll();
+      play('reference', ref.volume);
+      const t = setTimeout(() => {
+        timers.delete(t);
+        play(sound.id, ref.gameVolume);
+        sweep(wave);
+      }, ref.delayMs);
+      timers.add(t);
+    }
+
+    function card(sound) {
+      const li = document.createElement('li');
+      li.className = 'son';
+      li.dataset.id = sound.id;
+      const name = document.createElement('h2');
+      name.className = 'son-name';
+      name.textContent = sound.name;
+      const desc = document.createElement('p');
+      desc.className = 'desc';
+      desc.textContent = sound.desc;
+      const wave = waveform(sound.envelope);
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      actions.appendChild(
+        button('▶\uFE0E Seul', () => {
+          stopAll();
+          play(sound.id, 1);
+          sweep(wave);
+        })
+      );
+      if (page.reference) {
+        actions.appendChild(
+          button('▶\uFE0E ' + page.reference.label, () => playWithReference(sound, wave))
+        );
+      }
+      const pick = document.createElement('label');
+      pick.className = 'pick';
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'choix';
+      radio.id = 'choix-' + sound.id;
+      radio.value = sound.id;
+      pick.append(radio, document.createTextNode(' Je prends celui-ci'));
+      actions.appendChild(pick);
+      li.append(name, desc, wave, actions);
+      return li;
+    }
+
+    const payload = () => ({
+      choix: state.choix,
+      note: state.note,
+      updatedAt: new Date().toISOString(),
+    });
+
+    function refresh() {
+      for (const li of document.querySelectorAll('.son')) {
+        li.classList.toggle('chosen', li.dataset.id === state.choix);
+      }
+      for (const r of document.querySelectorAll('input[name="choix"]')) {
+        r.checked = r.value === state.choix;
+      }
+      const note = document.getElementById('note');
+      if (note.value !== state.note) note.value = state.note;
+      document.getElementById('fallback-text').value = JSON.stringify(payload());
+    }
+
+    function apply(data) {
+      if (!data) return;
+      if (typeof data.choix === 'string') state.choix = data.choix;
+      if (typeof data.note === 'string') state.note = data.note;
+      refresh();
+    }
+
+    function showFallback() {
+      document.getElementById('fallback').hidden = false;
+    }
+
+    function write() {
+      try {
+        localStorage.setItem(draftKey(), JSON.stringify(payload()));
+      } catch (e) {
+        /* pas de stockage dans cette vue : le texte en bas porte la réponse */
+      }
+      if (!db) {
+        say('Copie le texte en bas pour me le donner.');
+        return;
+      }
+      const body = payload();
+      writing = writing
+        .then(() => db.doc('choix/' + page.lot).set(body))
+        .then(() => {
+          const time = new Date().toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+          say('Enregistré à ' + time + '.');
+        })
+        .catch(error => {
+          if (error && error.code === 'invalid_argument') {
+            db = null;
+            showFallback();
+            say('Cette vue ne peut pas enregistrer : copie le texte en bas.');
+          } else {
+            say('Pas enregistré (réseau ?) : ça repartira au prochain changement.');
+          }
+        });
+    }
+
+    function changed(delay) {
+      refresh();
+      say('Enregistrement…');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(write, delay);
+    }
+
+    try {
+      page = await (await fetch('sons.json')).json();
+    } catch (e) {
+      say('La liste des sons ne se charge pas : recharge la page.');
+      return;
+    }
+    if (page.intro) document.getElementById('how').textContent = page.intro;
+    const list = document.getElementById('sons');
+    for (const sound of page.sounds) list.appendChild(card(sound));
+    document.addEventListener('change', event => {
+      if (event.target.name !== 'choix') return;
+      state.choix = event.target.value;
+      changed(300);
+    });
+    document.getElementById('note').addEventListener('input', event => {
+      state.note = event.target.value;
+      changed(1200);
+    });
+    try {
+      apply(JSON.parse(localStorage.getItem(draftKey()) || 'null'));
+    } catch (e) {
+      /* pas de brouillon dans cette vue */
+    }
+    refresh();
+
+    const use = window.claude && window.claude.use ? window.claude.use.bind(window.claude) : null;
+    db = use ? await use('db') : null;
+    if (!db) {
+      showFallback();
+      say('Cette vue ne peut pas enregistrer : copie le texte en bas.');
+      return;
+    }
+    db.doc('choix/' + page.lot).onSnapshot(
+      snap => {
+        if (restored) return;
+        restored = true;
+        if (!snap.exists) return;
+        apply(snap.data());
+        say('Ton choix précédent est revenu.');
+      },
+      () => say("Lecture du choix impossible : il s'enregistre quand même.")
+    );
+  })();
+</script>

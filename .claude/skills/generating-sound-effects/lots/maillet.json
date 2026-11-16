@@ -1,0 +1,36 @@
+{
+  "lot": "maillet",
+  "date": "2026-11-16",
+  "note": "Bruit du maillet de MultiPop quand il touche un monstre, demandé par le propriétaire le 16/11/2026. Six sons de 0,5 s, 6 crédits chacun (36 en tout). Choisi sur la page d'écoute : pop-2, installé raccourci à 0,3 s dans assets/sounds/maillet.wav.",
+  "title": "Bruit du maillet",
+  "intro": "Dans le jeu, ce bruit sonne quand le maillet touche un monstre, en même temps que le son de la réponse. « Avec la bonne réponse » te le fait entendre comme dans une partie, aux volumes du jeu. Les sons sont ramenés à la même force : on compare le son, pas le volume. Ton choix s'enregistre tout seul.",
+  "ceiling": 200,
+  "reference": {
+    "file": "assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav",
+    "label": "Avec la bonne réponse",
+    "volume": 0.4,
+    "gameVolume": 0.7,
+    "delayMs": 0
+  },
+  "sounds": [
+    {
+      "name": "bonk",
+      "prompt": "cartoon wooden mallet bonks a plush toy monster, short comic hollow knock, playful, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "couic",
+      "prompt": "toy squeaky hammer hit, short playful squeak with a soft thump, cartoon, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "pop",
+      "prompt": "whack-a-mole arcade hit, quick bouncy cartoon bonk with a tiny pop, bright and friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    }
+  ],
+  "chosen": "pop-2"
+}
