@@ -9,12 +9,13 @@
  * Souris, doigt ou clavier (flèches : monstre levé suivant ou précédent ; Entrée ou Espace :
  * le taper ; le clavier ne vise jamais l'ami). À la souris, un maillet remplace le curseur
  * sur le plateau et s'abat à chaque tape ; au doigt et au clavier, il apparaît le temps de la
- * frappe. Le nombre du monstre visé est annoncé aux
- * lecteurs d'écran.
+ * frappe. Quand il touche quelqu'un, il sonne, un éclat jaillit et le personnage s'écrase.
+ * Le nombre du monstre visé est annoncé aux lecteurs d'écran.
  */
 import { gameState } from './game.js';
 import { getTranslation, showArcadePoints } from './utils-es6.js';
 import { showArcadePenalty } from './arcade-points.js';
+import { AudioManager } from './core/audio.js';
 import { eventBus } from './core/eventBus.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { recordArcadeAnswer, SOLVED_PAUSE_MS, showSolvedQuestion } from './arcade-learning.js';
@@ -50,8 +51,20 @@ export const CORRECT_POINTS = 100;
 export const MISS_PENALTY = 50;
 /** Points retirés au plus pour un ami tapé (jamais plus que le score) */
 export const FRIEND_PENALTY = 50;
-/** Durée de la frappe du maillet : abattu à la tape, puis il se relève */
-export const MALLET_SWING_MS = 220;
+/**
+ * La frappe du maillet, en millisecondes de jeu : il s'abat de sa position levée (down),
+ * reste sur le point frappé avec l'éclat (hold), se relève (up) ; au doigt et au clavier, il
+ * s'efface ensuite (fade). Abattu dès la tape puis relevé en 220 ms, on ne le voyait pas
+ * taper au doigt
+ */
+export const MALLET_STRIKE = Object.freeze({ down: 80, hold: 200, up: 220, fade: 180 });
+// Jusqu'au maillet relevé
+const STRIKE_MS = MALLET_STRIKE.down + MALLET_STRIKE.hold + MALLET_STRIKE.up;
+/** Durée d'une frappe au doigt ou au clavier, jusqu'au maillet effacé */
+export const MALLET_TAP_MS = STRIKE_MS + MALLET_STRIKE.fade;
+// Le maillet levé sous la souris, et abattu toute la frappe quand les mouvements sont réduits
+const REST_POSE = Object.freeze({ swing: 0, burst: 0, alpha: 1 });
+const STILL_STRIKE = Object.freeze({ swing: 1, burst: 1, alpha: 1 });
 /** Chance qu'un ami sorte avec les monstres d'une sortie */
 export const FRIEND_CHANCE = 1 / 3;
 /** Attente avant la première sortie : le temps de lire le calcul du bandeau */
@@ -74,6 +87,24 @@ const WHACK_KEYS = new Set(['Enter', ' ']);
 
 // Partie en cours (une seule à la fois)
 let _popInstance = null;
+
+/**
+ * Pose du maillet un temps après la tape : il s'abat, reste sur le point frappé, se relève,
+ * puis s'efface
+ * @param {number} elapsed - temps de jeu depuis la tape (ms)
+ * @returns {{swing: number, burst: number, alpha: number}} swing : de 0 (levé) à 1 (abattu) ;
+ *   burst : opacité de l'éclat, s'il a touché quelqu'un ; alpha : opacité du maillet
+ */
+export function malletPose(elapsed) {
+  const { down, hold, up, fade } = MALLET_STRIKE;
+  if (elapsed < down) return { swing: elapsed / down, burst: 0, alpha: 1 };
+  if (elapsed < down + hold) return STILL_STRIKE;
+  if (elapsed < STRIKE_MS) {
+    const swing = 1 - (elapsed - down - hold) / up;
+    return { swing, burst: swing, alpha: 1 };
+  }
+  return { swing: 0, burst: 0, alpha: Math.max(0, 1 - (elapsed - STRIKE_MS) / fade) };
+}
 
 /** Images des amis : les héros du jeu, sauf celui du joueur */
 function friendSprites() {
@@ -116,8 +147,8 @@ export class PopGame extends ArcadeBoardGame {
      * @type {{x: number, y: number, held: boolean, impact: boolean}|null}
      */
     this.mallet = null;
-    /** Temps de frappe qui reste au maillet */
-    this.malletSwing = 0;
+    /** Temps de jeu depuis la dernière tape, null hors d'une frappe */
+    this.malletAge = null;
     this.cast = monsterCast(CAST_SIZE);
     this.friends = friendSprites();
     /** Image du personnage de chaque terrier, pour la sortie en cours */
@@ -229,15 +260,21 @@ export class PopGame extends ArcadeBoardGame {
   }
 
   /**
-   * Le maillet à dessiner : où il vise et où en est sa frappe (1 à l'impact, 0 au repos)
-   * @returns {{x: number, y: number, swing: number, impact: boolean}|null}
+   * Le maillet à dessiner : où il vise, où en est sa frappe, son éclat et son opacité
+   * @returns {{x: number, y: number, impact: boolean, swing: number, burst: number,
+   *   alpha: number}|null}
    */
   malletView() {
     if (!this.mallet) return null;
-    const swing = this.malletSwing / MALLET_SWING_MS;
     const { x, y, impact } = this.mallet;
-    // Mouvements réduits : abattu puis levé, sans les positions entre les deux
-    return { x, y, impact, swing: this.reducedMotion ? Math.ceil(swing) : swing };
+    return { x, y, impact, ...this.currentMalletPose() };
+  }
+
+  // Levé sous la souris hors d'une frappe ; mouvements réduits : abattu toute la frappe, sans
+  // les positions entre les deux ni le fondu
+  currentMalletPose() {
+    if (this.malletAge === null) return REST_POSE;
+    return this.reducedMotion ? STILL_STRIKE : malletPose(this.malletAge);
   }
 
   // La souris ou le stylet sur le plateau : le maillet prend la place du curseur
@@ -262,17 +299,28 @@ export class PopGame extends ArcadeBoardGame {
    */
   strike(point, { held, impact }) {
     this.mallet = { x: point.x, y: point.y, held, impact };
-    this.malletSwing = MALLET_SWING_MS;
+    this.malletAge = 0;
+    // Il sonne s'il a touché quelqu'un, dans le geste du joueur comme le son de la réponse :
+    // lancé plus tard par la boucle du jeu, Safari peut le refuser
+    if (impact) AudioManager.playSound('mallet');
   }
 
-  // La frappe retombe avec l'horloge du jeu ; au doigt et au clavier, le maillet s'en va
-  // ensuite (et le curseur revient, si la souris était restée sur le plateau)
+  // La frappe avance avec l'horloge du jeu ; à la souris, le maillet reste ensuite levé sous
+  // elle ; au doigt et au clavier, il s'en va (et le curseur revient, si la souris était
+  // restée sur le plateau)
   swingMallet(dt) {
-    if (this.malletSwing <= 0) return;
-    this.malletSwing = Math.max(0, this.malletSwing - dt);
-    if (this.malletSwing > 0 || !this.mallet) return;
-    if (this.mallet.held) this.mallet.impact = false;
+    if (this.malletAge === null) return;
+    this.malletAge += dt;
+    if (this.malletAge < this.strikeMs()) return;
+    this.malletAge = null;
+    if (this.mallet?.held) this.mallet.impact = false;
     else this.dropMallet();
+  }
+
+  // Durée de la frappe en cours : à la souris (ou sans fondu, mouvements réduits) jusqu'au
+  // maillet relevé ; au doigt et au clavier, jusqu'au maillet effacé
+  strikeMs() {
+    return this.mallet?.held || this.reducedMotion ? STRIKE_MS : MALLET_TAP_MS;
   }
 
   // Souris, doigt ou stylet : le terrier sous le point

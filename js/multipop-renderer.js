@@ -211,11 +211,17 @@ function paintFigure(ctx, parts, sprite, sunk) {
  * @param {import('./arcade-sprites.js').ArcadeSprite|null|undefined} sprite
  * @param {number} height
  */
-function drawFigure(ctx, parts, sprite, height) {
+function drawFigure(ctx, parts, sprite, height, squash = 0) {
   if (height <= 0) return;
   const { figure } = parts;
   const sunk = (1 - height) * figure.height;
   ctx.save();
+  // Tapé par le maillet : il s'écrase sur le bord du trou, plus large et moins haut
+  if (squash > 0) {
+    ctx.translate(parts.centerX, parts.holeY);
+    ctx.scale(1 + SQUASH.wider * squash, 1 - SQUASH.lower * squash);
+    ctx.translate(-parts.centerX, -parts.holeY);
+  }
   ctx.beginPath();
   ctx.rect(figure.x, figure.y, figure.width, figure.height);
   ctx.clip();
@@ -342,13 +348,14 @@ function shownHeight(field, figure, reducedMotion) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {{x: number, y: number, width: number, height: number}} cell
  * @param {{figure: import('./multipop-engine.js').Monster|import('./multipop-engine.js').Friend
- *   |undefined, view: Object}} what
+ *   |undefined, view: Object, squash?: number}} what - squash : de 0 à 1, le personnage
+ *   écrasé par le maillet
  */
-function drawBurrow(ctx, cell, { figure, view }) {
+function drawBurrow(ctx, cell, { figure, view, squash = 0 }) {
   const parts = cellParts(cell);
   drawHole(ctx, parts);
   const height = figure ? shownHeight(view.field, figure, view.reducedMotion) : 0;
-  drawFigure(ctx, parts, view.sprites?.get(figure?.hole), height);
+  drawFigure(ctx, parts, view.sprites?.get(figure?.hole), height, squash);
   drawLip(ctx, parts);
   if (height <= 0.3) return;
   const alpha = Math.min(1, (height - 0.3) / 0.4);
@@ -360,16 +367,19 @@ function drawBurrow(ctx, cell, { figure, view }) {
   if (view.cursorHole === figure.hole && figure.downAt === null) drawCursor(ctx, parts.sign);
 }
 
-// Le maillet : sa taille en parts d'une case, l'angle où il frappe et celui où il attend,
-// et dans son image (sans ses marges) le milieu de sa tête, en part de la hauteur
+// Le maillet : sa taille en parts d'une case (au tiers, on le voyait à peine au doigt), l'angle
+// où il frappe et celui où il attend, et dans son image (sans ses marges) le milieu de sa tête,
+// en part de la hauteur
 const MALLET = Object.freeze({
-  share: 0.3,
-  min: 30,
-  max: 64,
+  share: 0.42,
+  min: 36,
+  max: 72,
   hitAngle: -1.03,
   raise: 0.4,
   headCenter: 0.21,
 });
+// Le personnage tapé, écrasé au plus fort de la frappe : en part de sa largeur et de sa hauteur
+const SQUASH = Object.freeze({ wider: 0.12, lower: 0.18 });
 const MALLET_COLORS = Object.freeze({
   head: '#e03131',
   handle: '#f5b70a',
@@ -380,7 +390,7 @@ const MALLET_COLORS = Object.freeze({
 /**
  * Angle du maillet autour de sa poignée : levé au repos (swing 0), abattu sur le point visé
  * au moment de la frappe (swing 1), puis il se relève
- * @param {number} swing - de 1 (il vient de frapper) à 0 (au repos)
+ * @param {number} swing - de 0 (levé) à 1 (abattu)
  * @returns {number} radians
  */
 export function malletAngle(swing) {
@@ -413,7 +423,7 @@ export function malletParts(layout, point) {
 // L'ombre du maillet sur le point visé : la souris n'a plus de curseur, on voit où il tape
 function drawAim(ctx, point, size) {
   ctx.save();
-  ctx.globalAlpha = 0.28;
+  ctx.globalAlpha *= 0.28;
   ctx.fillStyle = MALLET_COLORS.edge;
   ctx.beginPath();
   ctx.ellipse(point.x, point.y, size * 0.62, size * 0.3, 0, 0, Math.PI * 2);
@@ -421,10 +431,10 @@ function drawAim(ctx, point, size) {
   ctx.restore();
 }
 
-// Éclat jaune à l'endroit frappé, le temps de la frappe
-function drawImpact(ctx, point, size, swing) {
+// Éclat jaune à l'endroit frappé, tant que le maillet y est
+function drawImpact(ctx, point, size, burst) {
   ctx.save();
-  ctx.globalAlpha = Math.min(1, swing * 1.4);
+  ctx.globalAlpha *= burst;
   ctx.fillStyle = MALLET_COLORS.burst;
   ctx.beginPath();
   for (let tip = 0; tip < 16; tip++) {
@@ -505,15 +515,19 @@ function paintMalletImage(ctx, sprite, length) {
  * chaque tape (au doigt et au clavier, il n'apparaît que le temps de la frappe)
  * @param {CanvasRenderingContext2D} ctx
  * @param {ReturnType<typeof popLayout>} layout
- * @param {{x: number, y: number, swing: number, impact: boolean}} mallet - swing : de 1 (il
- *   vient de frapper) à 0 (au repos) ; impact : il a touché un personnage
+ * @param {{x: number, y: number, swing: number, impact: boolean, burst?: number,
+ *   alpha?: number}} mallet - swing : de 0 (levé) à 1 (abattu) ; impact : il a touché un
+ *   personnage ; burst : opacité de l'éclat qui le montre ; alpha : opacité du maillet, qui
+ *   s'efface après une tape au doigt ou au clavier
  * @param {import('./arcade-sprites.js').ArcadeSprite|null} [sprite] - son image (maillet.png)
  */
 export function drawMallet(ctx, layout, mallet, sprite = null) {
   const { size, length, pivot } = malletParts(layout, mallet);
-  if (mallet.impact && mallet.swing > 0) drawImpact(ctx, mallet, size, mallet.swing);
-  else drawAim(ctx, mallet, size);
+  const { alpha = 1, burst = 0 } = mallet;
   ctx.save();
+  ctx.globalAlpha = alpha;
+  if (mallet.impact && burst > 0) drawImpact(ctx, mallet, size, burst);
+  else drawAim(ctx, mallet, size);
   ctx.translate(pivot.x, pivot.y);
   ctx.rotate(malletAngle(mallet.swing));
   if (!paintMalletImage(ctx, sprite, length)) drawMalletShape(ctx, size, length);
@@ -521,13 +535,28 @@ export function drawMallet(ctx, layout, mallet, sprite = null) {
 }
 
 /**
+ * Le terrier dont le personnage vient d'être touché par le maillet, et combien il s'écrase :
+ * autant que l'éclat est vif ; rien quand les mouvements sont réduits
+ * @param {{layout: ReturnType<typeof popLayout>, reducedMotion: boolean, mallet?: {x: number,
+ *   y: number, impact: boolean, burst?: number}|null}} view
+ * @returns {{hole: number, squash: number}} hole -1 : personne
+ */
+export function squashedHole(view) {
+  const { mallet } = view;
+  const squash = mallet?.impact && !view.reducedMotion ? (mallet.burst ?? 0) : 0;
+  if (squash <= 0) return { hole: -1, squash: 0 };
+  return { hole: holeAt(view.layout, mallet), squash };
+}
+
+/**
  * Tout le plateau
  * @param {CanvasRenderingContext2D} ctx
  * @param {{layout: ReturnType<typeof popLayout>, field: import('./multipop-engine.js').MonsterField,
  *   sprites: Map<number, Object>, grassSprite: Object|null, cursorHole: number|null,
- *   reducedMotion: boolean, mallet?: {x: number, y: number, swing: number, impact: boolean}
- *   |null, malletSprite?: Object|null}} view - sprites : l'image du personnage de chaque
- *   terrier ; mallet : le maillet à dessiner par-dessus, s'il est sur le plateau, et
+ *   reducedMotion: boolean, mallet?: {x: number, y: number, swing: number, impact: boolean,
+ *   burst?: number, alpha?: number}|null, malletSprite?: Object|null}} view - sprites :
+ *   l'image du personnage de chaque terrier ; mallet : le maillet à dessiner par-dessus,
+ *   s'il est sur le plateau, et
  *   malletSprite son image
  */
 export function drawPopBoard(ctx, view) {
@@ -538,8 +567,10 @@ export function drawPopBoard(ctx, view) {
   drawArcadeSprite(ctx, view.grassSprite, board, { fit: 'cover' });
   const figures = new Map(field.monsters.map(monster => [monster.hole, monster]));
   if (field.friend) figures.set(field.friend.hole, field.friend);
+  const struck = squashedHole(view);
   for (let hole = 0; hole < GRID * GRID; hole++) {
-    drawBurrow(ctx, cellRect(layout, hole), { figure: figures.get(hole), view });
+    const squash = hole === struck.hole ? struck.squash : 0;
+    drawBurrow(ctx, cellRect(layout, hole), { figure: figures.get(hole), view, squash });
   }
   if (view.mallet) drawMallet(ctx, layout, view.mallet, view.malletSprite);
 }

@@ -24,9 +24,19 @@ import {
   pauseArcadeGame,
 } from './helpers/board-game-bench.mjs';
 
-const { PopGame, CORRECT_POINTS, MISS_PENALTY, FRIEND_PENALTY, MALLET_SWING_MS } = await import(
-  '../js/arcade-multipop.js'
-);
+const {
+  PopGame,
+  CORRECT_POINTS,
+  MISS_PENALTY,
+  FRIEND_PENALTY,
+  MALLET_STRIKE,
+  MALLET_TAP_MS,
+  malletPose,
+} = await import('../js/arcade-multipop.js');
+// Frappe jusqu'au maillet relevé
+const STRIKE_MS = MALLET_STRIKE.down + MALLET_STRIKE.hold + MALLET_STRIKE.up;
+const RAISED = { swing: 0, burst: 0, alpha: 1 };
+const STRUCK = { swing: 1, burst: 1, alpha: 1 };
 const { GAP_MS, RISE_MS } = await import('../js/multipop-engine.js');
 const { cellParts, cellRect } = await import('../js/multipop-renderer.js');
 
@@ -312,7 +322,7 @@ describe('MultiPop : le maillet', () => {
     expect(game.malletView()).toBeNull();
     expect(canvas.classList.contains('has-mallet')).toBe(false);
     moveTo(40, 55);
-    expect(game.malletView()).toEqual({ x: 40, y: 55, swing: 0, impact: false });
+    expect(game.malletView()).toEqual({ x: 40, y: 55, impact: false, ...RAISED });
     expect(canvas.classList.contains('has-mallet')).toBe(true);
     moveTo(120, 80);
     expect(game.malletView()).toMatchObject({ x: 120, y: 80 });
@@ -328,32 +338,73 @@ describe('MultiPop : le maillet', () => {
     expect(canvas.classList.contains('has-mallet')).toBe(false);
   });
 
-  test('il s’abat à chaque clic, se relève avec l’horloge du jeu, et reste sous la souris', () => {
+  test('sa frappe : il s’abat, reste sur le point frappé avec l’éclat, se relève, s’efface', () => {
+    const { down, hold, up, fade } = MALLET_STRIKE;
+    expect(malletPose(0)).toEqual(RAISED);
+    expect(malletPose(down / 2)).toEqual({ swing: 0.5, burst: 0, alpha: 1 });
+    expect(malletPose(down)).toEqual(STRUCK);
+    expect(malletPose(down + hold - 1)).toEqual(STRUCK);
+    expect(malletPose(down + hold + up / 2)).toEqual({ swing: 0.5, burst: 0.5, alpha: 1 });
+    expect(malletPose(STRIKE_MS)).toEqual(RAISED);
+    expect(malletPose(STRIKE_MS + fade / 2).alpha).toBeCloseTo(0.5);
+    expect(malletPose(MALLET_TAP_MS)).toEqual({ ...RAISED, alpha: 0 });
+  });
+
+  test('il s’abat à chaque clic, reste un temps sur le point frappé, puis se relève sous la souris', () => {
     raiseMonsters();
     const point = signPoint(wrongMonster().hole);
     moveTo(point.x, point.y);
     tapHole(wrongMonster().hole);
-    expect(game.malletView()).toEqual({ ...point, swing: 1, impact: true });
-    game.step(MALLET_SWING_MS / 2);
+    // Il part de sa position levée, avec l'horloge du jeu
+    expect(game.malletView()).toEqual({ ...point, impact: true, ...RAISED });
+    game.step(MALLET_STRIKE.down / 2);
     expect(game.malletView().swing).toBeCloseTo(0.5);
-    game.step(MALLET_SWING_MS / 2);
-    expect(game.malletView()).toEqual({ ...point, swing: 0, impact: false });
+    game.step(MALLET_STRIKE.down / 2 + MALLET_STRIKE.hold - 1);
+    expect(game.malletView()).toEqual({ ...point, impact: true, ...STRUCK });
+    game.step(1 + MALLET_STRIKE.up);
+    expect(game.malletView()).toEqual({ ...point, impact: false, ...RAISED });
+    // À la souris, il ne s'efface pas
+    game.step(MALLET_TAP_MS);
+    expect(game.malletView()).toEqual({ ...point, impact: false, ...RAISED });
   });
 
   test('dans le vide : il s’abat sans éclat', () => {
     const empty = signPoint(4);
     tapHole(4);
-    expect(game.malletView()).toEqual({ ...empty, swing: 1, impact: false });
+    game.step(MALLET_STRIKE.down);
+    expect(game.malletView()).toEqual({ ...empty, impact: false, ...STRUCK });
   });
 
-  test('au doigt : il apparaît le temps de la frappe, sans cacher de curseur', () => {
+  test('au doigt : on le voit taper, rester sur le monstre, puis s’effacer', () => {
     raiseMonsters();
     const hole = rightMonster().hole;
     tapHole(hole, 'touch');
-    expect(game.malletView()).toEqual({ ...signPoint(hole), swing: 1, impact: true });
+    expect(game.malletView()).toEqual({ ...signPoint(hole), impact: true, ...RAISED });
     expect(canvas.classList.contains('has-mallet')).toBe(false);
-    game.step(MALLET_SWING_MS);
+    game.step(MALLET_STRIKE.down + MALLET_STRIKE.hold / 2);
+    expect(game.malletView()).toMatchObject(STRUCK);
+    // Toujours là une demi-seconde après la tape, le doigt levé depuis longtemps
+    game.step(500 - MALLET_STRIKE.down - MALLET_STRIKE.hold / 2);
+    expect(game.malletView()).not.toBeNull();
+    game.step(STRIKE_MS - 500 + MALLET_STRIKE.fade / 2);
+    expect(game.malletView().alpha).toBeCloseTo(0.5);
+    game.step(MALLET_STRIKE.fade / 2);
     expect(game.malletView()).toBeNull();
+  });
+
+  test('il sonne dès la tape qui touche quelqu’un, une fois, jamais dans le vide', () => {
+    const sound = jest.spyOn(AudioManager, 'playSound').mockImplementation(() => undefined);
+    const malletSounds = () => sound.mock.calls.filter(([name]) => name === 'mallet').length;
+    raiseMonsters();
+    // Dans le geste du joueur, comme le son de la réponse : sans attendre la boucle du jeu
+    tapHole(rightMonster().hole, 'touch');
+    expect(malletSounds()).toBe(1);
+    game.step(MALLET_TAP_MS);
+    expect(malletSounds()).toBe(1);
+    // La bonne réponse trouvée, plus personne à taper : le maillet frappe l'herbe sans bruit
+    tapHole(4, 'touch');
+    game.step(MALLET_TAP_MS);
+    expect(malletSounds()).toBe(1);
   });
 
   test('au clavier : il s’abat sur le monstre visé, puis s’en va', () => {
@@ -362,9 +413,11 @@ describe('MultiPop : le maillet', () => {
     const { centerX } = cellParts(cellRect(game.layout, hole));
     press('Enter');
     const view = game.malletView();
-    expect(view).toMatchObject({ x: centerX, swing: 1, impact: true });
+    expect(view).toMatchObject({ x: centerX, impact: true, ...RAISED });
     expect(view.y).toBeLessThan(signPoint(hole).y);
-    game.step(MALLET_SWING_MS);
+    game.step(MALLET_STRIKE.down);
+    expect(game.malletView()).toMatchObject(STRUCK);
+    game.step(MALLET_TAP_MS - MALLET_STRIKE.down);
     expect(game.malletView()).toBeNull();
     // Personne à viser : pas de frappe
     game.cursorHole = null;
@@ -377,7 +430,7 @@ describe('MultiPop : le maillet', () => {
     moveTo(40, 55);
     expect(canvas.classList.contains('has-mallet')).toBe(true);
     press('Enter');
-    game.step(MALLET_SWING_MS);
+    game.step(MALLET_TAP_MS);
     expect(game.malletView()).toBeNull();
     expect(canvas.classList.contains('has-mallet')).toBe(false);
     // La souris bouge de nouveau : le maillet reprend sa place
@@ -397,10 +450,21 @@ describe('MultiPop : le maillet', () => {
   test('mouvements réduits : abattu puis levé, sans les positions entre les deux', () => {
     game.reducedMotion = true;
     tapHole(4);
-    game.step(MALLET_SWING_MS / 2);
-    expect(game.malletView().swing).toBe(1);
-    game.step(MALLET_SWING_MS / 2);
-    expect(game.malletView().swing).toBe(0);
+    expect(game.malletView()).toMatchObject(STRUCK);
+    game.step(STRIKE_MS - 1);
+    expect(game.malletView()).toMatchObject(STRUCK);
+    game.step(1);
+    expect(game.malletView()).toMatchObject(RAISED);
+  });
+
+  test('mouvements réduits, au doigt : abattu toute la frappe, puis parti sans fondu', () => {
+    game.reducedMotion = true;
+    tapHole(4, 'touch');
+    expect(game.malletView()).toMatchObject(STRUCK);
+    game.step(STRIKE_MS - 1);
+    expect(game.malletView()).toMatchObject(STRUCK);
+    game.step(1);
+    expect(game.malletView()).toBeNull();
   });
 
   test('il est dessiné avec le plateau', () => {
