@@ -172,7 +172,7 @@ export class PopGame extends ArcadeBoardGame {
   listen() {
     super.listen();
     this.onPointerMove = event => this.handlePointerMove(event);
-    this.onPointerLeave = () => this.dropMallet();
+    this.onPointerLeave = event => this.handlePointerLeave(event);
     this.canvas.addEventListener('pointermove', this.onPointerMove);
     this.canvas.addEventListener('pointerleave', this.onPointerLeave);
   }
@@ -285,7 +285,15 @@ export class PopGame extends ArcadeBoardGame {
     this.canvas.classList.add('has-mallet');
   }
 
-  // La souris quitte le plateau (ou la partie est rendue) : plus de maillet, le curseur revient
+  // La souris ou le stylet quitte le plateau : plus de maillet. Un doigt qui se lève « quitte »
+  // lui aussi le plateau (pointerleave juste après pointerup) : sa frappe continue, sinon le
+  // maillet disparaissait sous le doigt, à peine posé
+  handlePointerLeave(event) {
+    if (event.pointerType === 'touch') return;
+    this.dropMallet();
+  }
+
+  // Plus de maillet (souris partie, frappe finie au doigt, partie rendue) : le curseur revient
   dropMallet() {
     this.mallet = null;
     this.canvas?.classList.remove('has-mallet');
