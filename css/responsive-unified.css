@@ -85,8 +85,8 @@ img {
 
 /* Optimisation générale layout mobile */
 @media (max-width: 768px) {
+  /* Sa marge intérieure reste celle des zones sûres (css/general.css) */
   body {
-    padding: 0;
     margin: 0;
   }
 

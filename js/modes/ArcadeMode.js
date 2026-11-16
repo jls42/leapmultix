@@ -19,6 +19,7 @@ import {
   showLoadErrorNotice,
 } from '../components/loadErrorNotice.js';
 import { UNTIMED_GAMES, isNoTimeLimit, setNoTimeLimit } from '../arcade-time.js';
+import { notePlayPressed } from '../arcade-common.js';
 import { spaceshipSpec } from '../arcade-sprite-catalog.js';
 import { normalizeAvatarId } from '../avatar-heads.js';
 import { attachImageFallbacks, webpImageAttributes } from '../webp-images.js';
@@ -525,6 +526,8 @@ export class ArcadeMode extends GameMode {
       },
       'arcade-play': () => {
         const gameId = actionEl.dataset.game;
+        // Touché par le joueur : la partie pourra passer en plein écran (arcade-common.js)
+        notePlayPressed(e);
         if (gameId) this.startGame(gameId);
       },
       'arcade-set-difficulty': () => {
