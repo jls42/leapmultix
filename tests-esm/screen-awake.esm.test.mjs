@@ -37,7 +37,8 @@ function fakeWakeLock() {
     }),
     /** Le navigateur rend tout verrou quand la page se cache */
     dropAll() {
-      for (const sentinel of [...api.held]) void sentinel.release();
+      // Retirer d'un Set l'élément en cours de parcours ne saute aucun des suivants
+      for (const sentinel of api.held) void sentinel.release();
     },
   };
   return api;
@@ -177,13 +178,13 @@ describe('Écran allumé pendant une partie', () => {
 describe('Branchement sur le changement d’écran (core/mainInit.js)', () => {
   test("ouvrir l'écran de jeu garde l'écran allumé, en sortir le rend", async () => {
     globalThis.scrollTo = () => {};
-    document.body.innerHTML = `
-      <section id="slide0" class="slide active-slide"></section>
-      <section id="${GAME_SLIDE}" class="slide"></section>
-    `;
+    const slide = id =>
+      Object.assign(document.createElement('section'), { id, className: 'slide' });
+    const home = slide('slide0');
+    const game = slide(GAME_SLIDE);
+    home.classList.add('active-slide');
+    document.body.replaceChildren(home, game);
     watchSlideChanges();
-    const home = document.getElementById('slide0');
-    const game = document.getElementById(GAME_SLIDE);
 
     home.classList.remove('active-slide');
     game.classList.add('active-slide');
@@ -194,6 +195,6 @@ describe('Branchement sur le changement d’écran (core/mainInit.js)', () => {
     home.classList.add('active-slide');
     await settle();
     expect(wakeLock.held.size).toBe(0);
-    document.body.innerHTML = '';
+    document.body.replaceChildren();
   });
 });
