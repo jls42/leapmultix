@@ -87,7 +87,7 @@ describe('MultiSnake : lancement depuis le menu de l’Arcade', () => {
     expect(document.getElementById('multisnake-canvas')).toBeTruthy();
     expect(document.getElementById('multisnake-abandon-btn')).toBeTruthy();
     expect(document.getElementById('multisnake-info-score').textContent).toBe('0');
-    expect(startArcadeTimer).toHaveBeenCalledWith(300);
+    expect(startArcadeTimer).toHaveBeenCalledWith(120);
     expect(snakes).toHaveLength(1);
     expect(snakes[0].canvasId).toBe('multisnake-canvas');
     expect(snakes[0].mode).toBe('operation');
@@ -108,7 +108,7 @@ describe('MultiSnake : lancement depuis le menu de l’Arcade', () => {
   test('sans niveau choisi : Moyen', () => {
     gameState.difficulty = undefined;
     startSnakeArcade();
-    expect(startArcadeTimer).toHaveBeenCalledWith(180);
+    expect(startArcadeTimer).toHaveBeenCalledWith(90);
     expect(snakes[0].options.difficulty).toBe('moyen');
   });
 

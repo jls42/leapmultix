@@ -9,8 +9,17 @@
 import { describe, test, expect } from '@jest/globals';
 
 const { getDifficultySettings } = await import('../js/difficulty.js');
-const { HOLES, GAP_MS, RISE_MS, BOTTOM_HOLES, pickHoles, monsterRhythm, MonsterField } =
-  await import('../js/multipop-engine.js');
+const {
+  HOLES,
+  GAP_MS,
+  RISE_MS,
+  SPEED_UP,
+  FASTEST,
+  BOTTOM_HOLES,
+  pickHoles,
+  monsterRhythm,
+  MonsterField,
+} = await import('../js/multipop-engine.js');
 
 const SOLVED_MS = 1500;
 /** Réponses d'un tour : la bonne (12) et des mauvaises, autant que de monstres */
@@ -193,6 +202,43 @@ describe('MultiPop : taper un monstre', () => {
       hole => !field.monsters.some(monster => monster.hole === hole)
     );
     expect(field.whack(empty)).toBeNull();
+  });
+});
+
+describe('MultiPop : les monstres accélèrent à chaque bonne réponse', () => {
+  // Trouve la bonne réponse de la sortie, puis pose le calcul suivant
+  function solveOnce(field) {
+    raise(field);
+    const right = field.monsters.find(monster => monster.correct);
+    expect(field.whack(right.hole)).toEqual({ correct: true, value: 12 });
+    expect(field.tick(SOLVED_MS)).toBe('solved-done');
+    field.ask(12, answersOf(field.count));
+  }
+
+  test('une bonne réponse : la sortie suivante dure 5 % de moins', () => {
+    const field = fieldOf('moyen');
+    solveOnce(field);
+    const shorter = 2500 * SPEED_UP;
+    expect(field.upMs).toBe(shorter);
+    raise(field);
+    expect(field.tick(shorter - 1)).toBeNull();
+    expect(field.heightOf(field.monsters[0])).toBeGreaterThan(0);
+    expect(field.tick(1)).toBe('escaped');
+  });
+
+  test('jamais plus court que 60 % du temps du niveau', () => {
+    const field = fieldOf('difficile');
+    for (let answer = 0; answer < 30; answer++) solveOnce(field);
+    expect(field.upMs).toBe(1800 * FASTEST);
+  });
+
+  test('une erreur ou des monstres repartis à temps : le rythme ne change pas', () => {
+    const field = fieldOf('debutant');
+    raise(field);
+    const wrong = field.monsters.find(monster => !monster.correct);
+    field.whack(wrong.hole);
+    expect(field.tick(3000)).toBe('escaped');
+    expect(field.upMs).toBe(3000);
   });
 });
 

@@ -6,7 +6,9 @@
  * calcul (les autres redescendent, le bon reste le temps de lire le calcul complet) ; un
  * mauvais redescend seul ; personne de tapé à temps : ils redescendent tous, puis d'autres
  * sortent pour le même calcul. Parfois un ami sort avec eux, sans nombre : il ne faut pas le
- * taper. Le temps est celui du jeu (tick) : la pause de l'Arcade l'arrête.
+ * taper. Chaque bonne réponse les fait sortir un peu moins longtemps (SPEED_UP), jusqu'à
+ * FASTEST fois le temps du niveau : la partie s'anime pour qui trouve, jamais pour qui
+ * cherche. Le temps est celui du jeu (tick) : la pause de l'Arcade l'arrête.
  */
 import { shuffleInPlace, chance } from './core/random.js';
 
@@ -18,6 +20,10 @@ export const HOLES = GRID * GRID;
 export const RISE_MS = 250;
 /** Terriers vides entre deux sorties */
 export const GAP_MS = 400;
+/** Temps de sortie après une bonne réponse : 5 % de moins que le précédent */
+export const SPEED_UP = 0.95;
+/** Temps de sortie le plus court : 60 % de celui du niveau (environ 10 bonnes réponses) */
+export const FASTEST = 0.6;
 
 /** Terriers de la rangée du bas : la consigne du début est posée dessus */
 export const BOTTOM_HOLES = Array.from({ length: GRID }, (_, column) => HOLES - GRID + column);
@@ -75,7 +81,9 @@ export class MonsterField {
    */
   constructor({ count, upMs, solvedMs, friendChance = 0 }) {
     this.count = count;
+    /** Temps de sortie du niveau, puis raccourci à chaque bonne réponse (jusqu'à FASTEST) */
     this.upMs = upMs;
+    this.slowestUpMs = upMs;
     this.solvedMs = solvedMs;
     this.friendChance = friendChance;
     /** waiting (pas de calcul), gap (terriers vides), up (monstres levés), solved */
@@ -183,13 +191,15 @@ export class MonsterField {
     return { correct: true, value: monster.value };
   }
 
-  // Bonne réponse : son monstre reste levé, les autres et l'ami redescendent ensemble
+  // Bonne réponse : son monstre reste levé, les autres et l'ami redescendent ensemble ; la
+  // prochaine sortie sera un peu plus courte
   solve(monster) {
     this.monsters = this.upMonsters();
     this.friend = this.upFriend();
     this.enter('solved');
     for (const other of this.monsters) if (other !== monster) other.downAt = 0;
     if (this.friend) this.friend.downAt = 0;
+    this.upMs = Math.max(this.slowestUpMs * FASTEST, this.upMs * SPEED_UP);
   }
 
   /**
