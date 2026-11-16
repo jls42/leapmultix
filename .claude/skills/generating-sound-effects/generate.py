@@ -44,12 +44,17 @@ def key():
 
 def request(path, body=None):
     data = json.dumps(body).encode("utf-8") if body is not None else None
-    req = urllib.request.Request(f"{API}{path}", data=data, method="POST" if data else "GET")
+    url = f"{API}{path}"
+    # Toujours l'API, en https : jamais file:/ ni un autre schéma ou un autre hôte
+    if not url.startswith("https://api.elevenlabs.io/"):
+        sys.exit(f"ÉCHEC : adresse refusée {url}")
+    req = urllib.request.Request(url, data=data, method="POST" if data else "GET")
     req.add_header("xi-api-key", key())
     if data:
         req.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(req, timeout=300) as response:
+        # Adresse vérifiée juste au-dessus (l'API, en https) : Bandit (B310) la signale quand même
+        with urllib.request.urlopen(req, timeout=300) as response:  # nosec B310
             return response.read(), response.headers.get("character-cost", "")
     except urllib.error.HTTPError as error:
         sys.exit(f"ÉCHEC HTTP {error.code} sur {path} : {error.read().decode('utf-8', 'replace')[:300]}")
