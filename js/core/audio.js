@@ -14,6 +14,8 @@ import { eventBus } from './eventBus.js';
  * faire sursauter l'enfant à chaque réponse fausse (valeur du Chrono depuis la PR #78)
  */
 const ERROR_SOUND_VOLUME = 0.35;
+// Le maillet sonne avec le son de la réponse : un peu en dessous, sans le couvrir
+const MALLET_SOUND_VOLUME = 0.7;
 
 /**
  * API audio centralisée
@@ -24,10 +26,15 @@ const AudioManager = {
     ['good', 'assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav'],
     ['bad', 'assets/sounds/mixkit-failure-arcade-alert-notification-240.wav'],
     ['shoot', 'assets/sounds/mixkit-short-laser-gun-shot-1670.wav'],
+    // Le maillet de MultiPop qui touche un monstre (ElevenLabs, choisi par le propriétaire)
+    ['mallet', 'assets/sounds/maillet.wav'],
   ]),
 
   // Volume propre à un son, en part du volume général (sinon tout le volume)
-  soundVolumes: new Map([['bad', ERROR_SOUND_VOLUME]]),
+  soundVolumes: new Map([
+    ['bad', ERROR_SOUND_VOLUME],
+    ['mallet', MALLET_SOUND_VOLUME],
+  ]),
 
   // État audio interne
   _volume: 1,

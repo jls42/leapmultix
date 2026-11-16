@@ -20,9 +20,10 @@ const {
   malletImageRect,
   drawMallet,
   drawPopBoard,
+  squashedHole,
   BOARD_MARGIN,
 } = await import('../js/multipop-renderer.js');
-const { MonsterField } = await import('../js/multipop-engine.js');
+const { MonsterField, RISE_MS } = await import('../js/multipop-engine.js');
 
 const PORTRAIT = { width: 366, height: 640 };
 const LANDSCAPE = { width: 800, height: 260 };
@@ -142,13 +143,24 @@ describe('MultiPop : le maillet', () => {
   /** Contexte de dessin qui note chaque appel */
   function recordingContext() {
     const calls = [];
+    // save() et restore() gardent l'opacité, comme sur un vrai canevas
+    const saved = [];
+    const keepAlpha = (target, prop) => {
+      if (prop === 'save') saved.push(target.globalAlpha);
+      if (prop !== 'restore') return;
+      const alpha = saved.pop();
+      if (alpha === undefined) Reflect.deleteProperty(target, 'globalAlpha');
+      else target.globalAlpha = alpha;
+    };
     const ctx = new Proxy(
       { canvas: document.createElement('canvas') },
       {
         get(target, prop) {
           if (prop in target) return Reflect.get(target, prop);
           return (...args) => {
-            calls.push({ name: prop, args });
+            keepAlpha(target, prop);
+            // L'opacité du moment de chaque appel : celle du maillet qui s'efface
+            calls.push({ name: prop, args, alpha: target.globalAlpha });
             return { width: 40 };
           };
         },
@@ -179,10 +191,10 @@ describe('MultiPop : le maillet', () => {
       expect(pivot.x).toBeGreaterThan(point.x);
       expect(pivot.y).toBeGreaterThan(point.y);
       // À la taille des cases, sans devenir minuscule ni énorme
-      expect(size).toBeGreaterThanOrEqual(30);
-      expect(size).toBeLessThanOrEqual(64);
+      expect(size).toBeGreaterThanOrEqual(36);
+      expect(size).toBeLessThanOrEqual(72);
       expect(size).toBeLessThanOrEqual(
-        Math.max(30, Math.min(layout.cellWidth, layout.cellHeight) * 0.3)
+        Math.max(36, Math.min(layout.cellWidth, layout.cellHeight) * 0.42)
       );
     }
   );
@@ -234,10 +246,25 @@ describe('MultiPop : le maillet', () => {
       drawMallet(ctx, layout, { x: 200, y: 150, ...mallet });
       return { burst: named(calls, 'lineTo').length, shadow: named(calls, 'ellipse').length };
     };
-    expect(drawn({ swing: 1, impact: true })).toEqual({ burst: 16, shadow: 0 });
-    expect(drawn({ swing: 1, impact: false })).toEqual({ burst: 0, shadow: 1 });
-    // La frappe retombée, il ne reste que l'ombre du point visé
+    expect(drawn({ swing: 1, burst: 1, impact: true })).toEqual({ burst: 16, shadow: 0 });
+    expect(drawn({ swing: 1, burst: 1, impact: false })).toEqual({ burst: 0, shadow: 1 });
+    // Il descend encore, ou la frappe est retombée : il ne reste que l'ombre du point visé
+    expect(drawn({ swing: 0.5, burst: 0, impact: true })).toEqual({ burst: 0, shadow: 1 });
     expect(drawn({ swing: 0, impact: true })).toEqual({ burst: 0, shadow: 1 });
+  });
+
+  test('il s’efface tout entier, son ombre et son image avec lui', () => {
+    const layout = popLayout(DESKTOP);
+    const { ctx, calls } = recordingContext();
+    drawMallet(
+      ctx,
+      layout,
+      { x: 200, y: 150, swing: 0, impact: false, alpha: 0.4 },
+      malletSprite()
+    );
+    expect(named(calls, 'drawImage').map(call => call.alpha)).toEqual([0.4]);
+    const [shadow] = named(calls, 'fill');
+    expect(shadow.alpha).toBeCloseTo(0.4 * 0.28);
   });
 
   test('le plateau ne le dessine que s’il est là, par-dessus les terriers', () => {
@@ -264,5 +291,44 @@ describe('MultiPop : le maillet', () => {
     // Après le dernier terrier : rien ne le cache
     const names = withMallet.calls.map(call => call.name);
     expect(names.lastIndexOf('rotate')).toBeGreaterThan(names.lastIndexOf('closePath'));
+  });
+
+  test('le personnage touché s’écrase sur le bord de son trou, autant que l’éclat est vif', () => {
+    const layout = popLayout(DESKTOP);
+    const field = new MonsterField({ count: 3, upMs: 3000, solvedMs: 1500 });
+    field.ask(12, () => [12, 15, 18], 0);
+    field.tick(1);
+    field.tick(RISE_MS);
+    const [monster] = field.upMonsters();
+    expect(monster).toBeDefined();
+    const { sign, centerX, holeY } = cellParts(cellRect(layout, monster.hole));
+    const point = { x: sign.x + sign.width / 2, y: sign.y + sign.height / 2 };
+    const view = { layout, field, sprites: new Map(), grassSprite: null, cursorHole: null };
+    const scales = (mallet, reducedMotion = false) => {
+      const { ctx, calls } = recordingContext();
+      drawPopBoard(ctx, { ...view, reducedMotion, mallet });
+      return { scale: named(calls, 'scale'), translate: named(calls, 'translate') };
+    };
+    const expectSquash = (calls, wider, lower) => {
+      expect(calls).toHaveLength(1);
+      const [x, y] = calls.at(0).args;
+      expect(x).toBeCloseTo(wider);
+      expect(y).toBeCloseTo(lower);
+    };
+    const struck = { ...point, swing: 1, impact: true, burst: 1 };
+    const { scale, translate } = scales(struck);
+    expectSquash(scale, 1.12, 0.82);
+    // Autour du bas du personnage, au bord du trou : il ne flotte pas
+    expect(translate.at(0).args).toEqual([centerX, holeY]);
+    expect(squashedHole({ layout, reducedMotion: false, mallet: struck })).toEqual({
+      hole: monster.hole,
+      squash: 1,
+    });
+    // À moitié relevé, à moitié écrasé
+    expectSquash(scales({ ...struck, burst: 0.5 }).scale, 1.06, 0.91);
+    // Rien dans le vide, avant qu'il arrive, ni quand les mouvements sont réduits
+    expect(scales({ ...struck, impact: false }).scale).toHaveLength(0);
+    expect(scales({ ...struck, burst: 0 }).scale).toHaveLength(0);
+    expect(scales(struck, true).scale).toHaveLength(0);
   });
 });
