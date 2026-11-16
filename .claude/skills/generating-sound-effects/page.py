@@ -13,7 +13,9 @@ Demande ffmpeg et numpy.
 import json
 import math
 import pathlib
-import subprocess
+import shutil
+# ffmpeg seulement, son chemin absolu et ses arguments en liste, sans shell, sur nos propres fichiers
+import subprocess  # nosec B404
 import sys
 
 import numpy as np
@@ -25,17 +27,19 @@ TARGET_RMS = -20.0
 PEAK_MAX = -3.0
 SILENT_PEAK = -20.0
 BARS = 40
+FFMPEG = shutil.which("ffmpeg")
 
 
 def decode(path):
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-ac", "1", "-ar", str(RATE),
-                          "-f", "f32le", "-"], capture_output=True, check=True).stdout
+    command = [FFMPEG, "-v", "error", "-i", str(path), "-ac", "1", "-ar", str(RATE), "-f", "f32le", "-"]
+    raw = subprocess.run(command, capture_output=True, check=True).stdout  # nosec B603
     return np.frombuffer(raw, dtype=np.float32).copy()
 
 
 def encode(samples, path):
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "f32le", "-ar", str(RATE), "-ac", "1", "-i", "-",
-                    "-b:a", "128k", str(path)], input=samples.astype(np.float32).tobytes(), check=True)
+    command = [FFMPEG, "-v", "error", "-y", "-f", "f32le", "-ar", str(RATE), "-ac", "1", "-i", "-",
+               "-b:a", "128k", str(path)]
+    subprocess.run(command, input=samples.astype(np.float32).tobytes(), check=True)  # nosec B603
 
 
 def decibels(value):
@@ -80,6 +84,8 @@ def normalize(samples):
 def main(argv):
     if len(argv) != 2:
         sys.exit(__doc__)
+    if not FFMPEG:
+        sys.exit("ÉCHEC : ffmpeg introuvable")
     lot = json.loads((SKILL / "lots" / f"{argv[0]}.json").read_text(encoding="utf-8"))
     out = pathlib.Path(argv[1])
     (out / "a").mkdir(parents=True, exist_ok=True)
