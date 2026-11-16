@@ -103,6 +103,31 @@ body:has(#slide4.active-slide)::before {
   opacity: 1;
 }
 
+/* Téléphone : la carte couvre presque tout l'écran, l'illustration ne se voyait qu'en deux
+   bordures. Elle devient un bandeau en haut de la page, sur toute sa largeur et sans
+   recadrage (l'illustration est en 3:2), qui défile avec elle et se fond dans le fond de la
+   page ; hors partie, la carte s'ouvre plus bas pour le laisser voir. En partie (#slide4),
+   le voile le couvre, comme avant. */
+@media (max-width: 600px) {
+  body {
+    --phone-band-height: calc(100vw * 2 / 3);
+
+    background-image:
+      linear-gradient(to bottom, transparent 60%, var(--color-page)),
+      var(--current-bg-image-webp, var(--current-bg-image-url, none));
+    background-position: top center;
+    background-size:
+      100% var(--phone-band-height),
+      100% auto;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+  }
+
+  .slide:not(#slide4) > .top-bar + .content-card {
+    margin-top: 30vw;
+  }
+}
+
 /* Les contrôles de formulaire héritent de la police du texte */
 button,
 input,
