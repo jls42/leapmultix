@@ -789,9 +789,8 @@ export function startMultiplicationInvasion() {
       size: isMobile ? 8 : 5, // Tir plus visible sur mobile
     });
 
-    if (isVoiceEnabled()) {
-      playSound('shoot');
-    }
+    // Un bruitage suit le son du jeu (coupé, volume), pas la lecture à voix haute
+    playSound('bubbleShot');
   }
 
   // Gestion locale de la barre espace (supprime le bridge global window.shoot)

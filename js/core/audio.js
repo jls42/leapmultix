@@ -16,6 +16,13 @@ import { eventBus } from './eventBus.js';
 const ERROR_SOUND_VOLUME = 0.35;
 // Le maillet sonne avec le son de la réponse : un peu en dessous, sans le couvrir
 const MALLET_SOUND_VOLUME = 0.7;
+// Les bruitages de l'Arcade (ElevenLabs, choisis par le propriétaire le 16/11/2026) : la
+// bouchée sonne avec la bonne réponse, comme le maillet ; la carte et le tir reviennent à
+// chaque geste, plus discrets
+const MUNCH_SOUND_VOLUME = 0.7;
+const KICK_SOUND_VOLUME = 0.7;
+const CARD_SOUND_VOLUME = 0.5;
+const SHOT_SOUND_VOLUME = 0.5;
 
 /**
  * API audio centralisée
@@ -28,12 +35,24 @@ const AudioManager = {
     ['shoot', 'assets/sounds/mixkit-short-laser-gun-shot-1670.wav'],
     // Le maillet de MultiPop qui touche un monstre (ElevenLabs, choisi par le propriétaire)
     ['mallet', 'assets/sounds/maillet.wav'],
+    // MultiSnake et MultiMiam : la bonne réponse croquée
+    ['munch', 'assets/sounds/miam.wav'],
+    // MultiGoal : le ballon frappé
+    ['kick', 'assets/sounds/ballon.wav'],
+    // MultiMemory : une carte retournée
+    ['cardFlip', 'assets/sounds/carte.wav'],
+    // MultiInvaders : le tir de la fusée (une bulle ; le laser reste à l'Aventure)
+    ['bubbleShot', 'assets/sounds/tir-bulle.wav'],
   ]),
 
   // Volume propre à un son, en part du volume général (sinon tout le volume)
   soundVolumes: new Map([
     ['bad', ERROR_SOUND_VOLUME],
     ['mallet', MALLET_SOUND_VOLUME],
+    ['munch', MUNCH_SOUND_VOLUME],
+    ['kick', KICK_SOUND_VOLUME],
+    ['cardFlip', CARD_SOUND_VOLUME],
+    ['bubbleShot', SHOT_SOUND_VOLUME],
   ]),
 
   // État audio interne

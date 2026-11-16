@@ -881,6 +881,8 @@ class MemoryGame {
     if (!card || card.isFlipped || card.isMatched) return false;
     card.isFlipped = true;
     this.flippedCards.push(card);
+    // La carte qui se retourne, dans le geste du joueur
+    AudioManager.playSound('cardFlip');
     this.announce(card.content);
 
     // Vérifier si deux cartes sont retournées

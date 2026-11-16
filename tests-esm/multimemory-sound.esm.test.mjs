@@ -78,6 +78,16 @@ describe('MultiMemory : sons au volume du jeu', () => {
     expect(played[0].volume).toBeCloseTo(0.4 * 0.35);
   });
 
+  test('une carte retournée sonne, discrète ; une carte déjà retournée, non', () => {
+    const [first] = game.cards;
+    expect(game.flipCard(first)).not.toBe(false);
+    expect(played).toHaveLength(1);
+    expect(played[0].src).toContain('carte.wav');
+    expect(played[0].volume).toBeCloseTo(0.4 * 0.5);
+    expect(game.flipCard(first)).toBe(false);
+    expect(played).toHaveLength(1);
+  });
+
   test('son coupé : aucun son', () => {
     AudioManager.setVolume(0);
     const [first, second] = game.cards;

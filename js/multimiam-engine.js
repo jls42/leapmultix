@@ -10,6 +10,7 @@
  */
 import { showArcadeMessage, showArcadePoints } from './utils-es6.js';
 import { showArcadePenalty } from './arcade-points.js';
+import { AudioManager } from './core/audio.js';
 import { chance, pickRandom } from './core/random.js';
 import { recordArcadeAnswer, showSolvedQuestion, SOLVED_PAUSE_MS } from './arcade-learning.js';
 import { noteArcadePlay } from './arcade-session.js';
@@ -161,6 +162,8 @@ function noteEatenAnswer(game, answer) {
  */
 function eatCorrectAnswer(game, answer) {
   game.score += 100;
+  // La réponse croquée, avec le son de la bonne réponse que jouent les points
+  AudioManager.playSound('munch');
   if (game.canvas) {
     showArcadePoints(100, game.canvas, cellPoint(game, answer));
   }

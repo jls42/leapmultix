@@ -29,6 +29,7 @@ jest.unstable_mockModule('../js/core/operation-stats.js', () => ({
 }));
 
 const { initPacmanEngine } = await import('../js/multimiam-engine.js');
+const { AudioManager } = await import('../js/core/audio.js');
 
 /** Un plateau d'une ligne, une réponse posée ; MultiMiam sur la case donnée */
 function boardWith(answer, multimiamX) {
@@ -81,6 +82,20 @@ describe('MultiMiam : une réponse croquée compte', () => {
     expect(noteArcadePlay).toHaveBeenCalledTimes(1);
     expect(recordOperationResult).toHaveBeenCalledWith('−', 15, 7, false);
     expect(game.answerPositions).toEqual([]);
+  });
+
+  test('la bonne réponse est croquée (son « munch ») ; une mauvaise ou rien, jamais', () => {
+    const sound = jest.spyOn(AudioManager, 'playSound').mockImplementation(() => undefined);
+    const munches = () => sound.mock.calls.filter(([name]) => name === 'munch').length;
+    try {
+      boardWith({ x: 1, y: 0, value: 9, isCorrect: false }, 1).checkAnswerCollision();
+      boardWith({ x: 2, y: 0, value: 8, isCorrect: true }, 0).checkAnswerCollision();
+      expect(munches()).toBe(0);
+      boardWith({ x: 1, y: 0, value: 8, isCorrect: true }, 1).checkAnswerCollision();
+      expect(munches()).toBe(1);
+    } finally {
+      sound.mockRestore();
+    }
   });
 
   test('aucune réponse sous MultiMiam : rien de compté', () => {

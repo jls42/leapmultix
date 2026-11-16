@@ -14,6 +14,7 @@
 import { gameState } from './game.js';
 import { getTranslation, showArcadePoints } from './utils-es6.js';
 import { showArcadePenalty } from './arcade-points.js';
+import { AudioManager } from './core/audio.js';
 import { eventBus } from './core/eventBus.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { recordArcadeAnswer, SOLVED_PAUSE_MS, showSolvedQuestion } from './arcade-learning.js';
@@ -222,6 +223,8 @@ export class GoalGame extends ArcadeBoardGame {
    */
   shoot(slot) {
     if (!this.canPlay() || !this.shootout.shoot(slot)) return;
+    // Le ballon frappé, dans le geste du joueur (Safari refuse un son lancé plus tard)
+    AudioManager.playSound('kick');
     // Un tir : la partie est jouée (tableau de bord)
     noteArcadePlay();
   }
