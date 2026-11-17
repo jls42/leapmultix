@@ -31,12 +31,16 @@ const AudioManager = {
   // Catalogue des sons disponibles
   sounds: new Map([
     ['good', 'assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav'],
-    ['bad', 'assets/sounds/mixkit-failure-arcade-alert-notification-240.wav'],
+    // La mauvaise réponse, partout : un « bloup » doux qui dit « essaie encore » (ElevenLabs,
+    // choisi par le propriétaire le 17/11/2026), au niveau de l'ancienne alerte d'arcade
+    ['bad', 'assets/sounds/erreur.wav'],
     ['shoot', 'assets/sounds/mixkit-short-laser-gun-shot-1670.wav'],
     // Le maillet de MultiPop qui touche un monstre (ElevenLabs, choisi par le propriétaire)
     ['mallet', 'assets/sounds/maillet.wav'],
-    // MultiSnake et MultiMiam : la bonne réponse croquée
+    // MultiMiam : la bonne réponse croquée
     ['munch', 'assets/sounds/miam.wav'],
+    // MultiSnake : la pomme croquée
+    ['crunch', 'assets/sounds/croque.wav'],
     // MultiGoal : le ballon frappé
     ['kick', 'assets/sounds/ballon.wav'],
     // MultiMemory : une carte retournée
@@ -50,6 +54,7 @@ const AudioManager = {
     ['bad', ERROR_SOUND_VOLUME],
     ['mallet', MALLET_SOUND_VOLUME],
     ['munch', MUNCH_SOUND_VOLUME],
+    ['crunch', MUNCH_SOUND_VOLUME],
     ['kick', KICK_SOUND_VOLUME],
     ['cardFlip', CARD_SOUND_VOLUME],
     ['bubbleShot', SHOT_SOUND_VOLUME],

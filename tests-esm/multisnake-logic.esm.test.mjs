@@ -205,9 +205,9 @@ describe('MultiSnake : pommes mangées', () => {
     expect(game.numberPositions).toEqual([]);
   });
 
-  test('la bonne pomme est croquée (son « munch ») ; une mauvaise, jamais', () => {
+  test('la bonne pomme est croquée (son « crunch ») ; une mauvaise, jamais', () => {
     const sound = jest.spyOn(AudioManager, 'playSound').mockImplementation(() => undefined);
-    const munches = () => sound.mock.calls.filter(([name]) => name === 'munch').length;
+    const munches = () => sound.mock.calls.filter(([name]) => name === 'crunch').length;
     try {
       game.numberPositions = [
         { x: 6, y: 5, value: 9, isCorrect: false },
