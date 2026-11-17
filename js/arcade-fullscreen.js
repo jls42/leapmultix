@@ -7,6 +7,8 @@
      même pas ce module.
    - Le plein écran dure pendant la partie, son écran de fin et « Rejouer » ; il se quitte
      par le bouton, par Échap, ou en revenant au menu Arcade ou à un autre écran.
+   - Sur un appareil tactile, la partie lancée par « Jouer » y passe d'elle-même
+     (enterFullscreenAfterPlay) ; le bouton reste pour en sortir.
    ===================== */
 import { getTranslation } from './i18n.js';
 import { createPathIcon } from './components/icons.js';
@@ -103,6 +105,25 @@ function toggleFullscreen(root, stage) {
     ? document.exitFullscreen()
     : root.requestFullscreen({ navigationUI: 'hide' });
   void Promise.resolve(request)
+    .catch(error => console.warn('[Arcade] Plein écran refusé', error))
+    .finally(() => focusBoard(stage));
+}
+
+/**
+ * La partie qui vient de s'afficher passe d'elle-même en plein écran, sur un appareil
+ * tactile (choix du propriétaire, 17/11/2026 ; arcade-common.js décide de l'appareil). Le
+ * navigateur ne l'accepte que juste après un geste du joueur (navigator.userActivation,
+ * quelques secondes : le temps de charger le jeu après « Jouer ») : sans geste récent, ou
+ * refusé, rien ne change et le bouton reste.
+ * @param {HTMLElement} stage - Zone de jeu (.arcade-game-ui) de la partie
+ */
+export function enterFullscreenAfterPlay(stage) {
+  const root = stage instanceof Element ? stage.closest('#game') : null;
+  if (!root || fullscreenRoot() || !isFullscreenAvailable(root)) return;
+  if (globalThis.navigator?.userActivation?.isActive !== true) return;
+  arcadeRoot = root;
+  listenOnce();
+  void Promise.resolve(root.requestFullscreen({ navigationUI: 'hide' }))
     .catch(error => console.warn('[Arcade] Plein écran refusé', error))
     .finally(() => focusBoard(stage));
 }

@@ -288,6 +288,26 @@ export function prepareArcadeStage(canvas) {
 
 /** Classe du bandeau qui garde une place au bouton plein écran (css/arcade.css) */
 const FULLSCREEN_PLACE_CLASS = 'has-fullscreen';
+/** Délai pendant lequel le navigateur accepte encore le plein écran après un geste */
+const PLAY_GESTURE_MS = 5000;
+// Dernier « Jouer » touché par le joueur lui-même (pas par un script)
+let playPressedAt = Number.NEGATIVE_INFINITY;
+
+/**
+ * « Jouer » d'une tuile de l'Arcade (js/modes/ArcadeMode.js) : touché par le joueur, la
+ * partie qui s'ouvre passera en plein écran sur un appareil tactile
+ * @param {Event} event - Le clic sur « Jouer »
+ */
+export function notePlayPressed(event) {
+  if (event?.isTrusted) playPressedAt = performance.now();
+}
+
+// « Jouer » vient-il d'être touché par le joueur ? Une seule partie en profite
+function takePlayGesture() {
+  const recent = performance.now() - playPressedAt < PLAY_GESTURE_MS;
+  playPressedAt = Number.NEGATIVE_INFINITY;
+  return recent;
+}
 
 /**
  * Bouton plein écran dans le bandeau de la partie (js/arcade-fullscreen.js). Sans l'API
@@ -305,6 +325,9 @@ function offerFullscreen(stage) {
       // Pas de bouton en fin de compte : la place gardée est rendue
       if (!module.mountArcadeFullscreenButton(stage)) {
         banner?.classList.remove(FULLSCREEN_PLACE_CLASS);
+      } else if (takePlayGesture() && isTouchFirstDevice()) {
+        // Lancée au doigt par « Jouer », la partie passe d'elle-même en plein écran
+        module.enterFullscreenAfterPlay(stage);
       }
       // La place du plateau est revue si l'arrivée du bouton l'a changée
       notifyStageChange(stage);

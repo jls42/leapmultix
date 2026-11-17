@@ -18,7 +18,9 @@ const { mountArcadeFullscreenButton, isFullscreenAvailable } = await import(
 );
 const { InfoBar } = await import('../js/components/infoBar.js');
 const { mountArcadePause, unmountArcadePause } = await import('../js/arcade-time.js');
-const { prepareArcadeStage, STAGE_CHANGE_EVENT } = await import('../js/arcade-common.js');
+const { prepareArcadeStage, STAGE_CHANGE_EVENT, notePlayPressed } = await import(
+  '../js/arcade-common.js'
+);
 
 let fullscreenElement = null;
 let game;
@@ -319,5 +321,106 @@ describe('Fin du plein écran en quittant la partie', () => {
     document.getElementById('slide4').classList.remove('active-slide');
     await flush();
     expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Au doigt, la partie lancée par « Jouer » passe d’elle-même en plein écran', () => {
+  const noop = () => undefined;
+  let matchMediaBefore;
+
+  /**
+   * Appareil au doigt ou à la souris, geste du joueur récent ou non, et « Jouer » touché par
+   * le joueur (vrai geste) ou cliqué par un script
+   */
+  function device({ touch, recentGesture, playedBy = 'player' }) {
+    notePlayPressed({ isTrusted: playedBy === 'player' });
+    globalThis.matchMedia = query => ({
+      matches: touch && query === '(pointer: coarse)',
+      addEventListener: noop,
+      removeEventListener: noop,
+    });
+    Object.defineProperty(navigator, 'userActivation', {
+      value: { isActive: recentGesture },
+      configurable: true,
+    });
+  }
+
+  async function openGame() {
+    prepareArcadeStage(canvas);
+    await import('../js/arcade-fullscreen.js');
+    for (let i = 0; i < 10; i++) await flush();
+  }
+
+  beforeEach(() => {
+    matchMediaBefore = globalThis.matchMedia;
+    provideFullscreenApi();
+  });
+
+  afterEach(() => {
+    globalThis.matchMedia = matchMediaBefore;
+    Reflect.deleteProperty(navigator, 'userActivation');
+  });
+
+  test('au doigt, juste après « Jouer » : toute la partie en plein écran, le bouton pour en sortir', async () => {
+    device({ touch: true, recentGesture: true });
+    await openGame();
+    expect(game.requestFullscreen).toHaveBeenCalledTimes(1);
+    expect(document.fullscreenElement).toBe(game);
+    expect(document.querySelector('.arcade-fullscreen-btn').getAttribute('aria-label')).toBe(
+      'Quitter le plein écran'
+    );
+    // Retour au menu Arcade : sortie du plein écran, comme avec le bouton
+    game.replaceChildren(document.createElement('div'));
+    await flush();
+    expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
+  });
+
+  test('à la souris : rien, le bouton reste au choix du joueur', async () => {
+    device({ touch: false, recentGesture: true });
+    await openGame();
+    expect(game.requestFullscreen).not.toHaveBeenCalled();
+    expect(document.querySelector('.arcade-fullscreen-btn')).not.toBeNull();
+  });
+
+  test('« Jouer » cliqué par un script, pas par le joueur : rien n’est demandé', async () => {
+    device({ touch: true, recentGesture: true, playedBy: 'script' });
+    await openGame();
+    expect(game.requestFullscreen).not.toHaveBeenCalled();
+  });
+
+  test('une seule partie en profite : la suivante, sans nouveau « Jouer », reste comme elle est', async () => {
+    device({ touch: true, recentGesture: true });
+    await openGame();
+    document.exitFullscreen();
+    await flush();
+    renderPlayScreen();
+    await openGame();
+    expect(game.requestFullscreen).toHaveBeenCalledTimes(1);
+  });
+
+  test('sans geste récent du joueur (le navigateur refuserait) : rien n’est demandé', async () => {
+    device({ touch: true, recentGesture: false });
+    await openGame();
+    expect(game.requestFullscreen).not.toHaveBeenCalled();
+  });
+
+  test('« Rejouer » déjà en plein écran : rien n’est redemandé', async () => {
+    device({ touch: true, recentGesture: true });
+    await openGame();
+    renderPlayScreen();
+    await openGame();
+    expect(game.requestFullscreen).toHaveBeenCalledTimes(1);
+  });
+
+  test('refusé par le navigateur : la partie continue, le bouton propose le plein écran', async () => {
+    device({ touch: true, recentGesture: true });
+    game.requestFullscreen = jest.fn(() => Promise.reject(new Error('refus')));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(noop);
+    await openGame();
+    expect(game.requestFullscreen).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.arcade-fullscreen-btn').getAttribute('aria-label')).toBe(
+      'Plein écran'
+    );
+    warn.mockRestore();
   });
 });

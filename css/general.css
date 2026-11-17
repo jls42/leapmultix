@@ -52,12 +52,23 @@
 html {
   text-size-adjust: 100%;
 
+  /* Zones sûres (encoche de caméra, coins arrondis, barre de geste), 0 sur un écran sans
+     encoche. L'appli Android, en plein écran, se dessine jusque sous la caméra sur Android
+     15 et plus : Capacitor (System Bars, mode « native ») les transmet à env() ; sur une
+     WebView plus ancienne, il pose lui-même la page hors de l'encoche (env() vaut alors 0). */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
   /* Place réservée à la barre de défilement : l'écran ne glisse pas latéralement
      quand une page devient défilante (explication d'une réponse, par exemple) */
   scrollbar-gutter: stable;
 }
 
 body {
+  /* Le contenu reste hors des zones sûres (0 sur un écran sans encoche) */
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   font-family: var(--font-text);
   font-size: var(--text-base);
   font-weight: 400;

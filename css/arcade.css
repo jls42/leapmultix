@@ -481,7 +481,8 @@
   --calc-pad: var(--space-2);
 
   position: sticky;
-  top: var(--space-2);
+  /* Collé sous l'encoche de caméra, pas dessous (css/general.css : --safe-top) */
+  top: calc(var(--space-2) + var(--safe-top));
   z-index: var(--z-sticky);
   box-sizing: border-box;
   display: grid;
@@ -1226,7 +1227,9 @@
    Sans la barre du haut ni les marges de la page, le plateau prend la place libérée. */
 #slide4 #game:fullscreen {
   overflow: auto;
-  padding: var(--space-2) var(--space-2) 0;
+  /* Hors de l'encoche de caméra et de la barre de geste (css/general.css : --safe-*) */
+  padding: calc(var(--space-2) + var(--safe-top)) calc(var(--space-2) + var(--safe-right))
+    var(--safe-bottom) calc(var(--space-2) + var(--safe-left));
   background-color: var(--color-page);
   background-image: var(--current-bg-image-webp, var(--current-bg-image-url, none));
   background-position: center;
