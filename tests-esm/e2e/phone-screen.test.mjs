@@ -62,6 +62,17 @@ describe('Écran de téléphone (E2E)', () => {
     await page.goto(`${server.url}?saison=${NO_SEASON}`, server.gotoOptions);
     await createUserAndSkipIntro(page);
     await pressButton(page, '.mode-btn[data-mode="arcade"]');
+    // Mesures sur l'écran de l'Arcade installé : affiché, page remise en haut, entrée animée
+    // terminée (sinon, sur une machine lente, la barre se mesure en cours de route)
+    await page.waitForFunction(
+      () =>
+        document.querySelector('#slide4.active-slide .top-bar') !== null &&
+        window.scrollY === 0 &&
+        document
+          .getAnimations()
+          .every(a => a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity),
+      { timeout: 10000 }
+    );
   }
 
   beforeEach(() => {
