@@ -4,7 +4,7 @@
  * joueur à côté. Une cible que le gardien bloque est estompée : on voit quand tirer. Les
  * tailles sont en unités du jeu (pixels CSS du plateau).
  */
-import { KEEPER_REACH, REPLAY_MS } from './multigoal-engine.js';
+import { FLIGHT_MS, KEEPER_REACH, REPLAY_MS } from './multigoal-engine.js';
 import { drawArcadeSprite, devicePixelsPerUnit } from './arcade-sprites.js';
 import { contentBounds } from './arcade-sprite-bounds.js';
 import { getCanvasFont, readableCanvasFontSize } from './arcade-common.js';
@@ -409,17 +409,80 @@ function drawBall(ctx, ball) {
   ctx.restore();
 }
 
-// Le héros du joueur, à gauche du ballon, tourné vers lui
+// Le héros au repos : à gauche du ballon, tourné vers lui
+const STILL = Object.freeze({ shift: 0, lift: 0, angle: 0, turn: 1, squash: 0 });
+// Le tir : élan vers le ballon pendant le vol, au plus fort aux 35 % (contact), puis retour
+const KICK_PEAK = 0.35;
+const KICK_SHIFT = 1.4; // en rayons de ballon
+const KICK_LEAN = 0.3; // radians, penché vers le ballon
+// Le but : un tour sur lui-même, avec un petit saut, puis il retombe face au ballon
+const GOAL_SPIN_MS = 600;
+const GOAL_HOP = 0.12; // en tailles du héros
+// Arrêté ou raté : un petit « oh ! » qui se balance et s'éteint
+const OH_MS = 600;
+const OH_SWAY = 0.12;
+
+/**
+ * Pose du héros, selon le moment du tir. Animations réduites : toujours au repos.
+ * @param {{phase: string, elapsed: number}} game
+ * @param {boolean} reducedMotion
+ * @returns {{shift: number, lift: number, angle: number, turn: number, squash: number}} shift :
+ *   avancée vers le ballon (rayons de ballon) ; lift : saut (tailles du héros) ; angle : penché
+ *   (radians, positif vers le ballon) ; turn : largeur apparente, de 1 à -1 quand il se tourne ;
+ *   squash : tassement vertical
+ */
+export function heroPose(game, reducedMotion) {
+  if (reducedMotion) return STILL;
+  const pose = POSES.get(game.phase);
+  return pose ? pose(game.elapsed) : STILL;
+}
+
+// Le tir : élan vers le ballon pendant le vol
+function kickPose(elapsed) {
+  const t = clamp(elapsed / FLIGHT_MS, 0, 1);
+  const kick = t <= KICK_PEAK ? t / KICK_PEAK : (1 - t) / (1 - KICK_PEAK);
+  const swing = Math.sin((kick * Math.PI) / 2);
+  return { ...STILL, shift: KICK_SHIFT * swing, angle: KICK_LEAN * swing, squash: 0.05 * swing };
+}
+
+// Le but : un tour sur lui-même avec un petit saut
+function goalPose(elapsed) {
+  if (elapsed >= GOAL_SPIN_MS) return STILL;
+  const t = elapsed / GOAL_SPIN_MS;
+  return { ...STILL, turn: Math.cos(t * 2 * Math.PI), lift: GOAL_HOP * Math.sin(t * Math.PI) };
+}
+
+// Arrêté ou raté : un « oh ! » qui se balance et s'éteint
+function ohPose(elapsed) {
+  if (elapsed >= OH_MS) return STILL;
+  const t = elapsed / OH_MS;
+  return { ...STILL, angle: -OH_SWAY * Math.sin(t * 4 * Math.PI) * (1 - t) };
+}
+
+const POSES = new Map([
+  ['flying', kickPose],
+  ['goal', goalPose],
+  ['saved', ohPose],
+  ['missed', ohPose],
+]);
+
+// Le héros du joueur, à gauche du ballon, tourné vers lui ; il bouge avec le tir (heroPose)
 function drawHero(ctx, view) {
   const { layout } = view;
   const size = clamp(layout.height * 0.24, 44, layout.goal.width * 0.34);
-  const box = {
-    x: layout.spot.x - layout.ballRadius * 1.6 - size,
-    y: layout.spot.y + layout.ballRadius - size,
-    width: size,
-    height: size,
-  };
+  const box = { x: -size / 2, y: -size, width: size, height: size };
+  // Pieds du héros au repos : il se penche, se tourne et saute autour de ce point
+  const feetX = layout.spot.x - layout.ballRadius * 1.6 - size / 2;
+  const feetY = layout.spot.y + layout.ballRadius;
+  const pose = heroPose(view.game, view.reducedMotion);
+  ctx.save();
+  ctx.translate(feetX + pose.shift * layout.ballRadius, feetY - pose.lift * size);
+  if (pose !== STILL) {
+    ctx.rotate(pose.angle);
+    ctx.scale(pose.turn, 1 - pose.squash);
+  }
   drawArcadeSprite(ctx, view.heroSprite, box, { facing: 'right' });
+  ctx.restore();
 }
 
 // « Arrêté ! » au-dessus du gardien, le temps de l'arrêt : la réponse était bonne

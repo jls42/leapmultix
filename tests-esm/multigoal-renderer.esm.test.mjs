@@ -12,6 +12,7 @@ const { KEEPER_REACH, FLIGHT_MS, REPLAY_MS, Shootout, targetSlots } = await impo
   '../js/multigoal-engine.js'
 );
 const {
+  heroPose,
   GOAL_RATIO,
   goalLayout,
   goalPoint,
@@ -343,5 +344,57 @@ describe('MultiGoal : le ballon', () => {
     const target = goalPoint(view.layout, game.targets.at(1));
     const place = ballPlace(view, keeper);
     expect([view.layout.spot.y, target.y].some(y => Math.abs(place.y - y) < 1e-6)).toBe(true);
+  });
+});
+
+describe('MultiGoal : le tireur', () => {
+  const pose = (phase, elapsed, reducedMotion = false) =>
+    heroPose({ phase, elapsed }, reducedMotion);
+
+  test('au repos pendant qu’on vise : ni élan, ni saut, face au ballon', () => {
+    expect(pose('aiming', 400)).toEqual({ shift: 0, lift: 0, angle: 0, turn: 1, squash: 0 });
+  });
+
+  test('au tir : il s’élance vers le ballon en se penchant, au plus fort au contact, puis revient', () => {
+    const start = pose('flying', 0);
+    const contact = pose('flying', FLIGHT_MS * 0.35);
+    const end = pose('flying', FLIGHT_MS);
+    expect(start.shift).toBeCloseTo(0);
+    expect(contact.shift).toBeGreaterThan(1.3);
+    expect(contact.angle).toBeGreaterThan(0.28);
+    expect(pose('flying', FLIGHT_MS * 0.2).shift).toBeLessThan(contact.shift);
+    expect(pose('flying', FLIGHT_MS * 0.7).shift).toBeLessThan(contact.shift);
+    expect(end.shift).toBeCloseTo(0);
+    expect(end.angle).toBeCloseTo(0);
+  });
+
+  test('au but : un tour sur lui-même avec un petit saut, puis il retombe face au ballon', () => {
+    // À mi-tour, il est de dos (largeur retournée) et en haut du saut
+    const half = pose('goal', 300);
+    expect(half.turn).toBeCloseTo(-1);
+    expect(half.lift).toBeGreaterThan(0.1);
+    expect(pose('goal', 150).turn).toBeCloseTo(0);
+    expect(pose('goal', 600)).toEqual(pose('aiming', 0));
+    expect(pose('goal', 1200)).toEqual(pose('aiming', 0));
+  });
+
+  test('arrêté ou raté : un petit balancement qui s’éteint, jamais de saut ni de tour', () => {
+    for (const phase of ['saved', 'missed']) {
+      const sway = pose(phase, 75);
+      expect(Math.abs(sway.angle)).toBeGreaterThan(0.05);
+      expect(sway.lift).toBe(0);
+      expect(sway.turn).toBe(1);
+      expect(pose(phase, 600)).toEqual(pose('aiming', 0));
+    }
+  });
+
+  test('mouvements réduits : le tireur ne bouge jamais', () => {
+    for (const [phase, elapsed] of [
+      ['flying', FLIGHT_MS * 0.35],
+      ['goal', 300],
+      ['saved', 75],
+    ]) {
+      expect(pose(phase, elapsed, true)).toEqual(pose('aiming', 0));
+    }
   });
 });
