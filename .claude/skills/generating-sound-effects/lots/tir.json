@@ -1,0 +1,29 @@
+{
+  "lot": "tir",
+  "date": "2026-11-16",
+  "note": "Bruitages de l'Arcade demandés par le propriétaire le 16/11/2026 (sons agréables à réentendre) : MultiInvaders : le tir de la fusée.",
+  "title": "MultiInvaders : le tir de la fusée",
+  "intro": "Dans MultiInvaders, ce bruit sonne à chaque tir de la fusée. « Actuel » est le son d'aujourd'hui : choisis-le pour ne rien changer.",
+  "ceiling": 150,
+  "sounds": [
+    {
+      "name": "bulle",
+      "prompt": "a toy spaceship shoots a soft bubble, short gentle pew, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "pew",
+      "prompt": "a cute retro space blaster pew, soft and rounded, not harsh, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "etoile",
+      "prompt": "a tiny magic star shot, light twinkly zap, short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    }
+  ],
+  "chosen": "bulle-2"
+}

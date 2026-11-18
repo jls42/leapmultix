@@ -22,7 +22,7 @@ paths:
 - `GameMode.js` / `GameModeManager.js` - Abstract game mode system
 - `userState.js` - User session and preference management
 - `storage.js` - LocalStorage abstraction layer
-- `audio.js` - Audio manager with volume controls
+- `audio.js` - Audio manager with volume controls; catalog of the game's sounds (`sounds`), each at its own level under the answer sound (`soundVolumes`): `bad` (`erreur.wav`, every wrong answer), MultiMiam `munch` (`miam.wav`), MultiSnake `crunch` (`croque.wav`), MultiGoal `kick` (`ballon.wav`), MultiMemory `cardFlip` (`carte.wav`), MultiInvaders `bubbleShot` (`tir-bulle.wav`), MultiPop `mallet` (`maillet.wav`); generated with ElevenLabs and chosen by ear (skill `generating-sound-effects`, `chosen` of each lot), played in the player's gesture
 - `eventBus.js` - Event-driven communication between components
 - `mainInit.js` - DOM-ready initialization logic
 - `theme.js` - Theme and color customization system; the displayed theme (`effectiveColorTheme`): during a holiday, its theme of the same lightness as the player's own, unless the player picked an ordinary theme during this edition (`seasonChoice`); `colorTheme` is never overwritten by a holiday theme; every theme has a counterpart of the other lightness (`THEME_PAIRS`: Classique/Nuit, Ciel/Spatial, Nature/Forêt, Orangé/Braise, each holiday's two), swapped by the « Mode sombre » switch of Personalisation (`counterpartTheme`), and only the buttons of the displayed lightness show
@@ -79,13 +79,13 @@ paths:
 - `arcade-multimemory.js` - Memory matching game
 - `arcade-multimiam.js` - Multimiam arcade integration
 - `arcade-multisnake.js` - Snake game integration
-- `arcade-multipop.js` - MultiPop, whack-a-mole: monsters rise from nine holes, each with a number; hit the one carrying the answer, never the friend (another hero). Rules in `multipop-engine.js` (no drawing, no DOM), board in `multipop-renderer.js` (holes, signs, the mallet image `maillet.png`, drawn by code until it has loaded). The mallet's strike runs on the game clock (`MALLET_STRIKE`: down 80 ms, held 200 ms with the burst, up 220 ms, then a 180 ms fade after a finger or key tap; it stays raised under the mouse); a hit squashes the figure and plays `assets/sounds/maillet.wav` in the player's gesture, like the answer sound (Safari may refuse a sound started later by the game loop)
+- `arcade-multipop.js` - MultiPop, whack-a-mole: monsters rise from nine holes, each with a number; hit the one carrying the answer, never the friend (another hero). Rules in `multipop-engine.js` (no drawing, no DOM), board in `multipop-renderer.js` (holes, signs, the mallet image `maillet.png`, drawn by code until it has loaded). Monsters stay up less long after each right answer (`SPEED_UP` 0.95, down to `FASTEST` 0.6 of the level's time). The mallet's strike runs on the game clock (`MALLET_STRIKE`: down 80 ms, held 200 ms with the burst, up 220 ms, then a 180 ms fade after a finger or key tap; it stays raised under the mouse); a hit squashes the figure and plays `assets/sounds/maillet.wav` in the player's gesture, like the answer sound (Safari may refuse a sound started later by the game loop)
 - `arcade-multigoal.js` - MultiGoal, penalty shootout: shoot at the target carrying the answer while the goalkeeper (a monster) is not in front of it. Rules in `multigoal-engine.js`, pitch in `multigoal-renderer.js` (goal, targets, ball and the player's hero; a target the keeper blocks is dimmed)
 - `arcade-board-game.js` - Shared base of the drawn-board games where a child picks an answer (MultiPop, MultiGoal): canvas and listeners, frame loop on the game clock (stopped during pause), screen-reader announcement and keyboard help, banner score, game screen with its timer and « Abandonner ». Each game keeps its rules: `resize()`, `step(dt)`, `draw()`, `handlePointer(event)`, `handleKeyDown(event)`
 - `arcade-answers.js` - Calculations and proposed answers of the games that show several answers at once (MultiInvaders, MultiPop, MultiGoal): the level's tables and numbers, tables to review drawn more often, wrong answers close or far by level
 - `arcade-question.js` - The calculation of the game banner, written by the six games through `writeArcadeQuestion(text)`: the « ? », then the answer once solved, in one box (`.arcade-answer-box`); the element's text stays exactly the one received (screen readers announce it once), and `--question-glyphs` (digits and « ? ») lets `css/arcade.css` shrink a long calculation just enough to fit its line
 - Game banner (`components/infoBar.js`, `css/arcade.css`): one line for the six games, score and lives on the left, the calculation in the middle, time and its buttons (`.arcade-banner-tools`: Pause, fullscreen) on the right; on a portrait phone the « Score » and « Temps » labels are for screen readers only and the fullscreen button moves under the score
-- `arcade-fullscreen.js` - Fullscreen button of the banner, only where the API exists (none on iPhone); `offerFullscreen()` of `arcade-common.js` keeps its place in the banner (`has-fullscreen`) from the start of the game, so the button arriving after the board is sized moves nothing
+- `arcade-fullscreen.js` - Fullscreen button of the banner, only where the API exists (none on iPhone); `offerFullscreen()` of `arcade-common.js` keeps its place in the banner (`has-fullscreen`) from the start of the game, so the button arriving after the board is sized moves nothing. On a touch-first device, a game started by a real tap on « Jouer » (`notePlayPressed`, trusted event, used once within `PLAY_GESTURE_MS`) enters fullscreen by itself (`enterFullscreenAfterPlay`, only while the tap's user activation is still active)
 - `arcade-common.js`, `arcade-utils.js` - Shared arcade utilities
 - `arcade-touch.js` - Gestes tactiles communs à MultiSnake et MultiMiam (glisser, toucher tolérant)
 - `isTouchFirstDevice()` (`arcade-common.js`) - Device played with a finger: a phone or tablet browser, or any screen whose primary pointer is coarse (an iPad presents itself as a Mac). The six games read it for their board, instructions and touch tolerance, never the user agent alone (test)
@@ -112,6 +112,8 @@ paths:
 - `uiUtils.js` - UI utility functions
 - `ui-feedback.js` - User feedback mechanisms
 - `touch-support.js` - Touch and mobile support
+- `screen-awake.js` - Keeps the phone screen on during a game (Screen Wake Lock on the game screen `slide4`, released after 5 minutes without a touch or a key and outside the game, asked again when the tab comes back)
+- Phone screen (`css/general.css`): the page stays out of the camera notch (`--safe-top`… from `env(safe-area-inset-*)` on `body`, also in the Android app, whose system bars are hidden); under 600 px the avatar's world is a band at the top of the page that scrolls with it and fades into the page, the card opening lower outside a game
 - `virtual-keyboard.js` - Virtual keyboard implementation
 - `coin-display.js`, `coin-effects.js` - Coin/currency system
 - `notifications.js` - Notification system
@@ -138,7 +140,7 @@ paths:
 - `main-helpers.js` - Main application helpers
 - `helpers.js` - Legacy helper functions
 - `stats-utils.js` - Statistics utilities
-- `difficulty.js` - Difficulty level management
+- `difficulty.js` - Difficulty level management: per level, the length of a timed Arcade game (`timeSeconds` 60, 90, 120 s; MultiMemory `memorySeconds` 120, 180, 300 s) and each game's pace
 - `questionGenerator.js` - Question generation system
 
 **Storage and State:**

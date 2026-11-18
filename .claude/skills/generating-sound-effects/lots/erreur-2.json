@@ -1,0 +1,32 @@
+{
+  "lot": "erreur-2",
+  "date": "2026-11-16",
+  "note": "Second lot pour la mauvaise réponse : le propriétaire voulait « plutôt bloup 2, mais on dirait qu'il sature » (bloup-2 écrêté à la source, crête +2,3 dBFS). Consignes du même esprit, plus calmes.",
+  "title": "La mauvaise réponse (nouveaux)",
+  "intro": "Dans l'esprit du « bloup 2 », sans saturation : un son qui dit « essaie encore » sans gronder, pour la mauvaise réponse dans tout le jeu. Les sons sortis saturés de la génération sont signalés.",
+  "ceiling": 150,
+  "sounds": [
+    {
+      "name": "bloup",
+      "prompt": "a soft bubbly bloop, two gentle descending notes, quiet and round, low volume, no distortion, try again cue, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "goutte",
+      "prompt": "two soft water drop plops, gentle and descending, calm and quiet, no distortion, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "marimba",
+      "prompt": "two soft descending marimba notes, warm and gentle, friendly try again cue, quiet, no distortion, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    }
+  ],
+  "notes": {
+    "bloup-1": "Saturé dès la génération (écrêté), comme l'ancien bloup 2 : à écarter, sauf coup de cœur."
+  },
+  "chosen": "bloup-2"
+}

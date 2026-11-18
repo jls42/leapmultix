@@ -1,0 +1,29 @@
+{
+  "lot": "carte",
+  "date": "2026-11-16",
+  "note": "Bruitages de l'Arcade demandés par le propriétaire le 16/11/2026 (sons agréables à réentendre) : MultiMemory : la carte retournée.",
+  "title": "MultiMemory : la carte retournée",
+  "intro": "Dans MultiMemory, ce bruit sonne à chaque carte retournée. Il revient très souvent : choisis le plus discret et agréable.",
+  "ceiling": 150,
+  "sounds": [
+    {
+      "name": "papier",
+      "prompt": "a playing card flipped over on a table, soft quick paper flick, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "bois",
+      "prompt": "a small wooden memory tile turned over, gentle soft click, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "magie",
+      "prompt": "a card flip with a tiny soft magical shimmer, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    }
+  ],
+  "chosen": "magie-2"
+}
