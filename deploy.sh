@@ -165,6 +165,7 @@ rsync -av --no-links \
   --include='modes.html' \
   --include='pwa.html' \
   --include='offline.html' \
+  --include='confidentialite-android.html' \
   --include='sw.js' \
   --include='manifest.json' \
   --include='favicon.svg' \

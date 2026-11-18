@@ -30,6 +30,7 @@ const TEXT_PUBLISHED = [
   'modes.html',
   'pwa.html',
   'offline.html',
+  'confidentialite-android.html',
   'sw.js',
   'manifest.json',
   'robots.txt',
