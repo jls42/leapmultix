@@ -1,12 +1,12 @@
 /**
  * Ce que l'Arcade retient d'une partie pour la suite de l'apprentissage : chaque réponse va
- * dans les statistiques du calcul et, en multiplication, dans la fenêtre « À revoir » de sa
- * table (tableau de bord, révision du Chrono) ; les calculs ratés sont montrés à l'écran de
+ * dans les statistiques du calcul et dans « Ton parcours » et, en multiplication, dans la
+ * fenêtre « À revoir » de sa table (tableau de bord, révision du Chrono) ; les calculs ratés sont montrés à l'écran de
  * fin ; les tables à revoir reviennent plus souvent au tirage. MultiMemory n'y passe pas :
  * une paire ratée est un oubli de place, pas une erreur de calcul.
  */
 import { recordOperationResult } from './core/operation-stats.js';
-import { recordReviewAnswer, weakTablesFrom } from './core/mode-stats.js';
+import { countArcadeAnswer, weakTablesFrom } from './core/mode-stats.js';
 import { UserState } from './core/userState.js';
 import { noteArcadeMiss } from './arcade-session.js';
 import { writeArcadeQuestion } from './arcade-question.js';
@@ -23,10 +23,11 @@ export function recordArcadeAnswer(operator, a, b, isCorrect) {
   if (!isCorrect) noteArcadeMiss({ operator, a, b });
   try {
     const userData = UserState.getCurrentUserData();
-    recordReviewAnswer(userData, { operator, table: a, isCorrect });
+    countArcadeAnswer(userData, { operator, table: a, isCorrect });
     UserState.updateUserData(userData);
   } catch {
-    // Profil illisible : la fenêtre « À revoir » attendra, la partie continue
+    // Profil illisible : « Ton parcours » et la fenêtre « À revoir » attendront, la partie
+    // continue
   }
 }
 

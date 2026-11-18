@@ -681,7 +681,8 @@ export const Dashboard = {
    */
   updateStats() {
     const userData = UserState.getCurrentUserData();
-    // Toutes les réponses : Quiz, Défi, Aventure et Chrono (course et révision)
+    // Toutes les réponses : Quiz, Défi, Aventure, Chrono (course et révision) et jeux d'Arcade
+    // (sauf MultiMemory, dont les paires ne sont pas des calculs)
     const totals = answerTotals(statsOf(userData));
     const rows = [
       {

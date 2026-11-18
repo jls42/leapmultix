@@ -45,6 +45,12 @@ describe('recordArcadeAnswer', () => {
     expect(profile.modeStats.review).toEqual({ 7: '01' });
   });
 
+  test('chaque réponse, juste ou fausse, entre dans « Ton parcours » du profil enregistré', () => {
+    recordArcadeAnswer('×', 7, 5, false);
+    recordArcadeAnswer('+', 4, 3, true);
+    expect(profile.modeStats.arcadeAnswers).toEqual({ questions: 2, correct: 1 });
+  });
+
   test('trois erreurs sur la table de 8 la font revenir plus souvent au tirage', () => {
     for (let i = 0; i < 3; i += 1) recordArcadeAnswer('×', 8, 4, false);
     expect(arcadeWeakTables()).toEqual([8]);
