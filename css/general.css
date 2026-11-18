@@ -634,6 +634,8 @@ body:has(#slide1.active-slide) .skip-link:focus {
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  /* Un libellé qui passe sur deux lignes (téléphone) reste centré, comme les autres boutons */
+  text-align: center;
   margin: var(--space-2) 0 0;
   text-decoration: none;
 }
