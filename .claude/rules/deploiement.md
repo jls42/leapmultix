@@ -38,11 +38,18 @@ par jeton OIDC (aucune clé stockée) et appelle `deploy.sh`, sans `npm ci`.
 
 Deux points à connaître avant d'y toucher :
 
-- **`assets/generated-images/` n'est pas versionné** (3100+ fichiers). Le job le
+- **`assets/generated-images/` n'est pas versionné** (8000+ fichiers, 1,7 Go). Le job le
   reconstruit par `npm run assets:generate` avant la synchronisation. Sans cette
   étape, `aws s3 sync --delete` effacerait toutes les images du site : mesuré,
   3145 suppressions. Un garde-fou refuse de déployer si la génération est
   incomplète.
+- **Le cache des images** (`actions/cache`, clé de `scripts/generated-images-key.sh`) reprend
+  `assets/generated-images/` tant que rien de ce qui le détermine n'a changé : originaux
+  (`assets/images/`), générateur et modules qu'il charge, versions de sharp et de libvips.
+  Clé exacte seulement : un seul changement et tout est régénéré, puis remis en cache après le
+  garde-fou. Un module ajouté au générateur entre dans `GENERATOR_FILES` du script, sinon
+  `tests-esm/scripts/generated-images-key.test.mjs` échoue. Le cache n'est écrit que par le job
+  `images`, qui ne tourne que sur `main` : une PR ne peut pas l'empoisonner.
 - **Rien d'autre que le site ne part** : ni lien symbolique (`rsync --no-links`, et
   `--no-follow-symlinks` pour l'AWS CLI), ni fichier caché (`--exclude='.*'`). Les outils de
   développement ne vivent pas dans les dossiers publiés (`assets/`, `css/`, `js/`, `img/`) :
