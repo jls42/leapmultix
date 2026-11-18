@@ -797,8 +797,9 @@ class SnakeGame {
   eatGoodApple(head, pos) {
     this.recordAnswer(true);
     this.score += 100;
-    // La pomme croquée, avec le son de la bonne réponse que jouent les points
-    AudioManager.playSound('crunch');
+    // La pomme croquée, au son du renard de MultiMiam, avec celui de la bonne réponse que
+    // jouent les points
+    AudioManager.playSound('munch');
     // Affichage du gain de points, au-dessus de la pomme mangée
     showArcadePoints(100, this.canvas, this.cellPoint(pos));
     // Augmenter la vitesse

@@ -9,7 +9,7 @@ import {
   normalizeModeStats,
   seedModeStats,
   recordModeAnswer,
-  recordReviewAnswer,
+  countArcadeAnswer,
   recordChallengeBest,
   recordArcadeGame,
   resetArcadeGame,
@@ -180,7 +180,7 @@ describe('mode-stats : lectures', () => {
     expect(weakTablesFrom(stats)).toEqual([3, 6]);
   });
 
-  test('« Ton parcours » : tous les modes à questions et les réponses anciennes sans mode', () => {
+  test('« Ton parcours » : tous les modes à questions, l’Arcade et les réponses anciennes', () => {
     const stats = {
       modes: {
         quiz: { '×': { questions: 10, correct: 8 } },
@@ -188,8 +188,14 @@ describe('mode-stats : lectures', () => {
         invasion: { '×': { games: 3, total: 300, best: 200 } },
       },
       imported: { questions: 4, correct: 1 },
+      arcadeAnswers: { questions: 6, correct: 5 },
     };
-    expect(answerTotals(stats)).toEqual({ questions: 25, correct: 19 });
+    expect(answerTotals(stats)).toEqual({ questions: 31, correct: 24 });
+  });
+
+  test('« Ton parcours » d’un profil d’avant la v87 : sans réponses d’Arcade, rien ne change', () => {
+    const stats = { modes: { quiz: { '×': { questions: 3, correct: 2 } } } };
+    expect(answerTotals(stats)).toEqual({ questions: 3, correct: 2 });
   });
 
   test('les opérations d’un mode, dans l’ordre ×, +, −, ÷ puis « ? »', () => {
@@ -267,6 +273,7 @@ describe('mode-stats : amorçage et relecture', () => {
       imported: { questions: 'x' },
       arcadeTop5: { invasion: [5, 'a', 90, 30, 10, 70, 60] },
       review: { 7: '01x10', 11: '0000' },
+      arcadeAnswers: { questions: '4', correct: 9 },
     };
     const clean = normalizeModeStats({ modeStats: raw });
     expect(clean.modes).toEqual({
@@ -276,6 +283,7 @@ describe('mode-stats : amorçage et relecture', () => {
     expect(clean.imported).toEqual({ questions: 0, correct: 0 });
     expect(clean.arcadeTop5).toEqual({ invasion: [90, 70, 60, 30, 10] });
     expect(clean.review).toEqual({ 7: '0110' });
+    expect(clean.arcadeAnswers).toEqual({ questions: 4, correct: 4 });
     expect(normalizeModeStats({ modeStats: JSON.parse(JSON.stringify(clean)) })).toEqual(clean);
   });
 });
@@ -329,23 +337,39 @@ describe('mode-stats : filet de sécurité', () => {
 describe('mode-stats : réponses de l’Arcade', () => {
   test('en ×, la fenêtre « À revoir » de leur table, sans compter dans aucun mode', () => {
     const user = profile();
-    recordReviewAnswer(user, { operator: '×', table: 7, isCorrect: false });
-    recordReviewAnswer(user, { operator: '×', table: 7, isCorrect: true });
+    countArcadeAnswer(user, { operator: '×', table: 7, isCorrect: false });
+    countArcadeAnswer(user, { operator: '×', table: 7, isCorrect: true });
     expect(user.modeStats.review['7']).toBe('01');
     expect(user.modeStats.modes).toEqual(emptyModeStats().modes);
   });
 
-  test('hors ×, ou hors des tables 1 à 10 : rien', () => {
+  test('chacune compte dans « Ton parcours », quelle que soit l’opération', () => {
     const user = profile();
-    recordReviewAnswer(user, { operator: '+', table: 7, isCorrect: false });
-    recordReviewAnswer(user, { operator: '×', table: 12, isCorrect: false });
+    countArcadeAnswer(user, { operator: '×', table: 7, isCorrect: true });
+    countArcadeAnswer(user, { operator: '+', table: 3, isCorrect: false });
+    countArcadeAnswer(user, { operator: '÷', table: 12, isCorrect: true });
+    expect(user.modeStats.arcadeAnswers).toEqual({ questions: 3, correct: 2 });
+    expect(answerTotals(user.modeStats)).toEqual({ questions: 3, correct: 2 });
+  });
+
+  test('un profil d’avant la v87, sans compteur d’Arcade, en reçoit un à sa première réponse', () => {
+    const user = { modeStats: { v: 1, modes: {}, review: {} } };
+    countArcadeAnswer(user, { operator: '×', table: 4, isCorrect: true });
+    expect(user.modeStats.arcadeAnswers).toEqual({ questions: 1, correct: 1 });
+    expect(user.modeStats.review).toEqual({ 4: '1' });
+  });
+
+  test('hors ×, ou hors des tables 1 à 10 : pas de fenêtre « À revoir »', () => {
+    const user = profile();
+    countArcadeAnswer(user, { operator: '+', table: 7, isCorrect: false });
+    countArcadeAnswer(user, { operator: '×', table: 12, isCorrect: false });
     expect(user.modeStats.review).toEqual({});
   });
 
   test('trois erreurs de l’Arcade font de la table une table à revoir', () => {
     const user = profile();
     for (let i = 0; i < 3; i += 1) {
-      recordReviewAnswer(user, { operator: '×', table: 8, isCorrect: false });
+      countArcadeAnswer(user, { operator: '×', table: 8, isCorrect: false });
     }
     expect(weakTablesFrom(user.modeStats)).toEqual([8]);
   });

@@ -99,6 +99,10 @@ const emptyContainers = () => ({
   // lit une version précédente du jeu
   arcadeTop5ByLevel: {},
   review: {},
+  // Réponses des jeux d'Arcade, comptées dans « Ton parcours » depuis la v87 (rien avant : les
+  // parties d'avant ne gardaient que leur score) ; MultiMemory n'en donne pas, une paire ratée
+  // y est un oubli de place, pas une erreur de calcul
+  arcadeAnswers: { questions: 0, correct: 0 },
 });
 
 export function emptyModeStats() {
@@ -205,6 +209,12 @@ export function normalizeModeStats(profile, readLegacyArcade = () => []) {
   }
 }
 
+/** Questions et bonnes réponses : des nombres positifs, jamais plus de justes que de questions */
+function cleanAnswerCounts(raw) {
+  const questions = count(raw?.questions);
+  return { questions, correct: Math.min(count(raw?.correct), questions) };
+}
+
 function cleanModeStats(raw) {
   return {
     v: MODE_STATS_VERSION,
@@ -213,6 +223,7 @@ function cleanModeStats(raw) {
     arcadeTop5: cleanArcadeTop5(raw.arcadeTop5),
     arcadeTop5ByLevel: cleanArcadeTop5ByLevel(raw.arcadeTop5ByLevel),
     review: cleanReview(raw.review),
+    arcadeAnswers: cleanAnswerCounts(raw.arcadeAnswers),
     countedUntil: count(raw.countedUntil),
   };
 }
@@ -476,17 +487,21 @@ export function recordModeAnswer(userData, { mode, operator, table, isCorrect, s
 }
 
 /**
- * Réponse d'un jeu d'Arcade : en multiplication, elle entre dans la fenêtre « À revoir » de
- * sa table, comme une réponse du Quiz ; elle ne compte dans aucun mode (le tableau de bord
- * compte l'Arcade en parties, pas en réponses)
+ * Réponse d'un jeu d'Arcade : comptée dans « Ton parcours » (questions, bonnes réponses), et
+ * en multiplication dans la fenêtre « À revoir » de sa table, comme une réponse du Quiz. Elle
+ * ne compte dans aucun mode : le tableau de bord compte l'Arcade en parties et en scores.
  * @param {Object} userData - Profil que l'appelant enregistre ensuite
  * @param {{operator: string, table: number, isCorrect: boolean}} answer
  */
-export function recordReviewAnswer(userData, { operator, table, isCorrect }) {
-  const reviewed = reviewTable(operator, table);
-  if (reviewed === null) return;
+export function countArcadeAnswer(userData, { operator, table, isCorrect }) {
   const stats = statsOf(userData);
-  if (stats) pushReview(stats.review, reviewed, isCorrect);
+  if (!stats) return;
+  const answers = cleanAnswerCounts(stats.arcadeAnswers);
+  answers.questions += 1;
+  if (isCorrect) answers.correct += 1;
+  stats.arcadeAnswers = answers;
+  const reviewed = reviewTable(operator, table);
+  if (reviewed !== null) pushReview(stats.review, reviewed, isCorrect);
 }
 
 /**
@@ -576,11 +591,15 @@ export function weakTablesFrom(stats) {
   return weak.sort((left, right) => left - right);
 }
 
-/** Réponses de « Ton parcours » : Quiz, Défi, Aventure, Chrono et réponses anciennes sans mode */
+/**
+ * Réponses de « Ton parcours » : Quiz, Défi, Aventure, Chrono, jeux d'Arcade et réponses
+ * anciennes sans mode
+ */
 export function answerTotals(stats) {
+  const arcade = cleanAnswerCounts(stats?.arcadeAnswers);
   const totals = {
-    questions: count(stats?.imported?.questions),
-    correct: count(stats?.imported?.correct),
+    questions: count(stats?.imported?.questions) + arcade.questions,
+    correct: count(stats?.imported?.correct) + arcade.correct,
   };
   for (const mode of ANSWER_MODES) {
     for (const entry of Object.values(ownValue(stats?.modes, mode) ?? {})) {

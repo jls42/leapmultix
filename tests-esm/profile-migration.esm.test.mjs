@@ -275,6 +275,7 @@ describe('Profils anciens : compteurs du tableau de bord amorcés depuis l’exi
       arcadeTop5: {},
       arcadeTop5ByLevel: {},
       review: {},
+      arcadeAnswers: { questions: 0, correct: 0 },
       countedUntil: 0,
     });
   });

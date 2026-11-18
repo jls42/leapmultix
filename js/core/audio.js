@@ -37,10 +37,9 @@ const AudioManager = {
     ['shoot', 'assets/sounds/mixkit-short-laser-gun-shot-1670.wav'],
     // Le maillet de MultiPop qui touche un monstre (ElevenLabs, choisi par le propriétaire)
     ['mallet', 'assets/sounds/maillet.wav'],
-    // MultiMiam : la bonne réponse croquée
+    // La bonne réponse croquée : le renard de MultiMiam et la pomme du serpent de MultiSnake,
+    // le même bonbon (choisi par le propriétaire le 18/11/2026, plus doux qu'un croc)
     ['munch', 'assets/sounds/miam.wav'],
-    // MultiSnake : la pomme croquée
-    ['crunch', 'assets/sounds/croque.wav'],
     // MultiGoal : le ballon frappé
     ['kick', 'assets/sounds/ballon.wav'],
     // MultiMemory : une carte retournée
@@ -54,7 +53,6 @@ const AudioManager = {
     ['bad', ERROR_SOUND_VOLUME],
     ['mallet', MALLET_SOUND_VOLUME],
     ['munch', MUNCH_SOUND_VOLUME],
-    ['crunch', MUNCH_SOUND_VOLUME],
     ['kick', KICK_SOUND_VOLUME],
     ['cardFlip', CARD_SOUND_VOLUME],
     ['bubbleShot', SHOT_SOUND_VOLUME],
