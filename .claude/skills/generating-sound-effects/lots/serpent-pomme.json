@@ -1,0 +1,37 @@
+{
+  "lot": "serpent-pomme",
+  "date": "2026-11-16",
+  "note": "Bruitages de l'Arcade demandés par le propriétaire le 16/11/2026 (sons agréables à réentendre) : MultiSnake : la pomme croquée.",
+  "title": "MultiSnake : la pomme croquée",
+  "intro": "Dans MultiSnake, ce bruit sonne quand le serpent mange la bonne réponse, en même temps que le son de la bonne réponse. « Avec la bonne réponse » te le fait entendre comme dans une partie. Il revient souvent : choisis celui qu'on a plaisir à réentendre.",
+  "ceiling": 150,
+  "reference": {
+    "file": "assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav",
+    "label": "Avec la bonne réponse",
+    "volume": 0.4,
+    "gameVolume": 0.7,
+    "delayMs": 0
+  },
+  "sounds": [
+    {
+      "name": "croque",
+      "prompt": "a cartoon snake takes one crisp bite of a juicy apple, single short crunch, playful, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "gloups",
+      "prompt": "a cute cartoon creature gulps a treat in one bite, soft and funny little gulp, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "miam",
+      "prompt": "bright cartoon munch with a tiny sparkle at the end, short and cheerful video game pickup, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    }
+  ],
+  "chosen": "renard-miam/bonbon-1",
+  "choice": "Croque 2, installé le 17/11/2026, remplacé le 18/11 par Bonbon 1 du lot renard-miam, à la demande du propriétaire (plus doux, moins robotique) : le serpent et le renard croquent avec le même son."
+}

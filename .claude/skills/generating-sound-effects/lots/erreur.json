@@ -1,0 +1,29 @@
+{
+  "lot": "erreur",
+  "date": "2026-11-16",
+  "note": "Bruitages de l'Arcade demandés par le propriétaire le 16/11/2026 (sons agréables à réentendre) : La mauvaise réponse.",
+  "title": "La mauvaise réponse",
+  "intro": "Ce son remplacerait celui de la mauvaise réponse dans tout le jeu (modes et Arcade). Il doit dire « essaie encore » sans gronder. « Actuel » est le son d'aujourd'hui : choisis-le pour ne rien changer.",
+  "ceiling": 150,
+  "sounds": [
+    {
+      "name": "boing",
+      "prompt": "a gentle cartoon oops, soft low boing, friendly, not sad, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "bloup",
+      "prompt": "a soft bubbly bloop, two gentle descending notes, try again cue, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "toc",
+      "prompt": "a muffled wooden double knock, soft neutral try again cue, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    }
+  ],
+  "chosen": "aucun"
+}

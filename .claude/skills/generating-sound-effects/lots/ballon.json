@@ -1,0 +1,29 @@
+{
+  "lot": "ballon",
+  "date": "2026-11-16",
+  "note": "Bruitages de l'Arcade demandés par le propriétaire le 16/11/2026 (sons agréables à réentendre) : MultiGoal : la frappe du ballon.",
+  "title": "MultiGoal : la frappe du ballon",
+  "intro": "Dans MultiGoal, ce bruit sonne à chaque tir, quand le ballon part vers une cible. Il revient à chaque tir : choisis celui qu'on a plaisir à réentendre.",
+  "ceiling": 150,
+  "sounds": [
+    {
+      "name": "frappe",
+      "prompt": "a soft kick of a small foam soccer ball, short muffled thump, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "rebond",
+      "prompt": "a cartoon ball kick with a light bouncy boing, playful, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "envol",
+      "prompt": "a quick soft ball kick followed by a short airy whoosh of the ball flying away, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    }
+  ],
+  "chosen": "frappe-1"
+}
