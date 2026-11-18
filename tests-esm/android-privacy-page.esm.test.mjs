@@ -75,6 +75,16 @@ describe('Politique de confidentialité de l’appli Android', () => {
     expect(csp).toContain(`style-src 'sha256-${hash}'`);
   });
 
+  test('sa feuille de style suit les règles du dépôt (stylelint, comme les fichiers de css/)', async () => {
+    const { default: stylelint } = await import('stylelint');
+    const style = /<style>([\s\S]*?)<\/style>/.exec(SOURCE)[1];
+    const { results } = await stylelint.lint({
+      code: style,
+      codeFilename: new URL('../css/confidentialite-android.css', import.meta.url).pathname,
+    });
+    expect(results[0].warnings.map(warning => warning.text)).toEqual([]);
+  });
+
   test('liée depuis nulle part sur le site, ni indexée', () => {
     expect(PAGE.querySelector('meta[name="robots"]').content).toBe('noindex');
     expect(read('sitemap.xml')).not.toContain(FILE);
