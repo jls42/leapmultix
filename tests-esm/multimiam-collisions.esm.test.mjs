@@ -132,13 +132,14 @@ describe('MultiMiam : collision avec un monstre', () => {
     expect(log).toEqual(['updateUI()']);
   });
 
-  test('une vie perdue : message neutre, MultiMiam repart de (2, 1), monstres replacés', () => {
+  test('une vie perdue : son doux, message neutre, MultiMiam repart de (2, 1), monstres replacés', () => {
     const game = newGame({
       ghosts: [ghost(5, 5), ghost(6, 6, { active: false }), ghost(7, 7, { active: false })],
     });
     game.checkGhostCollision();
     expect(log).toEqual([
       'updateUI()',
+      'playSound("lifeLost")',
       'showArcadeMessage("arcade_life_lost", "neutral")',
       'generateOperation(2, 1)',
       'displayOperationUI()',
@@ -188,9 +189,10 @@ describe('MultiMiam : collision avec un monstre', () => {
     game.checkGhostCollision();
     expect(game.score).toBe(60);
     expect(game.lives).toBe(2);
-    expect(log.slice(0, 3)).toEqual([
+    expect(log.slice(0, 4)).toEqual([
       'updateUI()',
       'updateUI()',
+      'playSound("lifeLost")',
       'showArcadeMessage("arcade_life_lost", "neutral")',
     ]);
   });
@@ -200,6 +202,7 @@ describe('MultiMiam : collision avec un monstre', () => {
     game.checkGhostCollision();
     expect(log).toEqual([
       'updateUI()',
+      'playSound("lifeLost")',
       'showArcadeMessage("arcade_life_lost", "neutral")',
       'endGame()',
     ]);

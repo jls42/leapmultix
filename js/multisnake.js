@@ -889,6 +889,7 @@ class SnakeGame {
   loseLife() {
     this.lives--;
     this.updateScoreDisplay();
+    AudioManager.playSound('lifeLost');
 
     // Afficher le message de vie perdue avec la fonction unifiée (ton neutre, jamais rouge)
     showArcadeMessage('arcade_life_lost', 'neutral');

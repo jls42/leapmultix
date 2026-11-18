@@ -46,7 +46,10 @@ jest.unstable_mockModule('../js/utils-es6.js', () => ({
 }));
 jest.unstable_mockModule('../js/slides.js', () => ({ goToSlide: noop }));
 jest.unstable_mockModule('../js/mode-orchestrator.js', () => ({ setGameMode: async () => {} }));
-jest.unstable_mockModule('../js/core/audio.js', () => ({ AudioManager: { stopAll: noop } }));
+const playSound = jest.fn();
+jest.unstable_mockModule('../js/core/audio.js', () => ({
+  AudioManager: { stopAll: noop, playSound },
+}));
 const invasionStart = jest.fn();
 jest.unstable_mockModule('../js/arcade-invasion.js', () => ({
   startMultiplicationInvasion: invasionStart,
@@ -203,14 +206,20 @@ describe('Écran de fin : ce que la partie apprend', () => {
   const NBSP = '\u00a0';
   const record = () => document.querySelector('#game .arcade-new-record');
 
-  test('un score plus haut que tous les précédents est annoncé comme un record', () => {
+  const recordSounds = () => playSound.mock.calls.filter(([name]) => name === 'record').length;
+
+  test('un score plus haut que tous les précédents est annoncé comme un record, avec son son', () => {
+    playSound.mockClear();
     arcade.showArcadeGameOver(150);
     expect(record()?.textContent).toBe('arcade_new_record');
+    expect(recordSounds()).toBe(1);
   });
 
-  test('un score sous le meilleur : pas de record', () => {
+  test('un score sous le meilleur : pas de record, pas de son de record', () => {
+    playSound.mockClear();
     arcade.showArcadeGameOver(100);
     expect(record()).toBeNull();
+    expect(recordSounds()).toBe(0);
   });
 
   test('le premier score est un record ; une partie à 0 point jamais', () => {

@@ -274,7 +274,11 @@ describe('MultiPop : l’ami qui sort avec les monstres', () => {
     raiseMonsters();
     for (const mock of [noteArcadePlay, recordArcadeAnswer]) mock.mockClear();
     const { friend } = game.field;
+    const sound = jest.spyOn(AudioManager, 'playSound').mockImplementation(() => undefined);
     tapHole(friend.hole);
+    // Le maillet et le « oups » de l'ami, ensemble dans le geste du joueur
+    expect(sound.mock.calls.map(([name]) => name).sort()).toEqual(['friendBump', 'mallet']);
+    sound.mockRestore();
     expect(game.score).toBe(CORRECT_POINTS - FRIEND_PENALTY);
     expect(shownScore()).toBe('50');
     expect(noteArcadePlay).toHaveBeenCalledTimes(1);

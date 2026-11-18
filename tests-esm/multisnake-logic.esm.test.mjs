@@ -244,6 +244,20 @@ describe('MultiSnake : pommes mangées', () => {
     expect(banner.textContent).toMatch(/^\d+ × \d+ = \?$/);
   });
 
+  test('une vie perdue sonne une fois, doucement ; une bonne pomme, jamais', () => {
+    const sound = jest.spyOn(AudioManager, 'playSound').mockImplementation(() => undefined);
+    const lost = () => sound.mock.calls.filter(([name]) => name === 'lifeLost').length;
+    try {
+      game.numberPositions = [{ x: 6, y: 5, value: 7, isCorrect: true }];
+      game.updateGameLogic();
+      expect(lost()).toBe(0);
+      game.loseLife();
+      expect(lost()).toBe(1);
+    } finally {
+      sound.mockRestore();
+    }
+  });
+
   test('une vie perdue pendant la lecture du calcul ne remet pas les pommes du calcul résolu', () => {
     game.numberPositions = [{ x: 6, y: 5, value: 7, isCorrect: true }];
     game.updateGameLogic();

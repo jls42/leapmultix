@@ -438,6 +438,7 @@ export class PopGame extends ArcadeBoardGame {
 
   // Un ami tapé : jusqu'à 50 points de moins ; ce n'est pas une erreur de calcul
   onFriend(at) {
+    AudioManager.playSound('friendBump');
     const removed = Math.min(this.score, FRIEND_PENALTY);
     this.score -= removed;
     showArcadePenalty(removed, this.canvas, at);

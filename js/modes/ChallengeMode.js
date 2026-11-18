@@ -223,6 +223,8 @@ export class ChallengeMode extends GameMode {
     this.timerInterval = setInterval(() => {
       this.state.timeLeft--;
       this.updateTimerDisplay();
+      // Les dernières secondes : un tic-tac léger, une fois par seconde
+      if (this.state.timeLeft > 0 && this.state.timeLeft <= LOW_TIME_SECONDS) playSound('tick');
 
       if (this.state.timeLeft <= 0) {
         this.finish();

@@ -23,6 +23,10 @@ const MUNCH_SOUND_VOLUME = 0.7;
 const KICK_SOUND_VOLUME = 0.7;
 const CARD_SOUND_VOLUME = 0.5;
 const SHOT_SOUND_VOLUME = 0.5;
+// Les moments qui n'avaient pas leur son (ElevenLabs, choisis par le propriétaire le 19/11/2026) :
+// le tic-tac revient chaque seconde, il reste le plus discret
+const MOMENT_SOUND_VOLUME = 0.6;
+const TICK_SOUND_VOLUME = 0.35;
 
 /**
  * API audio centralisée
@@ -46,6 +50,20 @@ const AudioManager = {
     ['cardFlip', 'assets/sounds/carte.wav'],
     // MultiInvaders : le tir de la fusée (une bulle ; le laser reste à l'Aventure)
     ['bubbleShot', 'assets/sounds/tir-bulle.wav'],
+    // Fin d'une partie d'Arcade avec un nouveau record
+    ['record', 'assets/sounds/record.wav'],
+    // Des étoiles gagnées à la fin d'un niveau de l'Aventure
+    ['star', 'assets/sounds/etoile.wav'],
+    // MultiPop : le maillet tombe sur un ami (un « oups », jamais une erreur de calcul)
+    ['friendBump', 'assets/sounds/ami-touche.wav'],
+    // MultiGoal : le gardien arrête le tir
+    ['saved', 'assets/sounds/gardien.wav'],
+    // Une vie perdue (MultiSnake, MultiMiam)
+    ['lifeLost', 'assets/sounds/vie-perdue.wav'],
+    // Défi : chacune des dernières secondes du chrono
+    ['tick', 'assets/sounds/tic-tac.wav'],
+    // MultiMemory : une paire trouvée, avec le son de la bonne réponse
+    ['pairFound', 'assets/sounds/paire.wav'],
   ]),
 
   // Volume propre à un son, en part du volume général (sinon tout le volume)
@@ -56,6 +74,13 @@ const AudioManager = {
     ['kick', KICK_SOUND_VOLUME],
     ['cardFlip', CARD_SOUND_VOLUME],
     ['bubbleShot', SHOT_SOUND_VOLUME],
+    ['record', MOMENT_SOUND_VOLUME],
+    ['star', MOMENT_SOUND_VOLUME],
+    ['friendBump', MALLET_SOUND_VOLUME],
+    ['saved', KICK_SOUND_VOLUME],
+    ['lifeLost', MOMENT_SOUND_VOLUME],
+    ['tick', TICK_SOUND_VOLUME],
+    ['pairFound', CARD_SOUND_VOLUME],
   ]),
 
   // État audio interne
