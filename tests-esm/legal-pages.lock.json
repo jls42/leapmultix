@@ -41,6 +41,26 @@
           "es": "Última actualización: 11 de octubre de 2026"
         },
         "empreinte": "736b151381de9c3d531b58c13e4000dd731412f9fcff51743e5718549ef5d443"
+      },
+      {
+        "date": {
+          "fr": "Dernière mise à jour : 18 novembre 2026",
+          "en": "Last updated: November 18, 2026",
+          "es": "Última actualización: 18 de noviembre de 2026"
+        },
+        "empreinte": "aef049788e5e7a2cc5405fda73b7dc8402d0039f7556b4bc22ce64da4f5dc51a"
+      }
+    ]
+  },
+  "confidentialite-android": {
+    "titre": "Politique de confidentialité de l'appli Android (confidentialite-android.html, testée par tests-esm/android-privacy-page.esm.test.mjs)",
+    "revisions": [
+      {
+        "date": {
+          "fr": "Dernière mise à jour : 18 novembre 2026",
+          "en": "Last updated: November 18, 2026"
+        },
+        "empreinte": "66dac9a0559c81735706c433dab39d4fa9b82d61a5067efe4a65a1d6a284b71f"
       }
     ]
   }

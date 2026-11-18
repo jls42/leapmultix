@@ -7,7 +7,14 @@
 import { describe, expect, test } from '@jest/globals';
 import { readFileSync } from 'node:fs';
 
-const PAGES = ['index.html', 'parents.html', 'offline.html', 'modes.html', 'pwa.html'];
+const PAGES = [
+  'index.html',
+  'parents.html',
+  'offline.html',
+  'modes.html',
+  'pwa.html',
+  'confidentialite-android.html',
+];
 const CSP = 'meta[http-equiv="Content-Security-Policy"]';
 const parse = page =>
   new DOMParser().parseFromString(

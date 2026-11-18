@@ -47,6 +47,7 @@ const PUBLISHED = {
     'modes.html',
     'pwa.html',
     'offline.html',
+    'confidentialite-android.html',
     'sw.js',
     'manifest.json',
     'favicon.svg',
