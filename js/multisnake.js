@@ -2,6 +2,7 @@
 // (c) LeapMultix - 2025
 
 import { generateQuestion } from './questionGenerator.js';
+import { fallbackCalculation } from './core/operations/OperationRegistry.js';
 import { showArcadeMessage, showArcadePoints, getTranslation } from './utils-es6.js';
 import { AudioManager } from './core/audio.js';
 import { showArcadePenalty } from './arcade-points.js';
@@ -611,7 +612,9 @@ class SnakeGame {
       this.displayOperation();
     } catch (error) {
       console.error("Erreur lors de la génération de l'opération:", error);
-      this.currentOperation = { num1: 1, num2: 1, operator: this.operator, result: 1 };
+      // Calcul et pommes changent ensemble : jamais les pommes du calcul d'avant
+      this.currentOperation = fallbackCalculation(this.operator);
+      this.answers = this.generateAnswers(this.currentOperation.result);
       this.displayOperation();
     }
   }

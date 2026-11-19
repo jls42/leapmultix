@@ -2,6 +2,7 @@
 // (c) LeapMultix 2025
 
 import { generateQuestion } from './questionGenerator.js';
+import { fallbackCalculation } from './core/operations/OperationRegistry.js';
 import { safeShuffleArray } from './arcade-utils.js';
 import { TablePreferences } from './core/tablePreferences.js';
 import { UserManager } from './userManager.js';
@@ -88,8 +89,7 @@ export const PacmanQuestions = {
       };
     } catch (e) {
       console.error('Erreur generateOperation', e);
-      const operator = game?.operator || '×';
-      return { num1: 1, num2: 1, operator, result: operator === '×' ? 1 : 2 };
+      return fallbackCalculation(game?.operator || '×');
     }
   },
 

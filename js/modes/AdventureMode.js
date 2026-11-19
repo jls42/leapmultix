@@ -747,7 +747,9 @@ export class AdventureMode extends GameMode {
 
     // Sauvegarder ou mettre à jour le niveau
     const existingProgress = operatorProgress[this.currentLevel.id];
-    const bestStars = existingProgress ? Math.max(existingProgress.stars, stars) : stars;
+    // Un niveau enregistré sans étoiles (ancien profil) vaut 0 étoile, pas « rien » : les
+    // étoiles gagnées s'y ajoutent au lieu de se perdre
+    const bestStars = Math.max(Number(existingProgress?.stars) || 0, stars);
 
     operatorProgress[this.currentLevel.id] = {
       // Un niveau déjà terminé le reste

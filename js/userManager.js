@@ -21,6 +21,7 @@ import { gameState, displayDailyChallenge } from './game.js';
 import { normalizeAdventureProgressByOperator } from './core/adventure-progress.js';
 import { normalizeModeStats, emptyModeStats, LEGACY_ARCADE_GAMES } from './core/mode-stats.js';
 import { eventBus } from './core/eventBus.js';
+import { isOperatorSupported } from './core/operations/OperationRegistry.js';
 import {
   normalizeChronoStats,
   normalizeChronoStatsByOperator,
@@ -163,7 +164,9 @@ const normalizeUserData = (rawData, currentUser) => {
     dailyChallengesCompleted: ensureNumber(raw.dailyChallengesCompleted, 0),
     starsByTable: ensureObject(raw.starsByTable),
     coins: ensureNumber(raw.coins, 0),
-    preferredOperator: raw.preferredOperator || '×',
+    // Un signe inconnu (fichier abîmé) se lit comme la multiplication, que le jeu calculerait
+    // de toute façon : le calcul affiché et la réponse attendue restent ceux d'une même opération
+    preferredOperator: isOperatorSupported(raw.preferredOperator) ? raw.preferredOperator : '×',
     chronoStats,
     // Chrono hors multiplication : un champ à part, que le code d'avant recopie sans y toucher
     chronoStatsByOperator,
