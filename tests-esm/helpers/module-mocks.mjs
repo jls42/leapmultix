@@ -20,7 +20,7 @@ function mockModules(jestApi, root, modules) {
  * @returns {{data: Object}}
  */
 export function mockCopiedProfile(jestApi, root) {
-  const copy = value => JSON.parse(JSON.stringify(value));
+  const copy = value => JSON.parse(JSON.stringify(value)); // NOSONAR - structuredClone n'existe pas sous jsdom
   const saved = { data: {} };
   mockModules(jestApi, root, {
     'core/userState.js': () => ({
@@ -150,7 +150,7 @@ export function mockDiscoveryShell(jestApi, root) {
     'utils-es6.js': () => ({
       getTranslation: key => key,
       speak: noop,
-      numberToWords: value => String(value),
+      numberToWords: String,
       addArrowKeyNavigation: noop,
       showFeedback: noop,
       updateInfoBar: noop,
