@@ -1,8 +1,9 @@
 /**
  * Place du plateau d'Arcade (js/arcade-common.js) : la consigne, posée sur le plateau, ne
- * lui prend aucune place (il garde sa taille quand elle part) ; la consigne et « Abandonner »
- * passent à côté du plateau sur un téléphone tourné, le plein écran ne compte pas les marges
- * de la page, et le plateau suit l'écran (rotation, plein écran) sans changer la partie.
+ * lui prend aucune place (il garde sa taille quand elle part) ; sur un téléphone tourné,
+ * « Abandonner » monte dans le bandeau et rend sa hauteur au plateau ; le plein écran ne
+ * compte pas les marges de la page, et le plateau suit l'écran (rotation, plein écran) sans
+ * changer la partie.
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 
@@ -13,6 +14,7 @@ const {
   getArcadeCanvasSize,
   readableCanvasFontSize,
   watchArcadeViewport,
+  prepareArcadeStage,
   STAGE_CHANGE_EVENT,
 } = await import('../js/arcade-common.js');
 
@@ -40,11 +42,7 @@ function renderStage() {
 
 /** Style calculé décrit par le test (jsdom ne calcule pas la mise en page) */
 function computed(style = {}) {
-  const { custom = {}, ...rest } = style;
-  return {
-    ...rest,
-    getPropertyValue: name => new Map(Object.entries(custom)).get(name) ?? '',
-  };
+  return { ...style, getPropertyValue: () => '' };
 }
 
 /** Remplace getComputedStyle et getBoundingClientRect des éléments donnés */
@@ -223,38 +221,108 @@ describe('Place du plateau : la page défilée ne la fausse pas', () => {
   });
 });
 
-describe('Place du plateau : téléphone tourné, consigne et « Abandonner » à côté', () => {
-  test('la colonne de côté se retire de la largeur, rien ne se retire de la hauteur', () => {
-    const { stage, canvas, abandon } = renderStage();
-    const instructions = showGameInstructions(canvas, 'Glisse le doigt');
+describe('Téléphone tourné : « Abandonner » dans le bandeau', () => {
+  /** Zone de jeu sous son bandeau, avec la place des boutons (js/components/infoBar.js) */
+  function renderGame() {
+    const parts = renderStage();
+    parts.abandon.id = 'arcade-abandon-btn';
+    const banner = document.createElement('div');
+    banner.className = 'arcade-mult-display';
+    const tools = document.createElement('div');
+    tools.className = 'arcade-banner-tools';
+    const pause = document.createElement('button');
+    pause.className = 'arcade-pause-btn';
+    tools.append(pause);
+    banner.append(tools);
+    parts.game.prepend(banner);
+    return { ...parts, banner, tools, pause };
+  }
+
+  let turned;
+  const realMatchMedia = globalThis.matchMedia;
+  beforeEach(() => {
+    turned = true;
+    // Écran bas et large : la condition de css/arcade.css, lue par le jeu
+    globalThis.matchMedia = query => ({
+      matches: turned && query === '(orientation: landscape) and (max-height: 540px)',
+    });
+  });
+  afterEach(() => {
+    globalThis.matchMedia = realMatchMedia;
+  });
+
+  test('au lancement, il passe après « Pause », et le plateau ne lui laisse plus de hauteur', () => {
+    const { stage, canvas, abandon, tools, pause } = renderGame();
     Object.defineProperty(stage, 'clientWidth', { value: 820, configurable: true });
     globalThis.innerHeight = 390;
     const restore = mockLayout([
-      [
-        stage,
-        {
-          rect: [12, 120, 820, 260],
-          style: {
-            rowGap: '12px',
-            columnGap: '16px',
-            gridTemplateColumns: '560px 192px',
-            custom: { '--arcade-stage-flow': 'row' },
-          },
-        },
-      ],
+      [stage, { rect: [12, 60, 820, 320], style: { rowGap: '12px' } }],
       [canvas, { style: FRAME_2PX }],
-      [instructions, { rect: [0, 0, 192, 120] }],
-      [abandon, { rect: [0, 0, 180, 48] }],
+      [abandon, { rect: [0, 0, 108, 44] }],
     ]);
     try {
+      prepareArcadeStage(canvas);
+      expect([...tools.children]).toEqual([pause, abandon]);
       const box = getArcadeCanvasBox(canvas, { minHeight: 100 });
-      // 820 − 192 (colonne de côté) − 16 (écart) − 4 (cadre)
-      expect(box.width).toBe(608);
-      // 390 − 120 − 4 : la consigne et « Abandonner » ne prennent rien en hauteur
-      expect(box.height).toBe(266);
+      // Toute la largeur de la zone : 820 − 4 (cadre)
+      expect(box.width).toBe(816);
+      // 390 − 60 − 4 : rien sous le plateau
+      expect(box.height).toBe(326);
     } finally {
       restore();
     }
+  });
+
+  test('écran haut : il reste sous le plateau', () => {
+    turned = false;
+    const { stage, canvas, abandon } = renderGame();
+    prepareArcadeStage(canvas);
+    expect([...stage.children]).toEqual([canvas, abandon]);
+  });
+
+  test('le téléphone tourne en pleine partie : il change de place avant que le jeu ne mesure la sienne', () => {
+    jest.useFakeTimers();
+    const { stage, canvas, abandon, tools } = renderGame();
+    const instructions = showGameInstructions(canvas, 'Glisse le doigt');
+    prepareArcadeStage(canvas);
+    const seen = [];
+    const stop = watchArcadeViewport(canvas, () => seen.push(abandon.parentElement));
+    turned = false;
+    globalThis.dispatchEvent(new Event('resize'));
+    jest.advanceTimersByTime(50);
+    // De retour sous le plateau, après la consigne (ordre de lecture)
+    expect([...stage.children]).toEqual([canvas, instructions, abandon]);
+    turned = true;
+    globalThis.dispatchEvent(new Event('resize'));
+    jest.advanceTimersByTime(50);
+    expect(seen).toEqual([stage, tools]);
+    stop();
+  });
+
+  test('le plein écran arrive après lui dans le bandeau : il reste le dernier', () => {
+    jest.useFakeTimers();
+    const { stage, canvas, abandon, tools, pause } = renderGame();
+    prepareArcadeStage(canvas);
+    const stop = watchArcadeViewport(canvas, () => {});
+    const fullscreen = document.createElement('button');
+    tools.append(fullscreen);
+    stage.dispatchEvent(new Event(STAGE_CHANGE_EVENT));
+    jest.advanceTimersByTime(50);
+    expect([...tools.children]).toEqual([pause, fullscreen, abandon]);
+    stop();
+  });
+
+  test('il garde le focus en changeant de place', () => {
+    jest.useFakeTimers();
+    const { canvas, abandon } = renderGame();
+    prepareArcadeStage(canvas);
+    const stop = watchArcadeViewport(canvas, () => {});
+    abandon.focus();
+    turned = false;
+    globalThis.dispatchEvent(new Event('resize'));
+    jest.advanceTimersByTime(50);
+    expect(document.activeElement).toBe(abandon);
+    stop();
   });
 });
 

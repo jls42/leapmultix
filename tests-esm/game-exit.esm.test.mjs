@@ -332,6 +332,22 @@ describe('Jeu d’Arcade', () => {
     expect(endGame).toHaveBeenCalledTimes(1);
   });
 
+  test('téléphone tourné : « Abandonner », rangé dans le bandeau, demande la même confirmation', async () => {
+    const { abandon, endGame } = mountArcadeGame();
+    const tools = Object.assign(document.createElement('div'), {
+      className: 'arcade-banner-tools',
+    });
+    screen.game.prepend(tools);
+    tools.append(abandon);
+    abandon.click();
+    expect(dialogQuestion()).toBe(FR.confirm_abandon_arcade);
+    await answerDialog(false);
+    expect(endGame).not.toHaveBeenCalled();
+    abandon.click();
+    await answerDialog(true);
+    expect(endGame).toHaveBeenCalledTimes(1);
+  });
+
   test('deux activations de suite au clavier (Tab, Espace, Espace) ne quittent pas', async () => {
     const { abandon, endGame } = mountArcadeGame();
     abandon.focus();

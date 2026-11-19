@@ -166,7 +166,7 @@ function stopFollowingBoard(element) {
 /**
  * Affiche la consigne d'un jeu, puis l'efface : au premier geste du joueur, sinon après
  * `duration` de jeu.
- * Elle est posée sur le plateau (sur un téléphone tourné, à côté) et laisse passer le doigt :
+ * Elle est posée sur le plateau et laisse passer le doigt :
  * elle ne lui prend aucune place, il garde donc sa taille du premier au dernier instant de
  * la partie. L'apparence vient de css/arcade.css (.game-instructions et ses tons).
  * @param {HTMLCanvasElement} canvas - Canvas du jeu
@@ -226,7 +226,7 @@ export function showGameInstructions(
    Zone de jeu : haut de page et place du canevas
    - Au lancement, la page revient en haut (le menu a pu être défilé).
    - Le canevas est dimensionné pour tenir dans l'écran, sous le bandeau, avec
-     « Abandonner » (à côté du plateau sur un téléphone tourné) : la page ne déborde plus.
+     « Abandonner » (dans le bandeau sur un téléphone tourné) : la page ne déborde plus.
      La consigne, posée sur le plateau, ne lui prend pas de place.
    - Chaque jeu choisit sa grille au lancement ; ensuite, seul l'affichage suit l'écran
      (rotation, plein écran) : la partie ne change pas.
@@ -234,9 +234,8 @@ export function showGameInstructions(
 
 // Éléments posés par-dessus le jeu (messages, points) : ils ne prennent pas de place
 const OVERLAY_POSITIONS = new Set(['absolute', 'fixed']);
-// Sens de la zone de jeu, donné par css/arcade.css : « row » quand la consigne et
-// « Abandonner » passent à côté du plateau (téléphone tourné)
-const STAGE_FLOW_PROPERTY = '--arcade-stage-flow';
+// Téléphone tourné, écran bas et large : la même condition que css/arcade.css
+const TURNED_PHONE_QUERY = '(orientation: landscape) and (max-height: 540px)';
 
 function toPx(value) {
   const n = Number.parseFloat(value);
@@ -337,8 +336,33 @@ export function prepareArcadeStage(canvas) {
   for (const prop of ['height', 'min-height', 'margin-top', 'justify-content', 'align-items']) {
     stage.style.removeProperty(prop);
   }
+  placeAbandon(stage, canvas);
   offerFullscreen(stage);
   return stage;
+}
+
+/**
+ * Range « Abandonner » là où l'écran lui laisse de la place : sous le plateau, ou, sur un
+ * téléphone tourné, dans le bandeau, après « Pause » et le plein écran. Le plateau y gagne
+ * toute la largeur et toute la hauteur de l'écran. À appeler avant de mesurer la place du
+ * plateau : au lancement, puis à chaque changement d'écran (watchArcadeViewport).
+ * @param {HTMLElement} stage - Zone de jeu
+ * @param {HTMLCanvasElement} canvas
+ */
+function placeAbandon(stage, canvas) {
+  const root = stage.parentElement;
+  const button = root?.querySelector('[id$="-abandon-btn"]');
+  const tools = root?.querySelector('.arcade-banner-tools');
+  if (!button || !tools) return;
+  const inBanner = Boolean(globalThis.matchMedia?.(TURNED_PHONE_QUERY)?.matches);
+  const home = inBanner ? tools : stage;
+  // Dans le bandeau, il reste le dernier : le plein écran y arrive après lui
+  if (button.parentElement === home && (!inBanner || button === tools.lastElementChild)) return;
+  // Un bouton déplacé perd le focus : il le retrouve à sa nouvelle place
+  const focused = document.activeElement === button;
+  if (inBanner) tools.append(button);
+  else (stage.querySelector('.game-instructions') ?? canvas).after(button);
+  if (focused) button.focus();
 }
 
 /** Classe du bandeau qui garde une place au bouton plein écran (css/arcade.css) */
@@ -421,21 +445,6 @@ function measureStageSiblings(stage, canvas, gap) {
 }
 
 /**
- * Largeur des colonnes posées à côté du plateau (grille de css/arcade.css sur un
- * téléphone tourné), écarts compris : toutes les colonnes sauf la première.
- * @param {CSSStyleDeclaration|null} stageStyle
- * @returns {number}
- */
-function measureSideColumns(stageStyle) {
-  const tracks = String(stageStyle?.gridTemplateColumns || '')
-    .split(/\s+/)
-    .map(toPx)
-    .filter(size => size > 0);
-  const gap = toPx(stageStyle?.columnGap);
-  return tracks.slice(1).reduce((sum, size) => sum + size + gap, 0);
-}
-
-/**
  * Espace réservé sous la zone de jeu (marges et rembourrages des conteneurs). En plein
  * écran, les conteneurs restés dans la page ne comptent plus.
  */
@@ -458,16 +467,6 @@ function measureTrailingSpace(stage, stageStyle) {
 function canvasFrame(canvas) {
   const style = readStyle(canvas);
   return sumEdges(edges(style, 'border'), edges(style, 'padding'));
-}
-
-/**
- * Sens de la zone de jeu donné par la feuille de style (« row » sur un téléphone tourné).
- * @param {CSSStyleDeclaration|null} stageStyle
- * @returns {string}
- */
-function stageFlow(stageStyle) {
-  if (typeof stageStyle?.getPropertyValue !== 'function') return '';
-  return String(stageStyle.getPropertyValue(STAGE_FLOW_PROPERTY)).trim();
 }
 
 /**
@@ -497,23 +496,10 @@ function stageContent(stage, stageStyle, view) {
 }
 
 /**
- * Place prise par « Abandonner » (et la consigne sur un téléphone tourné) : à côté du
- * plateau sur un téléphone tourné (--arcade-stage-flow: row), dessous sinon.
- * @returns {{beside: number, below: number}}
- */
-function measureStageOccupancy(stage, stageStyle, canvas) {
-  if (stageFlow(stageStyle) === 'row') {
-    return { beside: measureSideColumns(stageStyle), below: 0 };
-  }
-  const gap = toPx(stageStyle?.rowGap);
-  return { beside: 0, below: measureStageSiblings(stage, canvas, gap) };
-}
-
-/**
- * Place disponible pour le dessin du canevas : largeur de la zone de jeu (moins la
- * colonne de côté sur un téléphone tourné), hauteur de l'écran sous le haut de la zone,
- * moins « Abandonner » et les marges. La consigne ne compte pas : elle est posée sur le
- * plateau, la place reste la même qu'elle soit affichée ou partie.
+ * Place disponible pour le dessin du canevas : largeur de la zone de jeu, hauteur de
+ * l'écran sous le haut de la zone, moins « Abandonner » (quand il est sous le plateau : sur
+ * un téléphone tourné, il est dans le bandeau) et les marges. La consigne ne compte pas :
+ * elle est posée sur le plateau, la place reste la même qu'elle soit affichée ou partie.
  * À appeler après prepareArcadeStage().
  * @param {HTMLCanvasElement} canvas
  * @param {{minWidth?: number, minHeight?: number}} [options]
@@ -533,10 +519,10 @@ export function getArcadeCanvasBox(canvas, { minWidth = 200, minHeight = 160 } =
   const stageStyle = readStyle(stage);
   const frame = canvasFrame(canvas);
   const content = stageContent(stage, stageStyle, view);
-  const { beside, below } = measureStageOccupancy(stage, stageStyle, canvas);
+  const below = measureStageSiblings(stage, canvas, toPx(stageStyle?.rowGap));
   const trailing = measureTrailingSpace(stage, stageStyle);
 
-  const width = Math.floor(content.width - beside - frame.x);
+  const width = Math.floor(content.width - frame.x);
   const height = Math.floor(view.height - content.top - below - trailing - frame.y);
   return { width: Math.max(minWidth, width), height: Math.max(minHeight, height) };
 }
@@ -686,8 +672,13 @@ export function watchArcadeViewport(canvas, onChange) {
   };
   const run = () => {
     frame = 0;
-    if (canvas.isConnected) onChange();
-    else stop();
+    if (!canvas.isConnected) {
+      stop();
+      return;
+    }
+    // « Abandonner » change de place avec l'écran, avant que le jeu ne mesure la sienne
+    if (stage) placeAbandon(stage, canvas);
+    onChange();
   };
   const schedule = () => {
     if (!canvas.isConnected) stop();
