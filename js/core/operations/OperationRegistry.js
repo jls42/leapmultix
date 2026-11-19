@@ -111,6 +111,17 @@ export const OperationRegistry = new OperationRegistryClass();
 export const getOperation = symbol => OperationRegistry.get(symbol);
 
 /**
+ * Calcul de repli d'un jeu dont le tirage a échoué : « 2 op 1 », juste dans les quatre
+ * opérations (2, 3, 1, 2), avec le signe de l'opération réellement calculée
+ * @param {string} symbol - Symbole (×, +, −, ÷) ; un symbole inconnu donne la multiplication
+ * @returns {{num1: number, num2: number, operator: string, result: number}}
+ */
+export const fallbackCalculation = symbol => {
+  const operation = OperationRegistry.get(symbol);
+  return { num1: 2, num2: 1, operator: operation.symbol, result: operation.compute(2, 1) };
+};
+
+/**
  * Récupère toutes les opérations
  * @returns {Operation[]}
  */
