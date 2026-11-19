@@ -18,6 +18,7 @@ const {
   arcadeOfflineImages,
   arcadeSpriteSpecs,
   avatarSpec,
+  heroPoseSpecs,
   monsterSpec,
   seasonalSpriteSpecs,
   snakeHeadSpec,
@@ -57,6 +58,14 @@ function heroImage() {
 const FAMILY_FILES = new Map([
   ['heads', () => AVATAR_IDS.map(avatar => sourceOf(avatarHeadImage(avatar, '56px').src))],
   ['bodies', () => AVATAR_IDS.map(avatar => arcade(avatarSpec(avatar).source))],
+  [
+    'poses',
+    () =>
+      AVATAR_IDS.flatMap(avatar => {
+        const poses = heroPoseSpecs(avatar);
+        return [arcade(poses.kick.source), arcade(poses.joy.source)];
+      }),
+  ],
   [
     'monsters',
     () => Array.from({ length: MONSTER_COUNT }, (_, i) => arcade(monsterSpec(i + 1).source)),
@@ -172,11 +181,12 @@ describe('Arcade', () => {
 
   test('les images costumées ont leurs variantes, mais restent hors du préchargement', () => {
     const seasonal = seasonalSpriteSpecs().map(item => item.source);
-    // Corps (5), fusées pilotées (10), herbe, pomme et têtes (5) du serpent de MultiSnake,
-    // murs et réponses de MultiMiam, 155 monstres : pour chaque fête, les familles qu'elle
-    // costume
+    // Corps (5), poses du tireur (10), fusées pilotées (10), herbe, pomme et têtes (5) du
+    // serpent de MultiSnake, murs et réponses de MultiMiam, 155 monstres : pour chaque fête,
+    // les familles qu'elle costume
     const spritesOf = new Map([
       ['bodies', AVATAR_IDS.length],
+      ['poses', 2 * AVATAR_IDS.length],
       ['ships', 2 * AVATAR_IDS.length],
       ['snake', 2 + AVATAR_IDS.length],
       ['miam', 2],
