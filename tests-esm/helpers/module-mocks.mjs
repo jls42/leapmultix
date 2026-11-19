@@ -4,6 +4,16 @@
  * résolvent depuis ce fichier) et le chemin de `js/` vu de lui : '../js' ou '../../js'.
  */
 import { readFileSync } from 'node:fs';
+import {
+  createChronoDriver,
+  createChronoNavigation,
+  createGameMock,
+  createLazyLoaderMock,
+  createSpeechMock,
+  quietFakeTime,
+  trackChronoInstances,
+} from './chrono-test-helpers.mjs';
+import { createSlidesMock } from './mode-test-helpers.mjs';
 
 const noop = () => undefined;
 
@@ -239,4 +249,63 @@ export function mockLivesGamesShell(jestApi, root, { showArcadeGameOver }) {
       IMAGE_HEAD_SIZE: 1.5,
     }),
   });
+}
+
+/**
+ * Écran de jeu affiché sous sa barre du haut : « Accueil » et « Changer de joueur », que le
+ * garde des sorties (game-exit.js) surveille. `onExit` reçoit le clic d'une sortie acceptée.
+ * @param {(event: MouseEvent) => void} onExit
+ * @returns {{home: HTMLButtonElement, changePlayer: HTMLButtonElement}}
+ */
+export function mountScreenWithTopBar(onExit) {
+  const home = Object.assign(document.createElement('button'), { className: 'home-btn' });
+  const changePlayer = document.createElement('button');
+  changePlayer.className = 'change-user-btn';
+  changePlayer.dataset.slide = '0';
+  const bar = Object.assign(document.createElement('div'), { className: 'top-bar' });
+  bar.append(home, changePlayer);
+  home.addEventListener('click', onExit);
+  changePlayer.addEventListener('click', onExit);
+  const slide = Object.assign(document.createElement('section'), { id: 'slide4' });
+  slide.className = 'slide active-slide';
+  slide.append(bar, Object.assign(document.createElement('div'), { id: 'game' }));
+  const results = Object.assign(document.createElement('div'), { id: 'results' });
+  document.body.replaceChildren(slide, results);
+  return { home, changePlayer };
+}
+
+/**
+ * Banc du vrai mode Chrono : modules simulés autour de lui (chargement, jeu, voix,
+ * navigation), puis le mode importé et son pilote (chrono-test-helpers.mjs). À attendre en
+ * tête de fichier ; `prepare()` se lance dans beforeEach, `stop()` dans afterEach.
+ */
+export async function loadChronoBench(jestApi, root) {
+  const refs = {};
+  const instances = [];
+  const goToSlide = createChronoNavigation(jestApi, refs);
+  mockModules(jestApi, root, {
+    'lazy-loader.js': createLazyLoaderMock,
+    'game.js': () => createGameMock(jestApi, jestApi.fn()),
+    'speech.js': () => createSpeechMock({ speak: jestApi.fn(), preloadSpeech: jestApi.fn() }),
+    'slides.js': () => ({ ...createSlidesMock(jestApi), goToSlide }),
+  });
+  const store = await import('../../js/i18n-store.js');
+  const { AudioManager } = await import('../../js/core/audio.js');
+  refs.orchestrator = await import('../../js/mode-orchestrator.js');
+  refs.chronoModule = await import('../../js/modes/ChronoMode.js');
+  const { ChronoMode, stopChronoMode } = refs.chronoModule;
+  return {
+    ...createChronoDriver(jestApi, refs, () => instances),
+    goToSlide,
+    /** Écran de jeu sous sa barre du haut, textes français, horloge simulée */
+    prepare() {
+      instances.length = 0;
+      trackChronoInstances(jestApi, ChronoMode, () => instances);
+      store.setTranslations(frenchTranslations());
+      store.setCurrentLanguage('fr');
+      quietFakeTime(jestApi, AudioManager);
+      return mountScreenWithTopBar(() => stopChronoMode());
+    },
+    stop: stopChronoMode,
+  };
 }
