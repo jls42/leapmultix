@@ -350,51 +350,77 @@ describe('MultiGoal : le ballon', () => {
 describe('MultiGoal : le tireur', () => {
   const pose = (phase, elapsed, reducedMotion = false) =>
     heroPose({ phase, elapsed }, reducedMotion);
+  const STILL = { pose: 'idle', shift: 0, lift: 0, angle: 0 };
 
-  test('au repos pendant qu’on vise : ni élan, ni saut, face au ballon', () => {
-    expect(pose('aiming', 400)).toEqual({ shift: 0, lift: 0, angle: 0, turn: 1, squash: 0 });
+  test('au repos pendant qu’on vise : l’image habituelle, sans élan ni saut', () => {
+    expect(pose('aiming', 400)).toEqual(STILL);
   });
 
-  test('au tir : il s’élance vers le ballon en se penchant, au plus fort au contact, puis revient', () => {
-    const start = pose('flying', 0);
+  test('au tir : la pose « frappe », avec un élan vers le ballon au plus fort au contact', () => {
+    expect(pose('flying', 0).pose).toBe('kick');
     const contact = pose('flying', FLIGHT_MS * 0.35);
-    const end = pose('flying', FLIGHT_MS);
-    expect(start.shift).toBeCloseTo(0);
-    expect(contact.shift).toBeGreaterThan(1.3);
-    expect(contact.angle).toBeGreaterThan(0.28);
+    expect(contact.shift).toBeGreaterThan(1.1);
     expect(pose('flying', FLIGHT_MS * 0.2).shift).toBeLessThan(contact.shift);
     expect(pose('flying', FLIGHT_MS * 0.7).shift).toBeLessThan(contact.shift);
-    expect(end.shift).toBeCloseTo(0);
-    expect(end.angle).toBeCloseTo(0);
+    expect(pose('flying', FLIGHT_MS).shift).toBeCloseTo(0);
   });
 
-  test('au but : un tour sur lui-même avec un petit saut, puis il retombe face au ballon', () => {
-    // À mi-tour, il est de dos (largeur retournée) et en haut du saut
-    const half = pose('goal', 300);
-    expect(half.turn).toBeCloseTo(-1);
-    expect(half.lift).toBeGreaterThan(0.1);
-    expect(pose('goal', 150).turn).toBeCloseTo(0);
-    expect(pose('goal', 600)).toEqual(pose('aiming', 0));
-    expect(pose('goal', 1200)).toEqual(pose('aiming', 0));
+  test('au but : la pose « joie » avec un petit saut, puis le repos', () => {
+    const hop = pose('goal', 250);
+    expect(hop.pose).toBe('joy');
+    expect(hop.lift).toBeGreaterThan(0.1);
+    expect(pose('goal', 700)).toEqual({ pose: 'joy', shift: 0, lift: 0, angle: 0 });
+    expect(pose('goal', 900)).toEqual(STILL);
   });
 
-  test('arrêté ou raté : un petit balancement qui s’éteint, jamais de saut ni de tour', () => {
+  test('arrêté ou raté : l’image habituelle qui se balance et s’éteint, jamais de joie', () => {
     for (const phase of ['saved', 'missed']) {
       const sway = pose(phase, 75);
+      expect(sway.pose).toBe('idle');
       expect(Math.abs(sway.angle)).toBeGreaterThan(0.05);
-      expect(sway.lift).toBe(0);
-      expect(sway.turn).toBe(1);
-      expect(pose(phase, 600)).toEqual(pose('aiming', 0));
+      expect(pose(phase, 600)).toEqual(STILL);
     }
   });
 
-  test('mouvements réduits : le tireur ne bouge jamais', () => {
-    for (const [phase, elapsed] of [
-      ['flying', FLIGHT_MS * 0.35],
-      ['goal', 300],
-      ['saved', 75],
-    ]) {
-      expect(pose(phase, elapsed, true)).toEqual(pose('aiming', 0));
-    }
+  test('mouvements réduits : les poses changent, sans élan, saut ni balancement', () => {
+    expect(pose('flying', FLIGHT_MS * 0.35, true)).toEqual({ ...STILL, pose: 'kick' });
+    expect(pose('goal', 250, true)).toEqual({ ...STILL, pose: 'joy' });
+    expect(pose('saved', 75, true)).toEqual(STILL);
+  });
+
+  /** Images dessinées pendant le dessin du terrain */
+  function drawnImages(view) {
+    const { ctx, calls } = recordingContext();
+    drawGoalBoard(ctx, view);
+    return calls.filter(call => call.name === 'drawImage').map(call => call.args[0]);
+  }
+
+  test('il est dessiné dans la pose du moment, et dans son image habituelle au repos', () => {
+    const game = shootoutOf(3);
+    const heroSprite = fakeSprite('left');
+    const kick = fakeSprite();
+    const joy = fakeSprite();
+    const view = viewOf(game, { heroSprite, heroPoseSprites: { kick, joy } });
+    expect(drawnImages(view)).toContain(heroSprite.image);
+    // Les poses sont demandées d'avance, pour être là au premier tir
+    expect(kick.request).toHaveBeenCalled();
+    expect(joy.request).toHaveBeenCalled();
+    game.shoot(game.openTargets().at(0).slot);
+    const flying = drawnImages(view);
+    expect(flying).toContain(kick.image);
+    expect(flying).not.toContain(heroSprite.image);
+  });
+
+  test('une pose pas encore chargée, ou pas de poses (fête) : l’image habituelle', () => {
+    const game = shootoutOf(3);
+    const heroSprite = fakeSprite('left');
+    game.shoot(game.openTargets().at(0).slot);
+    const loading = { image: null, request: jest.fn(), facing: 'right' };
+    expect(
+      drawnImages(viewOf(game, { heroSprite, heroPoseSprites: { kick: loading, joy: loading } }))
+    ).toContain(heroSprite.image);
+    expect(drawnImages(viewOf(game, { heroSprite, heroPoseSprites: null }))).toContain(
+      heroSprite.image
+    );
   });
 });
