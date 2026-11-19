@@ -6,40 +6,10 @@
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { fakeCanvasContext } from './helpers/touch-test-helpers.mjs';
+import { mockLivesGamesShell } from './helpers/module-mocks.mjs';
 
 const showArcadeGameOver = jest.fn();
-jest.unstable_mockModule('../js/utils-es6.js', () => ({
-  showArcadeMessage: jest.fn(),
-  showArcadePoints: jest.fn(),
-  getTranslation: key => key,
-}));
-jest.unstable_mockModule('../js/arcade.js', () => ({ showArcadeGameOver }));
-jest.unstable_mockModule('../js/game.js', () => ({ gameState: { avatar: 'fox' } }));
-jest.unstable_mockModule('../js/arcade-points.js', () => ({ showArcadePenalty: jest.fn() }));
-jest.unstable_mockModule('../js/game-cleanup.js', () => ({ cleanupGameResources: jest.fn() }));
-jest.unstable_mockModule('../js/components/infoBar.js', () => ({
-  InfoBar: { update: jest.fn(), renderLives: jest.fn() },
-}));
-jest.unstable_mockModule('../js/core/operation-stats.js', () => ({
-  recordOperationResult: jest.fn(),
-}));
-jest.unstable_mockModule('../js/arcade-session.js', () => ({
-  noteArcadePlay: jest.fn(),
-  noteArcadeMiss: jest.fn(),
-}));
-jest.unstable_mockModule('../js/userManager.js', () => ({
-  UserManager: { getCurrentUser: () => null },
-}));
-jest.unstable_mockModule('../js/core/tablePreferences.js', () => ({
-  TablePreferences: { isGlobalEnabled: () => false, getActiveExclusions: () => [] },
-}));
-jest.unstable_mockModule('../js/core/GameMode.js', () => ({
-  plausibleWrongAnswers: ({ answer }) => [answer + 1, answer + 2, answer + 3],
-}));
-jest.unstable_mockModule('../js/multisnake-renderer.js', () => ({
-  drawSnakeScene: jest.fn(() => ({ heading: 0 })),
-  IMAGE_HEAD_SIZE: 1.5,
-}));
+mockLivesGamesShell(jest, '../js', { showArcadeGameOver });
 
 const { SnakeGame } = await import('../js/multisnake.js');
 const { PacmanGame } = await import('../js/multimiam.js');

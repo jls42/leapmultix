@@ -8,47 +8,15 @@
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { placeCanvasAtOrigin } from './helpers/touch-test-helpers.mjs';
+import { createInvasionBench } from './helpers/invasion-bench.mjs';
+import { mockArcadeShell } from './helpers/module-mocks.mjs';
 
-const noop = () => undefined;
 const updateInfoBar = jest.fn();
 const showArcadePoints = jest.fn();
 const saveArcadeScore = jest.fn();
-jest.unstable_mockModule('../js/utils-es6.js', () => ({
-  addArrowKeyNavigation: noop,
-  startBackgroundRotation: noop,
-  updateBackgroundByAvatar: noop,
-  updateCoinDisplay: noop,
-  updateWelcomeMessageUI: noop,
-  getDailyChallengeTable: () => '3',
-  showMessage: noop,
-  getTranslation: k => k,
-  cleanupGameResources: noop,
-  speak: noop,
-  isVoiceEnabled: () => false,
-  playSound: noop,
-  showArcadePoints,
-  updateInfoBar,
-  showArcadeMessage: noop,
-  saveArcadeScore,
-  getArcadeScores: () => [],
-  resetArcadeScores: noop,
-  saveArcadeScoreSnake: noop,
-  getArcadeScoresSnake: () => [],
-  resetArcadeScoresSnake: noop,
-  saveArcadeScorePacman: noop,
-  getArcadeScoresPacman: () => [],
-  resetArcadeScoresPacman: noop,
-  saveArcadeScoreMemory: noop,
-  getArcadeScoresMemory: () => [],
-  resetArcadeScoresMemory: noop,
-}));
-jest.unstable_mockModule('../js/slides.js', () => ({ goToSlide: noop }));
-jest.unstable_mockModule('../js/mode-orchestrator.js', () => ({ setGameMode: async () => {} }));
-jest.unstable_mockModule('../js/core/audio.js', () => ({
-  AudioManager: { stopAll: noop, playSound: noop },
-}));
+mockArcadeShell(jest, '../js', { updateInfoBar, showArcadePoints, saveArcadeScore });
 jest.unstable_mockModule('../js/core/operation-stats.js', () => ({
-  recordOperationResult: noop,
+  recordOperationResult: () => undefined,
 }));
 // Images toujours « chargées » : rien à attendre avant de jouer
 jest.unstable_mockModule('../js/arcade-sprites.js', () => ({
@@ -56,7 +24,7 @@ jest.unstable_mockModule('../js/arcade-sprites.js', () => ({
   ArcadeSprite: class {},
   spriteFor: spec => ({ spec }),
   fitRect: (_fit, box) => box,
-  prefetchArcadeSprite: noop,
+  prefetchArcadeSprite: () => undefined,
   drawArcadeSprite: () => true,
 }));
 
@@ -64,61 +32,13 @@ const { startMultiplicationInvasion } = await import('../js/arcade-invasion.js')
 const { stopArcadeMode } = await import('../js/arcade.js');
 const { gameState } = await import('../js/game.js');
 
-/** Ce que la dernière image a dessiné */
-let frame = [];
-let nextFrame = null;
-let clock = 0;
-
-/** Contexte 2D qui note chaque dessin */
-function recordingContext() {
-  return new Proxy(
-    {},
-    {
-      get: (target, prop) => {
-        if (prop in target) return Reflect.get(target, prop);
-        return (...args) => {
-          frame.push({ op: prop, args });
-          return { width: 10 };
-        };
-      },
-      set: (target, prop, value) => Reflect.set(target, prop, value),
-    }
-  );
-}
-
-/** Avance le jeu de `count` images de 1/60 s */
-function play(count) {
-  for (let i = 0; i < count && nextFrame; i++) {
-    const callback = nextFrame;
-    nextFrame = null;
-    frame = [];
-    clock += 1000 / 60;
-    callback(clock);
-  }
-}
-
-/** Nombres portés par les monstres dessinés à la dernière image, avec leur abscisse */
-const labels = () =>
-  frame.filter(d => d.op === 'fillText').map(d => ({ value: Number(d.args[0]), x: d.args[1] }));
-
-/** Réponse attendue, lue dans le bandeau (« 7 × 5 = ? ») */
-function expectedAnswer() {
-  const text = document.querySelector('.arcade-question')?.textContent ?? '';
-  const [a, b] = text.match(/\d+/g).map(Number);
-  return a * b;
-}
+const bench = createInvasionBench();
+const { play, labels, expectedAnswer, shootAt } = bench;
 
 /** Score et vies envoyés au bandeau en dernier (0 point et 3 vies avant le premier coup) */
 function shown() {
   const last = updateInfoBar.mock.calls.at(-1)?.[0];
   return { score: last?.score ?? 0, lives: last?.lives ?? 3 };
-}
-
-/** Vise l'abscisse du plateau donnée, et tire */
-function shootAt(x) {
-  const canvas = document.getElementById('arcade-canvas');
-  canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: x, clientY: 10, bubbles: true }));
-  canvas.dispatchEvent(new MouseEvent('mousedown', { button: 0, clientX: x, bubbles: true }));
 }
 
 /** Abat un monstre qui porte une mauvaise réponse */
@@ -141,26 +61,19 @@ function hitFriend() {
 
 function startGame(difficulty) {
   gameState.difficulty = difficulty;
-  const game = document.createElement('div');
-  game.id = 'game';
-  document.body.replaceChildren(game);
+  bench.mountGameScreen();
   startMultiplicationInvasion();
   placeCanvasAtOrigin(document.getElementById('arcade-canvas'));
   play(1);
 }
 
 beforeEach(() => {
-  frame = [];
-  nextFrame = null;
-  clock = 0;
+  bench.reset();
   updateInfoBar.mockClear();
   showArcadePoints.mockClear();
   saveArcadeScore.mockClear();
-  HTMLCanvasElement.prototype.getContext = () => recordingContext();
-  jest.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(callback => {
-    nextFrame = callback;
-    return 1;
-  });
+  HTMLCanvasElement.prototype.getContext = () => bench.context();
+  jest.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(bench.schedule);
   jest.useFakeTimers({ doNotFake: ['requestAnimationFrame', 'performance'] });
 });
 

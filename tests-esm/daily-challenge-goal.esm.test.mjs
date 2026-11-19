@@ -5,15 +5,9 @@
  * (UserManager), horloge simulée : la table du jour et la date ne dépendent pas du jour du test.
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { mockSpeechOff } from './helpers/module-mocks.mjs';
 
-jest.unstable_mockModule('../js/speech.js', () => ({
-  speak: jest.fn(),
-  preloadSpeech: jest.fn(),
-  isVoiceEnabled: () => false,
-  updateSpeechVoice: () => {},
-  cancelSpeech: () => {},
-  whenSpeechEnds: () => Promise.resolve(),
-}));
+mockSpeechOff(jest, '../js');
 
 const { UserManager } = await import('../js/userManager.js');
 const { getDailyChallengeTable } = await import('../js/utils-es6.js');

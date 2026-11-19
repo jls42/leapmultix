@@ -7,6 +7,7 @@
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 import { readFileSync } from 'node:fs';
 import { createSlidesMock } from './helpers/mode-test-helpers.mjs';
+import { multiplicationQuestion } from './helpers/module-mocks.mjs';
 import {
   answerDialog,
   closeOpenDialog,
@@ -78,16 +79,7 @@ function mountGameScreen() {
 
 /** Question connue en multiplication */
 function showQuestion(mode, table, num) {
-  mode.state.currentQuestion = {
-    question: `${table} × ${num} = ?`,
-    answer: table * num,
-    type: 'mcq',
-    operator: '×',
-    a: table,
-    b: num,
-    table,
-    num,
-  };
+  mode.state.currentQuestion = multiplicationQuestion(table, num);
   mode.displayQuestion();
 }
 

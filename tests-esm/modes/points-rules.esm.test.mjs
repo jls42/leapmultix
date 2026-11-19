@@ -6,12 +6,15 @@
  * joueur jusqu'à la lecture suivante, et updateUserData l'écrit.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
-import { readFileSync } from 'node:fs';
-import { createSlidesMock } from '../helpers/mode-test-helpers.mjs';
 import { closeOpenDialog } from '../helpers/confirm-dialog-helpers.mjs';
+import {
+  frenchTranslations,
+  mockClassicModesShell,
+  mountGameSlide,
+  multiplicationQuestion,
+} from '../helpers/module-mocks.mjs';
 
 let profile;
-const copy = value => JSON.parse(JSON.stringify(value));
 jest.unstable_mockModule('../../js/core/userState.js', () => ({
   UserState: {
     getCurrentUserData: () => {
@@ -19,77 +22,42 @@ jest.unstable_mockModule('../../js/core/userState.js', () => ({
       return profile;
     },
     updateUserData: data => {
-      profile = { ...profile, ...copy(data) };
+      profile = { ...profile, ...JSON.parse(JSON.stringify(data)) };
     },
   },
 }));
-jest.unstable_mockModule('../../js/game.js', () => {
-  const gameState = { gameMode: null, avatar: 'fox', streak: 0 };
-  return {
-    gameState,
-    default: gameState,
-    updateDailyChallengeProgress: jest.fn(),
-    displayDailyChallenge: jest.fn(),
-  };
-});
-jest.unstable_mockModule('../../js/slides.js', () => createSlidesMock(jest));
-jest.unstable_mockModule('../../js/mode-orchestrator.js', () => ({
-  getStartingMode: () => null,
-  setStartingMode: jest.fn(),
-  setGameMode: jest.fn(async () => {}),
-}));
+mockClassicModesShell(jest, '../../js');
 
 const store = await import('../../js/i18n-store.js');
 const { AudioManager } = await import('../../js/core/audio.js');
 const { QuizMode } = await import('../../js/modes/QuizMode.js');
 const { ChallengeMode } = await import('../../js/modes/ChallengeMode.js');
 const { AdventureMode } = await import('../../js/modes/AdventureMode.js');
-const FR = JSON.parse(
-  readFileSync(new URL('../../assets/translations/fr.json', import.meta.url), 'utf8')
-);
 
-/** Question connue en multiplication : table, multiplicande, réponse */
+/** Question connue en multiplication, affichée */
 function showQuestion(mode, table, num) {
-  mode.state.currentQuestion = {
-    question: `${table} × ${num} = ?`,
-    answer: table * num,
-    type: 'mcq',
-    operator: '×',
-    a: table,
-    b: num,
-    table,
-    num,
-  };
+  mode.state.currentQuestion = multiplicationQuestion(table, num);
   mode.displayQuestion();
 }
 
-/** Répond juste ou faux à la question affichée */
-const reply = (mode, correct = true) =>
-  mode.handleAnswer(
-    correct ? mode.state.currentQuestion.answer : mode.state.currentQuestion.answer + 1
-  );
+/** Répond juste, ou faux (une unité de trop), à la question affichée */
+function reply(mode, correct = true) {
+  const { answer } = mode.state.currentQuestion;
+  mode.handleAnswer(correct ? answer : answer + 1);
+}
 
 beforeAll(() => {
-  store.setTranslations(FR);
+  store.setTranslations(frenchTranslations());
   store.setCurrentLanguage('fr');
 });
 
 beforeEach(() => {
-  const slide = document.createElement('section');
-  slide.id = 'slide4';
-  slide.className = 'slide';
-  const game = document.createElement('div');
-  game.id = 'game';
-  slide.append(game);
-  const results = document.createElement('div');
-  results.id = 'results';
-  document.body.replaceChildren(slide, results);
+  jest.useFakeTimers();
+  mountGameSlide();
   globalThis.scrollTo = () => {};
   profile = { preferredOperator: '×', coins: 0, progressHistory: [] };
   jest.spyOn(AudioManager, 'playSound').mockImplementation(() => {});
-  jest.spyOn(console, 'log').mockImplementation(() => {});
-  jest.spyOn(console, 'warn').mockImplementation(() => {});
-  jest.useFakeTimers();
+  for (const level of ['log', 'warn']) jest.spyOn(console, level).mockImplementation(() => {});
 });
 
 afterEach(() => {

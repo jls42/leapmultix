@@ -5,40 +5,10 @@
  * l'écran de fin est celui que le bandeau affiche, une seule fois.
  */
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { mockArcadeShell } from './helpers/module-mocks.mjs';
 
 const saveArcadeScore = jest.fn();
-const noop = () => undefined;
-
-jest.unstable_mockModule('../js/utils-es6.js', () => ({
-  // Exports lus par game.js (importé par arcade.js)
-  addArrowKeyNavigation: noop,
-  startBackgroundRotation: noop,
-  updateBackgroundByAvatar: noop,
-  updateCoinDisplay: noop,
-  updateWelcomeMessageUI: noop,
-  getDailyChallengeTable: () => '3',
-  showMessage: noop,
-  getTranslation: k => k,
-  speak: noop,
-  isVoiceEnabled: () => false,
-  saveArcadeScore,
-  getArcadeScores: () => [],
-  resetArcadeScores: noop,
-  saveArcadeScoreSnake: noop,
-  getArcadeScoresSnake: () => [],
-  resetArcadeScoresSnake: noop,
-  saveArcadeScorePacman: noop,
-  getArcadeScoresPacman: () => [],
-  resetArcadeScoresPacman: noop,
-  saveArcadeScoreMemory: noop,
-  getArcadeScoresMemory: () => [],
-  resetArcadeScoresMemory: noop,
-}));
-jest.unstable_mockModule('../js/slides.js', () => ({ goToSlide: noop }));
-jest.unstable_mockModule('../js/mode-orchestrator.js', () => ({ setGameMode: async () => {} }));
-jest.unstable_mockModule('../js/core/audio.js', () => ({
-  AudioManager: { stopAll: noop, playSound: noop },
-}));
+mockArcadeShell(jest, '../js', { saveArcadeScore });
 
 const arcade = await import('../js/arcade.js');
 const { noteArcadePlay } = await import('../js/arcade-session.js');

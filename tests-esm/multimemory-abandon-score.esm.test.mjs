@@ -7,19 +7,10 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import fs from 'node:fs';
 import { fakeCanvasContext } from './helpers/touch-test-helpers.mjs';
+import { mockMemoryArcade } from './helpers/module-mocks.mjs';
 
 const showArcadeGameOver = jest.fn();
-jest.unstable_mockModule('../js/arcade.js', () => ({
-  startArcadeTimer: jest.fn(),
-  stopArcadeMode: jest.fn(),
-  showArcadeGameOver,
-  isArcadeActive: () => false,
-  memoryMonsterSprites: () => Array.from({ length: 16 }, () => ({ complete: false })),
-}));
-jest.unstable_mockModule('../js/arcade-session.js', () => ({
-  noteArcadePlay: jest.fn(),
-  noteArcadeMiss: jest.fn(),
-}));
+mockMemoryArcade(jest, '../js', { showArcadeGameOver });
 jest.unstable_mockModule('../js/slides.js', () => ({ goToSlide: jest.fn() }));
 jest.unstable_mockModule('../js/mode-orchestrator.js', () => ({ setStartingMode: jest.fn() }));
 jest.unstable_mockModule('../js/core/userState.js', () => ({
