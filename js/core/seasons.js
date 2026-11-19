@@ -13,9 +13,12 @@
  */
 
 /**
- * @typedef {'heads'|'bodies'|'monsters'|'ships'|'snake'|'miam'|'logos'|'gifts'|'backgrounds'|'hero'} CostumeFamily
+ * @typedef {'heads'|'bodies'|'poses'|'monsters'|'ships'|'snake'|'miam'|'logos'|'gifts'|'backgrounds'|'hero'} CostumeFamily
  * heads : assets/images/arcade/<avatar>_<fête>_head_avatar.png ;
  * bodies : assets/images/arcade/<avatar>_<fête>.png (MultiMiam) ;
+ * poses : assets/images/arcade/<avatar>_frappe_<fête>.png et <avatar>_joie_<fête>.png, les deux
+ *   poses du tireur de MultiGoal ; une fête qui costume les corps sans elles garde le tireur
+ *   costumé, immobile ;
  * monsters : assets/images/arcade/monstre<NN>_right_<fête>.png, les 155 monstres des jeux
  *   d'Arcade (MultiMiam, MultiInvaders, MultiMemory), tournés à droite comme les classiques ;
  * ships : assets/images/arcade/<fusée>_<fête>.png (MultiInvaders) ;
@@ -54,8 +57,9 @@
  */
 
 /**
- * Toutes les familles que le jeu sait costumer : Halloween, Noël et le Nouvel An les portent
- * toutes. Une fête dont une partie reste à dessiner donne sa propre liste.
+ * Toutes les familles que le jeu sait costumer, sauf les poses du tireur de MultiGoal, venues
+ * après les fêtes et dessinées fête par fête (WITH_POSES) : Halloween, Noël et le Nouvel An les
+ * portent toutes. Une fête dont une partie reste à dessiner donne sa propre liste.
  * @type {readonly CostumeFamily[]}
  */
 const EVERY_COSTUME = Object.freeze([
@@ -70,6 +74,9 @@ const EVERY_COSTUME = Object.freeze([
   'backgrounds',
   'hero',
 ]);
+
+/** Les mêmes, avec les poses du tireur de MultiGoal : Noël, en attendant les autres fêtes */
+const WITH_POSES = Object.freeze([...EVERY_COSTUME, 'poses']);
 
 /**
  * Premier jour de l'an lunaire, année par année, relevé dans les tables de conversion de
@@ -118,7 +125,7 @@ export const SEASONS = Object.freeze([
     from: Object.freeze([12, 1]),
     to: Object.freeze([12, 26]),
     themes: Object.freeze({ light: 'snow', dark: 'christmas' }),
-    costumes: EVERY_COSTUME,
+    costumes: WITH_POSES,
     worlds: 8,
   }),
   // Du 27 décembre au 6 janvier : passe le 31 décembre, sans année écrite dans les images.

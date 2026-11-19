@@ -155,10 +155,29 @@ describe('source haute définition de chaque image', () => {
     expect(catalog.heroPoseSpecs('licorne-inconnue').kick.source).toBe('fox_frappe');
     const sources = catalog.arcadeSpriteSpecs().map(item => item.source);
     expect(sources).toEqual(expect.arrayContaining(['dragon_frappe', 'dragon_joie']));
-    // Pendant une fête, le héros garde son costume : pas de pose (elles ne sont pas costumées)
+    // Fête qui costume le corps sans les poses : le héros garde son costume, sans pose
     try {
-      wearSeason(SEASONS.find(season => season.costumes.includes('bodies')));
+      wearSeason(
+        SEASONS.find(
+          season => season.costumes.includes('bodies') && !season.costumes.includes('poses')
+        )
+      );
       expect(catalog.heroPoseSpecs('fox')).toBeNull();
+    } finally {
+      wearSeason(null);
+    }
+  });
+
+  test('poses du tireur pendant une fête qui les costume : les deux, même côté', async () => {
+    const { wearSeason, SEASONS } = await import('../js/core/seasons.js');
+    const classic = catalog.heroPoseSpecs('dragon');
+    try {
+      wearSeason(SEASONS.find(season => season.id === 'christmas'));
+      expect(catalog.heroPoseSpecs('dragon')).toEqual({
+        kick: { ...classic.kick, source: 'dragon_frappe_christmas' },
+        joy: { ...classic.joy, source: 'dragon_joie_christmas' },
+      });
+      expect(catalog.heroPoseSpecs('inconnu').joy.source).toBe('fox_joie_christmas');
     } finally {
       wearSeason(null);
     }

@@ -143,15 +143,18 @@ const HERO_POSES = new Map([
 ]);
 
 /**
- * Poses du tireur de MultiGoal pour un avatar ; aucune pendant une fête, où le héros garde
- * son costume (les poses ne sont pas costumées)
+ * Poses du tireur de MultiGoal pour un avatar, costumées pendant une fête qui les a (famille
+ * poses) ; aucune pendant une fête qui costume le corps sans elles : le héros garde son costume
  * @param {string} name - Avatar du joueur
  * @returns {{kick: SpriteSpec, joy: SpriteSpec}|null}
  */
 export function heroPoseSpecs(name) {
   const avatar = AVATARS.has(name) ? name : 'fox';
+  const poses = HERO_POSES.get(avatar);
+  const kick = wornSpec(poses.kick, 'poses');
+  if (kick !== poses.kick) return { kick, joy: wornSpec(poses.joy, 'poses') };
   if (avatarSpec(avatar) !== AVATARS.get(avatar)) return null;
-  return HERO_POSES.get(avatar);
+  return poses;
 }
 
 /* --- Fusées de MultiInvaders --- */
@@ -287,6 +290,7 @@ export function arcadeSpriteSpecs() {
 const COSTUMED_SPRITES = new Map([
   ['monsters', () => Array.from({ length: MONSTER_COUNT }, (_, i) => classicMonster(i + 1))],
   ['bodies', () => [...AVATARS.values()]],
+  ['poses', () => [...HERO_POSES.values()].flatMap(poses => [poses.kick, poses.joy])],
   ['ships', () => PILOTED_SHIPS.map(source => spec(source, []))],
   [
     'snake',
@@ -296,8 +300,9 @@ const COSTUMED_SPRITES = new Map([
 ]);
 
 /**
- * Images costumées des fêtes dans les jeux d'Arcade (corps des personnages, fusées pilotées,
- * herbe, pomme et têtes du serpent de MultiSnake, murs et réponses de MultiMiam), d'après les familles
+ * Images costumées des fêtes dans les jeux d'Arcade (corps des personnages, poses du tireur de
+ * MultiGoal, fusées pilotées, herbe, pomme et têtes du serpent de MultiSnake, murs et réponses
+ * de MultiMiam), d'après les familles
  * de chaque fête : leurs variantes se génèrent comme
  * celles des images classiques, mais elles restent hors du préchargement (absentes
  * d'arcadeSpriteSpecs) ; hors ligne, l'image classique les remplace.
