@@ -945,8 +945,10 @@ class MemoryGame {
       // Erreur ignorée (non-critique)
     }
 
-    // Sons du gestionnaire audio : ils suivent le volume choisi dans le jeu
+    // Sons du gestionnaire audio : ils suivent le volume choisi dans le jeu ; les deux cartes
+    // glissent ensemble, avec le son de la bonne réponse
     AudioManager.playSound('good');
+    AudioManager.playSound('pairFound');
     // Afficher un message de félicitations
     showArcadeMessage('arcade.multiMemory.match', 'success', 1000);
     this.announce(getTranslation('arcade.multiMemory.match'));

@@ -108,6 +108,8 @@ describe('MultiGoal : une partie', () => {
     expect(recordArcadeAnswer).toHaveBeenCalledWith('×', a, b, true);
     expect(showSolvedQuestion).toHaveBeenCalledWith({ operator: '×', a, b });
     expect(playSound).toHaveBeenCalledWith('good', expect.anything());
+    // Un but n'est pas un arrêt
+    expect(playSound).not.toHaveBeenCalledWith('saved');
     const solved = game.question;
     const keeper = game.keeperSprite;
     game.step(1500);
@@ -134,7 +136,7 @@ describe('MultiGoal : une partie', () => {
     expect(kicks()).toBe(1);
   });
 
-  test('bonne réponse sur le gardien : arrêtée, ni point, ni erreur, ni son d’erreur', () => {
+  test('bonne réponse sur le gardien : arrêtée, ni point ni erreur, le bruit de l’arrêt', () => {
     scoreGoal();
     recordArcadeAnswer.mockClear();
     playSound.mockClear();
@@ -145,8 +147,8 @@ describe('MultiGoal : une partie', () => {
     expect(game.score).toBe(GOAL_POINTS);
     expect(recordArcadeAnswer).not.toHaveBeenCalled();
     expect(showSolvedQuestion).toHaveBeenCalledTimes(1);
-    // Seule la frappe du ballon a sonné : ni son d'erreur, ni bonne réponse
-    expect(playSound.mock.calls.map(([name]) => name)).toEqual(['kick']);
+    // La frappe, puis l'arrêt du gardien : ni son d'erreur, ni bonne réponse
+    expect(playSound.mock.calls.map(([name]) => name)).toEqual(['kick', 'saved']);
     expect(status()).toBe(FR.arcade_goal_saved);
     // On retire : la cible est toujours là, le gardien parti le but compte
     const { a, b } = game.question;
@@ -189,6 +191,9 @@ describe('MultiGoal : une partie', () => {
     land();
     expect(game.shootout.phase).toBe('missed');
     expect(recordArcadeAnswer).toHaveBeenCalledWith('×', a, b, false);
+    // Le son de l'erreur, pas celui de l'arrêt
+    expect(playSound).toHaveBeenCalledWith('bad');
+    expect(playSound).not.toHaveBeenCalledWith('saved');
   });
 
   test('au doigt : la cible touchée, sans défilement de la page', () => {

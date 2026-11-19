@@ -219,6 +219,7 @@ function loseLife(game) {
   // Only show message if game is still running to prevent sounds after navigation away
   // Ton neutre : une vie perdue n'est pas signalée en rouge
   if (!game.gameOver && game.running) {
+    AudioManager.playSound('lifeLost');
     showArcadeMessage('arcade_life_lost', 'neutral');
   }
   if (game.lives <= 0) {

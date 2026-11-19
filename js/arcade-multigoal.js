@@ -245,8 +245,10 @@ export class GoalGame extends ArcadeBoardGame {
     this.updateScore();
   }
 
-  // Bonne réponse arrêtée par le gardien : ni point, ni erreur, ni son d'erreur ; on retire
+  // Bonne réponse arrêtée par le gardien : ni point ni erreur ; le bruit de l'arrêt, jamais
+  // celui de l'erreur ; on retire
   onSaved() {
+    AudioManager.playSound('saved');
     if (this.liveRegion) this.liveRegion.textContent = this.savedLabel;
   }
 

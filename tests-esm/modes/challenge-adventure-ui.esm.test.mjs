@@ -105,6 +105,30 @@ describe('Défi', () => {
     challenge.stop();
   });
 
+  test('les dix dernières secondes du chrono : un tic-tac par seconde, rien avant, rien à la fin', async () => {
+    jest.useFakeTimers();
+    const challenge = new ChallengeMode();
+    try {
+      await challenge.start();
+      jest.spyOn(challenge, 'finish').mockImplementation(() => {});
+      const ticks = () => AudioManager.playSound.mock.calls.filter(([name]) => name === 'tick');
+      challenge.state.timeLeft = 13;
+      challenge.startTimer();
+      // 12, puis 11 : pas encore
+      jest.advanceTimersByTime(2000);
+      expect(ticks()).toHaveLength(0);
+      // 10 à 1 : un par seconde
+      jest.advanceTimersByTime(10000);
+      expect(ticks()).toHaveLength(10);
+      // 0 : la fin de la partie, sans tic-tac
+      jest.advanceTimersByTime(1000);
+      expect(ticks()).toHaveLength(10);
+    } finally {
+      challenge.stop();
+      jest.useRealTimers();
+    }
+  });
+
   test('temps faible : classe is-low sur la case du chrono, sans couleur en ligne', async () => {
     const challenge = new ChallengeMode();
     await challenge.start();
@@ -205,6 +229,9 @@ describe('Aventure', () => {
     expect(rating.querySelectorAll('svg.reward-star.is-earned')).toHaveLength(2);
     expect(results.querySelector('img.results-treasure')).not.toBeNull();
     expect(EMOJI.test(results.textContent)).toBe(false);
+    // Les étoiles gagnées sonnent une fois
+    const stars = AudioManager.playSound.mock.calls.filter(([name]) => name === 'star');
+    expect(stars).toHaveLength(1);
   });
 
   test('échec : ton calme, le personnage reste présent', () => {
@@ -220,6 +247,8 @@ describe('Aventure', () => {
     expect(results.querySelector('.results-lead').textContent).toBe('1 bonne réponse sur 4');
     expect(results.querySelector('img.results-avatar')).not.toBeNull();
     expect(results.querySelector('.reward-stars')).toBeNull();
+    // Aucune étoile gagnée : aucun son d'étoile
+    expect(AudioManager.playSound).not.toHaveBeenCalledWith('star', undefined);
     expect(EMOJI.test(results.textContent)).toBe(false);
     const primary = results.querySelector('.results-actions .btn:not(.btn-secondary)');
     expect(primary.dataset.action).toBe('adventure-start-level');

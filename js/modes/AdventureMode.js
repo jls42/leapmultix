@@ -806,6 +806,8 @@ export class AdventureMode extends GameMode {
       avatar: gameState?.avatar,
     };
     mountResults(this.gameScreen, () => this.renderLevelResults(result), { scrollTop: true });
+    // Les étoiles gagnées sonnent une fois, à l'arrivée de l'écran (pas à sa traduction)
+    if (success && stars > 0) playSound('star');
   }
 
   /**

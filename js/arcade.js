@@ -351,7 +351,10 @@ function beatsBestScore(played, mode, score) {
 function addLearningRecap(isRecord) {
   const wrapper = document.querySelector('#game .arcade-gameover');
   if (!wrapper) return;
-  if (isRecord) wrapper.querySelector('.arcade-final-score')?.after(buildRecordBadge());
+  if (isRecord) {
+    wrapper.querySelector('.arcade-final-score')?.after(buildRecordBadge());
+    AudioManager.playSound('record');
+  }
   const review = buildMissedCalculations(arcadeMisses());
   if (review) wrapper.querySelector('.arcade-gameover-actions')?.before(review);
 }
