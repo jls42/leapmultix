@@ -287,13 +287,17 @@ function bannerLayout(page, turned = false) {
         : score.right <= calc.left && calc.right <= time.left;
       const sides = turnedPhone ? [points, timer, tools] : [score, time];
       const middle = rect => rect.left + rect.width / 2;
+      // Bandeau et calcul mesurés au même instant : un écran encore en train d'arriver
+      // (animation de la slide) les décale ensemble, pas l'un par rapport à l'autre
+      const bannerBox = banner.getBoundingClientRect();
+      const calcOffCentre = Math.round(Math.abs(middle(calc) - middle(bannerBox)));
       // Relevé des largeurs, affiché si le calcul n'est pas au milieu : dit quel côté le pousse
       const width = rect => Math.round(rect?.width ?? 0);
       const toolWidths = [...banner.querySelectorAll('.arcade-banner-tools > *')].map(
         tool =>
           `${tool.id || tool.classList.item(tool.classList.length - 1)} ${width(tool.getBoundingClientRect())}`
       );
-      const bannerParts = `fenêtre ${innerWidth}, bandeau ${width(banner.getBoundingClientRect())}, score ${width(score)}, temps ${width(timer)}, calcul ${width(calc)}, boutons ${width(tools)} (${toolWidths.join(', ')})`;
+      const bannerParts = `fenêtre ${innerWidth}, bandeau ${Math.round(bannerBox.left)}+${width(bannerBox)}, score ${width(score)}, temps ${width(timer)}, calcul ${Math.round(calc.left)}+${width(calc)}, boutons ${width(tools)} (${toolWidths.join(', ')})`;
       const question = banner.querySelector('.arcade-question');
       const shown = question.textContent;
       const sizes = [];
@@ -321,7 +325,7 @@ function bannerLayout(page, turned = false) {
           Math.round(abandon.height) === 44 &&
           !buttons.some(button => overlap(button, abandon)),
         // Écart entre le milieu du calcul et celui du bandeau (px)
-        calcOffCentre: Math.round(Math.abs(middle(calc) - middle(banner.getBoundingClientRect()))),
+        calcOffCentre,
         bannerParts,
         buttonSides: buttons.map(button => Math.round(Math.min(button.width, button.height))),
         buttonsOverText: buttons.some(button => texts.some(text => overlap(button, text))),
