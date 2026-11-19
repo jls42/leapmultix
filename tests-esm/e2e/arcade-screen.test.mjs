@@ -258,6 +258,9 @@ function bannerLayout(page, turned = false) {
       const { writeArcadeQuestion } = await import('/js/arcade-question.js');
       const frame = () =>
         new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      // Les largeurs du bandeau se mesurent une fois les polices du jeu arrivées
+      await document.fonts.ready;
+      await frame();
       const banner = document.querySelector('#arcade-mult-display');
       const box = selector => banner.querySelector(selector)?.getBoundingClientRect() ?? null;
       const overlap = (a, b) =>
@@ -284,6 +287,13 @@ function bannerLayout(page, turned = false) {
         : score.right <= calc.left && calc.right <= time.left;
       const sides = turnedPhone ? [points, timer, tools] : [score, time];
       const middle = rect => rect.left + rect.width / 2;
+      // Relevé des largeurs, affiché si le calcul n'est pas au milieu : dit quel côté le pousse
+      const width = rect => Math.round(rect?.width ?? 0);
+      const toolWidths = [...banner.querySelectorAll('.arcade-banner-tools > *')].map(
+        tool =>
+          `${tool.id || tool.classList.item(tool.classList.length - 1)} ${width(tool.getBoundingClientRect())}`
+      );
+      const bannerParts = `fenêtre ${innerWidth}, bandeau ${width(banner.getBoundingClientRect())}, score ${width(score)}, temps ${width(timer)}, calcul ${width(calc)}, boutons ${width(tools)} (${toolWidths.join(', ')})`;
       const question = banner.querySelector('.arcade-question');
       const shown = question.textContent;
       const sizes = [];
@@ -312,6 +322,7 @@ function bannerLayout(page, turned = false) {
           !buttons.some(button => overlap(button, abandon)),
         // Écart entre le milieu du calcul et celui du bandeau (px)
         calcOffCentre: Math.round(Math.abs(middle(calc) - middle(banner.getBoundingClientRect()))),
+        bannerParts,
         buttonSides: buttons.map(button => Math.round(Math.min(button.width, button.height))),
         buttonsOverText: buttons.some(button => texts.some(text => overlap(button, text))),
         buttonsOverCalc: buttons.some(button => overlap(button, calc)),
@@ -478,12 +489,16 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
       for (const game of ['multisnake', 'multigoal']) {
         await launchArcadeGame(page, game);
         await settle(page);
-        const { calcOffCentre, ...layout } = await bannerLayout(page, turned);
-        if (turned)
-          expect({ game, calcOffCentre: calcOffCentre <= 8 }).toEqual({
+        const { calcOffCentre, bannerParts, ...layout } = await bannerLayout(page, turned);
+        // Au milieu de l'écran à 8 px près (en cas d'échec : le dépassement et les largeurs)
+        if (turned) {
+          const offCentre = Math.max(0, calcOffCentre - 8);
+          expect({ game, offCentre, parts: offCentre ? bannerParts : null }).toEqual({
             game,
-            calcOffCentre: true,
+            offCentre: 0,
+            parts: null,
           });
+        }
         expect({ game, ...layout, sizes: undefined }).toEqual({
           game,
           inOrder: true,
