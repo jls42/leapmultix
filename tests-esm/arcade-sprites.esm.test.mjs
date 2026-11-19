@@ -146,6 +146,24 @@ describe('source haute définition de chaque image', () => {
     expect(catalog.avatarSpec('licorne-inconnue').source).toBe('fox');
   });
 
+  test('poses du tireur de MultiGoal : frappe et joie, tournées vers la droite, en 1024', async () => {
+    const { wearSeason, SEASONS } = await import('../js/core/seasons.js');
+    expect(catalog.heroPoseSpecs('panda')).toMatchObject({
+      kick: { source: 'panda_frappe', facing: 'right', maxWidth: 1024 },
+      joy: { source: 'panda_joie', facing: 'right', maxWidth: 1024 },
+    });
+    expect(catalog.heroPoseSpecs('licorne-inconnue').kick.source).toBe('fox_frappe');
+    const sources = catalog.arcadeSpriteSpecs().map(item => item.source);
+    expect(sources).toEqual(expect.arrayContaining(['dragon_frappe', 'dragon_joie']));
+    // Pendant une fête, le héros garde son costume : pas de pose (elles ne sont pas costumées)
+    try {
+      wearSeason(SEASONS.find(season => season.costumes.includes('bodies')));
+      expect(catalog.heroPoseSpecs('fox')).toBeNull();
+    } finally {
+      wearSeason(null);
+    }
+  });
+
   test('tête du serpent : l’avatar sous sa capuche, sans repli (la tête dessinée)', () => {
     expect(catalog.snakeHeadSpec('panda')).toEqual({
       source: 'panda_snake_head',

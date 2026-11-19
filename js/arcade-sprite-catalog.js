@@ -129,6 +129,31 @@ export function avatarSpec(name) {
   return wornSpec(AVATARS.get(name) ?? AVATARS.get('fox'), 'bodies');
 }
 
+/* --- Poses du tireur de MultiGoal --- */
+
+// Deux poses par héros, dessinées tournées vers la droite (Codex, validées par le propriétaire le
+// 19/11/2026) : la frappe (une jambe lancée vers le ballon, le ballon n'est pas dessiné) et la
+// joie après un but (bras levés, petit saut)
+const HERO_POSES = new Map([
+  ['fox', { kick: spec('fox_frappe', []), joy: spec('fox_joie', []) }],
+  ['panda', { kick: spec('panda_frappe', []), joy: spec('panda_joie', []) }],
+  ['unicorn', { kick: spec('unicorn_frappe', []), joy: spec('unicorn_joie', []) }],
+  ['dragon', { kick: spec('dragon_frappe', []), joy: spec('dragon_joie', []) }],
+  ['astronaut', { kick: spec('astronaut_frappe', []), joy: spec('astronaut_joie', []) }],
+]);
+
+/**
+ * Poses du tireur de MultiGoal pour un avatar ; aucune pendant une fête, où le héros garde
+ * son costume (les poses ne sont pas costumées)
+ * @param {string} name - Avatar du joueur
+ * @returns {{kick: SpriteSpec, joy: SpriteSpec}|null}
+ */
+export function heroPoseSpecs(name) {
+  const avatar = AVATARS.has(name) ? name : 'fox';
+  if (avatarSpec(avatar) !== AVATARS.get(avatar)) return null;
+  return HERO_POSES.get(avatar);
+}
+
 /* --- Fusées de MultiInvaders --- */
 
 // Nom des fichiers du menu de l'Arcade (valeur enregistrée « fichier|repli ») → source :
@@ -251,6 +276,7 @@ export function arcadeSpriteSpecs() {
   return [
     ...monsters,
     ...AVATARS.values(),
+    ...[...HERO_POSES.values()].flatMap(poses => [poses.kick, poses.joy]),
     ...SNAKE_HEADS.values(),
     ...ships,
     ...TEXTURES.values(),

@@ -12,6 +12,7 @@ const { KEEPER_REACH, FLIGHT_MS, REPLAY_MS, Shootout, targetSlots } = await impo
   '../js/multigoal-engine.js'
 );
 const {
+  heroPose,
   GOAL_RATIO,
   goalLayout,
   goalPoint,
@@ -343,5 +344,83 @@ describe('MultiGoal : le ballon', () => {
     const target = goalPoint(view.layout, game.targets.at(1));
     const place = ballPlace(view, keeper);
     expect([view.layout.spot.y, target.y].some(y => Math.abs(place.y - y) < 1e-6)).toBe(true);
+  });
+});
+
+describe('MultiGoal : le tireur', () => {
+  const pose = (phase, elapsed, reducedMotion = false) =>
+    heroPose({ phase, elapsed }, reducedMotion);
+  const STILL = { pose: 'idle', shift: 0, lift: 0, angle: 0 };
+
+  test('au repos pendant qu’on vise : l’image habituelle, sans élan ni saut', () => {
+    expect(pose('aiming', 400)).toEqual(STILL);
+  });
+
+  test('au tir : la pose « frappe », avec un élan vers le ballon au plus fort au contact', () => {
+    expect(pose('flying', 0).pose).toBe('kick');
+    const contact = pose('flying', FLIGHT_MS * 0.35);
+    expect(contact.shift).toBeGreaterThan(1.1);
+    expect(pose('flying', FLIGHT_MS * 0.2).shift).toBeLessThan(contact.shift);
+    expect(pose('flying', FLIGHT_MS * 0.7).shift).toBeLessThan(contact.shift);
+    expect(pose('flying', FLIGHT_MS).shift).toBeCloseTo(0);
+  });
+
+  test('au but : la pose « joie » avec un petit saut, puis le repos', () => {
+    const hop = pose('goal', 250);
+    expect(hop.pose).toBe('joy');
+    expect(hop.lift).toBeGreaterThan(0.1);
+    expect(pose('goal', 700)).toEqual({ pose: 'joy', shift: 0, lift: 0, angle: 0 });
+    expect(pose('goal', 900)).toEqual(STILL);
+  });
+
+  test('arrêté ou raté : l’image habituelle qui se balance et s’éteint, jamais de joie', () => {
+    for (const phase of ['saved', 'missed']) {
+      const sway = pose(phase, 75);
+      expect(sway.pose).toBe('idle');
+      expect(Math.abs(sway.angle)).toBeGreaterThan(0.05);
+      expect(pose(phase, 600)).toEqual(STILL);
+    }
+  });
+
+  test('mouvements réduits : les poses changent, sans élan, saut ni balancement', () => {
+    expect(pose('flying', FLIGHT_MS * 0.35, true)).toEqual({ ...STILL, pose: 'kick' });
+    expect(pose('goal', 250, true)).toEqual({ ...STILL, pose: 'joy' });
+    expect(pose('saved', 75, true)).toEqual(STILL);
+  });
+
+  /** Images dessinées pendant le dessin du terrain */
+  function drawnImages(view) {
+    const { ctx, calls } = recordingContext();
+    drawGoalBoard(ctx, view);
+    return calls.filter(call => call.name === 'drawImage').map(call => call.args[0]);
+  }
+
+  test('il est dessiné dans la pose du moment, et dans son image habituelle au repos', () => {
+    const game = shootoutOf(3);
+    const heroSprite = fakeSprite('left');
+    const kick = fakeSprite();
+    const joy = fakeSprite();
+    const view = viewOf(game, { heroSprite, heroPoseSprites: { kick, joy } });
+    expect(drawnImages(view)).toContain(heroSprite.image);
+    // Les poses sont demandées d'avance, pour être là au premier tir
+    expect(kick.request).toHaveBeenCalled();
+    expect(joy.request).toHaveBeenCalled();
+    game.shoot(game.openTargets().at(0).slot);
+    const flying = drawnImages(view);
+    expect(flying).toContain(kick.image);
+    expect(flying).not.toContain(heroSprite.image);
+  });
+
+  test('une pose pas encore chargée, ou pas de poses (fête) : l’image habituelle', () => {
+    const game = shootoutOf(3);
+    const heroSprite = fakeSprite('left');
+    game.shoot(game.openTargets().at(0).slot);
+    const loading = { image: null, request: jest.fn(), facing: 'right' };
+    expect(
+      drawnImages(viewOf(game, { heroSprite, heroPoseSprites: { kick: loading, joy: loading } }))
+    ).toContain(heroSprite.image);
+    expect(drawnImages(viewOf(game, { heroSprite, heroPoseSprites: null }))).toContain(
+      heroSprite.image
+    );
   });
 });

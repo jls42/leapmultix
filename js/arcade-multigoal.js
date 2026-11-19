@@ -20,7 +20,7 @@ import { noteArcadePlay } from './arcade-session.js';
 import { recordArcadeAnswer, SOLVED_PAUSE_MS, showSolvedQuestion } from './arcade-learning.js';
 import { drawArcadeQuestion, arcadeAnswers } from './arcade-answers.js';
 import { spriteFor, prefetchArcadeSprite } from './arcade-sprites.js';
-import { avatarSpec } from './arcade-sprite-catalog.js';
+import { avatarSpec, heroPoseSpecs } from './arcade-sprite-catalog.js';
 import { normalizeAvatarId } from './avatar-heads.js';
 import {
   showGameInstructions,
@@ -87,7 +87,13 @@ export class GoalGame extends ArcadeBoardGame {
     this.cursorSlot = null;
     this.cast = monsterCast(CAST_SIZE);
     this.keeperSprite = this.cast.at(0);
-    this.heroSprite = spriteFor(avatarSpec(normalizeAvatarId(gameState?.avatar)));
+    const avatar = normalizeAvatarId(gameState?.avatar);
+    this.heroSprite = spriteFor(avatarSpec(avatar));
+    // La frappe et la joie du tireur (aucune pendant une fête : il garde son costume)
+    const poses = heroPoseSpecs(avatar);
+    this.heroPoseSprites = poses
+      ? { kick: spriteFor(poses.kick), joy: spriteFor(poses.joy) }
+      : null;
     this.savedLabel = getTranslation('arcade_goal_saved');
     this.layout = goalLayout({ width: 300, height: 340 }, this.shootout.count);
   }
@@ -159,6 +165,7 @@ export class GoalGame extends ArcadeBoardGame {
       game: this.shootout,
       keeperSprite: this.keeperSprite,
       heroSprite: this.heroSprite,
+      heroPoseSprites: this.heroPoseSprites,
       cursorSlot: this.keyboardCursor ? this.cursorSlot : null,
       savedLabel: this.savedLabel,
       reducedMotion: this.reducedMotion,

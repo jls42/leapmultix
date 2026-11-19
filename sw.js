@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v89'; // bump to trigger client update
+const VERSION = 'v90'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -302,23 +302,29 @@ const PRECACHE_CORE = [
   '/offline.html',
 ];
 const PRECACHE_IMAGES = [
+  '/assets/generated-images/arcade/astronaut_frappe-128.webp',
   '/assets/generated-images/arcade/astronaut_head_avatar-128.webp',
   '/assets/generated-images/arcade/astronaut_head_avatar-256.webp',
   '/assets/generated-images/arcade/astronaut_head_avatar-512.webp',
+  '/assets/generated-images/arcade/astronaut_joie-128.webp',
   '/assets/generated-images/arcade/astronaut_snake_head-128.webp',
   '/assets/generated-images/arcade/astronaut-128.webp',
   '/assets/generated-images/arcade/astronaute_vaisseau_2-128.webp',
   '/assets/generated-images/arcade/astronaute_vaisseau-128.webp',
+  '/assets/generated-images/arcade/dragon_frappe-128.webp',
   '/assets/generated-images/arcade/dragon_head_avatar-128.webp',
   '/assets/generated-images/arcade/dragon_head_avatar-256.webp',
   '/assets/generated-images/arcade/dragon_head_avatar-512.webp',
+  '/assets/generated-images/arcade/dragon_joie-128.webp',
   '/assets/generated-images/arcade/dragon_snake_head-128.webp',
   '/assets/generated-images/arcade/dragon_vaisseau_2-128.webp',
   '/assets/generated-images/arcade/dragon_vaisseau-128.webp',
   '/assets/generated-images/arcade/dragon-128.webp',
+  '/assets/generated-images/arcade/fox_frappe-128.webp',
   '/assets/generated-images/arcade/fox_head_avatar-128.webp',
   '/assets/generated-images/arcade/fox_head_avatar-256.webp',
   '/assets/generated-images/arcade/fox_head_avatar-512.webp',
+  '/assets/generated-images/arcade/fox_joie-128.webp',
   '/assets/generated-images/arcade/fox_snake_head-128.webp',
   '/assets/generated-images/arcade/fox-128.webp',
   '/assets/generated-images/arcade/licorne_vaisseau_2-128.webp',
@@ -496,9 +502,11 @@ const PRECACHE_IMAGES = [
   '/assets/generated-images/arcade/monstre97_right-128.webp',
   '/assets/generated-images/arcade/monstre98_right-128.webp',
   '/assets/generated-images/arcade/monstre99_right-128.webp',
+  '/assets/generated-images/arcade/panda_frappe-128.webp',
   '/assets/generated-images/arcade/panda_head_avatar-128.webp',
   '/assets/generated-images/arcade/panda_head_avatar-256.webp',
   '/assets/generated-images/arcade/panda_head_avatar-512.webp',
+  '/assets/generated-images/arcade/panda_joie-128.webp',
   '/assets/generated-images/arcade/panda_snake_head-128.webp',
   '/assets/generated-images/arcade/panda_vaisseau_2-128.webp',
   '/assets/generated-images/arcade/panda_vaisseau-128.webp',
@@ -506,9 +514,11 @@ const PRECACHE_IMAGES = [
   '/assets/generated-images/arcade/renard_vaisseau_2-128.webp',
   '/assets/generated-images/arcade/renard_vaisseau-128.webp',
   '/assets/generated-images/arcade/spaceship_default-128.webp',
+  '/assets/generated-images/arcade/unicorn_frappe-128.webp',
   '/assets/generated-images/arcade/unicorn_head_avatar-128.webp',
   '/assets/generated-images/arcade/unicorn_head_avatar-256.webp',
   '/assets/generated-images/arcade/unicorn_head_avatar-512.webp',
+  '/assets/generated-images/arcade/unicorn_joie-128.webp',
   '/assets/generated-images/arcade/unicorn_snake_head-128.webp',
   '/assets/generated-images/arcade/unicorn-128.webp',
   '/assets/generated-images/arcade/vaisseau_2-128.webp',
