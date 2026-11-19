@@ -34,11 +34,15 @@ const TICK_SOUND_VOLUME = 0.35;
 const AudioManager = {
   // Catalogue des sons disponibles
   sounds: new Map([
-    ['good', 'assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav'],
+    // La bonne réponse, partout : deux notes de kalimba, la seconde une quinte plus haut
+    // (réglé à l'oreille par le propriétaire le 19/11/2026), au niveau de l'ancien son
+    ['good', 'assets/sounds/bonne-reponse.wav'],
     // La mauvaise réponse, partout : un « bloup » doux qui dit « essaie encore » (ElevenLabs,
     // choisi par le propriétaire le 17/11/2026), au niveau de l'ancienne alerte d'arcade
     ['bad', 'assets/sounds/erreur.wav'],
-    ['shoot', 'assets/sounds/mixkit-short-laser-gun-shot-1670.wav'],
+    // Aventure : le tir du héros à chaque réponse donnée (ElevenLabs, choisi par le
+    // propriétaire le 19/11/2026), sous la bonne réponse
+    ['shoot', 'assets/sounds/tir-laser.wav'],
     // Le maillet de MultiPop qui touche un monstre (ElevenLabs, choisi par le propriétaire)
     ['mallet', 'assets/sounds/maillet.wav'],
     // La bonne réponse croquée : le renard de MultiMiam et la pomme du serpent de MultiSnake,

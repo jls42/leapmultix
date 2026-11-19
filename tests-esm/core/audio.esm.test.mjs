@@ -11,6 +11,7 @@
  * une ligne du module. Ici, les modules ES sont activés, donc le module est
  * réellement chargé et réellement éprouvé.
  */
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 
 /** Données du joueur courant, partagées par les simulacres */
@@ -93,6 +94,23 @@ describe('AudioManager : le module est bien chargé', () => {
     for (const nom of ['good', 'bad', 'shoot']) {
       expect(AudioManager.sounds.get(nom)).toMatch(/^assets\/sounds\/.+\.wav$/);
     }
+  });
+});
+
+// Un son du catalogue sans son fichier se tait sans rien dire (playSound avertit seulement
+// dans la console), et la liste hors ligne ne garde que les .wav
+describe('AudioManager : chaque son du catalogue a son fichier', () => {
+  test.each([...AudioManager.sounds])('%s : un WAV mono 16 bits du dépôt', (_name, path) => {
+    const file = new URL(`../../${path}`, import.meta.url);
+    expect(existsSync(file)).toBe(true);
+    const header = readFileSync(file).subarray(0, 36);
+    expect({
+      riff: header.toString('latin1', 0, 4),
+      wave: header.toString('latin1', 8, 12),
+      pcm: header.readUInt16LE(20),
+      channels: header.readUInt16LE(22),
+      bits: header.readUInt16LE(34),
+    }).toEqual({ riff: 'RIFF', wave: 'WAVE', pcm: 1, channels: 1, bits: 16 });
   });
 });
 
