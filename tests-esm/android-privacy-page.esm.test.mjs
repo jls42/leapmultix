@@ -59,10 +59,10 @@ describe('Politique de confidentialité de l’appli Android', () => {
 
   test('elle dit que rien n’est collecté ni transmis', () => {
     expect(plain(article('fr').textContent)).toContain(
-      "Aucune donnée n'est transmise à l'éditeur ni à un tiers."
+      "L'appli ne transmet aucune donnée, ni à l'éditeur ni à un tiers."
     );
     expect(plain(article('en').textContent)).toContain(
-      'No data is sent to the publisher or to any third party.'
+      'The app sends no data, neither to the publisher nor to any third party.'
     );
   });
 
