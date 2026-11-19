@@ -13,7 +13,8 @@ import { getTranslation, cleanupGameResources } from './utils-es6.js';
 import { setStartingMode } from './mode-orchestrator.js';
 import { startArcadeTimer, showArcadeGameOver, stopArcadeMode } from './arcade.js';
 import { eventBus } from './core/eventBus.js';
-import { showGameInstructions, prepareArcadeStage, isTouchFirstDevice } from './arcade-common.js';
+import { prepareArcadeStage, isTouchFirstDevice } from './arcade-common.js';
+import { showStartInstructions } from './arcade-start-instructions.js';
 import { InfoBar } from './components/infoBar.js';
 import { UserState } from './core/userState.js';
 // Utilise les helpers ESM
@@ -183,7 +184,7 @@ export function startPacmanArcade() {
   // que l'ensemble tienne dans l'écran
   const canvas = document.getElementById('multimiam-canvas');
   prepareArcadeStage(canvas);
-  showGameInstructions(canvas, getInstructions());
+  showStartInstructions(canvas, getInstructions(), { game: 'multimiam' });
   // Utilisation des paramètres de difficulté (Cascade 2025)
   const difficultySettings = getDifficultySettings(gameState.difficulty || 'moyen');
   // Durée de la partie selon le niveau

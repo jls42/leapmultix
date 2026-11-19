@@ -22,9 +22,8 @@ import {
 import { eventBus } from './core/eventBus.js';
 import { noteArcadePlay } from './arcade-session.js';
 import { AudioManager } from './core/audio.js';
+import { showStartInstructions } from './arcade-start-instructions.js';
 import {
-  showGameInstructions,
-  INSTRUCTIONS_MS,
   getCanvasFont,
   prepareArcadeStage,
   getArcadeCanvasBox,
@@ -481,13 +480,10 @@ export function memoryDuration(difficultySettings) {
  * @param {MemoryGame} game - Partie lancée (disposition choisie)
  */
 function showMemoryInstructions(canvas, game) {
-  showGameInstructions(
-    canvas,
-    getMemoryInstructions(),
-    'neutral',
-    INSTRUCTIONS_MS,
-    game.instructionPlacement()
-  );
+  showStartInstructions(canvas, getMemoryInstructions(), {
+    game: 'multimemory',
+    placement: game.instructionPlacement(),
+  });
 }
 
 // Consigne du jeu, selon l'appareil (doigt ou souris)

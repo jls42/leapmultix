@@ -62,9 +62,12 @@ jest.unstable_mockModule('../js/core/eventBus.js', () => ({
   eventBus: { on: note('eventBus.on') },
 }));
 jest.unstable_mockModule('../js/arcade-common.js', () => ({
-  showGameInstructions: (canvas, text) => note('showGameInstructions')(canvas.id, text),
   prepareArcadeStage: canvas => note('prepareArcadeStage')(canvas.id),
   isTouchFirstDevice: () => false,
+}));
+jest.unstable_mockModule('../js/arcade-start-instructions.js', () => ({
+  showStartInstructions: (canvas, text, options) =>
+    note('showStartInstructions')(canvas.id, text, options),
 }));
 jest.unstable_mockModule('../js/components/infoBar.js', () => ({
   InfoBar: {
@@ -126,7 +129,7 @@ describe('MultiMiam : lancement', () => {
       'goToSlide(4)',
       `createArcadeTemplateElement(${JSON.stringify(TEMPLATE)})`,
       'prepareArcadeStage("multimiam-canvas")',
-      'showGameInstructions("multimiam-canvas", "«arcade.multiMiam.controls.desktop»")',
+      'showStartInstructions("multimiam-canvas", "«arcade.multiMiam.controls.desktop»", {"game":"multimiam"})',
       'getDifficultySettings("difficile")',
       'startArcadeTimer("difficile-s")',
       'getDifficultySettings("difficile")',

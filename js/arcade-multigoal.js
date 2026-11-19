@@ -23,12 +23,12 @@ import { spriteFor, prefetchArcadeSprite } from './arcade-sprites.js';
 import { avatarSpec, heroPoseSpecs } from './arcade-sprite-catalog.js';
 import { normalizeAvatarId } from './avatar-heads.js';
 import {
-  showGameInstructions,
   getArcadeCanvasBox,
   clientToCanvasPoint,
   sizeArcadeCanvas,
   isTouchFirstDevice,
 } from './arcade-common.js';
+import { showStartInstructions } from './arcade-start-instructions.js';
 import { getDifficultySettings } from './difficulty.js';
 import { UserState } from './core/userState.js';
 import {
@@ -288,7 +288,7 @@ function showGoalInstructions(canvas) {
   const key = isTouchFirstDevice()
     ? 'arcade_goal_instructions_touch'
     : 'arcade_goal_instructions_desktop';
-  showGameInstructions(canvas, getTranslation(key));
+  showStartInstructions(canvas, getTranslation(key), { game: 'multigoal' });
 }
 
 /**

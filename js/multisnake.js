@@ -5,8 +5,8 @@ import { generateQuestion } from './questionGenerator.js';
 import { showArcadeMessage, showArcadePoints, getTranslation } from './utils-es6.js';
 import { AudioManager } from './core/audio.js';
 import { showArcadePenalty } from './arcade-points.js';
+import { showStartInstructions } from './arcade-start-instructions.js';
 import {
-  showGameInstructions,
   getCanvasFont,
   getArcadeCanvasBox,
   readableCanvasFontSize,
@@ -556,7 +556,7 @@ class SnakeGame {
       : getTranslation('arcade.multiSnake.controls.desktop') ||
         'Utilise les flèches du clavier pour déplacer le serpent';
 
-    showGameInstructions(this.canvas, instructions);
+    showStartInstructions(this.canvas, instructions, { game: 'multisnake' });
   }
 
   /**

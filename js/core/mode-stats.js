@@ -562,6 +562,20 @@ export function arcadeTopScores(userData, game, level) {
 }
 
 /**
+ * Parties jouées d'un jeu d'Arcade (au moins un coup, abandons compris), toutes opérations :
+ * remises à zéro avec ses scores
+ * @param {Object} userData
+ * @param {string} game
+ * @returns {number}
+ */
+export function arcadeGamesPlayed(userData, game) {
+  return modeEntries(userData?.modeStats, game).reduce(
+    (total, entry) => total + count(entry.games),
+    0
+  );
+}
+
+/**
  * Ajoute une réponse à l'historique réponse par réponse, borné aux dernières entrées : il ne
  * sert plus qu'au retour arrière, les compteurs portent le reste.
  * @param {Object} userData

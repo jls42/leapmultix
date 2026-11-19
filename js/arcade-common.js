@@ -3,10 +3,27 @@
    - Fonctions partagées par tous les jeux arcade pour une cohérence d'interface
    ===================== */
 
+import { isArcadePaused, isKeyFromButton } from './arcade-time.js';
+
 // Durée du fondu de sortie de la consigne : suit le jeton --dur-slow (css/themes.css)
 export const INSTRUCTIONS_FADE_MS = 320;
-// Durée d'affichage de la consigne, sauf demande du jeu
+// Durée d'affichage de la consigne au plus, en temps de jeu, sauf demande du jeu : elle part
+// d'abord au premier geste du joueur
 export const INSTRUCTIONS_MS = 5000;
+// Pas du décompte : la pause et un onglet caché l'arrêtent
+const INSTRUCTIONS_TICK_MS = 100;
+// Touches qui ne jouent pas : la consigne reste (pause, abandon, tabulation, modificateurs)
+const NON_PLAY_KEYS = new Set([
+  'Tab',
+  'Escape',
+  'Shift',
+  'Control',
+  'Alt',
+  'Meta',
+  'CapsLock',
+  'p',
+  'P',
+]);
 const INSTRUCTION_TONES = new Set(['neutral', 'success', 'warning']);
 // Où poser la consigne sur le plateau (css/arcade.css) : en bas, ou au milieu quand elle y
 // cache moins (vaisseau de MultiInvaders en bas, rangées de cartes de MultiMemory)
@@ -15,8 +32,9 @@ const INSTRUCTION_PLACEMENTS = new Set(['bottom', 'middle']);
 const STAGE_SELECTOR = '.arcade-game-ui';
 // Ancien conteneur, gardé pour les intégrations qui l'utiliseraient encore
 const LEGACY_STAGE_SELECTOR = '.arcade-game-container';
-// Minuteries de la consigne en cours, pour qu'un nouvel affichage ne soit pas masqué par l'ancien
-const instructionTimers = new WeakMap();
+// Consigne en cours : de quoi l'arrêter (décompte, écoute du premier geste, fondu), pour qu'un
+// nouvel affichage ne soit pas masqué par l'ancien
+const instructionStops = new WeakMap();
 // Surveillance du plateau tant que la consigne est posée dessus
 const instructionObservers = new WeakMap();
 
@@ -59,11 +77,56 @@ function findStage(canvas) {
   return canvas.closest(STAGE_SELECTOR) || canvas.closest(LEGACY_STAGE_SELECTOR);
 }
 
-function clearInstructionTimers(element) {
-  const timers = instructionTimers.get(element);
-  if (!timers) return;
-  timers.forEach(id => clearTimeout(id));
-  instructionTimers.delete(element);
+function stopInstructions(element) {
+  instructionStops.get(element)?.();
+  instructionStops.delete(element);
+}
+
+/**
+ * Efface la consigne en fondu, puis la cache
+ * @param {HTMLElement} element
+ */
+function leaveInstructions(element) {
+  stopInstructions(element);
+  element.classList.add('is-leaving');
+  const hideTimer = setTimeout(() => {
+    element.hidden = true;
+    instructionStops.delete(element);
+    stopFollowingBoard(element);
+  }, INSTRUCTIONS_FADE_MS);
+  instructionStops.set(element, () => clearTimeout(hideTimer));
+}
+
+/**
+ * La consigne part au premier geste de jeu : doigt, souris ou stylet posé sur le plateau, ou
+ * touche du jeu (pas celles de la pause, de l'abandon ni d'un bouton). Sinon, après `duration`
+ * de jeu : la pause et un onglet caché arrêtent le décompte. Écoute en capture : un jeu qui
+ * arrête la propagation de ses touches ne la retient pas.
+ * @param {HTMLElement} element - La consigne
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} duration
+ */
+function scheduleLeave(element, canvas, duration) {
+  let left = duration;
+  const tick = setInterval(() => {
+    if (isArcadePaused() || document.hidden) return;
+    left -= INSTRUCTIONS_TICK_MS;
+    if (left <= 0) leaveInstructions(element);
+  }, INSTRUCTIONS_TICK_MS);
+  const onPointer = event => {
+    if (event.target === canvas) leaveInstructions(element);
+  };
+  const onKey = event => {
+    if (NON_PLAY_KEYS.has(event.key) || isKeyFromButton(event)) return;
+    leaveInstructions(element);
+  };
+  document.addEventListener('pointerdown', onPointer, true);
+  document.addEventListener('keydown', onKey, true);
+  instructionStops.set(element, () => {
+    clearInterval(tick);
+    document.removeEventListener('pointerdown', onPointer, true);
+    document.removeEventListener('keydown', onKey, true);
+  });
 }
 
 /**
@@ -101,14 +164,16 @@ function stopFollowingBoard(element) {
 }
 
 /**
- * Affiche la consigne d'un jeu, puis l'efface.
+ * Affiche la consigne d'un jeu, puis l'efface : au premier geste du joueur, sinon après
+ * `duration` de jeu.
  * Elle est posée sur le plateau (sur un téléphone tourné, à côté) et laisse passer le doigt :
  * elle ne lui prend aucune place, il garde donc sa taille du premier au dernier instant de
  * la partie. L'apparence vient de css/arcade.css (.game-instructions et ses tons).
  * @param {HTMLCanvasElement} canvas - Canvas du jeu
  * @param {string} message - Consigne déjà traduite
  * @param {string} [tone='neutral'] - neutral | success | warning
- * @param {number} [duration=INSTRUCTIONS_MS] - Durée d'affichage en millisecondes
+ * @param {number} [duration=INSTRUCTIONS_MS] - Durée d'affichage au plus, en millisecondes de
+ *   jeu
  * @param {string} [placement='bottom'] - bottom | middle : où la poser sur le plateau, là où
  *   elle cache le moins au départ
  * @returns {HTMLElement|undefined} L'élément de consigne
@@ -134,7 +199,7 @@ export function showGameInstructions(
     canvas.after(instructionsElement);
   }
 
-  clearInstructionTimers(instructionsElement);
+  stopInstructions(instructionsElement);
   const safeTone = INSTRUCTION_TONES.has(tone) ? tone : 'neutral';
   instructionsElement.className = `game-instructions game-instructions--${safeTone}`;
   instructionsElement.dataset.placement = INSTRUCTION_PLACEMENTS.has(placement)
@@ -149,18 +214,8 @@ export function showGameInstructions(
   p.textContent = message;
   instructionsElement.appendChild(p);
 
-  // Faire disparaître le message après la durée spécifiée
   instructionsElement.classList.remove('is-leaving');
-  const fadeTimer = setTimeout(() => {
-    instructionsElement.classList.add('is-leaving');
-    const hideTimer = setTimeout(() => {
-      instructionsElement.hidden = true;
-      instructionTimers.delete(instructionsElement);
-      stopFollowingBoard(instructionsElement);
-    }, INSTRUCTIONS_FADE_MS);
-    instructionTimers.set(instructionsElement, [hideTimer]);
-  }, duration);
-  instructionTimers.set(instructionsElement, [fadeTimer]);
+  scheduleLeave(instructionsElement, canvas, duration);
 
   return instructionsElement;
 }
