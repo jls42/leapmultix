@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v94'; // bump to trigger client update
+const VERSION = 'v95'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -108,18 +108,18 @@ const PRECACHE_CORE = [
   '/assets/social/leapmultix-social-card.webp',
   '/assets/sounds/ami-touche.wav',
   '/assets/sounds/ballon.wav',
+  '/assets/sounds/bonne-reponse.wav',
   '/assets/sounds/carte.wav',
   '/assets/sounds/erreur.wav',
   '/assets/sounds/etoile.wav',
   '/assets/sounds/gardien.wav',
   '/assets/sounds/maillet.wav',
   '/assets/sounds/miam.wav',
-  '/assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav',
-  '/assets/sounds/mixkit-short-laser-gun-shot-1670.wav',
   '/assets/sounds/paire.wav',
   '/assets/sounds/record.wav',
   '/assets/sounds/tic-tac.wav',
   '/assets/sounds/tir-bulle.wav',
+  '/assets/sounds/tir-laser.wav',
   '/assets/sounds/vie-perdue.wav',
   '/assets/translations/en.json',
   '/assets/translations/es.json',

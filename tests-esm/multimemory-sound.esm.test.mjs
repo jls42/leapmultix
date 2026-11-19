@@ -66,7 +66,7 @@ describe('MultiMemory : sons au volume du jeu', () => {
     const [first, second] = game.cards;
     game.onPairFound(first, second);
     expect(played).toHaveLength(2);
-    expect(played[0].src).toContain('success');
+    expect(played[0].src).toContain('bonne-reponse.wav');
     expect(played[0].volume).toBeCloseTo(0.4);
     expect(played[1].src).toContain('paire.wav');
     expect(played[1].volume).toBeCloseTo(0.4 * 0.5);

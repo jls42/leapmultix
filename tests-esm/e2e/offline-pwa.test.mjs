@@ -186,7 +186,7 @@ describe('Hors ligne après une première visite', () => {
     const sound = await page.evaluate(
       () =>
         new Promise(resolve => {
-          const audio = new Audio('assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav');
+          const audio = new Audio('assets/sounds/bonne-reponse.wav');
           audio.addEventListener('canplaythrough', () => resolve({ duration: audio.duration }));
           audio.addEventListener('error', () => resolve({ error: audio.error?.code }));
           audio.load();
