@@ -100,6 +100,13 @@
   /* Voile sombre derrière une fenêtre (vidéo, réglages) */
   --color-scrim-modal: oklch(20% 0.02 250deg / 0.55);
 
+  /* Consigne posée sur le plateau d'un jeu d'Arcade : pastille sombre translucide, la même
+     dans tous les thèmes. Sur le plus clair des dessins (blanc), le fond devient un gris de
+     40 % : le texte blanc y garde 5,7:1 (tests-esm/arcade-instructions-style.esm.test.mjs) */
+  --color-hint: oklch(0% 0 0deg / 0.6);
+  --color-hint-ink: oklch(100% 0 0deg);
+  --color-hint-edge: oklch(100% 0 0deg / 0.25);
+
   /* Ombres neutres teintées, jamais colorées */
   --shadow-sm: 0 1px 2px oklch(25% 0.03 250deg / 0.1);
   --shadow-md: 0 1px 3px oklch(25% 0.03 250deg / 0.08), 0 6px 16px oklch(25% 0.03 250deg / 0.1);
@@ -538,6 +545,9 @@ body.high-contrast {
   --color-reward-edge: #fff;
   --color-scrim-game: #000;
   --color-scrim-modal: oklch(0% 0 0deg / 0.85);
+  --color-hint: #000;
+  --color-hint-ink: #fff;
+  --color-hint-edge: #fff;
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-lg: none;

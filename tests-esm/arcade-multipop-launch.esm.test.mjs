@@ -15,6 +15,9 @@ import {
 } from './helpers/board-game-launch.mjs';
 
 const { INSTRUCTIONS_MS } = await import('../js/arcade-common.js');
+const { INSTRUCTIONS_GAMES } = await import('../js/arcade-start-instructions.js');
+const { recordArcadeGame } = await import('../js/core/mode-stats.js');
+const { UserState } = await import('../js/core/userState.js');
 const { RISE_MS, BOTTOM_HOLES } = await import('../js/multipop-engine.js');
 const { startPopArcade, PopGame, CORRECT_POINTS, FIRST_RAISE_MS } = await import(
   '../js/arcade-multipop.js'
@@ -72,6 +75,34 @@ describe('MultiPop : lancement depuis le menu de l’Arcade', () => {
     expect(covered.every(sortie => !sortie.bottom)).toBe(true);
     // Ensuite, la rangée du bas sert comme les autres
     expect(holes.some(sortie => !sortie.shown && sortie.bottom)).toBe(true);
+  });
+
+  /** Rangées gardées libres à la première sortie des monstres (à 1,5 s) */
+  function reservedAtFirstRaise(beforeRaise = () => undefined) {
+    const reserved = [];
+    jest.spyOn(PopGame.prototype, 'onRaised').mockImplementation(function onRaised() {
+      reserved.push([...this.field.reserved]);
+    });
+    startPopArcade();
+    beforeRaise();
+    jest.advanceTimersByTime(FIRST_RAISE_MS + 100);
+    return reserved.at(0);
+  }
+
+  test('la consigne part au premier geste : la rangée du bas se libère aussitôt', () => {
+    expect(reservedAtFirstRaise()).toEqual(BOTTOM_HOLES);
+    // Relancée (l'ancienne partie rendue d'abord), touche du jeu dès le départ
+    expect(reservedAtFirstRaise(() => press('ArrowRight'))).toEqual([]);
+  });
+
+  test('joueur habitué (consigne réservée aux lecteurs d’écran) : la rangée du bas sert d’emblée', () => {
+    const regular = { preferredOperator: '+' };
+    for (let game = 0; game < INSTRUCTIONS_GAMES; game++) {
+      recordArcadeGame(regular, { game: 'multipop', operator: '+', score: 10 });
+    }
+    UserState.getCurrentUserData.mockReturnValue(regular);
+    expect(reservedAtFirstRaise()).toEqual([]);
+    expect(document.querySelector('.game-instructions').classList).toContain('sr-only');
   });
 
   test('« Abandonner » : la partie est rendue, l’écran de fin montre son score', () => {

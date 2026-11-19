@@ -39,8 +39,8 @@ import { recordArcadeAnswer, SOLVED_PAUSE_MS, solvedCalculation } from './arcade
 import { noteArcadePlay } from './arcade-session.js';
 import { isArcadePaused, isKeyFromButton } from './arcade-time.js';
 import { writeArcadeQuestion } from './arcade-question.js';
+import { showStartInstructions } from './arcade-start-instructions.js';
 import {
-  showGameInstructions,
   getCanvasFont,
   prepareArcadeStage,
   getArcadeCanvasBox,
@@ -65,9 +65,9 @@ const SPACE_COLOR = '#000';
 const INVADERS_INSTRUCTION_FALLBACK =
   'Tire sur les mauvaises réponses. Ne tire pas sur la bonne\u00a0: elle cache un ami à libérer\u00a0!';
 const AVATAR_ERROR_FALLBACK = 'Oups\u00a0! Ne tire pas sur la bonne réponse.';
-// La consigne reste le temps de la lire (règle inhabituelle : ne pas tirer sur la bonne)
-const INVADERS_INSTRUCTION_MS = 8000;
-// Posée au milieu du plateau, entre les monstres en haut et le vaisseau en bas
+// Consigne posée au milieu du plateau, entre les monstres en haut et le vaisseau en bas. Elle
+// part au premier geste, comme ailleurs : la règle inhabituelle (ne pas tirer sur la bonne) est
+// redite au moment où elle compte, par le message d'un tir sur la bonne réponse
 const INVADERS_INSTRUCTION_PLACEMENT = 'middle';
 // Numéros des monstres de MultiInvaders (sources haute définition)
 const numbersFrom = (first, last) => Array.from({ length: last - first + 1 }, (_, i) => first + i);
@@ -294,16 +294,14 @@ export function calculateCanvasDimensions(canvas) {
 }
 
 /**
- * Consigne de MultiInvaders, posée au milieu du plateau le temps de la lire
+ * Consigne de MultiInvaders, posée au milieu du plateau
  * @param {HTMLCanvasElement} canvas
  */
 function showInvadersInstructions(canvas) {
-  showGameInstructions(
+  showStartInstructions(
     canvas,
     getArcadeText('multiinvaders_instruction', INVADERS_INSTRUCTION_FALLBACK),
-    'neutral',
-    INVADERS_INSTRUCTION_MS,
-    INVADERS_INSTRUCTION_PLACEMENT
+    { game: 'invasion', placement: INVADERS_INSTRUCTION_PLACEMENT }
   );
 }
 

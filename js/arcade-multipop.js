@@ -24,8 +24,8 @@ import { spriteFor, prefetchArcadeSprite } from './arcade-sprites.js';
 import { avatarSpec, textureSpec } from './arcade-sprite-catalog.js';
 import { normalizeAvatarId } from './avatar-heads.js';
 import { pickRandom, shuffleInPlace } from './core/random.js';
+import { showStartInstructions } from './arcade-start-instructions.js';
 import {
-  showGameInstructions,
   INSTRUCTIONS_MS,
   INSTRUCTIONS_FADE_MS,
   getArcadeCanvasBox,
@@ -70,7 +70,9 @@ export const FRIEND_CHANCE = 1 / 3;
 /** Attente avant la première sortie : le temps de lire le calcul du bandeau */
 export const FIRST_RAISE_MS = 1500;
 // La consigne du début est posée sur la rangée du bas, le temps de la lire puis de
-// s'effacer : jusque-là, les monstres sortent des deux autres rangées
+// s'effacer : jusque-là, les monstres sortent des deux autres rangées. Elle part plus tôt au
+// premier geste du joueur, et n'est plus montrée après quelques parties : la rangée se libère
+// alors aussitôt (coverEnded)
 const INSTRUCTIONS_COVER_MS = INSTRUCTIONS_MS + INSTRUCTIONS_FADE_MS;
 // Monstres d'une partie, tirés parmi tous ceux du jeu et chargés d'avance
 const CAST_SIZE = 12;
@@ -140,6 +142,8 @@ export class PopGame extends ArcadeBoardGame {
     });
     this.introMs = introMs;
     this.coveredMs = coveredMs;
+    // Consigne du début, posée sur la rangée du bas (startPopArcade)
+    this.instructions = null;
     this.cursorHole = null;
     /**
      * Le maillet sur le plateau : son point visé, tenu (il suit la souris) ou non (doigt,
@@ -209,12 +213,23 @@ export class PopGame extends ArcadeBoardGame {
   }
 
   /**
+   * La consigne ne couvre plus la rangée du bas : partie (premier geste, fin du temps) ou
+   * réservée aux lecteurs d'écran
+   * @returns {boolean}
+   */
+  coverEnded() {
+    const note = this.instructions;
+    if (!note) return false;
+    return note.hidden || ['is-leaving', 'sr-only'].some(name => note.classList.contains(name));
+  }
+
+  /**
    * Avance le jeu de dt millisecondes
    * @param {number} dt
    */
   step(dt) {
     this.swingMallet(dt);
-    this.coveredMs = Math.max(0, this.coveredMs - dt);
+    this.coveredMs = this.coverEnded() ? 0 : Math.max(0, this.coveredMs - dt);
     this.field.reserved = this.coveredMs > 0 ? BOTTOM_HOLES : [];
     const event = this.field.tick(dt);
     if (event === 'solved-done') this.nextQuestion();
@@ -471,12 +486,16 @@ function cleanupPopGame() {
   return score;
 }
 
-// Consigne du début, selon l'appareil (elle n'est pas lue à voix haute)
+/**
+ * Consigne du début, selon l'appareil (elle n'est pas lue à voix haute)
+ * @param {HTMLCanvasElement} canvas
+ * @returns {HTMLElement|undefined}
+ */
 function showPopInstructions(canvas) {
   const key = isTouchFirstDevice()
     ? 'arcade_pop_instructions_touch'
     : 'arcade_pop_instructions_desktop';
-  showGameInstructions(canvas, getTranslation(key));
+  return showStartInstructions(canvas, getTranslation(key), { game: 'multipop' });
 }
 
 /**
@@ -499,6 +518,6 @@ export function startPopArcade() {
     coveredMs: INSTRUCTIONS_COVER_MS,
   });
   _popInstance.start();
-  showPopInstructions(_popInstance.canvas);
+  _popInstance.instructions = showPopInstructions(_popInstance.canvas) ?? null;
   eventBus.on('arcade:stop', cleanupPopGame, { once: true });
 }
