@@ -12,6 +12,8 @@ const ensureAudience = jest.fn(() => true);
 const listeners = new Map();
 
 jest.unstable_mockModule('../js/i18n.js', () => ({ getTranslation: key => `«${key}»` }));
+let translationsReady = true;
+jest.unstable_mockModule('../js/i18n-store.js', () => ({ isReady: () => translationsReady }));
 jest.unstable_mockModule('../js/core/eventBus.js', () => ({
   eventBus: { on: (event, handler) => listeners.set(event, handler) },
 }));
@@ -36,6 +38,7 @@ function mount() {
 
 beforeEach(() => {
   ensureAudience.mockClear();
+  translationsReady = true;
   document.documentElement.lang = 'fr';
 });
 afterEach(() => {
@@ -75,6 +78,16 @@ describe('Bouton de refus de la mesure d’audience', () => {
     const { button, status } = mount();
     expect(button.dataset.translate).toBe('audience_choice_resume');
     expect(status.dataset.translate).toBe('audience_status_refused');
+  });
+
+  test('traductions pas encore arrivées : la clé de l’état est posée, le texte attend', () => {
+    localStorage.setItem('plausible_ignore', 'true');
+    translationsReady = false;
+    const { button, status } = mount();
+    expect(button.dataset.translate).toBe('audience_choice_resume');
+    expect(status.dataset.translate).toBe('audience_status_refused');
+    // Le texte écrit dans la page reste en place : ni clé affichée, ni « [clé] »
+    expect(button.textContent.trim()).toBe('Ne plus compter mes visites');
   });
 
   test('stockage interdit : le choix n’est pas retenu, et la page le dit', () => {

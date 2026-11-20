@@ -6,6 +6,7 @@
  * de leur état : un changement de langue les réécrit sans rien d'autre (i18n.js).
  */
 import { getTranslation } from './i18n.js';
+import { isReady } from './i18n-store.js';
 import { eventBus } from './core/eventBus.js';
 import { isAudienceRefused, setAudienceRefused } from './core/audience-refusal.js';
 
@@ -26,7 +27,11 @@ const UNAVAILABLE = 'audience_status_unavailable';
 function write(element, key) {
   if (!element) return;
   element.dataset.translate = key;
-  element.textContent = getTranslation(key);
+  // Traductions pas encore arrivées (ouverture de la page) : la clé suffit, i18n.js écrira le
+  // texte en les appliquant
+  if (!isReady()) return;
+  const text = getTranslation(key);
+  if (!text.startsWith('[')) element.textContent = text;
 }
 
 /**
