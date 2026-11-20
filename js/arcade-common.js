@@ -354,15 +354,30 @@ function placeAbandon(stage, canvas) {
   const button = root?.querySelector('[id$="-abandon-btn"]');
   const tools = root?.querySelector('.arcade-banner-tools');
   if (!button || !tools) return;
-  const inBanner = Boolean(globalThis.matchMedia?.(TURNED_PHONE_QUERY)?.matches);
-  const home = inBanner ? tools : stage;
-  // Dans le bandeau, il reste le dernier : le plein écran y arrive après lui
-  if (button.parentElement === home && (!inBanner || button === tools.lastElementChild)) return;
+  const inBanner = isTurnedPhone();
+  if (isAbandonInPlace(button, tools, stage, inBanner)) return;
   // Un bouton déplacé perd le focus : il le retrouve à sa nouvelle place
   const focused = document.activeElement === button;
   if (inBanner) tools.append(button);
   else (stage.querySelector('.game-instructions') ?? canvas).after(button);
   if (focused) button.focus();
+}
+
+/** Téléphone tourné : un écran large et bas (même condition que css/arcade.css) */
+function isTurnedPhone() {
+  return Boolean(globalThis.matchMedia?.(TURNED_PHONE_QUERY)?.matches);
+}
+
+/**
+ * « Abandonner » est-il déjà à sa place ? Dans le bandeau, il reste le dernier : le plein
+ * écran y arrive après lui.
+ * @param {HTMLElement} button
+ * @param {HTMLElement} tools - Boutons du bandeau
+ * @param {HTMLElement} stage - Zone de jeu
+ * @param {boolean} inBanner - Vrai sur un téléphone tourné
+ */
+function isAbandonInPlace(button, tools, stage, inBanner) {
+  return inBanner ? button === tools.lastElementChild : button.parentElement === stage;
 }
 
 /** Classe du bandeau qui garde une place au bouton plein écran (css/arcade.css) */

@@ -248,97 +248,133 @@ const BANNER_CALCULATIONS = [
   '12\u00a0×\u00a012\u00a0=\u00a0144',
 ];
 
+/** Deux images : le temps d'une mise en page */
+const TWO_FRAMES = `new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`;
+
 /**
- * Bandeau de la partie : ses trois colonnes, ses boutons, et pour chaque calcul écrit par
- * l'écrivain du jeu (js/arcade-question.js) la taille du texte et la place qu'il prend
+ * Boîtes du bandeau, toutes relevées au même instant : un écran encore en train d'arriver
+ * (animation de la slide) les décale ensemble, pas l'une par rapport à l'autre
  */
-function bannerLayout(page, turned = false) {
-  return page.evaluate(
-    async (calculations, turnedPhone) => {
-      const { writeArcadeQuestion } = await import('/js/arcade-question.js');
-      const frame = () =>
-        new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      // Les largeurs du bandeau se mesurent une fois les polices du jeu arrivées
-      await document.fonts.ready;
-      await frame();
-      const banner = document.querySelector('#arcade-mult-display');
-      const box = selector => banner.querySelector(selector)?.getBoundingClientRect() ?? null;
-      const overlap = (a, b) =>
-        Boolean(a && b) &&
-        a.left < b.right &&
-        b.left < a.right &&
-        a.top < b.bottom &&
-        b.top < a.bottom;
-      const [score, calc, time] = [
-        '.arcade-banner-score',
-        '.arcade-banner-calc',
-        '.arcade-banner-time',
-      ].map(box);
-      const buttons = ['.arcade-pause-btn', '.arcade-fullscreen-btn'].map(box);
-      const texts = ['[id$="-info-score"]', '.info-hearts', '[id$="-info-timer"]'].map(box);
-      // Téléphone tourné : le temps suit le score et les vies à gauche du calcul, les boutons,
-      // « Abandonner » compris, sont à droite
-      const [points, hearts, timer] = texts;
-      const tools = box('.arcade-banner-tools');
-      const abandon = box('[id$="-abandon-btn"]');
-      const leftEnd = Math.max(points.right, hearts?.right ?? 0);
-      const inOrder = turnedPhone
-        ? leftEnd <= timer.left && timer.right <= calc.left && calc.right <= tools.left
-        : score.right <= calc.left && calc.right <= time.left;
-      const sides = turnedPhone ? [points, timer, tools] : [score, time];
-      const middle = rect => rect.left + rect.width / 2;
-      // Bandeau et calcul mesurés au même instant : un écran encore en train d'arriver
-      // (animation de la slide) les décale ensemble, pas l'un par rapport à l'autre
-      const bannerBox = banner.getBoundingClientRect();
-      const calcOffCentre = Math.round(Math.abs(middle(calc) - middle(bannerBox)));
-      // Relevé des largeurs, affiché si le calcul n'est pas au milieu : dit quel côté le pousse
-      const width = rect => Math.round(rect?.width ?? 0);
-      const toolWidths = [...banner.querySelectorAll('.arcade-banner-tools > *')].map(
+async function bannerBoxes(page) {
+  // Les largeurs se mesurent une fois les polices du jeu arrivées
+  await page.evaluate(`document.fonts.ready.then(() => ${TWO_FRAMES})`);
+  return page.evaluate(() => {
+    const banner = document.querySelector('#arcade-mult-display');
+    const plain = element => {
+      if (!element) return null;
+      const { left, right, top, bottom, width, height } = element.getBoundingClientRect();
+      return { left, right, top, bottom, width, height };
+    };
+    const box = selector => plain(banner.querySelector(selector));
+    return {
+      window: innerWidth,
+      banner: plain(banner),
+      score: box('.arcade-banner-score'),
+      calc: box('.arcade-banner-calc'),
+      time: box('.arcade-banner-time'),
+      pause: box('.arcade-pause-btn'),
+      fullscreen: box('.arcade-fullscreen-btn'),
+      points: box('[id$="-info-score"]'),
+      hearts: box('.info-hearts'),
+      timer: box('[id$="-info-timer"]'),
+      tools: box('.arcade-banner-tools'),
+      abandon: box('[id$="-abandon-btn"]'),
+      toolNames: [...banner.querySelectorAll('.arcade-banner-tools > *')].map(
         tool =>
-          `${tool.id || tool.classList.item(tool.classList.length - 1)} ${width(tool.getBoundingClientRect())}`
-      );
-      const bannerParts = `fenêtre ${innerWidth}, bandeau ${Math.round(bannerBox.left)}+${width(bannerBox)}, score ${width(score)}, temps ${width(timer)}, calcul ${Math.round(calc.left)}+${width(calc)}, boutons ${width(tools)} (${toolWidths.join(', ')})`;
-      const question = banner.querySelector('.arcade-question');
-      const shown = question.textContent;
-      const sizes = [];
-      for (const text of calculations) {
-        writeArcadeQuestion(text, question);
-        await frame();
-        sizes.push({
-          text,
-          px: Math.floor(Number.parseFloat(getComputedStyle(question).fontSize)),
-          fits: question.scrollWidth <= question.clientWidth,
-          bannerHeight: Math.round(banner.getBoundingClientRect().height),
-          calcHeight: Math.round(question.getBoundingClientRect().height),
-        });
-      }
-      writeArcadeQuestion(shown, question);
+          `${tool.id || tool.classList.item(tool.classList.length - 1)} ${Math.round(tool.getBoundingClientRect().width)}`
+      ),
+    };
+  });
+}
+
+/** Pour chaque calcul écrit par l'écrivain du jeu (js/arcade-question.js) : taille et place */
+function calculationSizes(page) {
+  return page.evaluate(async calculations => {
+    const { writeArcadeQuestion } = await import('/js/arcade-question.js');
+    const frame = () =>
+      new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const banner = document.querySelector('#arcade-mult-display');
+    const question = banner.querySelector('.arcade-question');
+    const shown = question.textContent;
+    const sizes = [];
+    for (const text of calculations) {
+      writeArcadeQuestion(text, question);
       await frame();
-      return {
-        inOrder,
-        onOneLine: sides.every(side => side.top < calc.bottom && calc.top < side.bottom),
-        // « Abandonner » dans le bandeau (téléphone tourné) : entier, à la hauteur de ses voisins
-        abandonInBanner:
-          Boolean(abandon) &&
-          abandon.left >= tools.left &&
-          abandon.right <= tools.right + 1 &&
-          Math.round(abandon.height) === 44 &&
-          !buttons.some(button => overlap(button, abandon)),
-        // Écart entre le milieu du calcul et celui du bandeau (px)
-        calcOffCentre,
-        bannerParts,
-        buttonSides: buttons.map(button => Math.round(Math.min(button.width, button.height))),
-        buttonsOverText: buttons.some(button => texts.some(text => overlap(button, text))),
-        buttonsOverCalc: buttons.some(button => overlap(button, calc)),
-        buttonsOverEachOther: overlap(...buttons),
-        heights: [...new Set(sizes.map(size => size.bannerHeight))].length,
-        calcHeights: [...new Set(sizes.map(size => size.calcHeight))].length,
-        sizes: sizes.map(({ text, px, fits }) => ({ text, px, fits })),
-      };
-    },
-    BANNER_CALCULATIONS,
-    turned
-  );
+      sizes.push({
+        text,
+        px: Math.floor(Number.parseFloat(getComputedStyle(question).fontSize)),
+        fits: question.scrollWidth <= question.clientWidth,
+        bannerHeight: Math.round(banner.getBoundingClientRect().height),
+        calcHeight: Math.round(question.getBoundingClientRect().height),
+      });
+    }
+    writeArcadeQuestion(shown, question);
+    await frame();
+    return sizes;
+  }, BANNER_CALCULATIONS);
+}
+
+const overlap = (a, b) =>
+  Boolean(a && b) && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+const middle = rect => rect.left + rect.width / 2;
+const rounded = rect => Math.round(rect?.width ?? 0);
+
+/**
+ * Ordre des cases du bandeau. Téléphone tourné : le temps suit le score et les vies à gauche
+ * du calcul, les boutons, « Abandonner » compris, sont à droite
+ */
+function bannerOrder(boxes, turned) {
+  const { score, calc, time, points, hearts, timer, tools } = boxes;
+  if (!turned) {
+    return { inOrder: score.right <= calc.left && calc.right <= time.left, sides: [score, time] };
+  }
+  const leftEnd = Math.max(points.right, hearts?.right ?? 0);
+  return {
+    inOrder: leftEnd <= timer.left && timer.right <= calc.left && calc.right <= tools.left,
+    sides: [points, timer, tools],
+  };
+}
+
+/** « Abandonner » dans le bandeau (téléphone tourné) : entier, à la hauteur de ses voisins */
+function abandonInBanner({ abandon, tools, pause, fullscreen }) {
+  if (!abandon) return false;
+  const inside = abandon.left >= tools.left && abandon.right <= tools.right + 1;
+  const clear = ![pause, fullscreen].some(button => overlap(button, abandon));
+  return inside && clear && Math.round(abandon.height) === 44;
+}
+
+/** Relevé des largeurs, affiché si le calcul n'est pas au milieu : dit quel côté le pousse */
+function bannerParts(boxes) {
+  const { banner, score, timer, calc, tools, toolNames } = boxes;
+  return `fenêtre ${boxes.window}, bandeau ${Math.round(banner.left)}+${rounded(banner)}, score ${rounded(score)}, temps ${rounded(timer)}, calcul ${Math.round(calc.left)}+${rounded(calc)}, boutons ${rounded(tools)} (${toolNames.join(', ')})`;
+}
+
+/**
+ * Bandeau de la partie : ses trois colonnes, ses boutons, et pour chaque calcul la taille du
+ * texte et la place qu'il prend
+ */
+async function bannerLayout(page, turned = false) {
+  const boxes = await bannerBoxes(page);
+  const sizes = await calculationSizes(page);
+  const { calc, pause, fullscreen } = boxes;
+  const buttons = [pause, fullscreen];
+  const texts = [boxes.points, boxes.hearts, boxes.timer];
+  const { inOrder, sides } = bannerOrder(boxes, turned);
+  return {
+    inOrder,
+    onOneLine: sides.every(side => side.top < calc.bottom && calc.top < side.bottom),
+    abandonInBanner: abandonInBanner(boxes),
+    // Écart entre le milieu du calcul et celui du bandeau (px)
+    calcOffCentre: Math.round(Math.abs(middle(calc) - middle(boxes.banner))),
+    bannerParts: bannerParts(boxes),
+    buttonSides: buttons.map(button => Math.round(Math.min(button.width, button.height))),
+    buttonsOverText: buttons.some(button => texts.some(text => overlap(button, text))),
+    buttonsOverCalc: buttons.some(button => overlap(button, calc)),
+    buttonsOverEachOther: overlap(pause, fullscreen),
+    heights: [...new Set(sizes.map(size => size.bannerHeight))].length,
+    calcHeights: [...new Set(sizes.map(size => size.calcHeight))].length,
+    sizes: sizes.map(({ text, px, fits }) => ({ text, px, fits })),
+  };
 }
 
 describe('Écran des jeux d’Arcade (E2E)', () => {
