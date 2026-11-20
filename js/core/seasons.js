@@ -8,8 +8,8 @@
  * Une fête dure du jour `from` au jour `to` inclus ([mois, jour], date de l'appareil) ; un `to`
  * plus tôt dans l'année que `from` passe le 31 décembre. Une fête dont la date change chaque
  * année donne `movable` à la place : son jour de chaque année, et combien de jours elle dure
- * avant et après lui. Marche à suivre pour en ajouter une : skill dressing-for-events
- * (.claude/skills/).
+ * avant et après lui. Deux tests disent ce qui manque à une fête ajoutée :
+ * tests-esm/core/seasons-registry.esm.test.mjs et tests-esm/season-images.esm.test.mjs.
  */
 
 /**
