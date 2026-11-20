@@ -386,6 +386,78 @@ describe('« Qui joue ? » : boutons de la sauvegarde', () => {
     );
   });
 
+  describe('dans l’appli Android, qui enregistre le fichier elle-même', () => {
+    const SAVED = '3 joueurs enregistrés dans « leapmultix-joueurs-2026-10-08.json ».';
+
+    /** Le pont de Capacitor avec le plugin de l'appli, qui répond `answer` */
+    function installAppBridge(answer) {
+      const nativePromise = jest.fn(() => answer);
+      globalThis.Capacitor = { PluginHeaders: [{ name: 'LeapMultixFiles' }], nativePromise };
+      return nativePromise;
+    }
+
+    function pressExport() {
+      seedLegacyStorage(localStorage);
+      UserManager._players = UserManager.loadPlayers();
+      UserManager.refreshUserList();
+      jest.useFakeTimers({ now: NOW, doNotFake: ['queueMicrotask', 'nextTick'] });
+      document.getElementById('export-players-btn').click();
+      jest.useRealTimers();
+    }
+
+    const message = () => document.getElementById('players-backup-message').textContent;
+    const settled = async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+
+    afterEach(() => {
+      Reflect.deleteProperty(globalThis, 'Capacitor');
+    });
+
+    test('« Enregistrer » confie le fichier à l’appli, sans téléchargement, puis dit le résultat', async () => {
+      let answer;
+      const nativePromise = installAppBridge(new Promise(resolve => (answer = resolve)));
+      pressExport();
+
+      expect(downloads).toEqual([]);
+      const [plugin, method, options] = nativePromise.mock.calls[0];
+      expect([plugin, method]).toEqual(['LeapMultixFiles', 'save']);
+      expect(options.name).toBe('leapmultix-joueurs-2026-10-08.json');
+      expect(Object.keys(JSON.parse(options.content).players)).toEqual(['Zoé', 'Léa', 'Tom']);
+      // Tant que la fenêtre « Enregistrer sous » est ouverte, rien n'est annoncé comme fait
+      expect(message()).toBe('Choisis où enregistrer le fichier.');
+
+      answer({ saved: true });
+      await settled();
+      expect(message()).toBe(SAVED);
+    });
+
+    test('fenêtre fermée sans enregistrer : le jeu le dit', async () => {
+      installAppBridge(Promise.resolve({ saved: false }));
+      pressExport();
+      await settled();
+      expect(message()).toBe('Le fichier n’a pas été enregistré.');
+    });
+
+    test('écriture refusée par l’appli : le jeu le dit, sans prétendre avoir enregistré', async () => {
+      jest.spyOn(console, 'warn').mockImplementation(() => {});
+      installAppBridge(Promise.reject(new Error('écriture impossible')));
+      pressExport();
+      await settled();
+      expect(message()).toBe('Le fichier n’a pas été enregistré.');
+    });
+
+    test('un pont sans ce plugin (autre appli, version ancienne) : téléchargement habituel', () => {
+      const nativePromise = jest.fn();
+      globalThis.Capacitor = { PluginHeaders: [{ name: 'App' }], nativePromise };
+      pressExport();
+      expect(nativePromise).not.toHaveBeenCalled();
+      expect(downloads).toHaveLength(2);
+      expect(message()).toBe(SAVED);
+    });
+  });
+
   test('le champ du fichier est nommé par son bouton, les bilans sont des zones <output>', () => {
     const input = document.getElementById('import-players-input');
     const label = document.getElementById(input.getAttribute('aria-labelledby'));

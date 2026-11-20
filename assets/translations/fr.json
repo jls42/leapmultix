@@ -722,6 +722,8 @@
   "import_players": "Reprendre des joueurs d’un fichier",
   "players_file_prefix": "leapmultix-joueurs",
   "export_done": "{n, plural, one {# joueur enregistré} other {# joueurs enregistrés}} dans « {file} ».",
+  "export_choose_place": "Choisis où enregistrer le fichier.",
+  "export_not_saved": "Le fichier n’a pas été enregistré.",
   "import_done": "{n, plural, =0 {Aucun joueur ajouté.} one {# joueur ajouté.} other {# joueurs ajoutés.}}",
   "import_skipped": "Déjà dans la liste, laissés tels quels : {names}.",
   "import_skipped_many": "{n, plural, one {# joueur déjà dans la liste, laissé tel quel.} other {# joueurs déjà dans la liste, laissés tels quels.}}",

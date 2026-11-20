@@ -712,6 +712,8 @@
   "import_players": "Bring back players from a file",
   "players_file_prefix": "leapmultix-players",
   "export_done": "{n, plural, one {# player saved} other {# players saved}} in “{file}”.",
+  "export_choose_place": "Choose where to save the file.",
+  "export_not_saved": "The file was not saved.",
   "import_done": "{n, plural, =0 {No player added.} one {# player added.} other {# players added.}}",
   "import_skipped": "Already in the list, left as they are: {names}.",
   "import_skipped_many": "{n, plural, one {# player already in the list, left as it is.} other {# players already in the list, left as they are.}}",

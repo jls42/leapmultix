@@ -718,6 +718,8 @@
   "import_players": "Recuperar jugadores de un archivo",
   "players_file_prefix": "leapmultix-jugadores",
   "export_done": "{n, plural, one {# jugador guardado} other {# jugadores guardados}} en «{file}».",
+  "export_choose_place": "Elige dónde guardar el archivo.",
+  "export_not_saved": "El archivo no se ha guardado.",
   "import_done": "{n, plural, =0 {Ningún jugador añadido.} one {# jugador añadido.} other {# jugadores añadidos.}}",
   "import_skipped": "Ya estaban en la lista, se dejan como están: {names}.",
   "import_skipped_many": "{n, plural, one {# jugador ya estaba en la lista, se deja como está.} other {# jugadores ya estaban en la lista, se dejan como están.}}",
