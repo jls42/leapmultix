@@ -1,0 +1,85 @@
+{
+  "lot": "bonne-reponse-3",
+  "date": "2026-11-19",
+  "note": "Troisième tour pour le son de la bonne réponse. Retours du propriétaire : marimba-1 du premier lot « s'approche de ce que je veux », « Vibra 2 semble positif mais trop long », l'ancien son « trop agressif », puis « aucun ne va […] gère bien les prompts ElevenLabs ». Consignes refaites selon le guide officiel : descriptions courtes et concrètes, sans consigne négative ni adjectif de style, durée laissée au modèle, promptInfluence 0,7, modèle v3. Chaque son est ensuite coupé à 0,45 s avec un fondu, pour être jugé à la longueur où il sonnera.",
+  "title": "La bonne réponse, troisième tour",
+  "intro": "Des sons écrits cette fois comme le demande le guide d'ElevenLabs : une description courte et concrète, la durée laissée au modèle, puis chaque son coupé court (0,45 s au plus) comme il sonnera dans le jeu. Pour comparer : « garde 1 » est le Marimba 1 que tu as mis de côté, « vibra court 1 » ton Vibra 2 accéléré, « actuel 1 » le son d'aujourd'hui, qui sera retiré. Les sons sont ramenés à la même force. Ton choix s'enregistre tout seul.",
+  "ceiling": 2600,
+  "sounds": [
+    {
+      "name": "actuel",
+      "prompt": "(son actuel du jeu, repris pour comparer)",
+      "duration": 0.25,
+      "variations": 1
+    },
+    {
+      "name": "garde",
+      "prompt": "(Marimba 1 du premier tour, mis de côté)",
+      "duration": 0.5,
+      "variations": 1
+    },
+    {
+      "name": "vibra-court",
+      "prompt": "(Vibra 2 du deuxième tour, accéléré 1,5 fois)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "marimba",
+      "prompt": "Soft marimba two-note rising chime",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "tierce",
+      "prompt": "Marimba, two quick notes rising a major third",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "vibraphone",
+      "prompt": "Vibraphone two-note rising chime, short",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "xylophone",
+      "prompt": "Xylophone ding, correct answer in a quiz game",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "glockenspiel",
+      "prompt": "Soft glockenspiel two-note success chime",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "kalimba",
+      "prompt": "Kalimba two-note rising chime",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "clochette",
+      "prompt": "Soft bell ding, correct answer in a game show",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "notification",
+      "prompt": "Positive notification chime, marimba, short",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    }
+  ],
+  "chosen": "aucun"
+}

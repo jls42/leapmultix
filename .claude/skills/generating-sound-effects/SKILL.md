@@ -13,7 +13,9 @@ description: >-
 # Bruitages ElevenLabs
 
 Premier lot : le maillet de MultiPop (16/11/2026), six sons de 0,5 s pour 36 crédits, « pop-2 »
-choisi. Le lot `lots/maillet.json` sert de modèle.
+choisi. Le lot `lots/tir-aventure-2.json` sert de modèle (consignes selon le guide d'ElevenLabs,
+durée libre, modèle v3) ; `lots/maillet.json` montre un son qui part avec un son du jeu
+(`reference`).
 
 ## Règles
 
@@ -22,8 +24,11 @@ choisi. Le lot `lots/maillet.json` sert de modèle.
   après, en crédits.
 - **La clé** ELEVENLABS_API_KEY vient du `.env` du dépôt des voix (`../leapmultix-voices/.env`),
   lue sur sa seule ligne par `generate.py` ; jamais affichée, jamais cherchée ailleurs.
-- **Pour des enfants de 6 à 12 ans** : doux, rigolo, jamais agressif ni effrayant ; consignes en
-  anglais, terminées par « child friendly, clean, no background, no voice ».
+- **Pour des enfants de 6 à 12 ans** : doux, rigolo, jamais agressif ni effrayant.
+- **Consignes selon le guide d'ElevenLabs** (elevenlabs.io/docs/overview/capabilities/sound-effects) :
+  en anglais, courtes et concrètes, l'action et son cadre (« Retro arcade laser gun firing a
+  single shot ») ; ni consigne négative (« no voice »), ni adjectif de style (« child
+  friendly ») : au premier tour du tir de l'Aventure, ces consignes-là n'ont rien donné de bon.
 
 ## Procédure
 
@@ -37,11 +42,16 @@ choisi. Le lot `lots/maillet.json` sert de modèle.
 ### 1. Le lot
 
 `lots/<nom>.json` : `lot`, `title` (titre de la page), `intro`, `ceiling` (crédits au plus),
-`sounds` (nom, consigne, `duration`, `variations`) et, si le son part avec un son du jeu,
-`reference` (fichier, libellé du bouton, son volume dans le jeu, celui du nouveau son, délai).
-Durée : 0,5 s au moins (minimum de l'API), raccourcie à l'installation. Deux ou trois variantes
-par consigne, trois consignes de styles différents. `generate.py plan <lot>` donne la dépense
-au plus (prix documenté : 40 crédits par seconde ; facturé le 16/11 : 6 pour 0,5 s).
+`sounds` (nom, consigne, `variations`, `promptInfluence` : 0,7 suit mieux la consigne que le
+0,5 par défaut) et, si le son part avec un son du jeu, `reference` (fichier, libellé du bouton,
+son volume dans le jeu, celui du nouveau son, délai). Durée : sans `duration`, le modèle la
+choisit, et c'est le conseil du guide (une durée imposée très courte tronque le son ; 0,5 s est
+le minimum de l'API) ; le silence se coupe à l'installation. Modèle : `model` du son, sinon du
+lot, sinon v2 ; prendre `eleven_text_to_sound_v3`, meilleur sur les sons musicaux et les
+consignes à plusieurs éléments (v2 retiré le 01/03/2027). Deux ou trois variantes par consigne,
+trois consignes de styles différents. `generate.py plan <lot>` donne la dépense au plus (prix
+documenté : 40 crédits par seconde, 3 s comptées pour une durée libre ; facturé : 6 crédits
+pour 0,5 s le 16/11, 55 par son en durée libre le 19/11).
 
 ### 2. Génération et mesure
 
@@ -64,6 +74,12 @@ ramène les autres à la même force et affiche le `file_path` et la table `file
 Artifact avec `capabilities: {"db": {}}`. Une description écrite après écoute des mesures se
 met dans `notes` du lot (`{"pop-2": "…"}`) ; sinon la page montre les mesures. Le choix se relit
 avec ArtifactData : collection `choix`, document `<lot>` (`{choix, note}` ; `aucun` : refaire).
+
+Après deux tours sans choix, ne pas en lancer un troisième à l'aveugle : pour la bonne réponse,
+quatre tours d'écoute n'ont rien donné, et une page de réglage en direct a suffi (zéro crédit).
+Le propriétaire y règle lui-même un son synthétisé par la page (instrument, hauteur, écart
+entre deux coups, longueur, douceur) et coche ce qui manque ; le réglage enregistré se rend à
+l'identique en `.wav` (lot `bonne-reponse-5`, `chosen: "reglage"` et son `reglage`).
 
 ### 4. Installation
 

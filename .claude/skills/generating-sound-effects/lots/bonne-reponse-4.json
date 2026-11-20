@@ -1,0 +1,110 @@
+{
+  "lot": "bonne-reponse-4",
+  "date": "2026-11-19",
+  "note": "Quatrième tour. Retour du propriétaire sur le troisième : aucun, « le son actuel il fait un deux coup, on ne peut pas faire comme ça aussi ? ». Mesuré : le son actuel est fait de deux coups très secs à 90 ms d'écart (d'où son côté agressif). Montages à la main : deux coups au même rythme (100 ms), le second plus haut d'une tierce ou d'une quinte, sur les notes douces des tours précédents ; plus trois consignes ElevenLabs v3 à deux coups.",
+  "title": "La bonne réponse, quatrième tour : deux coups",
+  "intro": "Tu as raison : le son d'aujourd'hui est fait de deux coups très rapprochés (0,09 s d'écart), et très secs, d'où son côté agressif. Voici le même rythme en deux coups, avec des notes douces : le second coup est plus haut (« tierce » : un peu plus haut, « quinte » : nettement plus haut). Le nom dit la note utilisée. « actuel 1 » est le son d'aujourd'hui, pour comparer. Les sons sont ramenés à la même force. Ton choix s'enregistre tout seul.",
+  "ceiling": 1200,
+  "sounds": [
+    {
+      "name": "actuel",
+      "prompt": "(son actuel du jeu, repris pour comparer)",
+      "duration": 0.25,
+      "variations": 1
+    },
+    {
+      "name": "marimba-tierce",
+      "prompt": "(montage : deux coups à 100 ms, le second une tierce plus haut, note « marimba »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "marimba-quinte",
+      "prompt": "(montage : deux coups à 100 ms, le second une quinte plus haut, note « marimba »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "note-tierce",
+      "prompt": "(montage : deux coups à 100 ms, le second une tierce plus haut, note « note »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "note-quinte",
+      "prompt": "(montage : deux coups à 100 ms, le second une quinte plus haut, note « note »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "note-b-tierce",
+      "prompt": "(montage : deux coups à 100 ms, le second une tierce plus haut, note « note-b »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "grave-tierce",
+      "prompt": "(montage : deux coups à 100 ms, le second une tierce plus haut, note « grave »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "vibra-tierce",
+      "prompt": "(montage : deux coups à 100 ms, le second une tierce plus haut, note « vibra »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "xylo-tierce",
+      "prompt": "(montage : deux coups à 100 ms, le second une tierce plus haut, note « xylo »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "xylo-quinte",
+      "prompt": "(montage : deux coups à 100 ms, le second une quinte plus haut, note « xylo »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "glock-tierce",
+      "prompt": "(montage : deux coups à 100 ms, le second une tierce plus haut, note « glock »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "kalimba-tierce",
+      "prompt": "(montage : deux coups à 100 ms, le second une tierce plus haut, note « kalimba »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "bois-tierce",
+      "prompt": "(montage : deux coups à 100 ms, le second une tierce plus haut, note « bois »)",
+      "duration": 0.3,
+      "variations": 1
+    },
+    {
+      "name": "deux-marimba",
+      "prompt": "Two quick soft marimba taps, the second one higher",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "deux-bois",
+      "prompt": "Double wooden beep, low then high, soft",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "deux-bulles",
+      "prompt": "Two quick soft bubble pops, the second one higher",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    }
+  ],
+  "chosen": "aucun"
+}

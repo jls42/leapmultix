@@ -1,0 +1,67 @@
+{
+  "lot": "tir-aventure",
+  "date": "2026-11-19",
+  "note": "Tir du héros à chaque réponse donnée dans l'Aventure : remplace mixkit-short-laser-gun-shot-1670.wav (0,9 s), dont la licence Mixkit n'autorise pas la mise à disposition du fichier dans un dépôt public. Demandé par le propriétaire le 19/11/2026.",
+  "title": "Aventure : le tir",
+  "intro": "Dans l'Aventure, ce son part à chaque réponse donnée, juste avant le son de la bonne ou de la mauvaise réponse. Il doit rester léger et amusant, jamais agressif. « actuel 1 » est le son d'aujourd'hui, pour comparer : il sera retiré du jeu. Les quatre derniers groupes (piou doux, bouchon, étoile, élastique) viennent du nouveau modèle d'ElevenLabs. Les sons sont ramenés à la même force. Ton choix s'enregistre tout seul.",
+  "ceiling": 600,
+  "sounds": [
+    {
+      "name": "piou",
+      "prompt": "soft cartoon toy laser zap, short playful pew, friendly and not aggressive, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    },
+    {
+      "name": "arcade",
+      "prompt": "quick bright retro arcade pew shot, light and cheerful, short, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    },
+    {
+      "name": "etincelle",
+      "prompt": "small magic spark shot, quick whoosh with a tiny twinkle, short and light, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    },
+    {
+      "name": "actuel",
+      "prompt": "(son actuel du jeu, repris pour comparer)",
+      "duration": 0.92,
+      "variations": 1
+    },
+    {
+      "name": "piou-doux",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.6,
+      "duration": 0.6,
+      "variations": 2,
+      "prompt": "One-shot cartoon sound effect. A soft toy laser pew, short downward pitch sweep, round synth tone, playful, not harsh. High quality, dry close-mic studio recording. Child friendly, clean, no background, no voice."
+    },
+    {
+      "name": "bouchon",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.6,
+      "duration": 0.6,
+      "variations": 2,
+      "prompt": "One-shot cartoon sound effect. A light cork pop followed by a tiny airy whoosh, like a toy pop gun, playful and soft. High quality, dry close-mic studio recording. Child friendly, clean, no background, no voice."
+    },
+    {
+      "name": "etoile",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.6,
+      "duration": 0.6,
+      "variations": 2,
+      "prompt": "One-shot magical sound effect. A quick soft sparkle whoosh like a tiny shooting star, light chime tail, gentle. High quality, dry close-mic studio recording. Child friendly, clean, no background, no voice."
+    },
+    {
+      "name": "elastique",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.6,
+      "duration": 0.6,
+      "variations": 2,
+      "prompt": "One-shot cartoon sound effect. A soft rubber band flick with a small bouncy boing, short and friendly. High quality, dry close-mic studio recording. Child friendly, clean, no background, no voice."
+    }
+  ],
+  "chosen": "aucun"
+}

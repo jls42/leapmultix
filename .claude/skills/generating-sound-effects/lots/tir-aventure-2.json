@@ -1,0 +1,73 @@
+{
+  "lot": "tir-aventure-2",
+  "date": "2026-11-19",
+  "note": "Second tour pour le tir de l'Aventure. Retour du propriétaire sur le premier : aucun son ne convient, « décris mieux un tir, gère bien les prompts ElevenLabs ». Consignes refaites selon le guide officiel (docs/overview/capabilities/sound-effects) : descriptions courtes et concrètes, l'action et son cadre, aucune consigne négative ni adjectif de style, durée laissée au modèle (la durée imposée de 0,6 s tronquait les sons), promptInfluence 0,7. Modèle v3, et v2 sur deux consignes pour comparer comme le guide le conseille.",
+  "title": "Aventure : le tir, second tour",
+  "intro": "De vrais tirs de laser, écrits cette fois comme le demande le guide d'ElevenLabs : une description courte et concrète, et la durée laissée au modèle. « actuel 1 » est le son d'aujourd'hui, pour comparer : il sera retiré du jeu. Un son trop long sera raccourci à l'installation : juge le tir lui-même. Les sons sont ramenés à la même force. Ton choix s'enregistre tout seul.",
+  "ceiling": 2400,
+  "sounds": [
+    {
+      "name": "actuel",
+      "prompt": "(son actuel du jeu, repris pour comparer)",
+      "duration": 0.92,
+      "variations": 1
+    },
+    {
+      "name": "arcade",
+      "prompt": "Retro arcade laser gun firing a single shot",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "blaster",
+      "prompt": "Sci-fi blaster pistol firing one laser bolt",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "huit-bits",
+      "prompt": "8-bit video game laser shot, one quick pew",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "jouet",
+      "prompt": "Toy ray gun firing a single zap",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "vaisseau",
+      "prompt": "Cartoon spaceship laser cannon firing one shot",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "leger",
+      "prompt": "Light laser pew, one shot, arcade game",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.7,
+      "variations": 2
+    },
+    {
+      "name": "arcade-v2",
+      "prompt": "Retro arcade laser gun firing a single shot",
+      "model": "eleven_text_to_sound_v2",
+      "promptInfluence": 0.7,
+      "variations": 1
+    },
+    {
+      "name": "blaster-v2",
+      "prompt": "Sci-fi blaster pistol firing one laser bolt",
+      "model": "eleven_text_to_sound_v2",
+      "promptInfluence": 0.7,
+      "variations": 1
+    }
+  ],
+  "chosen": "arcade-1"
+}

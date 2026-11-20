@@ -1,0 +1,29 @@
+{
+  "lot": "record",
+  "date": "2026-11-19",
+  "note": "Bruitages des moments encore muets, demandés par le propriétaire le 19/11/2026 (crédits ElevenLabs à utiliser avant le 25/11) : Fin de partie : nouveau record.",
+  "title": "Fin de partie : nouveau record",
+  "intro": "Ce son accompagne le badge « Nouveau record ! » sur l'écran de fin d'une partie d'Arcade. Il est rare : il peut être un peu plus festif, sans être long.",
+  "ceiling": 380,
+  "sounds": [
+    {
+      "name": "fanfare",
+      "prompt": "short cheerful victory fanfare on soft toy trumpets and xylophone, celebrating a new high score, bright and warm, child friendly, clean, no background, no voice",
+      "duration": 1.5,
+      "variations": 2
+    },
+    {
+      "name": "etincelles",
+      "prompt": "magical sparkle cascade rising into a happy chime chord, reward moment in a kids game, child friendly, clean, no background, no voice",
+      "duration": 1.5,
+      "variations": 2
+    },
+    {
+      "name": "tada",
+      "prompt": "playful cartoon tada with a tiny drum roll and soft cymbal shimmer, short, child friendly, clean, no background, no voice",
+      "duration": 1.5,
+      "variations": 2
+    }
+  ],
+  "chosen": "etincelles-2"
+}

@@ -29,6 +29,7 @@ MODEL = "eleven_text_to_sound_v2"
 # Prix documenté : 40 crédits par seconde demandée ; mesuré le 16/11/2026 : 6 pour 0,5 s.
 # L'estimation reste le prix documenté, une borne haute.
 CREDITS_PER_SECOND = 40
+AUTO_SECONDS = 3
 
 
 def key():
@@ -68,7 +69,9 @@ def load(name):
 
 
 def estimate(entry):
-    return round(CREDITS_PER_SECOND * entry["duration"])
+    # Sans "duration", le modèle choisit la durée (conseil du guide d'ElevenLabs : une durée
+    # imposée très courte tronque le son) ; l'estimation compte alors AUTO_SECONDS
+    return round(CREDITS_PER_SECOND * (entry.get("duration") or AUTO_SECONDS))
 
 
 def usage():
@@ -83,7 +86,8 @@ def plan(lot):
     for entry in lot["sounds"]:
         cost = estimate(entry) * entry.get("variations", 1)
         total += cost
-        print(f"{entry['name']} × {entry.get('variations', 1)}, {entry['duration']} s : ≤ {cost} crédits")
+        length = f"{entry['duration']} s" if entry.get("duration") else "durée libre"
+        print(f"{entry['name']} × {entry.get('variations', 1)}, {length} : ≤ {cost} crédits")
     print(f"total ≤ {total} crédits (plafond du lot : {lot['ceiling']})")
 
 
@@ -98,13 +102,18 @@ def generate(lot):
                 continue
             if paid + estimate(entry) > lot["ceiling"]:
                 sys.exit(f"ARRÊT : plafond de {lot['ceiling']} crédits ({paid} déjà payés)")
-            body = {"text": entry["prompt"], "model_id": MODEL, "duration_seconds": entry["duration"],
+            # Modèle du son, sinon celui du lot, sinon MODEL ("eleven_text_to_sound_v3" : mieux
+            # sur les sons musicaux et les consignes à plusieurs éléments, v2 retiré en mars 2027)
+            model = entry.get("model", lot.get("model", MODEL))
+            body = {"text": entry["prompt"], "model_id": model,
                     "prompt_influence": entry.get("promptInfluence", 0.5), "loop": False}
+            if entry.get("duration"):
+                body["duration_seconds"] = entry["duration"]
             audio, billed = request("/sound-generation?output_format=mp3_44100_128", body)
             cost = int(billed) if billed.isdigit() else estimate(entry)
             paid += cost
             target.write_bytes(audio)
-            sidecar = {"prompt": entry["prompt"], "model": MODEL, "duration": entry["duration"],
+            sidecar = {"prompt": entry["prompt"], "model": model, "duration": entry.get("duration"),
                        "credits": cost, "creditsFrom": "character-cost" if billed.isdigit() else "estimate"}
             target.with_suffix(".json").write_text(json.dumps(sidecar, ensure_ascii=False, indent=2))
             print(f"{target.relative_to(ROOT)} : {cost} crédits")

@@ -1,0 +1,36 @@
+{
+  "lot": "paire-2",
+  "date": "2026-11-19",
+  "note": "Bruitages des moments encore muets (19/11/2026) : MultiMemory : une paire trouvée, second passage (le premier, lot paire, refusé : « c'est moche »).",
+  "title": "MultiMemory : une paire trouvée (second essai)",
+  "intro": "Second essai pour la paire trouvée de MultiMemory, dans d'autres styles que le premier (refusé) : plus doux, plus rond. « Avec la bonne réponse » le fait entendre comme en partie.",
+  "ceiling": 164,
+  "reference": {
+    "file": "assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav",
+    "label": "Avec la bonne réponse",
+    "volume": 0.4,
+    "gameVolume": 0.7,
+    "delayMs": 0
+  },
+  "sounds": [
+    {
+      "name": "kalimba",
+      "prompt": "two soft warm kalimba notes going up, gentle and sweet, a small happy match, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    },
+    {
+      "name": "bulles",
+      "prompt": "two soft round bubble pops merging into one, cute and satisfying, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    },
+    {
+      "name": "glisse",
+      "prompt": "two paper cards sliding together with a soft swish and a tiny warm sparkle, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    }
+  ],
+  "chosen": "glisse-1"
+}

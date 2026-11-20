@@ -1,0 +1,17 @@
+{
+  "lot": "bonne-reponse-5",
+  "date": "2026-11-19",
+  "note": "Cinquième tour. Retour du propriétaire sur le quatrième : aucun, « Kalimba tierce 1 et Bois tierce 1 s'approchent de ce que je veux, mais ce n'est pas ce que je veux ». Quatre tours de choix sans direction : cette fois une page de réglage en direct (analysis/sons/bonne-reponse-5/page.html et reglage.py), sans génération ni crédit. Le son en deux coups se règle à partir des deux notes reconnues : instrument, hauteur, montée du deuxième coup, rythme, longueur, douceur. Le réglage enregistré (collection choix, document bonne-reponse-5 : choix ok ou aucun, reglage, manque, note) se refait à l'identique avec `reglage.py rendu`.",
+  "title": "La bonne réponse, à régler toi-même",
+  "ceiling": 0,
+  "sounds": [],
+  "chosen": "reglage",
+  "reglage": {
+    "note": "kalimba",
+    "h": 0,
+    "i": 7,
+    "g": 100,
+    "L": 130,
+    "d": 10
+  }
+}

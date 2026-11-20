@@ -1,0 +1,29 @@
+{
+  "lot": "bonne-reponse",
+  "date": "2026-11-19",
+  "note": "Son de la bonne réponse, partout dans le jeu : remplace mixkit-electronic-lock-success-beeps-2852.wav (0,25 s), dont la licence Mixkit n'autorise pas la mise à disposition du fichier dans un dépôt public. Demandé par le propriétaire le 19/11/2026 (« on vire ça du repo et on regénère »).",
+  "title": "La bonne réponse",
+  "intro": "C'est le son le plus entendu du jeu : il sonne à chaque bonne réponse, dans tous les modes. Il doit être court, doux et agréable à réentendre cent fois. Les sons sont ramenés à la même force : on compare le son, pas le volume. Ton choix s'enregistre tout seul.",
+  "ceiling": 400,
+  "sounds": [
+    {
+      "name": "bips",
+      "prompt": "two quick soft electronic beeps rising in pitch, friendly success confirmation for a correct answer, rounded tone, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 3
+    },
+    {
+      "name": "marimba",
+      "prompt": "two soft ascending marimba notes, gentle positive chime for a correct answer in a kids learning game, warm, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 3
+    },
+    {
+      "name": "clochette",
+      "prompt": "tiny bright bell ding with a soft sparkle, quick happy correct answer sound, gentle and light, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 3
+    }
+  ],
+  "chosen": "aucun"
+}
