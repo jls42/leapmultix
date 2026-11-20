@@ -518,10 +518,6 @@
     gap: var(--space-3);
   }
 
-  .arcade-games-list > .arcade-game-card.expanded {
-    grid-column: 1 / -1;
-  }
-
   .arcade-games-list > .arcade-game-card.collapsed {
     flex-direction: row;
     gap: var(--space-2);
@@ -547,9 +543,11 @@
     display: none;
   }
 
-  /* Tuile ouverte : le jeu à gauche, ses réglages à droite, « Jouer » à portée de vue */
+  /* Tuile ouverte, sur toute la largeur : le jeu à gauche, ses réglages à droite, « Jouer » à
+     portée de vue */
   .arcade-games-list > .arcade-game-card.expanded {
     display: grid;
+    grid-column: 1 / -1;
     grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
     grid-template-rows: auto auto 1fr;
     column-gap: var(--space-5);
