@@ -1,0 +1,785 @@
+/* ===========================================
+   Téléphone tourné : un écran large et bas (844 × 390, 740 × 340, 568 × 320)
+   La hauteur est rare, la largeur abondante : ce qui s'empilait en portrait se range côte à
+   côte. En partie, la question est à gauche, les réponses à droite, sans défilement ;
+   les menus sont resserrés. Rien ici ne s'applique au portrait, à la tablette ni à
+   l'ordinateur. Chargée en dernier (index.html) ; les jeux d'Arcade ont leurs propres
+   règles pour ce même écran (css/arcade.css).
+   =========================================== */
+
+@media (orientation: landscape) and (max-height: 540px) {
+  /* --- Cadre commun : marges fines, barre du haut à la hauteur de ses boutons --- */
+  .slide {
+    --slide-gutter: var(--space-3);
+
+    padding: 0 var(--slide-gutter) var(--space-2);
+  }
+
+  .slide .top-bar {
+    margin-block: var(--space-1) var(--space-2);
+    padding: var(--space-1) var(--space-3);
+  }
+
+  /* L'écran de jeu pose ses marges comme les autres (au-delà de 768 px de large, il n'en
+     avait aucune et sa barre du haut portait la sienne). Les jeux d'Arcade gardent les
+     leurs : leur plateau va d'un bord à l'autre (css/arcade.css). */
+  #slide4.active-slide:not(:has(.arcade-game-ui, .arcade-gameover)) {
+    min-height: 0;
+    padding: 0 var(--slide-gutter) var(--space-2);
+  }
+
+  #slide4.active-slide:not(:has(.arcade-game-ui, .arcade-gameover)) .top-bar {
+    margin-inline: 0;
+    margin-bottom: var(--space-2);
+  }
+
+  /* Sous 600 px de large, la carte s'ouvrait plus bas pour montrer l'illustration
+     (css/general.css) : ici, chaque ligne de hauteur compte */
+  .slide:not(#slide4) > .top-bar + .content-card {
+    margin-top: 0;
+  }
+
+  .slide .content-card {
+    width: 100%;
+    max-width: none;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .slide .screen-title {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-lg);
+  }
+
+  .slide .section-title {
+    font-size: var(--text-md);
+  }
+
+  /* --- En partie (Quiz, Défi, Aventure, Chrono) --- */
+  #game {
+    padding-top: 0;
+  }
+
+  .game-info-bar {
+    gap: 0 var(--space-5);
+    margin-bottom: var(--space-2);
+    padding: 0 var(--space-4);
+  }
+
+  .game-info-bar .info-item {
+    min-height: 28px;
+  }
+
+  /* Deux colonnes dès qu'une question est posée : elle à gauche, avec le retour dessous ;
+     les réponses à droite, avec « Continuer » et « Abandonner » dessous. Les réponses ne
+     bougent pas quand l'explication d'une erreur s'affiche. */
+  :is(.quiz-container, .challenge-container, .adventure-container, .chrono-container):has(
+    > .question:not(:empty)
+  ) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-2) var(--space-4);
+    align-items: start;
+    max-width: none;
+  }
+
+  /* En partie, la carte serre ses marges du haut et du bas : chaque pixel va au jeu */
+  #game > .content-card:has(.question:not(:empty)) {
+    padding-block: var(--space-2);
+  }
+
+  #slide4.active-slide:has(.question:not(:empty)) {
+    padding-bottom: var(--space-1);
+  }
+
+  /* Le nom du mode reste pour les lecteurs d'écran : la couleur et la barre le disent déjà */
+  :is(.quiz-container, .challenge-container, .adventure-container, .chrono-container):has(
+      > .question:not(:empty)
+    )
+    > .screen-title {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  :is(.quiz-container, .challenge-container, .adventure-container, .chrono-container)
+    > .question:not(:empty) {
+    display: grid;
+    grid-area: 1 / 1;
+    place-items: center;
+    align-self: stretch;
+    max-width: none;
+    margin: 0;
+    padding: var(--space-3);
+    font-size: clamp(var(--text-xl), 6vw, var(--text-3xl));
+  }
+
+  :is(.quiz-container, .challenge-container, .adventure-container, .chrono-container)
+    > .question.is-sentence {
+    font-size: var(--text-md);
+    line-height: var(--leading-tight);
+  }
+
+  :is(.quiz-container, .challenge-container, .adventure-container, .chrono-container)
+    > .options:not(:empty) {
+    grid-area: 1 / 2;
+    gap: var(--space-2);
+    max-width: none;
+    margin: 0;
+  }
+
+  /* Les touches grandissent avec la hauteur de l'écran : 54 px sur un écran de 340 px, puis
+     0,4 px par pixel de hauteur en plus (74 px à 390 px), jamais moins de 52 ni plus de 88.
+     Deux rangées de touches prennent ainsi moins que la hauteur gagnée. */
+  .options .option {
+    min-height: clamp(52px, calc(54px + (100vh - 340px) * 0.4), 88px);
+    padding: var(--space-2) var(--space-5);
+  }
+
+  :is(.quiz-container, .challenge-container, .adventure-container, .chrono-container) > .feedback {
+    grid-area: 2 / 1;
+    max-width: none;
+    margin: 0;
+  }
+
+  :is(.quiz-container, .challenge-container, .adventure-container, .chrono-container)
+    > :is(.game-continue, .game-quit) {
+    grid-area: 2 / 2;
+    margin: 0;
+  }
+
+  /* « Continuer » à gauche de sa colonne, « Abandonner » à droite : une seule ligne */
+  .game-continue {
+    justify-self: start;
+  }
+
+  .game-continue .btn {
+    min-width: 0;
+  }
+
+  .game-quit {
+    justify-self: end;
+  }
+
+  .game-quit .btn,
+  .game-continue .btn {
+    min-height: 44px;
+  }
+
+  .adventure-level-header p {
+    line-height: var(--leading-tight);
+  }
+
+  .feedback-explain {
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    text-align: start;
+  }
+
+  /* Aventure : le niveau et le chemin du héros au-dessus de la question, à gauche */
+  .adventure-container > div:has(> .adventure-level-header) {
+    grid-area: 1 / 1;
+  }
+
+  .adventure-container:has(> div > .adventure-level-header) > .question:not(:empty) {
+    grid-area: 2 / 1;
+  }
+
+  .adventure-container:has(> div > .adventure-level-header) > .options:not(:empty) {
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+
+  .adventure-container:has(> div > .adventure-level-header) > .feedback {
+    grid-area: 3 / 1;
+  }
+
+  .adventure-container:has(> div > .adventure-level-header) > :is(.game-continue, .game-quit) {
+    grid-area: 3 / 2;
+  }
+
+  .adventure-level-header h2,
+  .adventure-level-header p {
+    margin-bottom: 0;
+  }
+
+  .adventure-scene {
+    max-width: none;
+    height: 48px;
+    margin: var(--space-1) 0 0;
+  }
+
+  .adventure-scene .adventure-path {
+    bottom: var(--space-2);
+  }
+
+  .adventure-scene .adventure-character,
+  .adventure-scene .adventure-treasure {
+    bottom: var(--space-2);
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Chrono, réponse tapée : le nombre tapé sous la question, le clavier à droite */
+  .chrono-container .options:has(.chrono-keypad) {
+    display: contents;
+  }
+
+  .chrono-container .chrono-keypad {
+    display: contents;
+  }
+
+  .chrono-container .chrono-typed {
+    grid-area: 2 / 1;
+    min-height: 44px;
+    font-size: var(--text-xl);
+  }
+
+  .chrono-container .chrono-keys {
+    grid-area: 1 / 2 / span 4;
+    gap: var(--space-2);
+  }
+
+  .chrono-container .chrono-key {
+    min-height: 44px;
+    padding: 0 var(--space-2);
+  }
+
+  .chrono-container:has(.chrono-keypad) > .feedback {
+    grid-area: 3 / 1;
+  }
+
+  /* « Abandonner » sous la question : le clavier occupe toute la colonne de droite */
+  .chrono-container:has(.chrono-keypad) > .game-quit {
+    grid-area: 4 / 1;
+    place-self: end start;
+  }
+
+  /* --- Fin de partie : le héros à gauche, le résultat et les boutons à droite --- */
+  .game-results {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-5);
+    place-items: center start;
+    text-align: start;
+  }
+
+  /* Le héros en haut à gauche, à côté du résultat (la liste des temps du Chrono est longue) */
+  .game-results .results-avatar {
+    grid-row: 1 / span 3;
+    align-self: start;
+  }
+
+  .game-results > :not(.results-avatar) {
+    grid-column: 2;
+    margin-block: 0 var(--space-2);
+  }
+
+  /* --- Accueil : la mascotte, l'opération, puis les six modes, sur un écran --- */
+  #slide1 .content-card {
+    display: grid;
+    gap: var(--space-2);
+    max-width: none;
+    padding: var(--space-2) var(--space-4) var(--space-3);
+  }
+
+  #slide1 .mascot-hero-container {
+    max-width: none;
+    margin: 0;
+  }
+
+  #slide1 .mascot-hero {
+    gap: var(--space-3);
+  }
+
+  #slide1 .mascot-image {
+    width: 44px;
+    height: 44px;
+  }
+
+  #slide1 .mascot-speech-bubble {
+    padding-block: var(--space-1);
+  }
+
+  #slide1 .operation-selector {
+    margin: 0;
+  }
+
+  /* « Choisis ton opération » et « Choisis ton mode de jeu » : dits aux lecteurs d'écran,
+     la bulle de la mascotte pose déjà la question */
+  #slide1 .operation-selector-label,
+  #slide1 .game-modes h2 {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Une ligne de 44 px : l'icône à côté du nom, la coche au bout. Chaque touche prend la
+     largeur de son nom (« Multiplication » est deux fois plus long que « Division »). */
+  #slide1 .operation-selector-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    justify-content: space-between;
+  }
+
+  #slide1 .operation-btn {
+    flex-direction: row;
+    gap: var(--space-1);
+    min-height: 44px;
+    padding: 0 var(--space-5) 0 var(--space-2);
+  }
+
+  #slide1 .operation-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  #slide1 .operation-check {
+    top: 50%;
+    right: var(--space-1);
+    transform: translateY(-50%);
+  }
+
+  /* Tuiles couchées, trois par rangée : l'illustration à gauche, le nom et la phrase à droite */
+  #slide1 .mode-buttons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2) var(--space-3);
+  }
+
+  #slide1 .mode-btn {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-3);
+    align-content: center;
+    align-items: center;
+    padding: var(--space-1) var(--space-3);
+    text-align: start;
+  }
+
+  #slide1 .mode-icon {
+    grid-row: 1 / span 2;
+    margin: 0;
+  }
+
+  #slide1 .mode-icon img {
+    width: 52px;
+    height: 52px;
+  }
+
+  #slide1 .mode-name {
+    align-self: end;
+    font-size: var(--text-md);
+  }
+
+  #slide1 .mode-desc,
+  #slide1 .mode-unavailable-note {
+    align-self: start;
+    margin-top: 0;
+    line-height: var(--leading-tight);
+  }
+
+  #slide1 .daily-challenge {
+    margin-top: var(--space-2);
+  }
+
+  /* --- « Qui joue ? » : les joueurs à gauche, le nouveau joueur à droite --- */
+  #slide0 .content-card {
+    display: grid;
+    grid-template:
+      'accueil nouveau' auto
+      'outils nouveau' auto
+      'joueurs nouveau' 1fr
+      'sauvegarde sauvegarde' auto
+      'presentation presentation' auto
+      / minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--space-5);
+    align-items: start;
+  }
+
+  #slide0 .user-selection-intro {
+    grid-area: accueil;
+  }
+
+  #slide0 .user-selection-intro h1 {
+    margin-bottom: var(--space-1);
+    font-size: var(--text-xl);
+  }
+
+  #slide0 .user-selection-intro p {
+    margin-bottom: var(--space-2);
+  }
+
+  #slide0 .user-list-tools {
+    grid-area: outils;
+  }
+
+  #slide0 .user-list {
+    grid-area: joueurs;
+  }
+
+  #slide0 .user-tiles {
+    gap: var(--space-3);
+  }
+
+  #slide0 .user-container {
+    gap: var(--space-2);
+  }
+
+  /* Le formulaire est sous les yeux : son raccourci ne sert plus */
+  #slide0 #new-player-shortcut {
+    display: none;
+  }
+
+  #slide0 .new-player {
+    grid-area: nouveau;
+    margin-top: 0;
+    padding-top: 0;
+    padding-inline-start: var(--space-5);
+    border-top: 0;
+    border-inline-start: 1px solid var(--color-border);
+  }
+
+  #slide0 .new-player h2 {
+    margin-bottom: var(--space-2);
+  }
+
+  #slide0 .creation-avatar-label {
+    margin-block: var(--space-2) var(--space-1);
+  }
+
+  #slide0 .creation-avatar-selector .avatar-btn img {
+    max-width: 44px;
+  }
+
+  #slide0 #create-user-btn {
+    margin-top: var(--space-2);
+  }
+
+  #slide0 .players-backup {
+    grid-area: sauvegarde;
+  }
+
+  /* Clavier à l'écran ouvert : il lui faut toute la largeur, la page reprend une colonne */
+  #slide0 .content-card:has(.virtual-keyboard) {
+    grid-template:
+      'accueil' auto
+      'outils' auto
+      'joueurs' auto
+      'nouveau' auto
+      'sauvegarde' auto
+      'presentation' auto
+      / minmax(0, 1fr);
+  }
+
+  #slide0 .content-card:has(.virtual-keyboard) .new-player {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    padding-inline-start: 0;
+    border-top: 1px solid var(--color-border);
+    border-inline-start: 0;
+  }
+
+  /* La présentation : l'image à gauche, le texte à droite */
+  #slide0 .seo-intro {
+    display: grid;
+    grid-area: presentation;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    column-gap: var(--space-5);
+    align-items: center;
+    max-width: none;
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    text-align: start;
+  }
+
+  #slide0 .seo-hero {
+    grid-row: 1 / span 3;
+    margin: 0;
+  }
+
+  #slide0 .seo-intro > :not(.seo-hero, picture) {
+    grid-column: 2;
+  }
+
+  /* --- Menu de l'Arcade : six tuiles couchées, le logo à gauche, le nom à droite ;
+     la description et les réglages apparaissent dans la tuile ouverte --- */
+  .arcade-container .arcade-intro {
+    max-width: none;
+    margin-bottom: var(--space-2);
+  }
+
+  .arcade-container .arcade-games-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .arcade-games-list > .arcade-game-card.expanded {
+    grid-column: 1 / -1;
+  }
+
+  .arcade-games-list > .arcade-game-card.collapsed {
+    flex-direction: row;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    text-align: start;
+  }
+
+  .arcade-games-list > .arcade-game-card.collapsed .game-thumb {
+    flex: none;
+  }
+
+  .arcade-games-list > .arcade-game-card.collapsed .arcade-logo {
+    width: 64px;
+    height: 64px;
+  }
+
+  .arcade-games-list > .arcade-game-card.collapsed .game-title {
+    margin: 0;
+    font-size: var(--text-md);
+  }
+
+  .arcade-games-list > .arcade-game-card.collapsed .game-desc {
+    display: none;
+  }
+
+  /* Tuile ouverte : le jeu à gauche, ses réglages à droite, « Jouer » à portée de vue */
+  .arcade-games-list > .arcade-game-card.expanded {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: var(--space-5);
+    align-items: start;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .arcade-games-list > .arcade-game-card.expanded > .game-thumb {
+    grid-area: 1 / 1;
+    justify-self: center;
+  }
+
+  .arcade-games-list > .arcade-game-card.expanded .arcade-logo {
+    width: 96px;
+    height: 96px;
+  }
+
+  .arcade-games-list > .arcade-game-card.expanded > .game-title {
+    grid-area: 2 / 1;
+    margin: 0;
+  }
+
+  .arcade-games-list > .arcade-game-card.expanded > .game-desc {
+    grid-area: 3 / 1;
+    justify-self: center;
+  }
+
+  .arcade-games-list > .arcade-game-card.expanded > .arcade-game-settings {
+    grid-area: 1 / 2 / 4 / 3;
+    gap: var(--space-2);
+    margin-top: 0;
+  }
+
+  .arcade-game-card.expanded .arcade-game-settings > :first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  /* --- Aventure, la carte : le héros et l'histoire sur une ligne, les niveaux par trois --- */
+  .adventure-container:has(> .adventure-levels) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-1) var(--space-5);
+    align-items: center;
+    text-align: start;
+  }
+
+  .adventure-container:has(> .adventure-levels) > * {
+    grid-column: 2;
+    margin-block: 0;
+  }
+
+  .adventure-container:has(> .adventure-levels) > .adventure-header {
+    grid-area: 1 / 1 / span 2;
+    flex-direction: column;
+    gap: var(--space-1);
+    text-align: center;
+  }
+
+  .adventure-container > .adventure-header .adventure-avatar {
+    width: 56px;
+    height: 56px;
+  }
+
+  .adventure-container:has(> .adventure-levels) > .adventure-story-intro {
+    max-width: none;
+    line-height: var(--leading-tight);
+  }
+
+  .adventure-container:has(> .adventure-levels) > :is(.section-title, .adventure-levels) {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+
+  .adventure-container:has(> .adventure-levels) > .section-title {
+    margin-top: var(--space-2);
+  }
+
+  .adventure-container > .adventure-levels {
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+  }
+
+  /* --- Chrono, les réglages : la course à gauche, les calculs à revoir à droite --- */
+  .chrono-container .chrono-setup-panel:has(> .chrono-race) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-2) var(--space-5);
+    align-items: start;
+  }
+
+  /* « Comment tu réponds ? » et ses deux touches sur une ligne */
+  .chrono-setup-panel > .chrono-input-mode {
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 20rem);
+    gap: var(--space-4);
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chrono-input-mode > .section-title {
+    margin: 0;
+  }
+
+  .chrono-setup-panel > .chrono-block {
+    margin: 0;
+    padding-top: var(--space-2);
+  }
+
+  /* --- Découverte : dix tables ou dix calculs sur deux rangées de cinq --- */
+  .discovery-container :is(.lab-selector--tables, .multiplication-carousel, .visual-grid) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+
+  /* --- Défi, les réglages --- */
+  .challenge-container .challenge-difficulty-selection {
+    gap: var(--space-2);
+  }
+
+  .challenge-container .challenge-difficulty-selection p {
+    margin-bottom: 0;
+  }
+}
+
+/* Écran très bas (téléphone Android tourné, barres du système déduites) ou étroit (moins de
+   800 px, où la phrase prenait quatre lignes) : les six modes tiennent sans leur phrase ; la
+   raison d'un mode indisponible reste affichée */
+@media (orientation: landscape) and (max-height: 360px),
+  (orientation: landscape) and (max-height: 540px) and (max-width: 799px) {
+  #slide1 .mode-btn {
+    column-gap: var(--space-2);
+  }
+
+  #slide1 .mode-icon img {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* « Descubrimiento » tient à côté de son illustration dans une tuile de 195 px */
+  #slide1 .mode-name {
+    align-self: center;
+    grid-row: 1 / span 2;
+    font-size: var(--text-base);
+  }
+
+  #slide1 .mode-btn.mode-unavailable .mode-name {
+    align-self: end;
+    grid-row: auto;
+  }
+
+  #slide1 .mode-desc {
+    display: none;
+  }
+}
+
+/* Très petit téléphone (568 × 320) : les quatre opérations sur deux rangées de deux */
+@media (orientation: landscape) and (max-height: 540px) and (max-width: 640px) {
+  #slide1 .operation-selector-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #slide1 .mode-btn {
+    column-gap: var(--space-2);
+    padding-inline: var(--space-2);
+  }
+
+  #slide1 .mode-icon img {
+    width: 36px;
+    height: 36px;
+  }
+
+  #slide1 .mode-name {
+    font-size: var(--text-base);
+  }
+
+  /* Six jeux sur trois rangées de deux : « MultiInvaders » tient à côté de son logo */
+  .arcade-container .arcade-games-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .arcade-games-list > .arcade-game-card.collapsed .arcade-logo {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Menu de la barre replié sous ☰ (jusqu'à 992 px de large, css/topbar.css) : la barre du haut a
+   de la place entre ses boutons et les pièces */
+@media (orientation: landscape) and (max-height: 540px) and (max-width: 992px) {
+  /* Score, vies et progression rejoignent la barre du haut, entre ses boutons et les
+     pièces : une rangée de moins. Trop longs pour la place, ils passent sur deux lignes,
+     toujours dans la hauteur de la barre. */
+  #game > .game-info-bar {
+    position: absolute;
+    inset-block-start: var(--space-1);
+    inset-inline: calc(var(--slide-gutter) + 124px) calc(var(--slide-gutter) + 164px);
+    z-index: calc(var(--z-sticky) + 1);
+    place-content: center;
+    gap: 0 var(--space-4);
+    width: auto;
+    block-size: 54px;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+
+  #game > .game-info-bar .info-item {
+    min-height: 22px;
+  }
+
+  /* Le menu de la barre s'ouvre par-dessus */
+  .slide:has(.top-bar-nav.is-open) #game > .game-info-bar {
+    visibility: hidden;
+  }
+
+  /* --- Menu de la barre : deux colonnes, jamais plus haut que l'écran --- */
+  .top-bar .top-bar-nav.is-open {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+    inline-size: min(34rem, calc(100vw - 2 * var(--space-4)));
+    max-block-size: calc(100dvh - 72px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .top-bar .top-bar-nav.is-open > :is(.language-selector, .global-volume-controls) {
+    grid-column: 1 / -1;
+  }
+}

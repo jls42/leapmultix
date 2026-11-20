@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v96'; // bump to trigger client update
+const VERSION = 'v97'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -132,6 +132,7 @@ const PRECACHE_CORE = [
   '/css/game.css',
   '/css/general.css',
   '/css/home.css',
+  '/css/landscape-phone.css',
   '/css/multimiam.css',
   '/css/multisnake.css',
   '/css/operation-selector.css',
