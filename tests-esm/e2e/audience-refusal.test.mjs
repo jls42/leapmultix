@@ -70,6 +70,25 @@ describe('Refus de la mesure d’audience (E2E)', () => {
     expect((await choiceState(page)).stored).toBeNull();
   }, 60000);
 
+  test('depuis l’accueil, « En savoir plus » ouvre la politique, bouton de refus en vue', async () => {
+    const page = await session.newPage();
+    await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+    await page.goto(`${session.server.url}?saison=${NO_SEASON}`, session.server.gotoOptions);
+    await createUserAndSkipIntro(page);
+    const link = '#slide1.active-slide .privacy-info [data-slide="10"]';
+    await page.waitForSelector(link, { visible: true, timeout: 10000 });
+    expect(await page.$eval(link, el => el.dataset.translate)).toBe('privacy_info_more');
+    // Une cible de 44 px de haut, dans une ligne de texte de 14 px
+    const target = await (await page.$(link)).boundingBox();
+    expect(Math.floor(target.height)).toBeGreaterThanOrEqual(44);
+    // Au clavier, comme à la souris : c'est un bouton
+    await page.focus(link);
+    await page.keyboard.press('Enter');
+    await page.waitForSelector(BUTTON, { visible: true, timeout: 10000 });
+    const box = await (await page.$(BUTTON)).boundingBox();
+    expect(box.y + box.height).toBeLessThanOrEqual(844);
+  }, 60000);
+
   test('le traceur servi par le site n’envoie rien tant que le refus est retenu', async () => {
     const page = await session.newPage();
     const sent = [];

@@ -519,6 +519,13 @@
   color: var(--color-ink-muted);
 }
 
+/* « En savoir plus » : une cible de 44 px de haut, sans écarter la ligne des autres */
+.privacy-info .inline-link {
+  display: inline-block;
+  padding: 0.75rem 0.25rem;
+  margin-block: -0.75rem;
+}
+
 @media (max-width: 599px) {
   .creation-avatar-selector {
     gap: var(--space-2);
