@@ -17,9 +17,11 @@ import { confirmDialog } from './components/confirm-dialog.js';
 
 /** Boutons de la barre du haut qui changent d'écran */
 const TOP_BAR_EXITS = '.top-bar .home-btn, .top-bar [data-slide]';
-/** Écran d'un jeu d'Arcade en cours et son « Abandonner » (components/infoBar.js) */
+/** Écran d'un jeu d'Arcade en cours et son « Abandonner » (components/infoBar.js) : sous le
+    plateau, ou dans le bandeau sur un téléphone tourné (arcade-common.js, placeAbandon) */
 const ARCADE_SCREEN = '.slide.active-slide .arcade-game-ui';
-const ARCADE_ABANDON = `${ARCADE_SCREEN} [id$="-abandon-btn"]`;
+const ARCADE_ABANDON =
+  '.slide.active-slide :is(.arcade-game-ui, .arcade-banner-tools) > [id$="-abandon-btn"]';
 /** « Abandonner » de la partie affichée : celui d'un mode à questions, ou d'un jeu d'Arcade */
 const ABANDON_BUTTON = `.slide.active-slide .game-quit button, ${ARCADE_ABANDON}`;
 

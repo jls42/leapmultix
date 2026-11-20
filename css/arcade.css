@@ -434,16 +434,13 @@
 }
 
 /* === 5. ZONE DE JEU ===
-   En haut le bandeau, puis, serrés dessous, le plateau, la consigne et « Abandonner ».
-   Chaque jeu dimensionne son canevas pour que l'ensemble tienne dans l'écran
-   (js/arcade-common.js : prepareArcadeStage, getArcadeCanvasBox) : pas de défilement
-   pendant la partie, pas de vide entre le bandeau et le plateau. */
+   En haut le bandeau, puis, serrés dessous, le plateau et « Abandonner » (sur un téléphone
+   tourné, « Abandonner » monte dans le bandeau : js/arcade-common.js, placeAbandon). La
+   consigne est posée sur le plateau. Chaque jeu dimensionne son canevas pour que l'ensemble
+   tienne dans l'écran (js/arcade-common.js : prepareArcadeStage, getArcadeCanvasBox) : pas de
+   défilement pendant la partie, pas de vide entre le bandeau et le plateau. */
 
 .arcade-game-ui {
-  /* Sens de la zone, lu par js/arcade-common.js : la consigne et « Abandonner » sous le
-     plateau (column), ou à côté sur un téléphone tourné (row, plus bas) */
-  --arcade-stage-flow: column;
-
   /* Repère des pastilles de points posées sur le plateau */
   position: relative;
   display: flex;
@@ -703,14 +700,19 @@
   }
 }
 
-/* Téléphone tourné (écran bas et large) : le bandeau tient sur une ligne, le plateau
-   prend la largeur et toute la hauteur dessous, « Abandonner » et la consigne passent
-   dans une colonne à côté. js/arcade-common.js lit --arcade-stage-flow et retire cette
-   colonne, de largeur fixe, de la place du plateau. */
+/* Téléphone tourné (écran bas et large) : tout le bandeau sur une ligne, « Abandonner »
+   compris (js/arcade-common.js l'y range, placeAbandon), et le plateau prend toute la largeur
+   et toute la hauteur dessous. */
 @media (orientation: landscape) and (max-height: 540px) {
   .arcade-mult-display {
     --calc-size: 2rem;
+    /* Place du temps (« 05:00 », chiffres de même largeur), gardée à droite du score */
+    --time-room: calc(var(--text-xl) * 2.9);
 
+    /* Trois parts qui se partagent la ligne : les deux côtés s'égalisent dès qu'ils le
+       peuvent (le calcul est alors au milieu de l'écran), au lieu de laisser le calcul
+       prendre d'abord toute sa largeur */
+    grid-template-columns: minmax(max-content, 1fr) minmax(0, 1.4fr) minmax(max-content, 1fr);
     inline-size: 100%;
     /* Hauteur des boutons réservée : ils arrivent juste après le calcul du plateau */
     min-block-size: calc(44px + 2 * var(--space-1));
@@ -718,15 +720,51 @@
     padding-block: var(--space-1);
   }
 
-  /* Score et vies côte à côte, temps et boutons aussi : rien ne s'empile */
+  /* Score et vies côte à côte : rien ne s'empile */
   .arcade-banner-side {
     flex-direction: row;
     align-items: center;
     gap: var(--space-2);
   }
 
+  /* Le temps passe à gauche, après le score et les vies, et les boutons restent à droite :
+     les deux côtés pèsent à peu près autant, le calcul reste au milieu, en grand. Le temps
+     et les boutons deviennent des cases du bandeau, sur sa seule ligne. */
   .arcade-banner-time {
-    justify-content: flex-end;
+    display: contents;
+  }
+
+  .arcade-banner-score,
+  .arcade-banner-calc,
+  .arcade-banner-time > .game-stat-display,
+  .arcade-banner-tools {
+    grid-row: 1;
+  }
+
+  .arcade-banner-score {
+    grid-column: 1;
+    justify-self: start;
+    padding-inline-end: calc(var(--time-room) + var(--space-3));
+  }
+
+  .arcade-banner-time > .game-stat-display {
+    grid-column: 1;
+    justify-self: end;
+    inline-size: var(--time-room);
+    text-align: end;
+  }
+
+  .arcade-banner-calc {
+    grid-column: 2;
+    justify-self: center;
+    inline-size: 100%;
+    max-inline-size: 24rem;
+    block-size: 44px;
+  }
+
+  .arcade-banner-tools {
+    grid-column: 3;
+    justify-self: end;
   }
 
   /* Les libellés ne restent que pour les lecteurs d'écran */
@@ -738,41 +776,14 @@
     clip-path: inset(50%);
   }
 
-  .arcade-banner-calc {
-    block-size: 44px;
-  }
-
-  .arcade-game-ui {
-    --arcade-stage-flow: row;
-
-    display: grid;
-    grid-template-columns: auto 14rem;
-    /* Consigne, « Abandonner », puis une rangée souple : pas de rangée vide qui ajouterait
-       un écart et rendrait la colonne plus haute que le plateau */
-    grid-template-rows: min-content min-content 1fr;
-    justify-content: center;
-    align-items: start;
-    gap: var(--space-3) var(--space-4);
-  }
-
-  .arcade-game-ui > canvas {
-    grid-row: 1 / -1;
-    grid-column: 1;
-  }
-
-  /* La consigne et « Abandonner » se placent seuls dans la colonne libre, à côté du
-     plateau. Aucune colonne imposée : un élément posé par-dessus le jeu (voile de pause,
-     points, messages) garde toute la zone pour repère au lieu de la seule colonne de côté. */
-  .arcade-game-ui > :not(canvas) {
-    justify-self: center;
-  }
-
-  /* Consigne serrée, sous « Abandonner » : elle tient à côté du plateau, même sur un
-     téléphone bas, et en partant ne déplace pas le bouton */
-  .arcade-game-ui > .game-instructions {
-    grid-row: 2;
-    padding: var(--space-2) var(--space-3);
-    line-height: var(--leading-tight);
+  /* « Abandonner » dans le bandeau : la hauteur de ses voisins, son nom en entier */
+  .arcade-banner-tools > .btn[id$='-abandon-btn'] {
+    flex: none;
+    min-block-size: 44px;
+    margin: 0;
+    padding: 0 var(--space-3);
+    font-size: var(--text-sm);
+    white-space: nowrap;
   }
 }
 
@@ -1041,8 +1052,8 @@
 }
 
 /* Consigne du jeu, jusqu'au premier geste du joueur (js/arcade-common.js). Elle ne prend
-   aucune place au plateau, qui garde ainsi sa taille quand elle part : posée dessus (plus
-   bas), ou à côté sur un téléphone tourné (section 5). Elle laisse toujours passer le doigt.
+   aucune place au plateau, qui garde ainsi sa taille quand elle part : elle est posée dessus
+   (plus bas). Elle laisse toujours passer le doigt.
    Pastille sombre translucide (jetons --color-hint) : le jeu se voit au travers. */
 .game-instructions {
   flex: none;
@@ -1085,23 +1096,21 @@
    -height et -width, cadre compris) : en bas, ou au milieu là où le bas sert dès le départ
    (data-placement="middle" : vaisseau de MultiInvaders, rangées de cartes de MultiMemory).
    Sous le voile de pause, qui la couvre avec le plateau. */
-@media not all and (orientation: landscape) and (max-height: 540px) {
-  .arcade-game-ui > .game-instructions {
-    position: absolute;
-    z-index: var(--z-raised);
-    top: calc(var(--arcade-board-top, 0px) + var(--arcade-board-height, 0px) - var(--space-3));
-    right: 0;
-    left: 0;
-    width: fit-content;
-    max-width: min(calc(var(--arcade-board-width, 100%) - 2 * var(--space-3)), 40rem);
-    margin-inline: auto;
-    transform: translateY(-100%);
-  }
+.arcade-game-ui > .game-instructions {
+  position: absolute;
+  z-index: var(--z-raised);
+  top: calc(var(--arcade-board-top, 0px) + var(--arcade-board-height, 0px) - var(--space-3));
+  right: 0;
+  left: 0;
+  width: fit-content;
+  max-width: min(calc(var(--arcade-board-width, 100%) - 2 * var(--space-3)), 40rem);
+  margin-inline: auto;
+  transform: translateY(-100%);
+}
 
-  .arcade-game-ui > .game-instructions[data-placement='middle'] {
-    top: calc(var(--arcade-board-top, 0px) + var(--arcade-board-height, 0px) / 2);
-    transform: translateY(-50%);
-  }
+.arcade-game-ui > .game-instructions[data-placement='middle'] {
+  top: calc(var(--arcade-board-top, 0px) + var(--arcade-board-height, 0px) / 2);
+  transform: translateY(-50%);
 }
 
 /* === 9. TEMPS : PAUSE ET PARTIE SANS LIMITE (WCAG 2.2.1, js/arcade-time.js) ===

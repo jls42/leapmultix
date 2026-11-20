@@ -1,7 +1,7 @@
 /**
  * Tests E2E - Écran des jeux d'Arcade : les plateaux prennent la place disponible (téléphone
- * en portrait et tourné), la consigne part sans rien déplacer (posée sur le plateau, ou à côté
- * sur un téléphone tourné), le bouton plein écran met toute la partie en plein écran et Échap
+ * en portrait et tourné, où « Abandonner » monte dans le bandeau), la consigne part sans rien
+ * déplacer (posée sur le plateau), le bouton plein écran met toute la partie en plein écran et Échap
  * en sort sans quitter la partie, et le doigt vise toujours la bonne case une fois le plateau
  * mis à l'échelle (carte retournée, serpent dirigé, monstre touché).
  * @jest-environment node
@@ -248,30 +248,52 @@ const BANNER_CALCULATIONS = [
   '12\u00a0×\u00a012\u00a0=\u00a0144',
 ];
 
+/** Deux images : le temps d'une mise en page */
+const TWO_FRAMES = `new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`;
+
 /**
- * Bandeau de la partie : ses trois colonnes, ses boutons, et pour chaque calcul écrit par
- * l'écrivain du jeu (js/arcade-question.js) la taille du texte et la place qu'il prend
+ * Boîtes du bandeau, toutes relevées au même instant : un écran encore en train d'arriver
+ * (animation de la slide) les décale ensemble, pas l'une par rapport à l'autre
  */
-function bannerLayout(page) {
+async function bannerBoxes(page) {
+  // Les largeurs se mesurent une fois les polices du jeu arrivées
+  await page.evaluate(`document.fonts.ready.then(() => ${TWO_FRAMES})`);
+  return page.evaluate(() => {
+    const banner = document.querySelector('#arcade-mult-display');
+    const plain = element => {
+      if (!element) return null;
+      const { left, right, top, bottom, width, height } = element.getBoundingClientRect();
+      return { left, right, top, bottom, width, height };
+    };
+    const box = selector => plain(banner.querySelector(selector));
+    return {
+      window: innerWidth,
+      banner: plain(banner),
+      score: box('.arcade-banner-score'),
+      calc: box('.arcade-banner-calc'),
+      time: box('.arcade-banner-time'),
+      pause: box('.arcade-pause-btn'),
+      fullscreen: box('.arcade-fullscreen-btn'),
+      points: box('[id$="-info-score"]'),
+      hearts: box('.info-hearts'),
+      timer: box('[id$="-info-timer"]'),
+      tools: box('.arcade-banner-tools'),
+      abandon: box('[id$="-abandon-btn"]'),
+      toolNames: [...banner.querySelectorAll('.arcade-banner-tools > *')].map(
+        tool =>
+          `${tool.id || tool.classList.item(tool.classList.length - 1)} ${Math.round(tool.getBoundingClientRect().width)}`
+      ),
+    };
+  });
+}
+
+/** Pour chaque calcul écrit par l'écrivain du jeu (js/arcade-question.js) : taille et place */
+function calculationSizes(page) {
   return page.evaluate(async calculations => {
     const { writeArcadeQuestion } = await import('/js/arcade-question.js');
     const frame = () =>
       new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const banner = document.querySelector('#arcade-mult-display');
-    const box = selector => banner.querySelector(selector)?.getBoundingClientRect() ?? null;
-    const overlap = (a, b) =>
-      Boolean(a && b) &&
-      a.left < b.right &&
-      b.left < a.right &&
-      a.top < b.bottom &&
-      b.top < a.bottom;
-    const [score, calc, time] = [
-      '.arcade-banner-score',
-      '.arcade-banner-calc',
-      '.arcade-banner-time',
-    ].map(box);
-    const buttons = ['.arcade-pause-btn', '.arcade-fullscreen-btn'].map(box);
-    const texts = ['[id$="-info-score"]', '.info-hearts', '#arcade-info-timer'].map(box);
     const question = banner.querySelector('.arcade-question');
     const shown = question.textContent;
     const sizes = [];
@@ -288,18 +310,71 @@ function bannerLayout(page) {
     }
     writeArcadeQuestion(shown, question);
     await frame();
-    return {
-      inOrder: score.right <= calc.left && calc.right <= time.left,
-      onOneLine: [score, time].every(side => side.top < calc.bottom && calc.top < side.bottom),
-      buttonSides: buttons.map(button => Math.round(Math.min(button.width, button.height))),
-      buttonsOverText: buttons.some(button => texts.some(text => overlap(button, text))),
-      buttonsOverCalc: buttons.some(button => overlap(button, calc)),
-      buttonsOverEachOther: overlap(...buttons),
-      heights: [...new Set(sizes.map(size => size.bannerHeight))].length,
-      calcHeights: [...new Set(sizes.map(size => size.calcHeight))].length,
-      sizes: sizes.map(({ text, px, fits }) => ({ text, px, fits })),
-    };
+    return sizes;
   }, BANNER_CALCULATIONS);
+}
+
+const overlap = (a, b) =>
+  Boolean(a && b) && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+const middle = rect => rect.left + rect.width / 2;
+const rounded = rect => Math.round(rect?.width ?? 0);
+
+/**
+ * Ordre des cases du bandeau. Téléphone tourné : le temps suit le score et les vies à gauche
+ * du calcul, les boutons, « Abandonner » compris, sont à droite
+ */
+function bannerOrder(boxes, turned) {
+  const { score, calc, time, points, hearts, timer, tools } = boxes;
+  if (!turned) {
+    return { inOrder: score.right <= calc.left && calc.right <= time.left, sides: [score, time] };
+  }
+  const leftEnd = Math.max(points.right, hearts?.right ?? 0);
+  return {
+    inOrder: leftEnd <= timer.left && timer.right <= calc.left && calc.right <= tools.left,
+    sides: [points, timer, tools],
+  };
+}
+
+/** « Abandonner » dans le bandeau (téléphone tourné) : entier, à la hauteur de ses voisins */
+function abandonInBanner({ abandon, tools, pause, fullscreen }) {
+  if (!abandon) return false;
+  const inside = abandon.left >= tools.left && abandon.right <= tools.right + 1;
+  const clear = ![pause, fullscreen].some(button => overlap(button, abandon));
+  return inside && clear && Math.round(abandon.height) === 44;
+}
+
+/** Relevé des largeurs, affiché si le calcul n'est pas au milieu : dit quel côté le pousse */
+function bannerParts(boxes) {
+  const { banner, score, timer, calc, tools, toolNames } = boxes;
+  return `fenêtre ${boxes.window}, bandeau ${Math.round(banner.left)}+${rounded(banner)}, score ${rounded(score)}, temps ${rounded(timer)}, calcul ${Math.round(calc.left)}+${rounded(calc)}, boutons ${rounded(tools)} (${toolNames.join(', ')})`;
+}
+
+/**
+ * Bandeau de la partie : ses trois colonnes, ses boutons, et pour chaque calcul la taille du
+ * texte et la place qu'il prend
+ */
+async function bannerLayout(page, turned = false) {
+  const boxes = await bannerBoxes(page);
+  const sizes = await calculationSizes(page);
+  const { calc, pause, fullscreen } = boxes;
+  const buttons = [pause, fullscreen];
+  const texts = [boxes.points, boxes.hearts, boxes.timer];
+  const { inOrder, sides } = bannerOrder(boxes, turned);
+  return {
+    inOrder,
+    onOneLine: sides.every(side => side.top < calc.bottom && calc.top < side.bottom),
+    abandonInBanner: abandonInBanner(boxes),
+    // Écart entre le milieu du calcul et celui du bandeau (px)
+    calcOffCentre: Math.round(Math.abs(middle(calc) - middle(boxes.banner))),
+    bannerParts: bannerParts(boxes),
+    buttonSides: buttons.map(button => Math.round(Math.min(button.width, button.height))),
+    buttonsOverText: buttons.some(button => texts.some(text => overlap(button, text))),
+    buttonsOverCalc: buttons.some(button => overlap(button, calc)),
+    buttonsOverEachOther: overlap(pause, fullscreen),
+    heights: [...new Set(sizes.map(size => size.bannerHeight))].length,
+    calcHeights: [...new Set(sizes.map(size => size.calcHeight))].length,
+    sizes: sizes.map(({ text, px, fits }) => ({ text, px, fits })),
+  };
 }
 
 describe('Écran des jeux d’Arcade (E2E)', () => {
@@ -335,6 +410,10 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     page = null;
   });
 
+  // Les jeux dont le plateau suit l'écran (les autres gardent des cases carrées ou leurs
+  // proportions) : avec « Abandonner » dans le bandeau, ils prennent toute la largeur
+  // (811 px sur 844 ; 571 quand une colonne de côté portait le bouton)
+  const FULL_WIDTH_GAMES = new Set(['multimemory', 'multipop', 'multigoal']);
   test('téléphone tourné : chaque plateau prend la largeur, sans faire défiler la page', async () => {
     await openArcade(LANDSCAPE);
     for (const game of ARCADE_GAMES) {
@@ -343,13 +422,52 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
       const { board, overflow } = await screenState(page);
       expect({ game, ...overflow }).toEqual({ game, x: 0, y: 0 });
       expect({ game, wide: board.width > board.height }).toEqual({ game, wide: true });
+      if (FULL_WIDTH_GAMES.has(game)) {
+        expect({ game, full: board.width >= LANDSCAPE.width - 40 }).toEqual({ game, full: true });
+      }
       await backToArcadeMenu(page);
     }
   }, 90000);
 
+  /** Où est « Abandonner » : dans le bandeau ou sous le plateau, et la page déborde-t-elle ? */
+  function abandonPlace(shownPage) {
+    return shownPage.evaluate(() => {
+      const abandon = document.querySelector('#game [id$="abandon-btn"]');
+      const board = document.querySelector('#game canvas').getBoundingClientRect();
+      const rect = abandon.getBoundingClientRect();
+      const root = document.documentElement;
+      return {
+        parent: abandon.parentElement.className,
+        underBoard: rect.top >= board.bottom,
+        overflowY: root.scrollHeight - innerHeight,
+      };
+    });
+  }
+
+  test('le téléphone tourne en pleine partie : « Abandonner » passe du bandeau sous le plateau, et retour', async () => {
+    await openArcade(LANDSCAPE);
+    await launchArcadeGame(page, 'multigoal');
+    await settle(page);
+    const banner = { parent: 'arcade-banner-tools', underBoard: false, overflowY: 0 };
+    expect(await abandonPlace(page)).toEqual(banner);
+    await page.setViewport(PORTRAIT);
+    await settle(page);
+    expect(await abandonPlace(page)).toEqual({
+      parent: 'arcade-game-ui',
+      underBoard: true,
+      overflowY: 0,
+    });
+    await page.setViewport(LANDSCAPE);
+    await settle(page);
+    expect(await abandonPlace(page)).toEqual(banner);
+    // De sa place dans le bandeau, il pose toujours sa question et quitte la partie
+    await backToArcadeMenu(page);
+    await page.waitForSelector('.arcade-game-card', { visible: true, timeout: 5000 });
+  }, 60000);
+
   // Les cases vides qui centrent le calcul sur deux rangées (portrait) prenaient sa place sur la
   // ligne unique du téléphone tourné : le calcul s'écrivait un signe par ligne, et le bandeau,
-  // trois fois plus haut, recouvrait le haut du plateau et d'« Abandonner »
+  // trois fois plus haut, recouvrait le haut du plateau
   test('téléphone tourné, barres du navigateur affichées : bandeau sur une ligne, au-dessus du plateau', async () => {
     await openArcade(SHORT_LANDSCAPE);
     for (const game of ARCADE_GAMES) {
@@ -370,18 +488,19 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
           ? 1
           : 2;
         const top = selector => document.querySelector(selector).getBoundingClientRect().top;
+        const abandon = document.querySelector('#game [id$="abandon-btn"]').getBoundingClientRect();
         // MultiMemory n'écrit pas de calcul dans le bandeau : aucune ligne
         return {
           questionOnOneLine: lines <= 1,
           barAboveBoard: bar.bottom <= top('#game canvas'),
-          barAboveAbandon: bar.bottom <= top('#game [id$="abandon-btn"]'),
+          abandonInBar: bar.top <= abandon.top && abandon.bottom <= bar.bottom,
         };
       });
       expect({ game, ...layout }).toEqual({
         game,
         questionOnOneLine: true,
         barAboveBoard: true,
-        barAboveAbandon: true,
+        abandonInBar: true,
       });
       // Le plateau tient dans la hauteur qui reste : la page ne défile pas (MultiPop et
       // MultiGoal gardaient un plateau plus haut que la place, de 8 et 38 px)
@@ -394,23 +513,37 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
   // Le calcul se lisait mal : 31 px sur un téléphone de 390 px, 22 px téléphone tourné, entre
   // le score, le temps, « Pause » et les vies sur deux rangées. Il a sa case au centre d'une
   // seule ligne, en grand, et un calcul long y tient sans changer la hauteur du bandeau
+  // Téléphone tourné : le temps passe à gauche avec le score, « Abandonner » rejoint les
+  // boutons à droite, et les deux côtés pèsent autant : le calcul reste au milieu de l'écran
+  // (il était décalé de 47 px quand il prenait d'abord toute sa largeur)
   test.each([
-    ['téléphone en portrait', PORTRAIT, 32, true],
-    ['téléphone tourné', SHORT_LANDSCAPE, 30, true],
-    ['ordinateur', DESKTOP, 40, false],
+    ['téléphone en portrait', PORTRAIT, 32, true, false],
+    ['téléphone tourné', SHORT_LANDSCAPE, 30, true, true],
+    ['téléphone tourné, grand écran', LANDSCAPE, 30, true, true],
+    ['ordinateur', DESKTOP, 40, false, false],
   ])(
     '%s : score, calcul en grand et temps sur une ligne, quel que soit le calcul',
-    async (_name, viewport, minimum, phone) => {
+    async (_name, viewport, minimum, phone, turned) => {
       await openArcade(viewport, { phone });
       // Un jeu avec des vies, un jeu sans
       for (const game of ['multisnake', 'multigoal']) {
         await launchArcadeGame(page, game);
         await settle(page);
-        const layout = await bannerLayout(page);
+        const { calcOffCentre, bannerParts, ...layout } = await bannerLayout(page, turned);
+        // Au milieu de l'écran à 8 px près (en cas d'échec : le dépassement et les largeurs)
+        if (turned) {
+          const offCentre = Math.max(0, calcOffCentre - 8);
+          expect({ game, offCentre, parts: offCentre ? bannerParts : null }).toEqual({
+            game,
+            offCentre: 0,
+            parts: null,
+          });
+        }
         expect({ game, ...layout, sizes: undefined }).toEqual({
           game,
           inOrder: true,
           onOneLine: true,
+          abandonInBanner: turned,
           buttonSides: [44, 44],
           buttonsOverText: false,
           buttonsOverCalc: false,
@@ -444,9 +577,8 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     }
   }, 90000);
 
-  // Le plateau garde sa taille du premier au dernier instant : la consigne, posée dessus
-  // (à côté sur un téléphone tourné), ne lui prend pas de place et part sans rien déplacer.
-  // Dans les deux cas, elle laisse passer le doigt (au plateau, ou à la zone de jeu à côté).
+  // Le plateau garde sa taille du premier au dernier instant : la consigne, posée dessus, ne
+  // lui prend pas de place et part sans rien déplacer. Elle laisse passer le doigt au plateau.
   // Les six jeux sur chaque écran : chacun pose sa consigne à sa place (MultiMemory sur
   // ordinateur a trois rangées, consigne en bas), et chacun a montré le défaut sur ordinateur.
   // Sous le plateau, « Abandonner » reste en bas de l'écran dès le lancement, et le dessin du
@@ -461,10 +593,17 @@ describe('Écran des jeux d’Arcade (E2E)', () => {
     abandonAtBottom: true,
     drawingFillsBoard: true,
   };
-  const BESIDE_BOARD = { inside: false, overlaps: false, touched: 'DIV', drawingFillsBoard: true };
+  // Téléphone tourné : « Abandonner » est dans le bandeau, pas en bas de l'écran
+  const ON_BOARD_TURNED = {
+    inside: true,
+    overlaps: true,
+    touched: 'CANVAS',
+    placedAsSaid: true,
+    drawingFillsBoard: true,
+  };
   test.each([
     ['téléphone en portrait', PORTRAIT, true, ON_BOARD, ARCADE_GAMES],
-    ['téléphone tourné', LANDSCAPE, true, BESIDE_BOARD, ARCADE_GAMES],
+    ['téléphone tourné', LANDSCAPE, true, ON_BOARD_TURNED, ARCADE_GAMES],
     ['ordinateur', DESKTOP, false, ON_BOARD, ARCADE_GAMES],
   ])(
     '%s : la consigne part sans rien déplacer, ni le plateau ni « Abandonner »',
