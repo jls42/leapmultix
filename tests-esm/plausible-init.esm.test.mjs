@@ -7,7 +7,7 @@
  * depuis plausible.io. La page de test a l'adresse du site : le traceur ignore localhost.
  */
 /* eslint-env jest, node */
-import { afterAll, beforeAll, describe, expect, jest, test } from '@jest/globals';
+import { afterAll, afterEach, beforeAll, describe, expect, jest, test } from '@jest/globals';
 
 const META = 'meta[name="plausible-domain"]';
 const sent = [];
@@ -69,6 +69,43 @@ describe('Domaine lu dans la page', () => {
     expect(start).not.toHaveBeenCalled();
     expect(startAudience(pageWith('leapmultix.jls42.org'), start)).toBe(true);
     expect(start).toHaveBeenCalledWith({ domain: 'leapmultix.jls42.org', logging: false });
+  });
+});
+
+describe('Visiteur qui a refusé d’être compté', () => {
+  afterEach(() => localStorage.removeItem('plausible_ignore'));
+
+  test('le traceur ne démarre pas, même avec un domaine valide', async () => {
+    const { startAudience } = await import('../js/plausible-init.js');
+    const start = jest.fn();
+    localStorage.setItem('plausible_ignore', 'true');
+    expect(startAudience(pageWith('leapmultix.jls42.org'), start)).toBe(false);
+    expect(start).not.toHaveBeenCalled();
+  });
+
+  test('refus levé : le traceur démarre de nouveau', async () => {
+    const { startAudience } = await import('../js/plausible-init.js');
+    const start = jest.fn();
+    localStorage.setItem('plausible_ignore', 'true');
+    localStorage.removeItem('plausible_ignore');
+    expect(startAudience(pageWith('leapmultix.jls42.org'), start)).toBe(true);
+  });
+
+  // Le traceur lit le refus comme une propriété du stockage (localStorage.plausible_ignore),
+  // ce que fait tout navigateur ; le stockage de ces tests n'offre que getItem, d'où la
+  // propriété posée à la main. Dans Chrome : tests-esm/e2e/audience-refusal.test.mjs
+  test('traceur déjà démarré : un événement du jeu n’est plus envoyé après le refus', async () => {
+    await import('../js/plausible-init.js');
+    const before = sent.length;
+    Object.defineProperty(localStorage, 'plausible_ignore', { value: 'true', configurable: true });
+    try {
+      globalThis.plausible('Voice fallback', { props: { cause: 'missing', lang: 'fr' } });
+      expect(sent).toHaveLength(before);
+    } finally {
+      Reflect.deleteProperty(localStorage, 'plausible_ignore');
+    }
+    globalThis.plausible('Voice fallback', { props: { cause: 'missing', lang: 'fr' } });
+    expect(sent).toHaveLength(before + 1);
   });
 });
 

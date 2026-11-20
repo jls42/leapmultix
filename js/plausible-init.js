@@ -7,8 +7,13 @@
  * (serveur local, copie du dépôt), rien n'est mesuré. Le traceur ignore de lui-même localhost
  * et les navigateurs pilotés par un robot. Il pose window.plausible, qui reçoit les événements
  * du jeu (« Voice fallback », voice-clips.js).
+ *
+ * Un visiteur qui a refusé d'être compté (bouton de la politique de confidentialité,
+ * js/audience-choice.js) n'est pas mesuré : le traceur ne démarre pas, et il lit lui-même ce
+ * refus avant chaque envoi quand il a démarré plus tôt dans la visite.
  */
 import { init } from './vendor/plausible.js';
+import { isAudienceRefused } from './core/audience-refusal.js';
 
 /** Nom d'hôte seul : ni guillemet, ni barre, ni espace */
 const HOSTNAME = /^[a-z0-9.-]{1,253}$/i;
@@ -25,12 +30,14 @@ export function plausibleDomain(doc) {
 }
 
 /**
- * Lance le traceur pour le domaine de la page, s'il y en a un
+ * Lance le traceur pour le domaine de la page, s'il y en a un et si le visiteur n'a pas refusé
  * @param {Document} doc
  * @param {(options: {domain: string, logging: boolean}) => void} start - init du traceur
+ * @param {boolean} [refused] - Le visiteur a refusé d'être compté
  * @returns {boolean} Vrai si la mesure est lancée
  */
-export function startAudience(doc, start) {
+export function startAudience(doc, start, refused = isAudienceRefused()) {
+  if (refused) return false;
   const domain = plausibleDomain(doc);
   if (!domain) return false;
   // Sans journal : pas d'« Ignoring Event: localhost » dans la console en développement
@@ -38,4 +45,16 @@ export function startAudience(doc, start) {
   return true;
 }
 
-startAudience(document, init);
+let started = false;
+
+/**
+ * Lance la mesure de cette page une seule fois : à son ouverture, ou plus tard, quand un
+ * visiteur qui avait refusé d'être compté revient sur son choix
+ * @returns {boolean} Vrai si la mesure tourne
+ */
+export function ensureAudience() {
+  started ||= startAudience(document, init);
+  return started;
+}
+
+ensureAudience();

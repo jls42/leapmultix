@@ -9,6 +9,7 @@ import { gameState } from './game.js';
 import { eventBus } from './core/eventBus.js';
 import { OperationSelector } from './components/operationSelector.js';
 import { updateModeButtonsAvailability } from './components/operationModeAvailability.js';
+import { mountAudienceChoice } from './audience-choice.js';
 
 /**
  * Exécute une étape de rafraîchissement sans laisser une erreur interrompre les
@@ -127,6 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     // Preferred: wire data-attributes
     wireDataAttributes(document);
+    // Refus de la mesure d'audience (politique de confidentialité)
+    mountAudienceChoice(document);
     // Back-compat: rewire legacy inline handlers, and convert them to data-*
     rewireSetGameModeButtons(document);
     // Observe future DOM (optional) if content is dynamically injected

@@ -1397,7 +1397,7 @@
           <div class="legal-header">
             <h1 class="screen-title" data-translate="legal_title">Mentions légales</h1>
             <p class="last-updated" data-translate="legal_last_updated">
-              Dernière mise à jour&nbsp;: 15 septembre 2025
+              Dernière mise à jour&nbsp;: 20 novembre 2026
             </p>
             <!-- Le texte juridique n'est rédigé qu'en français : on le dit dans la langue
                  choisie ; la mention est masquée quand la page est en français (general.css) -->
@@ -1415,12 +1415,13 @@
                   public en ligne édité à titre non professionnel.
                 </p>
                 <p>
-                  Conformément à l'article 1-1, II de la loi n°&nbsp;2004-575 du 21 juin 2004
-                  (LCEN), l'éditeur a choisi de rester anonyme.
+                  L'éditeur, un particulier, use de la faculté que lui donne l'article 1-1, II de la
+                  loi n°&nbsp;2004-575 du 21 juin 2004 (LCEN)&nbsp;: seules les coordonnées du
+                  fournisseur d'hébergement sont publiées ci-dessous.
                 </p>
                 <p>
-                  À ce titre, seules les coordonnées du fournisseur d'hébergement sont publiées
-                  ci-dessous.
+                  Son nom figure dans la Politique de confidentialité du site, où il est responsable
+                  du traitement des données.
                 </p>
                 <p>
                   <strong>Contact éditeur&nbsp;:</strong>
@@ -1477,20 +1478,21 @@
               <div class="legal-section">
                 <h2 class="section-title">Données personnelles et statistiques</h2>
                 <p>
-                  Ce site ne dépose aucun cookie à des fins publicitaires et ne collecte pas de
-                  données personnelles identifiantes.
+                  Ce site ne dépose aucun cookie et ne demande ni adresse e-mail ni compte&nbsp;; le
+                  prénom ou le surnom d'un joueur reste sur l'appareil.
                 </p>
                 <p>
-                  La mesure d'audience est réalisée avec Plausible Analytics, un outil sans cookies
-                  produisant des statistiques agrégées et anonymisées.
+                  La mesure d'audience est réalisée avec Plausible Analytics, un outil sans cookie
+                  qui produit des statistiques agrégées.
                 </p>
                 <p>
                   <strong>Base légale&nbsp;:</strong> intérêt légitime (article 6, §1, f) du RGPD),
                   dans la finalité strictement limitée à la mesure d'audience.
                 </p>
                 <p>
-                  Pour toute question ou pour exercer vos droits (accès, opposition, rectification,
-                  effacement), écrivez à&nbsp;:
+                  Pour refuser la mesure d'audience, un bouton se trouve en haut de la Politique de
+                  confidentialité du site. Pour toute question ou pour exercer vos autres droits,
+                  écrivez à&nbsp;:
                   <a href="mailto:contact@jls42.org">contact@jls42.org</a>
                 </p>
                 <p>
@@ -1531,9 +1533,9 @@
                   <a href="mailto:contact@jls42.org">contact@jls42.org</a>
                 </p>
                 <p>
-                  Lorsque l'éditeur non professionnel conserve l'anonymat, la demande peut également
-                  être adressée à l'hébergeur, qui la transmet sans délai au directeur de la
-                  publication.
+                  L'éditeur ne publiant ici que les coordonnées de son hébergeur, la demande peut
+                  également être adressée à ce dernier, qui la transmet sans délai au directeur de
+                  la publication.
                 </p>
               </div>
 
@@ -1574,7 +1576,7 @@
               Politique de confidentialité
             </h1>
             <p class="last-updated" data-translate="privacy_last_updated">
-              Dernière mise à jour&nbsp;: 18 novembre 2026
+              Dernière mise à jour&nbsp;: 20 novembre 2026
             </p>
             <p class="legal-language-note" data-translate="legal_french_only_note">
               Ce texte n'existe qu'en français.
@@ -1583,11 +1585,42 @@
 
           <div class="privacy-content">
             <div class="legal-body" lang="fr">
+              <!-- L'essentiel dit à un enfant, traduit (le reste de la page n'existe qu'en
+                   français), avec le bouton qui refuse la mesure d'audience
+                   (js/audience-choice.js) -->
+              <div class="privacy-section privacy-summary" data-audience-summary>
+                <h2 class="section-title" data-translate="privacy_summary_title">
+                  En bref, pour toi
+                </h2>
+                <p data-translate="privacy_summary_text">
+                  Le jeu te demande seulement un prénom ou un surnom, qui reste sur ton appareil
+                  avec tes scores. Il ne te demande ni adresse ni e-mail. Une seule chose part
+                  d'ici&nbsp;: le site compte ses visites, sans savoir qui tu es. Tu peux dire non
+                  avec le bouton ci-dessous. Un adulte peut lire la suite avec toi.
+                </p>
+                <div class="audience-choice" data-audience-choice>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-audience-toggle
+                    data-translate="audience_choice_refuse"
+                  >
+                    Ne plus compter mes visites
+                  </button>
+                  <output
+                    class="audience-status"
+                    data-audience-status
+                    data-translate="audience_status_counted"
+                    >Tes visites sont comptées, sans savoir qui tu es.</output
+                  >
+                </div>
+              </div>
+
               <div class="privacy-section">
                 <h2 class="section-title">1. Responsable du traitement</h2>
                 <p>
-                  L'éditeur anonyme du site personnel «&nbsp;leapmultix.jls42.org&nbsp;» agit comme
-                  responsable du traitement.
+                  Julien Le Saux, particulier, édite le site «&nbsp;leapmultix.jls42.org&nbsp;» à
+                  titre non professionnel et y est responsable du traitement des données.
                 </p>
                 <ul>
                   <li>
@@ -1605,12 +1638,15 @@
                 <ul>
                   <li>Aucune inscription ni formulaire</li>
                   <li>Pas de publicité ni suivi marketing</li>
-                  <li>Aucune donnée personnelle identifiante transmise à un serveur</li>
+                  <li>
+                    Ni adresse e-mail ni compte&nbsp;; le prénom ou le surnom d'un joueur reste sur
+                    l'appareil, il n'est transmis à aucun serveur
+                  </li>
                 </ul>
               </div>
 
               <div class="privacy-section">
-                <h2 class="section-title">3. Traitements strictement nécessaires</h2>
+                <h2 class="section-title">3. Les deux traitements du site</h2>
 
                 <h3 class="subsection-title">Stockage local (localStorage)</h3>
                 <ul>
@@ -1630,26 +1666,39 @@
                   </li>
                 </ul>
 
-                <h3 class="subsection-title">Statistiques techniques (Plausible Analytics)</h3>
+                <h3 class="subsection-title">Mesure d'audience (Plausible Analytics)</h3>
                 <ul>
                   <li>
-                    <strong>Usage&nbsp;:</strong> mesures anonymisées de fréquentation (pages vues,
-                    temps passé et défilement de la page, trafic approximatif) et un événement
-                    technique quand une phrase est lue par la voix de l'appareil faute de clip
-                    enregistré (cause, langue, voix choisie), sans cookies ni IP stockées (hachage
-                    journalier et sel éphémère)
+                    <strong>Usage&nbsp;:</strong> statistiques de fréquentation agrégées (pages
+                    vues, temps passé et défilement de la page, pays, région et ville approximatifs
+                    de la visite) et un événement technique quand une phrase est lue par la voix de
+                    l'appareil faute de clip enregistré (cause, langue, voix choisie)
                   </li>
                   <li>
-                    <strong>Base légale&nbsp;:</strong> intérêt légitime (art. 6-1 f RGPD) pour
-                    améliorer la stabilité et l'usage pédagogique
-                  </li>
-                  <li><strong>Sous-traitant&nbsp;:</strong> Plausible Insights OÜ (UE)</li>
-                  <li>
-                    <strong>Durée&nbsp;:</strong> conservées tant que le site est actif&nbsp;;
-                    suppression immédiate sur demande ou fermeture du compte
+                    <strong>Données&nbsp;:</strong> l'adresse IP et le type de navigateur, que toute
+                    requête sur Internet transmet. Plausible s'en sert pour situer la visite et pour
+                    calculer un identifiant haché qui ne vaut qu'un jour&nbsp;; il ne les conserve
+                    pas, et le sel du hachage est détruit chaque jour. Aucun cookie, et rien n'est
+                    écrit sur l'appareil
                   </li>
                   <li>
-                    <strong>Opposition&nbsp;:</strong> via un bloqueur ou les réglages du navigateur
+                    <strong>Base légale&nbsp;:</strong> intérêt légitime (art. 6-1 f RGPD)&nbsp;:
+                    connaître la fréquentation du site et savoir quand la voix enregistrée manque
+                  </li>
+                  <li>
+                    <strong>Sous-traitant&nbsp;:</strong> Plausible Insights OÜ (Estonie),
+                    hébergement dans l'Union européenne, sans transfert hors de l'Union
+                  </li>
+                  <li>
+                    <strong>Durée&nbsp;:</strong> les statistiques agrégées sont conservées tant que
+                    le site est actif&nbsp;; elles sont supprimées à la fermeture du compte
+                    Plausible
+                  </li>
+                  <li>
+                    <strong>Opposition&nbsp;:</strong> le bouton «&nbsp;Ne plus compter mes
+                    visites&nbsp;», en haut de cette page, sans avoir à donner de raison. Le refus
+                    est retenu sur l'appareil&nbsp;; un bloqueur de mesure d'audience a le même
+                    effet
                   </li>
                   <li>
                     <strong>Appli Android&nbsp;:</strong> aucune statistique et aucune connexion à
@@ -1674,26 +1723,31 @@
               <div class="privacy-section">
                 <h2 class="section-title">4. Cookies et traceurs</h2>
                 <p>
-                  Aucun cookie ni pixel marketing&nbsp;; seul le localStorage fonctionnel est
-                  utilisé.
+                  Aucun cookie ni pixel marketing. Le stockage du navigateur (localStorage) ne sert
+                  qu'au jeu (joueurs, scores, réglages) et à retenir le refus de la mesure
+                  d'audience, que l'outil de mesure lit avant chaque envoi.
                 </p>
               </div>
 
               <div class="privacy-section">
                 <h2 class="section-title">5. Vos droits RGPD</h2>
-                <p>
-                  Si des données personnelles sont traitées (par exemple un e-mail envoyé), vous
-                  disposez des droits suivants&nbsp;:
-                </p>
                 <ul>
                   <li>
-                    accès, rectification, effacement (suppression locale ou par e-mail)&nbsp;;
+                    opposition à la mesure d'audience&nbsp;: le bouton «&nbsp;Ne plus compter mes
+                    visites&nbsp;», en haut de cette page&nbsp;;
                   </li>
                   <li>
-                    opposition (par exemple, bloquer les statistiques dans le navigateur)&nbsp;;
+                    accès, rectification, effacement&nbsp;: les données du jeu sont sur votre
+                    appareil, où vous pouvez les voir et les supprimer&nbsp;; un e-mail que vous
+                    avez envoyé est effacé sur demande&nbsp;;
                   </li>
                   <li>limitation et portabilité (non pertinentes&nbsp;: pas de base serveur).</li>
                 </ul>
+                <p>
+                  Les statistiques ne permettent pas de vous reconnaître&nbsp;: l'éditeur ne peut
+                  donc pas retrouver «&nbsp;vos&nbsp;» visites pour vous y donner accès ou les
+                  effacer (article 11 du RGPD).
+                </p>
                 <p>
                   <strong>Exercice&nbsp;:</strong>
                   <a href="mailto:contact@jls42.org">contact@jls42.org</a> (réponse sous un mois)<br />
