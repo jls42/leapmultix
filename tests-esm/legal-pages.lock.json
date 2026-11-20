@@ -18,7 +18,7 @@
           "en": "Last updated: November 20, 2026",
           "es": "Última actualización: 20 de noviembre de 2026"
         },
-        "empreinte": "96368fd91f8be265bb7f135503f0f46b423594205a77c4b0785857d160f7d772"
+        "empreinte": "ee3ce2a157fd1a4014d778e7ea49aca687f7b4eb7977fd851d7f6e926a97606b"
       }
     ]
   },
@@ -84,6 +84,13 @@
           "en": "Last updated: November 19, 2026"
         },
         "empreinte": "ee3891fe252940e3506068417e1738baf669a5e94065623f31cf98768d75e9fa"
+      },
+      {
+        "date": {
+          "fr": "Dernière mise à jour : 20 novembre 2026",
+          "en": "Last updated: November 20, 2026"
+        },
+        "empreinte": "3407535992067d9c0be3543cf2dbecb0fbdecbd6035669b221ff1f131aa6d483"
       }
     ]
   }
