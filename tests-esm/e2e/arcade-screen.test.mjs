@@ -124,17 +124,20 @@ function stageLayout(page) {
       ? document.elementFromPoint(shown.left + shown.width / 2, shown.top + shown.height / 2)
       : null;
     const abandon = document.querySelector('#game [id$="abandon-btn"]');
-    // Part du plateau couverte par le dessin du jeu (object-fit: contain), cadre exclu
+    // Ce que le dessin du jeu laisse vide sur le plateau (object-fit: contain), cadre exclu
     const canvas = document.querySelector('#game canvas');
     const style = getComputedStyle(canvas);
     const frame = side => Number.parseFloat(style[`border${side}Width`]) || 0;
     const shownWidth = canvas.getBoundingClientRect().width - frame('Left') - frame('Right');
     const shownHeight = canvas.getBoundingClientRect().height - frame('Top') - frame('Bottom');
     const scale = Math.min(shownWidth / canvas.width, shownHeight / canvas.height);
-    const drawnShare = (canvas.width * scale * canvas.height * scale) / (shownWidth * shownHeight);
+    const undrawn = Math.max(
+      shownWidth - canvas.width * scale,
+      shownHeight - canvas.height * scale
+    );
     return {
       board: box(canvas),
-      drawnShare,
+      undrawn,
       abandon: box(abandon),
       note: shown,
       underNote: touched?.tagName ?? null,
@@ -171,8 +174,13 @@ const overlaps = (a, b) =>
 /** Marge du bas de l'écran sous « Abandonner », au plus (px) : au-delà, il n'est plus en bas */
 const ABANDON_BOTTOM_GAP_MAX = 40;
 
-/** Part du plateau que couvre le dessin du jeu, au moins : les cases entières laissent un reste */
-const DRAWN_SHARE_MIN = 0.95;
+/**
+ * Ce que le dessin du jeu laisse vide sur le plateau, au plus (px). Les cases ont une taille
+ * entière : le labyrinthe de MultiMiam (19 × 15 cases, js/multimiam-layout.js) laisse moins
+ * d'un pixel par rangée ou par colonne, donc moins de 19 px, quel que soit l'écran. Le défaut
+ * que cette limite garde : deux bandes de mur de 57 px.
+ */
+const UNDRAWN_MAX = 19;
 
 /**
  * Ce que montre la consigne affichée, dans les termes de l'écran attendu (spot) : dans le
@@ -190,7 +198,7 @@ function noteSpot(during, spot) {
   if ('abandonAtBottom' in spot) {
     seen.abandonAtBottom = during.emptyBelow < ABANDON_BOTTOM_GAP_MAX;
   }
-  if ('drawingFillsBoard' in spot) seen.drawingFillsBoard = during.drawnShare >= DRAWN_SHARE_MIN;
+  if ('drawingFillsBoard' in spot) seen.drawingFillsBoard = during.undrawn < UNDRAWN_MAX;
   return seen;
 }
 

@@ -131,7 +131,7 @@ export function avatarSpec(name) {
 
 /* --- Poses du tireur de MultiGoal --- */
 
-// Deux poses par héros, dessinées tournées vers la droite (Codex, validées par le propriétaire le
+// Deux poses par héros, dessinées tournées vers la droite (validées par le propriétaire le
 // 19/11/2026) : la frappe (une jambe lancée vers le ballon, le ballon n'est pas dessiné) et la
 // joie après un but (bras levés, petit saut)
 const HERO_POSES = new Map([

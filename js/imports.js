@@ -28,7 +28,7 @@ export {
   startBackgroundRotation,
 } from './main-helpers.js';
 export { AudioManager } from './core/audio.js';
-// Game modes loaded via lazy-loader (see CLAUDE.md architecture guidelines)
+// Game modes loaded via lazy-loader (js/lazy-loader.js)
 export { goToSlide, showSlide, hideAllSlides } from './slides.js';
 export {
   arcadeUtils,
