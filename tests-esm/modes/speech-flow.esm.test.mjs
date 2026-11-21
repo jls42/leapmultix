@@ -72,6 +72,7 @@ beforeAll(() => {
     challenge_mode: 'Mode Défi',
     incorrect: 'Raté !',
     correct: 'Bravo !',
+    feedback_correct_spoken: 'Oui, {answer} !',
     feedback_incorrect: 'La bonne réponse est {correctAnswer}.',
     challenge_feedback_incorrect: 'La bonne réponse est {correctAnswer}.',
     challenge_feedback_correct: 'Correct ! +{points} points',
@@ -143,7 +144,7 @@ describe('Démarrage d’un mode', () => {
   });
 });
 
-describe('Quiz : bip, « Bravo », question suivante', () => {
+describe('Quiz : bip, le nombre trouvé, « Bravo », question suivante', () => {
   async function quizOnKnownQuestion() {
     const quiz = new QuizMode();
     await quiz.start();
@@ -153,7 +154,7 @@ describe('Quiz : bip, « Bravo », question suivante', () => {
     return quiz;
   }
 
-  test('répondre coupe la question ; « Bravo » part après le bip ; la question suivante l’attend', async () => {
+  test('répondre coupe la question ; « Oui, 8 ! » part après le bip, « Bravo » le suit ; la question suivante les attend', async () => {
     const quiz = await quizOnKnownQuestion();
     const reading = engine.last();
     expect(reading.text).toBe('Combien font 4 fois 2 ?');
@@ -163,35 +164,40 @@ describe('Quiz : bip, « Bravo », question suivante', () => {
     expect(engine.last()).toBe(reading);
 
     await wait(GOOD_SOUND_MS + 30);
+    const number = engine.last();
+    expect(number.text).toBe('Oui, 8 !');
+
+    // Question suivante affichée pendant que le nombre se dit : elle ne prend pas la place
+    // du « Bravo », qui part dès la fin du nombre
+    await wait(quiz.config.nextQuestionDelay);
+    expect(engine.last()).toBe(number);
+    expect(number.handle.stop).not.toHaveBeenCalled();
+    number.ctx.onEnded();
     const bravo = engine.last();
     expect(bravo.text).toBe('Bravo !');
-
-    // Question suivante affichée pendant que « Bravo » parle : elle attend sa fin
-    await wait(quiz.config.nextQuestionDelay);
-    expect(engine.last()).toBe(bravo);
-    expect(bravo.handle.stop).not.toHaveBeenCalled();
 
     bravo.ctx.onEnded();
     expect(engine.last().text).toBe(quiz.spokenQuestionText());
     quiz.stop();
   });
 
-  test('une réponse donnée avant que la question en file parte l’abandonne', async () => {
+  test('une réponse donnée avant que la question en file parte l’abandonne, avec le « Bravo » qui restait à dire', async () => {
     const quiz = await quizOnKnownQuestion();
     option('quiz', false).click();
     await wait(GOOD_SOUND_MS + 30);
-    const bravo = engine.last();
+    const number = engine.last();
+    expect(number.text).toBe('Oui, 8 !');
     await wait(quiz.config.nextQuestionDelay);
 
     // L'enfant répond à la question affichée avant d'avoir entendu sa lecture
     const before = engine.starts.length;
     quiz.handleAnswer(quiz.state.currentQuestion.answer);
-    expect(bravo.handle.stop).toHaveBeenCalledTimes(1);
-    bravo.ctx.onEnded();
+    expect(number.handle.stop).toHaveBeenCalledTimes(1);
+    number.ctx.onEnded();
     expect(engine.starts.slice(before).map(s => s.text)).toEqual([]);
 
     await wait(GOOD_SOUND_MS + 30);
-    expect(engine.last().text).toBe('Bravo !');
+    expect(engine.last().text).toMatch(/^Oui, \d+ !$/);
     quiz.stop();
   });
 

@@ -102,6 +102,8 @@ export class AdventureMode extends GameMode {
       autoProgress: true,
       // Pas de chrono : après une erreur, l'explication attend « Continuer »
       pauseAfterError: true,
+      // Le nombre trouvé se dit avant le bravo (« Oui, 42 ! », puis « Super ! »)
+      saysCorrectAnswer: true,
       showScore: true,
       initialLives: 3,
     });
@@ -609,14 +611,14 @@ export class AdventureMode extends GameMode {
 
     if (isCorrect) {
       this.sessionBestStreak = Math.max(this.sessionBestStreak, this.state.streak);
-      // Un seul encouragement à voix haute (le retour écrit n'est pas relu)
+      // À voix haute, le nombre trouvé puis un bravo (le retour écrit n'est pas relu)
       showFeedback(
         this.feedbackElement.id,
         getTranslation('adventure_feedback_correct'),
         'success',
         false
       );
-      speak(getTranslation('correct'));
+      speak(this.spokenCorrectParts());
       return;
     }
 

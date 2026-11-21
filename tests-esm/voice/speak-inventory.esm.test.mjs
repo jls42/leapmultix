@@ -31,13 +31,13 @@ const EXPECTED = {
   // trois formes viennent de spokenQuestionText) ; showFeedback : retours de la classe de
   // base, remplacés par chaque mode (feedback_correct, dont les points ne sont pas bornés)
   'js/core/GameMode.js': { speak: 3, showFeedback: 2 },
-  // bravo, erreur ; showFeedback sans voix
+  // bonne réponse (le nombre puis un bravo), erreur ; showFeedback sans voix
   'js/modes/AdventureMode.js': { speak: 2, showFeedback: 1 },
   // bravo ; displayFeedback lit l'erreur (challenge_feedback_incorrect)
   'js/modes/ChallengeMode.js': { speak: 1, showFeedback: 1, displayFeedback: 2 },
   // table, opération et niveau, égalités
   'js/modes/DiscoveryMode.js': { speak: 3 },
-  // bravo, erreur ; showFeedback sans voix
+  // bonne réponse (le nombre puis un bravo), erreur ; showFeedback sans voix
   'js/modes/QuizMode.js': { speak: 2, showFeedback: 1 },
   // showFeedback(…, speakIt) : la définition et son appel à speak()
   'js/ui-feedback.js': { speak: 1, showFeedback: 1 },

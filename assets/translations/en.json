@@ -348,6 +348,7 @@
   "info_time_label": "Time:",
   "feedback_correct": "Correct! +{points} points",
   "feedback_incorrect": "The right answer is {correctAnswer}.",
+  "feedback_correct_spoken": "Yes, {answer}!",
   "feedback_correct_streak": "Correct! +{points} points (streak {streak})",
   "challenge_feedback_correct": "Correct! +{points} points",
   "challenge_feedback_correct_bonus": "Correct! +{points} points and +{timeBonus} s",

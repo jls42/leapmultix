@@ -195,6 +195,101 @@ describe('Règles de la file', () => {
   });
 });
 
+describe('Phrase en plusieurs parties (« Oui, 42 ! », puis « Super ! »)', () => {
+  const PARTS = ['Oui, 42 !', 'Super !'];
+
+  test('les parties partent l’une après l’autre, chacune seule vers le moteur, avec son jeton', () => {
+    speak(PARTS);
+    expect(engine.texts()).toEqual(['Oui, 42 !']);
+    const number = engine.last();
+    number.ctx.onEnded();
+    expect(engine.texts()).toEqual(['Oui, 42 !', 'Super !']);
+    expect(number.handle.stop).not.toHaveBeenCalled();
+    expect(engine.last().ctx.token).not.toBe(number.ctx.token);
+  });
+
+  test('la phrase en file attend la fin de la dernière partie, pas de la première', () => {
+    speak(PARTS);
+    speak('Combien font 7 fois 8 ?', { queue: true });
+    engine.last().ctx.onEnded();
+    // Le bravo passe avant la question, qui ne prend pas sa place
+    expect(engine.texts()).toEqual(['Oui, 42 !', 'Super !']);
+    engine.last().ctx.onEnded();
+    expect(engine.texts()).toEqual(['Oui, 42 !', 'Super !', 'Combien font 7 fois 8 ?']);
+  });
+
+  test('couper pendant la première partie oublie la seconde', () => {
+    speak(PARTS);
+    const number = engine.last();
+    cancelSpeech();
+    expect(number.handle.stop).toHaveBeenCalledTimes(1);
+    // Fin tardive de la partie coupée : rien ne part
+    number.ctx.onEnded();
+    expect(engine.texts()).toEqual(['Oui, 42 !']);
+  });
+
+  test('une phrase normale arrivée pendant la première partie coupe toute la phrase', () => {
+    speak(PARTS);
+    const number = engine.last();
+    speak('Raté !');
+    expect(number.handle.stop).toHaveBeenCalledTimes(1);
+    expect(engine.texts()).toEqual(['Oui, 42 !', 'Raté !']);
+    engine.last().ctx.onEnded();
+    expect(engine.texts()).toEqual(['Oui, 42 !', 'Raté !']);
+  });
+
+  test('une partie qui échoue laisse passer la suivante', () => {
+    const errors = jest.spyOn(console, 'error').mockImplementation(() => {});
+    speak(PARTS);
+    engine.last().ctx.onFailed({ error: 'network' });
+    expect(engine.texts()).toEqual(['Oui, 42 !', 'Super !']);
+    errors.mockRestore();
+  });
+
+  test('une partie qui ne peut pas se dire est sautée ; aucune : rien ne part', () => {
+    speak(['[feedback_correct_spoken]', 'Super !']);
+    expect(engine.texts()).toEqual(['Super !']);
+    speak(['', '[correct]'], { queue: true });
+    engine.last().ctx.onEnded();
+    expect(engine.texts()).toEqual(['Super !']);
+  });
+
+  test('chaque partie a sa fin bornée : un son bloqué sur la première laisse partir la seconde', async () => {
+    jest.useFakeTimers();
+    speak(PARTS);
+    const stuck = engine.last();
+    stuck.ctx.onStarted();
+    await jest.advanceTimersByTimeAsync(estimateSpeechDurationMs('Oui, 42 !') + 10);
+    expect(stuck.handle.stop).toHaveBeenCalledTimes(1);
+    expect(engine.texts()).toEqual(['Oui, 42 !', 'Super !']);
+  });
+
+  test('la parole ne se tait qu’après la dernière partie', async () => {
+    speak(PARTS);
+    let silent = false;
+    void whenSpeechEnds().then(() => {
+      silent = true;
+    });
+    engine.last().ctx.onEnded();
+    await Promise.resolve();
+    expect(silent).toBe(false);
+    engine.last().ctx.onEnded();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(silent).toBe(true);
+  });
+
+  test('retenue pendant la première décision, la phrase garde ses parties', () => {
+    const release = holdSpeechDecision();
+    speak(PARTS);
+    expect(engine.texts()).toEqual([]);
+    release();
+    expect(engine.texts()).toEqual(['Oui, 42 !']);
+    engine.last().ctx.onEnded();
+    expect(engine.texts()).toEqual(['Oui, 42 !', 'Super !']);
+  });
+});
+
 describe('Fin bornée', () => {
   test('un son bloqué ne retient rien : au-delà de la durée estimée, la file avance', async () => {
     jest.useFakeTimers();

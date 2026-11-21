@@ -42,6 +42,8 @@ export class QuizMode extends GameMode {
       // (créé par GameMode) suspend l'avance jusqu'à ce que l'enfant l'active.
       autoProgress: true,
       pauseAfterError: true,
+      // Le nombre trouvé se dit avant le bravo (« Oui, 42 ! », puis « Super ! »)
+      saysCorrectAnswer: true,
       showScore: true,
     });
 
@@ -222,9 +224,10 @@ export class QuizMode extends GameMode {
     const points = this.calculatePoints();
     const message = this._getCorrectAnswerMessage(points);
 
-    // Le bip, puis « Bravo » juste après lui
+    // Le bip, puis le nombre trouvé et un bravo juste après lui (« Oui, 42 ! », « Super ! »)
     playSound('good');
-    this.addTimer(() => speak(getTranslation('correct')), GOOD_SOUND_MS);
+    const spoken = this.spokenCorrectParts();
+    this.addTimer(() => speak(spoken), GOOD_SOUND_MS);
 
     this._displayCorrectFeedback(message);
   }
