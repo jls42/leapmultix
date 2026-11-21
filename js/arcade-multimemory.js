@@ -195,25 +195,15 @@ export function drawMemoryCalculation({ operator, level, tables, excludedTables 
   return { num1: question.a, num2: question.b, operator, result: question.answer };
 }
 
-/** Opérations où l'ordre des nombres ne change rien : 3 × 4 et 4 × 3 sont le même calcul */
-const COMMUTATIVE_OPERATORS = new Set(['×', '+']);
-/** Tirages permis par paire : chaque niveau offre au moins 10 calculs, pour 8 paires au plus */
+/**
+ * Tirages permis par paire : chaque niveau offre plus de résultats que de paires (au moins 9
+ * pour 4 paires, 10 pour 6, 12 pour 8)
+ */
 const DRAWS_PER_PAIR = 100;
 
 /**
- * Clé d'un calcul : deux paires de même clé poseraient le même calcul (dans un sens ou dans
- * l'autre, pour × et +)
- * @param {{num1: number, num2: number, operator: string}} calculation
- * @returns {string}
- */
-export function calculationKey({ num1, num2, operator }) {
-  const swap = COMMUTATIVE_OPERATORS.has(operator) && num1 > num2;
-  const [first, second] = swap ? [num2, num1] : [num1, num2];
-  return `${first} ${operator} ${second}`;
-}
-
-/**
- * Calculs d'un plateau : jamais deux fois le même (ni 3 × 4 avec 4 × 3)
+ * Calculs d'un plateau : jamais deux fois le même résultat (5 + 1 et 3 + 3 poseraient deux
+ * cartes « 6 », que rien ne distingue), donc jamais deux fois le même calcul non plus
  * @param {number} pairs - Nombre de paires voulu
  * @param {Object} settings - Voir drawMemoryCalculation
  * @returns {Array<{num1: number, num2: number, operator: string, result: number}>}
@@ -222,8 +212,7 @@ export function drawMemoryCalculations(pairs, settings) {
   const chosen = new Map();
   for (let draw = 0; chosen.size < pairs && draw < pairs * DRAWS_PER_PAIR; draw++) {
     const calculation = drawMemoryCalculation(settings);
-    const key = calculationKey(calculation);
-    if (!chosen.has(key)) chosen.set(key, calculation);
+    if (!chosen.has(calculation.result)) chosen.set(calculation.result, calculation);
   }
   return [...chosen.values()];
 }
@@ -771,7 +760,7 @@ class MemoryGame {
     // Cette ligne est ajoutée pour s'assurer que le bon nombre de paires est utilisé à chaque fois
     this.pairs = this.getPairsCount();
 
-    // Des calculs tous différents (R4.3 : +, −, ×, ÷)
+    // Des résultats tous différents (R4.3 : +, −, ×, ÷)
     const calculations = drawMemoryCalculations(this.pairs, {
       operator: this.operator,
       level: this.difficulty,
