@@ -1,0 +1,29 @@
+{
+  "lot": "tic-tac",
+  "date": "2026-11-19",
+  "note": "Bruitages des moments encore muets, demandés par le propriétaire le 19/11/2026 (crédits ElevenLabs à utiliser avant le 25/11) : Les dernières secondes du chrono.",
+  "title": "Les dernières secondes du chrono",
+  "intro": "Ce son part chaque seconde pendant les dernières secondes du Défi. Il se répète : il doit rester léger et discret, jamais stressant.",
+  "ceiling": 140,
+  "sounds": [
+    {
+      "name": "horloge",
+      "prompt": "single soft clock tick, wooden and gentle, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "bois",
+      "prompt": "soft woodblock tock, single hit, light, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "metronome",
+      "prompt": "tiny metronome click, warm and quiet, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    }
+  ],
+  "chosen": "horloge-1"
+}

@@ -1,0 +1,99 @@
+{
+  "lot": "bonne-reponse-2",
+  "date": "2026-11-19",
+  "note": "Second tour pour le son de la bonne réponse. Retour du propriétaire sur le premier lot : « garde Marimba 1 de côté mais je cherche un son meilleur […] c'est celui qui s'approche de ce que je veux. L'ancien était trop agressif. » Sons doux, boisés, dans l'esprit du marimba ; « garde-1 » est marimba-1 du premier lot, repris pour comparer. Troisième vague le même jour, après « fais des bons prompts, best practice ElevenLabs » : modèle eleven_text_to_sound_v3 (moins de saturation sur les sons aigus, meilleur sur les sons musicaux), consignes courtes en termes audio (one-shot, attaque, résonance), promptInfluence 0,6. Retour sur la deuxième vague : « Vibra 2 semble positif mais trop long » : trois versions raccourcies et trois vibraphones courts du modèle v3.",
+  "title": "La bonne réponse, second tour",
+  "intro": "Des sons doux dans l'esprit du marimba que tu as mis de côté : il est repris ici sous le nom « garde 1 ». « actuel 1 » est le son d'aujourd'hui, pour comparer : il sera retiré du jeu. « vibra court » est ton Vibra 2 raccourci de trois façons (1 : accéléré 1,5 fois ; 2 : accéléré 1,25 fois ; 3 : sa seconde note seule). Les derniers groupes (duo, kalimba chaud, grave, arpège, vibra net) viennent du nouveau modèle d'ElevenLabs, avec des consignes écrites selon son guide. Les sons sont ramenés à la même force. Ton choix s'enregistre tout seul.",
+  "ceiling": 700,
+  "sounds": [
+    {
+      "name": "garde",
+      "prompt": "two soft ascending marimba notes, gentle positive chime for a correct answer in a kids learning game, warm, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 1
+    },
+    {
+      "name": "marimba-rond",
+      "prompt": "two soft ascending marimba notes played with felt mallets, mellow rounded tone, quiet attack, warm wooden resonance, calm and happy, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 3
+    },
+    {
+      "name": "kalimba",
+      "prompt": "two gentle ascending kalimba plucks, soft warm thumb piano, calm positive confirmation, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 3
+    },
+    {
+      "name": "bois",
+      "prompt": "soft wooden xylophone two-note rise, mellow and round, no harsh attack, cozy happy tone, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 3
+    },
+    {
+      "name": "vibra",
+      "prompt": "two soft ascending vibraphone notes, smooth warm mellow tone with a short gentle ring, calm success sound, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "note",
+      "prompt": "one single soft marimba note with a warm short resonance, gentle happy pluck, mellow, not sharp, very short, child friendly, clean, no background, no voice",
+      "duration": 0.5,
+      "variations": 2
+    },
+    {
+      "name": "actuel",
+      "prompt": "(son actuel du jeu, repris pour comparer)",
+      "duration": 0.25,
+      "variations": 1
+    },
+    {
+      "name": "duo",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.6,
+      "duration": 0.5,
+      "variations": 3,
+      "prompt": "One-shot UI success sound. Two soft marimba notes rising a major third, felt mallets, warm round tone, gentle attack, short natural decay. High quality, dry close-mic studio recording. Child friendly, clean, no background, no voice."
+    },
+    {
+      "name": "kalimba-chaud",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.6,
+      "duration": 0.5,
+      "variations": 3,
+      "prompt": "One-shot UI success sound. Two gentle kalimba notes rising, warm thumb piano, soft pluck, short decay. High quality, dry close-mic studio recording. Child friendly, clean, no background, no voice."
+    },
+    {
+      "name": "grave",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.6,
+      "duration": 0.5,
+      "variations": 3,
+      "prompt": "One-shot UI success sound. A single soft wooden marimba note in a low-mid register, mellow and round, gentle attack, short warm tail. High quality, dry close-mic studio recording. Child friendly, clean, no background, no voice."
+    },
+    {
+      "name": "arpege",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.6,
+      "duration": 0.5,
+      "variations": 3,
+      "prompt": "One-shot UI success sound. Three quick soft marimba notes rising like a tiny arpeggio, felt mallets, warm and quiet, short. High quality, dry close-mic studio recording. Child friendly, clean, no background, no voice."
+    },
+    {
+      "name": "vibra-court",
+      "prompt": "(Vibra 2 raccourci : 1 accéléré 1,5 fois, 2 accéléré 1,25 fois, 3 seconde note seule)",
+      "duration": 0.3,
+      "variations": 3
+    },
+    {
+      "name": "vibra-net",
+      "model": "eleven_text_to_sound_v3",
+      "promptInfluence": 0.6,
+      "duration": 0.5,
+      "variations": 3,
+      "prompt": "One-shot UI success sound. Two quick soft vibraphone notes rising, motor off, lightly damped, warm mellow tone, very short decay, ends within a third of a second. High quality, dry close-mic studio recording. Child friendly, clean, no background, no voice."
+    }
+  ],
+  "chosen": "aucun"
+}

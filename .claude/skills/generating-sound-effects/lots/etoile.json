@@ -1,0 +1,29 @@
+{
+  "lot": "etoile",
+  "date": "2026-11-19",
+  "note": "Bruitages des moments encore muets, demandés par le propriétaire le 19/11/2026 (crédits ElevenLabs à utiliser avant le 25/11) : Une étoile gagnée sur une table.",
+  "title": "Une étoile gagnée sur une table",
+  "intro": "Ce son part quand une table gagne une étoile. Doux et brillant, comme une étoile qui s'allume.",
+  "ceiling": 212,
+  "sounds": [
+    {
+      "name": "scintille",
+      "prompt": "single twinkling star sparkle, soft glockenspiel ding with a gentle shimmer, child friendly, clean, no background, no voice",
+      "duration": 0.8,
+      "variations": 2
+    },
+    {
+      "name": "carillon",
+      "prompt": "bright magical chime pop, a little star appearing in the night sky, cute, child friendly, clean, no background, no voice",
+      "duration": 0.8,
+      "variations": 2
+    },
+    {
+      "name": "harpe",
+      "prompt": "short ascending harp glissando ending on a soft bell, child friendly, clean, no background, no voice",
+      "duration": 0.8,
+      "variations": 2
+    }
+  ],
+  "chosen": "scintille-1"
+}

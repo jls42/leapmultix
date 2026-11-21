@@ -1,0 +1,37 @@
+{
+  "lot": "paire",
+  "date": "2026-11-19",
+  "note": "Bruitages des moments encore muets, demandés par le propriétaire le 19/11/2026 (crédits ElevenLabs à utiliser avant le 25/11) : MultiMemory : une paire trouvée.",
+  "title": "MultiMemory : une paire trouvée",
+  "intro": "Dans MultiMemory, ce son part quand deux cartes forment une paire, avec le son de la bonne réponse. « Avec la bonne réponse » le fait entendre comme en partie.",
+  "ceiling": 164,
+  "reference": {
+    "file": "assets/sounds/mixkit-electronic-lock-success-beeps-2852.wav",
+    "label": "Avec la bonne réponse",
+    "volume": 0.4,
+    "gameVolume": 0.7,
+    "delayMs": 0
+  },
+  "sounds": [
+    {
+      "name": "ding-ding",
+      "prompt": "two cards matching, a sweet double chime ding ding, happy, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    },
+    {
+      "name": "clic",
+      "prompt": "soft magical pop with a sparkle, two pieces clicking together, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    },
+    {
+      "name": "harpe",
+      "prompt": "cheerful little plucked harp arpeggio, very short, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    }
+  ],
+  "chosen": "aucun",
+  "choice": "Refusé par le propriétaire (« c'est moche ») : second passage, lot paire-2."
+}

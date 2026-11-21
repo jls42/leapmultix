@@ -1,0 +1,36 @@
+{
+  "lot": "ami-touche",
+  "date": "2026-11-19",
+  "note": "Bruitages des moments encore muets, demandés par le propriétaire le 19/11/2026 (crédits ElevenLabs à utiliser avant le 25/11) : MultiPop : un ami touché par erreur.",
+  "title": "MultiPop : un ami touché par erreur",
+  "intro": "Dans MultiPop, ce son part quand le maillet touche un ami (un autre héros) au lieu d'un monstre. Un « oups » rigolo, jamais une punition. « Avec le maillet » le fait entendre comme en partie.",
+  "ceiling": 164,
+  "reference": {
+    "file": "assets/sounds/maillet.wav",
+    "label": "Avec le maillet",
+    "volume": 0.7,
+    "gameVolume": 0.7,
+    "delayMs": 80
+  },
+  "sounds": [
+    {
+      "name": "boing",
+      "prompt": "soft cartoon oops boing, gentle and funny, a friendly character bumped on the head, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    },
+    {
+      "name": "pouet",
+      "prompt": "squeaky rubber toy squeeze, short and silly, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    },
+    {
+      "name": "bonk",
+      "prompt": "soft wooden bonk with a tiny comic wobble, child friendly, clean, no background, no voice",
+      "duration": 0.6,
+      "variations": 2
+    }
+  ],
+  "chosen": "boing-1"
+}

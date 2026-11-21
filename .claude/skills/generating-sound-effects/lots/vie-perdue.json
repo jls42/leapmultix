@@ -1,0 +1,29 @@
+{
+  "lot": "vie-perdue",
+  "date": "2026-11-19",
+  "note": "Bruitages des moments encore muets, demandés par le propriétaire le 19/11/2026 (crédits ElevenLabs à utiliser avant le 25/11) : Une vie perdue.",
+  "title": "Une vie perdue",
+  "intro": "Ce son part quand une vie est perdue (MultiSnake, MultiMiam). Un petit contretemps, jamais triste ni effrayant : on a envie de rejouer.",
+  "ceiling": 212,
+  "sounds": [
+    {
+      "name": "marimba",
+      "prompt": "gentle descending three-note marimba, soft and kind, a small setback in a kids game, not sad, child friendly, clean, no background, no voice",
+      "duration": 0.8,
+      "variations": 2
+    },
+    {
+      "name": "degonfle",
+      "prompt": "soft cartoon deflating whistle going down, funny not scary, child friendly, clean, no background, no voice",
+      "duration": 0.8,
+      "variations": 2
+    },
+    {
+      "name": "bloup",
+      "prompt": "short soft wobble bloop going down in pitch, friendly, child friendly, clean, no background, no voice",
+      "duration": 0.8,
+      "variations": 2
+    }
+  ],
+  "chosen": "degonfle-1"
+}
