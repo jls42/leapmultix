@@ -53,7 +53,7 @@ describe('Politique de confidentialité de l’appli Android', () => {
   test.each(['fr', 'en'])('en %s : un titre de politique, l’éditeur et son contact', lang => {
     const text = plain(article(lang).textContent);
     expect(article(lang).querySelector('h1').textContent).toMatch(/confidentialité|privacy/i);
-    expect(text).toContain('Julien LE SAUX');
+    expect(text).toContain('Julien Le Saux');
     expect(article(lang).querySelector('a[href="mailto:contact@jls42.org"]')).not.toBeNull();
   });
 

@@ -605,6 +605,27 @@ body:has(#slide1.active-slide) .skip-link:focus {
   color: var(--color-ink);
 }
 
+/* Refus de la mesure d'audience (politique de confidentialité, js/audience-choice.js) : le
+   bouton, puis la phrase qui dit si les visites sont comptées */
+.audience-choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.audience-choice .btn {
+  flex: none;
+  margin: 0;
+}
+
+.audience-status {
+  flex: 1 1 14rem;
+  font-weight: 700;
+  line-height: var(--leading-body);
+  color: var(--color-ink);
+}
+
 .legal-section a[href^='http'],
 .legal-section a[href^='mailto:'] {
   color: var(--color-action-ink);
