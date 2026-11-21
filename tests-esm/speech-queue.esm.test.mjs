@@ -574,6 +574,103 @@ describe('Moteur de synthèse', () => {
   });
 });
 
+describe('Voix du téléphone, dans l’appli Android', () => {
+  let calls;
+  let settle;
+
+  /** L'appli annonce ses modules ; chaque appel garde de quoi le tenir ou le refuser */
+  function installApp(plugins = ['LeapMultixFiles', 'LeapMultixSpeech']) {
+    calls = [];
+    settle = [];
+    globalThis.Capacitor = {
+      PluginHeaders: plugins.map(name => ({ name })),
+      nativePromise: (plugin, method, options) => {
+        calls.push([plugin, method, options]);
+        return new Promise((resolve, reject) => settle.push({ resolve, reject }));
+      },
+    };
+  }
+
+  beforeEach(() => {
+    // La file passe par le moteur de synthèse : la « voix de l'appareil »
+    setSpeechEngine(null);
+  });
+
+  afterEach(() => {
+    delete globalThis.Capacitor;
+    delete globalThis.speechSynthesis;
+    delete globalThis.SpeechSynthesisUtterance;
+  });
+
+  test('sans synthèse du navigateur, la phrase part vers l’appli, avec la langue et les réglages', () => {
+    installApp();
+    expect(getSynthesisEngine().isAvailable()).toBe(true);
+    speak('Combien font 7 fois 8 ?');
+    expect(calls).toEqual([
+      [
+        'LeapMultixSpeech',
+        'speak',
+        { text: 'Combien font 7 fois 8 ?', lang: 'fr-FR', rate: 0.9, pitch: 1.1, volume: 1 },
+      ],
+    ]);
+  });
+
+  test('la phrase en file attend la réponse de l’appli ; un refus laisse aussi passer la suite', async () => {
+    installApp();
+    const errors = jest.spyOn(console, 'error').mockImplementation(() => {});
+    speak('Bravo !');
+    speak('Combien font 7 fois 8 ?', { queue: true });
+    expect(calls.map(([, , options]) => options.text)).toEqual(['Bravo !']);
+    settle[0].resolve({});
+    await Promise.resolve();
+    expect(calls.map(([, , options]) => options.text)).toEqual([
+      'Bravo !',
+      'Combien font 7 fois 8 ?',
+    ]);
+
+    speak('Raté !', { queue: true });
+    settle[1].reject(new Error('langue absente'));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(calls.at(-1)[2].text).toBe('Raté !');
+    errors.mockRestore();
+  });
+
+  test('couper demande l’arrêt à l’appli ; la réponse tardive de la phrase coupée ne fait rien', async () => {
+    installApp();
+    speak('Mode Quiz', { priority: 'high' });
+    speak('Bravo !', { queue: true });
+    cancelSpeech();
+    expect(calls.map(([, method]) => method)).toEqual(['speak', 'stop']);
+    settle[0].resolve({ stopped: true });
+    await Promise.resolve();
+    expect(calls.map(([, method]) => method)).toEqual(['speak', 'stop']);
+  });
+
+  test('une appli qui n’annonce pas ce module reste muette', () => {
+    installApp(['LeapMultixFiles']);
+    expect(getSynthesisEngine().isAvailable()).toBe(false);
+    speak('Bravo !');
+    expect(calls).toEqual([]);
+  });
+
+  test('la synthèse du navigateur garde la priorité quand elle existe', () => {
+    installApp();
+    const spoken = [];
+    globalThis.SpeechSynthesisUtterance = function SpeechSynthesisUtterance(text) {
+      this.text = String(text ?? '');
+    };
+    globalThis.speechSynthesis = {
+      speak: u => spoken.push(u),
+      cancel: jest.fn(),
+      getVoices: () => [],
+    };
+    speak('Bravo !');
+    expect(spoken.map(u => u.text)).toEqual(['Bravo !']);
+    expect(calls).toEqual([]);
+  });
+});
+
 describe('Première décision (voix enregistrée, première visite)', () => {
   test('les phrases demandées pendant l’attente partent ensuite, dans l’ordre, selon les règles', () => {
     const release = holdSpeechDecision();
