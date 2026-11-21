@@ -358,6 +358,7 @@
   "info_time_label": "Temps :",
   "feedback_correct": "Correct ! +{points} points",
   "feedback_incorrect": "La bonne réponse est {correctAnswer}.",
+  "feedback_correct_spoken": "Oui, {answer} !",
   "feedback_correct_streak": "Correct ! +{points} points (série {streak})",
   "challenge_feedback_correct": "Correct ! +{points} points",
   "challenge_feedback_correct_bonus": "Correct ! +{points} points et +{timeBonus} s",

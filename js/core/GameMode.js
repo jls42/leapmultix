@@ -278,6 +278,21 @@ function operationDetails(question, operator, a, b, result) {
 }
 
 /**
+ * Ce qui se dit après une bonne réponse : le nombre trouvé, puis un bravo (« Oui, 42 ! »,
+ * « Super ! »). Deux parties, deux clips : les bravos restent indépendants des nombres.
+ * Entendre le résultat le fixe, comme après une erreur. Vrai/Faux et divisibilité n'ont pas
+ * de nombre à dire : le bravo seul.
+ * @param {Object} question - Question courante
+ * @returns {string[]} Parties à dire l'une après l'autre (speak les tient pour une phrase)
+ */
+export function correctAnswerParts(question) {
+  const praise = getTranslation('correct');
+  const hasNumber = !['true_false', 'divisibility'].includes(question?.type);
+  if (!hasNumber || !Number.isFinite(Number(question?.answer))) return [praise];
+  return [getTranslation('feedback_correct_spoken', { answer: question.answer }), praise];
+}
+
+/**
  * Explication d'une erreur (principe « Comprendre avant de réciter ») : la bonne réponse,
  * le vrai résultat d'une question Vrai/Faux, ce que fait l'opération (comptage ou
  * vérification) et une astuce.
@@ -402,6 +417,9 @@ export class GameMode {
       wrongAnswerDelay: 2400,
       showScore: true,
       announceOnStart: true,
+      // Une bonne réponse dit le nombre trouvé avant le bravo (Quiz, Aventure). Les modes
+      // chronométrés gardent le bravo seul, ou rien : le nombre les ralentirait
+      saysCorrectAnswer: false,
       ...config,
     };
 
@@ -1009,6 +1027,22 @@ export class GameMode {
   }
 
   /**
+   * Parties dites après une bonne réponse à la question en cours (correctAnswerParts). Le
+   * bravo est tiré une seule fois par question : ce qui est chargé d'avance est ce qui sera
+   * dit. Rien dans un mode qui ne dit pas le nombre (config.saysCorrectAnswer) : il n'a alors
+   * rien à charger d'avance.
+   * @returns {string[]|null}
+   */
+  spokenCorrectParts() {
+    const question = this.state.currentQuestion;
+    if (!question || !this.config.saysCorrectAnswer) return null;
+    if (this._correctSpeech?.question !== question) {
+      this._correctSpeech = { question, parts: correctAnswerParts(question) };
+    }
+    return this._correctSpeech.parts;
+  }
+
+  /**
    * Affiche « Continuer » et suspend l'avance jusqu'à ce que l'enfant l'active.
    * Le focus y est placé après l'événement clavier en cours, pour qu'Entrée
    * sur une réponse ne valide pas aussitôt l'explication.
@@ -1455,10 +1489,12 @@ export class GameMode {
     if (!text) return;
     if (queued) speak(text, { queue: true });
     else speak(text);
-    // La phrase d'une erreur se charge d'avance (voix enregistrée), après le démarrage de
-    // la question : dite dès la réponse, elle n'attend pas le réseau
-    const errorText = this.spokenErrorText();
-    if (errorText) preloadSpeech([errorText]);
+    // Les phrases de la réponse (erreur, bonne réponse) se chargent d'avance (voix
+    // enregistrée), après le démarrage de la question : dites dès la réponse, elles
+    // n'attendent pas le réseau
+    const answerTexts = [this.spokenErrorText(), ...(this.spokenCorrectParts() ?? [])];
+    const toLoad = answerTexts.filter(Boolean);
+    if (toLoad.length) preloadSpeech(toLoad);
   }
 
   /**

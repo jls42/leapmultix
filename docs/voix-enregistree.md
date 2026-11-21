@@ -163,6 +163,15 @@ dite reste une phrase du corpus.
 - **Question en file** (`queue: true`) : après une bonne réponse, la question suivante
   attend la fin du « Bravo » ; elle est oubliée si l'enfant répond avant. Après une
   erreur, dans le Défi, la question suivante coupe la fin de l'explication.
+- **Bonne réponse** : dans le Quiz et l'Aventure, le nombre trouvé se dit avant le bravo
+  (« Oui, 42 ! », puis « Super ! », `correctAnswerParts` de `js/core/GameMode.js`) :
+  l'entendre le fixe, comme après une erreur. Deux clips, pour que les bravos restent
+  indépendants des nombres : un bravo ajouté ne demande qu'un clip par voix. Vrai/Faux,
+  divisibilité et Défi gardent le bravo seul.
+- **Phrase en plusieurs parties** : `speak([partie, partie])` les dit l'une après l'autre
+  dans l'emplacement actif, comme une seule phrase. La couper coupe ce qui reste, la question
+  en file part après la dernière partie, chaque partie a sa fin bornée, et une partie qui ne
+  peut pas se dire est sautée.
 - **Fin bornée** : au-delà d'une durée estimée d'après le texte (large : 3 s plus 200 ms
   par caractère, pour ne jamais couper une voix lente), la phrase est tenue pour finie et
   la file avance. Un son bloqué ne retient rien.
@@ -217,9 +226,10 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
   pas démarré en 1,5 s (le téléchargement continue alors pour le cache). Plausible compte
   une fois par session chaque cause (`Voice fallback`).
 - **Préchargement** : les annonces de mode et les « Bravo » dès que la voix est branchée ;
-  pendant chaque question, la phrase de son erreur (« Raté ! La bonne réponse est 56. »),
-  une fois le clip de la question parti pour ne pas lui prendre la bande passante. Dite à la
-  réponse, elle sort du cache.
+  pendant chaque question, la phrase de son erreur (« Raté ! La bonne réponse est 56. ») et,
+  dans le Quiz et l'Aventure, les parties de sa bonne réponse (« Oui, 56 ! » et le bravo tiré
+  pour cette question), une fois le clip de la question parti pour ne pas lui prendre la
+  bande passante. Dites à la réponse, elles sortent du cache.
 - **Première visite** (ni copie de l'index ni choix du joueur) : la décision « parole
   active ? » attend l'index, au plus 1,5 s. Les phrases demandées entre-temps attendent avec
   elle (les trois dernières), et le bouton de voix de la barre du haut reste masqué, à sa

@@ -16,8 +16,12 @@
 // - une phrase coupée, remplacée ou oubliée est invalidée : ses événements tardifs (fin,
 //   erreur, téléchargement, minuteur) ne font plus rien, ni lecture ni repli ;
 // - fin bornée, quel que soit le moteur : au-delà d'une durée estimée d'après le texte,
-//   la phrase est tenue pour finie et la file avance. Un son bloqué ne retient rien.
-// Chaque phrase part seule vers le moteur : plus aucun texte recollé.
+//   la phrase est tenue pour finie et la file avance. Un son bloqué ne retient rien ;
+// - une phrase peut tenir en plusieurs parties, dites l'une après l'autre (« Oui, 42 ! »
+//   puis « Super ! ») : elles occupent ensemble l'emplacement actif. Couper la phrase coupe
+//   les parties qui restent, la phrase en attente part après la dernière, et chaque partie
+//   a sa propre fin bornée.
+// Chaque partie part seule vers le moteur : plus aucun texte recollé.
 // whenSpeechEnds() rend une promesse tenue quand la parole se tait : phrase active finie
 // (ou coupée) et aucune en attente. Le Défi s'en sert pour laisser finir l'explication d'une
 // erreur avant la question suivante.
@@ -479,9 +483,12 @@ export function estimateSpeechDurationMs(text) {
 }
 
 let nextToken = 0;
-/** @type {{token: number, text: string, priority: string, handle: Object|null, deadline: any}|null} */
+/**
+ * text : la partie en cours ; rest : les parties qui la suivent dans la même phrase
+ * @type {{token: number, text: string, rest: string[], priority: string, handle: Object|null, deadline: any}|null}
+ */
 let active = null;
-/** @type {{token: number, text: string, priority: string}|null} */
+/** @type {{token: number, text: string, rest: string[], priority: string}|null} */
 let pending = null;
 /** Attentes de whenSpeechEnds, tenues quand plus rien n'est dit ni en attente */
 let silenceWaiters = [];
@@ -539,13 +546,27 @@ function playPending() {
   if (next) startPhrase(next);
 }
 
-/** Fin (ou abandon) de la phrase active : la file passe à la suite */
+/**
+ * Après une partie finie (ou tenue pour finie) : la partie suivante de la même phrase,
+ * sinon la phrase en attente
+ */
+function continueAfter(phrase) {
+  const [text, ...rest] = phrase.rest;
+  if (text !== undefined) {
+    const { priority } = phrase;
+    startPhrase({ token: ++nextToken, text, rest, priority, handle: null, deadline: null });
+    return;
+  }
+  playPending();
+  settleSilence();
+}
+
+/** Fin (ou abandon) de la partie active : la file passe à la suite */
 function finishActive(phrase) {
   if (active !== phrase) return;
   active = null;
   clearDeadline(phrase);
-  playPending();
-  settleSilence();
+  continueAfter(phrase);
 }
 
 function setDeadlineFor(phrase, ms) {
@@ -553,10 +574,9 @@ function setDeadlineFor(phrase, ms) {
   clearDeadline(phrase);
   phrase.deadline = setTimeout(() => {
     if (active !== phrase) return;
-    // Son bloqué ou fin jamais signalée : la phrase est tenue pour finie
+    // Son bloqué ou fin jamais signalée : la partie est tenue pour finie
     stopActive();
-    playPending();
-    settleSilence();
+    continueAfter(phrase);
   }, ms);
 }
 
@@ -612,7 +632,7 @@ export function cancelSpeech() {
 const MAX_HELD_PHRASES = 3;
 /** Attente en cours : son jeton, null sinon */
 let decisionHold = null;
-/** @type {{text: string, options: Object}[]} */
+/** @type {{text: string[], options: Object}[]} */
 let heldPhrases = [];
 
 /**
@@ -674,20 +694,22 @@ function canSpeak(text) {
 
 /**
  * Lit une phrase à voix haute, selon les règles de la file (en tête de fichier).
- * @param {string} text - Phrase telle qu'elle doit être dite
+ * @param {string|string[]} text - Phrase telle qu'elle doit être dite, ou ses parties, dites
+ *   l'une après l'autre comme une seule phrase (une partie qui ne peut pas se dire est sautée)
  * @param {{priority?: 'high'|'normal', queue?: boolean}} [options]
  *   priority 'high' : annonce de mode ; queue : attendre la fin de la phrase en cours
  */
 export function speak(text, options = {}) {
   const { priority = 'normal', queue = false } = options;
-  const phraseText = String(text ?? '');
+  const parts = (Array.isArray(text) ? text : [text]).map(part => String(part ?? ''));
   if (decisionHold) {
-    heldPhrases = [...heldPhrases, { text: phraseText, options }].slice(-MAX_HELD_PHRASES);
+    heldPhrases = [...heldPhrases, { text: parts, options }].slice(-MAX_HELD_PHRASES);
     return;
   }
-  if (!canSpeak(phraseText)) return;
+  const [first, ...rest] = parts.filter(canSpeak);
+  if (first === undefined) return;
 
-  const phrase = { token: ++nextToken, text: phraseText, priority, handle: null, deadline: null };
+  const phrase = { token: ++nextToken, text: first, rest, priority, handle: null, deadline: null };
   if (priority === 'high') {
     cancelSpeech();
     startPhrase(phrase);

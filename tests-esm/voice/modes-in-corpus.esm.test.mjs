@@ -79,7 +79,8 @@ function playQuestions(mode, count = QUESTIONS_PER_MODE) {
 }
 
 function spokenTexts() {
-  return speak.mock.calls.map(([text]) => normalizeSpokenText(text));
+  // Une phrase en plusieurs parties (« Oui, 42 ! », « Super ! ») : chaque partie a son clip
+  return speak.mock.calls.flatMap(([text]) => [text].flat()).map(normalizeSpokenText);
 }
 
 function preloadedTexts() {

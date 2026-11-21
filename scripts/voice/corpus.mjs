@@ -301,6 +301,21 @@ function addErrorPhrases(ctx) {
 }
 
 /**
+ * Bonnes réponses : « Oui, 42 ! », le nombre trouvé, dit avant un bravo (Quiz et Aventure ;
+ * correctAnswerParts de js/core/GameMode.js). Le bravo est un autre clip, déjà au corpus.
+ * Vrai/Faux, divisibilité et Défi gardent le bravo seul.
+ * @param {Object} ctx - Contexte de construction (voir buildCorpus)
+ */
+function addCorrectPhrases(ctx) {
+  const { dict, lang, add, quizAnswers } = ctx;
+  for (const answer of quizAnswers) {
+    for (const text of variantsOf(dict, lang, 'feedback_correct_spoken', { answer })) {
+      add('bonne réponse', text);
+    }
+  }
+}
+
+/**
  * Découverte : la table choisie, ou l'opération et le niveau (« Addition, Facile »)
  * @param {Object} ctx - Contexte de construction (voir buildCorpus)
  */
@@ -355,6 +370,7 @@ export function buildCorpus(lang, dict = readTranslations(lang)) {
   }
   addDivisibilityPhrases(ctx);
   addErrorPhrases(ctx);
+  addCorrectPhrases(ctx);
   addDiscoveryChoicePhrases(ctx);
 
   return [...phrases.entries()]
