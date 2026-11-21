@@ -117,13 +117,28 @@ function restoreMessage({ ok, name, problem }) {
   return translateOr('trash_restore_failed', 'Ce joueur n’a pas pu être restauré.');
 }
 
+/** Nom du plugin par lequel l'appli Android enregistre un fichier (« Enregistrer sous ») */
+const APP_FILES_PLUGIN = 'LeapMultixFiles';
+
+/**
+ * L'enregistreur de fichiers de l'appli Android, ou null dans un navigateur. La page de
+ * l'appli ne télécharge rien : c'est l'appli qui ouvre la fenêtre « Enregistrer sous ».
+ * @returns {((name: string, content: string) => Promise<{saved: boolean}>)|null}
+ */
+function appFileSaver() {
+  const bridge = globalThis.Capacitor;
+  const offered = bridge?.PluginHeaders?.some(header => header.name === APP_FILES_PLUGIN);
+  if (!offered || typeof bridge.nativePromise !== 'function') return null;
+  return (name, content) => bridge.nativePromise(APP_FILES_PLUGIN, 'save', { name, content });
+}
+
 /**
  * Télécharge un fichier JSON (lien temporaire vers un Blob)
- * @param {Object} payload
+ * @param {string} text - Contenu du fichier
  * @param {string} fileName
  */
-function downloadJson(payload, fileName) {
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+function downloadJson(text, fileName) {
+  const blob = new Blob([text], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -447,17 +462,44 @@ export const PlayerTools = {
   },
 
   /**
-   * « Enregistrer les joueurs dans un fichier » : le fichier du jour se télécharge
+   * « Enregistrer les joueurs dans un fichier » : le fichier du jour se télécharge ; dans
+   * l'appli Android, le joueur choisit où l'enregistrer
    */
   exportPlayers() {
     const backup = UserManager.exportPlayers();
     const count = Object.keys(backup.players).length;
     const prefix = translateOr('players_file_prefix', 'leapmultix-joueurs');
     const file = backupFileName(prefix, new Date());
-    downloadJson(backup, file);
-    void requestPersistentStorage();
+    const text = JSON.stringify(backup, null, 2);
     const fallback = `${count} joueurs enregistrés dans «\u00a0${file}\u00a0».`;
-    this._sayBackup(translateOr('export_done', fallback, { n: count, file }));
+    const done = translateOr('export_done', fallback, { n: count, file });
+    void requestPersistentStorage();
+    const save = appFileSaver();
+    if (save) {
+      void this._saveInApp(save, file, text, done);
+      return;
+    }
+    downloadJson(text, file);
+    this._sayBackup(done);
+  },
+
+  /**
+   * Appli Android : le message suit la fenêtre « Enregistrer sous » (choix, puis résultat)
+   * @param {(name: string, content: string) => Promise<{saved: boolean}>} save
+   * @param {string} file
+   * @param {string} text
+   * @param {string} done - Message d'un fichier enregistré
+   */
+  async _saveInApp(save, file, text, done) {
+    this._sayBackup(translateOr('export_choose_place', 'Choisis où enregistrer le fichier.'));
+    const notSaved = translateOr('export_not_saved', 'Le fichier n’a pas été enregistré.');
+    try {
+      const result = await save(file, text);
+      this._sayBackup(result?.saved ? done : notSaved);
+    } catch (error) {
+      console.warn('[Joueurs] Enregistrement du fichier impossible', error);
+      this._sayBackup(notSaved);
+    }
   },
 
   /**
