@@ -52,7 +52,8 @@ function createFakeEngine() {
   };
 }
 
-const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+// Temps simulé : le test avance l'horloge lui-même, sans dépendre de la vitesse de la machine
+const wait = ms => jest.advanceTimersByTimeAsync(ms);
 
 function showKnownQuestion(mode) {
   mode.state.currentQuestion = { ...KNOWN };
@@ -94,6 +95,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  jest.useFakeTimers();
   localStorage.setItem('voiceEnabled', 'true');
   document.body.innerHTML =
     '<section id="slide4" class="slide"><div id="game"></div></section><div id="results"></div>';
@@ -107,6 +109,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  jest.useRealTimers();
   setSpeechEngine(null);
   localStorage.removeItem('voiceEnabled');
   jest.restoreAllMocks();
@@ -189,15 +192,18 @@ describe('Quiz : bip, le nombre trouvé, « Bravo », question suivante', () => 
     expect(number.text).toBe('Oui, 8 !');
     await wait(quiz.config.nextQuestionDelay);
 
-    // L'enfant répond à la question affichée avant d'avoir entendu sa lecture
+    // L'enfant répond à la question affichée avant d'avoir entendu sa lecture. Cette question
+    // est tirée au hasard, et un vrai ou faux n'a pas de nombre à dire : on lui donne la
+    // question connue, pour que la phrase attendue ne dépende pas du tirage
+    quiz.state.currentQuestion = { ...KNOWN };
     const before = engine.starts.length;
-    quiz.handleAnswer(quiz.state.currentQuestion.answer);
+    quiz.handleAnswer(KNOWN.answer);
     expect(number.handle.stop).toHaveBeenCalledTimes(1);
     number.ctx.onEnded();
     expect(engine.starts.slice(before).map(s => s.text)).toEqual([]);
 
     await wait(GOOD_SOUND_MS + 30);
-    expect(engine.last().text).toMatch(/^Oui, \d+ !$/);
+    expect(engine.starts.slice(before).map(s => s.text)).toEqual(['Oui, 8 !']);
     quiz.stop();
   });
 
