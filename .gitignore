@@ -69,6 +69,9 @@ deploy*.config
 credentials*.json
 *service-account*.json
 
+# Notes privées du poste, lues par les sessions de travail assistées
+CLAUDE.local.md
+
 # Generated analysis reports
 analysis/
 
