@@ -376,21 +376,70 @@ function reportSpeechError(reason, detail) {
   );
 }
 
+/** Nom du module par lequel l'appli Android lit une phrase avec la voix du téléphone */
+const APP_SPEECH_PLUGIN = 'LeapMultixSpeech';
+
 /**
- * Moteur de synthèse du navigateur (speechSynthesis). Une seule phrase à la fois : la
- * file ne lui confie jamais deux énoncés en même temps.
+ * La voix du téléphone, offerte par l'appli Android, ou null. La page de l'appli n'a pas
+ * speechSynthesis : la « voix de l'appareil » y est la synthèse vocale d'Android, pour le
+ * joueur qui décoche « Voix enregistrée » comme pour une appli construite sans elle.
+ * @returns {((method: string, options?: Object) => Promise<Object>)|null}
+ */
+function appSpeech() {
+  const bridge = getGlobalRoot()?.Capacitor;
+  const offered = bridge?.PluginHeaders?.some(header => header.name === APP_SPEECH_PLUGIN);
+  if (!offered || typeof bridge.nativePromise !== 'function') return null;
+  return (method, options = {}) => bridge.nativePromise(APP_SPEECH_PLUGIN, method, options);
+}
+
+/**
+ * Une phrase dite par la voix du téléphone : l'appli répond quand la phrase est finie ou
+ * coupée, et refuse quand elle ne peut pas la dire (langue absente, synthèse en panne)
+ * @param {(method: string, options?: Object) => Promise<Object>} call - Voir appSpeech
+ * @param {string} text
+ * @param {{volume: number, onEnded: Function, onFailed: Function}} events
+ * @returns {{stop: () => void}}
+ */
+function startInApp(call, text, { volume, onEnded, onFailed }) {
+  let done = false;
+  const settle = callback => value => {
+    if (done) return;
+    done = true;
+    callback(value);
+  };
+  const { lang, rate, pitch } = speechSettings;
+  call('speak', { text: String(text || ''), lang, rate, pitch, volume }).then(
+    settle(onEnded),
+    settle(onFailed)
+  );
+  return {
+    stop() {
+      done = true;
+      call('stop').catch(error => console.warn('[Speech] Error cancelling:', error));
+    },
+  };
+}
+
+/**
+ * Moteur de synthèse, la « voix de l'appareil » : celle du navigateur (speechSynthesis), ou
+ * celle du téléphone dans l'appli Android (appSpeech). Une seule phrase à la fois : la file ne
+ * lui confie jamais deux énoncés en même temps.
  */
 function createSynthesisEngine() {
   const synthesis = () => getGlobalRoot()?.speechSynthesis;
+  const hasBrowserVoice = () =>
+    Boolean(synthesis()) && typeof SpeechSynthesisUtterance !== 'undefined';
   return {
     name: 'synthesis',
 
     isAvailable() {
-      return Boolean(synthesis()) && typeof SpeechSynthesisUtterance !== 'undefined';
+      return hasBrowserVoice() || appSpeech() !== null;
     },
 
     start(text, { volume, onStarted, onEnded, onFailed }) {
       const synth = synthesis();
+      const app = hasBrowserVoice() ? null : appSpeech();
+      if (app) return startInApp(app, text, { volume, onEnded, onFailed });
       let done = false;
       const settle = callback => event => {
         if (done) return;

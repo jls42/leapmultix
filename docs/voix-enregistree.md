@@ -168,6 +168,10 @@ dite reste une phrase du corpus.
   l'entendre le fixe, comme après une erreur. Deux clips, pour que les bravos restent
   indépendants des nombres : un bravo ajouté ne demande qu'un clip par voix. Vrai/Faux,
   divisibilité et Défi gardent le bravo seul.
+- **Appli Android** : la page de l'appli n'a pas `speechSynthesis`. Quand l'appli annonce son
+  module `LeapMultixSpeech`, le moteur de synthèse confie la phrase à la synthèse vocale du
+  téléphone (`appSpeech` de `js/speech.js`) : c'est la « voix de l'appareil » de l'appli, pour
+  le joueur qui décoche « Voix enregistrée » comme pour une appli construite sans elle.
 - **Phrase en plusieurs parties** : `speak([partie, partie])` les dit l'une après l'autre
   dans l'emplacement actif, comme une seule phrase. La couper coupe ce qui reste, la question
   en file part après la dernière partie, chaque partie a sa fin bornée, et une partie qui ne
