@@ -7,7 +7,9 @@
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import fs from 'node:fs';
 
-const { SEASONS, wearSeason, wornSeason } = await import('../../js/core/seasons.js');
+const { SEASONS, setAbsentSeasons, wearSeason, wornSeason } = await import(
+  '../../js/core/seasons.js'
+);
 const { eventBus } = await import('../../js/core/eventBus.js');
 const {
   applyColorTheme,
@@ -16,6 +18,7 @@ const {
   effectiveColorTheme,
   initThemes,
   isDarkTheme,
+  readAbsentSeasons,
   rememberColorTheme,
   toggleColorMode,
 } = await import('../../js/core/theme.js');
@@ -72,6 +75,7 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.useRealTimers();
+  setAbsentSeasons([]);
   wearSeason(null);
   localStorage.clear();
   document.body.replaceChildren();
@@ -196,6 +200,50 @@ describe('Application du thème et costume des images', () => {
     expect(document.body.classList.contains('theme-halloween')).toBe(false);
     expect(visible()).toEqual(['dark', 'moss']);
     expect(head().getAttribute('src')).toContain('/fox_head_avatar-128.webp');
+  });
+});
+
+describe('Fête absente de cette copie du jeu (appli Android)', () => {
+  const withMeta = content =>
+    new DOMParser().parseFromString(
+      `<head><meta name="leapmultix-seasons-absent" content="${content}" /></head>`,
+      'text/html'
+    );
+
+  test('la balise du site est vide : aucune fête ne manque', () => {
+    const page = fs.readFileSync('index.html', 'utf8');
+    // Texte exact : la construction de l'appli le remplace tel quel
+    expect(page.split('<meta name="leapmultix-seasons-absent" content="" />')).toHaveLength(2);
+    expect(readAbsentSeasons(new DOMParser().parseFromString(page, 'text/html'))).toEqual([]);
+  });
+
+  test('la balise nomme les fêtes absentes ; sans balise, aucune', () => {
+    expect(readAbsentSeasons(withMeta('halloween'))).toEqual(['halloween']);
+    expect(readAbsentSeasons(withMeta('halloween, lunarnewyear'))).toEqual([
+      'halloween',
+      'lunarnewyear',
+    ]);
+    expect(readAbsentSeasons(document)).toEqual([]);
+  });
+
+  test('à ses dates : thème ordinaire, boutons de fête cachés, rien de costumé', () => {
+    setAbsentSeasons(readAbsentSeasons(withMeta('halloween')));
+    jest.useFakeTimers({ now: IN_2026 });
+    localStorage.setItem('colorTheme', 'dark');
+    initThemes();
+    expect(appliedColorTheme()).toBe('dark');
+    expect(visible()).toEqual(['dark', 'moss']);
+    expect(wornSeason()).toBeNull();
+    expect(head().getAttribute('src')).not.toContain('halloween');
+    expect(logo().getAttribute('src')).not.toContain('halloween');
+  });
+
+  test('un thème de cette fête appliqué quand même ne demande aucune image costumée', () => {
+    setAbsentSeasons(['halloween']);
+    applyColorTheme('halloween', null);
+    expect(wornSeason()).toBeNull();
+    expect(head().getAttribute('srcset')).not.toContain('halloween');
+    expect(logo().getAttribute('srcset')).not.toContain('halloween');
   });
 });
 

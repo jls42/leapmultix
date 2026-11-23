@@ -13,9 +13,11 @@ import {
   isInSeason,
   isSeasonalImage,
   lunarNewYearDay,
+  parseAbsentSeasons,
   seasonDays,
   seasonEdition,
   seasonOfTheme,
+  setAbsentSeasons,
   wearSeason,
   wornSeason,
 } from '../../js/core/seasons.js';
@@ -237,6 +239,60 @@ describe('Essai ?saison=', () => {
   test('une valeur inconnue laisse la date décider', () => {
     expect(findSeason(day(2026, 10, 31), 'paques')).toBe(HALLOWEEN);
     expect(findSeason(day(2026, 6, 15), 'paques')).toBeNull();
+  });
+});
+
+describe('Fête absente (ses images ne sont pas embarquées)', () => {
+  afterEach(() => {
+    setAbsentSeasons([]);
+    wearSeason(null);
+  });
+
+  test('à ses dates, elle ne s’applique pas ; les autres fêtes gardent les leurs', () => {
+    setAbsentSeasons(['halloween']);
+    expect(findSeason(day(2027, 10, 31))).toBeNull();
+    expect(findSeason(day(2026, 12, 25))).toBe(CHRISTMAS);
+    expect(findSeason(day(2027, 1, 2))).toBe(NEW_YEAR);
+  });
+
+  test('?saison= ne la force pas, et laisse la date décider', () => {
+    setAbsentSeasons(['halloween']);
+    expect(findSeason(day(2026, 7, 14), 'halloween')).toBeNull();
+    expect(findSeason(day(2026, 12, 25), 'halloween')).toBe(CHRISTMAS);
+    expect(findSeason(day(2026, 7, 14), 'christmas')).toBe(CHRISTMAS);
+  });
+
+  test('portée quand même, elle ne costume aucune image', () => {
+    setAbsentSeasons(['halloween']);
+    wearSeason(HALLOWEEN);
+    expect(wornSeason()).toBeNull();
+    expect(costumed('fox', 'bodies')).toBe('fox');
+    expect(costumed('dragon', 'backgrounds')).toBe('dragon');
+    wearSeason(CHRISTMAS);
+    expect(costumed('fox', 'bodies')).toBe('fox_christmas');
+  });
+
+  test('la liste se vide : la fête revient', () => {
+    setAbsentSeasons(['halloween']);
+    setAbsentSeasons([]);
+    expect(findSeason(day(2027, 10, 31))).toBe(HALLOWEEN);
+    wearSeason(HALLOWEEN);
+    expect(costumed('fox', 'heads')).toBe('fox_halloween');
+  });
+
+  test('un identifiant inconnu ne retire rien', () => {
+    setAbsentSeasons(['paques', '']);
+    expect(findSeason(day(2027, 10, 31))).toBe(HALLOWEEN);
+  });
+
+  test.each([
+    ['', []],
+    [null, []],
+    [undefined, []],
+    ['halloween', ['halloween']],
+    [' halloween , lunarnewyear,', ['halloween', 'lunarnewyear']],
+  ])('contenu de la balise %p → %p', (content, ids) => {
+    expect(parseAbsentSeasons(content)).toEqual(ids);
   });
 });
 

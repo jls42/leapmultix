@@ -19,8 +19,10 @@ import { eventBus } from './eventBus.js';
 import {
   SEASONS,
   findSeason,
+  parseAbsentSeasons,
   seasonEdition,
   seasonOfTheme,
+  setAbsentSeasons,
   wearSeason,
   wornSeason,
 } from './seasons.js';
@@ -93,6 +95,19 @@ function markPressed(selector, isActive) {
     btn.setAttribute('aria-pressed', String(active));
   }
 }
+
+/**
+ * Fêtes dont cette copie du jeu n'a pas les images, lues dans la balise que la construction de
+ * l'appli Android remplit (vide sur le site : toutes les fêtes y sont)
+ * @param {Document} [doc]
+ * @returns {string[]} Identifiants de fêtes
+ */
+export function readAbsentSeasons(doc = globalThis.document) {
+  const meta = doc?.querySelector('meta[name="leapmultix-seasons-absent"]');
+  return parseAbsentSeasons(meta?.getAttribute('content'));
+}
+
+setAbsentSeasons(readAbsentSeasons());
 
 /**
  * La fête du jour, ou celle de l'essai ?saison=halloween (?saison=aucune : aucune)
