@@ -20,10 +20,19 @@ paths:
   déploiement), obligatoire dès qu'un PNG est ajouté ou modifié. Il garde une variante plus
   récente que sa source (`dist/assets/images/`) et refait celle d'une image redessinée depuis :
   pour essayer d'autres réglages, régénérer dans un dossier neuf.
-- Réglages de `scripts/generate-responsive-assets.cjs` : 256, 512 et 1024 en WebP quasi sans
-  perte (niveau 40), 64 et 128 en qualité 90 avec sharp YUV. En qualité 75 à 80, les contours des
+- Réglages de `scripts/generate-responsive-assets.cjs` : 256 et 512 en WebP quasi sans perte
+  (niveau 40), 64, 128 et 1024 en qualité 90 avec sharp YUV. En qualité 75 à 80, les contours des
   dessins bavaient (mesuré le 09/10/2026, dessin au canevas comme dans les jeux : 36,6 à 37,8 dB
   de la réduction parfaite de la source, contre 39 à 42,5) : ne pas les baisser sans mesure.
+- Les variantes de 1024 px pesaient les deux tiers des images générées. Ce sont les tablettes et
+  les écrans très denses qui les demandent, dessinées presque pixel pour pixel (un téléphone,
+  même à densité 3, s'arrête à 512) : en qualité 90 depuis le 23/11/2026 (40 % du poids, 41 dB
+  en moyenne, 37 au pire sur 24 dessins), à l'effort 5 (même fidélité qu'à 6, 3 % de poids en
+  plus, 0,3 s par image au lieu de 5). Plus la variante est petite, plus la perte coûte et
+  moins elle rapporte (256 px : 62 % du poids pour 37 dB) : 256 et 512, celles des téléphones,
+  restent quasi sans perte. Exception : les sols étirés (herbe, herbes des fêtes, chemin),
+  agrandis jusqu'à trois fois, gardent leur 1024 quasi sans perte, sinon leur grain fin
+  disparaît (`STRETCHED_TEXTURES`).
 - Fonds : `npm run assets:backgrounds` (WebP versionnés à côté des PNG), qualité 85 avec sharp YUV.
 - Hors ligne : à l'installation, le service worker garde les variantes de 256 px au plus de
   chaque image (`PRECACHE_MAX_WIDTH` de `sw.js`) ; les grandes viennent à la demande. Sans ce
