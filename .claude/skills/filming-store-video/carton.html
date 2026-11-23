@@ -1,0 +1,110 @@
+<!doctype html>
+<!-- Carton de fin de la vidéo de la fiche : une image (?image=<adresse>) et deux lignes dans la
+     langue (?lang=fr|en|es). Photographié en 1920 × 1080 par monter.mjs. Google refuse dans une
+     vidéo de fiche les mots qui vantent (« le meilleur », « nouveau », « gratuit »…) et les
+     invitations (« Télécharger », « Installer », « Jouer ») : ces lignes disent ce qu'est le
+     jeu, rien d'autre. -->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Carton de fin</title>
+    <style>
+      @font-face {
+        font-family: Baloo2;
+        font-weight: 700;
+        src: url('../../../assets/fonts/baloo2-700.woff2') format('woff2');
+      }
+
+      @font-face {
+        font-family: Baloo2;
+        font-weight: 600;
+        src: url('../../../assets/fonts/baloo2-600.woff2') format('woff2');
+      }
+
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        overflow: hidden;
+        background: #0b1026;
+      }
+
+      img {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        object-fit: cover;
+      }
+
+      .band {
+        position: absolute;
+        inset: auto 0 0;
+        padding: 150px 60px 44px;
+        background: linear-gradient(rgb(8 12 34 / 0), rgb(8 12 34 / 0.9) 46%, rgb(8 12 34 / 0.96));
+        color: #fff;
+        font-family: Baloo2, sans-serif;
+        text-align: center;
+      }
+
+      .what {
+        margin: 0;
+        font-size: 62px;
+        font-weight: 700;
+        line-height: 1.15;
+      }
+
+      .how {
+        margin: 8px 0 0;
+        color: #ffd66b;
+        font-size: 46px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="band">
+      <p class="what" id="what"></p>
+      <p class="how" id="how"></p>
+    </div>
+    <script>
+      const TEXTS = new Map([
+        [
+          'fr',
+          [
+            'Tables et calcul mental pour les 6-12 ans',
+            'Sans publicité · Sans compte · Fonctionne sans Internet',
+          ],
+        ],
+        [
+          'en',
+          [
+            'Times tables and mental math for ages 6-12',
+            'No ads · No account · Works without Internet',
+          ],
+        ],
+        [
+          'es',
+          [
+            'Tablas y cálculo mental de 6 a 12 años',
+            'Sin anuncios · Sin cuenta · Funciona sin Internet',
+          ],
+        ],
+      ]);
+      const params = new URLSearchParams(location.search);
+      const lang = TEXTS.has(params.get('lang')) ? params.get('lang') : 'fr';
+      const [what, how] = TEXTS.get(lang);
+      document.documentElement.lang = lang;
+      document.getElementById('what').textContent = what;
+      document.getElementById('how').textContent = how;
+      // L'image arrive par l'adresse : monter.mjs attend qu'elle soit chargée avant la photo
+      const art = new Image();
+      art.id = 'art';
+      art.alt = '';
+      art.src = params.get('image') ?? '';
+      document.body.prepend(art);
+    </script>
+  </body>
+</html>
