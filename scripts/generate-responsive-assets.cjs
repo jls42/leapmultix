@@ -29,9 +29,16 @@ const REPORT_FILE = './analysis/responsive-assets-report.json';
 // comme dans les jeux : 36,6 à 37,8 dB de la réduction parfaite de la source).
 // - 64 et 128 (préchargés pour le hors ligne, petits écrans) : qualité 90, couleurs
 //   sous-échantillonnées sans bavure (sharp YUV) ; poids × 1,2 environ ;
-// - 256, 512 et 1024 (tablettes, écrans denses et grands, chargés à la demande) : quasi sans
-//   perte, niveau 40 : 39 à 42,5 dB, autant que le niveau 80 pour un cinquième de poids en moins.
+// - 256 et 512 (téléphones et tablettes, chargés à la demande) : quasi sans perte, niveau 40 :
+//   39 à 42,5 dB, autant que le niveau 80 pour un cinquième de poids en moins ;
+// - 1024 (tablettes et écrans très denses, dessiné presque pixel pour pixel) : qualité 90 comme
+//   les petites, 40 % du poids du quasi sans perte pour 41 dB en moyenne et 37 au pire (24
+//   dessins, 23/11/2026) ; les grandes variantes pesaient les deux tiers de toutes les images.
+//   Plus l'image est petite, plus la perte coûte : 256 et 512 restent quasi sans perte.
+//   Effort 5 et non 6 : même fidélité, 3 % de poids en plus, mais 0,3 s par image au lieu de
+//   5 (plus d'une heure de génération en moins sur 900 grandes variantes).
 const SMALL_WEBP = { quality: 90, alphaQuality: 100, smartSubsample: true, effort: 6 };
+const LARGE_WEBP = { ...SMALL_WEBP, effort: 5 };
 const NEAR_LOSSLESS_WEBP = { nearLossless: true, quality: 40, effort: 6 };
 
 // Configuration des résolutions cibles
@@ -41,8 +48,20 @@ const RESOLUTION_TARGETS = {
   128: { width: 128, webp: SMALL_WEBP, desc: 'Mobile small' },
   256: { width: 256, webp: NEAR_LOSSLESS_WEBP, desc: 'Mobile/tablet' },
   512: { width: 512, webp: NEAR_LOSSLESS_WEBP, desc: 'Desktop standard' },
-  1024: { width: 1024, webp: NEAR_LOSSLESS_WEBP, desc: 'High-DPI/4K' },
+  1024: { width: 1024, webp: LARGE_WEBP, desc: 'High-DPI/4K' },
 };
+// Sols des plateaux (herbe de MultiSnake et de MultiPop, chemin de MultiMemory, herbes des
+// fêtes comprises) : les seules images étirées, jusqu'à trois fois sur une tablette dense. Leur
+// grain fin disparaît en qualité 90 et cela se verrait : leur grande variante reste quasi sans
+// perte, pour quelques Mo.
+const STRETCHED_TEXTURES = /^(?:herbe|chemin)[_.]/i;
+const LARGE_WIDTH = 1024;
+
+/** Réglages d'une variante : ceux de sa largeur, sauf la grande variante d'un sol étiré */
+function variantConfig(filename, config) {
+  const keepsGrain = config.width === LARGE_WIDTH && STRETCHED_TEXTURES.test(filename);
+  return keepsGrain ? { ...config, webp: NEAR_LOSSLESS_WEBP } : config;
+}
 
 // Patterns spéciaux par type d'asset
 const ASSET_PATTERNS = {
@@ -302,9 +321,9 @@ class ResponsiveAssetGenerator {
       // Monstres, et sources haute définition des jeux d'Arcade (js/arcade-sprite-catalog.js) :
       // toutes les résolutions, pour une image nette en grand écran comme sur un téléphone
       return Object.fromEntries(
-        Object.entries(RESOLUTION_TARGETS).filter(
-          ([, config]) => config.width <= originalDimensions.width
-        )
+        Object.entries(RESOLUTION_TARGETS)
+          .filter(([, config]) => config.width <= originalDimensions.width)
+          .map(([suffix, config]) => [suffix, variantConfig(filename, config)])
       );
     } else if (ASSET_PATTERNS.illustrations.test(filename)) {
       // Logos, cadeaux et têtes : résolutions moyennes
