@@ -3,6 +3,9 @@
 // métadonnées. Le résultat ne dépend que du fichier brut et des réglages : relancer le
 // traitement redonne le même clip.
 //
+// Le même traitement sort aussi un clip en Opus (conteneur Ogg), pour l'appli Android
+// (scripts/voice/opus.mjs) : seule la dernière étape, l'encodage, change.
+//
 // La synthèse laisse parfois, après la phrase, plusieurs secondes de silence puis un clic :
 // le clic arrêtait la coupe du silence de fin. Un bruit bref isolé par un long silence, au
 // début ou à la fin, est donc coupé avec ce silence (usefulRange).
@@ -229,6 +232,72 @@ async function encodeMp3(wavPath, outPath, gain, bitrateKbps) {
   ]);
 }
 
+/** Fréquences d'échantillonnage qu'Opus accepte ; toute autre (44,1 kHz) passe à 48 kHz */
+const OPUS_RATES = new Set([8000, 12000, 16000, 24000, 48000]);
+
+/** Fréquence d'échantillonnage d'un fichier audio, lue par ffprobe */
+async function sampleRate(filePath, format) {
+  const { stdout } = await run('ffprobe', [
+    '-v',
+    'error',
+    '-show_entries',
+    'stream=sample_rate',
+    '-of',
+    'csv=p=0',
+    ...inputArgs(filePath, format).filter(arg => arg !== '-i'),
+  ]);
+  return Number(stdout.trim().split('\n')[0]);
+}
+
+/**
+ * Encode en Opus (Ogg) mono à débit variable, sans métadonnées ; `filters` : les filtres audio
+ * à appliquer avant (le gain), aucun pour un fichier déjà traité
+ */
+async function encodeOpus(input, outPath, bitrateKbps, filters = []) {
+  const rate = await sampleRate(input.file, input.format);
+  await run('ffmpeg', [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-y',
+    ...inputArgs(input.file, input.format),
+    ...filters,
+    '-map_metadata',
+    '-1',
+    '-ac',
+    '1',
+    ...(OPUS_RATES.has(rate) ? [] : ['-ar', '48000']),
+    '-c:a',
+    'libopus',
+    '-b:a',
+    `${bitrateKbps}k`,
+    '-vbr',
+    'on',
+    '-compression_level',
+    '10',
+    '-application',
+    'audio',
+    '-fflags',
+    '+bitexact',
+    '-f',
+    'ogg',
+    outPath,
+  ]);
+}
+
+/** Les étapes communes à tous les formats : coupe des silences, clic isolé, gain de sonie */
+async function processWith(rawPath, outPath, encoding, encode) {
+  const wavPath = `${outPath}.wav.part`;
+  try {
+    await decodeTrimmed(rawPath, wavPath, encoding);
+    await cutIsolatedBlips(wavPath);
+    const gain = await loudnessGain(wavPath, encoding);
+    await encode(wavPath, gain);
+  } finally {
+    await fs.rm(wavPath, { force: true });
+  }
+}
+
 /**
  * Traite un clip brut vers outPath (écrit tel quel : à l'appelant de passer un nom
  * temporaire, puis de renommer).
@@ -237,15 +306,34 @@ async function encodeMp3(wavPath, outPath, gain, bitrateKbps) {
  * @param {{bitrateKbps: number, loudnessLufs: number, truePeakDb: number, silenceDb: number}} encoding
  */
 export async function processClip(rawPath, outPath, encoding) {
-  const wavPath = `${outPath}.wav.part`;
-  try {
-    await decodeTrimmed(rawPath, wavPath, encoding);
-    await cutIsolatedBlips(wavPath);
-    const gain = await loudnessGain(wavPath, encoding);
-    await encodeMp3(wavPath, outPath, gain, encoding.bitrateKbps);
-  } finally {
-    await fs.rm(wavPath, { force: true });
-  }
+  await processWith(rawPath, outPath, encoding, (wavPath, gain) =>
+    encodeMp3(wavPath, outPath, gain, encoding.bitrateKbps)
+  );
+}
+
+/**
+ * Le même traitement, sorti en Opus : mêmes coupes et même sonie que le MP3 du clip, seul
+ * l'encodeur change.
+ * @param {string} rawPath
+ * @param {string} outPath
+ * @param {Object} encoding - Réglages de la voix (ceux de processClip)
+ * @param {number} bitrateKbps - Débit de l'Opus
+ */
+export async function processClipToOpus(rawPath, outPath, encoding, bitrateKbps) {
+  await processWith(rawPath, outPath, encoding, (wavPath, gain) =>
+    encodeOpus({ file: wavPath }, outPath, bitrateKbps, ['-af', `volume=${gain.toFixed(2)}dB`])
+  );
+}
+
+/**
+ * Un clip MP3 déjà traité, réencodé en Opus tel quel : pour un clip dont le brut n'est plus
+ * là. Second encodage avec perte : à réserver à ce cas.
+ * @param {string} mp3Path
+ * @param {string} outPath
+ * @param {number} bitrateKbps
+ */
+export async function transcodeToOpus(mp3Path, outPath, bitrateKbps) {
+  await encodeOpus({ file: mp3Path, format: 'mp3' }, outPath, bitrateKbps);
 }
 
 /**
@@ -281,10 +369,12 @@ export async function probeClip(filePath) {
 }
 
 /**
- * Vérifie, avant tout appel payant, que ffmpeg (avec l'encodeur MP3) et ffprobe répondent
+ * Vérifie, avant tout appel payant, que ffmpeg (avec l'encodeur MP3, et l'encodeur Opus si
+ * `opus` est demandé) et ffprobe répondent
+ * @param {{opus?: boolean}} [needs]
  * @throws {Error} si un outil manque
  */
-export async function checkAudioTools() {
+export async function checkAudioTools({ opus = false } = {}) {
   let encoders;
   try {
     ({ stdout: encoders } = await run('ffmpeg', ['-hide_banner', '-encoders']));
@@ -293,15 +383,17 @@ export async function checkAudioTools() {
     throw new Error(`ffmpeg et ffprobe sont requis (${error.code ?? error.message})`);
   }
   if (!/libmp3lame/.test(encoders)) throw new Error("ffmpeg n'a pas l'encodeur MP3 libmp3lame");
+  if (opus && !/libopus/.test(encoders)) throw new Error("ffmpeg n'a pas l'encodeur Opus libopus");
 }
 
 /**
  * Raison pour laquelle un clip traité n'est pas valide, ou null s'il l'est
  * @param {{duration: number, codec: string, channels: number}} info
+ * @param {string} [codec] - Codec attendu : « mp3 », ou « opus » pour les clips de l'appli
  * @returns {string|null}
  */
-export function clipProblem(info) {
-  if (info.codec !== 'mp3') return `codec ${info.codec || 'inconnu'}`;
+export function clipProblem(info, codec = 'mp3') {
+  if (info.codec !== codec) return `codec ${info.codec || 'inconnu'}`;
   if (info.channels !== 1) return `${info.channels} canaux`;
   if (info.duration > CLIP_LIMITS.maxSeconds) return `trop long (${info.duration} s)`;
   // Toute durée qui n'atteint pas le minimum est trop courte, une durée illisible (NaN) comprise

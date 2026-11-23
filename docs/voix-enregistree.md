@@ -96,8 +96,14 @@ place et ce qui vient ensuite.
       Les 7 437 clips (374 895 caractères payés, environ 6 $) n'ont pas été publiés.
 - **Corpus fini** : le jeu ne dit qu'environ 7 400 phrases par langue. Elles sont
   toutes enregistrées à l'avance ; aucun appel à un fournisseur pendant une partie.
-- **Format** : MP3 mono. Safari et iOS ne lisent l'Opus en WebM qu'à partir de 17.4
-  (en partie) et 18.4.
+- **Format** : MP3 mono sur le site. Safari et iOS ne lisent l'Opus en WebM qu'à partir de
+  17.4 (en partie) et 18.4.
+- **Appli Android** : les mêmes phrases en Opus (conteneur Ogg, fichiers `.ogg`, 24 kb/s),
+  que sa WebView sait lire : trois fois moins lourd que le MP3, sans différence entendue à
+  l'écoute (23/11/2026 ; 32, 24 et 16 kb/s comparés). L'index dit le format de chaque voix
+  (`format` : `mp3` ou `opus`, `VOICE_FORMATS` de `js/core/voice-index.js`) ; un navigateur
+  qui ne lit pas le format d'une voix ne la propose pas. Les commandes de publication du
+  site n'écrivent que du MP3.
 - **Encodage** : 64 kb/s et 0,15 s de silence avant la phrase. À 48 kb/s avec 0,05 s, Whisper
   entendait mal le début du premier mot (« vingt », « huit ») : sur 17 clips qu'il entendait
   juste en brut et faux une fois traités, 0 redevenait juste ; à 64 kb/s avec 0,15 s, 11.
@@ -215,7 +221,7 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
   marque le navigateur comme testeur, `?voix=off` retire les marques.
 
 - **Activation** (`js/core/voice-activation.js`) : la voix est disponible si la langue est
-  dans l'index, ouverte à ce navigateur et que le MP3 est lisible ; la parole est active
+  dans l'index, ouverte à ce navigateur et que le format de ses clips est lisible ; la parole est active
   selon le choix du joueur (bouton de la barre du haut), sinon selon `defaultOn` ; le moteur
   est la voix enregistrée sauf si la case « Voix enregistrée » est décochée (la parole
   continue alors avec la voix de l'appareil).
@@ -242,7 +248,8 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
 - **iPhone** : `navigator.audioSession.type = 'playback'`. La voix enregistrée suit la
   règle des bruitages : c'est le bouton muet du jeu qui fait foi.
 - **Service worker** (`sw.js`) : clips en cache d'abord dans `leapmultix-voice` (épargné
-  par les changements de version), gardés seulement s'ils sont un vrai MP3 du site ; index
+  par les changements de version), gardés seulement s'ils sont un vrai MP3 du site (un clip
+  en Opus de l'appli est transmis sans être gardé : il est déjà dans l'appli) ; index
   en réseau d'abord ; chaque nouvel index purge les clips des versions qu'il n'annonce plus,
   ni comme voix par défaut ni parmi les autres voix ; plafond d'environ 2 000 clips.
 - **Réglage** : case « Voix enregistrée » dans Accessibilité et contrôles, visible là où la
@@ -284,6 +291,11 @@ CI publique : les clés des fournisseurs et le dépôt privé des voix n'en sort
 **Dépôt privé des voix** (`../leapmultix-voices`, GitHub privé `jls42/leapmultix-voices`) :
 
 - `clips/<langue>/<version>/<empreinte>.mp3` : les clips traités, ceux que le jeu lit ;
+- `opus/<langue>/<version>/<empreinte>.ogg` et `opus/<langue>/<version>.json` : les mêmes
+  clips en Opus pour l'appli Android, refaits sans appel payant par
+  `node scripts/voice/opus.mjs --out ../leapmultix-voices` depuis les bruts (même chaîne que
+  le MP3, seul l'encodeur change ; depuis le MP3 quand le brut n'existe plus). `--check`
+  contrôle le dossier, `--site <www>` pose les Opus dans un site embarqué ;
 - `manifests/<langue>/<version>.json` : pour chaque clip, la phrase, le texte dit, la
   durée, l'empreinte sha256, l'identifiant de requête et le coût en crédits (quand le
   fournisseur le dit). À côté :

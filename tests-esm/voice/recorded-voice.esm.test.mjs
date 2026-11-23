@@ -13,6 +13,7 @@ import {
   getRecordedVoiceChoices,
   initRecordedVoice,
   isRecordedVoiceAvailable,
+  playableFormats,
   resetRecordedVoiceForTests,
   setRecordedVoiceChoice,
   setRecordedVoicePreference,
@@ -89,7 +90,7 @@ function setup({
     eventBus: ctx.bus,
     lang: () => ctx.lang,
     translations: () => translations,
-    canPlayMp3: () => true,
+    playableFormats: () => ['mp3'],
     fetchImpl: async () => {
       if (gate) await gate.promise;
       if (offline) throw new TypeError('Failed to fetch');
@@ -445,6 +446,45 @@ describe('Voix enregistrée dans le jeu', () => {
       // Sans service dans l'index, la mention de la langue revient
       expect(hint.dataset.translate).toBe('recorded_voice_hint');
     });
+  });
+});
+
+describe('Formats de clips que le navigateur sait lire', () => {
+  const probe = playable => () => ({
+    canPlayType: type => (playable.some(part => type.startsWith(part)) ? 'probably' : ''),
+  });
+
+  test('chaque format est sondé par son type : le MP3, et l’Opus dans son conteneur Ogg', () => {
+    const asked = [];
+    playableFormats(() => ({
+      canPlayType: type => {
+        asked.push(type);
+        return '';
+      },
+    }));
+    expect(asked).toEqual(['audio/mpeg', 'audio/ogg; codecs=opus']);
+  });
+
+  test.each([
+    [
+      'MP3 et Opus (WebView d’Android, Chrome, Firefox)',
+      ['audio/mpeg', 'audio/ogg'],
+      ['mp3', 'opus'],
+    ],
+    ['MP3 seul (Safari d’avant iOS 18.4)', ['audio/mpeg'], ['mp3']],
+    ['Opus seul', ['audio/ogg'], ['opus']],
+    ['aucun', [], []],
+  ])('%s', (_label, playable, formats) => {
+    expect(playableFormats(probe(playable))).toEqual(formats);
+  });
+
+  test('« maybe » compte comme lisible ; sans élément audio, aucun format', () => {
+    expect(playableFormats(() => ({ canPlayType: () => 'maybe' }))).toEqual(['mp3', 'opus']);
+    expect(
+      playableFormats(() => {
+        throw new ReferenceError('Audio is not defined');
+      })
+    ).toEqual([]);
   });
 });
 

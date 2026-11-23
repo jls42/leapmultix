@@ -235,6 +235,33 @@ describe('Service worker : voix enregistrée', () => {
     expect(response.type).toBe('error');
   });
 
+  describe('clip en Opus de l’appli Android (.ogg)', () => {
+    const url = `${ORIGIN}/voice/fr/lucie-v3-2/abc123.ogg`;
+    const cachedUrls = worker =>
+      [...worker.caches.stores.values()].flatMap(store => [...store.entries.keys()]);
+
+    test.each(['audio/ogg', 'application/ogg'])(
+      'réponse %s : transmise, gardée dans aucun cache (le clip est déjà dans l’appli)',
+      async type => {
+        const worker = loadWorker(
+          () => new FakeResponse('opus', { headers: { 'Content-Type': type } })
+        );
+        expect((await request(worker, url)).body).toBe('opus');
+        expect((await request(worker, url)).body).toBe('opus');
+        expect(worker.fetches).toEqual([url, url]);
+        expect(cachedUrls(worker)).toEqual([]);
+      }
+    );
+
+    test('introuvable : échec immédiat, comme un MP3 (le jeu passe à la synthèse)', async () => {
+      const worker = loadWorker(() => {
+        throw new TypeError('Failed to fetch');
+      });
+      expect((await request(worker, url)).type).toBe('error');
+      expect(worker.fetches).toEqual([url]);
+    });
+  });
+
   test('index : réseau d’abord, copie gardée pour le hors-ligne', async () => {
     let offline = false;
     const worker = loadWorker(() => {

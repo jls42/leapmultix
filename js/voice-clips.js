@@ -17,7 +17,7 @@
 import Storage from './core/storage.js';
 import { eventBus } from './core/eventBus.js';
 import { ANNOUNCED_MODES, voiceKey } from './core/spoken-text.js';
-import { clipPath, parseVoiceIndex } from './core/voice-index.js';
+import { VOICE_FORMATS, clipPath, parseVoiceIndex } from './core/voice-index.js';
 import {
   availableVoices,
   isSpeechActive,
@@ -114,9 +114,14 @@ export async function fetchVoiceIndex(base, fetchImpl = fetch) {
 // Moteur des clips
 // ---------------------------------------------------------------------------------------
 
-/** « audio/mpeg » exactement, paramètres à part : audio/mpegurl (liste de lecture) commence pareil */
-const isMp3Response = res =>
-  (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase() === 'audio/mpeg';
+/**
+ * La réponse est-elle un clip du format annoncé ? Le type exact, paramètres à part :
+ * « audio/mpegurl » (liste de lecture) commence comme « audio/mpeg »
+ */
+function isClipResponse(res, format) {
+  const type = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
+  return (VOICE_FORMATS.get(format)?.responses ?? []).includes(type);
+}
 
 function silenceBlob() {
   const bytes = Uint8Array.from(atob(SILENCE_MP3), char => char.codePointAt(0));
@@ -129,7 +134,7 @@ function silenceBlob() {
  * @param {Object} options
  * @param {string} options.base - « /voice/ »
  * @param {string} options.lang
- * @param {{version: string}} options.entry - Entrée de l'index pour la langue
+ * @param {{version: string, format?: string}} options.entry - Entrée de l'index pour la langue
  * @param {Object} options.synthesis - Moteur de repli (getSynthesisEngine())
  * @param {typeof fetch} [options.fetchImpl]
  * @param {HTMLAudioElement} [options.audio]
@@ -159,6 +164,8 @@ export function createClipEngine({
   let deferredPreloads = [];
 
   const urlFor = key => `${base}${clipPath(lang, entry, key)}`;
+  // Une entrée sans format (index d'avant) est en MP3
+  const isClip = res => isClipResponse(res, entry.format ?? 'mp3');
 
   function preloadNow(texts) {
     for (const text of texts) {
@@ -166,7 +173,7 @@ export function createClipEngine({
       if (absent.has(key) || preloaded.has(key)) continue;
       preloaded.add(key);
       fetchImpl(urlFor(key), { priority: 'low' })
-        .then(res => (res.ok && isMp3Response(res) ? res.blob() : absent.add(key)))
+        .then(res => (res.ok && isClip(res) ? res.blob() : absent.add(key)))
         .catch(() => preloaded.delete(key));
     }
   }
@@ -245,7 +252,7 @@ export function createClipEngine({
     let blob;
     try {
       const res = await fetchImpl(urlFor(key), { signal: phrase.controller.signal });
-      if (!res.ok || !isMp3Response(res)) {
+      if (!res.ok || !isClip(res)) {
         absent.add(key);
         fallBack(phrase, 'absent');
         return;
@@ -398,18 +405,26 @@ function reportFallback(cause, lang, voice) {
   }
 }
 
-function canPlayMp3() {
+/**
+ * Formats de clips que ce navigateur dit savoir lire (VOICE_FORMATS)
+ * @param {() => {canPlayType: (type: string) => string}} [createProbe]
+ * @returns {string[]}
+ */
+export function playableFormats(createProbe = () => new Audio()) {
   try {
-    return new Audio().canPlayType('audio/mpeg') !== '';
+    const probe = createProbe();
+    return [...VOICE_FORMATS]
+      .filter(([, { type }]) => probe.canPlayType(type) !== '')
+      .map(([format]) => format);
   } catch {
-    return false;
+    return [];
   }
 }
 
 function browserState(deps) {
   return {
     tester: Boolean(deps.storage.get(VOICE_STORAGE_KEYS.tester, false)) || Boolean(deps.localMark),
-    canPlayMp3: deps.canPlayMp3(),
+    formats: deps.playableFormats(),
   };
 }
 
@@ -590,7 +605,7 @@ function defaultDeps() {
     eventBus,
     lang: getCurrentLanguage,
     translations: getTranslations,
-    canPlayMp3,
+    playableFormats,
     fetchImpl: (...args) => fetch(...args),
     createAudio: createSharedAudio,
     createEngine: options => createClipEngine(options),

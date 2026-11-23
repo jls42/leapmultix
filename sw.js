@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v105'; // bump to trigger client update
+const VERSION = 'v106'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -78,7 +78,7 @@ const BYTE_RANGE = /^bytes=(\d*)-(\d*)$/;
 const VOICE_CACHE = 'leapmultix-voice';
 const VOICE_CACHE_LIMIT = 2000;
 const VOICE_INDEX = '/voice/index.json';
-const VOICE_CLIP = /^\/voice\/([a-z]{2})\/([a-z0-9][a-z0-9.-]*)\/[0-9a-z]+\.mp3$/;
+const VOICE_CLIP = /^\/voice\/([a-z]{2})\/([a-z0-9][a-z0-9.-]*)\/[0-9a-z]+\.(?:mp3|ogg)$/;
 
 // precache:start (scripts/precache-list.mjs, npm run precache:update)
 const PRECACHE_CORE = [
@@ -847,7 +847,8 @@ const mediaType = response =>
 
 /**
  * Un clip ne se garde que s'il est bien un MP3 du site, reçu en entier : « audio/mpeg » exactement
- * (audio/mpegurl, une liste de lecture, commence pareil)
+ * (audio/mpegurl, une liste de lecture, commence pareil). Les clips en Opus de l'appli Android
+ * (.ogg) passent par ici sans être gardés : ils sont déjà dans l'appli.
  */
 function isStorableClip(response) {
   return (

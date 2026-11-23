@@ -51,17 +51,31 @@ const INDEX = { schema: 'cyrb53-nfc-1', languages: { fr: ENTRY } };
 describe('Activation : table de vérité', () => {
   test.each([
     ['index absent', null, 'fr', {}, null],
-    ['langue absente (coupe-circuit)', INDEX, 'en', { canPlayMp3: true }, null],
-    ['MP3 illisible', INDEX, 'fr', { canPlayMp3: false }, null],
-    ['audience « all »', INDEX, 'fr', { canPlayMp3: true }, ENTRY],
+    ['langue absente (coupe-circuit)', INDEX, 'en', { formats: ['mp3'] }, null],
+    ['MP3 illisible', INDEX, 'fr', { formats: [] }, null],
+    ['audience « all »', INDEX, 'fr', { formats: ['mp3'] }, ENTRY],
   ])('%s', (_label, index, lang, browser, expected) => {
     expect(recordedVoiceEntry(index, lang, browser)).toEqual(expected);
   });
 
+  test('voix en Opus (appli Android) : seulement pour un navigateur qui lit ce format', () => {
+    const opus = { ...ENTRY, format: 'opus' };
+    const index = { ...INDEX, languages: { fr: opus } };
+    // Un navigateur qui ne lit que le MP3 garde la voix de l'appareil
+    expect(recordedVoiceEntry(index, 'fr', { formats: ['mp3'] })).toBeNull();
+    expect(recordedVoiceEntry(index, 'fr', { formats: ['mp3', 'opus'] })).toEqual(opus);
+    // Le format se juge voix par voix : une autre voix en MP3 reste proposée
+    const mixed = {
+      ...INDEX,
+      languages: { fr: { ...opus, alternatives: [{ ...ENTRY, voice: 'marie', version: 'm-1' }] } },
+    };
+    expect(availableVoices(mixed, 'fr', { formats: ['mp3'] }).map(v => v.voice)).toEqual(['marie']);
+  });
+
   test('audience « test » : seulement pour un navigateur testeur', () => {
     const index = { ...INDEX, languages: { fr: { ...ENTRY, audience: 'test' } } };
-    expect(recordedVoiceEntry(index, 'fr', { canPlayMp3: true })).toBeNull();
-    expect(recordedVoiceEntry(index, 'fr', { canPlayMp3: true, tester: true })).toMatchObject({
+    expect(recordedVoiceEntry(index, 'fr', { formats: ['mp3'] })).toBeNull();
+    expect(recordedVoiceEntry(index, 'fr', { formats: ['mp3'], tester: true })).toMatchObject({
       audience: 'test',
     });
   });
@@ -165,7 +179,7 @@ describe('Autres voix d’une langue (index)', () => {
         },
       },
     };
-    const browser = { canPlayMp3: true };
+    const browser = { formats: ['mp3'] };
 
     test('la voix par défaut d’abord, chacune avec le « par défaut » de la langue', () => {
       expect(availableVoices(index, 'en', browser).map(v => [v.voice, v.defaultOn])).toEqual([
@@ -177,7 +191,7 @@ describe('Autres voix d’une langue (index)', () => {
         'jane',
         'test',
       ]);
-      expect(availableVoices(index, 'en', { canPlayMp3: false })).toEqual([]);
+      expect(availableVoices(index, 'en', { formats: [] })).toEqual([]);
     });
 
     test('la voix choisie si elle est disponible, sinon la voix par défaut', () => {
@@ -387,6 +401,45 @@ describe('Moteur des clips', () => {
     await flush();
     expect(fallbacks).toEqual(['absent']);
     expect(audio.plays).toEqual([]);
+  });
+
+  describe('voix en Opus (appli Android)', () => {
+    const OPUS = { ...ENTRY, format: 'opus' };
+    const ogg = type =>
+      new Response(new Uint8Array([0x4f, 0x67, 0x67, 0x53]), { headers: { 'Content-Type': type } });
+
+    test.each(['audio/ogg', 'application/ogg', 'audio/ogg; codecs=opus'])(
+      'clip annoncé « %s » : adresse en .ogg, joué',
+      async type => {
+        respond = async () => ogg(type);
+        const engine = makeEngine({ entry: OPUS });
+        engine.start('Mode Quiz', handlers());
+        await flush();
+        expect(fetches[0].url).toBe(`/voice/fr/lucie-v3-1/${voiceKey('Mode Quiz')}.ogg`);
+        expect(audio.plays).toHaveLength(1);
+        expect(fallbacks).toEqual([]);
+      }
+    );
+
+    test('réponse d’un autre format (un MP3) : clip tenu pour absent, voix de l’appareil', async () => {
+      respond = async () => mp3();
+      const engine = makeEngine({ entry: OPUS });
+      const h = handlers();
+      engine.start('Mode Quiz', h);
+      await flush();
+      expect(fallbacks).toEqual(['absent']);
+      expect(audio.plays).toEqual([]);
+      expect(synthesis.start).toHaveBeenCalledWith('Mode Quiz', h);
+    });
+
+    test('un clip en Ogg n’est pas accepté pour une voix en MP3', async () => {
+      respond = async () => ogg('audio/ogg');
+      const engine = makeEngine();
+      engine.start('Mode Quiz', handlers());
+      await flush();
+      expect(fallbacks).toEqual(['absent']);
+      expect(audio.plays).toEqual([]);
+    });
   });
 
   test('réseau coupé : repli, sans retenir le clip comme absent', async () => {

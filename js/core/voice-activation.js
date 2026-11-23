@@ -4,7 +4,8 @@
  * joueur.
  *
  * - Disponible : la langue est dans l'index, son audience s'ouvre à ce navigateur
- *   (« all », ou « test » pour un navigateur marqué testeur) et il sait lire le MP3.
+ *   (« all », ou « test » pour un navigateur marqué testeur) et il sait lire le format de
+ *   ses clips (MP3 sur le site, Opus dans l'appli Android).
  * - Voix : celle que le joueur a choisie parmi les voix disponibles de la langue, sinon la
  *   voix par défaut, sinon la première autre voix ouverte à ce navigateur.
  * - Parole active : le choix du joueur (bouton de la barre du haut), sinon la voix
@@ -25,15 +26,18 @@ const opensTo = (audience, tester) => audience === 'all' || (audience === 'test'
  * s'ouvre à ce navigateur. Chacune porte la parole par défaut (defaultOn) de la langue.
  * @param {{languages: Object<string, Object>}|null} index - Index validé
  * @param {string} lang
- * @param {{tester?: boolean, canPlayMp3?: boolean}} [browser]
+ * @param {{tester?: boolean, formats?: string[]}} [browser] - formats : ceux que le
+ *   navigateur sait lire (VOICE_FORMATS de voice-index.js)
  * @returns {Object[]}
  */
-export function availableVoices(index, lang, { tester = false, canPlayMp3 = false } = {}) {
+export function availableVoices(index, lang, { tester = false, formats = [] } = {}) {
   const entry = index?.languages?.[lang];
-  if (!entry || !canPlayMp3) return [];
+  if (!entry) return [];
   const { alternatives = [], ...main } = entry;
   const others = alternatives.map(voice => ({ ...voice, defaultOn: entry.defaultOn }));
-  return [main, ...others].filter(voice => opensTo(voice.audience, tester));
+  return [main, ...others].filter(
+    voice => formats.includes(voice.format) && opensTo(voice.audience, tester)
+  );
 }
 
 /**
@@ -41,7 +45,7 @@ export function availableVoices(index, lang, { tester = false, canPlayMp3 = fals
  * joueur a choisie, sinon la première disponible
  * @param {{languages: Object<string, Object>}|null} index - Index validé
  * @param {string} lang
- * @param {{tester?: boolean, canPlayMp3?: boolean}} [browser]
+ * @param {{tester?: boolean, formats?: string[]}} [browser]
  * @param {string|null} [choice] - Nom de la voix choisie par le joueur
  * @returns {Object|null}
  */
