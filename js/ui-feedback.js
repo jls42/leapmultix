@@ -488,6 +488,41 @@ function createRewardLine(icon, kind, text) {
 }
 
 /**
+ * Les lignes de « ce que tu as gagné » : les pièces, puis chaque badge tout juste débloqué.
+ * @param {number} coins
+ * @param {string[]} badges
+ * @returns {HTMLLIElement[]}
+ */
+function createRewardLines(coins, badges) {
+  const earned =
+    coins > 0
+      ? [createRewardLine('coin', 'coins', getTranslation('results_coins_earned', { n: coins }))]
+      : [];
+  const unlocked = badges.map(badgeId => {
+    const name = getTranslation(`badge_${badgeId}_name`);
+    return createRewardLine('award', 'badge', getTranslation('results_new_badge', { name }));
+  });
+  return [...earned, ...unlocked];
+}
+
+/**
+ * La phrase qui dit à quoi servent les pièces gagnées : combien il en manque pour un avatar.
+ * @param {number} coins
+ * @param {number|null} coinsToAvatar
+ * @returns {HTMLParagraphElement|null} null sans pièce gagnée ou sans avatar à débloquer
+ */
+function createAvatarHint(coins, coinsToAvatar) {
+  if (coins <= 0 || coinsToAvatar === null) return null;
+  const hint = document.createElement('p');
+  hint.className = 'results-reward-hint';
+  hint.textContent =
+    coinsToAvatar > 0
+      ? getTranslation('results_coins_to_avatar', { n: coinsToAvatar })
+      : getTranslation('results_avatar_ready');
+  return hint;
+}
+
+/**
  * Ce que la partie a rapporté, sous le message d'un écran de fin : les pièces gagnées, chaque
  * badge tout juste débloqué, puis une phrase qui dit à quoi servent les pièces. Sans cela,
  * l'écran montrait un trésor sans dire ce que l'enfant gardait (retour d'une testeuse).
@@ -499,16 +534,7 @@ function createRewardLine(icon, kind, text) {
  * @returns {HTMLElement|null} null quand la partie n'a rien rapporté
  */
 export function createResultsRewards({ coins = 0, badges = [], coinsToAvatar = null } = {}) {
-  const lines = [];
-  if (coins > 0) {
-    lines.push(
-      createRewardLine('coin', 'coins', getTranslation('results_coins_earned', { n: coins }))
-    );
-  }
-  for (const badgeId of badges) {
-    const name = getTranslation(`badge_${badgeId}_name`);
-    lines.push(createRewardLine('award', 'badge', getTranslation('results_new_badge', { name })));
-  }
+  const lines = createRewardLines(coins, badges);
   if (lines.length === 0) return null;
 
   const block = document.createElement('div');
@@ -520,15 +546,8 @@ export function createResultsRewards({ coins = 0, badges = [], coinsToAvatar = n
   list.append(...lines);
   block.appendChild(list);
 
-  if (coins > 0 && coinsToAvatar !== null) {
-    const hint = document.createElement('p');
-    hint.className = 'results-reward-hint';
-    hint.textContent =
-      coinsToAvatar > 0
-        ? getTranslation('results_coins_to_avatar', { n: coinsToAvatar })
-        : getTranslation('results_avatar_ready');
-    block.appendChild(hint);
-  }
+  const hint = createAvatarHint(coins, coinsToAvatar);
+  if (hint) block.appendChild(hint);
   return block;
 }
 
