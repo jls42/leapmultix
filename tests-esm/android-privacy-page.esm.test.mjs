@@ -57,13 +57,22 @@ describe('Politique de confidentialité de l’appli Android', () => {
     expect(article(lang).querySelector('a[href="mailto:contact@jls42.org"]')).not.toBeNull();
   });
 
-  test('elle dit que rien n’est collecté ni transmis', () => {
+  test('elle dit que rien du jeu ni du joueur n’est transmis', () => {
     expect(plain(article('fr').textContent)).toContain(
-      "L'appli ne transmet aucune donnée, ni à l'éditeur ni à un tiers."
+      "L'appli ne transmet aucune donnée du jeu ni du joueur, ni à l'éditeur ni à un tiers."
     );
     expect(plain(article('en').textContent)).toContain(
-      'The app sends no data, neither to the publisher nor to any third party.'
+      'The app sends no game or player data, neither to the publisher nor to any third party.'
     );
+  });
+
+  test('elle dit la vérification de mise à jour auprès de Google Play, et ce qu’il traite', () => {
+    const fr = plain(article('fr').textContent);
+    expect(fr).toContain("l'appli demande à Google Play s'il existe une version plus récente");
+    expect(fr).toContain('Google Play traite des informations techniques');
+    const en = plain(article('en').textContent);
+    expect(en).toContain('the app asks Google Play whether a newer version exists');
+    expect(en).toContain('Google Play processes technical information');
   });
 
   test('une page seule : ni script, et sa feuille de style tenue par son empreinte', () => {
