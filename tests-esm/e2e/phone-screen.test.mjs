@@ -1,7 +1,7 @@
 /**
  * Tests E2E - Écran de téléphone : la page reste hors de l'encoche de caméra (zones sûres,
  * comme dans l'appli Android en plein écran sur Android 15 et plus), et une partie d'Arcade
- * lancée au doigt passe d'elle-même en plein écran.
+ * lancée au doigt passe d'elle-même en plein écran, son bandeau au-dessus du plateau.
  * @jest-environment node
  */
 
@@ -112,9 +112,9 @@ describe('Écran de téléphone (E2E)', () => {
     expect(bannerTop).toBeGreaterThanOrEqual(NOTCH_PX);
   }, 60000);
 
-  test('un vrai toucher sur « Jouer » met la partie en plein écran', async () => {
-    await openArcade({ notch: false });
-    const card = '.arcade-game-card[data-game="multipop"]';
+  /** Lance un jeu par un vrai toucher sur « Jouer » : la partie passe en plein écran */
+  async function tapPlay(game) {
+    const card = `.arcade-game-card[data-game="${game}"]`;
     await pressButton(page, `${card} .arcade-game-toggle`);
     const play = await page.waitForSelector(`${card} .play-arcade-btn`, { visible: true });
     await play.evaluate(el => el.scrollIntoView({ block: 'center' }));
@@ -123,8 +123,48 @@ describe('Écran de téléphone (E2E)', () => {
     await page.waitForFunction(() => document.fullscreenElement?.id === 'game', {
       timeout: 10000,
     });
+  }
+
+  test('un vrai toucher sur « Jouer » met la partie en plein écran', async () => {
+    await openArcade({ notch: false });
+    await tapPlay('multipop');
     expect(
       await page.$eval('.arcade-fullscreen-btn', button => button.getAttribute('aria-label'))
     ).toBe('Quitter le plein écran');
   }, 60000);
+
+  /** Bandeau et plateau de la partie en plein écran, en pixels de la fenêtre */
+  async function fullscreenBoard() {
+    await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
+    return page.evaluate(() => {
+      const banner = document.querySelector('.arcade-mult-display');
+      const canvas = document.querySelector('#game canvas');
+      const board = canvas.getBoundingClientRect();
+      const top = document.elementFromPoint(board.left + board.width / 2, board.top + 2);
+      return {
+        bannerTop: Math.round(banner.getBoundingClientRect().top),
+        // Écart entre le bas du bandeau et le haut du plateau, et celui que la feuille demande
+        gap: Math.round(board.top - banner.getBoundingClientRect().bottom),
+        wanted: Math.round(Number.parseFloat(getComputedStyle(banner).marginBottom)),
+        // Ce qu'un doigt touche tout en haut du plateau
+        topOfBoard: top?.tagName ?? null,
+      };
+    });
+  }
+
+  test.each([
+    ['sans encoche', false],
+    ['avec l’encoche', true],
+  ])(
+    'plein écran, %s : le bandeau reste au-dessus du plateau de MultiInvaders',
+    async (_name, notch) => {
+      await openArcade({ notch });
+      await tapPlay('invasion');
+      const seen = await fullscreenBoard();
+      expect(seen.gap).toBe(seen.wanted);
+      expect(seen.topOfBoard).toBe('CANVAS');
+      expect(seen.bannerTop).toBeGreaterThanOrEqual(notch ? NOTCH_PX : 0);
+    },
+    60000
+  );
 });
