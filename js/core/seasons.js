@@ -199,17 +199,52 @@ export function isInSeason(season, date) {
   return crossesNewYear(days) ? today >= from || today <= to : today >= from && today <= to;
 }
 
+/* --- Fêtes absentes --- */
+
+/**
+ * Identifiants des fêtes dont les images ne sont pas là. L'appli Android n'embarque pas les
+ * images d'une fête lointaine : sa construction les nomme dans la balise
+ * <meta name="leapmultix-seasons-absent"> (vide sur le site), que js/core/theme.js lit.
+ */
+let absent = new Set();
+
+/**
+ * Dit quelles fêtes sont absentes : elles ne s'appliquent plus, même à leurs dates ou demandées
+ * par ?saison=, et leurs images ne sont jamais demandées. Un identifiant inconnu est ignoré.
+ * @param {Iterable<string>} ids
+ */
+export function setAbsentSeasons(ids) {
+  const known = new Set(SEASONS.map(season => season.id));
+  absent = new Set([...ids].filter(id => known.has(id)));
+}
+
+/**
+ * Lit le contenu de la balise : identifiants séparés par des virgules (« halloween »)
+ * @param {string|null|undefined} content
+ * @returns {string[]}
+ */
+export function parseAbsentSeasons(content) {
+  return String(content ?? '')
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean);
+}
+
+/** @param {Season|null|undefined} season */
+const isPresent = season => Boolean(season) && !absent.has(season.id);
+
 /**
  * La fête du jour, ou celle que demande le paramètre d'essai ?saison= (une fête hors de ses
- * dates, ou « aucune »)
+ * dates, ou « aucune »). Une fête absente ne s'applique jamais.
  * @param {Date} [date]
  * @param {string|null} [forced] - Valeur de ?saison=
  * @returns {Season|null}
  */
 export function findSeason(date = new Date(), forced = null) {
   if (forced === NO_SEASON) return null;
-  const asked = forced ? SEASONS.find(season => season.id === forced) : undefined;
-  return asked ?? SEASONS.find(season => isInSeason(season, date)) ?? null;
+  const present = SEASONS.filter(isPresent);
+  const asked = forced ? present.find(season => season.id === forced) : undefined;
+  return asked ?? present.find(season => isInSeason(season, date)) ?? null;
 }
 
 /**
@@ -242,12 +277,13 @@ export function seasonOfTheme(theme) {
 let worn = null;
 
 /**
- * Habille les images d'une fête, ou les rend à leur dessin classique (null). Seul js/core/theme.js
- * l'appelle, quand il applique un thème : sans lui, tout reste classique (tests compris).
+ * Habille les images d'une fête, ou les rend à leur dessin classique (null, ou une fête absente :
+ * ses images ne sont pas là). Seul js/core/theme.js l'appelle, quand il applique un thème : sans
+ * lui, tout reste classique (tests compris).
  * @param {Season|null} season
  */
 export function wearSeason(season) {
-  worn = season ?? null;
+  worn = isPresent(season) ? season : null;
 }
 
 /** @returns {Season|null} La fête dont les images portent le costume */

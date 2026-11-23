@@ -13,6 +13,7 @@ import {
   getRecordedVoiceChoices,
   initRecordedVoice,
   isRecordedVoiceAvailable,
+  playableFormats,
   resetRecordedVoiceForTests,
   setRecordedVoiceChoice,
   setRecordedVoicePreference,
@@ -80,6 +81,7 @@ function setup({
   lang = 'fr',
   base = '/voice/',
   translations = { correct: ['Bravo !', 'Super !'] },
+  formats = ['mp3'],
 } = {}) {
   const ctx = { lang, engines: [], storage: memoryStorage(stored), bus: fakeBus() };
   ctx.deps = {
@@ -89,7 +91,7 @@ function setup({
     eventBus: ctx.bus,
     lang: () => ctx.lang,
     translations: () => translations,
-    canPlayMp3: () => true,
+    playableFormats: () => formats,
     fetchImpl: async () => {
       if (gate) await gate.promise;
       if (offline) throw new TypeError('Failed to fetch');
@@ -445,6 +447,86 @@ describe('Voix enregistrée dans le jeu', () => {
       // Sans service dans l'index, la mention de la langue revient
       expect(hint.dataset.translate).toBe('recorded_voice_hint');
     });
+  });
+});
+
+describe('Mise à jour de l’appli : la même version de voix change de format', () => {
+  const OPUS = { ...ENTRY, format: 'opus' };
+
+  test('copie gardée en MP3, index reçu en Opus : le moteur est refait avec le nouveau format', async () => {
+    const gate = deferred();
+    const ctx = setup({
+      index: indexWith({ fr: OPUS }),
+      gate,
+      formats: ['mp3', 'opus'],
+      stored: { [VOICE_STORAGE_KEYS.index]: indexWith({ fr: ENTRY }) },
+    });
+    const ready = initRecordedVoice(ctx.deps);
+    // Avant l'index : le moteur de la copie gardée
+    expect(ctx.engines.map(engine => engine.options.entry.format)).toEqual(['mp3']);
+    gate.resolve();
+    await ready;
+    expect(ctx.engines.map(engine => engine.options.entry.format)).toEqual(['mp3', 'opus']);
+    // La phrase suivante part par le moteur en Opus, plus par l'ancien
+    expect(saidByClips(ctx, 'Bravo !')).toBe(true);
+    expect(ctx.engines.map(engine => engine.spoken)).toEqual([[], ['Bravo !']]);
+    expect(ctx.storage.get(VOICE_STORAGE_KEYS.index).languages.fr.format).toBe('opus');
+  });
+
+  test('le même index reçu deux fois ne refait pas le moteur', async () => {
+    const ctx = setup({
+      index: indexWith({ fr: OPUS }),
+      formats: ['mp3', 'opus'],
+      stored: { [VOICE_STORAGE_KEYS.index]: indexWith({ fr: OPUS }) },
+    });
+    await initRecordedVoice(ctx.deps);
+    expect(ctx.engines).toHaveLength(1);
+  });
+
+  test('un navigateur qui ne lit pas l’Opus garde la voix de l’appareil, sans moteur de clips', async () => {
+    const ctx = setup({ index: indexWith({ fr: OPUS }), formats: ['mp3'] });
+    await initRecordedVoice(ctx.deps);
+    expect(ctx.engines).toHaveLength(0);
+    expect(isRecordedVoiceAvailable()).toBe(false);
+  });
+});
+
+describe('Formats de clips que le navigateur sait lire', () => {
+  const probe = playable => () => ({
+    canPlayType: type => (playable.some(part => type.startsWith(part)) ? 'probably' : ''),
+  });
+
+  test('chaque format est sondé par son type : le MP3, et l’Opus dans son conteneur Ogg', () => {
+    const asked = [];
+    playableFormats(() => ({
+      canPlayType: type => {
+        asked.push(type);
+        return '';
+      },
+    }));
+    expect(asked).toEqual(['audio/mpeg', 'audio/ogg; codecs=opus']);
+  });
+
+  test.each([
+    [
+      'MP3 et Opus (WebView d’Android, Chrome, Firefox)',
+      ['audio/mpeg', 'audio/ogg'],
+      ['mp3', 'opus'],
+    ],
+    ['MP3 seul (Safari d’avant iOS 18.4)', ['audio/mpeg'], ['mp3']],
+    ['Opus seul', ['audio/ogg'], ['opus']],
+    ['aucun', [], []],
+  ])('%s', (_label, playable, formats) => {
+    expect(playableFormats(probe(playable))).toEqual(formats);
+  });
+
+  test('« maybe » compte comme lisible ; sans élément audio, aucun format', () => {
+    expect(playableFormats(() => ({ canPlayType: () => 'maybe' }))).toEqual(['mp3', 'opus']);
+    expect(
+      playableFormats(() => {
+        throw new ReferenceError('Audio is not defined');
+      })
+    ).toEqual([]);
   });
 });
 

@@ -9,7 +9,7 @@
  *     "fr": {
  *       "voice": "lucie",                     nom de la voix
  *       "version": "lucie-v3-2",              dossier des clips : /voice/fr/lucie-v3-2/
- *       "format": "mp3",
+ *       "format": "mp3",                      "mp3", ou "opus" (VOICE_FORMATS)
  *       "audience": "test",                   "test" : navigateurs marqués ?voix=test ; "all"
  *       "defaultOn": false,                   parole active par défaut (sans choix du joueur)
  *       "provider": "elevenlabs",             facultatif : service qui a créé la voix
@@ -31,6 +31,26 @@ export const VOICE_AUDIENCES = ['test', 'all'];
 /** Services qui créent les voix, nommés dans la mention des réglages */
 export const VOICE_PROVIDERS = ['elevenlabs', 'google', 'mistral'];
 
+/**
+ * Formats des clips : l'extension du fichier, le type à demander au navigateur (canPlayType)
+ * et les types de réponse acceptés pour un clip. Le site publie du MP3, lu partout ; l'appli
+ * Android embarque les mêmes phrases en Opus (conteneur Ogg), bien plus léger, que sa WebView
+ * sait lire. Un navigateur qui ne lit pas le format d'une voix ne la propose pas : il garde
+ * la voix de l'appareil.
+ */
+export const VOICE_FORMATS = new Map([
+  ['mp3', Object.freeze({ extension: 'mp3', type: 'audio/mpeg', responses: ['audio/mpeg'] })],
+  [
+    'opus',
+    Object.freeze({
+      extension: 'ogg',
+      type: 'audio/ogg; codecs=opus',
+      // Selon la version d'Android, le serveur de l'appli annonce l'un ou l'autre
+      responses: ['audio/ogg', 'application/ogg'],
+    }),
+  ],
+]);
+
 /** Autres voix d'une langue, au plus */
 export const MAX_ALTERNATIVES = 4;
 
@@ -45,7 +65,7 @@ const matches = (value, pattern) => typeof value === 'string' && pattern.test(va
 const VOICE_RULES = [
   ({ voice }) => matches(voice, NAME),
   ({ version }) => matches(version, VERSION),
-  ({ format }) => format === 'mp3',
+  ({ format }) => VOICE_FORMATS.has(format),
   ({ audience }) => VOICE_AUDIENCES.includes(audience),
 ];
 
@@ -83,7 +103,7 @@ function parseAlternatives(list, main) {
  * entrée que le jeu écarterait n'est jamais publiée. Les champs facultatifs n'apparaissent
  * que s'ils sont valides.
  * @param {unknown} entry
- * @returns {{voice: string, version: string, format: 'mp3', audience: string,
+ * @returns {{voice: string, version: string, format: 'mp3'|'opus', audience: string,
  *   defaultOn: boolean, provider?: string, alternatives?: Object[]}|null}
  */
 export function parseLanguage(entry) {
@@ -118,9 +138,10 @@ export function parseVoiceIndex(data) {
 /**
  * Chemin d'un clip, relatif à la base de la voix (« /voice/ »)
  * @param {string} lang
- * @param {{version: string}} entry - Entrée de langue validée
+ * @param {{version: string, format?: string}} entry - Entrée de langue validée
  * @param {string} key - Empreinte de la phrase (voiceKey)
  */
 export function clipPath(lang, entry, key) {
-  return `${lang}/${entry.version}/${key}.mp3`;
+  const extension = VOICE_FORMATS.get(entry.format)?.extension ?? 'mp3';
+  return `${lang}/${entry.version}/${key}.${extension}`;
 }

@@ -235,6 +235,33 @@ describe('Service worker : voix enregistrée', () => {
     expect(response.type).toBe('error');
   });
 
+  describe('clip en Opus de l’appli Android (.ogg)', () => {
+    const url = `${ORIGIN}/voice/fr/lucie-v3-2/abc123.ogg`;
+    const cachedUrls = worker =>
+      [...worker.caches.stores.values()].flatMap(store => [...store.entries.keys()]);
+
+    test.each(['audio/ogg', 'application/ogg'])(
+      'réponse %s : transmise, gardée dans aucun cache (le clip est déjà dans l’appli)',
+      async type => {
+        const worker = loadWorker(
+          () => new FakeResponse('opus', { headers: { 'Content-Type': type } })
+        );
+        expect((await request(worker, url)).body).toBe('opus');
+        expect((await request(worker, url)).body).toBe('opus');
+        expect(worker.fetches).toEqual([url, url]);
+        expect(cachedUrls(worker)).toEqual([]);
+      }
+    );
+
+    test('introuvable : échec immédiat, comme un MP3 (le jeu passe à la synthèse)', async () => {
+      const worker = loadWorker(() => {
+        throw new TypeError('Failed to fetch');
+      });
+      expect((await request(worker, url)).type).toBe('error');
+      expect(worker.fetches).toEqual([url]);
+    });
+  });
+
   test('index : réseau d’abord, copie gardée pour le hors-ligne', async () => {
     let offline = false;
     const worker = loadWorker(() => {
@@ -274,6 +301,21 @@ describe('Service worker : voix enregistrée', () => {
     expect([...(await voiceCache(worker)).keys()].sort()).toEqual(
       [current, `${ORIGIN}/voice/index.json`].sort()
     );
+  });
+
+  test('la même version annoncée en Opus (appli mise à jour) : ses MP3 gardés avant sont purgés', async () => {
+    let index = INDEX;
+    const worker = loadWorker(url =>
+      url.endsWith('index.json') ? new FakeResponse(JSON.stringify(index)) : mp3()
+    );
+    const kept = clipUrl('fr', 'lucie-v3-2', 'a1');
+    await request(worker, kept);
+    await request(worker, '/voice/index.json');
+    expect([...(await voiceCache(worker)).keys()]).toContain(kept);
+
+    index = { ...INDEX, languages: { fr: { ...INDEX.languages.fr, format: 'opus' } } };
+    await request(worker, '/voice/index.json');
+    expect([...(await voiceCache(worker)).keys()]).toEqual([`${ORIGIN}/voice/index.json`]);
   });
 
   test('français et anglais dans l’index : les clips des deux sont gardés, l’ancienne version purgée', async () => {
