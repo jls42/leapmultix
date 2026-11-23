@@ -46,6 +46,14 @@ const BASE_TRANSLATIONS = {
   results_correct_count_one: '{correct} bonne réponse sur {total}',
   results_score: 'Score : {score}',
   results_best_streak: 'Meilleure série : {streak}',
+  results_coins_earned: '{n, plural, one {# pièce gagnée} other {# pièces gagnées}}',
+  results_new_badge: 'Nouveau badge : {name}',
+  results_coins_to_avatar:
+    'Encore {n, plural, one {# pièce} other {# pièces}} pour débloquer un nouvel avatar.',
+  results_avatar_ready: 'Tu as assez de pièces pour un nouvel avatar.',
+  results_see_badges: 'Voir mes badges',
+  badge_adventurer_name: 'Premiers pas',
+  badge_daily_challenger_name: 'Défi quotidien relevé',
   stars_earned: '{stars} étoiles sur {total}',
   stars_earned_one: '{stars} étoile sur {total}',
   level_completed: 'Niveau terminé',
@@ -75,8 +83,12 @@ beforeEach(() => {
   userStore.preferredOperator = '×';
   userStore.adventureProgressByOperator = {};
   userStore.progressHistory = [];
+  userStore.coins = 0;
+  userStore.avatar = 'fox';
+  userStore.unlockedAvatars = ['fox'];
+  userStore.unlockedBadges = [];
   slides.goToSlide.mockClear();
-  checkAndUnlockBadge.mockClear();
+  checkAndUnlockBadge.mockReset();
   // jsdom n'implémente pas le défilement de la fenêtre
   globalThis.scrollTo = jest.fn();
   jest.spyOn(AudioManager, 'playSound').mockImplementation(() => {});
@@ -88,6 +100,26 @@ afterEach(() => {
   closeOpenDialog();
   jest.restoreAllMocks();
 });
+
+const QUESTION = { a: 2, b: 2, operator: '×', answer: 4 };
+
+/** Le badge « Premiers pas » entre dans le profil la première fois, comme le fait js/badges.js */
+function unlockFirstSteps(badgeId) {
+  if (badgeId === 'adventurer' && !userStore.unlockedBadges.includes(badgeId)) {
+    userStore.unlockedBadges.push(badgeId);
+  }
+}
+
+/** Un niveau d'Aventure prêt à recevoir des réponses, sans son écran de jeu */
+function levelInPlay(levelIndex) {
+  const adventure = new AdventureMode();
+  adventure.gameScreen = document.getElementById('game');
+  adventure.currentLevel = adventure.adventureLevels.at(levelIndex);
+  adventure.resetState();
+  adventure.state.lives = 3;
+  adventure.state.currentQuestion = QUESTION;
+  return adventure;
+}
 
 describe('Défi', () => {
   test('une double activation du choix de difficulté ne lance qu’un chrono', async () => {
@@ -252,6 +284,138 @@ describe('Aventure', () => {
     expect(EMOJI.test(results.textContent)).toBe(false);
     const primary = results.querySelector('.results-actions .btn:not(.btn-secondary)');
     expect(primary.dataset.action).toBe('adventure-start-level');
+  });
+
+  test('ce que le niveau a rapporté : pièces, badge gagné à l’instant, et où le retrouver', () => {
+    checkAndUnlockBadge.mockImplementation(unlockFirstSteps);
+    const adventure = levelInPlay(0);
+    adventure.state.questionCount = 10;
+    for (let answer = 0; answer < 9; answer++) {
+      adventure.state.correctAnswers++;
+      adventure.onAnswerSubmitted(true, 4);
+    }
+    adventure.onAnswerSubmitted(false, 5);
+    expect(userStore.coins).toBe(9);
+    adventure.saveResults();
+    adventure.showLevelResults(true, 2);
+
+    const results = document.querySelector('.adventure-results');
+    const rewards = results.querySelector('.results-rewards');
+    // Sous « Voici ton trésor ! », avant la ligne du score
+    expect(rewards.previousElementSibling.className).toBe('results-message');
+    expect(rewards.nextElementSibling.className).toBe('results-details');
+    const lines = [...rewards.querySelectorAll('[role="list"] > li')];
+    expect(lines.map(line => line.textContent)).toEqual([
+      '9 pièces gagnées',
+      'Nouveau badge : Premiers pas',
+    ]);
+    expect(lines.map(line => line.querySelector('svg').dataset.icon)).toEqual(['coin', 'award']);
+    expect(rewards.querySelector('.results-reward-hint').textContent).toBe(
+      'Encore 41 pièces pour débloquer un nouvel avatar.'
+    );
+    expect(EMOJI.test(results.textContent)).toBe(false);
+
+    // « Voir mes badges » ouvre « Mes progrès », après les deux boutons habituels
+    const buttons = [...results.querySelectorAll('.results-actions button')];
+    expect(buttons.map(button => button.dataset.action)).toEqual([
+      'adventure-start-level',
+      'adventure-back-to-levels',
+      'results-see-badges',
+    ]);
+    expect(buttons.at(-1).className).toBe('btn btn-secondary');
+    buttons.at(-1).click();
+    expect(slides.goToSlide).toHaveBeenCalledWith(7);
+  });
+
+  test('niveau suivant : ses pièces repartent de zéro, le badge déjà gagné ne revient pas', () => {
+    checkAndUnlockBadge.mockImplementation(unlockFirstSteps);
+    const adventure = levelInPlay(0);
+    adventure.state.correctAnswers = 1;
+    adventure.onAnswerSubmitted(true, 4);
+    adventure.saveResults();
+    expect(userStore.unlockedBadges).toEqual(['adventurer']);
+
+    adventure.resetState();
+    adventure.state.lives = 3;
+    adventure.state.currentQuestion = QUESTION;
+    adventure.state.correctAnswers = 1;
+    adventure.state.questionCount = 10;
+    adventure.onAnswerSubmitted(true, 4);
+    adventure.saveResults();
+    adventure.showLevelResults(true, 1);
+
+    const results = document.querySelector('.adventure-results');
+    const lines = [...results.querySelectorAll('.results-reward')];
+    expect(lines.map(line => line.textContent)).toEqual(['1 pièce gagnée']);
+    expect(results.querySelector('[data-action="results-see-badges"]')).toBeNull();
+  });
+
+  test('défi du jour réussi pendant le niveau : ses pièces et son badge sont comptés', () => {
+    const adventure = levelInPlay(0);
+    adventure.state.correctAnswers = 1;
+    adventure.state.questionCount = 10;
+    adventure.onAnswerSubmitted(true, 4);
+    // Ce que fait completeDailyChallenge (js/game.js) à la dernière réponse du défi
+    userStore.coins += 10;
+    userStore.unlockedBadges.push('daily_challenger');
+    adventure.showLevelResults(true, 1);
+
+    const lines = [...document.querySelectorAll('.adventure-results .results-reward')];
+    expect(lines.map(line => line.textContent)).toEqual([
+      '11 pièces gagnées',
+      'Nouveau badge : Défi quotidien relevé',
+    ]);
+    // Le compteur de la barre du haut et l'écran de fin disent le même gain
+    expect(userStore.coins).toBe(11);
+  });
+
+  test('échec : les pièces gagnées restent dites ; aucune bonne réponse, rien à dire', () => {
+    const adventure = levelInPlay(1);
+    adventure.state.questionCount = 4;
+    adventure.state.correctAnswers = 2;
+    adventure.onAnswerSubmitted(true, 4);
+    adventure.onAnswerSubmitted(true, 6);
+    adventure.showLevelResults(false, 0);
+    let results = document.querySelector('.adventure-results');
+    expect(results.querySelector('.results-reward').textContent).toBe('2 pièces gagnées');
+    expect(results.querySelector('.results-rewards').previousElementSibling.className).toBe(
+      'results-message'
+    );
+
+    // Les pièces du niveau d'avant ne se redisent pas après un niveau perdu sans bonne réponse
+    adventure.resetState();
+    adventure.state.lives = 0;
+    adventure.state.questionCount = 3;
+    adventure.saveResults();
+    adventure.showLevelResults(false, 0);
+    results = document.querySelector('.adventure-results');
+    expect(results.querySelector('.results-rewards')).toBeNull();
+  });
+
+  test('tous les avatars débloqués : les pièces se disent sans promettre un avatar', () => {
+    userStore.unlockedAvatars = ['fox', 'panda', 'unicorn', 'dragon', 'astronaut'];
+    const adventure = levelInPlay(0);
+    adventure.state.correctAnswers = 1;
+    adventure.state.questionCount = 10;
+    adventure.onAnswerSubmitted(true, 4);
+    adventure.showLevelResults(true, 1);
+
+    const rewards = document.querySelector('.results-rewards');
+    expect(rewards.querySelector('.results-reward').textContent).toBe('1 pièce gagnée');
+    expect(rewards.querySelector('.results-reward-hint')).toBeNull();
+  });
+
+  test('assez de pièces pour un avatar : l’écran dit où il attend', () => {
+    userStore.coins = 49;
+    const adventure = levelInPlay(0);
+    adventure.state.correctAnswers = 1;
+    adventure.state.questionCount = 10;
+    adventure.onAnswerSubmitted(true, 4);
+    adventure.showLevelResults(true, 1);
+
+    expect(document.querySelector('.results-reward-hint').textContent).toBe(
+      'Tu as assez de pièces pour un nouvel avatar.'
+    );
   });
 
   test('la progression s’affiche « 3/10 »', () => {

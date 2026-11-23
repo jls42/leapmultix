@@ -277,6 +277,15 @@
   object-fit: contain;
 }
 
+/* Écran peu haut : le trésor plus petit, pour que « Niveau suivant » reste à l'écran sous la
+   ligne des pièces gagnées */
+@media (max-height: 700px) {
+  .results-treasure {
+    width: 80px;
+    height: 80px;
+  }
+}
+
 @media (max-width: 480px) {
   .adventure-header {
     gap: var(--space-3);

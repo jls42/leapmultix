@@ -3,7 +3,8 @@
  * - showMessage : message éphémère (toast), annoncé aux lecteurs d'écran
  * - showFeedback : retour de réponse dans un élément
  * - markAnswerOptions / tagAnswerOptions / markQuestionKind : état des tuiles de réponse
- * - formatCorrectCount / createResultsSummary / createResultsActions / createStarRating :
+ * - formatCorrectCount / createResultsSummary / createResultsRewards / createResultsActions /
+ *   createStarRating :
  *   écrans de fin des modes Quiz, Défi et Aventure ; mountResults les affiche, les
  *   garde dans la langue choisie et y place le focus
  * - singleActivation : une seule activation par geste (Entrée déclenche deux clics)
@@ -22,7 +23,7 @@ import {
   spokenOperatorWord,
   spokenQuestion,
 } from './core/spoken-text.js';
-import { createPathIcon } from './components/icons.js';
+import { createIcon, createPathIcon } from './components/icons.js';
 import { HEAD_SIZES, setAvatarHead } from './avatar-heads.js';
 
 /** Durée d'affichage d'un message, puis de sa disparition (ms) */
@@ -466,6 +467,69 @@ export function createResultsSummary({ lead, leadTag = 'h1', message = '', detai
   }
 
   return frag;
+}
+
+/**
+ * Une ligne de « ce que tu as gagné » : une icône dessinée (décorative) puis le texte.
+ * @param {string} icon - Nom de l'icône (components/icons.js)
+ * @param {string} kind - « coins » ou « badge », pour la feuille de style
+ * @param {string} text
+ * @returns {HTMLLIElement}
+ */
+function createRewardLine(icon, kind, text) {
+  const line = document.createElement('li');
+  line.className = `results-reward results-reward-${kind}`;
+  const drawing = createIcon(icon, { className: 'results-reward-icon' });
+  if (drawing) line.appendChild(drawing);
+  const label = document.createElement('span');
+  label.textContent = text;
+  line.appendChild(label);
+  return line;
+}
+
+/**
+ * Ce que la partie a rapporté, sous le message d'un écran de fin : les pièces gagnées, chaque
+ * badge tout juste débloqué, puis une phrase qui dit à quoi servent les pièces. Sans cela,
+ * l'écran montrait un trésor sans dire ce que l'enfant gardait (retour d'une testeuse).
+ * @param {Object} rewards
+ * @param {number} [rewards.coins] - Pièces gagnées pendant la partie
+ * @param {string[]} [rewards.badges] - Identifiants des badges gagnés à l'instant (js/badges.js)
+ * @param {number|null} [rewards.coinsToAvatar] - Pièces qui manquent pour un avatar de plus
+ *   (0 : assez ; null : rien à débloquer, la phrase ne s'affiche pas)
+ * @returns {HTMLElement|null} null quand la partie n'a rien rapporté
+ */
+export function createResultsRewards({ coins = 0, badges = [], coinsToAvatar = null } = {}) {
+  const lines = [];
+  if (coins > 0) {
+    lines.push(
+      createRewardLine('coin', 'coins', getTranslation('results_coins_earned', { n: coins }))
+    );
+  }
+  for (const badgeId of badges) {
+    const name = getTranslation(`badge_${badgeId}_name`);
+    lines.push(createRewardLine('award', 'badge', getTranslation('results_new_badge', { name })));
+  }
+  if (lines.length === 0) return null;
+
+  const block = document.createElement('div');
+  block.className = 'results-rewards';
+  const list = document.createElement('ul');
+  list.className = 'results-reward-list';
+  // Sans puces, Safari ne l'annonce plus comme une liste : le rôle le lui redit
+  list.setAttribute('role', 'list');
+  list.append(...lines);
+  block.appendChild(list);
+
+  if (coins > 0 && coinsToAvatar !== null) {
+    const hint = document.createElement('p');
+    hint.className = 'results-reward-hint';
+    hint.textContent =
+      coinsToAvatar > 0
+        ? getTranslation('results_coins_to_avatar', { n: coinsToAvatar })
+        : getTranslation('results_avatar_ready');
+    block.appendChild(hint);
+  }
+  return block;
 }
 
 /** Texte traduit, ou null si la clé manque (getTranslation rend alors « [clé] ») */

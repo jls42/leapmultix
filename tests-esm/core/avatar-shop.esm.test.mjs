@@ -7,6 +7,7 @@ import { describe, test, expect } from '@jest/globals';
 import {
   AVATAR_PRICE,
   buyAvatar,
+  coinsToNextAvatar,
   keepWornAvatar,
   missingCoins,
 } from '../../js/core/avatar-shop.js';
@@ -57,5 +58,24 @@ describe('Avatar porté (profil d’avant les pièces)', () => {
     const old = {};
     keepWornAvatar(old, 'unicorn');
     expect(old.unlockedAvatars).toEqual(['unicorn']);
+  });
+});
+
+describe('Pièces qui manquent pour un avatar de plus (écran de fin)', () => {
+  const ALL = ['fox', 'panda', 'unicorn'];
+
+  test('il en reste à débloquer : la différence avec le prix, 0 quand il y en a assez', () => {
+    expect(coinsToNextAvatar(player(AVATAR_PRICE - 18), ALL)).toBe(18);
+    expect(coinsToNextAvatar(player(AVATAR_PRICE + 5), ALL)).toBe(0);
+  });
+
+  test('tous débloqués, l’avatar porté compris : plus rien à annoncer', () => {
+    const user = { coins: 3, avatar: 'unicorn', unlockedAvatars: ['fox', 'panda'] };
+    expect(coinsToNextAvatar(user, ALL)).toBeNull();
+    expect(coinsToNextAvatar({ ...user, avatar: 'fox' }, ALL)).toBe(AVATAR_PRICE - 3);
+  });
+
+  test('profil sans liste d’avatars : tout reste à débloquer', () => {
+    expect(coinsToNextAvatar({ coins: 10 }, ALL)).toBe(AVATAR_PRICE - 10);
   });
 });
