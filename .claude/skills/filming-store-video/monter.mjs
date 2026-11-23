@@ -131,17 +131,16 @@ function assemble(cuts, card, output) {
   chains.push(`[${cuts.length}:v]${shape},fade=t=in:st=0:d=0.3[v${cuts.length}]`);
   const labels = chains.map((_, i) => `[v${i}]`).join('');
   const graph = `${chains.join(';')};${labels}concat=n=${chains.length}:v=1:a=0[out]`;
+  const encoding = '-c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p -r 30 -movflags +faststart';
+  const graphArgs = ['-filter_complex', graph, '-map', '[out]'];
   run('ffmpeg', [
     '-loglevel',
     'error',
     '-y',
     ...inputs,
-    '-filter_complex',
-    graph,
-    '-map',
-    '[out]',
-    ...['-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-pix_fmt', 'yuv420p', '-r', '30'],
-    ...['-movflags', '+faststart', output],
+    ...graphArgs,
+    ...encoding.split(' '),
+    output,
   ]);
 }
 
