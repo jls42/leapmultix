@@ -31,8 +31,11 @@ ignore.
   montrer de daté.
 - **Le propriétaire décide** l'ordre, les durées et le carton, met lui-même les vidéos sur
   YouTube et colle leur adresse dans la fiche.
-- **Ne pas montrer l'astronaute comme « ami »** (précaution prise pour les visuels de la
-  fiche) : le tournage note `ami` quand il apparaît, le montage écarte ces instants.
+- **Des images peuvent s'écarter du montage** : le tournage note `ami` quand un héros apparaît
+  en « ami » (toujours dans MultiPop ; dans MultiInvaders, seulement ceux que nomme
+  `AMIS_ECARTES=<début du nom de l'image>,…`), et le montage choisit un extrait sans ces
+  instants. Ce que le propriétaire veut écarter des visuels de la fiche est dans les notes
+  privées du dépôt (`CLAUDE.local.md`) : les lire avant de tourner.
 
 ## Ce que Google demande (aide Play Console, « Ajouter des éléments d'aperçu »)
 
@@ -70,8 +73,8 @@ arcade-menu multipop multigoal invasion multimiam multisnake multimemory`. Chaqu
    `analysis/video-fiche/sorties/leapmultix-fr.mp4` (H.264, sans son) et des planches
    `planche-fr-N.jpg`, deux images par seconde. **Regarder chaque planche** : c'est la seule
    vraie vérification. Y chercher un extrait qui ne montre pas ce qu'il doit (pas de bonne
-   réponse, écran de transition), une faute, l'astronaute, une langue qui n'est pas la bonne,
-   une fête.
+   réponse, écran de transition), une faute, une image à écarter, une langue qui n'est pas la
+   bonne, une fête.
 3. **Régler** : l'ordre et les durées sont le tableau `PLAN` de `monter.mjs` (secondes avant et
    après le moment marqué) ; remonter ne demande pas de refilmer. Les deux lignes du carton sont
    dans `carton.html`, reprises des descriptions courtes de la fiche.

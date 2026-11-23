@@ -29,6 +29,8 @@ import {
 
 const [lang = 'fr', ...wanted] = process.argv.slice(2);
 const out = join(TAKES, lang);
+// AMIS_ECARTES=<début du nom d'une image>,… : héros à ne pas montrer en « ami libéré »
+const HIDDEN_FRIENDS = (process.env.AMIS_ECARTES ?? '').split(',').filter(Boolean);
 
 /* --- Quiz : une bonne réponse sur un calcul à quatre choix, puis une erreur expliquée --- */
 
@@ -211,8 +213,8 @@ const SCENES = new Map([
         seconds: 14,
         gap: 520,
         choose: q => lowestWrongAnswer(page, q),
-        // L'ami libéré est un héros tiré au sort : la fiche ne montre pas l'astronaute
-        watch: friendWatcher(page, mark, src => src.startsWith('astronaut')),
+        // L'ami libéré est un héros tiré au sort : ceux d'AMIS_ECARTES ne se montrent pas
+        watch: friendWatcher(page, mark, src => HIDDEN_FRIENDS.some(name => src.startsWith(name))),
       }),
   ],
   ['multimiam', (page, mark) => playMiam(page, mark)],
