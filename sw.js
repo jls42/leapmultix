@@ -874,10 +874,16 @@ async function voiceClip(event) {
   return response;
 }
 
-/** Versions qu'annonce une langue de l'index : sa voix par défaut et ses autres voix */
+/**
+ * Versions qu'annonce une langue de l'index, en MP3 : sa voix par défaut et ses autres voix.
+ * Seuls des MP3 sont gardés : une version annoncée dans un autre format (l'Opus embarqué dans
+ * l'appli Android) n'a plus besoin de ceux qu'une version précédente a pu garder.
+ */
 function announcedVersions(entry) {
   const others = Array.isArray(entry?.alternatives) ? entry.alternatives : [];
-  return [entry?.version, ...others.map(voice => voice?.version)];
+  return [entry, ...others]
+    .filter(voice => (voice?.format ?? 'mp3') === 'mp3')
+    .map(voice => voice?.version);
 }
 
 /**

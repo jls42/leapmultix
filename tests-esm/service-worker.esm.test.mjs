@@ -303,6 +303,21 @@ describe('Service worker : voix enregistrée', () => {
     );
   });
 
+  test('la même version annoncée en Opus (appli mise à jour) : ses MP3 gardés avant sont purgés', async () => {
+    let index = INDEX;
+    const worker = loadWorker(url =>
+      url.endsWith('index.json') ? new FakeResponse(JSON.stringify(index)) : mp3()
+    );
+    const kept = clipUrl('fr', 'lucie-v3-2', 'a1');
+    await request(worker, kept);
+    await request(worker, '/voice/index.json');
+    expect([...(await voiceCache(worker)).keys()]).toContain(kept);
+
+    index = { ...INDEX, languages: { fr: { ...INDEX.languages.fr, format: 'opus' } } };
+    await request(worker, '/voice/index.json');
+    expect([...(await voiceCache(worker)).keys()]).toEqual([`${ORIGIN}/voice/index.json`]);
+  });
+
   test('français et anglais dans l’index : les clips des deux sont gardés, l’ancienne version purgée', async () => {
     const both = {
       ...INDEX,

@@ -513,7 +513,9 @@ export function refreshVoiceEngine() {
     recordedPreference: deps.storage.get(VOICE_STORAGE_KEYS.recorded, null),
   });
   const lang = deps.lang();
-  const engineId = kind === 'clips' ? `${lang}/${entry.version}` : null;
+  // Le format compte : après une mise à jour de l'appli, la copie gardée de l'index peut dire
+  // « mp3 » pour une version que l'index reçu annonce en « opus » ; le moteur est alors refait
+  const engineId = kind === 'clips' ? `${lang}/${entry.version}/${entry.format}` : null;
   if (engineId !== state.engineId) {
     state.engineId = engineId;
     state.engine = engineId ? engineFor(engineId, lang, entry) : null;
