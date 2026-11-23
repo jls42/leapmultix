@@ -277,6 +277,15 @@
     margin-block: 0 var(--space-2);
   }
 
+  /* Ce que la partie a rapporté : aligné à gauche comme le reste du résultat */
+  .results-rewards {
+    align-items: flex-start;
+  }
+
+  .results-reward-list {
+    justify-content: flex-start;
+  }
+
   /* --- Accueil : la mascotte, l'opération, puis les six modes, sur un écran --- */
   #slide1 .content-card {
     display: grid;

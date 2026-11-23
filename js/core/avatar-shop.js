@@ -30,6 +30,21 @@ export function missingCoins(userData, price = AVATAR_PRICE) {
 }
 
 /**
+ * Pièces qui manquent pour débloquer un avatar de plus : 0 quand le joueur peut déjà s'en offrir
+ * un, null quand il les a tous (l'avatar porté compte parmi les siens : keepWornAvatar).
+ * @param {Object} userData
+ * @param {readonly string[]} avatarIds - Tous les avatars du jeu
+ * @param {number} [price]
+ * @returns {number|null}
+ */
+export function coinsToNextAvatar(userData, avatarIds, price = AVATAR_PRICE) {
+  const unlocked = Array.isArray(userData?.unlockedAvatars) ? userData.unlockedAvatars : [];
+  const owned = new Set([...unlocked, userData?.avatar]);
+  if (avatarIds.every(id => owned.has(id))) return null;
+  return missingCoins(userData, price);
+}
+
+/**
  * Débloque un avatar contre des pièces. Rien ne change s'il est déjà débloqué ou s'il manque des
  * pièces.
  * @param {Object} userData - Profil que l'appelant enregistre ensuite
