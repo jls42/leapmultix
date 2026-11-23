@@ -1245,6 +1245,13 @@
   background-size: cover;
 }
 
+/* La partie en plein écran fait défiler son propre contenu : le bandeau s'y colle à partir
+   du bord intérieur, que la marge ci-dessus tient déjà hors de l'encoche. Le décalage du
+   bandeau s'y ajouterait, et le bandeau recouvrirait le haut du plateau. */
+#slide4 #game:fullscreen .arcade-mult-display {
+  top: 0;
+}
+
 /* Bouton plein écran : sous le temps, à côté de « Pause ». Cible de 44 px, icône au trait
    de la couleur du texte. */
 .btn.arcade-fullscreen-btn {
