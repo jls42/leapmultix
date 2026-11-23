@@ -22,6 +22,16 @@ const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36';
 // Encoche de caméra en haut de l'écran, comme un téléphone à poinçon
 const NOTCH_PX = 40;
+// Le même téléphone tourné : l'encoche passe sur le côté gauche
+const TURNED_VIEWPORT = { ...PHONE_VIEWPORT, width: 844, height: 390 };
+const ARCADE_GAMES = [
+  'invasion',
+  'multimiam',
+  'multimemory',
+  'multisnake',
+  'multipop',
+  'multigoal',
+];
 
 /** Haut de la barre du haut de l'écran affiché, en pixels de la fenêtre */
 function topBarTop(page) {
@@ -48,16 +58,17 @@ describe('Écran de téléphone (E2E)', () => {
     if (server) await server.stop();
   });
 
-  /** Page du téléphone, avec ou sans encoche, au menu Arcade */
-  async function openArcade({ notch }) {
+  /** Page du téléphone, avec ou sans encoche (en haut, ou à gauche s'il est tourné), au menu Arcade */
+  async function openArcade({ notch, turned = false }) {
     page = await browser.newPage();
     await page.setUserAgent(ANDROID_USER_AGENT);
-    await page.setViewport(PHONE_VIEWPORT);
+    await page.setViewport(turned ? TURNED_VIEWPORT : PHONE_VIEWPORT);
     if (notch) {
       const client = await page.createCDPSession();
-      await client.send('Emulation.setSafeAreaInsetsOverride', {
-        insets: { top: NOTCH_PX, topMax: NOTCH_PX, bottom: 0, left: 0, right: 0 },
-      });
+      const insets = { top: 0, bottom: 0, left: 0, right: 0 };
+      if (turned) Object.assign(insets, { left: NOTCH_PX, leftMax: NOTCH_PX });
+      else Object.assign(insets, { top: NOTCH_PX, topMax: NOTCH_PX });
+      await client.send('Emulation.setSafeAreaInsetsOverride', { insets });
     }
     await page.goto(`${server.url}?saison=${NO_SEASON}`, server.gotoOptions);
     await createUserAndSkipIntro(page);
@@ -133,37 +144,77 @@ describe('Écran de téléphone (E2E)', () => {
     ).toBe('Quitter le plein écran');
   }, 60000);
 
-  /** Bandeau et plateau de la partie en plein écran, en pixels de la fenêtre */
-  async function fullscreenBoard() {
+  /**
+   * La partie en plein écran, en pixels de la fenêtre : bandeau, zone de jeu, plateau et
+   * « Abandonner », ce qu'un doigt touche en haut du plateau, et ce qui défile
+   */
+  async function fullscreenLayout() {
     await page.waitForSelector('#game canvas', { visible: true, timeout: 10000 });
+    // Bouton plein écran monté, puis deux images : le bandeau et le plateau ont leur place
+    await page.waitForSelector('.arcade-fullscreen-btn', { visible: true, timeout: 5000 });
+    await page.evaluate(
+      () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    );
     return page.evaluate(() => {
+      const game = document.querySelector('#game');
       const banner = document.querySelector('.arcade-mult-display');
-      const canvas = document.querySelector('#game canvas');
-      const board = canvas.getBoundingClientRect();
-      const top = document.elementFromPoint(board.left + board.width / 2, board.top + 2);
+      const canvas = game.querySelector('canvas');
+      const box = el => {
+        const r = el.getBoundingClientRect();
+        return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+      };
+      const board = box(canvas);
+      const bar = box(banner);
+      const touched = document.elementFromPoint((board.left + board.right) / 2, board.top + 2);
       return {
-        bannerTop: Math.round(banner.getBoundingClientRect().top),
-        // Écart entre le bas du bandeau et le haut du plateau, et celui que la feuille demande
-        gap: Math.round(board.top - banner.getBoundingClientRect().bottom),
+        banner: bar,
+        board,
+        abandon: box(game.querySelector('[id$="-abandon-btn"]')),
+        // Écart entre le bas du bandeau et le haut de la zone de jeu, et celui que la feuille
+        // de style demande
+        gap: Math.round(box(canvas.closest('.arcade-game-ui')).top - bar.bottom),
         wanted: Math.round(Number.parseFloat(getComputedStyle(banner).marginBottom)),
-        // Ce qu'un doigt touche tout en haut du plateau
-        topOfBoard: top?.tagName ?? null,
+        topOfBoard: touched?.tagName ?? null,
+        scroll: game.scrollHeight - game.clientHeight,
+        view: { width: innerWidth, height: innerHeight },
       };
     });
   }
 
-  test.each([
-    ['sans encoche', false],
-    ['avec l’encoche', true],
-  ])(
-    'plein écran, %s : le bandeau reste au-dessus du plateau de MultiInvaders',
-    async (_name, notch) => {
-      await openArcade({ notch });
-      await tapPlay('invasion');
-      const seen = await fullscreenBoard();
-      expect(seen.gap).toBe(seen.wanted);
-      expect(seen.topOfBoard).toBe('CANVAS');
-      expect(seen.bannerTop).toBeGreaterThanOrEqual(notch ? NOTCH_PX : 0);
+  /** Rien ne recouvre le plateau, rien ne défile, tout reste à l'écran et hors de l'encoche */
+  function expectClearBoard(seen, { top = 0, left = 0 } = {}) {
+    expect(seen.gap).toBe(seen.wanted);
+    expect(seen.topOfBoard).toBe('CANVAS');
+    expect(seen.banner.bottom).toBeLessThanOrEqual(seen.board.top);
+    expect(seen.banner.top).toBeGreaterThanOrEqual(top);
+    expect(Math.min(seen.banner.left, seen.board.left)).toBeGreaterThanOrEqual(left);
+    expect(seen.scroll).toBe(0);
+    expect(seen.board.bottom).toBeLessThanOrEqual(seen.view.height);
+    expect(seen.abandon.bottom).toBeLessThanOrEqual(seen.view.height);
+  }
+
+  test('plein écran sans encoche : le bandeau reste au-dessus du plateau de MultiInvaders', async () => {
+    await openArcade({ notch: false });
+    await tapPlay('invasion');
+    expectClearBoard(await fullscreenLayout());
+  }, 60000);
+
+  test.each(ARCADE_GAMES)(
+    'plein écran avec l’encoche, %s : le bandeau reste au-dessus du plateau, sous l’encoche',
+    async game => {
+      await openArcade({ notch: true });
+      await tapPlay(game);
+      expectClearBoard(await fullscreenLayout(), { top: NOTCH_PX });
+    },
+    60000
+  );
+
+  test.each(ARCADE_GAMES)(
+    'plein écran, téléphone tourné, encoche à gauche, %s : bandeau et plateau à côté de l’encoche',
+    async game => {
+      await openArcade({ notch: true, turned: true });
+      await tapPlay(game);
+      expectClearBoard(await fullscreenLayout(), { left: NOTCH_PX });
     },
     60000
   );
