@@ -284,8 +284,10 @@ export async function main(argv, { log = console.log } = {}) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main(process.argv.slice(2)).catch(error => {
+  try {
+    await main(process.argv.slice(2));
+  } catch (error) {
     console.error(error.message);
     process.exitCode = 1;
-  });
+  }
 }
