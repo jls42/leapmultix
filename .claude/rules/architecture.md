@@ -165,6 +165,7 @@ paths:
 
 - `accessibility.js` - Accessibility features
 - `game-exit.js` - Single exit rule during a game: Escape, « Abandonner » and the top-bar screens (Home, About, Dashboard, Customization, Change player) ask the mode's own confirmation; confirmed, the game is recorded as an abandon, then the screen opens. Outside a game, nothing changes
+- `back-navigation.js` - The phone's back button in the Android app: the app sends a cancelable `backbutton` event to the document and closes only if the page leaves it uncancelled. From nearest to farthest: an open window or top-bar menu closes (as Escape does), a game in progress presses its « Abandonner » (`game-exit.js`; a second back closes the question), the screen's own back button is pressed (`data-back`, set by the modes: Arcade menu, tables list, levels map, Chrono setup and results), otherwise the screen we came from opens (trail of non-game screens fed by `slideShown`, called from `mainInit.js`); on « Qui joue ? » nothing is handled and the app closes. No browser sends this event: the site is unchanged
 - `speech.js` - Single speech queue (see `docs/voix-enregistree.md`): `speak(text, {priority, queue})`,
   `cancelSpeech()`, pluggable engine (`setSpeechEngine`); never call `speechSynthesis` directly
 - `voice-clips.js`, `core/voice-index.js`, `core/voice-activation.js` - Recorded voice: the index
