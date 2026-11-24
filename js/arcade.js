@@ -298,11 +298,13 @@ function translated(key, fallback) {
  * @param {{id: string, className: string, key: string, fallback: string}} options
  * @returns {HTMLButtonElement}
  */
-function createTranslatedButton({ id, className, key, fallback }) {
+function createTranslatedButton({ id, className, key, fallback, back = false }) {
   const button = document.createElement('button');
   button.type = 'button';
   button.id = id;
   button.className = className;
+  // Le retour du téléphone presse ce bouton (back-navigation.js)
+  if (back) button.dataset.back = '';
   button.dataset.translate = key;
   button.textContent = translated(key, fallback);
   return button;
@@ -462,6 +464,7 @@ function buildGameOverWrapper(mode, score, endMessageKey, endMessage, arcadeScor
       className: 'btn btn-secondary',
       key: 'back_to_arcade_menu',
       fallback: 'Retour au menu Arcade',
+      back: true,
     }),
     createTranslatedButton({
       id: 'arcade-home-btn',

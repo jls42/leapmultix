@@ -461,6 +461,8 @@ describe('Chrono : écran de départ', () => {
     document.querySelector('#chrono-open-stats').click();
     await flush();
     expect(document.activeElement.textContent).toBe(FR.chrono_stats_pick_title);
+    // Le retour du téléphone presse ce bouton (back-navigation.js)
+    expect('back' in document.querySelector('#chrono-stats-back-setup').dataset).toBe(true);
     document.querySelector('#chrono-stats-back-setup').click();
     await flush();
     expect(document.activeElement.id).toBe('chrono-open-stats');
@@ -489,6 +491,8 @@ describe('Chrono : écran de départ', () => {
     // Le classement ouvert montre son temps et sa courbe
     expect(document.querySelectorAll('.chrono-ranking li')).toHaveLength(1);
     expect(document.querySelectorAll('.chrono-curve circle')).toHaveLength(1);
+    // Le retour du téléphone presse ce bouton (back-navigation.js)
+    expect('back' in document.querySelector('#chrono-stats-back-pick').dataset).toBe(true);
     document.querySelector('#chrono-stats-back-pick').click();
     await flush();
     expect(document.activeElement.dataset.bucketKey).toBe(key);
@@ -635,6 +639,9 @@ describe('Chrono : résultats', () => {
     await playGame({ error: true });
     expect(resultActions()).toEqual(['play-again', 'chrono-menu', 'stats', 'back-to-home']);
     expect(resultButton('chrono-menu').textContent).toBe(FR.chrono_back_to_menu);
+    // Le retour du téléphone ramène au menu de Chrono (back-navigation.js)
+    const backs = [...document.querySelectorAll('#results [data-back]')];
+    expect(backs.map(btn => btn.dataset.action)).toEqual(['chrono-menu']);
   });
 
   test('« Mes temps » depuis l’écran de fin dit quel classement il montre, comme depuis le menu', async () => {
@@ -645,6 +652,7 @@ describe('Chrono : résultats', () => {
     const fromResults = header(document.querySelector('#results .chrono-results'));
     expect(fromResults).toHaveLength(2);
     // Le même classement, ouvert depuis le menu de Chrono : même en-tête
+    expect('back' in resultButton('back-to-results').dataset).toBe(true);
     resultButton('back-to-results').click();
     await flush(10);
     resultButton('chrono-menu').click();

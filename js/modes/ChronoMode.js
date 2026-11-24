@@ -235,6 +235,13 @@ function translatedButton(id, key, className) {
   return button;
 }
 
+/** Bouton qui revient à l'écran d'avant : le retour du téléphone le presse (back-navigation.js) */
+function backButton(id, key, className) {
+  const button = translatedButton(id, key, className);
+  button.dataset.back = '';
+  return button;
+}
+
 /** Un bloc de l’écran de départ, nommé par son titre (`chrono-race` → `#chrono-race-title`) */
 function createSetupBlock(name, titleKey) {
   const section = document.createElement('section');
@@ -837,7 +844,7 @@ export class ChronoMode extends GameMode {
       panel.appendChild(list);
     }
     panel.appendChild(
-      translatedButton('chrono-stats-back-setup', 'chrono_back_to_setup', 'btn btn-quiet')
+      backButton('chrono-stats-back-setup', 'chrono_back_to_setup', 'btn btn-quiet')
     );
     return panel;
   }
@@ -897,7 +904,7 @@ export class ChronoMode extends GameMode {
     panel.appendChild(this.buildRanking(rankedSessions(bucket)));
     panel.appendChild(this.buildCurve(recentSessions(bucket), averageMs));
     panel.appendChild(
-      translatedButton('chrono-stats-back-pick', 'chrono_back_to_setup', 'btn btn-quiet')
+      backButton('chrono-stats-back-pick', 'chrono_back_to_setup', 'btn btn-quiet')
     );
     return panel;
   }
@@ -1442,6 +1449,7 @@ export class ChronoMode extends GameMode {
       {
         label: getTranslation('chrono_back_to_menu'),
         action: 'chrono-menu',
+        back: true,
         primary: !race,
         onActivate: () => relaunchChrono(),
       },
@@ -1473,6 +1481,7 @@ export class ChronoMode extends GameMode {
         {
           label: getTranslation('chrono_back_to_results'),
           action: 'back-to-results',
+          back: true,
           primary: true,
           onActivate: () => this.openResultsPane('session'),
         },
