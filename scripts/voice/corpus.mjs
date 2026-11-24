@@ -22,6 +22,7 @@ import {
   spokenEquation,
   spokenGapQuestion,
   spokenQuestion,
+  spokenShortQuestion,
   voiceKey,
 } from '../../js/core/spoken-text.js';
 import { getAdventureLevelsByOperator } from '../../js/core/adventure-data.js';
@@ -204,6 +205,7 @@ function addQuizPhrases(ctx, operator) {
   for (const { a, b } of quizPairs(operator)) {
     const result = operation.compute(a, b);
     add('question', spokenQuestion(`${a} ${symbol} ${b} = ?`, t), operator);
+    add('question courte', spokenShortQuestion(`${a} ${symbol} ${b} = ?`, t), operator);
     challengeAnswers.add(result);
     quizAnswers.add(result);
     if (types.includes('gap')) {
@@ -235,6 +237,7 @@ function addAdventureAndDiscoveryPhrases(ctx, operator) {
   const { symbol } = operation;
   for (const { a, b } of adventurePairs(operator)) {
     add('question', spokenQuestion(`${a} ${symbol} ${b} = ?`, t), operator);
+    add('question courte', spokenShortQuestion(`${a} ${symbol} ${b} = ?`, t), operator);
     quizAnswers.add(operation.compute(a, b));
   }
   for (const { a, b } of uniquePairs(discoveryExamples(operator))) {
@@ -278,6 +281,7 @@ function addChronoPhrases(ctx, operator) {
       const other = otherFactDirection(operator, fact.a, fact.b);
       for (const { a, b } of other ? [fact, other] : [fact]) {
         add('question', spokenQuestion(`${a} ${symbol} ${b} = ?`, t), operator);
+        add('question courte', spokenShortQuestion(`${a} ${symbol} ${b} = ?`, t), operator);
       }
     }
   }

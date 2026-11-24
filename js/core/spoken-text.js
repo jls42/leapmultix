@@ -62,11 +62,36 @@ export function spokenOperatorWord(operator, translate) {
  * @returns {string}
  */
 export function spokenQuestion(text, translate) {
-  const match = DISPLAYED_QUESTION.exec(String(text ?? ''));
-  if (!match) return spokenEquation(text, translate);
-  const [, a, operator, b] = match;
-  const expression = `${a} ${spokenOperatorWord(operator, translate)} ${b}`;
+  const expression = spokenExpression(text, translate);
+  if (!expression) return spokenEquation(text, translate);
   return translate('speech_question', { expression }) ?? spokenEquation(text, translate);
+}
+
+/**
+ * La même question, dite court : « 7 × 8 = ? » → « 7 fois 8 ? ». Pour les questions qui
+ * suivent la première d'une partie : « Combien font » répété à chacune lasse. Un texte
+ * d'une autre forme (un énoncé de problème) se lit comme avec spokenQuestion.
+ * @param {string} text - Question affichée
+ * @param {(key: string, params?: Object) => string|null} translate
+ * @returns {string}
+ */
+export function spokenShortQuestion(text, translate) {
+  const expression = spokenExpression(text, translate);
+  if (!expression) return spokenEquation(text, translate);
+  return translate('speech_question_short', { expression }) ?? spokenQuestion(text, translate);
+}
+
+/**
+ * Le calcul d'une question affichée, prononcé : « 7 × 8 = ? » → « 7 fois 8 »
+ * @param {string} text - Question affichée
+ * @param {(key: string, params?: Object) => string|null} translate
+ * @returns {string|null} null si le texte n'est pas une question de cette forme
+ */
+function spokenExpression(text, translate) {
+  const match = DISPLAYED_QUESTION.exec(String(text ?? ''));
+  if (!match) return null;
+  const [, a, operator, b] = match;
+  return `${a} ${spokenOperatorWord(operator, translate)} ${b}`;
 }
 
 /**

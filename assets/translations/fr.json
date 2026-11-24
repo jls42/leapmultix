@@ -774,6 +774,7 @@
   "speech_divided_by": "divisé par",
   "speech_equals": "égale",
   "speech_question": "Combien font {expression} ?",
+  "speech_question_short": "{expression} ?",
   "speech_gap_question": "{a} {operator} combien égale {result} ?",
   "close_video": "Fermer la vidéo",
   "arcade_fullscreen_enter": "Plein écran",

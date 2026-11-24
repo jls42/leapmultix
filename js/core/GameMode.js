@@ -36,6 +36,7 @@ import { setSafeComplexFeedback } from '../security-utils.js';
 import {
   toSpokenForm,
   toSpokenQuestion,
+  toSpokenShortQuestion,
   toSpokenGapQuestion,
   preferredScrollBehavior,
   keepNumbersTogether,
@@ -1472,9 +1473,10 @@ export class GameMode {
     if (type === 'true_false') return toSpokenForm(question);
     // « 2 × ? = 18 » : « 2 fois combien égale 18 ? », sans la réponse
     if (type === 'gap') return toSpokenGapQuestion(question);
-    // classic, mcq : « Combien font 7 fois 8 ? » ; problem : l'énoncé tel quel
+    // classic, mcq : « Combien font 7 fois 8 ? » à la première question de la partie, puis
+    // « 7 fois 8 ? » : la formule répétée à chaque question lasse ; problem : l'énoncé tel quel
     const text = displayed || (question ? String(question) : `${a} ${operator} ${b} = ?`);
-    return toSpokenQuestion(text);
+    return this.state.questionCount === 0 ? toSpokenQuestion(text) : toSpokenShortQuestion(text);
   }
 
   /**

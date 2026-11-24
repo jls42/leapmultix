@@ -134,7 +134,9 @@ milieu d'une partie en anglais.
 
 - **Questions** : « Combien font 7 fois 8 ? » (et non « 7 fois 8 égale ? », que
   l'oreille n'entend pas comme une question), « 7 fois combien égale 56 ? » pour la
-  question à trou, l'égalité proposée lue telle quelle pour le vrai/faux.
+  question à trou, l'égalité proposée lue telle quelle pour le vrai/faux. Dès la deuxième
+  question d'une partie, la forme courte : « 7 fois 8 ? » (`speech_question_short`,
+  `GameMode.spokenQuestionText`) ; la formule répétée à chaque question lassait.
 - **Énoncés** accordés au singulier dans les trois langues (« 1 boîte de 7 pommes »).
 - **Fin d'arcade** : une phrase sans le score, qui reste affiché.
 - **Formes parlées et empreinte** : `js/core/spoken-text.js`. `voiceKey(texte)` est

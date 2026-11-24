@@ -770,6 +770,7 @@
   "speech_divided_by": "dividido entre",
   "speech_equals": "es igual a",
   "speech_question": "¿Cuánto es {expression}?",
+  "speech_question_short": "¿{expression}?",
   "speech_gap_question": "¿{a} {operator} cuánto es {result}?",
   "close_video": "Cerrar el vídeo",
   "arcade_fullscreen_enter": "Pantalla completa",
