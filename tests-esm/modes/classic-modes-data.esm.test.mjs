@@ -199,9 +199,11 @@ describe('Défi : parties et records', () => {
     expect(score).toBeGreaterThan(0);
     await jest.advanceTimersByTimeAsync(40000);
     expect(challenge.state.isActive).toBe(false);
+    // Dans les records de la règle actuelle ; ceux d'avant la v108 ne bougent pas
     expect(persisted.modeStats.modes.challenge['×']).toMatchObject({
       games: 1,
-      best: { hard: score },
+      best: {},
+      best2: { hard: score },
     });
   });
 
@@ -215,7 +217,7 @@ describe('Défi : parties et records', () => {
     // Mené au bout du temps : son record est un record d'addition, pas de multiplication
     const score = challenge.state.score;
     await jest.advanceTimersByTimeAsync(95000);
-    expect(persisted.modeStats.modes.challenge['+'].best).toEqual({ easy: score });
+    expect(persisted.modeStats.modes.challenge['+'].best2).toEqual({ easy: score });
     expect(persisted.modeStats.modes.challenge['×']).toBeUndefined();
   });
 });

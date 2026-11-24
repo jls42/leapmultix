@@ -210,11 +210,15 @@ function quizFacts(stats) {
   ];
 }
 
-/** Meilleur score d'un Défi et sa difficulté : « 210 (Difficile) », ou null */
+/**
+ * Meilleur score d'un Défi et sa difficulté : « 210 (Difficile) », ou null. Les records sont
+ * ceux de la règle actuelle (`best2`, mode-stats.js) : ceux d'avant la v108 restent dans le
+ * profil sans s'afficher.
+ */
 function challengeBestText(entry) {
   let best = null;
   for (const difficulty of CHALLENGE_DIFFICULTIES) {
-    const score = Number(entry.best?.[difficulty]) || 0;
+    const score = Number(entry.best2?.[difficulty]) || 0;
     if (score > 0 && (best === null || score >= best.score)) best = { score, difficulty };
   }
   if (!best) return null;

@@ -35,6 +35,8 @@ export const LEGACY_ARCADE_GAMES = Object.freeze([
 /** Jeux d'Arcade (MultiPop depuis la v75, MultiGoal depuis la v77) */
 export const ARCADE_GAMES = Object.freeze([...LEGACY_ARCADE_GAMES, 'multipop', 'multigoal']);
 export const CHALLENGE_DIFFICULTIES = Object.freeze(['easy', 'medium', 'hard']);
+/** Records du Défi par difficulté : ceux d'avant la v108, puis ceux de la règle actuelle */
+const CHALLENGE_RECORDS = Object.freeze(['best', 'best2']);
 
 const OPERATORS = new Set(['×', '+', '−', '÷']);
 const OPERATOR_KEYS = new Set([...OPERATORS, UNKNOWN_OPERATOR]);
@@ -78,7 +80,9 @@ function putOwn(record, key, value) {
 /** Champs d'une opération, selon le mode : réponses ; parties ; records */
 function emptyEntry(mode) {
   if (ARCADE_GAMES.includes(mode)) return { games: 0, total: 0, best: 0 };
-  if (mode === 'challenge') return { games: 0, questions: 0, correct: 0, best: {} };
+  // Défi : `best` garde les records d'avant la v108 (le temps rendu y était plus généreux, ils
+  // sont devenus inatteignables), jamais effacés ; `best2` porte ceux de la règle actuelle
+  if (mode === 'challenge') return { games: 0, questions: 0, correct: 0, best: {}, best2: {} };
   if (mode === 'chrono') return { games: 0, questions: 0, correct: 0 };
   return { questions: 0, correct: 0 };
 }
@@ -127,7 +131,9 @@ function cleanBest(raw) {
 function cleanEntry(mode, raw) {
   const fields = Object.keys(emptyEntry(mode)).map(field => [
     field,
-    field === 'best' && mode === 'challenge' ? cleanBest(raw?.best) : count(ownValue(raw, field)),
+    CHALLENGE_RECORDS.includes(field) && mode === 'challenge'
+      ? cleanBest(ownValue(raw, field))
+      : count(ownValue(raw, field)),
   ]);
   const entry = Object.fromEntries(fields);
   if ('correct' in entry) entry.correct = Math.min(entry.correct, entry.questions);
@@ -505,14 +511,18 @@ export function countArcadeAnswer(userData, { operator, table, isCorrect }) {
 }
 
 /**
- * Meilleur score d'un Défi terminé (pas d'un abandon), dans sa difficulté
+ * Meilleur score d'un Défi terminé (pas d'un abandon), dans sa difficulté. Il va dans les
+ * records de la règle actuelle (`best2`) : ceux d'avant la v108 (`best`) ne bougent plus.
  * @param {Object} userData
  * @param {{operator: string, difficulty: string, score: number}} result
  */
 export function recordChallengeBest(userData, { operator, difficulty, score }) {
   const stats = statsOf(userData);
   if (!stats || !CHALLENGE_DIFFICULTIES.includes(difficulty)) return;
-  mergeBest(entryOf(stats, 'challenge', operator).best, { [difficulty]: count(score) });
+  const entry = entryOf(stats, 'challenge', operator);
+  // Un profil d'avant la v108 n'a pas encore ce champ
+  entry.best2 ??= {};
+  mergeBest(entry.best2, { [difficulty]: count(score) });
 }
 
 /**

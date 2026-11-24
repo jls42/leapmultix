@@ -136,10 +136,11 @@ describe('Tableau de bord : Zoé, × seulement, depuis 2025', () => {
       ],
       [
         'Défi',
-        // v37 : la difficulté du meilleur score (anomalie n°13)
+        // v108 : son record (210, Difficile) date de l'ancienne règle du temps ; il reste
+        // dans le profil et ne s'affiche plus, un nouveau record prendra sa place
         [
           ['Nombre de parties', '9'],
-          ['Meilleur score', '210 (Difficile)'],
+          ['Meilleur score', '—'],
         ],
       ],
       [
@@ -248,7 +249,8 @@ describe('Tableau de bord : Léa, × et +, surnom changé', () => {
         'Défi',
         [
           ['Nombre de parties', '2'],
-          ['Meilleur score', '140 (Moyen)'],
+          // v108 : record de l'ancienne règle du temps (140, Moyen), gardé sans être affiché
+          ['Meilleur score', '—'],
         ],
       ],
       [

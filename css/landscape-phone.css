@@ -15,9 +15,12 @@
     padding: 0 var(--slide-gutter) var(--space-2);
   }
 
+  /* Les touches de la barre comptent leur tranche (topbar.css, --key-edge) : la barre garde sa
+     hauteur, 2 px au-dessus d'une touche et 2 px sous sa tranche. Quatre pixels de plus, et un
+     niveau d'Aventure ne tenait plus sur l'écran. */
   .slide .top-bar {
     margin-block: var(--space-1) var(--space-2);
-    padding: var(--space-1) var(--space-3);
+    padding: 2px var(--space-3);
   }
 
   /* L'écran de jeu pose ses marges comme les autres (au-delà de 768 px de large, il n'en
