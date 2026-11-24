@@ -614,17 +614,20 @@ export function singleActivation(handler) {
 
 /**
  * Rangée de boutons d'un écran de fin : une action principale, les autres secondaires.
- * @param {Array<{label: string, action: string, onActivate: Function, primary?: boolean, level?: number}>} buttons
+ * `back` marque le bouton qui revient à l'écran d'avant : le retour du téléphone le presse
+ * (back-navigation.js).
+ * @param {Array<{label: string, action: string, onActivate: Function, primary?: boolean, level?: number, back?: boolean}>} buttons
  * @returns {HTMLElement}
  */
 export function createResultsActions(buttons) {
   const row = document.createElement('div');
   row.className = 'results-actions button-row';
-  for (const { label, action, onActivate, primary = false, level } of buttons) {
+  for (const { label, action, onActivate, primary = false, level, back = false } of buttons) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = primary ? 'btn' : 'btn btn-secondary';
     btn.dataset.action = action;
+    if (back) btn.dataset.back = '';
     if (level !== undefined) btn.dataset.level = String(level);
     btn.textContent = label;
     btn.addEventListener(

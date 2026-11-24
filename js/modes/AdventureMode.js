@@ -928,6 +928,7 @@ export class AdventureMode extends GameMode {
     const backToLevels = {
       label: getTranslation('back_to_levels'),
       action: 'adventure-back-to-levels',
+      back: true,
       onActivate: () => this.returnToLevelSelection(),
     };
 

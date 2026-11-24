@@ -26,6 +26,7 @@ import { initModeAvailability } from '../components/operationModeAvailability.js
 import { autoMigrate } from './stats-migration.js';
 import { attachRecordedVoiceSetting, initRecordedVoice } from '../voice-clips.js';
 import { installScreenAwake, screenShown } from '../screen-awake.js';
+import { installBackNavigation, slideShown } from '../back-navigation.js';
 
 const logInitWarning = (message, error) => {
   console.warn(`[MainInit] ${message}`, error);
@@ -243,12 +244,14 @@ function initComponentModules() {
  * Un nouvel écran commence en haut : sans cela, « Retour à l'accueil » depuis le bas
  * du tableau de bord ouvrait l'accueil au milieu de la page (barre et mascotte
  * hors de l'écran). Le menu de la barre quittée est refermé au passage, et l'écran du
- * téléphone ne reste allumé que sur l'écran de jeu (screen-awake.js).
+ * téléphone ne reste allumé que sur l'écran de jeu (screen-awake.js). Le retour du téléphone
+ * retient l'écran traversé (back-navigation.js).
  * slides.js n'émet pas d'événement : on observe la classe active-slide.
  * @param {HTMLElement} slide - Écran qui vient de s'afficher
  */
 function onSlideShown(slide) {
   screenShown(slide.id);
+  slideShown(slide.id);
   try {
     TopBar.closeAllMenus();
   } catch (error) {
@@ -291,6 +294,7 @@ function wireUiHandlers() {
   wireCreationAvatarSelector();
   wirePersonalizationButton();
   installScreenAwake();
+  installBackNavigation();
   watchSlideChanges();
 }
 

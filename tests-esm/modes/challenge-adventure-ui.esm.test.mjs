@@ -322,6 +322,8 @@ describe('Aventure', () => {
       'adventure-back-to-levels',
       'results-see-badges',
     ]);
+    // Le retour du téléphone presse « Retour aux niveaux », et lui seul (back-navigation.js)
+    expect(buttons.map(button => 'back' in button.dataset)).toEqual([false, true, false]);
     expect(buttons.at(-1).className).toBe('btn btn-secondary');
     buttons.at(-1).click();
     expect(slides.goToSlide).toHaveBeenCalledWith(7);

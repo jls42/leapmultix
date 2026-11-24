@@ -1147,7 +1147,10 @@ export class DiscoveryMode extends GameMode {
   setupTableExploration(root = this._scope()) {
     // Tête de la mascotte en WebP, produite au déploiement : sans elle, le PNG du dépôt
     attachImageFallbacks(root);
-    root.querySelector('#discovery-table-back-btn')?.addEventListener(
+    const back = root.querySelector('#discovery-table-back-btn');
+    // Le retour du téléphone presse ce bouton (back-navigation.js)
+    if (back) back.dataset.back = '';
+    back?.addEventListener(
       'click',
       singleActivation(() => this.returnToTableSelection())
     );
