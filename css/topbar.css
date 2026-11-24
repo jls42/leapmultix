@@ -38,6 +38,13 @@
   font-size: var(--text-base);
 }
 
+/* Une touche a sa tranche sous elle (--key-edge, general.css), dessinée hors de sa boîte : la
+   barre centre la touche avec sa tranche, autant d'espace au-dessus qu'en dessous. Sans cela,
+   la tranche touchait le bas de la barre au téléphone (4 px au-dessus, 0 en dessous). */
+.top-bar .btn {
+  margin-block-end: var(--key-edge);
+}
+
 /* Masqués sans joueur choisi (topBar.js) : l'affichage propre à chaque élément
    l'emporterait sinon sur l'attribut hidden */
 .top-bar .icon-btn[hidden],
@@ -246,7 +253,8 @@
   justify-content: center;
   gap: var(--space-2);
   min-block-size: 44px;
-  margin: 0;
+  /* La place de sa tranche, comme les autres touches de la barre (.top-bar .btn) */
+  margin: 0 0 var(--key-edge);
   padding: 0 var(--space-4);
 }
 
