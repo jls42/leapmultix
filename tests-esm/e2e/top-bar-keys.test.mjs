@@ -6,9 +6,8 @@
  * @jest-environment node
  */
 
-import { afterAll, afterEach, beforeAll, describe, expect, test } from '@jest/globals';
-import puppeteer from 'puppeteer';
-import { startStaticServer } from '../../tests/utils/static-server.cjs';
+import { describe, expect, test } from '@jest/globals';
+import { chromeSession } from '../helpers/chrome-session.mjs';
 import { createUserAndSkipIntro } from '../helpers/game-session.mjs';
 import { NO_SEASON } from '../../js/core/seasons.js';
 
@@ -22,26 +21,8 @@ const SCREENS = [
 ];
 
 describe('Barre du haut : touches centrées avec leur tranche (E2E)', () => {
-  let browser;
+  const chrome = chromeSession();
   let page;
-  let server;
-
-  beforeAll(async () => {
-    server = await startStaticServer('networkidle0');
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-  }, 30000);
-
-  afterAll(async () => {
-    if (browser) await browser.close();
-    if (server) await server.stop();
-  });
-
-  afterEach(async () => {
-    if (page) await page.close();
-  });
 
   /** Touches visibles de la rangée de la barre : espace au-dessus, espace sous la tranche */
   const keyGaps = () =>
@@ -68,9 +49,9 @@ describe('Barre du haut : touches centrées avec leur tranche (E2E)', () => {
   test.each(SCREENS)(
     '%s : autant d’espace au-dessus d’une touche que sous sa tranche',
     async (_, viewport) => {
-      page = await browser.newPage();
+      page = await chrome.newPage();
       await page.setViewport(viewport);
-      await page.goto(`${server.url}?saison=${NO_SEASON}`, server.gotoOptions);
+      await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
       await createUserAndSkipIntro(page);
       const gaps = await keyGaps();
       expect(gaps.length).toBeGreaterThan(0);
