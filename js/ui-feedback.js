@@ -22,6 +22,7 @@ import {
   spokenGapQuestion,
   spokenOperatorWord,
   spokenQuestion,
+  spokenShortQuestion,
 } from './core/spoken-text.js';
 import { createIcon, createPathIcon } from './components/icons.js';
 import { HEAD_SIZES, setAvatarHead } from './avatar-heads.js';
@@ -582,6 +583,15 @@ export function spokenOperator(operator) {
  */
 export function toSpokenQuestion(text) {
   return spokenQuestion(text, translatedOrNull);
+}
+
+/**
+ * La même question, dite court : « 7 × 8 = ? » → « 7 fois 8 ? ».
+ * @param {string} text - Question affichée
+ * @returns {string}
+ */
+export function toSpokenShortQuestion(text) {
+  return spokenShortQuestion(text, translatedOrNull);
 }
 
 /**

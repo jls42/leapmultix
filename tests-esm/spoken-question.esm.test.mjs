@@ -8,9 +8,13 @@ import { describe, test, expect, afterAll } from '@jest/globals';
 import fs from 'node:fs';
 
 const store = await import('../js/i18n-store.js');
-const { toSpokenForm, toSpokenQuestion, toSpokenGapQuestion, spokenOperator } = await import(
-  '../js/ui-feedback.js'
-);
+const {
+  toSpokenForm,
+  toSpokenQuestion,
+  toSpokenShortQuestion,
+  toSpokenGapQuestion,
+  spokenOperator,
+} = await import('../js/ui-feedback.js');
 
 const TRANSLATIONS = Object.fromEntries(
   ['fr', 'en', 'es'].map(lang => [
@@ -58,6 +62,40 @@ describe('Question classique', () => {
     store.setTranslations({ speech_times: 'fois', speech_equals: 'égale' });
     store.setCurrentLanguage('fr');
     expect(toSpokenQuestion('7 × 8 = ?')).toBe('7 fois 8 égale ?');
+  });
+});
+
+describe('Question courte, après la première d’une partie', () => {
+  test.each([
+    ['fr', '7 × 8 = ?', '7 fois 8\u00a0?'],
+    ['en', '7 × 8 = ?', '7 times 8?'],
+    ['es', '7 × 8 = ?', '¿7 por 8?'],
+    ['fr', '15 − 9 = ?', '15 moins 9\u00a0?'],
+    ['en', '56 ÷ 7 = ?', '56 divided by 7?'],
+    ['es', '3 + 4 = ?', '¿3 más 4?'],
+  ])('%s : « %s » se dit « %s », sans « Combien font »', (lang, shown, spoken) => {
+    useLanguage(lang);
+    expect(toSpokenShortQuestion(shown)).toBe(spoken);
+  });
+
+  test('garde l’ordre affiché des facteurs', () => {
+    useLanguage('fr');
+    expect(toSpokenShortQuestion('8 × 7 = ?')).toBe('8 fois 7\u00a0?');
+  });
+
+  test('un énoncé de problème se lit en entier, comme à la première question', () => {
+    useLanguage('fr');
+    const problem = 'Il y a 3 ballons et 1 éclate. Combien de ballons reste-t-il\u00a0?';
+    expect(toSpokenShortQuestion(problem)).toBe(toSpokenQuestion(problem));
+  });
+
+  test('sans la phrase courte traduite, la question se dit en entier', () => {
+    const withoutShort = Object.entries(TRANSLATIONS.fr).filter(
+      ([key]) => key !== 'speech_question_short'
+    );
+    store.setTranslations(Object.fromEntries(withoutShort));
+    store.setCurrentLanguage('fr');
+    expect(toSpokenShortQuestion('7 × 8 = ?')).toBe('Combien font 7 fois 8\u00a0?');
   });
 });
 

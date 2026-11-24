@@ -83,6 +83,7 @@ beforeAll(() => {
     speech_divided_by: 'divisé par',
     speech_equals: 'égale',
     speech_question: 'Combien font {expression} ?',
+    speech_question_short: '{expression} ?',
     speech_gap_question: '{a} {operator} combien égale {result} ?',
     continue: 'Continuer',
     // Énoncés de problèmes : la question tirée au hasard peut en être un
@@ -181,6 +182,17 @@ describe('Quiz : bip, le nombre trouvé, « Bravo », question suivante', () => 
 
     bravo.ctx.onEnded();
     expect(engine.last().text).toBe(quiz.spokenQuestionText());
+    quiz.stop();
+  });
+
+  test('la première question de la partie se dit en entier, les suivantes en court', async () => {
+    const quiz = await quizOnKnownQuestion();
+    expect(quiz.spokenQuestionText()).toBe('Combien font 4 fois 2 ?');
+    // Une réponse donnée : la partie en est à sa deuxième question
+    quiz.state.questionCount = 1;
+    expect(quiz.spokenQuestionText()).toBe('4 fois 2 ?');
+    quiz.state.questionCount = 7;
+    expect(quiz.spokenQuestionText()).toBe('4 fois 2 ?');
     quiz.stop();
   });
 

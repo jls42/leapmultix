@@ -764,6 +764,7 @@
   "speech_divided_by": "divided by",
   "speech_equals": "equals",
   "speech_question": "What is {expression}?",
+  "speech_question_short": "{expression}?",
   "speech_gap_question": "{a} {operator} what equals {result}?",
   "close_video": "Close the video",
   "arcade_fullscreen_enter": "Full screen",
