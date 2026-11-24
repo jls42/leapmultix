@@ -172,8 +172,8 @@ describe('Tableau de bord : ce qui est enregistré, rien de moins', () => {
     show({
       modeStats: modeStats({
         challenge: {
-          '×': { games: 1, questions: 12, correct: 10, best: { hard: 90 } },
-          '−': { games: 1, questions: 3, correct: 2, best: {} },
+          '×': { games: 1, questions: 12, correct: 10, best2: { hard: 90 } },
+          '−': { games: 1, questions: 3, correct: 2, best2: {} },
         },
       }),
     });
@@ -181,6 +181,19 @@ describe('Tableau de bord : ce qui est enregistré, rien de moins', () => {
       ['Nombre de parties', '2 (×Multiplication 1 · −Soustraction 1)'],
       ['Meilleur score', '×Multiplication 90 (Difficile)'],
     ]);
+  });
+
+  test('Défi : un record d’avant la v108 ne s’affiche plus, le nouveau prend sa place', () => {
+    // Le temps rendu était plus généreux avant la v108 : ces scores ne se battent plus. Ils
+    // restent dans le profil (`best`) ; le tableau de bord montre ceux de la règle actuelle
+    const old = { games: 3, questions: 90, correct: 88, best: { hard: 1216 } };
+    show({ modeStats: modeStats({ challenge: { '×': old } }) });
+    expect(rowFacts('Défi')).toEqual([
+      ['Nombre de parties', '3'],
+      ['Meilleur score', '—'],
+    ]);
+    show({ modeStats: modeStats({ challenge: { '×': { ...old, best2: { medium: 240 } } } }) });
+    expect(rowFacts('Défi')[1]).toEqual(['Meilleur score', '240 (Moyen)']);
   });
 
   test('Chrono : le temps garde son signe quand une autre opération a été jouée sans temps', () => {
@@ -214,8 +227,8 @@ describe('Tableau de bord : ce qui est enregistré, rien de moins', () => {
     show({
       modeStats: modeStats({
         challenge: {
-          '×': { games: 1, questions: 12, correct: 10, best: { hard: 90 } },
-          '?': { games: 2, questions: 0, correct: 0, best: { medium: 140 } },
+          '×': { games: 1, questions: 12, correct: 10, best2: { hard: 90 } },
+          '?': { games: 2, questions: 0, correct: 0, best2: { medium: 140 } },
         },
       }),
     });

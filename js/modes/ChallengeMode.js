@@ -38,6 +38,21 @@ import { UserManager } from '../userManager.js';
 
 /** Seuil (en secondes) à partir duquel le chrono passe en état « temps faible ». */
 const LOW_TIME_SECONDS = 10;
+/** Une série de bonnes réponses rend du temps toutes les TIME_BONUS_EVERY réponses de suite */
+const TIME_BONUS_EVERY = 3;
+/**
+ * Secondes rendues par série, selon la difficulté. Toujours moins que le temps qu'une série
+ * coûte : trois questions prennent au moins 3,6 s d'attente (nextQuestionDelay) plus les
+ * réponses. Avant la v108, chaque bonne réponse rendait jusqu'à 5 s, dans toutes les
+ * difficultés : un joueur rapide gagnait plus de temps qu'il n'en dépensait.
+ */
+const TIME_BONUS_SECONDS = new Map([
+  ['easy', 5],
+  ['medium', 4],
+  ['hard', 3],
+]);
+/** La voix encourage tous les PRAISE_EVERY bonnes réponses de suite, pas à chacune */
+const PRAISE_EVERY = 5;
 
 export class ChallengeMode extends GameMode {
   /**
@@ -372,14 +387,11 @@ export class ChallengeMode extends GameMode {
       const coinIcon = document.querySelector('.coin-count');
       if (coinIcon) showCoinGainAnimation(coinIcon);
 
-      // Ajouter du temps bonus pour les séries
-      let timeBonus = 0;
-      if (this.state.streak >= 3) {
-        timeBonus = Math.min(5, Math.floor(this.state.streak / 3));
+      // Une série de bonnes réponses rend du temps
+      const timeBonus = this.timeBonus();
+      if (timeBonus > 0) {
         this.state.timeLeft += timeBonus;
         this.bonusTimeEarned += timeBonus;
-
-        console.log(`⏰ Bonus temps: +${timeBonus}s (total: +${this.bonusTimeEarned}s)`);
       }
 
       // Mettre à jour le défi quotidien (seulement pour multiplication)
@@ -437,22 +449,37 @@ export class ChallengeMode extends GameMode {
   }
 
   /**
-   * Réponse juste : points (et temps gagné pendant une série)
+   * Temps rendu par la bonne réponse qui vient d'être donnée : rien, sauf quand elle
+   * complète une série de TIME_BONUS_EVERY (3, 6, 9… de suite)
+   * @returns {number} secondes
+   */
+  timeBonus() {
+    const { streak } = this.state;
+    if (streak <= 0 || streak % TIME_BONUS_EVERY !== 0) return 0;
+    return TIME_BONUS_SECONDS.get(this.difficulty) ?? 0;
+  }
+
+  /**
+   * Réponse juste : points (et temps gagné quand elle complète une série)
    */
   showCorrectFeedback() {
     const points = this.calculatePoints();
-    const timeBonus = this.state.streak >= 3 ? Math.min(5, Math.floor(this.state.streak / 3)) : 0;
+    const timeBonus = this.timeBonus();
 
     const message =
       timeBonus > 0
         ? getTranslation('challenge_feedback_correct_bonus', { points, timeBonus })
         : getTranslation('challenge_feedback_correct', { points });
 
-    // Le retour s'affiche sans être lu : la voix dit un seul encouragement
+    // Le retour s'affiche sans être lu. Le bip à chaque bonne réponse ; la voix n'encourage
+    // qu'aux paliers d'une série (5, 10, 15… de suite) : un « Bravo » à chaque réponse, puis
+    // la question suivante, faisait deux phrases par question dans un mode de vitesse
     this.displayFeedback(message, 'success', false);
-    // Le bip, puis « Bravo » juste après lui
     playSound('good');
-    this.addTimer(() => speak(getTranslation('correct')), GOOD_SOUND_MS);
+    const { streak } = this.state;
+    if (streak > 0 && streak % PRAISE_EVERY === 0) {
+      this.addTimer(() => speak(getTranslation('correct')), GOOD_SOUND_MS);
+    }
   }
 
   /**

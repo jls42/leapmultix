@@ -121,16 +121,40 @@ describe('Défi : la voix', () => {
     challenge.stop();
   });
 
-  test('après une bonne réponse, le bip seul, puis un seul encouragement', async () => {
+  test('après une bonne réponse, le bip seul : la voix n’encourage pas à chaque réponse', async () => {
     const challenge = await startChallenge();
     option('challenge', false).click();
 
-    // « Bravo » ne couvre pas le bip : il part juste après lui
     expect(AudioManager.playSound.mock.calls.map(([name]) => name)).toEqual(['good']);
-    expect(speak).not.toHaveBeenCalled();
     await new Promise(r => setTimeout(r, GOOD_SOUND_MS + 20));
-    const spoken = speak.mock.calls.map(([text]) => text);
-    expect(spoken).toEqual(['Bravo !']);
+    expect(speak).not.toHaveBeenCalled();
+    challenge.stop();
+  });
+
+  test.each([5, 10])(
+    'à la %ie bonne réponse de suite, le bip puis un seul encouragement',
+    async streak => {
+      const challenge = await startChallenge();
+      // La série en est à une réponse du palier
+      challenge.state.streak = streak - 1;
+      option('challenge', false).click();
+
+      // « Bravo » ne couvre pas le bip : il part juste après lui
+      expect(AudioManager.playSound.mock.calls.map(([name]) => name)).toEqual(['good']);
+      expect(speak).not.toHaveBeenCalled();
+      await new Promise(r => setTimeout(r, GOOD_SOUND_MS + 20));
+      const spoken = speak.mock.calls.map(([text]) => text);
+      expect(spoken).toEqual(['Bravo !']);
+      challenge.stop();
+    }
+  );
+
+  test.each([1, 4, 6, 9])('à la %ie bonne réponse de suite, pas d’encouragement', async streak => {
+    const challenge = await startChallenge();
+    challenge.state.streak = streak - 1;
+    option('challenge', false).click();
+    await new Promise(r => setTimeout(r, GOOD_SOUND_MS + 20));
+    expect(speak).not.toHaveBeenCalled();
     challenge.stop();
   });
 });

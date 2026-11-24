@@ -194,18 +194,59 @@ describe('Défi : points, pièces et temps gagné', () => {
     challenge.stop();
   });
 
-  test('temps gagné : une seconde par tranche de trois bonnes réponses de suite, 5 au plus', async () => {
-    const challenge = await startChallenge('easy');
-    const start = challenge.state.timeLeft;
-    const gained = [];
-    for (let i = 0; i < 18; i++) {
-      reply(challenge);
-      gained.push(challenge.state.timeLeft - start);
+  test.each([
+    ['easy', 5],
+    ['medium', 4],
+    ['hard', 3],
+  ])(
+    'temps gagné (%s) : +%i s à chaque série de trois bonnes réponses, rien entre',
+    async (difficulty, bonus) => {
+      const challenge = await startChallenge(difficulty);
+      const start = challenge.state.timeLeft;
+      const gained = [];
+      for (let i = 0; i < 18; i++) {
+        reply(challenge);
+        gained.push(challenge.state.timeLeft - start);
+      }
+      // Le temps ne tombe qu'à la 3e, 6e, 9e… bonne réponse de suite
+      const expected = Array.from({ length: 18 }, (_, i) => Math.floor((i + 1) / 3) * bonus);
+      expect(gained).toEqual(expected);
+      expect(challenge.bonusTimeEarned).toBe(6 * bonus);
+      challenge.stop();
     }
-    // Séries 1 et 2 : rien ; 3 à 5 : +1 ; 6 à 8 : +2 ; 9 à 11 : +3 ; 12 à 14 : +4 ; 15 à 18 : +5
-    expect(gained).toEqual([0, 0, 1, 2, 3, 5, 7, 9, 12, 15, 18, 22, 26, 30, 35, 40, 45, 50]);
-    expect(challenge.bonusTimeEarned).toBe(50);
+  );
+
+  test('temps gagné : une erreur remet la série à zéro, il faut trois nouvelles bonnes réponses', async () => {
+    const challenge = await startChallenge('hard');
+    const start = challenge.state.timeLeft;
+    reply(challenge);
+    reply(challenge);
+    reply(challenge, false);
+    reply(challenge);
+    reply(challenge);
+    expect(challenge.state.timeLeft - start).toBe(0);
+    reply(challenge);
+    expect(challenge.state.timeLeft - start).toBe(3);
     challenge.stop();
+  });
+
+  test('une série rend moins de temps qu’elle n’en coûte, même au joueur le plus rapide', async () => {
+    // Trois questions coûtent trois attentes entre deux questions (nextQuestionDelay), plus le
+    // temps de lire et de répondre : personne ne le fait en moins d'une demi-seconde. Avant la
+    // v108, chaque bonne réponse rendait jusqu'à 5 s : le chrono remontait au lieu de descendre.
+    const FASTEST_ANSWER_SECONDS = 0.5;
+    for (const difficulty of ['easy', 'medium', 'hard']) {
+      const challenge = await startChallenge(difficulty);
+      const cost = 3 * (challenge.config.nextQuestionDelay / 1000 + FASTEST_ANSWER_SECONDS);
+      reply(challenge);
+      reply(challenge);
+      const before = challenge.state.timeLeft;
+      reply(challenge);
+      const given = challenge.state.timeLeft - before;
+      expect(given).toBeGreaterThan(0);
+      expect(given).toBeLessThan(cost);
+      challenge.stop();
+    }
   });
 });
 

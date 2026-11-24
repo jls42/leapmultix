@@ -34,6 +34,7 @@ describe('mode-stats : une réponse', () => {
       questions: 2,
       correct: 1,
       best: {},
+      best2: {},
     });
   });
 
@@ -86,7 +87,26 @@ describe('mode-stats : records et Arcade', () => {
     recordChallengeBest(user, { operator: '×', difficulty: 'hard', score: 90 });
     recordChallengeBest(user, { operator: '×', difficulty: 'hard', score: 60 });
     recordChallengeBest(user, { operator: '×', difficulty: 'expert', score: 999 });
-    expect(user.modeStats.modes.challenge['×'].best).toEqual({ hard: 90 });
+    expect(user.modeStats.modes.challenge['×'].best2).toEqual({ hard: 90 });
+  });
+
+  test('Défi : un record d’avant la v108 reste dans le profil, le nouveau se compte à part', () => {
+    // Le temps rendu était plus généreux avant la v108 : ces scores ne se battent plus
+    const user = profile();
+    user.modeStats.modes.challenge = {
+      '×': { games: 4, questions: 60, correct: 55, best: { hard: 1216, easy: 300 } },
+    };
+    recordChallengeBest(user, { operator: '×', difficulty: 'hard', score: 240 });
+    expect(user.modeStats.modes.challenge['×']).toEqual({
+      games: 4,
+      questions: 60,
+      correct: 55,
+      best: { hard: 1216, easy: 300 },
+      best2: { hard: 240 },
+    });
+    // Relu (profil rechargé) : rien ne se perd, ni l'ancien record ni le nouveau
+    const reread = normalizeModeStats({ modeStats: JSON.parse(JSON.stringify(user.modeStats)) });
+    expect(reread.modes.challenge['×']).toEqual(user.modeStats.modes.challenge['×']);
   });
 
   test('une partie d’Arcade : parties, total, record, 5 meilleurs scores', () => {
@@ -267,7 +287,9 @@ describe('mode-stats : amorçage et relecture', () => {
       v: 1,
       modes: {
         quiz: { '×': { questions: '12', correct: 99 }, '%': { questions: 3 } },
-        challenge: { '+': { games: -2, best: { hard: '50', expert: 9 } } },
+        challenge: {
+          '+': { games: -2, best: { hard: '50', expert: 9 }, best2: { easy: '7', x: 1 } },
+        },
         inconnu: { '×': { questions: 1 } },
       },
       imported: { questions: 'x' },
@@ -278,7 +300,9 @@ describe('mode-stats : amorçage et relecture', () => {
     const clean = normalizeModeStats({ modeStats: raw });
     expect(clean.modes).toEqual({
       quiz: { '×': { questions: 12, correct: 12 } },
-      challenge: { '+': { games: 0, questions: 0, correct: 0, best: { hard: 50 } } },
+      challenge: {
+        '+': { games: 0, questions: 0, correct: 0, best: { hard: 50 }, best2: { easy: 7 } },
+      },
     });
     expect(clean.imported).toEqual({ questions: 0, correct: 0 });
     expect(clean.arcadeTop5).toEqual({ invasion: [90, 70, 60, 30, 10] });
