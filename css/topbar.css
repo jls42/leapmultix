@@ -180,6 +180,13 @@
     0 0 0 var(--color-warning-edge);
 }
 
+/* Son coupé : la voix se tait avec lui. Son bouton s'efface (il n'agit pas, topBar.js) et dit
+   « Voix : coupée avec le son » */
+.top-bar .voice-toggle[aria-disabled='true'] {
+  color: var(--color-ink-muted);
+  cursor: default;
+}
+
 /* Première visite : état de la voix pas encore décidé (js/voice-clips.js) */
 .top-bar .voice-toggle[data-voice-pending] {
   visibility: hidden;
@@ -405,8 +412,12 @@
     box-shadow: var(--shadow-lg);
   }
 
+  /* Jamais plus haut que l'écran : sur petit téléphone, le bas du menu se fait défiler */
   .top-bar-nav.is-open {
     display: flex;
+    max-block-size: calc(100dvh - 88px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .top-bar-nav .language-selector {
@@ -434,14 +445,48 @@
     clip-path: none;
   }
 
+  /* Son : la touche et son interrupteur sur toute la largeur, le curseur du volume dessous */
+  .top-bar-nav .global-volume-controls {
+    flex-wrap: wrap;
+  }
+
   .top-bar-nav .global-volume-controls .icon-btn {
-    flex: 1;
+    flex: 1 1 100%;
     inline-size: auto;
   }
 
   .top-bar-nav .volume-slider {
+    flex: 1 1 100%;
+    inline-size: auto;
+  }
+
+  /* Interrupteur dessiné au bout des trois réglages à deux états (sombre, son, voix) : on
+     voit d'un coup d'œil ce qui est allumé, sans avoir à interpréter une couleur de fond.
+     Éteint : piste grise, curseur à gauche. Allumé : piste de la couleur d'action, curseur à
+     droite. Le libellé le dit en toutes lettres (« Son : coupé », topBar.js). */
+  .top-bar-nav :is(.theme-mode-btn, .mute-btn, .voice-toggle)::after {
+    content: '';
     flex: none;
-    inline-size: 7rem;
+    inline-size: 40px;
+    block-size: 22px;
+    margin-inline-start: auto;
+    background: radial-gradient(circle at 11px 50%, var(--color-surface) 8px, transparent 9px)
+      var(--color-border-strong);
+    border-radius: var(--radius-pill);
+  }
+
+  .top-bar-nav
+    :is(
+      .theme-mode-btn[aria-checked='true'],
+      .mute-btn:not([data-sound-off]),
+      .voice-toggle[data-voice-on]
+    )::after {
+    background: radial-gradient(
+        circle at calc(100% - 11px) 50%,
+        var(--color-surface) 8px,
+        transparent 9px
+      )
+      var(--color-action);
   }
 
   .top-bar-nav .change-user-btn {
@@ -472,6 +517,14 @@
     inset-block-start: calc(-1 * var(--space-3) - 1px);
     border-block-start: 1px solid var(--color-border);
     pointer-events: none;
+  }
+}
+
+/* Petit téléphone (640 px de haut) : les lignes du menu se resserrent, pour qu'il tienne à
+   l'écran sans avoir à le faire défiler jusqu'à « Changer de joueur » */
+@media (max-width: 992px) and (max-height: 700px) {
+  .top-bar-nav {
+    gap: var(--space-2);
   }
 }
 

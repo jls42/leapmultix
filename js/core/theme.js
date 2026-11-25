@@ -241,7 +241,7 @@ function getMuteButtonTitle(isMuted, translation) {
   const isMissingTranslation =
     typeof translation === 'string' && translation.startsWith('[') && translation.endsWith(']');
   if (isMissingTranslation) {
-    return isMuted ? 'Activer le son' : 'Couper le son';
+    return isMuted ? 'Son : coupé' : 'Son : activé';
   }
   return translation;
 }
@@ -252,7 +252,7 @@ function updateMuteButtons(newVolume) {
   const isMuted = Number.isNaN(numericVolume) ? false : numericVolume === 0;
   for (const btn of document.querySelectorAll('.mute-btn')) {
     setIcon(btn, isMuted ? 'volume-x' : 'volume-2');
-    const key = isMuted ? 'mute_button_label_off' : 'mute_button_label_on';
+    const key = isMuted ? 'sound_state_off' : 'sound_state_on';
     const label = getMuteButtonTitle(isMuted, getTranslation(key));
     btn.title = label;
     btn.setAttribute('aria-label', label);

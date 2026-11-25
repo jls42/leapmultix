@@ -15,10 +15,11 @@ const TRANSLATIONS = {
   home_button_label: 'Accueil',
   about_button_label: 'À propos',
   table_settings_button_label: 'Paramètres des tables',
-  mute_button_label_on: 'Couper le son',
-  mute_button_label_off: 'Activer le son',
-  voice_toggle_on: 'Activer la voix',
-  voice_toggle_off: 'Désactiver la voix',
+  sound_state_on: 'Son : activé',
+  sound_state_off: 'Son : coupé',
+  voice_state_on: 'Voix : activée',
+  voice_state_off: 'Voix : coupée',
+  voice_state_sound_off: 'Voix : coupée avec le son',
   change_user: 'Changer de joueur',
   dashboard_button_label: 'Mes progrès',
   dashboard_button_caption: 'Progrès',
@@ -156,7 +157,7 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     expect(TopBar.generateTopBarHTML('slide7')).toBe(fromDom);
   });
 
-  test('voix : le nom, le libellé du menu, l’infobulle et l’icône disent l’action proposée', () => {
+  test('voix : le nom, le libellé du menu, l’infobulle et l’icône disent son état', () => {
     Storage.saveVoiceEnabled(true);
     TopBar.injectTopBarIntoSlides();
     const btn = document.querySelector('#slide7 .voice-toggle');
@@ -165,23 +166,66 @@ describe('TopBar : icônes SVG, libellés et états', () => {
       btn.title,
       btn.querySelector('.icon-btn-label').textContent,
     ];
+    TopBar.updateVolumeControls(0.6, false);
     expect(btn.hasAttribute('data-voice-on')).toBe(true);
-    expect(said()).toEqual(Array(3).fill('Désactiver la voix'));
+    expect(said()).toEqual(Array(3).fill('Voix : activée'));
     expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('speech');
-    // Le nom change avec l'état : pas d'aria-pressed en plus, qui le dirait deux fois
+    // Le nom porte l'état : pas d'aria-pressed en plus, qui le dirait deux fois
     expect(btn.hasAttribute('aria-pressed')).toBe(false);
+    expect(btn.hasAttribute('aria-disabled')).toBe(false);
 
     TopBar.updateVoiceToggleUI(false);
     expect(btn.hasAttribute('data-voice-on')).toBe(false);
-    expect(said()).toEqual(Array(3).fill('Activer la voix'));
-    expect(btn.dataset.translateTitle).toBe('voice_toggle_on');
-    expect(btn.dataset.translateAriaLabel).toBe('voice_toggle_on');
-    expect(btn.querySelector('.icon-btn-label').dataset.translate).toBe('voice_toggle_on');
+    expect(said()).toEqual(Array(3).fill('Voix : coupée'));
+    expect(btn.dataset.translateTitle).toBe('voice_state_off');
+    expect(btn.dataset.translateAriaLabel).toBe('voice_state_off');
+    expect(btn.querySelector('.icon-btn-label').dataset.translate).toBe('voice_state_off');
     expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('speech-off');
     // Le mot sous l'icône (grand écran) reste contenu dans le nom du bouton (WCAG 2.5.3)
     expect(btn.getAttribute('aria-label').toLowerCase()).toContain(
       btn.querySelector('.icon-btn-caption').textContent.toLowerCase()
     );
+  });
+
+  test('voix : son coupé, elle se dit « coupée avec le son » et son bouton n’agit plus ; elle reprend avec le son', () => {
+    Storage.saveVoiceEnabled(true);
+    TopBar.init();
+    const btn = document.querySelector('#slide7 .voice-toggle');
+    const state = () => [
+      btn.getAttribute('aria-label'),
+      btn.querySelector('.icon-btn-label').textContent,
+      btn.querySelector('svg').getAttribute('data-icon'),
+      btn.hasAttribute('data-voice-on'),
+      btn.getAttribute('aria-disabled'),
+    ];
+    TopBar.updateVolumeControls(0.6, false);
+    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, null]);
+
+    // Le son se coupe (touche « Son », curseur à zéro) : la voix se tait avec lui
+    TopBar.updateVolumeControls(0.6, true);
+    expect(state()).toEqual([
+      'Voix : coupée avec le son',
+      'Voix : coupée avec le son',
+      'speech-off',
+      false,
+      'true',
+    ]);
+    // Toucher la voix pendant ce temps ne change pas son réglage à l'aveugle
+    btn.click();
+    expect(Storage.loadVoiceEnabled()).toBe(true);
+    expect(state()[0]).toBe('Voix : coupée avec le son');
+    TopBar.updateVolumeControls(0, false);
+    expect(state()[0]).toBe('Voix : coupée avec le son');
+
+    // Le son revient : la voix reprend l'état de son réglage, resté allumé
+    TopBar.updateVolumeControls(0.6, false);
+    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, null]);
+
+    // Voix coupée par son réglage : elle le reste quand le son revient
+    Storage.saveVoiceEnabled(false);
+    TopBar.updateVolumeControls(0.6, true);
+    TopBar.updateVolumeControls(0.6, false);
+    expect(state()).toEqual(['Voix : coupée', 'Voix : coupée', 'speech-off', false, null]);
   });
 
   test('voix : désactivée tant que le joueur ne l’a pas demandée', () => {
@@ -192,7 +236,7 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     TopBar.injectTopBarIntoSlides();
     const btn = document.querySelector('#slide7 .voice-toggle');
     expect(btn.hasAttribute('data-voice-on')).toBe(false);
-    expect(btn.title).toBe('Activer la voix');
+    expect(btn.title).toBe('Voix : coupée');
 
     Storage.saveVoiceEnabled(true);
     expect(isVoiceEnabled()).toBe(true);
@@ -307,14 +351,14 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     expect(EMOJI.test(btn.textContent)).toBe(false);
     expect(btn.querySelectorAll('svg').length).toBe(1);
     expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('volume-x');
-    expect(btn.getAttribute('aria-label')).toBe('Activer le son');
-    expect(btn.dataset.translateAriaLabel).toBe('mute_button_label_off');
-    expect(btn.querySelector('.icon-btn-label').textContent).toBe('Activer le son');
+    expect(btn.getAttribute('aria-label')).toBe('Son : coupé');
+    expect(btn.dataset.translateAriaLabel).toBe('sound_state_off');
+    expect(btn.querySelector('.icon-btn-label').textContent).toBe('Son : coupé');
     expect(document.querySelector('#slide7 .volume-slider').value).toBe('0');
 
     TopBar.updateVolumeControls(0.6, false);
     expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('volume-2');
-    expect(btn.getAttribute('aria-label')).toBe('Couper le son');
+    expect(btn.getAttribute('aria-label')).toBe('Son : activé');
   });
 
   test('son : une touche dans la barre elle-même, juste avant le menu, de même état que celle du menu', async () => {
@@ -334,10 +378,10 @@ describe('TopBar : icônes SVG, libellés et états', () => {
       ]);
 
     TopBar.updateVolumeControls(0.6, false);
-    expect(states()).toEqual(Array(2).fill(['Couper le son', 'volume-2', false]));
+    expect(states()).toEqual(Array(2).fill(['Son : activé', 'volume-2', false]));
     // Son coupé : l'état se lit sur les deux touches (teinte d'alerte de css/topbar.css)
     TopBar.updateVolumeControls(0, true);
-    expect(states()).toEqual(Array(2).fill(['Activer le son', 'volume-x', true]));
+    expect(states()).toEqual(Array(2).fill(['Son : coupé', 'volume-x', true]));
 
     // Un toucher sur la touche de la barre bascule le son, comme celle du menu
     const toggle = jest.spyOn(AudioManager, 'toggleMute').mockImplementation(() => {});
@@ -577,7 +621,7 @@ describe('TopBar : mots sous les icônes', () => {
     mute.textContent = '🔇';
     TopBar.updateVolumeControls(0, true);
     expect(mute.querySelector('.icon-btn-caption')?.textContent).toBe('Son');
-    expect(mute.getAttribute('aria-label')).toBe('Activer le son');
+    expect(mute.getAttribute('aria-label')).toBe('Son : coupé');
     TopBar.updateVolumeControls(1, false);
     expect(mute.querySelectorAll('.icon-btn-caption')).toHaveLength(1);
   });
