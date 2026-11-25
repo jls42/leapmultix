@@ -504,11 +504,13 @@ export class ChallengeMode extends GameMode {
   }
 
   /**
-   * Réponse fausse : ton calme, sans son d'alerte ; la bonne tuile est déjà cochée, la
-   * phrase entière est lue
+   * Réponse fausse : ton calme ; la bonne tuile est déjà cochée, la phrase entière est lue
    */
   showIncorrectFeedback() {
-    this.displayFeedback(this.spokenErrorText(), 'error', true);
+    const spoken = this.spokenErrorText();
+    // Voix éteinte : le son doux d'erreur à sa place, jamais les deux
+    this.playErrorSoundUnlessSpoken(spoken);
+    this.displayFeedback(spoken, 'error', true);
   }
 
   /**

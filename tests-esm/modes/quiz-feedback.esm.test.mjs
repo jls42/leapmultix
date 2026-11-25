@@ -104,7 +104,7 @@ describe('Quiz : retour sur erreur', () => {
     expect(document.getElementById('quiz-abandon').className).toContain('btn-quiet');
   });
 
-  test('coche la bonne tuile, croise le choix erroné, sans son d’alerte', async () => {
+  test('coche la bonne tuile, croise le choix erroné ; voix éteinte, le son doux d’erreur', async () => {
     await startQuiz();
     const wrong = options().find(b => b.dataset.value !== '42');
     wrong.click();
@@ -114,7 +114,8 @@ describe('Quiz : retour sur erreur', () => {
     expect(correct.querySelector('svg.option-mark')).not.toBeNull();
     expect(wrong.classList.contains('is-chosen-wrong')).toBe(true);
     expect(wrong.querySelector('svg.option-mark-wrong')).not.toBeNull();
-    expect(AudioManager.playSound).not.toHaveBeenCalledWith('bad');
+    // La voix est éteinte dans ce test : le son doux d'erreur prend sa place
+    expect(AudioManager.playSound).toHaveBeenCalledWith('bad');
 
     const panel = document.querySelector('#quiz-feedback .feedback-explain');
     expect(panel).not.toBeNull();

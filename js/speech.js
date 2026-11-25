@@ -726,6 +726,17 @@ export function preloadSpeech(texts) {
   }
 }
 
+/**
+ * Cette phrase serait-elle dite à l'instant ? Non quand le son est coupé, quand la voix est
+ * éteinte ou indisponible, ou quand la phrase est vide. Les modes s'en servent pour ne donner
+ * qu'un signal sonore par erreur : la voix, ou à défaut le son d'erreur (GameMode)
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function willSpeak(text) {
+  return canSpeak(String(text ?? ''));
+}
+
 function canSpeak(text) {
   if (isMuted) return false;
   // Une traduction manquante (« [table_of] 7 ») ne se lit pas : ce serait un nom technique

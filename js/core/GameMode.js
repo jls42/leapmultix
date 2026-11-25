@@ -25,7 +25,7 @@ import { recordModeAnswer, ANSWER_MODES } from './mode-stats.js';
 import { UserState } from './userState.js';
 import { goToSlide } from '../slides.js';
 import { setActiveMode, clearActiveMode } from '../game-exit.js';
-import { cancelSpeech, preloadSpeech, whenSpeechEnds } from '../speech.js';
+import { cancelSpeech, preloadSpeech, whenSpeechEnds, willSpeak } from '../speech.js';
 import { AudioManager } from './audio.js';
 import { InfoBar } from '../components/infoBar.js';
 import { generateQuestion } from '../questionGenerator.js';
@@ -1040,6 +1040,17 @@ export class GameMode {
     }
     setSafeComplexFeedback(this.feedbackElement, message, hint, '', { lead, countBy, facts });
     return { lead, message };
+  }
+
+  /**
+   * Un seul signal sonore par erreur : la voix quand elle dit la phrase d'erreur, sinon le
+   * son doux d'erreur (voix éteinte ou indisponible). Jamais les deux à la suite : ce serait
+   * appuyer deux fois sur la faute. Son coupé : rien (AudioManager.playSound s'y plie)
+   * @param {string|null} spoken - Phrase d'erreur confiée à la voix
+   */
+  playErrorSoundUnlessSpoken(spoken) {
+    if (spoken && willSpeak(spoken)) return;
+    AudioManager.playSound('bad');
   }
 
   /**
