@@ -1078,8 +1078,9 @@ export class GameMode {
    * @returns {boolean}
    */
   praiseDue(question) {
-    const every = this.config.praiseEvery;
-    if (!(every > 1)) return true;
+    // Sans réglage lisible, le bravo suit chaque bonne réponse
+    const every = Number(this.config.praiseEvery) || 1;
+    if (every <= 1) return true;
     const reached = this._countedQuestion === question ? this.state.streak : this.state.streak + 1;
     return reached > 0 && reached % every === 0;
   }
