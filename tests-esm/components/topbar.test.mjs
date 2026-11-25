@@ -156,21 +156,32 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     expect(TopBar.generateTopBarHTML('slide7')).toBe(fromDom);
   });
 
-  test('voix : nom fixe, aria-pressed, icône et infobulle cohérents avec l’état', () => {
+  test('voix : le nom, le libellé du menu, l’infobulle et l’icône disent l’action proposée', () => {
     Storage.saveVoiceEnabled(true);
     TopBar.injectTopBarIntoSlides();
     const btn = document.querySelector('#slide7 .voice-toggle');
-    expect(btn.getAttribute('aria-pressed')).toBe('true');
-    expect(btn.getAttribute('aria-label')).toBe('Lecture à voix haute');
-    expect(btn.title).toBe('Désactiver la voix');
+    const said = () => [
+      btn.getAttribute('aria-label'),
+      btn.title,
+      btn.querySelector('.icon-btn-label').textContent,
+    ];
+    expect(btn.hasAttribute('data-voice-on')).toBe(true);
+    expect(said()).toEqual(Array(3).fill('Désactiver la voix'));
     expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('speech');
+    // Le nom change avec l'état : pas d'aria-pressed en plus, qui le dirait deux fois
+    expect(btn.hasAttribute('aria-pressed')).toBe(false);
 
     TopBar.updateVoiceToggleUI(false);
-    expect(btn.getAttribute('aria-pressed')).toBe('false');
-    expect(btn.getAttribute('aria-label')).toBe('Lecture à voix haute');
-    expect(btn.title).toBe('Activer la voix');
+    expect(btn.hasAttribute('data-voice-on')).toBe(false);
+    expect(said()).toEqual(Array(3).fill('Activer la voix'));
     expect(btn.dataset.translateTitle).toBe('voice_toggle_on');
+    expect(btn.dataset.translateAriaLabel).toBe('voice_toggle_on');
+    expect(btn.querySelector('.icon-btn-label').dataset.translate).toBe('voice_toggle_on');
     expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('speech-off');
+    // Le mot sous l'icône (grand écran) reste contenu dans le nom du bouton (WCAG 2.5.3)
+    expect(btn.getAttribute('aria-label').toLowerCase()).toContain(
+      btn.querySelector('.icon-btn-caption').textContent.toLowerCase()
+    );
   });
 
   test('voix : désactivée tant que le joueur ne l’a pas demandée', () => {
@@ -180,7 +191,7 @@ describe('TopBar : icônes SVG, libellés et états', () => {
 
     TopBar.injectTopBarIntoSlides();
     const btn = document.querySelector('#slide7 .voice-toggle');
-    expect(btn.getAttribute('aria-pressed')).toBe('false');
+    expect(btn.hasAttribute('data-voice-on')).toBe(false);
     expect(btn.title).toBe('Activer la voix');
 
     Storage.saveVoiceEnabled(true);
@@ -195,11 +206,11 @@ describe('TopBar : icônes SVG, libellés et états', () => {
       TopBar.injectTopBarIntoSlides();
       TopBar.attachVoiceToggles();
       const btn = document.querySelector('#slide7 .voice-toggle');
-      expect(btn.getAttribute('aria-pressed')).toBe('true');
+      expect(btn.hasAttribute('data-voice-on')).toBe(true);
       btn.click();
       expect(localStorage.getItem('voiceEnabled')).toBe('false');
       expect(isVoiceEnabled()).toBe(false);
-      expect(btn.getAttribute('aria-pressed')).toBe('false');
+      expect(btn.hasAttribute('data-voice-on')).toBe(false);
     } finally {
       setVoiceEnabledResolver(null);
       localStorage.removeItem('voiceEnabled');
@@ -229,9 +240,9 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     TopBar.init();
     const btn = document.querySelector('#slide7 .voice-toggle');
     eventBus.emit('voice:changed', { available: true, active: true, engine: 'clips' });
-    expect(btn.getAttribute('aria-pressed')).toBe('true');
+    expect(btn.hasAttribute('data-voice-on')).toBe(true);
     eventBus.emit('voice:changed', { available: false, active: false, engine: 'synthesis' });
-    expect(btn.getAttribute('aria-pressed')).toBe('false');
+    expect(btn.hasAttribute('data-voice-on')).toBe(false);
   });
 
   test('voix, première visite : bouton masqué tant que la décision attend, puis son état', () => {
@@ -246,7 +257,7 @@ describe('TopBar : icônes SVG, libellés et états', () => {
       release();
       eventBus.emit('voice:changed', { available: true, active: true, engine: 'clips' });
       expect(btn.hasAttribute('data-voice-pending')).toBe(false);
-      expect(btn.getAttribute('aria-pressed')).toBe('true');
+      expect(btn.hasAttribute('data-voice-on')).toBe(true);
     } finally {
       release();
     }
@@ -304,6 +315,35 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     TopBar.updateVolumeControls(0.6, false);
     expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('volume-2');
     expect(btn.getAttribute('aria-label')).toBe('Couper le son');
+  });
+
+  test('son : une touche dans la barre elle-même, juste avant le menu, de même état que celle du menu', async () => {
+    const { AudioManager } = await import('../../js/core/audio.js');
+    TopBar.injectTopBarIntoSlides();
+    TopBar.attachVolumeControls();
+    const bar = document.querySelector('#slide7 .top-bar');
+    const quick = bar.querySelector(':scope > .mute-btn-quick');
+    const inMenu = bar.querySelector('.top-bar-nav .mute-btn');
+    expect(quick.nextElementSibling).toBe(bar.querySelector('.burger-menu-btn'));
+    expect(inMenu).not.toBe(quick);
+    const states = () =>
+      [quick, inMenu].map(btn => [
+        btn.getAttribute('aria-label'),
+        btn.querySelector('svg').getAttribute('data-icon'),
+        btn.hasAttribute('data-sound-off'),
+      ]);
+
+    TopBar.updateVolumeControls(0.6, false);
+    expect(states()).toEqual(Array(2).fill(['Couper le son', 'volume-2', false]));
+    // Son coupé : l'état se lit sur les deux touches (teinte d'alerte de css/topbar.css)
+    TopBar.updateVolumeControls(0, true);
+    expect(states()).toEqual(Array(2).fill(['Activer le son', 'volume-x', true]));
+
+    // Un toucher sur la touche de la barre bascule le son, comme celle du menu
+    const toggle = jest.spyOn(AudioManager, 'toggleMute').mockImplementation(() => {});
+    quick.click();
+    expect(toggle).toHaveBeenCalledTimes(1);
+    toggle.mockRestore();
   });
 
   test('menu : aria-expanded et icône suivent l’ouverture', () => {
@@ -433,6 +473,55 @@ describe('TopBar : sans joueur choisi et touche Échap', () => {
     closeButton.click();
     expect(bar.querySelector('.top-bar-nav').classList.contains('is-open')).toBe(false);
     expect(document.activeElement).toBe(bar.querySelector('.burger-menu-btn'));
+  });
+
+  test('menu ouvert : un voile se pose juste avant la barre, et part quand le menu se ferme', () => {
+    TopBar.init();
+    const bar = document.querySelector('#slide1 .top-bar');
+    expect(document.querySelector('.top-bar-veil')).toBeNull();
+
+    TopBar.setMenuOpen(bar, true);
+    TopBar.setMenuOpen(bar, true);
+    const veils = document.querySelectorAll('.top-bar-veil');
+    expect(veils).toHaveLength(1);
+    expect(bar.previousElementSibling).toBe(veils[0]);
+    expect(veils[0].getAttribute('aria-hidden')).toBe('true');
+
+    // Bouton retour d'Android et Échap passent par closeAllMenus
+    TopBar.closeAllMenus();
+    expect(document.querySelector('.top-bar-veil')).toBeNull();
+  });
+
+  test('toucher le voile ferme le menu', () => {
+    TopBar.init();
+    const bar = document.querySelector('#slide1 .top-bar');
+    TopBar.setMenuOpen(bar, true);
+    document.querySelector('.top-bar-veil').click();
+    expect(bar.querySelector('.top-bar-nav').classList.contains('is-open')).toBe(false);
+    expect(document.querySelector('.top-bar-veil')).toBeNull();
+  });
+
+  test('le focus qui sort de la barre ferme le menu ; celui qui y reste le laisse ouvert', () => {
+    TopBar.init();
+    const bar = document.querySelector('#slide1 .top-bar');
+    const nav = bar.querySelector('.top-bar-nav');
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    const leave = (from, to) =>
+      from.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: to }));
+
+    TopBar.setMenuOpen(bar, true);
+    const [first, second] = nav.querySelectorAll('button');
+    leave(first, second);
+    expect(nav.classList.contains('is-open')).toBe(true);
+    // Focus perdu sans destination (toucher sur une zone inerte) : le clic s'en charge
+    leave(first, null);
+    expect(nav.classList.contains('is-open')).toBe(true);
+
+    leave(second, outside);
+    expect(nav.classList.contains('is-open')).toBe(false);
+    expect(bar.querySelector('.burger-menu-btn').getAttribute('aria-expanded')).toBe('false');
+    outside.remove();
   });
 
   test('closeAllMenus referme les menus de toutes les barres', () => {

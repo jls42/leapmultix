@@ -10,6 +10,7 @@ import { UserState } from './core/userState.js';
 import { UserManager } from './userManager.js';
 import { appendSanitizedHTML } from './security-utils.js';
 import { eventBus } from './core/eventBus.js';
+import { announceReward } from './core/session-rewards.js';
 
 /* ======================
    ÉTAT DU JEU
@@ -224,9 +225,14 @@ function completeDailyChallenge(challengeData) {
   // bonne réponse l'a rafraîchi avant cette récompense
   updateCoinDisplay();
 
-  // Afficher une notification spéciale
-  showMessage(
-    getTranslation('daily_challenge_finished_message', { reward: DAILY_CHALLENGE_REWARD })
+  // Le dire : tout de suite hors partie ; pendant une partie, le message se poserait sur les
+  // réponses, l'écran de fin le dit à sa place (core/session-rewards.js)
+  announceReward(
+    () =>
+      showMessage(
+        getTranslation('daily_challenge_finished_message', { reward: DAILY_CHALLENGE_REWARD })
+      ),
+    'results_daily_challenge_done'
   );
   import('./badges.js')
     .then(({ checkAndUnlockBadge }) => {

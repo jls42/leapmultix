@@ -5,9 +5,9 @@
  *   est 8. »), rien ne la coupe ; après une bonne réponse, un seul encouragement.
  * - Aventure : chaque question est lue à voix haute, comme au Quiz et au Défi, avec les
  *   facteurs dans l'ordre affiché (« Combien font 7 fois 8 ? »).
- * - Quiz et Aventure : une bonne réponse dit le nombre trouvé puis un bravo (« Oui, 8 ! »,
- *   « Bravo ! »), deux parties d'une même phrase, chargées d'avance ; Vrai/Faux garde le
- *   bravo seul.
+ * - Quiz et Aventure : une bonne réponse dit le nombre trouvé (« Oui, 8 ! ») ; un bravo le
+ *   suit toutes les trois bonnes réponses de suite (« Bravo ! »), deux parties d'une même
+ *   phrase, chargées d'avance ; Vrai/Faux n'a que le bravo, donc rien hors palier.
  * - Une réponse n'est enregistrée qu'une fois dans les statistiques d'opérations.
  */
 import { describe, test, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
@@ -206,7 +206,7 @@ describe('Quiz : chaque forme de question se dit sans la réponse', () => {
   });
 });
 
-describe('Bonne réponse : le nombre trouvé, puis un bravo', () => {
+describe('Bonne réponse : le nombre trouvé ; un bravo aux paliers de la série', () => {
   const TRUE_FALSE = {
     question: '8 × 6 = 47',
     answer: false,
@@ -227,7 +227,33 @@ describe('Bonne réponse : le nombre trouvé, puis un bravo', () => {
     expect(correctAnswerParts({ type: 'divisibility', answer: true })).toEqual(['Bravo !']);
   });
 
-  test('Quiz : le bip seul, puis « Oui, 8 ! » et « Bravo ! » en une seule phrase', async () => {
+  test('sans bravo : le nombre seul ; Vrai/Faux et divisibilité n’ont alors rien à dire', () => {
+    expect(correctAnswerParts(KNOWN, { praise: false })).toEqual(['Oui, 8 !']);
+    expect(correctAnswerParts({ ...KNOWN, answer: 0 }, { praise: false })).toEqual(['Oui, 0 !']);
+    expect(correctAnswerParts(TRUE_FALSE, { praise: false })).toEqual([]);
+    expect(correctAnswerParts({ type: 'divisibility', answer: true }, { praise: false })).toEqual(
+      []
+    );
+  });
+
+  /** Ce que la voix dit après chaque bonne réponse d'une suite de réponses au Quiz */
+  async function quizAnswers(quiz, answers) {
+    const said = [];
+    for (const right of answers) {
+      showKnownQuestion(quiz);
+      quiz.speakQuestion();
+      speak.mockClear();
+      option('quiz', !right).click();
+      await new Promise(r => setTimeout(r, GOOD_SOUND_MS + 20));
+      said.push(speak.mock.calls.map(([text]) => text).filter(Array.isArray));
+      // Après une erreur, « Continuer » attend l'enfant
+      document.querySelector('#quiz-continue')?.click();
+      quiz._continuePending = false;
+    }
+    return said;
+  }
+
+  test('Quiz : le bip seul, puis « Oui, 8 ! » ; le bravo le suit à la 3e et à la 6e de suite', async () => {
     const quiz = new QuizMode();
     await quiz.start();
     showKnownQuestion(quiz);
@@ -237,8 +263,33 @@ describe('Bonne réponse : le nombre trouvé, puis un bravo', () => {
     expect(AudioManager.playSound.mock.calls.map(([name]) => name)).toEqual(['good']);
     expect(speak).not.toHaveBeenCalled();
     await new Promise(r => setTimeout(r, GOOD_SOUND_MS + 20));
-    // Un seul appel : les deux parties tiennent ensemble dans la file
-    expect(speak.mock.calls.map(([text]) => text)).toEqual([['Oui, 8 !', 'Bravo !']]);
+    expect(speak.mock.calls.map(([text]) => text)).toEqual([['Oui, 8 !']]);
+
+    // Cinq bonnes réponses de plus : six de suite en tout
+    const said = await quizAnswers(quiz, [true, true, true, true, true]);
+    expect(said).toEqual([
+      [['Oui, 8 !']],
+      // Un seul appel : les deux parties tiennent ensemble dans la file
+      [['Oui, 8 !', 'Bravo !']],
+      [['Oui, 8 !']],
+      [['Oui, 8 !']],
+      [['Oui, 8 !', 'Bravo !']],
+    ]);
+    quiz.stop();
+  });
+
+  test('Quiz : une erreur remet la série à zéro, le bravo attend trois nouvelles bonnes réponses', async () => {
+    const quiz = new QuizMode();
+    await quiz.start();
+    const said = await quizAnswers(quiz, [true, true, false, true, true, true]);
+    expect(said).toEqual([
+      [['Oui, 8 !']],
+      [['Oui, 8 !']],
+      [],
+      [['Oui, 8 !']],
+      [['Oui, 8 !']],
+      [['Oui, 8 !', 'Bravo !']],
+    ]);
     quiz.stop();
   });
 
@@ -249,11 +300,14 @@ describe('Bonne réponse : le nombre trouvé, puis un bravo', () => {
       await quiz.start();
       const pairs = [];
       for (let round = 0; round < 12; round++) {
+        // Deux bonnes réponses de suite : la suivante est un palier, son bravo se charge
+        quiz.state.streak = 2;
         showKnownQuestion(quiz);
         preloadSpeech.mockClear();
         quiz.speakQuestion();
         const [loaded] = preloadSpeech.mock.calls.at(-1);
         expect(loaded.slice(0, 2)).toEqual(['Raté ! La bonne réponse est 8.', 'Oui, 8 !']);
+        expect(loaded).toHaveLength(3);
         pairs.push([loaded[2], quiz.spokenCorrectParts()[1]]);
       }
       expect(pairs.filter(([loaded, said]) => loaded !== said)).toEqual([]);
@@ -265,23 +319,59 @@ describe('Bonne réponse : le nombre trouvé, puis un bravo', () => {
     }
   });
 
-  test('Quiz, Vrai/Faux : le bravo seul', async () => {
+  test('Quiz : hors palier, seuls l’erreur et le nombre se chargent d’avance, et c’est ce qui est dit', async () => {
     const quiz = new QuizMode();
     await quiz.start();
+    showKnownQuestion(quiz);
+    preloadSpeech.mockClear();
+    quiz.speakQuestion();
+    expect(preloadSpeech.mock.calls.at(-1)).toEqual([
+      ['Raté ! La bonne réponse est 8.', 'Oui, 8 !'],
+    ]);
+    speak.mockClear();
+    option('quiz', false).click();
+    await new Promise(r => setTimeout(r, GOOD_SOUND_MS + 20));
+    expect(speak.mock.calls.map(([text]) => text)).toEqual([['Oui, 8 !']]);
+    quiz.stop();
+  });
+
+  test('Quiz, Vrai/Faux : rien à dire hors palier (le bip seul), le bravo seul au palier', async () => {
+    const quiz = new QuizMode();
+    await quiz.start();
+    quiz.state.currentQuestion = { ...TRUE_FALSE };
+    expect(quiz.spokenCorrectParts()).toEqual([]);
+    speak.mockClear();
+    quiz._handleCorrectAnswer();
+    await new Promise(r => setTimeout(r, GOOD_SOUND_MS + 20));
+    expect(speak).not.toHaveBeenCalled();
+
+    quiz.state.streak = 2;
     quiz.state.currentQuestion = { ...TRUE_FALSE };
     expect(quiz.spokenCorrectParts()).toEqual(['Bravo !']);
     quiz.stop();
   });
 
-  test('Aventure : « Oui, 8 ! » et « Bravo ! », une seule phrase', async () => {
+  test('Aventure : « Oui, 8 ! » seul, puis « Bravo ! » à la troisième bonne réponse de suite', async () => {
     const adventure = new AdventureMode();
     await adventure.start();
     await adventure.startLevel(1);
-    adventure.state.currentQuestion = { ...KNOWN };
-    speak.mockClear();
-    adventure.showAnswerFeedback(true, 8);
-    expect(speak.mock.calls.map(([text]) => text)).toEqual([['Oui, 8 !', 'Bravo !']]);
+    const said = [];
+    for (let turn = 0; turn < 3; turn++) {
+      adventure.state.currentQuestion = { ...KNOWN };
+      speak.mockClear();
+      adventure.updateStats(true);
+      adventure.showAnswerFeedback(true, 8);
+      said.push(speak.mock.calls.map(([text]) => text));
+    }
+    expect(said).toEqual([[['Oui, 8 !']], [['Oui, 8 !']], [['Oui, 8 !', 'Bravo !']]]);
     adventure.stop();
+  });
+
+  test('Défi : son bravo ne dépend pas du réglage du Quiz (palier à 5, sans le nombre)', async () => {
+    const challenge = await startChallenge();
+    expect(challenge.config.praiseEvery).toBe(1);
+    expect(challenge.spokenCorrectParts()).toBeNull();
+    challenge.stop();
   });
 });
 

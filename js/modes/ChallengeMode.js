@@ -23,6 +23,7 @@ import {
   markQuestionKind,
   formatCorrectCount,
   createResultsSummary,
+  addResultsRewards,
   createResultsActions,
   singleActivation,
   createAvatarPortrait,
@@ -639,6 +640,7 @@ export class ChallengeMode extends GameMode {
       bestStreak: this.sessionBestStreak,
       bonusTime: this.bonusTimeEarned,
       avatar: gameState?.avatar,
+      ...this.sessionRewards(),
     };
     mountResults(resultsScreen, () => this.renderResults(result), { ready: shown });
   }
@@ -675,6 +677,9 @@ export class ChallengeMode extends GameMode {
       })
     );
 
+    // Ce que la partie a rapporté : pièces, badges, défi du jour terminé
+    addResultsRewards(container, result);
+
     container.appendChild(
       createResultsActions([
         {
@@ -695,6 +700,7 @@ export class ChallengeMode extends GameMode {
           action: 'back-to-home',
           onActivate: () => goToSlide(1),
         },
+        ...this.badgesButtons(result.badges),
       ])
     );
 

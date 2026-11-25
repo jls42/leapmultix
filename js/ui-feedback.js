@@ -3,10 +3,9 @@
  * - showMessage : message éphémère (toast), annoncé aux lecteurs d'écran
  * - showFeedback : retour de réponse dans un élément
  * - markAnswerOptions / tagAnswerOptions / markQuestionKind : état des tuiles de réponse
- * - formatCorrectCount / createResultsSummary / createResultsRewards / createResultsActions /
- *   createStarRating :
- *   écrans de fin des modes Quiz, Défi et Aventure ; mountResults les affiche, les
- *   garde dans la langue choisie et y place le focus
+ * - formatCorrectCount / createResultsSummary / createResultsRewards / addResultsRewards /
+ *   createResultsActions / createStarRating : écrans de fin des modes Quiz, Défi, Chrono et
+ *   Aventure ; mountResults les affiche, les garde dans la langue choisie et y place le focus
  * - singleActivation : une seule activation par geste (Entrée déclenche deux clics)
  * - preferredScrollBehavior / scrollToScreenTop : défilement qui respecte le mouvement réduit
  * - keepNumbersTogether : un nombre reste collé à son nom (« 9 sauts »)
@@ -489,12 +488,15 @@ function createRewardLine(icon, kind, text) {
 }
 
 /**
- * Les lignes de « ce que tu as gagné » : les pièces, puis chaque badge tout juste débloqué.
+ * Les lignes de « ce que tu as gagné » : ce qui s'est passé pendant la partie (défi du jour
+ * terminé), les pièces, puis chaque badge tout juste débloqué.
  * @param {number} coins
  * @param {string[]} badges
+ * @param {string[]} notes - Clés des phrases en plus (core/session-rewards.js)
  * @returns {HTMLLIElement[]}
  */
-function createRewardLines(coins, badges) {
+function createRewardLines(coins, badges, notes) {
+  const said = notes.map(key => createRewardLine('calendar', 'note', getTranslation(key)));
   const earned =
     coins > 0
       ? [createRewardLine('coin', 'coins', getTranslation('results_coins_earned', { n: coins }))]
@@ -503,7 +505,7 @@ function createRewardLines(coins, badges) {
     const name = getTranslation(`badge_${badgeId}_name`);
     return createRewardLine('award', 'badge', getTranslation('results_new_badge', { name }));
   });
-  return [...earned, ...unlocked];
+  return [...said, ...earned, ...unlocked];
 }
 
 /**
@@ -530,12 +532,19 @@ function createAvatarHint(coins, coinsToAvatar) {
  * @param {Object} rewards
  * @param {number} [rewards.coins] - Pièces gagnées pendant la partie
  * @param {string[]} [rewards.badges] - Identifiants des badges gagnés à l'instant (js/badges.js)
+ * @param {string[]} [rewards.notes] - Clés des phrases dites à la place d'une bulle retenue
+ *   pendant la partie (« Défi du jour terminé ! »)
  * @param {number|null} [rewards.coinsToAvatar] - Pièces qui manquent pour un avatar de plus
  *   (0 : assez ; null : rien à débloquer, la phrase ne s'affiche pas)
  * @returns {HTMLElement|null} null quand la partie n'a rien rapporté
  */
-export function createResultsRewards({ coins = 0, badges = [], coinsToAvatar = null } = {}) {
-  const lines = createRewardLines(coins, badges);
+export function createResultsRewards({
+  coins = 0,
+  badges = [],
+  notes = [],
+  coinsToAvatar = null,
+} = {}) {
+  const lines = createRewardLines(coins, badges, notes);
   if (lines.length === 0) return null;
 
   const block = document.createElement('div');
@@ -549,6 +558,22 @@ export function createResultsRewards({ coins = 0, badges = [], coinsToAvatar = n
 
   const hint = createAvatarHint(coins, coinsToAvatar);
   if (hint) block.appendChild(hint);
+  return block;
+}
+
+/**
+ * Pose « ce que la partie a rapporté » sur un écran de fin : sous son message, avant la ligne
+ * du score (createResultsSummary), à la même place dans tous les modes.
+ * @param {HTMLElement} container - Écran de fin, son résumé déjà posé
+ * @param {Object} [rewards] - Voir createResultsRewards
+ * @returns {HTMLElement|null} Le bloc posé ; null quand la partie n'a rien rapporté
+ */
+export function addResultsRewards(container, rewards) {
+  const block = createResultsRewards(rewards);
+  if (!block) return null;
+  const message = container.querySelector('.results-message');
+  if (message) message.after(block);
+  else container.appendChild(block);
   return block;
 }
 

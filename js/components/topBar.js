@@ -39,14 +39,14 @@ const MUTE_STATES = {
 };
 
 /**
- * Voix : le nom du bouton reste fixe (aria-pressed porte l'état).
- * L'infobulle décrit l'action : « voice_toggle_off » vaut « Désactiver la voix »
- * (proposée quand la voix est active), « voice_toggle_on » vaut « Activer la voix ».
+ * Libellés des états de la voix : comme pour le son, l'intitulé décrit l'action proposée
+ * (« voice_toggle_off », « Désactiver la voix », quand elle est active). Un nom fixe,
+ * « Lecture à voix haute », ne disait pas dans le menu si la voix était allumée (retour
+ * d'un testeur). L'état se lit aussi sur l'icône et sur data-voice-on (bouton enfoncé).
  */
-const VOICE_LABEL = { key: 'voice_toggle_label', fallback: 'Lecture à voix haute' };
-const VOICE_TITLES = {
-  enabled: { key: 'voice_toggle_off', fallback: 'Désactiver la voix' },
-  disabled: { key: 'voice_toggle_on', fallback: 'Activer la voix' },
+const VOICE_STATES = {
+  on: { icon: 'speech', key: 'voice_toggle_off', fallback: 'Désactiver la voix' },
+  off: { icon: 'speech-off', key: 'voice_toggle_on', fallback: 'Activer la voix' },
 };
 
 /**
@@ -129,11 +129,6 @@ function setButtonLabel(button, key, fallback) {
   }
 }
 
-function setButtonTitle(button, key, fallback) {
-  button.title = tr(key, fallback);
-  button.dataset.translateTitle = key;
-}
-
 /**
  * Crée un bouton d'icône de la barre.
  * @param {Object} spec
@@ -197,6 +192,8 @@ function renderIconButton(button, iconName) {
 
 function applyMuteState(button, soundOn) {
   const state = soundOn ? MUTE_STATES.on : MUTE_STATES.off;
+  // Son coupé : la touche le montre (css/topbar.css), l'icône barrée seule se remarquait peu
+  button.toggleAttribute('data-sound-off', !soundOn);
   renderIconButton(button, state.icon);
   setButtonLabel(button, state.key, state.fallback);
 }
@@ -205,11 +202,10 @@ function applyVoiceState(button, enabled) {
   // Première visite : l'état attend l'index de la voix enregistrée (au plus 1,5 s) ; le
   // bouton reste masqué, à sa place, plutôt que d'afficher un état qui changerait aussitôt
   button.toggleAttribute('data-voice-pending', isSpeechDecisionPending());
-  button.setAttribute('aria-pressed', String(enabled));
-  renderIconButton(button, enabled ? 'speech' : 'speech-off');
-  setButtonLabel(button, VOICE_LABEL.key, VOICE_LABEL.fallback);
-  const title = enabled ? VOICE_TITLES.enabled : VOICE_TITLES.disabled;
-  setButtonTitle(button, title.key, title.fallback);
+  button.toggleAttribute('data-voice-on', enabled);
+  const state = enabled ? VOICE_STATES.on : VOICE_STATES.off;
+  renderIconButton(button, state.icon);
+  setButtonLabel(button, state.key, state.fallback);
 }
 
 function applyLanguageState(button, activeLang) {
@@ -361,6 +357,11 @@ export const TopBar = {
       top.appendChild(this._buildCoinDisplay());
     }
 
+    // --- Son : une touche toujours visible sur téléphone et tablette, où tout le reste est
+    // dans le menu. Couper le son fait taire aussi la voix : c'est le geste qu'un parent
+    // cherchait sans le trouver (retour de testeurs). Sur grand écran, celle du menu suffit.
+    top.appendChild(this._buildQuickMute());
+
     // --- Bouton du menu (mobile et tablette) ---
     const navId = `top-bar-nav-${slideId}`;
     const burgerBtn = createIconButton({
@@ -407,8 +408,8 @@ export const TopBar = {
       id: `voice-toggle-${slideId}`,
       className: 'btn btn-sm btn-secondary icon-btn voice-toggle',
       icon: 'speech',
-      labelKey: VOICE_LABEL.key,
-      labelFallback: VOICE_LABEL.fallback,
+      labelKey: VOICE_STATES.off.key,
+      labelFallback: VOICE_STATES.off.fallback,
       caption: CAPTIONS.voice,
     });
     applyVoiceState(voiceBtn, readVoiceEnabled());
@@ -427,6 +428,9 @@ export const TopBar = {
       changeLabel.dataset.translate = 'change_user';
       changeLabel.textContent = tr('change_user', 'Changer de joueur');
       change.appendChild(changeLabel);
+      // Infobulle : là où la touche n'a que son icône ou le mot « Joueur », elle dit la phrase
+      change.title = changeLabel.textContent;
+      change.dataset.translateTitle = 'change_user';
       change.appendChild(createCaption(CAPTIONS.player));
       navContainer.appendChild(change);
     }
@@ -513,6 +517,23 @@ export const TopBar = {
       langWrap.appendChild(btn);
     }
     return langWrap;
+  },
+
+  /**
+   * Touche « Son » posée dans la barre elle-même (css/topbar.css la masque sur grand écran).
+   * Même classe que celle du menu : un clic sur l'une met les deux à jour.
+   * @returns {HTMLButtonElement}
+   */
+  _buildQuickMute() {
+    const mute = createIconButton({
+      className: 'btn btn-sm btn-secondary icon-btn mute-btn mute-btn-quick',
+      icon: MUTE_STATES.on.icon,
+      labelKey: MUTE_STATES.on.key,
+      labelFallback: MUTE_STATES.on.fallback,
+      caption: CAPTIONS.mute,
+    });
+    applyMuteState(mute, readVolume() > 0 && !readMuted());
+    return mute;
   },
 
   _buildVolumeControls(slideId) {
@@ -761,6 +782,31 @@ export const TopBar = {
       burger.setAttribute('aria-expanded', String(open));
       setIcon(burger, open ? 'x' : 'menu');
     }
+    this._setMenuVeil(topBar, open);
+  },
+
+  /**
+   * Voile sous le menu ouvert : il couvre l'écran et reçoit le toucher donné à côté du menu,
+   * qui ferme alors le menu et rien d'autre. Sans lui, ce toucher atteignait aussi ce qui
+   * était dessous : en partie, il répondait à la question (un parent qui refermait le menu
+   * faisait rater la réponse de l'enfant).
+   * @param {Element} topBar - Barre dont le menu s'ouvre ou se ferme
+   * @param {boolean} open
+   */
+  _setMenuVeil(topBar, open) {
+    const existing = topBar.previousElementSibling?.classList.contains('top-bar-veil')
+      ? topBar.previousElementSibling
+      : null;
+    if (!open) {
+      existing?.remove();
+      return;
+    }
+    if (existing) return;
+    const veil = document.createElement('div');
+    veil.className = 'top-bar-veil';
+    veil.setAttribute('aria-hidden', 'true');
+    // Le clic sur le voile est un clic hors de la barre : attachOutsideClickWatcher ferme
+    topBar.before(veil);
   },
 
   attachBurgerMenus() {
@@ -785,6 +831,14 @@ export const TopBar = {
           this.setMenuOpen(topBar, false);
           topBar.querySelector('.burger-menu-btn')?.focus();
           event.stopPropagation();
+        });
+        // Le focus sort de la barre (Tab après la dernière touche, fenêtre ouverte depuis le
+        // menu) : le menu se ferme. Resté ouvert, il recouvrait les boutons où le focus
+        // avançait ensuite
+        topBar.addEventListener('focusout', event => {
+          const next = event.relatedTarget;
+          if (!next || topBar.contains(next)) return;
+          if (topBar.querySelector('.top-bar-nav.is-open')) this.setMenuOpen(topBar, false);
         });
         topBar.dataset.menuKeysAttached = 'true';
       }

@@ -37,7 +37,7 @@ import {
   formatCorrectCount,
   formatStarsLabel,
   createResultsSummary,
-  createResultsRewards,
+  addResultsRewards,
   createResultsActions,
   createStarRating,
   createStarIcon,
@@ -48,9 +48,6 @@ import {
   scrollToScreenTop,
 } from '../ui-feedback.js';
 import { UserState } from '../core/userState.js';
-import { AVATAR_IDS } from '../core/avatars.js';
-import { coinBalance, coinsToNextAvatar } from '../core/avatar-shop.js';
-import { goToSlide } from '../slides.js';
 import { appendProgressHistory } from '../core/mode-stats.js';
 import { checkAndUnlockBadge } from '../badges.js';
 import { gameState, updateDailyChallengeProgress } from '../game.js';
@@ -96,16 +93,6 @@ function hasTranslation(key) {
   return typeof value === 'string' && value !== '' && !/^\[.+\]$/.test(value);
 }
 
-/**
- * Pièces et badges du joueur à cet instant
- * @returns {{coins: number, badges: string[]}}
- */
-function rewardsSnapshot() {
-  const userData = UserState.getCurrentUserData();
-  const badges = Array.isArray(userData?.unlockedBadges) ? userData.unlockedBadges : [];
-  return { coins: coinBalance(userData), badges: [...badges] };
-}
-
 export class AdventureMode extends GameMode {
   constructor() {
     super('adventure', {
@@ -118,6 +105,7 @@ export class AdventureMode extends GameMode {
       pauseAfterError: true,
       // Le nombre trouvé se dit avant le bravo (« Oui, 42 ! », puis « Super ! »)
       saysCorrectAnswer: true,
+      praiseEvery: 3,
       showScore: true,
       initialLives: 3,
     });
@@ -158,8 +146,6 @@ export class AdventureMode extends GameMode {
     super.resetState();
     this.sessionBestStreak = 0;
     this._levelStars = null;
-    // Pièces et badges au départ du niveau : son écran de fin dit ce qu'il y a ajouté
-    this._levelStart = rewardsSnapshot();
   }
 
   /**
@@ -627,14 +613,16 @@ export class AdventureMode extends GameMode {
 
     if (isCorrect) {
       this.sessionBestStreak = Math.max(this.sessionBestStreak, this.state.streak);
-      // À voix haute, le nombre trouvé puis un bravo (le retour écrit n'est pas relu)
+      // À voix haute, le nombre trouvé (le retour écrit n'est pas relu)
       showFeedback(
         this.feedbackElement.id,
         getTranslation('adventure_feedback_correct'),
         'success',
         false
       );
-      speak(this.spokenCorrectParts());
+      // Le nombre trouvé ; le bravo aux paliers de la série (config.praiseEvery)
+      const spoken = this.spokenCorrectParts();
+      if (spoken?.length) speak(spoken);
       return;
     }
 
@@ -824,27 +812,12 @@ export class AdventureMode extends GameMode {
       score: this.state.score,
       bestStreak: this.sessionBestStreak,
       avatar: gameState?.avatar,
-      ...this.levelRewards(),
-      coinsToAvatar: coinsToNextAvatar(UserState.getCurrentUserData(), AVATAR_IDS),
+      // Pièces et badges gagnés depuis le départ du niveau (GameMode.resetState)
+      ...this.sessionRewards(),
     };
     mountResults(this.gameScreen, () => this.renderLevelResults(result), { scrollTop: true });
     // Les étoiles gagnées sonnent une fois, à l'arrivée de l'écran (pas à sa traduction)
     if (success && stars > 0) playSound('star');
-  }
-
-  /**
-   * Ce que le niveau a rapporté : la différence entre le profil au départ du niveau et
-   * maintenant. Elle compte tout ce que l'enfant a vu arriver pendant le niveau, la récompense
-   * et le badge du défi du jour compris, que ce mode ne donne pas lui-même.
-   * @returns {{coins: number, badges: string[]}}
-   */
-  levelRewards() {
-    const now = rewardsSnapshot();
-    const start = this._levelStart || now;
-    return {
-      coins: Math.max(0, now.coins - start.coins),
-      badges: now.badges.filter(badgeId => !start.badges.includes(badgeId)),
-    };
   }
 
   /**
@@ -888,8 +861,7 @@ export class AdventureMode extends GameMode {
 
     // Ce que le niveau a rapporté, sous le message : pièces (même après un échec) et badges
     const messageEl = wrapper.querySelector('.results-message');
-    const rewards = createResultsRewards(result);
-    if (rewards) messageEl.after(rewards);
+    addResultsRewards(wrapper, result);
 
     if (success) {
       // Les étoiles suivent la phrase qui les explique ; le trésor précède son message
@@ -905,15 +877,11 @@ export class AdventureMode extends GameMode {
       );
     }
 
-    const buttons = this.getResultsButtons(success, result.levelId);
-    if (result.badges?.length > 0) {
-      // Un badge vient d'être gagné : il se retrouve dans « Mes progrès »
-      buttons.push({
-        label: getTranslation('results_see_badges'),
-        action: 'results-see-badges',
-        onActivate: () => void goToSlide(7),
-      });
-    }
+    // Un badge vient d'être gagné : il se retrouve dans « Mes progrès »
+    const buttons = [
+      ...this.getResultsButtons(success, result.levelId),
+      ...this.badgesButtons(result.badges),
+    ];
     wrapper.appendChild(createResultsActions(buttons));
     return wrapper;
   }

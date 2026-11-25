@@ -43,6 +43,15 @@ import {
   isSentenceQuestion,
 } from '../ui-feedback.js';
 import { chance } from './random.js';
+import { AVATAR_IDS } from './avatars.js';
+import { coinsToNextAvatar } from './avatar-shop.js';
+import {
+  rewardsSnapshot,
+  rewardsSince,
+  holdRewardAnnouncements,
+  takeRewardNotes,
+  releaseRewardAnnouncements,
+} from './session-rewards.js';
 import { buildAnswerOptions, operandsOf } from './wrong-answers.js';
 
 // Mauvaises réponses plausibles : dans wrong-answers.js, que l'Arcade importe sans tout ce module
@@ -283,14 +292,19 @@ function operationDetails(question, operator, a, b, result) {
  * « Super ! »). Deux parties, deux clips : les bravos restent indépendants des nombres.
  * Entendre le résultat le fixe, comme après une erreur. Vrai/Faux et divisibilité n'ont pas
  * de nombre à dire : le bravo seul.
+ * Le bravo peut manquer (praise: false) : dit après chaque bonne réponse, il lassait ; les
+ * modes le gardent pour les paliers d'une série (config.praiseEvery).
  * @param {Object} question - Question courante
- * @returns {string[]} Parties à dire l'une après l'autre (speak les tient pour une phrase)
+ * @param {Object} [options]
+ * @param {boolean} [options.praise=true] - Le bravo suit-il le nombre ?
+ * @returns {string[]} Parties à dire l'une après l'autre (speak les tient pour une phrase) ;
+ *   vide quand il n'y a ni nombre ni bravo à dire
  */
-export function correctAnswerParts(question) {
-  const praise = getTranslation('correct');
+export function correctAnswerParts(question, { praise = true } = {}) {
+  const bravo = praise ? [getTranslation('correct')] : [];
   const hasNumber = !['true_false', 'divisibility'].includes(question?.type);
-  if (!hasNumber || !Number.isFinite(Number(question?.answer))) return [praise];
-  return [getTranslation('feedback_correct_spoken', { answer: question.answer }), praise];
+  if (!hasNumber || !Number.isFinite(Number(question?.answer))) return bravo;
+  return [getTranslation('feedback_correct_spoken', { answer: question.answer }), ...bravo];
 }
 
 /**
@@ -421,6 +435,8 @@ export class GameMode {
       // Une bonne réponse dit le nombre trouvé avant le bravo (Quiz, Aventure). Les modes
       // chronométrés gardent le bravo seul, ou rien : le nombre les ralentirait
       saysCorrectAnswer: false,
+      // Le bravo suit le nombre toutes les praiseEvery bonnes réponses de suite (1 : à chacune)
+      praiseEvery: 1,
       ...config,
     };
 
@@ -505,6 +521,9 @@ export class GameMode {
     // Nettoyer les timers et intervalles
     this.cleanup();
 
+    // Partie quittée avant son écran de fin : ses gains s'annoncent maintenant
+    releaseRewardAnnouncements();
+
     // Logique spécifique d'arrêt
     this.onStop();
   }
@@ -530,6 +549,11 @@ export class GameMode {
     this._statsGameCounted = false;
     this._statsOperator = null;
     this._resultsSaved = false;
+    this._countedQuestion = null;
+    // Pièces et badges au départ : l'écran de fin dit ce que la partie y a ajouté, et d'ici
+    // là aucune bulle de gain ne se pose sur le jeu
+    this._rewardsStart = rewardsSnapshot();
+    holdRewardAnnouncements();
 
     gameState.streak = 0;
   }
@@ -905,6 +929,8 @@ export class GameMode {
    */
   updateStats(isCorrect) {
     this.state.questionCount++;
+    // La série compte désormais cette question (voir praiseDue)
+    this._countedQuestion = this.state.currentQuestion;
 
     if (isCorrect) {
       this.state.correctAnswers++;
@@ -1038,9 +1064,55 @@ export class GameMode {
     const question = this.state.currentQuestion;
     if (!question || !this.config.saysCorrectAnswer) return null;
     if (this._correctSpeech?.question !== question) {
-      this._correctSpeech = { question, parts: correctAnswerParts(question) };
+      const parts = correctAnswerParts(question, { praise: this.praiseDue(question) });
+      this._correctSpeech = { question, parts };
     }
     return this._correctSpeech.parts;
+  }
+
+  /**
+   * Une bonne réponse à cette question mérite-t-elle un bravo ? Oui aux paliers de la série
+   * (config.praiseEvery : 3, 6, 9… de suite). Avant la réponse, la série compte une bonne
+   * réponse de plus : la phrase se prépare pendant que la question est lue.
+   * @param {Object} question
+   * @returns {boolean}
+   */
+  praiseDue(question) {
+    // Sans réglage lisible, le bravo suit chaque bonne réponse
+    const every = Number(this.config.praiseEvery) || 1;
+    if (every <= 1) return true;
+    const reached = this._countedQuestion === question ? this.state.streak : this.state.streak + 1;
+    return reached > 0 && reached % every === 0;
+  }
+
+  /**
+   * Ce que la partie a rapporté, pour son écran de fin : pièces et badges gagnés depuis son
+   * départ, phrases en plus (défi du jour terminé) et pièces qui manquent pour un avatar.
+   * L'écran de fin prend ainsi la suite des bulles retenues pendant la partie.
+   * @returns {{coins: number, badges: string[], notes: string[], coinsToAvatar: number|null}}
+   */
+  sessionRewards() {
+    return {
+      ...rewardsSince(this._rewardsStart),
+      notes: takeRewardNotes(),
+      coinsToAvatar: coinsToNextAvatar(UserState.getCurrentUserData(), AVATAR_IDS),
+    };
+  }
+
+  /**
+   * Bouton « Voir mes badges » d'un écran de fin, quand la partie en a rapporté un
+   * @param {string[]} [badges] - Badges gagnés pendant la partie
+   * @returns {Object[]} Zéro ou un bouton, à ajouter à ceux de l'écran (createResultsActions)
+   */
+  badgesButtons(badges = []) {
+    if (badges.length === 0) return [];
+    return [
+      {
+        label: getTranslation('results_see_badges'),
+        action: 'results-see-badges',
+        onActivate: () => void goToSlide(7),
+      },
+    ];
   }
 
   /**

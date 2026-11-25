@@ -755,7 +755,8 @@
   #game > .game-info-bar {
     position: absolute;
     inset-block-start: var(--space-1);
-    inset-inline: calc(var(--slide-gutter) + 124px) calc(var(--slide-gutter) + 164px);
+    /* À droite : les pièces, la touche « Son » (44 px et son écart) et le menu */
+    inset-inline: calc(var(--slide-gutter) + 124px) calc(var(--slide-gutter) + 216px);
     z-index: calc(var(--z-sticky) + 1);
     place-content: center;
     gap: 0 var(--space-4);
@@ -791,5 +792,15 @@
 
   .top-bar .top-bar-nav.is-open > :is(.language-selector, .global-volume-controls) {
     grid-column: 1 / -1;
+  }
+
+  /* Deux colonnes : pas de filet entre les groupes (css/topbar.css). Il décalerait vers le
+     bas une touche sur deux, et ne soulignerait qu'une moitié du menu */
+  .top-bar .top-bar-nav.is-open > :is(.theme-mode-btn, .change-user-btn) {
+    margin-block-start: 0;
+  }
+
+  .top-bar .top-bar-nav.is-open > :is(.theme-mode-btn, .change-user-btn)::before {
+    content: none;
   }
 }

@@ -18,6 +18,7 @@ import {
   markQuestionKind,
   formatCorrectCount,
   createResultsSummary,
+  addResultsRewards,
   createResultsActions,
   singleActivation,
   createAvatarPortrait,
@@ -42,8 +43,10 @@ export class QuizMode extends GameMode {
       // (créé par GameMode) suspend l'avance jusqu'à ce que l'enfant l'active.
       autoProgress: true,
       pauseAfterError: true,
-      // Le nombre trouvé se dit avant le bravo (« Oui, 42 ! », puis « Super ! »)
+      // Le nombre trouvé se dit (« Oui, 42 ! ») ; un bravo le suit (« Super ! ») toutes les
+      // trois bonnes réponses de suite : à chacune, il lassait (retour de testeurs)
       saysCorrectAnswer: true,
+      praiseEvery: 3,
       showScore: true,
     });
 
@@ -224,10 +227,11 @@ export class QuizMode extends GameMode {
     const points = this.calculatePoints();
     const message = this._getCorrectAnswerMessage(points);
 
-    // Le bip, puis le nombre trouvé et un bravo juste après lui (« Oui, 42 ! », « Super ! »)
+    // Le bip, puis le nombre trouvé (« Oui, 42 ! ») et, aux paliers de la série, un bravo
+    // (« Super ! »). Vrai ou faux hors palier : le bip seul, il n'y a pas de nombre à dire
     playSound('good');
     const spoken = this.spokenCorrectParts();
-    this.addTimer(() => speak(spoken), GOOD_SOUND_MS);
+    if (spoken?.length) this.addTimer(() => speak(spoken), GOOD_SOUND_MS);
 
     this._displayCorrectFeedback(message);
   }
@@ -389,6 +393,7 @@ export class QuizMode extends GameMode {
    * Écran de fin : une phrase « 7 bonnes réponses sur 10 », un encouragement, puis
    * le score et la meilleure série en ligne secondaire. Construit à partir d'un
    * instantané : il peut être reconstruit dans une autre langue.
+   * Sous l'encouragement, ce que la partie a rapporté (pièces du défi du jour, badges).
    * @param {{correct: number, total: number, score: number, bestStreak: number, avatar: string}} result
    * @returns {HTMLElement}
    */
@@ -413,6 +418,9 @@ export class QuizMode extends GameMode {
       })
     );
 
+    // Ce que la partie a rapporté : pièces et badge du défi du jour, badges du Quiz
+    addResultsRewards(container, result);
+
     container.appendChild(
       createResultsActions([
         {
@@ -430,6 +438,7 @@ export class QuizMode extends GameMode {
           action: 'back-to-home',
           onActivate: () => goToSlide(1),
         },
+        ...this.badgesButtons(result.badges),
       ])
     );
 
@@ -452,6 +461,7 @@ export class QuizMode extends GameMode {
       score: this.state.score,
       bestStreak: this.sessionBestStreak,
       avatar: gameState?.avatar,
+      ...this.sessionRewards(),
     };
     mountResults(resultsScreen, () => this.renderResults(result), { ready: shown });
   }

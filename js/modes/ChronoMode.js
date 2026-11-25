@@ -21,6 +21,7 @@ import {
   tagAnswerOptions,
   markQuestionKind,
   createResultsSummary,
+  addResultsRewards,
   createResultsActions,
   createAvatarPortrait,
   mountResults,
@@ -1361,6 +1362,8 @@ export class ChronoMode extends GameMode {
       tables: [...this.selectedTables],
       inputMode: this.inputMode,
       avatar: gameState?.avatar,
+      // Pièces (révision réussie, défi du jour) et badges gagnés pendant la séance
+      rewards: this.sessionRewards(),
     };
     this.mountResultsPane({ ready: shown });
   }
@@ -1397,6 +1400,7 @@ export class ChronoMode extends GameMode {
         ...this.resultsMessages(result, lang),
       })
     );
+    addResultsRewards(container, result.rewards);
     container.appendChild(this.buildFactsTable(result.facts, 'h2'));
     container.appendChild(this.buildSessionActions(result));
     return container;
@@ -1463,6 +1467,7 @@ export class ChronoMode extends GameMode {
         action: 'back-to-home',
         onActivate: () => void goToSlide(1),
       },
+      ...this.badgesButtons(result.rewards?.badges),
     ];
     return createResultsActions(buttons.filter(Boolean));
   }

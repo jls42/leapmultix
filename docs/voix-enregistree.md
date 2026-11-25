@@ -171,11 +171,14 @@ dite reste une phrase du corpus.
 - **Question en file** (`queue: true`) : après une bonne réponse, la question suivante
   attend la fin du « Bravo » ; elle est oubliée si l'enfant répond avant. Après une
   erreur, dans le Défi, la question suivante coupe la fin de l'explication.
-- **Bonne réponse** : dans le Quiz et l'Aventure, le nombre trouvé se dit avant le bravo
-  (« Oui, 42 ! », puis « Super ! », `correctAnswerParts` de `js/core/GameMode.js`) :
-  l'entendre le fixe, comme après une erreur. Deux clips, pour que les bravos restent
-  indépendants des nombres : un bravo ajouté ne demande qu'un clip par voix. Vrai/Faux,
-  divisibilité et Défi gardent le bravo seul.
+- **Bonne réponse** : dans le Quiz et l'Aventure, le nombre trouvé se dit à chaque fois
+  (« Oui, 42 ! », `correctAnswerParts` de `js/core/GameMode.js`) : l'entendre le fixe, comme
+  après une erreur. Un bravo le suit (« Super ! ») toutes les trois bonnes réponses de suite
+  (`praiseEvery`, `GameMode.praiseDue`) ; dit à chacune, il lassait. Deux clips, pour que
+  les bravos restent indépendants des nombres : un bravo ajouté ne demande qu'un clip par
+  voix. Vrai/Faux et divisibilité n'ont pas de nombre à dire : le bip seul hors palier, le
+  bravo seul au palier. Le Défi garde le bravo seul, toutes les cinq bonnes réponses de
+  suite.
 - **Appli Android** : la page de l'appli n'a pas `speechSynthesis`. Quand l'appli annonce son
   module `LeapMultixSpeech`, le moteur de synthèse confie la phrase à la synthèse vocale du
   téléphone (`appSpeech` de `js/speech.js`) : c'est la « voix de l'appareil » de l'appli, pour
@@ -239,9 +242,10 @@ setDeadline }) → { stop(), setVolume?() }, isAvailable?(), unlock?() }` ; la s
   une fois par session chaque cause (`Voice fallback`).
 - **Préchargement** : les annonces de mode et les « Bravo » dès que la voix est branchée ;
   pendant chaque question, la phrase de son erreur (« Raté ! La bonne réponse est 56. ») et,
-  dans le Quiz et l'Aventure, les parties de sa bonne réponse (« Oui, 56 ! » et le bravo tiré
-  pour cette question), une fois le clip de la question parti pour ne pas lui prendre la
-  bande passante. Dites à la réponse, elles sortent du cache.
+  dans le Quiz et l'Aventure, les parties de sa bonne réponse (« Oui, 56 ! » et, quand elle
+  ferait un palier de la série, le bravo tiré pour cette question), une fois le clip de la
+  question parti pour ne pas lui prendre la bande passante. Dites à la réponse, elles
+  sortent du cache.
 - **Première visite** (ni copie de l'index ni choix du joueur) : la décision « parole
   active ? » attend l'index, au plus 1,5 s. Les phrases demandées entre-temps attendent avec
   elle (les trois dernières), et le bouton de voix de la barre du haut reste masqué, à sa
