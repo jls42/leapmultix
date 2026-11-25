@@ -164,6 +164,22 @@
   }
 }
 
+/* Son coupé : la touche prend la teinte d'alerte. L'icône barrée seule ne suffisait pas à
+   dire, d'un coup d'œil, pourquoi le jeu est muet */
+.top-bar .mute-btn[data-sound-off] {
+  color: var(--color-warning-ink);
+  background: var(--color-warning-tint);
+  box-shadow:
+    inset 0 0 0 2px var(--color-warning-edge),
+    0 var(--key-edge) 0 var(--color-warning-edge);
+}
+
+.top-bar .mute-btn[data-sound-off]:active {
+  box-shadow:
+    inset 0 0 0 2px var(--color-warning-edge),
+    0 0 0 var(--color-warning-edge);
+}
+
 /* Première visite : état de la voix pas encore décidé (js/voice-clips.js) */
 .top-bar .voice-toggle[data-voice-pending] {
   visibility: hidden;
@@ -325,7 +341,24 @@
   }
 }
 
-.top-bar .coin-display + .burger-menu-btn {
+/* Très petit téléphone (320 px) : avec la touche « Son », cinq éléments et 9 999 pièces en
+   grand texte ne tenaient plus sur une rangée. Le compteur se resserre */
+@media (max-width: 340px) {
+  .top-bar .coin-display {
+    gap: 2px;
+    padding-inline: var(--space-1) var(--space-2);
+    font-size: var(--text-base);
+  }
+}
+
+/* À droite de la barre : les pièces, la touche « Son », le menu. Seul le premier de ce groupe
+   prend la marge qui le pousse à droite (sur « Qui joue ? », sans pièces, c'est « Son ») */
+.top-bar .mute-btn-quick {
+  margin-inline-start: auto;
+}
+
+.top-bar .coin-display:not([hidden]) + .mute-btn-quick,
+.top-bar .mute-btn-quick + .burger-menu-btn {
   margin-inline-start: 0;
 }
 
@@ -336,6 +369,11 @@
 }
 
 @media (min-width: 993px) {
+  /* Grand écran : la touche « Son » est déjà dans la rangée, avec son curseur */
+  .top-bar .mute-btn-quick {
+    display: none;
+  }
+
   .top-bar-nav .language-selector {
     margin-inline-end: var(--space-2);
   }

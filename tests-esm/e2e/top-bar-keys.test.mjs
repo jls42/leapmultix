@@ -158,4 +158,93 @@ describe('Barre du haut : touches centrées avec leur tranche (E2E)', () => {
     const lonely = keys.filter(key => key.left === columns[1] && !leftTops.includes(key.top));
     expect(lonely).toEqual([]);
   }, 60000);
+  test.each([320, 360, 390, 768])(
+    'téléphone de %i px : la touche « Son » est dans la barre, qui tient sur une rangée (9 999 pièces, grand texte)',
+    async width => {
+      page = await chrome.newPage();
+      await page.setViewport({ width, height: 800, deviceScaleFactor: 2, isMobile: true });
+      await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
+      await createUserAndSkipIntro(page);
+      await page.click('.mode-btn[data-mode="quiz"]');
+      await page.waitForSelector('#quiz-options .option:not([disabled])', { visible: true });
+      const row = await page.evaluate(() => {
+        for (const count of document.querySelectorAll('.coin-count')) count.textContent = '9999';
+        document.body.classList.remove('font-size-small', 'font-size-medium');
+        document.body.classList.add('font-size-large');
+        const bar = document.querySelector('#slide4 .top-bar');
+        const shown = [...bar.children].filter(
+          item =>
+            item.checkVisibility({ checkVisibilityCSS: true }) && !item.matches('.top-bar-nav')
+        );
+        const middles = shown.map(item => {
+          const box = item.getBoundingClientRect();
+          return Math.round(box.top + box.height / 2);
+        });
+        const quick = bar.querySelector(':scope > .mute-btn-quick').getBoundingClientRect();
+        return {
+          names: shown.map(
+            item =>
+              ['home-btn', 'about-btn', 'coin-display', 'mute-btn-quick', 'burger-menu-btn'].find(
+                name => item.classList.contains(name)
+              ) ?? item.className
+          ),
+          spread: Math.max(...middles) - Math.min(...middles),
+          overflow: bar.scrollWidth - bar.clientWidth,
+          quick: [Math.round(quick.width), Math.round(quick.height)],
+        };
+      });
+      expect(row.names).toEqual([
+        'home-btn',
+        'about-btn',
+        'coin-display',
+        'mute-btn-quick',
+        'burger-menu-btn',
+      ]);
+      // Une rangée : tous les éléments à la même hauteur, à quelques pixels près
+      expect(row.spread).toBeLessThanOrEqual(4);
+      expect(row.overflow).toBe(0);
+      expect(row.quick).toEqual([44, 44]);
+    },
+    60000
+  );
+
+  test('grand écran : une seule touche « Son » visible, celle de la rangée', async () => {
+    page = await chrome.newPage();
+    await page.setViewport({ width: 1280, height: 800 });
+    await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
+    await createUserAndSkipIntro(page);
+    const shown = await page.evaluate(() =>
+      [...document.querySelectorAll('.slide.active-slide .top-bar .mute-btn')]
+        .filter(key => key.checkVisibility({ checkVisibilityCSS: true }))
+        .map(key => key.classList.contains('mute-btn-quick'))
+    );
+    expect(shown).toEqual([false]);
+  }, 60000);
+
+  test('son coupé : la touche prend la teinte d’alerte, lisible', async () => {
+    page = await chrome.newPage();
+    await page.setViewport(SCREENS[0][1]);
+    await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
+    await createUserAndSkipIntro(page);
+    const look = () =>
+      page.$eval('.slide.active-slide .mute-btn-quick', key => {
+        const style = getComputedStyle(key);
+        return {
+          off: key.hasAttribute('data-sound-off'),
+          background: style.backgroundColor,
+          color: style.color,
+          name: key.getAttribute('aria-label'),
+        };
+      });
+    const on = await look();
+    await page.tap('.slide.active-slide .mute-btn-quick');
+    await page.waitForFunction(() =>
+      document.querySelector('.slide.active-slide .mute-btn-quick').hasAttribute('data-sound-off')
+    );
+    const off = await look();
+    expect(on.off).toBe(false);
+    expect(off.name).not.toBe(on.name);
+    expect(off.background).not.toBe(on.background);
+    expect(off.color).not.toBe(on.color);
+  }, 60000);
 });

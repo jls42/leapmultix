@@ -317,6 +317,35 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     expect(btn.getAttribute('aria-label')).toBe('Couper le son');
   });
 
+  test('son : une touche dans la barre elle-même, juste avant le menu, de même état que celle du menu', async () => {
+    const { AudioManager } = await import('../../js/core/audio.js');
+    TopBar.injectTopBarIntoSlides();
+    TopBar.attachVolumeControls();
+    const bar = document.querySelector('#slide7 .top-bar');
+    const quick = bar.querySelector(':scope > .mute-btn-quick');
+    const inMenu = bar.querySelector('.top-bar-nav .mute-btn');
+    expect(quick.nextElementSibling).toBe(bar.querySelector('.burger-menu-btn'));
+    expect(inMenu).not.toBe(quick);
+    const states = () =>
+      [quick, inMenu].map(btn => [
+        btn.getAttribute('aria-label'),
+        btn.querySelector('svg').getAttribute('data-icon'),
+        btn.hasAttribute('data-sound-off'),
+      ]);
+
+    TopBar.updateVolumeControls(0.6, false);
+    expect(states()).toEqual(Array(2).fill(['Couper le son', 'volume-2', false]));
+    // Son coupé : l'état se lit sur les deux touches (teinte d'alerte de css/topbar.css)
+    TopBar.updateVolumeControls(0, true);
+    expect(states()).toEqual(Array(2).fill(['Activer le son', 'volume-x', true]));
+
+    // Un toucher sur la touche de la barre bascule le son, comme celle du menu
+    const toggle = jest.spyOn(AudioManager, 'toggleMute').mockImplementation(() => {});
+    quick.click();
+    expect(toggle).toHaveBeenCalledTimes(1);
+    toggle.mockRestore();
+  });
+
   test('menu : aria-expanded et icône suivent l’ouverture', () => {
     TopBar.injectTopBarIntoSlides();
     const bar = document.querySelector('#slide7 .top-bar');

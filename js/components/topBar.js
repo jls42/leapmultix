@@ -192,6 +192,8 @@ function renderIconButton(button, iconName) {
 
 function applyMuteState(button, soundOn) {
   const state = soundOn ? MUTE_STATES.on : MUTE_STATES.off;
+  // Son coupé : la touche le montre (css/topbar.css), l'icône barrée seule se remarquait peu
+  button.toggleAttribute('data-sound-off', !soundOn);
   renderIconButton(button, state.icon);
   setButtonLabel(button, state.key, state.fallback);
 }
@@ -355,6 +357,11 @@ export const TopBar = {
       top.appendChild(this._buildCoinDisplay());
     }
 
+    // --- Son : une touche toujours visible sur téléphone et tablette, où tout le reste est
+    // dans le menu. Couper le son fait taire aussi la voix : c'est le geste qu'un parent
+    // cherchait sans le trouver (retour de testeurs). Sur grand écran, celle du menu suffit.
+    top.appendChild(this._buildQuickMute());
+
     // --- Bouton du menu (mobile et tablette) ---
     const navId = `top-bar-nav-${slideId}`;
     const burgerBtn = createIconButton({
@@ -510,6 +517,23 @@ export const TopBar = {
       langWrap.appendChild(btn);
     }
     return langWrap;
+  },
+
+  /**
+   * Touche « Son » posée dans la barre elle-même (css/topbar.css la masque sur grand écran).
+   * Même classe que celle du menu : un clic sur l'une met les deux à jour.
+   * @returns {HTMLButtonElement}
+   */
+  _buildQuickMute() {
+    const mute = createIconButton({
+      className: 'btn btn-sm btn-secondary icon-btn mute-btn mute-btn-quick',
+      icon: MUTE_STATES.on.icon,
+      labelKey: MUTE_STATES.on.key,
+      labelFallback: MUTE_STATES.on.fallback,
+      caption: CAPTIONS.mute,
+    });
+    applyMuteState(mute, readVolume() > 0 && !readMuted());
+    return mute;
   },
 
   _buildVolumeControls(slideId) {

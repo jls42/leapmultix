@@ -105,18 +105,25 @@ describe('Menu de la barre du haut pendant une partie (E2E)', () => {
           const box = node.getBoundingClientRect();
           return [box.left + box.width / 2, box.top + box.height / 2];
         };
-        // Boutons du jeu visibles à l'écran, hors de ceux que le menu recouvre déjà
-        const exposed = [...document.querySelectorAll('#game button')].filter(button => {
-          const [x, y] = centre(button);
-          const onScreen = x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight;
-          const underMenu = x >= menu.left && x <= menu.right && y >= menu.top && y <= menu.bottom;
-          return button.offsetParent !== null && onScreen && !underMenu;
-        });
+        // Les points de chaque bouton du jeu que le menu ne recouvre pas (bord gauche, centre,
+        // bord droit) : selon la question tirée, le centre d'une tuile est sous le menu
+        const exposed = [...document.querySelectorAll('#game button')]
+          .filter(button => button.offsetParent !== null)
+          .flatMap(button => {
+            const box = button.getBoundingClientRect();
+            const y = box.top + box.height / 2;
+            return [box.left + 6, box.left + box.width / 2, box.right - 6].map(x => [x, y]);
+          })
+          .filter(([x, y]) => {
+            const onScreen = x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight;
+            const underMenu =
+              x >= menu.left && x <= menu.right && y >= menu.top && y <= menu.bottom;
+            return onScreen && !underMenu;
+          });
         return {
           gameButtons: exposed.length > 0,
-          reachable: exposed.filter(
-            button => document.elementFromPoint(...centre(button)) !== element
-          ).length,
+          reachable: exposed.filter(point => document.elementFromPoint(...point) !== element)
+            .length,
           // Une touche de la barre reste au-dessus du voile : elle se touche encore
           barAbove: bar.contains(
             document.elementFromPoint(...centre(bar.querySelector('.home-btn')))

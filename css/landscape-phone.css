@@ -755,7 +755,8 @@
   #game > .game-info-bar {
     position: absolute;
     inset-block-start: var(--space-1);
-    inset-inline: calc(var(--slide-gutter) + 124px) calc(var(--slide-gutter) + 164px);
+    /* À droite : les pièces, la touche « Son » (44 px et son écart) et le menu */
+    inset-inline: calc(var(--slide-gutter) + 124px) calc(var(--slide-gutter) + 216px);
     z-index: calc(var(--z-sticky) + 1);
     place-content: center;
     gap: 0 var(--space-4);
