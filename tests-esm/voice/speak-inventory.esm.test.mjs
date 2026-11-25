@@ -26,7 +26,8 @@ const EXPECTED = {
   // fin de partie sans le score : arcade_try_again, arcade_game_over_spoken
   'js/arcade.js': { speak: 1 },
   // voice_enabled
-  'js/components/topBar.js': { speak: 1 },
+  // « Voix activée » quand on l'allume, « Voix désactivée » juste avant qu'elle se taise
+  'js/components/topBar.js': { speak: 2 },
   // annonce du mode ; la question, dite tout de suite ou en file après un « Bravo » (ses
   // trois formes viennent de spokenQuestionText) ; showFeedback : retours de la classe de
   // base, remplacés par chaque mode (feedback_correct, dont les points ne sont pas bornés)

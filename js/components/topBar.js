@@ -14,7 +14,7 @@ import {
   speak as _speak,
 } from '../utils-es6.js';
 import { AudioManager } from '../core/audio.js';
-import { cancelSpeech, isSpeechDecisionPending, unlockSpeech } from '../speech.js';
+import { cancelSpeech, isSpeechDecisionPending, unlockSpeech, whenSpeechEnds } from '../speech.js';
 import { goToSlide } from '../slides.js';
 import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
@@ -32,21 +32,31 @@ const LANGUAGES = [
   { code: 'es', short: 'ES', name: 'Español' },
 ];
 
-/** Libellés des états du son : l'intitulé décrit l'action proposée. */
+/**
+ * Libellés du son et de la voix : l'intitulé dit l'ÉTAT (« Son : coupé », « Voix : activée »).
+ * Un intitulé d'action (« Désactiver la voix », bouton allumé) se lisait à l'envers, comme
+ * « la voix est désactivée » : on ne savait pas si c'était allumé ou éteint (retour de
+ * testeurs). Dans le menu, un interrupteur dessiné le redit (css/topbar.css, par
+ * data-sound-off et data-voice-on).
+ */
 const MUTE_STATES = {
-  on: { icon: 'volume-2', key: 'mute_button_label_on', fallback: 'Couper le son' },
-  off: { icon: 'volume-x', key: 'mute_button_label_off', fallback: 'Activer le son' },
+  on: { icon: 'volume-2', key: 'sound_state_on', fallback: 'Son : activé' },
+  off: { icon: 'volume-x', key: 'sound_state_off', fallback: 'Son : coupé' },
 };
 
 /**
- * Libellés des états de la voix : comme pour le son, l'intitulé décrit l'action proposée
- * (« voice_toggle_off », « Désactiver la voix », quand elle est active). Un nom fixe,
- * « Lecture à voix haute », ne disait pas dans le menu si la voix était allumée (retour
- * d'un testeur). L'état se lit aussi sur l'icône et sur data-voice-on (bouton enfoncé).
+ * La voix suit le son : son coupé, elle se tait quel que soit son réglage. Le bouton le dit
+ * (« Voix : coupée avec le son ») et n'agit plus, au lieu d'afficher « activée » pendant que
+ * le jeu est muet.
  */
 const VOICE_STATES = {
-  on: { icon: 'speech', key: 'voice_toggle_off', fallback: 'Désactiver la voix' },
-  off: { icon: 'speech-off', key: 'voice_toggle_on', fallback: 'Activer la voix' },
+  on: { icon: 'speech', key: 'voice_state_on', fallback: 'Voix : activée' },
+  off: { icon: 'speech-off', key: 'voice_state_off', fallback: 'Voix : coupée' },
+  soundOff: {
+    icon: 'speech-off',
+    key: 'voice_state_sound_off',
+    fallback: 'Voix : coupée avec le son',
+  },
 };
 
 /**
@@ -198,12 +208,27 @@ function applyMuteState(button, soundOn) {
   setButtonLabel(button, state.key, state.fallback);
 }
 
-function applyVoiceState(button, enabled) {
+/** Le son est-il audible ? (volume au-dessus de zéro, pas en sourdine) */
+function isSoundOn() {
+  return readVolume() > 0 && !readMuted();
+}
+
+/** État affiché de la voix : coupée avec le son, sinon son propre réglage */
+function voiceState(enabled, soundOn) {
+  if (!soundOn) return VOICE_STATES.soundOff;
+  return enabled ? VOICE_STATES.on : VOICE_STATES.off;
+}
+
+function applyVoiceState(button, enabled, soundOn = isSoundOn()) {
   // Première visite : l'état attend l'index de la voix enregistrée (au plus 1,5 s) ; le
   // bouton reste masqué, à sa place, plutôt que d'afficher un état qui changerait aussitôt
   button.toggleAttribute('data-voice-pending', isSpeechDecisionPending());
-  button.toggleAttribute('data-voice-on', enabled);
-  const state = enabled ? VOICE_STATES.on : VOICE_STATES.off;
+  // Allumée pour de bon : son réglage, et un son pour la porter
+  button.toggleAttribute('data-voice-on', enabled && soundOn);
+  // Son coupé : le bouton n'agit pas (attachVoiceToggles), il reprendra avec le son
+  if (soundOn) button.removeAttribute('aria-disabled');
+  else button.setAttribute('aria-disabled', 'true');
+  const state = voiceState(enabled, soundOn);
   renderIconButton(button, state.icon);
   setButtonLabel(button, state.key, state.fallback);
 }
@@ -694,24 +719,12 @@ export const TopBar = {
     for (const btn of document.querySelectorAll('.voice-toggle')) {
       if (!btn.dataset.topBarListenerAttached) {
         const toggleVoice = singleActivation(() => {
+          // Son coupé : la voix se tait déjà, son réglage ne se change pas à l'aveugle
+          if (btn.getAttribute('aria-disabled') === 'true') return;
           try {
             // Le bouton bascule l'état effectif, puis l'enregistre comme choix du joueur
-            const next = !readVoiceEnabled();
-            Storage.saveVoiceEnabled(next);
-            eventBus.emit('voice:preference-changed', { enabled: next });
-            this.updateVoiceToggleUI(next);
-            if (next) {
-              // Ce clic est un geste : il déverrouille le son (iOS) avant la confirmation
-              void unlockSpeech();
-              try {
-                _speak(getTranslation('voice_enabled'));
-              } catch (error) {
-                console.warn('TopBar voice announcement failed', error);
-              }
-            } else {
-              // Voix coupée : la phrase en cours s'arrête aussitôt
-              cancelSpeech();
-            }
+            if (readVoiceEnabled()) this._turnVoiceOff();
+            else this._turnVoiceOn();
           } catch (error) {
             console.warn('TopBar voice toggle failed', error);
           }
@@ -909,6 +922,44 @@ export const TopBar = {
     });
   },
 
+  /** La voix s'allume : elle le dit (« Voix activée ») */
+  _turnVoiceOn() {
+    // Rallumée pendant qu'elle disait « Voix désactivée » : cette phrase s'arrête là
+    cancelSpeech();
+    Storage.saveVoiceEnabled(true);
+    eventBus.emit('voice:preference-changed', { enabled: true });
+    this.updateVoiceToggleUI(true);
+    // Ce clic est un geste : il déverrouille le son (iOS) avant la confirmation
+    void unlockSpeech();
+    try {
+      _speak(getTranslation('voice_enabled'));
+    } catch (error) {
+      console.warn('TopBar voice announcement failed', error);
+    }
+  },
+
+  /**
+   * La voix se coupe : elle le dit une dernière fois (« Voix désactivée »), puis se tait.
+   * La phrase part avant que le choix soit enregistré ; une fois enregistré, plus rien
+   * d'autre ne se dit. Le moteur n'est prévenu qu'à la fin de la phrase : prévenu tout de
+   * suite, il se débranche et la couperait.
+   */
+  _turnVoiceOff() {
+    // La phrase en cours s'arrête : la voix ne finit pas sa question avant de se taire
+    cancelSpeech();
+    try {
+      _speak(getTranslation('voice_disabled'), { priority: 'high' });
+    } catch (error) {
+      console.warn('TopBar voice announcement failed', error);
+    }
+    Storage.saveVoiceEnabled(false);
+    this.updateVoiceToggleUI(false);
+    // Rallumée entre-temps, la voix garde son moteur : on annonce le choix du moment
+    void whenSpeechEnds().then(() => {
+      eventBus.emit('voice:preference-changed', { enabled: readVoiceEnabled() });
+    });
+  },
+
   /**
    * Mettre à jour l'affichage du toggle Voix
    * @param {boolean} [enabledParam] - État voulu ; lu dans le stockage si absent
@@ -944,6 +995,11 @@ export const TopBar = {
 
     document.querySelectorAll('.mute-btn').forEach(btn => {
       applyMuteState(btn, soundOn);
+    });
+    // La voix suit le son : son bouton dit « coupée avec le son », puis reprend son état
+    const voiceEnabled = readVoiceEnabled();
+    document.querySelectorAll('.voice-toggle').forEach(btn => {
+      applyVoiceState(btn, voiceEnabled, soundOn);
     });
 
     document.querySelectorAll('.volume-slider').forEach(slider => {

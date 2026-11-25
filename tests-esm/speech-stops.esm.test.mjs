@@ -20,6 +20,8 @@ const { goToSlide } = await import('../js/slides.js');
 const { GameModeManager } = await import('../js/core/GameModeManager.js');
 const { showArcadeGameOver } = await import('../js/arcade.js');
 const { TopBar } = await import('../js/components/topBar.js');
+const i18n = await import('../js/i18n-store.js');
+const { eventBus } = await import('../js/core/eventBus.js');
 
 function createFakeEngine() {
   const starts = [];
@@ -96,5 +98,85 @@ describe('Arrêts de la parole', () => {
     document.querySelector('#slide1 .voice-toggle').click();
     expect(localStorage.getItem('voiceEnabled')).toBe('false');
     expectSilenced(announcement);
+  });
+});
+
+describe('Voix coupée : elle le dit une dernière fois, puis se tait', () => {
+  const { setTranslations } = i18n;
+  const changes = [];
+  const onChange = payload => changes.push((payload?.detail ?? payload).enabled);
+
+  beforeEach(() => {
+    setTranslations({ voice_disabled: 'Voix désactivée', voice_enabled: 'Voix activée' });
+    changes.length = 0;
+    eventBus.on('voice:preference-changed', onChange);
+    TopBar.injectTopBarIntoSlides();
+    TopBar.attachVoiceToggles();
+  });
+
+  afterEach(() => {
+    eventBus.off('voice:preference-changed', onChange);
+    setTranslations({});
+  });
+
+  const toggle = () => document.querySelector('#slide1 .voice-toggle').click();
+  const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+
+  test('la question en cours s’arrête, « Voix désactivée » part, le choix est enregistré', () => {
+    const announcement = speakingWithPending();
+    toggle();
+    expect(announcement.handle.stop).toHaveBeenCalledTimes(1);
+    expect(engine.starts.map(s => s.text)).toEqual(['Mode Quiz', 'Voix désactivée']);
+    expect(engine.last().handle.stop).not.toHaveBeenCalled();
+    expect(localStorage.getItem('voiceEnabled')).toBe('false');
+    expect(document.querySelector('#slide1 .voice-toggle').hasAttribute('data-voice-on')).toBe(
+      false
+    );
+  });
+
+  test('pendant sa dernière phrase, rien d’autre ne se dit et elle n’est pas coupée', () => {
+    toggle();
+    const farewell = engine.last();
+    speak('Combien font 7 fois 8 ?');
+    speak('Mode Défi', { priority: 'high' });
+    expect(engine.last()).toBe(farewell);
+    expect(farewell.handle.stop).not.toHaveBeenCalled();
+  });
+
+  test('le moteur n’est prévenu qu’à la fin de la phrase : prévenu avant, il la couperait', async () => {
+    toggle();
+    await flush();
+    expect(changes).toEqual([]);
+
+    engine.last().ctx.onEnded();
+    await flush();
+    expect(changes).toEqual([false]);
+    // Et plus rien ne se dit ensuite
+    speak('Combien font 7 fois 8 ?');
+    expect(engine.starts.map(s => s.text)).toEqual(['Voix désactivée']);
+  });
+
+  test('rallumée avant la fin de la phrase : « Voix activée », et le moteur apprend le choix du moment', async () => {
+    toggle();
+    const farewell = engine.last();
+    // Un second geste (le même geste ne bascule qu'une fois : singleActivation)
+    await flush();
+    toggle();
+    expect(localStorage.getItem('voiceEnabled')).toBe('true');
+    expect(farewell.handle.stop).toHaveBeenCalledTimes(1);
+    expect(engine.last().text).toBe('Voix activée');
+    await flush();
+    // Jamais « coupée » : la voix a été rallumée avant que la phrase d'adieu finisse
+    expect(changes).not.toContain(false);
+    expect(changes.at(-1)).toBe(true);
+  });
+
+  test('sans phrase à dire (traduction absente), la voix se coupe quand même tout de suite', async () => {
+    setTranslations({});
+    toggle();
+    expect(engine.starts).toEqual([]);
+    expect(localStorage.getItem('voiceEnabled')).toBe('false');
+    await flush();
+    expect(changes).toEqual([false]);
   });
 });

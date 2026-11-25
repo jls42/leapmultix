@@ -174,4 +174,62 @@ describe('Menu de la barre du haut pendant une partie (E2E)', () => {
     });
     expect(after).toEqual({ menuOpen: false, expanded: 'false', veil: false, visible: true });
   }, 60000);
+  test('son coupé par la touche de la barre, rallumé par le menu : chaque ligne dit son état, la voix suit le son', async () => {
+    page = await chrome.newPage();
+    await page.setViewport(PHONE);
+    // La voix est allumée par le joueur
+    await page.evaluateOnNewDocument(() => localStorage.setItem('voiceEnabled', 'true'));
+    await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
+    await createUserAndSkipIntro(page);
+    await page.click('.mode-btn[data-mode="quiz"]');
+    await page.waitForSelector('#quiz-options .option:not([disabled])', { visible: true });
+
+    /** Ce qu'on lit dans le menu : libellé de chaque réglage, et son interrupteur dessiné */
+    const menu = () =>
+      page.evaluate(() => {
+        const row = selector => {
+          const key = document.querySelector(`#slide4 .top-bar-nav ${selector}`);
+          const knob = getComputedStyle(key, '::after');
+          return {
+            label: key.querySelector('.icon-btn-label').textContent,
+            shown: key.querySelector('.icon-btn-label').getBoundingClientRect().width > 1,
+            // Interrupteur : sa piste (couleur de fond) et la place du curseur
+            switch: `${knob.width} ${knob.backgroundColor}`,
+            knobAtEnd: knob.backgroundImage.includes('calc(100%'),
+          };
+        };
+        return { sound: row('.mute-btn'), voice: row('.voice-toggle') };
+      });
+    const openMenu = async () => {
+      await page.tap('#slide4 .burger-menu-btn');
+      await page.waitForSelector('#slide4 .top-bar-nav.is-open', { visible: true });
+    };
+
+    await openMenu();
+    const on = await menu();
+    expect([on.sound.label, on.voice.label]).toEqual(['Son : activé', 'Voix : activée']);
+    expect([on.sound.shown, on.voice.shown]).toEqual([true, true]);
+    expect([on.sound.knobAtEnd, on.voice.knobAtEnd]).toEqual([true, true]);
+    expect(on.sound.switch.startsWith('40px')).toBe(true);
+    await page.keyboard.press('Escape');
+
+    // La touche « Son » de la barre coupe tout
+    await page.tap('#slide4 .mute-btn-quick');
+    await openMenu();
+    const off = await menu();
+    expect([off.sound.label, off.voice.label]).toEqual([
+      'Son : coupé',
+      'Voix : coupée avec le son',
+    ]);
+    expect([off.sound.knobAtEnd, off.voice.knobAtEnd]).toEqual([false, false]);
+    expect(off.sound.switch).not.toBe(on.sound.switch);
+    expect(off.voice.switch).not.toBe(on.voice.switch);
+
+    // Le son rallumé dans le menu : la voix, restée réglée sur « activée », revient avec lui
+    await page.tap('#slide4 .top-bar-nav .mute-btn');
+    await page.waitForFunction(
+      () => !document.querySelector('#slide4 .mute-btn-quick').hasAttribute('data-sound-off')
+    );
+    expect(await menu()).toEqual(on);
+  }, 60000);
 });
