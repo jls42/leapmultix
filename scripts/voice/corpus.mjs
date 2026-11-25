@@ -91,6 +91,7 @@ const FIXED_KEYS = [
   'congrats4',
   'congrats5',
   'voice_enabled',
+  'voice_disabled',
 ];
 
 /**

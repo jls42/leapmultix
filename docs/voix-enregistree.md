@@ -179,6 +179,13 @@ dite reste une phrase du corpus.
   voix. Vrai/Faux et divisibilité n'ont pas de nombre à dire : le bip seul hors palier, le
   bravo seul au palier. Le Défi garde le bravo seul, toutes les cinq bonnes réponses de
   suite.
+- **Voix allumée, voix coupée** : le bouton de la voix dit « Voix activée » quand on l'allume
+  et « Voix désactivée » juste avant qu'elle se taise (`voice_enabled`, `voice_disabled`,
+  `_turnVoiceOn` et `_turnVoiceOff` de `js/components/topBar.js`). La dernière phrase part
+  avant que le choix soit enregistré ; une fois enregistré, plus rien d'autre ne se dit. Le
+  moteur n'est prévenu (`voice:preference-changed`) qu'à la fin de la phrase : prévenu tout de
+  suite, il se débranche et la couperait. Son coupé, la voix se tait sans rien dire, et son
+  bouton l'écrit : « Voix : coupée avec le son ».
 - **Appli Android** : la page de l'appli n'a pas `speechSynthesis`. Quand l'appli annonce son
   module `LeapMultixSpeech`, le moteur de synthèse confie la phrase à la synthèse vocale du
   téléphone (`appSpeech` de `js/speech.js`) : c'est la « voix de l'appareil » de l'appli, pour

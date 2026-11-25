@@ -14,7 +14,7 @@ import {
   speak as _speak,
 } from '../utils-es6.js';
 import { AudioManager } from '../core/audio.js';
-import { cancelSpeech, isSpeechDecisionPending, unlockSpeech } from '../speech.js';
+import { cancelSpeech, isSpeechDecisionPending, unlockSpeech, whenSpeechEnds } from '../speech.js';
 import { goToSlide } from '../slides.js';
 import Storage from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
@@ -723,22 +723,8 @@ export const TopBar = {
           if (btn.getAttribute('aria-disabled') === 'true') return;
           try {
             // Le bouton bascule l'état effectif, puis l'enregistre comme choix du joueur
-            const next = !readVoiceEnabled();
-            Storage.saveVoiceEnabled(next);
-            eventBus.emit('voice:preference-changed', { enabled: next });
-            this.updateVoiceToggleUI(next);
-            if (next) {
-              // Ce clic est un geste : il déverrouille le son (iOS) avant la confirmation
-              void unlockSpeech();
-              try {
-                _speak(getTranslation('voice_enabled'));
-              } catch (error) {
-                console.warn('TopBar voice announcement failed', error);
-              }
-            } else {
-              // Voix coupée : la phrase en cours s'arrête aussitôt
-              cancelSpeech();
-            }
+            if (readVoiceEnabled()) this._turnVoiceOff();
+            else this._turnVoiceOn();
           } catch (error) {
             console.warn('TopBar voice toggle failed', error);
           }
@@ -933,6 +919,44 @@ export const TopBar = {
   updateCoinDisplay(count) {
     document.querySelectorAll('.coin-count').forEach(el => {
       el.textContent = count || 0;
+    });
+  },
+
+  /** La voix s'allume : elle le dit (« Voix activée ») */
+  _turnVoiceOn() {
+    // Rallumée pendant qu'elle disait « Voix désactivée » : cette phrase s'arrête là
+    cancelSpeech();
+    Storage.saveVoiceEnabled(true);
+    eventBus.emit('voice:preference-changed', { enabled: true });
+    this.updateVoiceToggleUI(true);
+    // Ce clic est un geste : il déverrouille le son (iOS) avant la confirmation
+    void unlockSpeech();
+    try {
+      _speak(getTranslation('voice_enabled'));
+    } catch (error) {
+      console.warn('TopBar voice announcement failed', error);
+    }
+  },
+
+  /**
+   * La voix se coupe : elle le dit une dernière fois (« Voix désactivée »), puis se tait.
+   * La phrase part avant que le choix soit enregistré ; une fois enregistré, plus rien
+   * d'autre ne se dit. Le moteur n'est prévenu qu'à la fin de la phrase : prévenu tout de
+   * suite, il se débranche et la couperait.
+   */
+  _turnVoiceOff() {
+    // La phrase en cours s'arrête : la voix ne finit pas sa question avant de se taire
+    cancelSpeech();
+    try {
+      _speak(getTranslation('voice_disabled'), { priority: 'high' });
+    } catch (error) {
+      console.warn('TopBar voice announcement failed', error);
+    }
+    Storage.saveVoiceEnabled(false);
+    this.updateVoiceToggleUI(false);
+    // Rallumée entre-temps, la voix garde son moteur : on annonce le choix du moment
+    void whenSpeechEnds().then(() => {
+      eventBus.emit('voice:preference-changed', { enabled: readVoiceEnabled() });
     });
   },
 

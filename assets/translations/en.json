@@ -300,6 +300,7 @@
   "virtual_keyboard_space": "Space",
   "visual_exploration_title": "Visual Exploration",
   "voice_enabled": "Voice enabled",
+  "voice_disabled": "Voice disabled",
   "your_journey_title": "Your journey",
   "welcome_user": "Welcome {nickname} to the adventure! Explore the 4 paths of mental math: Multiplication, Addition, Subtraction, and Division.",
   "about_support_title": "Support the project",
