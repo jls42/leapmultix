@@ -39,14 +39,14 @@ const MUTE_STATES = {
 };
 
 /**
- * Voix : le nom du bouton reste fixe (aria-pressed porte l'état).
- * L'infobulle décrit l'action : « voice_toggle_off » vaut « Désactiver la voix »
- * (proposée quand la voix est active), « voice_toggle_on » vaut « Activer la voix ».
+ * Libellés des états de la voix : comme pour le son, l'intitulé décrit l'action proposée
+ * (« voice_toggle_off », « Désactiver la voix », quand elle est active). Un nom fixe,
+ * « Lecture à voix haute », ne disait pas dans le menu si la voix était allumée (retour
+ * d'un testeur). L'état se lit aussi sur l'icône et sur data-voice-on (bouton enfoncé).
  */
-const VOICE_LABEL = { key: 'voice_toggle_label', fallback: 'Lecture à voix haute' };
-const VOICE_TITLES = {
-  enabled: { key: 'voice_toggle_off', fallback: 'Désactiver la voix' },
-  disabled: { key: 'voice_toggle_on', fallback: 'Activer la voix' },
+const VOICE_STATES = {
+  on: { icon: 'speech', key: 'voice_toggle_off', fallback: 'Désactiver la voix' },
+  off: { icon: 'speech-off', key: 'voice_toggle_on', fallback: 'Activer la voix' },
 };
 
 /**
@@ -129,11 +129,6 @@ function setButtonLabel(button, key, fallback) {
   }
 }
 
-function setButtonTitle(button, key, fallback) {
-  button.title = tr(key, fallback);
-  button.dataset.translateTitle = key;
-}
-
 /**
  * Crée un bouton d'icône de la barre.
  * @param {Object} spec
@@ -205,11 +200,10 @@ function applyVoiceState(button, enabled) {
   // Première visite : l'état attend l'index de la voix enregistrée (au plus 1,5 s) ; le
   // bouton reste masqué, à sa place, plutôt que d'afficher un état qui changerait aussitôt
   button.toggleAttribute('data-voice-pending', isSpeechDecisionPending());
-  button.setAttribute('aria-pressed', String(enabled));
-  renderIconButton(button, enabled ? 'speech' : 'speech-off');
-  setButtonLabel(button, VOICE_LABEL.key, VOICE_LABEL.fallback);
-  const title = enabled ? VOICE_TITLES.enabled : VOICE_TITLES.disabled;
-  setButtonTitle(button, title.key, title.fallback);
+  button.toggleAttribute('data-voice-on', enabled);
+  const state = enabled ? VOICE_STATES.on : VOICE_STATES.off;
+  renderIconButton(button, state.icon);
+  setButtonLabel(button, state.key, state.fallback);
 }
 
 function applyLanguageState(button, activeLang) {
@@ -407,8 +401,8 @@ export const TopBar = {
       id: `voice-toggle-${slideId}`,
       className: 'btn btn-sm btn-secondary icon-btn voice-toggle',
       icon: 'speech',
-      labelKey: VOICE_LABEL.key,
-      labelFallback: VOICE_LABEL.fallback,
+      labelKey: VOICE_STATES.off.key,
+      labelFallback: VOICE_STATES.off.fallback,
       caption: CAPTIONS.voice,
     });
     applyVoiceState(voiceBtn, readVoiceEnabled());
@@ -427,6 +421,9 @@ export const TopBar = {
       changeLabel.dataset.translate = 'change_user';
       changeLabel.textContent = tr('change_user', 'Changer de joueur');
       change.appendChild(changeLabel);
+      // Infobulle : là où la touche n'a que son icône ou le mot « Joueur », elle dit la phrase
+      change.title = changeLabel.textContent;
+      change.dataset.translateTitle = 'change_user';
       change.appendChild(createCaption(CAPTIONS.player));
       navContainer.appendChild(change);
     }

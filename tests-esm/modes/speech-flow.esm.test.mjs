@@ -149,17 +149,19 @@ describe('Démarrage d’un mode', () => {
 });
 
 describe('Quiz : bip, le nombre trouvé, « Bravo », question suivante', () => {
-  async function quizOnKnownQuestion() {
+  /** @param {number} [streak] - Bonnes réponses de suite avant la question connue */
+  async function quizOnKnownQuestion(streak = 0) {
     const quiz = new QuizMode();
     await quiz.start();
     engine.starts[0].ctx.onEnded();
+    quiz.state.streak = streak;
     showKnownQuestion(quiz);
     quiz.speakQuestion();
     return quiz;
   }
 
-  test('répondre coupe la question ; « Oui, 8 ! » part après le bip, « Bravo » le suit ; la question suivante les attend', async () => {
-    const quiz = await quizOnKnownQuestion();
+  test('troisième bonne réponse de suite : répondre coupe la question ; « Oui, 8 ! » part après le bip, « Bravo » le suit ; la question suivante les attend', async () => {
+    const quiz = await quizOnKnownQuestion(2);
     const reading = engine.last();
     expect(reading.text).toBe('Combien font 4 fois 2 ?');
 
@@ -182,6 +184,21 @@ describe('Quiz : bip, le nombre trouvé, « Bravo », question suivante', () => 
 
     bravo.ctx.onEnded();
     expect(engine.last().text).toBe(quiz.spokenQuestionText());
+    quiz.stop();
+  });
+
+  test('hors palier de série : « Oui, 8 ! » seul, puis la question suivante, sans bravo', async () => {
+    const quiz = await quizOnKnownQuestion();
+    option('quiz', false).click();
+    await wait(GOOD_SOUND_MS + 30);
+    const number = engine.last();
+    expect(number.text).toBe('Oui, 8 !');
+
+    await wait(quiz.config.nextQuestionDelay);
+    expect(engine.last()).toBe(number);
+    number.ctx.onEnded();
+    expect(engine.last().text).toBe(quiz.spokenQuestionText());
+    expect(engine.starts.map(s => s.text)).not.toContain('Bravo !');
     quiz.stop();
   });
 

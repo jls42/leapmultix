@@ -205,7 +205,7 @@ describe('Voix enregistrée E2E', () => {
         buttons.map(button => ({
           pending: button.hasAttribute('data-voice-pending'),
           visibility: getComputedStyle(button).visibility,
-          pressed: button.getAttribute('aria-pressed'),
+          on: button.hasAttribute('data-voice-on'),
         }))
       );
     try {
@@ -232,7 +232,7 @@ describe('Voix enregistrée E2E', () => {
       expect(spoken).toEqual([]);
       const after = await voiceButtons();
       expect(after.every(b => !b.pending && b.visibility !== 'hidden')).toBe(true);
-      expect(after.every(b => b.pressed === 'true')).toBe(true);
+      expect(after.every(b => b.on)).toBe(true);
     } finally {
       releaseIndex();
       await context.close();

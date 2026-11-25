@@ -475,6 +475,20 @@ strong.feedback-count-step {
   stroke-width: 1.5;
 }
 
+/* Téléphone : plusieurs gains s'empilent (défi du jour, pièces, badges). En colonne, calés à
+   gauche dans un bloc centré : les icônes s'alignent, un nom de badge long passe à la ligne
+   à côté de la sienne */
+@media (max-width: 600px) {
+  .results-reward-list {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .results-reward {
+    text-align: start;
+  }
+}
+
 .results-reward-hint {
   max-width: 36rem;
   margin: 0;

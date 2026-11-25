@@ -644,6 +644,33 @@ describe('Chrono : résultats', () => {
     expect(backs.map(btn => btn.dataset.action)).toEqual(['chrono-menu']);
   });
 
+  test('l’écran de fin dit ce que la course a rapporté, sous son message, avant les calculs', async () => {
+    const before = userStore.coins;
+    const chrono = await startChrono();
+    // Un badge gagné pendant la course (défi du jour) : aucune bulle, l'écran de fin le nomme
+    userStore.unlockedBadges = [...(userStore.unlockedBadges ?? []), 'daily_challenger'];
+    while (chrono.state.correctAnswers < 10) await answer(chrono);
+    await flush(1000);
+
+    const earned = userStore.coins - before;
+    expect(earned).toBeGreaterThan(0);
+    const block = document.querySelector('#results .results-rewards');
+    expect([...block.querySelectorAll('.results-reward')].map(line => line.textContent)).toEqual([
+      formatMessage(FR.results_coins_earned, { n: earned }, 'fr'),
+      formatMessage(FR.results_new_badge, { name: FR.badge_daily_challenger_name }, 'fr'),
+    ]);
+    expect(block.previousElementSibling.className).toBe('results-message');
+    expect(block.nextElementSibling.classList.contains('results-rewards')).toBe(false);
+    expect(resultActions()).toEqual([
+      'play-again',
+      'chrono-menu',
+      'stats',
+      'back-to-home',
+      'results-see-badges',
+    ]);
+    userStore.unlockedBadges = [];
+  });
+
   test('« Mes temps » depuis l’écran de fin dit quel classement il montre, comme depuis le menu', async () => {
     await playGame();
     resultButton('stats').click();

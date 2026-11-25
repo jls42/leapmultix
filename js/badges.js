@@ -4,6 +4,7 @@
 
 import { UserState } from './core/userState.js';
 import { getTranslation, showNotification, playSound } from './utils-es6.js';
+import { announceReward } from './core/session-rewards.js';
 
 /**
  * Liste des badges disponibles dans le jeu.
@@ -45,9 +46,12 @@ function checkAndUnlockBadge(badgeId) {
     UserState.updateUserData(userData);
     // Toast : titre « Nouveau badge débloqué » puis le nom du badge (texte brut, sans HTML).
     // Deux lignes plutôt qu'une phrase composée : aucune ponctuation propre à une langue.
-    showNotification('badge', badges[badgeId].icon, getTranslation(`badge_${badgeId}_name`), {
-      title: getTranslation('new_badge_unlocked'),
-    });
+    // Pendant une partie, il attend : l'écran de fin nomme le badge (core/session-rewards.js)
+    announceReward(() =>
+      showNotification('badge', badges[badgeId].icon, getTranslation(`badge_${badgeId}_name`), {
+        title: getTranslation('new_badge_unlocked'),
+      })
+    );
     // Son de succès
     if (typeof playSound === 'function') playSound('good');
   }
