@@ -446,6 +446,55 @@ describe('TopBar : sans joueur choisi et touche Échap', () => {
     expect(document.activeElement).toBe(bar.querySelector('.burger-menu-btn'));
   });
 
+  test('menu ouvert : un voile se pose juste avant la barre, et part quand le menu se ferme', () => {
+    TopBar.init();
+    const bar = document.querySelector('#slide1 .top-bar');
+    expect(document.querySelector('.top-bar-veil')).toBeNull();
+
+    TopBar.setMenuOpen(bar, true);
+    TopBar.setMenuOpen(bar, true);
+    const veils = document.querySelectorAll('.top-bar-veil');
+    expect(veils).toHaveLength(1);
+    expect(bar.previousElementSibling).toBe(veils[0]);
+    expect(veils[0].getAttribute('aria-hidden')).toBe('true');
+
+    // Bouton retour d'Android et Échap passent par closeAllMenus
+    TopBar.closeAllMenus();
+    expect(document.querySelector('.top-bar-veil')).toBeNull();
+  });
+
+  test('toucher le voile ferme le menu', () => {
+    TopBar.init();
+    const bar = document.querySelector('#slide1 .top-bar');
+    TopBar.setMenuOpen(bar, true);
+    document.querySelector('.top-bar-veil').click();
+    expect(bar.querySelector('.top-bar-nav').classList.contains('is-open')).toBe(false);
+    expect(document.querySelector('.top-bar-veil')).toBeNull();
+  });
+
+  test('le focus qui sort de la barre ferme le menu ; celui qui y reste le laisse ouvert', () => {
+    TopBar.init();
+    const bar = document.querySelector('#slide1 .top-bar');
+    const nav = bar.querySelector('.top-bar-nav');
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    const leave = (from, to) =>
+      from.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: to }));
+
+    TopBar.setMenuOpen(bar, true);
+    const [first, second] = nav.querySelectorAll('button');
+    leave(first, second);
+    expect(nav.classList.contains('is-open')).toBe(true);
+    // Focus perdu sans destination (toucher sur une zone inerte) : le clic s'en charge
+    leave(first, null);
+    expect(nav.classList.contains('is-open')).toBe(true);
+
+    leave(second, outside);
+    expect(nav.classList.contains('is-open')).toBe(false);
+    expect(bar.querySelector('.burger-menu-btn').getAttribute('aria-expanded')).toBe('false');
+    outside.remove();
+  });
+
   test('closeAllMenus referme les menus de toutes les barres', () => {
     const bars = [...document.querySelectorAll('.top-bar')];
     for (const bar of bars) TopBar.setMenuOpen(bar, true);

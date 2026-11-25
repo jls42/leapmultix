@@ -758,6 +758,31 @@ export const TopBar = {
       burger.setAttribute('aria-expanded', String(open));
       setIcon(burger, open ? 'x' : 'menu');
     }
+    this._setMenuVeil(topBar, open);
+  },
+
+  /**
+   * Voile sous le menu ouvert : il couvre l'écran et reçoit le toucher donné à côté du menu,
+   * qui ferme alors le menu et rien d'autre. Sans lui, ce toucher atteignait aussi ce qui
+   * était dessous : en partie, il répondait à la question (un parent qui refermait le menu
+   * faisait rater la réponse de l'enfant).
+   * @param {Element} topBar - Barre dont le menu s'ouvre ou se ferme
+   * @param {boolean} open
+   */
+  _setMenuVeil(topBar, open) {
+    const existing = topBar.previousElementSibling?.classList.contains('top-bar-veil')
+      ? topBar.previousElementSibling
+      : null;
+    if (!open) {
+      existing?.remove();
+      return;
+    }
+    if (existing) return;
+    const veil = document.createElement('div');
+    veil.className = 'top-bar-veil';
+    veil.setAttribute('aria-hidden', 'true');
+    // Le clic sur le voile est un clic hors de la barre : attachOutsideClickWatcher ferme
+    topBar.before(veil);
   },
 
   attachBurgerMenus() {
@@ -782,6 +807,14 @@ export const TopBar = {
           this.setMenuOpen(topBar, false);
           topBar.querySelector('.burger-menu-btn')?.focus();
           event.stopPropagation();
+        });
+        // Le focus sort de la barre (Tab après la dernière touche, fenêtre ouverte depuis le
+        // menu) : le menu se ferme. Resté ouvert, il recouvrait les boutons où le focus
+        // avançait ensuite
+        topBar.addEventListener('focusout', event => {
+          const next = event.relatedTarget;
+          if (!next || topBar.contains(next)) return;
+          if (topBar.querySelector('.top-bar-nav.is-open')) this.setMenuOpen(topBar, false);
         });
         topBar.dataset.menuKeysAttached = 'true';
       }

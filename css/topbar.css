@@ -298,6 +298,15 @@
   animation: coin-gain var(--dur-slow) var(--ease-out) 1;
 }
 
+/* --- Voile sous le menu ouvert (topBar.js) : tout l'écran, juste sous la barre. Il prend le
+   toucher donné à côté du menu, que le jeu dessous ne reçoit donc pas --- */
+.top-bar-veil {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-sticky) - 1);
+  background-color: rgb(12 22 36 / 0.3);
+}
+
 /* --- Menu (mobile et tablette) --- */
 .top-bar .burger-menu-btn {
   display: none;
