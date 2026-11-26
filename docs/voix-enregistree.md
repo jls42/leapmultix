@@ -186,6 +186,16 @@ dite reste une phrase du corpus.
   moteur n'est prévenu (`voice:preference-changed`) qu'à la fin de la phrase : prévenu tout de
   suite, il se débranche et la couperait. Son coupé, la voix se tait sans rien dire, et son
   bouton l'écrit : « Voix : coupée avec le son ».
+- **Son, bruitages, voix** : trois réglages. « Son » coupe tout (touche de la barre, curseur
+  du volume). « Bruitages » (bips et sons des jeux, `AudioManager.setEffectsEnabled`, réglage
+  `soundEffectsEnabled`) et « Voix » se règlent à part, l'un sans l'autre, et tous deux
+  suivent le son. Toucher l'un d'eux pendant que le son est coupé rend le son, sans changer
+  son réglage. Bruitages ou voix coupés par le joueur : la touche « Son » de la barre porte
+  une pastille et son nom dit les trois états (`applyQuickMuteState`).
+- **Erreur** : un seul signal sonore. Au Quiz, au Défi et en Aventure, la voix dit l'erreur
+  (« Raté ! La bonne réponse est 56. ») ; quand elle ne la dira pas (voix coupée ou
+  indisponible, `willSpeak` de `js/speech.js`), le son doux d'erreur joue à sa place
+  (`GameMode.playErrorSoundUnlessSpoken`). Jamais les deux à la suite.
 - **Appli Android** : la page de l'appli n'a pas `speechSynthesis`. Quand l'appli annonce son
   module `LeapMultixSpeech`, le moteur de synthèse confie la phrase à la synthèse vocale du
   téléphone (`appSpeech` de `js/speech.js`) : c'est la « voix de l'appareil » de l'appli, pour
