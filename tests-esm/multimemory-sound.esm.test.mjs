@@ -62,12 +62,12 @@ afterEach(() => {
 });
 
 describe('MultiMemory : sons au volume du jeu', () => {
-  test('une paire trouvée : la bonne réponse au volume choisi, et les cartes qui glissent ensemble', () => {
+  test('une paire trouvée : la bonne réponse à son niveau, et les cartes qui glissent ensemble', () => {
     const [first, second] = game.cards;
     game.onPairFound(first, second);
     expect(played).toHaveLength(2);
     expect(played[0].src).toContain('bonne-reponse.wav');
-    expect(played[0].volume).toBeCloseTo(0.4);
+    expect(played[0].volume).toBeCloseTo(0.4 * 0.4);
     expect(played[1].src).toContain('paire.wav');
     expect(played[1].volume).toBeCloseTo(0.4 * 0.5);
   });
@@ -77,7 +77,7 @@ describe('MultiMemory : sons au volume du jeu', () => {
     game.onPairMissed(first, second);
     expect(played).toHaveLength(1);
     expect(played[0].src).toContain('erreur.wav');
-    expect(played[0].volume).toBeCloseTo(0.4 * 0.35);
+    expect(played[0].volume).toBeCloseTo(0.4 * 0.5);
   });
 
   test('une carte retournée sonne, discrète ; une carte déjà retournée, non', () => {

@@ -201,17 +201,20 @@ describe('AudioManager : lecture d’un son', () => {
     expect(sonsCrees.at(-1).volume).toBeCloseTo(0.4, 5);
   });
 
-  test('le son d’erreur est adouci partout : 35 % du volume général, sauf volume demandé', () => {
-    AudioManager.setVolume(0.4);
+  test('la bonne réponse et l’erreur sont alignées : 40 % et 50 % du volume général, sauf volume demandé', () => {
+    AudioManager.setVolume(0.8);
     // Quiz, Défi, Aventure, Chrono, points perdus de l'Arcade, MultiMemory : playSound('bad') sans volume
     AudioManager.playSound('bad');
-    expect(sonsCrees.at(-1).volume).toBeCloseTo(0.4 * 0.35, 5);
-    // Un volume demandé garde la main
-    AudioManager.playSound('bad', { volume: 0.4 });
-    expect(sonsCrees.at(-1).volume).toBeCloseTo(0.16, 5);
-    // Les autres sons gardent tout le volume général
+    expect(sonsCrees.at(-1).volume).toBeCloseTo(0.8 * 0.5, 5);
+    // Le fichier de la bonne réponse est bien plus fort que les autres : il est joué plus bas
     AudioManager.playSound('good');
-    expect(sonsCrees.at(-1).volume).toBeCloseTo(0.4, 5);
+    expect(sonsCrees.at(-1).volume).toBeCloseTo(0.8 * 0.4, 5);
+    // Un volume demandé garde la main
+    AudioManager.playSound('bad', { volume: 0.25 });
+    expect(sonsCrees.at(-1).volume).toBeCloseTo(0.2, 5);
+    // Un son sans réglage propre garde tout le volume général
+    AudioManager.playSound('shoot');
+    expect(sonsCrees.at(-1).volume).toBeCloseTo(0.8, 5);
   });
 
   test('l’option de répétition est transmise', () => {

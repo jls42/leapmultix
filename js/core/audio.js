@@ -10,10 +10,18 @@ import { gameState } from '../game.js';
 import { eventBus } from './eventBus.js';
 
 /**
- * Part du volume général donnée au son d'erreur : il est adouci, dans tous les modes, pour ne pas
- * faire sursauter l'enfant à chaque réponse fausse (valeur du Chrono depuis la PR #78)
+ * Part du volume général donnée au son de la bonne réponse. Son fichier est le plus fort du
+ * catalogue (niveau moyen de -12,6 dB, les autres de -17 à -28) : joué à plein volume, il
+ * sortait 14 dB au-dessus du son d'erreur et couvrait tout sur un téléphone. À 0,4, il rejoint
+ * le tir de l'Aventure (-20 dB en jeu) et reste le son le plus présent.
  */
-const ERROR_SOUND_VOLUME = 0.35;
+const GOOD_SOUND_VOLUME = 0.4;
+/**
+ * Part du volume général donnée au son d'erreur : adouci, dans tous les modes, pour ne pas
+ * faire sursauter l'enfant à chaque réponse fausse. Il reste 3 dB sous la bonne réponse
+ * (-23,5 dB en jeu) ; à 0,35 il passait presque inaperçu à côté d'elle.
+ */
+const ERROR_SOUND_VOLUME = 0.5;
 // Le maillet sonne avec le son de la réponse : un peu en dessous, sans le couvrir
 const MALLET_SOUND_VOLUME = 0.7;
 // Les bruitages de l'Arcade (ElevenLabs, choisis par le propriétaire le 16/11/2026) : la
@@ -72,6 +80,7 @@ const AudioManager = {
 
   // Volume propre à un son, en part du volume général (sinon tout le volume)
   soundVolumes: new Map([
+    ['good', GOOD_SOUND_VOLUME],
     ['bad', ERROR_SOUND_VOLUME],
     ['mallet', MALLET_SOUND_VOLUME],
     ['munch', MUNCH_SOUND_VOLUME],
