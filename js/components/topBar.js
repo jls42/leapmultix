@@ -16,7 +16,7 @@ import {
 import { AudioManager } from '../core/audio.js';
 import { cancelSpeech, isSpeechDecisionPending, unlockSpeech, whenSpeechEnds } from '../speech.js';
 import { goToSlide } from '../slides.js';
-import Storage from '../core/storage.js';
+import Storage, { STORAGE_KEYS } from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
 import { UserState } from '../core/userState.js';
@@ -62,10 +62,10 @@ const VOICE_STATES = {
 };
 
 const EFFECTS_STATES = {
-  on: { icon: 'bell', key: 'effects_state_on', fallback: 'Bruitages : activés' },
-  off: { icon: 'bell-off', key: 'effects_state_off', fallback: 'Bruitages : coupés' },
+  on: { icon: 'note', key: 'effects_state_on', fallback: 'Bruitages : activés' },
+  off: { icon: 'note-off', key: 'effects_state_off', fallback: 'Bruitages : coupés' },
   soundOff: {
-    icon: 'bell-off',
+    icon: 'note-off',
     key: 'effects_state_sound_off',
     fallback: 'Bruitages : coupés avec le son',
   },
@@ -114,6 +114,16 @@ function readLanguage() {
     return Storage.loadLanguage?.() || 'fr';
   } catch {
     return 'fr';
+  }
+}
+
+/** Le joueur a-t-il réglé la voix lui-même ? (sinon elle suit sa valeur par défaut) */
+function isVoiceChosen() {
+  try {
+    return Storage.get(STORAGE_KEYS.VOICE_ENABLED, null) !== null;
+  } catch {
+    // Stockage illisible : aucun choix connu
+    return false;
   }
 }
 
@@ -231,6 +241,36 @@ function applyMuteState(button, soundOn) {
   setButtonLabel(button, state.key, state.fallback);
 }
 
+/**
+ * Touche « Son » de la barre du téléphone, seule visible quand le menu est fermé : elle ne
+ * doit pas dire « Son : activé » sans plus quand le joueur a coupé les bruitages ou la voix
+ * (les deux coupés, le jeu est muet). Elle porte alors une pastille (css/topbar.css) et son
+ * nom dit les trois états, avec les libellés du menu : « Son : activé. Bruitages : coupés.
+ * Voix : coupée. »
+ * @param {HTMLButtonElement} button
+ * @param {boolean} [soundOn]
+ */
+function applyQuickMuteState(button, soundOn = isSoundOn()) {
+  applyMuteState(button, soundOn);
+  const effects = readEffectsEnabled();
+  const voice = readVoiceEnabled();
+  const partial = soundOn && (!effects || (!voice && isVoiceChosen()));
+  button.toggleAttribute('data-partial', partial);
+  if (!partial) return;
+  const said = [
+    MUTE_STATES.on,
+    effects ? EFFECTS_STATES.on : EFFECTS_STATES.off,
+    voice ? VOICE_STATES.on : VOICE_STATES.off,
+  ].map(({ key, fallback }) => `${tr(key, fallback)}.`);
+  const text = said.join(' ');
+  button.setAttribute('aria-label', text);
+  button.title = text;
+  // Nom composé : la traduction statique ne doit pas le remplacer par « Son : activé » seul
+  // (updateTranslations le recompose à chaque changement de langue)
+  delete button.dataset.translateAriaLabel;
+  delete button.dataset.translateTitle;
+}
+
 /** Le son est-il audible ? (volume au-dessus de zéro, pas en sourdine) */
 function isSoundOn() {
   return readVolume() > 0 && !readMuted();
@@ -255,12 +295,14 @@ function restoreSound() {
  * @param {HTMLButtonElement} button
  * @param {{on: object, off: object, soundOff: object}} states
  * @param {string} onAttribute - « data-voice-on » ou « data-effects-on »
- * @param {boolean} enabled - Réglage du joueur
+ * @param {boolean} enabled - Réglage en vigueur
  * @param {boolean} soundOn - Le son général est-il audible ?
+ * @param {boolean} [chosen] - Est-ce le joueur qui l'a réglé ainsi ? (faux : valeur par défaut)
  */
-function applyFollowerState(button, states, onAttribute, enabled, soundOn) {
+function applyFollowerState(button, states, onAttribute, enabled, soundOn, chosen = true) {
   button.toggleAttribute(onAttribute, enabled && soundOn);
-  button.toggleAttribute('data-cut', !enabled && soundOn);
+  // La teinte d'alerte dit « tu l'as coupé » : jamais pour une voix éteinte par défaut
+  button.toggleAttribute('data-cut', !enabled && soundOn && chosen);
   button.toggleAttribute('data-sound-muted', !soundOn);
   let state = states.soundOff;
   if (soundOn) state = enabled ? states.on : states.off;
@@ -272,7 +314,7 @@ function applyVoiceState(button, enabled, soundOn = isSoundOn()) {
   // Première visite : l'état attend l'index de la voix enregistrée (au plus 1,5 s) ; le
   // bouton reste masqué, à sa place, plutôt que d'afficher un état qui changerait aussitôt
   button.toggleAttribute('data-voice-pending', isSpeechDecisionPending());
-  applyFollowerState(button, VOICE_STATES, 'data-voice-on', enabled, soundOn);
+  applyFollowerState(button, VOICE_STATES, 'data-voice-on', enabled, soundOn, isVoiceChosen());
 }
 
 function applyEffectsState(button, enabled = readEffectsEnabled(), soundOn = isSoundOn()) {
@@ -604,7 +646,7 @@ export const TopBar = {
       labelFallback: MUTE_STATES.on.fallback,
       caption: CAPTIONS.mute,
     });
-    applyMuteState(mute, readVolume() > 0 && !readMuted());
+    applyQuickMuteState(mute, readVolume() > 0 && !readMuted());
     return mute;
   },
 
@@ -825,6 +867,14 @@ export const TopBar = {
   /** Mettre à jour l'affichage des interrupteurs « Bruitages » */
   updateEffectsToggleUI() {
     for (const btn of document.querySelectorAll('.effects-toggle')) applyEffectsState(btn);
+    this.updateQuickMute();
+  },
+
+  /** La touche « Son » de la barre redit ce qui s'entend (son, bruitages, voix) */
+  updateQuickMute(soundOn = isSoundOn()) {
+    for (const btn of document.querySelectorAll('.mute-btn-quick')) {
+      applyQuickMuteState(btn, soundOn);
+    }
   },
 
   attachTableSettingsButtons() {
@@ -1061,6 +1111,7 @@ export const TopBar = {
     document.querySelectorAll('.voice-toggle').forEach(btn => {
       applyVoiceState(btn, enabled);
     });
+    this.updateQuickMute();
   },
 
   /**
@@ -1088,6 +1139,7 @@ export const TopBar = {
     document.querySelectorAll('.mute-btn').forEach(btn => {
       applyMuteState(btn, soundOn);
     });
+    this.updateQuickMute(soundOn);
     // La voix et les bruitages suivent le son : « coupés avec le son », puis leur propre état
     const voiceEnabled = readVoiceEnabled();
     document.querySelectorAll('.voice-toggle').forEach(btn => {

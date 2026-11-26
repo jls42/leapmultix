@@ -70,6 +70,8 @@ const VOLUME_BODY = [
     d: 'M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z',
   },
 ];
+const NOTE_HEAD = ['circle', { cx: '8', cy: '18', r: '4' }];
+const NOTE_STEM = ['path', { d: 'M12 18V2l7 4' }];
 const CROSS_RIGHT = [
   ['line', { x1: '22', x2: '16', y1: '9', y2: '15' }],
   ['line', { x1: '16', x2: '22', y1: '9', y2: '15' }],
@@ -112,21 +114,9 @@ const ICONS = Object.freeze({
     ['path', { d: 'M17 15a3.5 3.5 0 0 0-.025-4.975' }],
   ],
   'speech-off': [SPEECH_HEAD, ...CROSS_RIGHT],
-  bell: [
-    ['path', { d: 'M10.268 21a2 2 0 0 0 3.464 0' }],
-    [
-      'path',
-      {
-        d: 'M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326',
-      },
-    ],
-  ],
-  'bell-off': [
-    ['path', { d: 'M10.268 21a2 2 0 0 0 3.464 0' }],
-    ['path', { d: 'M17 17H4a1 1 0 0 1-.74-1.673C4.59 13.956 6 12.499 6 8a6 6 0 0 1 .258-1.742' }],
-    ['path', { d: 'm2 2 20 20' }],
-    ['path', { d: 'M8.668 3.01A6 6 0 0 1 18 8c0 2.687.77 4.653 1.707 6.05' }],
-  ],
+  // Bruitages : une note de musique ; coupés, la même croix que le son et la voix
+  note: [NOTE_HEAD, NOTE_STEM],
+  'note-off': [NOTE_HEAD, NOTE_STEM, ...CROSS_RIGHT],
   menu: [
     ['path', { d: 'M4 5h16' }],
     ['path', { d: 'M4 12h16' }],

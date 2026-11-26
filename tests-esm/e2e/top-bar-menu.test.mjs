@@ -267,4 +267,94 @@ describe('Menu de la barre du haut pendant une partie (E2E)', () => {
       await page.$eval('#slide4 .mute-btn-quick', key => key.hasAttribute('data-sound-off'))
     ).toBe(false);
   }, 60000);
+
+  test('téléphone tourné : le menu tient à l’écran sans défiler, « Changer de joueur » compris, même tout coupé', async () => {
+    page = await chrome.newPage();
+    await page.setViewport({
+      width: 844,
+      height: 390,
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+    });
+    await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
+    await createUserAndSkipIntro(page);
+    const menu = async () => {
+      if (!(await page.$('#slide1 .top-bar-nav.is-open'))) {
+        await page.tap('#slide1 .burger-menu-btn');
+        await page.waitForSelector('#slide1 .top-bar-nav.is-open', { visible: true });
+      }
+      return page.evaluate(() => {
+        const nav = document.querySelector('#slide1 .top-bar-nav');
+        const last = nav.querySelector('.change-user-btn').getBoundingClientRect();
+        return {
+          scrolls: nav.scrollHeight > nav.clientHeight + 1,
+          lastKeyOnScreen: last.bottom <= innerHeight,
+          // Aucun libellé ne dépasse de sa touche
+          overflowing: [...nav.querySelectorAll('.icon-btn')].filter(key => {
+            const label = key.querySelector('.icon-btn-label').getBoundingClientRect();
+            const box = key.getBoundingClientRect();
+            return label.top < box.top - 1 || label.bottom > box.bottom + 1;
+          }).length,
+        };
+      });
+    };
+    expect(await menu()).toEqual({ scrolls: false, lastKeyOnScreen: true, overflowing: 0 });
+
+    // Tout coupé : les libellés « … coupés avec le son » passent sur deux lignes
+    await page.keyboard.press('Escape');
+    await page.tap('#slide1 .mute-btn-quick');
+    expect(await menu()).toEqual({ scrolls: false, lastKeyOnScreen: true, overflowing: 0 });
+
+    // En espagnol, « Efectos: desactivados con el sonido » en prend trois : la touche grandit
+    // avec son libellé (le menu défile alors, mais rien ne sort de sa touche)
+    await page.tap('#slide1 .top-bar-nav .lang-btn[data-lang="es"]');
+    await page.waitForFunction(() =>
+      document
+        .querySelector('#slide1 .effects-toggle')
+        .getAttribute('aria-label')
+        .startsWith('Efectos')
+    );
+    expect((await menu()).overflowing).toBe(0);
+  }, 60000);
+
+  test('grand écran : une seule rangée dans les trois langues, en grand texte, avec beaucoup de pièces', async () => {
+    page = await chrome.newPage();
+    await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
+    await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
+    await createUserAndSkipIntro(page);
+    const rows = [];
+    for (const lang of ['fr', 'en', 'es']) {
+      await page.click(`#slide1 .lang-btn[data-lang="${lang}"]`);
+      await page.waitForFunction(
+        expected => document.querySelector('#slide1 .lang-btn.active')?.dataset.lang === expected,
+        {},
+        lang
+      );
+      for (const width of [1000, 1200, 1240, 1280]) {
+        await page.setViewport({ width, height: 800, deviceScaleFactor: 1 });
+        rows.push(
+          await page.evaluate(() => {
+            document.body.classList.remove('font-size-small', 'font-size-medium');
+            document.body.classList.add('font-size-large');
+            const bar = document.querySelector('#slide1 .top-bar');
+            bar.querySelector('.coin-count').textContent = '99999';
+            // Les touches (toutes de la même hauteur) : une rangée = un seul haut
+            const keys = [...bar.querySelectorAll('button.icon-btn, .change-user-btn')].filter(
+              key => key.offsetParent
+            );
+            const tops = new Set(keys.map(key => Math.round(key.getBoundingClientRect().top)));
+            const slider = bar.querySelector('.volume-slider').getBoundingClientRect();
+            return {
+              oneRow: tops.size === 1,
+              overflow: bar.scrollWidth - bar.clientWidth,
+              // Le curseur cède de la place, sans descendre sous une cible de 44 px
+              sliderOk: slider.width >= 44,
+            };
+          })
+        );
+      }
+    }
+    expect(rows).toEqual(Array(12).fill({ oneRow: true, overflow: 0, sliderOk: true }));
+  }, 90000);
 });

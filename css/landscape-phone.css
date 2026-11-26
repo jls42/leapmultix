@@ -790,7 +790,9 @@
     overscroll-behavior: contain;
   }
 
-  .top-bar .top-bar-nav.is-open > :is(.language-selector, .global-volume-controls) {
+  /* La langue sur toute la largeur ; le volume tient dans une colonne, à côté des bruitages
+     (sur toute la largeur, il ajoutait une rangée et « Changer de joueur » sortait de l'écran) */
+  .top-bar .top-bar-nav.is-open > .language-selector {
     grid-column: 1 / -1;
   }
 
