@@ -517,7 +517,8 @@ LeapMultix is a complete PWA with offline support and installation capabilities.
 npm run serve
 ```
 
-Manually: leave the page open long enough for the service worker to register the game, stop
+Manually: create a player (on a first visit, the service worker registers at the first
+tap, click or key press), leave the page open long enough for it to store the game, stop
 the server (or disable the device's network), then refresh the page. The game should
 appear, and every mode should start.
 

@@ -513,7 +513,8 @@ LeapMultix es una PWA completa con soporte sin conexión y posibilidad de instal
 npm run serve
 ```
 
-Manualmente: dejar la página abierta hasta que el service worker registre el juego, detener
+Manualmente: crear un jugador (en una primera visita, el service worker se registra con el
+primer gesto), dejar la página abierta hasta que guarde el juego, detener
 el servidor (o desconectar la red del dispositivo) y luego actualizar la página. El juego debe
 mostrarse y todos los modos deben iniciarse.
 

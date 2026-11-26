@@ -1,6 +1,7 @@
 /**
- * Tests E2E - Hors ligne après une première visite (wifi d'école coupé) : le service worker a
- * tout gardé, sans qu'aucun mode n'ait été ouvert en ligne. Sans réseau, recharger affiche le
+ * Tests E2E - Hors ligne après une première visite (wifi d'école coupé) : le service worker,
+ * enregistré au premier geste du joueur, a tout gardé, sans qu'aucun mode n'ait été ouvert en
+ * ligne. Sans réseau, recharger affiche le
  * jeu (pas « Tu es hors ligne »), chacun des 6 modes et des 6 jeux d'Arcade démarre, et un
  * bruitage se charge. Réseau coupé pour de bon : le serveur ferme toute connexion, et la
  * page se croit hors ligne (navigator.onLine).
@@ -114,6 +115,7 @@ describe('Hors ligne après une première visite', () => {
   let server;
   const failures = [];
   const errors = [];
+  let beforeFirstGesture;
 
   beforeAll(async () => {
     server = await startStaticServer('networkidle2');
@@ -133,18 +135,28 @@ describe('Hors ligne après une première visite', () => {
     page.on('pageerror', error => errors.push(error.message));
     page.on('dialog', dialog => dialog.accept());
 
-    // Première visite, en ligne : un profil, et le service worker qui a tout préchargé
+    // Première visite, en ligne : tant que le joueur n'a rien touché, aucun service worker
     await page.goto(server.url, server.gotoOptions);
+    await pause(1500);
+    beforeFirstGesture = await page.evaluate(async () => ({
+      registrations: (await navigator.serviceWorker.getRegistrations()).length,
+      controlled: navigator.serviceWorker.controller !== null,
+    }));
+    // Un profil : au premier geste le service worker s'enregistre, puis précharge tout
+    await createUserAndSkipIntro(page);
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null, {
       timeout: 90000,
     });
-    await createUserAndSkipIntro(page);
     await cutNetwork(browser, page, server);
   }, 150000);
 
   afterAll(async () => {
     await browser?.close();
     await server?.stop();
+  });
+
+  test('première visite : aucun service worker avant le premier geste du joueur', () => {
+    expect(beforeFirstGesture).toEqual({ registrations: 0, controlled: false });
   });
 
   test('recharger sans réseau affiche le jeu, pas « Tu es hors ligne »', async () => {
