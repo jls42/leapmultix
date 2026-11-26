@@ -1,0 +1,20 @@
+# LeapMultix
+
+> Free, open-source mental math game for children aged 6 to 12: multiplication
+> tables, addition, subtraction and division. Available in French, English and
+> Spanish. No ads, no account, works offline.
+
+LeapMultix runs in the browser and can be installed as an app. It offers six
+game modes and six arcade mini-games, with a recorded voice that reads the
+questions. Each player's progress stays on their own device.
+
+## Pages
+
+- [Play LeapMultix](https://leapmultix.jls42.org/): the game
+- [Game modes](https://leapmultix.jls42.org/modes.html): what each mode trains
+- [Parents and teachers](https://leapmultix.jls42.org/parents.html): guide for adults
+- [Install the app](https://leapmultix.jls42.org/pwa.html): offline use
+
+## Source
+
+- [Source code](https://github.com/jls42/leapmultix): AGPL v3 licence

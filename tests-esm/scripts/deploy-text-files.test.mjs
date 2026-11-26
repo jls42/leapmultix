@@ -24,6 +24,7 @@ const TEXT_FILES = {
   'sw.js': "const VERSION = 'v7';\n",
   'manifest.json': '{ "name": "LeapMultix" }\n',
   'robots.txt': 'User-agent: *\n',
+  'llms.txt': '# LeapMultix\n',
   'sitemap.xml': '<urlset></urlset>\n',
   'js/main.js': "import './core/storage.js';\n",
   'js/core/storage.js': 'export const storage = {};\n',

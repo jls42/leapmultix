@@ -54,6 +54,7 @@ const PUBLISHED = {
     'favicon.ico',
     'favicon.png',
     'robots.txt',
+    'llms.txt',
     'sitemap.xml',
   ]),
   dirs: ['assets/', 'css/', 'js/', 'img/'],

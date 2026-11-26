@@ -34,6 +34,7 @@ const TEXT_PUBLISHED = [
   'sw.js',
   'manifest.json',
   'robots.txt',
+  'llms.txt',
   'sitemap.xml',
   'css',
   'js',
