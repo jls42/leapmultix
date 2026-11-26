@@ -623,6 +623,12 @@
   }
 }
 
+/* Barre réservée dans index.html avant l'arrivée du composant : sa touche et son sélecteur de
+   langue ne se voient pas, ils ne servent qu'à donner à la barre la hauteur qu'elle aura */
+.top-bar-placeholder-key {
+  visibility: hidden;
+}
+
 /* --- Variante de la slide 0 (choix du joueur) : langue à gauche, son et voix à droite --- */
 .top-bar--slide0 {
   margin-bottom: var(--space-2);

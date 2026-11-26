@@ -363,7 +363,23 @@
 
       <!-- SLIDE 0 : « Qui joue ? » (choisir son joueur ou en créer un) -->
       <section id="slide0" class="slide active-slide">
-        <!-- Top-bar sera injectée ici par le composant TopBar -->
+        <!-- Place de la barre du haut, réservée dès le premier affichage : le composant TopBar
+             (chargé après coup) la remplace par la vraie. Sans elle, la barre poussait la carte
+             vers le bas en arrivant. Une touche et un sélecteur de langue masqués lui donnent la hauteur de la vraie -->
+        <div class="top-bar top-bar--slide0" data-top-bar-placeholder>
+          <span
+            class="btn btn-sm btn-secondary icon-btn top-bar-placeholder-key"
+            aria-hidden="true"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <span class="icon-btn-caption">&nbsp;</span>
+          </span>
+          <div class="top-bar-nav">
+            <div class="language-selector top-bar-placeholder-key" aria-hidden="true">
+              <span class="lang-btn">FR</span>
+            </div>
+          </div>
+        </div>
         <div class="content-card p-responsive">
           <div class="user-selection-intro">
             <h1 data-translate="user_selection_title">Qui joue&nbsp;?</h1>
@@ -410,8 +426,13 @@
           </div>
 
           <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList),
-               triées par prénom -->
-          <div class="user-list" id="user-list"></div>
+               triées par prénom. La ligne « Aucun joueur » est écrite d'avance : c'est ce que
+               voit un nouveau visiteur, et sa place ne bouge pas quand la liste arrive -->
+          <div class="user-list" id="user-list">
+            <p class="user-list-empty" data-translate="no_existing_users">
+              Aucun joueur pour l’instant.
+            </p>
+          </div>
 
           <section class="new-player" aria-labelledby="new-player-title">
             <h2 id="new-player-title" data-translate="new_player_title">Nouveau joueur</h2>
@@ -588,11 +609,14 @@
               appareil.
             </p>
             <div class="players-backup-actions">
+              <!-- Masqué tant qu'il n'y a aucun joueur à enregistrer (playerTools.js) : c'est
+                   l'état d'un nouveau visiteur, écrit d'avance pour que rien ne bouge -->
               <button
                 type="button"
                 class="btn btn-secondary"
                 id="export-players-btn"
                 data-translate="export_players"
+                hidden
               >
                 Enregistrer les joueurs dans un fichier
               </button>
