@@ -370,11 +370,8 @@
 }
 
 /* Son allumé, mais bruitages ou voix coupés par le joueur : une pastille d'alerte sur la touche
-   « Son » de la barre. Menu fermé, c'est le seul témoin : il ne dit pas « tout va bien » */
-.top-bar .mute-btn-quick {
-  position: relative;
-}
-
+   « Son » de la barre (placée par rapport à la touche, règle suivante). Menu fermé, c'est le
+   seul témoin : il ne dit pas « tout va bien » */
 .top-bar .mute-btn-quick[data-partial]::after {
   content: '';
   position: absolute;
@@ -390,6 +387,7 @@
 /* À droite de la barre : les pièces, la touche « Son », le menu. Seul le premier de ce groupe
    prend la marge qui le pousse à droite (sur « Qui joue ? », sans pièces, c'est « Son ») */
 .top-bar .mute-btn-quick {
+  position: relative;
   margin-inline-start: auto;
 }
 
