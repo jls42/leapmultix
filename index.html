@@ -365,18 +365,21 @@
       <section id="slide0" class="slide active-slide">
         <!-- Place de la barre du haut, réservée dès le premier affichage : le composant TopBar
              (chargé après coup) la remplace par la vraie. Sans elle, la barre poussait la carte
-             vers le bas en arrivant. Une touche et un sélecteur de langue masqués lui donnent la hauteur de la vraie -->
+             vers le bas en arrivant. Une touche et un sélecteur de langue masqués lui donnent
+             la hauteur de la vraie. Ils portent « hidden » : tant que les feuilles de style ne
+             sont pas là, ils ne prennent aucune place (css/topbar.css les rétablit) -->
         <div class="top-bar top-bar--slide0" data-top-bar-placeholder>
           <span
             class="btn btn-sm btn-secondary icon-btn top-bar-placeholder-key"
             aria-hidden="true"
+            hidden
           >
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <svg class="icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"></svg>
             <span class="icon-btn-caption">&nbsp;</span>
           </span>
           <div class="top-bar-nav">
-            <div class="language-selector top-bar-placeholder-key" aria-hidden="true">
-              <span class="lang-btn">FR</span>
+            <div class="language-selector top-bar-placeholder-key" aria-hidden="true" hidden>
+              <span class="lang-btn">&nbsp;</span>
             </div>
           </div>
         </div>

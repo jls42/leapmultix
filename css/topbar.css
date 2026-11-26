@@ -624,8 +624,12 @@
 }
 
 /* Barre réservée dans index.html avant l'arrivée du composant : sa touche et son sélecteur de
-   langue ne se voient pas, ils ne servent qu'à donner à la barre la hauteur qu'elle aura */
-.top-bar-placeholder-key {
+   langue ne se voient pas, ils ne servent qu'à donner à la barre la hauteur qu'elle aura. Leur
+   attribut hidden les retire tant que cette feuille n'est pas appliquée (la page est parfois
+   peinte un instant sans ses styles : la réserve n'y prend alors aucune place) ; elle les
+   rétablit ici, invisibles */
+.top-bar .top-bar-placeholder-key[hidden] {
+  display: inline-flex;
   visibility: hidden;
 }
 

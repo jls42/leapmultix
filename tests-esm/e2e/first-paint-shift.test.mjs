@@ -101,6 +101,27 @@ describe('Premier affichage de « Qui joue ? » (E2E)', () => {
     60000
   );
 
+  test('sans feuilles de style, la barre réservée ne prend aucune place', async () => {
+    // La page est parfois peinte un instant avant ses styles : la réserve ne doit pas y
+    // pousser le contenu (sans l'attribut hidden, son icône nue occupait des centaines de px)
+    const page = await chrome.newPage();
+    await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
+    // Le service worker posé par les tests d'avant servirait les feuilles depuis son cache
+    await page.setBypassServiceWorker(true);
+    await page.setRequestInterception(true);
+    page.on('request', request =>
+      request.resourceType() === 'stylesheet' ? request.abort() : request.continue()
+    );
+    await page.evaluateOnNewDocument(() => {
+      document.addEventListener('DOMContentLoaded', () => {
+        const reserved = document.querySelector('#slide0 > [data-top-bar-placeholder]');
+        globalThis.__unstyled = reserved ? reserved.getBoundingClientRect().height : -1;
+      });
+    });
+    await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, { waitUntil: 'domcontentloaded' });
+    expect(await page.evaluate(() => globalThis.__unstyled)).toBe(0);
+  }, 60000);
+
   test('visiteur connu : ses joueurs remplacent la ligne « Aucun joueur », et le bouton pour les enregistrer revient', async () => {
     const page = await chrome.newPage();
     await page.setViewport({
