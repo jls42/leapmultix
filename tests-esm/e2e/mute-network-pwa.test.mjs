@@ -49,10 +49,11 @@ async function firstVisit(browser, server) {
   await page.setViewport({ width: 1280, height: 800 });
   page.on('dialog', dialog => dialog.accept());
   await page.goto(server.url, server.gotoOptions);
+  // Le service worker s'enregistre au premier geste : le joueur d'abord
+  await createUserAndSkipIntro(page);
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null, {
     timeout: 90000,
   });
-  await createUserAndSkipIntro(page);
   return page;
 }
 

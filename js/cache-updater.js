@@ -4,7 +4,7 @@
  */
 
 // Version globale de l'application - doit correspondre à sw.js
-export const APP_VERSION = 'v114';
+export const APP_VERSION = 'v115';
 export const VERSION_PARAM = `v=${APP_VERSION}`;
 
 const runtime = globalThis;
@@ -240,13 +240,44 @@ const registerAfterLoad = navigatorRef => {
     });
 };
 
+/** Ce qui montre un joueur devant l'écran (un lecteur d'écran n'envoie que « click ») */
+const FIRST_GESTURES = ['pointerdown', 'keydown', 'click'];
+
+/**
+ * Moment où le service worker s'enregistre, une fois la page chargée :
+ * - joueur déjà venu (page servie par un service worker) : aussitôt, comme toujours, c'est
+ *   là qu'une mise à jour arrive ;
+ * - première visite : au premier geste. Le préchargement de plusieurs centaines de fichiers
+ *   ne part ni pour un visiteur qui ne fait que passer, ni pendant le premier affichage, ni
+ *   pendant qu'un outil mesure la page.
+ * @param {Window} target - fenêtre de la page
+ * @param {Navigator} navigatorRef
+ * @param {() => void} register
+ */
+export function scheduleRegistration(target, navigatorRef, register) {
+  const afterLoad = () => {
+    if (target.document?.readyState === 'complete') register();
+    else target.addEventListener('load', register, { once: true });
+  };
+  if (navigatorRef.serviceWorker.controller) {
+    afterLoad();
+    return;
+  }
+  const onGesture = () => {
+    for (const type of FIRST_GESTURES) target.removeEventListener(type, onGesture, true);
+    afterLoad();
+  };
+  for (const type of FIRST_GESTURES) target.addEventListener(type, onGesture, true);
+}
+
+let registrationScheduled = false;
+
 // Enregistrement du service worker
 export function registerServiceWorker() {
   const navigatorRef = runtime.navigator;
-  if (!navigatorRef?.serviceWorker) return;
-
-  const loadHandler = registerAfterLoad.bind(null, navigatorRef);
-  runtime.addEventListener('load', loadHandler);
+  if (!navigatorRef?.serviceWorker || registrationScheduled) return;
+  registrationScheduled = true;
+  scheduleRegistration(runtime, navigatorRef, registerAfterLoad.bind(null, navigatorRef));
 }
 
 // Ajouter un paramètre de version aux ressources principales

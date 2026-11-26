@@ -518,7 +518,8 @@ LeapMultix est une PWA complète avec support hors-ligne et possibilité d'insta
 npm run serve
 ```
 
-À la main : laisser la page ouverte le temps que le service worker enregistre le jeu, arrêter
+À la main : créer un joueur (le service worker s'enregistre au premier geste d'une première
+visite), laisser la page ouverte le temps qu'il enregistre le jeu, arrêter
 le serveur (ou couper le réseau de l'appareil), puis rafraîchir la page. Le jeu doit
 s'afficher, et chaque mode démarrer.
 

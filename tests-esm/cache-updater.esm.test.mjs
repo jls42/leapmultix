@@ -6,7 +6,9 @@
  *   worker désinscrit, caches vidés, voix comprise) à chaque visite, depuis que deploy.sh
  *   versionne toutes les adresses du site ;
  * - rechargement après l'installation d'un nouveau service worker, réservé à une page qui
- *   n'est pas de sa version.
+ *   n'est pas de sa version ;
+ * - moment de l'enregistrement du service worker : au premier geste pour une première visite,
+ *   dès la page chargée pour un joueur déjà venu.
  */
 import { describe, test, expect, jest } from '@jest/globals';
 import { MessageChannel } from 'node:worker_threads';
@@ -15,6 +17,7 @@ import {
   askWorkerVersion,
   hasMixedScriptVersions,
   reloadIfOutdated,
+  scheduleRegistration,
   versionedPageUrl,
 } from '../js/cache-updater.js';
 
@@ -97,5 +100,57 @@ describe('Rechargement après le nettoyage du cache', () => {
         `?v=${APP_VERSION}`,
       ]);
     }
+  });
+});
+
+describe('Enregistrement du service worker', () => {
+  /** Fenêtre de page : ses événements, et l'état de chargement du document */
+  const pageWindow = readyState => Object.assign(new EventTarget(), { document: { readyState } });
+  const navigatorOf = controller => ({ serviceWorker: { controller } });
+  const fire = (target, type) => target.dispatchEvent(new Event(type));
+
+  test('première visite : rien au chargement, puis une seule fois au premier geste', () => {
+    const target = pageWindow('complete');
+    const register = jest.fn();
+    scheduleRegistration(target, navigatorOf(null), register);
+    fire(target, 'load');
+    expect(register).not.toHaveBeenCalled();
+    fire(target, 'pointerdown');
+    fire(target, 'keydown');
+    fire(target, 'click');
+    expect(register).toHaveBeenCalledTimes(1);
+  });
+
+  test.each(['pointerdown', 'keydown', 'click'])(
+    'première visite : « %s » suffit (souris, doigt, clavier, lecteur d’écran)',
+    gesture => {
+      const target = pageWindow('complete');
+      const register = jest.fn();
+      scheduleRegistration(target, navigatorOf(null), register);
+      fire(target, gesture);
+      expect(register).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  test('première visite, geste avant la fin du chargement : enregistré au chargement', () => {
+    const target = pageWindow('loading');
+    const register = jest.fn();
+    scheduleRegistration(target, navigatorOf(null), register);
+    fire(target, 'pointerdown');
+    expect(register).not.toHaveBeenCalled();
+    fire(target, 'load');
+    expect(register).toHaveBeenCalledTimes(1);
+  });
+
+  test('joueur déjà venu : dès la page chargée, sans attendre de geste', () => {
+    const loading = pageWindow('loading');
+    const loaded = pageWindow('complete');
+    const register = jest.fn();
+    scheduleRegistration(loading, navigatorOf({}), register);
+    expect(register).not.toHaveBeenCalled();
+    fire(loading, 'load');
+    expect(register).toHaveBeenCalledTimes(1);
+    scheduleRegistration(loaded, navigatorOf({}), register);
+    expect(register).toHaveBeenCalledTimes(2);
   });
 });
