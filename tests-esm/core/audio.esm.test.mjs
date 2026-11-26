@@ -28,13 +28,17 @@ jest.unstable_mockModule('../../js/userManager.js', () => ({
   UserManager: { getCurrentUser: () => joueurCourant },
 }));
 
-/** Volume conservé par la couche de stockage */
-const stockage = { volume: 1 };
+/** Volume et réglage des bruitages conservés par la couche de stockage */
+const stockage = { volume: 1, bruitages: undefined };
 jest.unstable_mockModule('../../js/core/storage.js', () => ({
   default: {
     loadVolume: jest.fn(() => stockage.volume),
     saveVolume: jest.fn(v => {
       stockage.volume = v;
+    }),
+    loadSoundEffectsEnabled: jest.fn(() => stockage.bruitages !== false),
+    saveSoundEffectsEnabled: jest.fn(enabled => {
+      stockage.bruitages = enabled;
     }),
   },
 }));
@@ -193,6 +197,39 @@ describe('AudioManager : lecture d’un son', () => {
   test('un nom qui n’est pas un identifiant est ignoré', () => {
     expect(() => AudioManager.playSound('../../etc/passwd')).not.toThrow();
     expect(globalThis.Audio).not.toHaveBeenCalled();
+  });
+
+  test('bruitages coupés : aucun son ne part, le volume général et son réglage restent', () => {
+    AudioManager.setVolume(0.8);
+    const before = sonsCrees.length;
+    AudioManager.setEffectsEnabled(false);
+    try {
+      AudioManager.playSound('good');
+      AudioManager.playSound('bad');
+      expect(sonsCrees).toHaveLength(before);
+      expect(AudioManager.areEffectsEnabled()).toBe(false);
+      expect(stockage.bruitages).toBe(false);
+      // Ce n'est pas le son général : il n'est pas coupé, la voix peut parler
+      expect(AudioManager.isMuted()).toBe(false);
+      expect(AudioManager.getVolume()).toBeCloseTo(0.8);
+    } finally {
+      AudioManager.setEffectsEnabled(true);
+    }
+    AudioManager.playSound('good');
+    expect(sonsCrees).toHaveLength(before + 1);
+    expect(stockage.bruitages).toBe(true);
+  });
+
+  test('le réglage des bruitages se relit au démarrage ; allumés tant qu’il n’existe pas', () => {
+    stockage.bruitages = undefined;
+    AudioManager.loadPreferences();
+    expect(AudioManager.areEffectsEnabled()).toBe(true);
+    stockage.bruitages = false;
+    AudioManager.loadPreferences();
+    expect(AudioManager.areEffectsEnabled()).toBe(false);
+    stockage.bruitages = undefined;
+    AudioManager.loadPreferences();
+    expect(AudioManager.areEffectsEnabled()).toBe(true);
   });
 
   test('le volume demandé se combine au volume général', () => {

@@ -8,6 +8,7 @@ const { TopBar } = await import('../../js/components/topBar.js');
 const { isVoiceEnabled, setVoiceEnabledResolver, setSpeechEngine, holdSpeechDecision } =
   await import('../../js/speech.js');
 const { UserManager } = await import('../../js/userManager.js');
+const { AudioManager } = await import('../../js/core/audio.js');
 
 const EMOJI = /\p{Extended_Pictographic}/u;
 
@@ -20,6 +21,11 @@ const TRANSLATIONS = {
   voice_state_on: 'Voix : activée',
   voice_state_off: 'Voix : coupée',
   voice_state_sound_off: 'Voix : coupée avec le son',
+  effects_toggle_caption: 'Bruitages',
+  effects_state_on: 'Bruitages : activés',
+  effects_state_off: 'Bruitages : coupés',
+  effects_state_sound_off: 'Bruitages : coupés avec le son',
+  volume_label: 'Volume',
   change_user: 'Changer de joueur',
   dashboard_button_label: 'Mes progrès',
   dashboard_button_caption: 'Progrès',
@@ -187,8 +193,9 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     );
   });
 
-  test('voix : son coupé, elle se dit « coupée avec le son » et son bouton n’agit plus ; elle reprend avec le son', () => {
+  test('voix : son coupé, elle se dit « coupée avec le son » ; la toucher rend le son sans changer son réglage', () => {
     Storage.saveVoiceEnabled(true);
+    AudioManager.setVolume(0.6);
     TopBar.init();
     const btn = document.querySelector('#slide7 .voice-toggle');
     const state = () => [
@@ -196,36 +203,129 @@ describe('TopBar : icônes SVG, libellés et états', () => {
       btn.querySelector('.icon-btn-label').textContent,
       btn.querySelector('svg').getAttribute('data-icon'),
       btn.hasAttribute('data-voice-on'),
-      btn.getAttribute('aria-disabled'),
+      btn.hasAttribute('data-sound-muted'),
+      btn.hasAttribute('data-cut'),
     ];
-    TopBar.updateVolumeControls(0.6, false);
-    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, null]);
+    TopBar.updateVolumeControls();
+    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, false, false]);
 
     // Le son se coupe (touche « Son », curseur à zéro) : la voix se tait avec lui
-    TopBar.updateVolumeControls(0.6, true);
+    AudioManager.setVolume(0);
+    TopBar.updateVolumeControls();
     expect(state()).toEqual([
       'Voix : coupée avec le son',
       'Voix : coupée avec le son',
       'speech-off',
       false,
-      'true',
+      true,
+      false,
     ]);
-    // Toucher la voix pendant ce temps ne change pas son réglage à l'aveugle
+    // Le bouton agit toujours : rien ne le dit désactivé
+    expect(btn.hasAttribute('aria-disabled')).toBe(false);
+
+    // La toucher pendant ce temps rend le son, au volume d'avant, sans toucher à son réglage
     btn.click();
+    expect(AudioManager.getVolume()).toBeCloseTo(0.6);
     expect(Storage.loadVoiceEnabled()).toBe(true);
-    expect(state()[0]).toBe('Voix : coupée avec le son');
-    TopBar.updateVolumeControls(0, false);
-    expect(state()[0]).toBe('Voix : coupée avec le son');
+    TopBar.updateVolumeControls();
+    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, false, false]);
 
-    // Le son revient : la voix reprend l'état de son réglage, resté allumé
-    TopBar.updateVolumeControls(0.6, false);
-    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, null]);
-
-    // Voix coupée par son réglage : elle le reste quand le son revient
+    // Voix coupée par son réglage : elle le reste quand le son revient, et le dit en ambre
     Storage.saveVoiceEnabled(false);
-    TopBar.updateVolumeControls(0.6, true);
-    TopBar.updateVolumeControls(0.6, false);
-    expect(state()).toEqual(['Voix : coupée', 'Voix : coupée', 'speech-off', false, null]);
+    AudioManager.setVolume(0);
+    AudioManager.setVolume(0.6);
+    TopBar.updateVolumeControls();
+    expect(state()).toEqual(['Voix : coupée', 'Voix : coupée', 'speech-off', false, false, true]);
+  });
+
+  test('bruitages : un interrupteur à part, qui dit son état et ne touche ni à la voix ni au volume', async () => {
+    Storage.saveVoiceEnabled(true);
+    AudioManager.setVolume(0.6);
+    AudioManager.setEffectsEnabled(true);
+    TopBar.init();
+    const btn = document.querySelector('#slide7 .effects-toggle');
+    const state = () => [
+      btn.getAttribute('aria-label'),
+      btn.title,
+      btn.querySelector('.icon-btn-label').textContent,
+      btn.querySelector('svg').getAttribute('data-icon'),
+      btn.hasAttribute('data-effects-on'),
+      btn.hasAttribute('data-cut'),
+      btn.hasAttribute('data-sound-muted'),
+    ];
+    TopBar.updateVolumeControls();
+    expect(state()).toEqual([...Array(3).fill('Bruitages : activés'), 'bell', true, false, false]);
+    // Le mot sous l'icône (grand écran) reste contenu dans le nom du bouton (WCAG 2.5.3)
+    expect(btn.getAttribute('aria-label').toLowerCase()).toContain(
+      btn.querySelector('.icon-btn-caption').textContent.toLowerCase()
+    );
+
+    btn.click();
+    expect(AudioManager.areEffectsEnabled()).toBe(false);
+    expect(Storage.loadSoundEffectsEnabled()).toBe(false);
+    expect(state()).toEqual([
+      ...Array(3).fill('Bruitages : coupés'),
+      'bell-off',
+      false,
+      true,
+      false,
+    ]);
+    // La voix et le volume général n'ont pas bougé
+    expect(Storage.loadVoiceEnabled()).toBe(true);
+    expect(AudioManager.getVolume()).toBeCloseTo(0.6);
+    expect(document.querySelector('#slide7 .voice-toggle').hasAttribute('data-voice-on')).toBe(
+      true
+    );
+    // Les interrupteurs des autres écrans suivent
+    expect(document.querySelector('#slide1 .effects-toggle').getAttribute('aria-label')).toBe(
+      'Bruitages : coupés'
+    );
+
+    // Une seule bascule par geste (singleActivation) : le geste suivant vient après
+    await new Promise(resolve => setTimeout(resolve, 5));
+    btn.click();
+    expect(AudioManager.areEffectsEnabled()).toBe(true);
+    expect(state()[0]).toBe('Bruitages : activés');
+  });
+
+  test('bruitages : son coupé, « coupés avec le son » ; les toucher rend le son sans changer leur réglage', () => {
+    AudioManager.setVolume(0.6);
+    AudioManager.setEffectsEnabled(true);
+    TopBar.init();
+    const btn = document.querySelector('#slide7 .effects-toggle');
+    AudioManager.setVolume(0);
+    TopBar.updateVolumeControls();
+    expect(btn.getAttribute('aria-label')).toBe('Bruitages : coupés avec le son');
+    expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('bell-off');
+    expect(btn.hasAttribute('data-sound-muted')).toBe(true);
+    expect(btn.hasAttribute('data-cut')).toBe(false);
+
+    btn.click();
+    expect(AudioManager.getVolume()).toBeCloseTo(0.6);
+    expect(AudioManager.areEffectsEnabled()).toBe(true);
+    TopBar.updateVolumeControls();
+    expect(btn.getAttribute('aria-label')).toBe('Bruitages : activés');
+  });
+
+  test('menu du téléphone : le curseur porte son nom, « Bruitages » puis « Voix » le suivent', () => {
+    const nav = TopBar.buildTopBarElement('slide1').querySelector('.top-bar-nav');
+    const volume = nav.querySelector('.global-volume-controls');
+    expect([...volume.children].map(el => el.className.split(' ').pop())).toEqual([
+      'mute-btn',
+      'volume-caption',
+      'volume-slider',
+    ]);
+    expect(volume.querySelector('.volume-caption').dataset.translate).toBe('volume_label');
+    const order = [...nav.children].map(el => el.className.split(' ')[0]);
+    expect(order.indexOf('effects-toggle-controls')).toBe(
+      order.indexOf('global-volume-controls') + 1
+    );
+    expect(order.indexOf('voice-toggle-controls')).toBe(
+      order.indexOf('effects-toggle-controls') + 1
+    );
+    // Feuille de style : la touche « Son » du menu s'efface sous 993 px (elle est dans la barre)
+    const css = fs.readFileSync('css/topbar.css', 'utf8');
+    expect(css).toMatch(/\.top-bar-nav \.global-volume-controls \.mute-btn \{\s*display: none;/);
   });
 
   test('voix : désactivée tant que le joueur ne l’a pas demandée', () => {

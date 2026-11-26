@@ -97,6 +97,17 @@ describe('Joueurs et préférences', () => {
     expect(localStorage.getItem(STORAGE_KEYS.LANGUAGE)).toBe('en');
   });
 
+  test('bruitages : allumés tant que le joueur ne les a pas coupés, à part de la voix', () => {
+    expect(Storage.loadSoundEffectsEnabled()).toBe(true);
+    Storage.saveSoundEffectsEnabled(false);
+    expect(Storage.loadSoundEffectsEnabled()).toBe(false);
+    expect(localStorage.getItem(STORAGE_KEYS.SOUND_EFFECTS_ENABLED)).toBe('false');
+    // La voix garde son propre réglage
+    expect(Storage.loadVoiceEnabled()).toBe(false);
+    Storage.saveSoundEffectsEnabled(true);
+    expect(Storage.loadSoundEffectsEnabled()).toBe(true);
+  });
+
   test('volume : celui du joueur d’abord, borné entre 0 et 1 ; sinon le volume de l’appareil', () => {
     const players = { Léa: { volume: 1.7 }, Noé: {} };
     expect(Storage.loadVolume('Léa', players)).toBe(1);

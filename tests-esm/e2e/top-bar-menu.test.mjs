@@ -174,7 +174,7 @@ describe('Menu de la barre du haut pendant une partie (E2E)', () => {
     });
     expect(after).toEqual({ menuOpen: false, expanded: 'false', veil: false, visible: true });
   }, 60000);
-  test('son coupé par la touche de la barre, rallumé par le menu : chaque ligne dit son état, la voix suit le son', async () => {
+  test('la touche de la barre coupe tout ; dans le menu, bruitages et voix disent leur état, et les toucher rend le son', async () => {
     page = await chrome.newPage();
     await page.setViewport(PHONE);
     // La voix est allumée par le joueur
@@ -187,8 +187,9 @@ describe('Menu de la barre du haut pendant une partie (E2E)', () => {
     /** Ce qu'on lit dans le menu : libellé de chaque réglage, et son interrupteur dessiné */
     const menu = () =>
       page.evaluate(() => {
+        const nav = document.querySelector('#slide4 .top-bar-nav');
         const row = selector => {
-          const key = document.querySelector(`#slide4 .top-bar-nav ${selector}`);
+          const key = nav.querySelector(selector);
           const knob = getComputedStyle(key, '::after');
           return {
             label: key.querySelector('.icon-btn-label').textContent,
@@ -196,40 +197,74 @@ describe('Menu de la barre du haut pendant une partie (E2E)', () => {
             // Interrupteur : sa piste (couleur de fond) et la place du curseur
             switch: `${knob.width} ${knob.backgroundColor}`,
             knobAtEnd: knob.backgroundImage.includes('calc(100%'),
+            cut: key.hasAttribute('data-cut'),
           };
         };
-        return { sound: row('.mute-btn'), voice: row('.voice-toggle') };
+        const seen = el => el.getBoundingClientRect().width > 1;
+        return {
+          effects: row('.effects-toggle'),
+          voice: row('.voice-toggle'),
+          // « Son », qui coupe tout, est dans la barre : le menu garde le curseur et son nom
+          soundKeyInMenu: seen(nav.querySelector('.mute-btn')),
+          volume: seen(nav.querySelector('.volume-slider'))
+            ? nav.querySelector('.volume-caption').textContent
+            : null,
+        };
       });
     const openMenu = async () => {
+      if (await page.$('#slide4 .top-bar-nav.is-open')) return;
       await page.tap('#slide4 .burger-menu-btn');
       await page.waitForSelector('#slide4 .top-bar-nav.is-open', { visible: true });
     };
+    const soundBack = () =>
+      page.waitForFunction(
+        () => !document.querySelector('#slide4 .mute-btn-quick').hasAttribute('data-sound-off')
+      );
 
     await openMenu();
     const on = await menu();
-    expect([on.sound.label, on.voice.label]).toEqual(['Son : activé', 'Voix : activée']);
-    expect([on.sound.shown, on.voice.shown]).toEqual([true, true]);
-    expect([on.sound.knobAtEnd, on.voice.knobAtEnd]).toEqual([true, true]);
-    expect(on.sound.switch.startsWith('40px')).toBe(true);
+    expect([on.effects.label, on.voice.label]).toEqual(['Bruitages : activés', 'Voix : activée']);
+    expect([on.effects.shown, on.voice.shown]).toEqual([true, true]);
+    expect([on.effects.knobAtEnd, on.voice.knobAtEnd]).toEqual([true, true]);
+    expect(on.effects.switch.startsWith('40px')).toBe(true);
+    expect([on.soundKeyInMenu, on.volume]).toEqual([false, 'Volume']);
     await page.keyboard.press('Escape');
 
     // La touche « Son » de la barre coupe tout
     await page.tap('#slide4 .mute-btn-quick');
     await openMenu();
     const off = await menu();
-    expect([off.sound.label, off.voice.label]).toEqual([
-      'Son : coupé',
+    expect([off.effects.label, off.voice.label]).toEqual([
+      'Bruitages : coupés avec le son',
       'Voix : coupée avec le son',
     ]);
-    expect([off.sound.knobAtEnd, off.voice.knobAtEnd]).toEqual([false, false]);
-    expect(off.sound.switch).not.toBe(on.sound.switch);
+    expect([off.effects.knobAtEnd, off.voice.knobAtEnd]).toEqual([false, false]);
+    expect(off.effects.switch).not.toBe(on.effects.switch);
     expect(off.voice.switch).not.toBe(on.voice.switch);
+    // Ce n'est pas leur réglage qui est coupé : pas de teinte d'alerte
+    expect([off.effects.cut, off.voice.cut]).toEqual([false, false]);
 
-    // Le son rallumé dans le menu : la voix, restée réglée sur « activée », revient avec lui
-    await page.tap('#slide4 .top-bar-nav .mute-btn');
-    await page.waitForFunction(
-      () => !document.querySelector('#slide4 .mute-btn-quick').hasAttribute('data-sound-off')
-    );
+    // Le chemin du retour passe par le menu : toucher « Voix » rend le son, et les deux
+    // réglages, restés allumés, reviennent avec lui
+    await page.tap('#slide4 .top-bar-nav .voice-toggle');
+    await soundBack();
+    await openMenu();
     expect(await menu()).toEqual(on);
+
+    // Les bruitages se coupent seuls : la voix reste allumée
+    await page.tap('#slide4 .top-bar-nav .effects-toggle');
+    await page.waitForFunction(() =>
+      document.querySelector('#slide4 .top-bar-nav .effects-toggle').hasAttribute('data-cut')
+    );
+    await openMenu();
+    const effectsOff = await menu();
+    expect([effectsOff.effects.label, effectsOff.effects.knobAtEnd]).toEqual([
+      'Bruitages : coupés',
+      false,
+    ]);
+    expect(effectsOff.voice).toEqual(on.voice);
+    expect(
+      await page.$eval('#slide4 .mute-btn-quick', key => key.hasAttribute('data-sound-off'))
+    ).toBe(false);
   }, 60000);
 });

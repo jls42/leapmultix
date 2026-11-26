@@ -794,21 +794,6 @@
     grid-column: 1 / -1;
   }
 
-  /* Le son occupe toute la largeur : sa touche et le curseur du volume restent côte à côte
-     (en hauteur, le curseur passe dessous, css/topbar.css) */
-  .top-bar .top-bar-nav.is-open .global-volume-controls {
-    flex-wrap: nowrap;
-  }
-
-  .top-bar .top-bar-nav.is-open .global-volume-controls .icon-btn {
-    flex: 1;
-  }
-
-  .top-bar .top-bar-nav.is-open .volume-slider {
-    flex: none;
-    inline-size: 7rem;
-  }
-
   /* Deux colonnes : pas de filet entre les groupes (css/topbar.css). Il décalerait vers le
      bas une touche sur deux, et ne soulignerait qu'une moitié du menu */
   .top-bar .top-bar-nav.is-open > :is(.theme-mode-btn, .change-user-btn) {

@@ -36,6 +36,16 @@ const SHOT_SOUND_VOLUME = 0.5;
 const MOMENT_SOUND_VOLUME = 0.6;
 const TICK_SOUND_VOLUME = 0.35;
 
+/** Réglage « Bruitages » enregistré */
+function readEffectsChoice() {
+  try {
+    return Storage.loadSoundEffectsEnabled();
+  } catch {
+    // Stockage illisible : les bruitages restent allumés, comme à la première visite
+    return true;
+  }
+}
+
 /**
  * API audio centralisée
  */
@@ -100,6 +110,8 @@ const AudioManager = {
   _volume: 1,
   _muted: false,
   _lastVolume: 1,
+  // Bruitages voulus par le joueur (la voix a son propre réglage, js/speech.js)
+  _effectsEnabled: true,
   _gameState: null, // Référence vers gameState global
   activeSounds: new Set(),
 
@@ -148,6 +160,7 @@ const AudioManager = {
     }
 
     this._muted = this._volume === 0;
+    this._effectsEnabled = readEffectsChoice();
 
     // Initialize _lastVolume with the loaded volume if it's not 0
     if (this._volume > 0) {
@@ -238,6 +251,29 @@ const AudioManager = {
   },
 
   /**
+   * Les bruitages sont-ils voulus ? (réglage « Bruitages », à part du son général et de la voix)
+   * @returns {boolean}
+   */
+  areEffectsEnabled() {
+    return this._effectsEnabled;
+  },
+
+  /**
+   * Allumer ou couper les bruitages : la voix n'est pas touchée, le volume général non plus
+   * @param {boolean} enabled
+   */
+  setEffectsEnabled(enabled) {
+    this._effectsEnabled = Boolean(enabled);
+    if (!this._effectsEnabled) this.stopAll();
+    try {
+      Storage.saveSoundEffectsEnabled(this._effectsEnabled);
+    } catch {
+      // Stockage refusé (navigation privée) : le réglage vaut pour cette visite
+    }
+    eventBus.emit('soundEffectsChanged', { enabled: this._effectsEnabled });
+  },
+
+  /**
    * État muet
    * @returns {boolean} True si muet
    */
@@ -262,8 +298,8 @@ const AudioManager = {
    * @param {Object} options - Options { volume: 0-1, loop: false }
    */
   playSound(name, options = {}) {
-    // Vérifier si audio est désactivé
-    if (this.isMuted()) return;
+    // Son coupé, ou bruitages coupés par le joueur
+    if (this.isMuted() || !this._effectsEnabled) return;
 
     // Vérifier si le son existe
     if (typeof name !== 'string' || !/^[a-z0-9_-]+$/i.test(name)) return;
