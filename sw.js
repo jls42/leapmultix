@@ -18,7 +18,7 @@
 // - Recorded voice: clips cache-first in their own cache (kept across versions),
 //   index network-first (kill switch) with an offline copy
 
-const VERSION = 'v113'; // bump to trigger client update
+const VERSION = 'v114'; // bump to trigger client update
 const OFFLINE_CACHE = `leapmultix-offline-${VERSION}`;
 const RUNTIME_CACHE = `leapmultix-runtime-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -58,6 +58,10 @@ const SEASON_MARKS = SEASON_IDS.flatMap(id =>
 );
 
 const TRANSLATIONS = /^\/assets\/translations\/[^/]+\.json$/;
+// Fichiers du jeu : ses dossiers, et à la racine le manifeste et l'icône. Le reste de la racine
+// (robots.txt, sitemap.xml, llms.txt, /.well-known/…) est lu par des robots et des outils de
+// mesure : le service worker n'en garde rien et ne s'en mêle pas.
+const GAME_FILE = /^\/(?:assets|css|img|js)\/|^\/(?:manifest\.json|favicon\.[a-z]+)$/;
 
 // Réseau qui ne répond pas (wifi d'école sans Internet, portail captif, filtre qui retient) :
 // passé ce délai, la page et les modules viennent de la copie gardée par cette version, et
@@ -1300,6 +1304,7 @@ function assetResponse(event, pathname) {
   if (destination === 'script' || destination === 'style') return moduleResponse(event);
   // Vidéos : jamais préchargées, lues par plages ; le navigateur s'en charge seul
   if (destination === 'video') return null;
+  if (!GAME_FILE.test(pathname)) return null;
   return precachedResponse(event.request);
 }
 
