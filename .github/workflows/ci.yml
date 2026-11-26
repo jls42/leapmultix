@@ -348,9 +348,9 @@ jobs:
           AVANT: ${{ github.event.before }}
           TITRE: ${{ github.event.head_commit.message }}
         run: |
-          # Pages, service worker, manifeste, icônes, robots.txt, sitemap.xml, et les
+          # Pages, service worker, manifeste, icônes, robots.txt, llms.txt, sitemap.xml, et les
           # dossiers assets/, css/, img/, js/.
-          SITE='^(assets|css|img|js)/|^((index|modes|offline|parents|pwa)\.html|sw\.js|manifest\.json|favicon\.(ico|png|svg)|robots\.txt|sitemap\.xml)$'
+          SITE='^(assets|css|img|js)/|^((index|modes|offline|parents|pwa)\.html|sw\.js|manifest\.json|favicon\.(ico|png|svg)|robots\.txt|llms\.txt|sitemap\.xml)$'
           # Ancien commit connu et aucun fichier du site touché : silence.
           # Ancien commit inconnu (force-push, historique réécrit) : on
           # notifie — mieux vaut un ping en trop qu'une mise à jour muette.

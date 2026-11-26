@@ -623,6 +623,41 @@ describe('Service worker : hors ligne', () => {
   });
 });
 
+describe('Service worker : fichiers hors du jeu', () => {
+  test('robots.txt, sitemap.xml, llms.txt, /.well-known/ : laissés au navigateur, sans réseau du service worker', async () => {
+    const { worker, site } = await installedOffline();
+    site.state.online = true;
+    const before = worker.fetches.length;
+    for (const url of [
+      '/robots.txt',
+      '/sitemap.xml',
+      '/llms.txt',
+      '/.well-known/ai-catalog.json',
+    ]) {
+      expect(await request(worker, url)).toBeUndefined();
+    }
+    expect(worker.fetches.length).toBe(before);
+  });
+
+  test('le manifeste et un son du jeu restent servis par le service worker', async () => {
+    const { worker } = await installedOffline();
+    const manifest = await request(worker, '/manifest.json', { destination: 'manifest' });
+    expect(await manifest.text()).toBe('contenu de /manifest.json');
+    const sound = precacheList(worker, 'PRECACHE_CORE').find(url => url.endsWith('.wav'));
+    expect((await request(worker, sound, { destination: 'audio' })).status).toBe(200);
+  });
+
+  test('chaque fichier préchargé est un fichier du jeu ou une page', () => {
+    const worker = loadWorker(() => new FakeResponse(''));
+    const gameFile = constant(worker, 'GAME_FILE');
+    const pages = new Set(['/index.html', '/offline.html']);
+    const outside = ['PRECACHE_CORE', 'PRECACHE_IMAGES']
+      .flatMap(name => precacheList(worker, name))
+      .filter(url => !pages.has(url) && !gameFile.test(url));
+    expect(outside).toEqual([]);
+  });
+});
+
 describe('Service worker : sons hors ligne', () => {
   const sound = worker => precacheList(worker, 'PRECACHE_CORE').find(url => url.endsWith('.wav'));
   const play = (worker, url, range) =>

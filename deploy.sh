@@ -172,6 +172,7 @@ rsync -av --no-links \
   --include='favicon.ico' \
   --include='favicon.png' \
   --include='robots.txt' \
+  --include='llms.txt' \
   --include='sitemap.xml' \
   --exclude='assets/voice/***' \
   --include='assets/***' \
