@@ -27,6 +27,7 @@ export function createSpeechMock({ speak, preloadSpeech }) {
     speak,
     preloadSpeech,
     isVoiceEnabled: () => true,
+    willSpeak: () => true,
     updateSpeechVoice: () => {},
     cancelSpeech: () => {},
     whenSpeechEnds: () => Promise.resolve(),

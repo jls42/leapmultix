@@ -269,14 +269,16 @@ export class QuizMode extends GameMode {
   }
 
   /**
-   * Gère le feedback pour une réponse incorrecte : ton calme, ni son d'alerte
-   * ni secousse ; l'explication (GameMode) montre ce que fait l'opération et la
-   * voix donne la bonne réponse aux lecteurs débutants.
+   * Gère le feedback pour une réponse incorrecte : ton calme, sans secousse ;
+   * l'explication (GameMode) montre ce que fait l'opération et la voix donne la bonne
+   * réponse aux lecteurs débutants. Voix éteinte : le son doux d'erreur à sa place.
    */
   _handleIncorrectAnswer() {
     this.errors++;
 
-    if (this.showErrorExplanation()) speak(this.spokenErrorText());
+    const spoken = this.showErrorExplanation() ? this.spokenErrorText() : null;
+    this.playErrorSoundUnlessSpoken(spoken);
+    if (spoken) speak(spoken);
 
     this.showContinueButton();
   }

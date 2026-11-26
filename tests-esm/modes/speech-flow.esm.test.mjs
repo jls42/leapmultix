@@ -22,9 +22,10 @@ jest.unstable_mockModule('../../js/badges.js', () => ({
 
 const store = await import('../../js/i18n-store.js');
 const { AudioManager } = await import('../../js/core/audio.js');
-const { setSpeechEngine } = await import('../../js/speech.js');
+const { setSpeechEngine, willSpeak } = await import('../../js/speech.js');
 const { QuizMode } = await import('../../js/modes/QuizMode.js');
 const { ChallengeMode } = await import('../../js/modes/ChallengeMode.js');
+const { AdventureMode } = await import('../../js/modes/AdventureMode.js');
 const { GOOD_SOUND_MS } = await import('../../js/core/GameMode.js');
 
 const KNOWN = {
@@ -326,4 +327,108 @@ describe('Défi : l’explication d’une erreur est dite en entier', () => {
     expect(next).not.toHaveBeenCalled();
     expect(challenge.timerInterval).toBeNull();
   }, 10000);
+});
+
+describe('Un seul signal sonore par erreur : la voix, sinon le son doux d’erreur', () => {
+  const ERROR_PHRASE = 'Raté ! La bonne réponse est 8.';
+
+  /** Les sons demandés au gestionnaire audio depuis la mauvaise réponse */
+  const sounds = () => AudioManager.playSound.mock.calls.map(([name]) => name);
+
+  /** Le Quiz sur la question connue, une mauvaise réponse donnée */
+  async function quizWrongAnswer() {
+    const quiz = new QuizMode();
+    await quiz.start();
+    showKnownQuestion(quiz);
+    engine.starts.length = 0;
+    AudioManager.playSound.mockClear();
+    option('quiz', true).click();
+    return quiz;
+  }
+
+  /** Le Défi sur la question connue, une mauvaise réponse donnée */
+  async function challengeWrongAnswer() {
+    const challenge = new ChallengeMode();
+    await challenge.start();
+    document.querySelector('.difficulty-btn[data-difficulty="easy"]').click();
+    await wait(20);
+    showKnownQuestion(challenge);
+    engine.starts.length = 0;
+    AudioManager.playSound.mockClear();
+    option('challenge', true).click();
+    return challenge;
+  }
+
+  /** L'Aventure : le retour d'une mauvaise réponse à la question connue, sans la carte */
+  function adventureWrongFeedback() {
+    const adventure = new AdventureMode();
+    const options = document.createElement('div');
+    const feedback = document.createElement('div');
+    feedback.id = 'adventure-feedback';
+    document.getElementById('game').append(options, feedback);
+    adventure.optionsElement = options;
+    adventure.feedbackElement = feedback;
+    adventure.state.currentQuestion = { ...KNOWN };
+    jest.spyOn(adventure, 'showContinueButton').mockImplementation(() => {});
+    adventure.showAnswerFeedback(false, 6);
+    return adventure;
+  }
+
+  test('willSpeak : oui voix allumée, non voix éteinte ou phrase vide', () => {
+    expect(willSpeak(ERROR_PHRASE)).toBe(true);
+    expect(willSpeak('  ')).toBe(false);
+    expect(willSpeak(null)).toBe(false);
+    localStorage.setItem('voiceEnabled', 'false');
+    expect(willSpeak(ERROR_PHRASE)).toBe(false);
+  });
+
+  describe('voix allumée : elle dit l’erreur, sans son d’erreur', () => {
+    test('Quiz', async () => {
+      const quiz = await quizWrongAnswer();
+      expect(engine.texts()).toHaveLength(1);
+      expect(engine.texts()[0].startsWith(ERROR_PHRASE)).toBe(true);
+      expect(sounds()).not.toContain('bad');
+      quiz.stop();
+    });
+
+    test('Défi', async () => {
+      const challenge = await challengeWrongAnswer();
+      expect(engine.texts()).toEqual([ERROR_PHRASE]);
+      expect(sounds()).not.toContain('bad');
+      challenge.stop();
+    }, 10000);
+
+    test('Aventure', () => {
+      const adventure = adventureWrongFeedback();
+      expect(engine.texts()).toHaveLength(1);
+      expect(engine.texts()[0].startsWith(ERROR_PHRASE)).toBe(true);
+      expect(sounds()).not.toContain('bad');
+      adventure.stop();
+    });
+  });
+
+  describe('voix éteinte : le son doux d’erreur, une fois, et aucune phrase', () => {
+    beforeEach(() => localStorage.setItem('voiceEnabled', 'false'));
+
+    test('Quiz', async () => {
+      const quiz = await quizWrongAnswer();
+      expect(engine.texts()).toEqual([]);
+      expect(sounds()).toEqual(['bad']);
+      quiz.stop();
+    });
+
+    test('Défi', async () => {
+      const challenge = await challengeWrongAnswer();
+      expect(engine.texts()).toEqual([]);
+      expect(sounds()).toEqual(['bad']);
+      challenge.stop();
+    }, 10000);
+
+    test('Aventure', () => {
+      const adventure = adventureWrongFeedback();
+      expect(engine.texts()).toEqual([]);
+      expect(sounds()).toEqual(['bad']);
+      adventure.stop();
+    });
+  });
 });

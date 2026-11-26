@@ -8,6 +8,7 @@ const { TopBar } = await import('../../js/components/topBar.js');
 const { isVoiceEnabled, setVoiceEnabledResolver, setSpeechEngine, holdSpeechDecision } =
   await import('../../js/speech.js');
 const { UserManager } = await import('../../js/userManager.js');
+const { AudioManager } = await import('../../js/core/audio.js');
 
 const EMOJI = /\p{Extended_Pictographic}/u;
 
@@ -20,6 +21,11 @@ const TRANSLATIONS = {
   voice_state_on: 'Voix : activée',
   voice_state_off: 'Voix : coupée',
   voice_state_sound_off: 'Voix : coupée avec le son',
+  effects_toggle_caption: 'Bruitages',
+  effects_state_on: 'Bruitages : activés',
+  effects_state_off: 'Bruitages : coupés',
+  effects_state_sound_off: 'Bruitages : coupés avec le son',
+  volume_label: 'Volume',
   change_user: 'Changer de joueur',
   dashboard_button_label: 'Mes progrès',
   dashboard_button_caption: 'Progrès',
@@ -43,6 +49,9 @@ describe('TopBar : icônes SVG, libellés et états', () => {
 
   afterEach(() => {
     document.body.innerHTML = '';
+    // Le son est celui du vrai gestionnaire : chaque test repart du son allumé
+    AudioManager.setVolume(1);
+    AudioManager.setEffectsEnabled(true);
   });
 
   test("n'affiche plus aucun émoji et nomme chaque bouton d'icône", () => {
@@ -187,8 +196,9 @@ describe('TopBar : icônes SVG, libellés et états', () => {
     );
   });
 
-  test('voix : son coupé, elle se dit « coupée avec le son » et son bouton n’agit plus ; elle reprend avec le son', () => {
+  test('voix : son coupé, elle se dit « coupée avec le son » ; la toucher rend le son sans changer son réglage', () => {
     Storage.saveVoiceEnabled(true);
+    AudioManager.setVolume(0.6);
     TopBar.init();
     const btn = document.querySelector('#slide7 .voice-toggle');
     const state = () => [
@@ -196,36 +206,214 @@ describe('TopBar : icônes SVG, libellés et états', () => {
       btn.querySelector('.icon-btn-label').textContent,
       btn.querySelector('svg').getAttribute('data-icon'),
       btn.hasAttribute('data-voice-on'),
-      btn.getAttribute('aria-disabled'),
+      btn.hasAttribute('data-sound-muted'),
+      btn.hasAttribute('data-cut'),
     ];
-    TopBar.updateVolumeControls(0.6, false);
-    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, null]);
+    TopBar.updateVolumeControls();
+    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, false, false]);
 
     // Le son se coupe (touche « Son », curseur à zéro) : la voix se tait avec lui
-    TopBar.updateVolumeControls(0.6, true);
+    AudioManager.setVolume(0);
+    TopBar.updateVolumeControls();
     expect(state()).toEqual([
       'Voix : coupée avec le son',
       'Voix : coupée avec le son',
       'speech-off',
       false,
-      'true',
+      true,
+      false,
     ]);
-    // Toucher la voix pendant ce temps ne change pas son réglage à l'aveugle
+    // Le bouton agit toujours : rien ne le dit désactivé
+    expect(btn.hasAttribute('aria-disabled')).toBe(false);
+
+    // La toucher pendant ce temps rend le son, au volume d'avant, sans toucher à son réglage
     btn.click();
+    expect(AudioManager.getVolume()).toBeCloseTo(0.6);
     expect(Storage.loadVoiceEnabled()).toBe(true);
-    expect(state()[0]).toBe('Voix : coupée avec le son');
-    TopBar.updateVolumeControls(0, false);
-    expect(state()[0]).toBe('Voix : coupée avec le son');
+    TopBar.updateVolumeControls();
+    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, false, false]);
 
-    // Le son revient : la voix reprend l'état de son réglage, resté allumé
-    TopBar.updateVolumeControls(0.6, false);
-    expect(state()).toEqual(['Voix : activée', 'Voix : activée', 'speech', true, null]);
-
-    // Voix coupée par son réglage : elle le reste quand le son revient
+    // Voix coupée par son réglage : elle le reste quand le son revient, et le dit en ambre
     Storage.saveVoiceEnabled(false);
-    TopBar.updateVolumeControls(0.6, true);
-    TopBar.updateVolumeControls(0.6, false);
-    expect(state()).toEqual(['Voix : coupée', 'Voix : coupée', 'speech-off', false, null]);
+    AudioManager.setVolume(0);
+    AudioManager.setVolume(0.6);
+    TopBar.updateVolumeControls();
+    expect(state()).toEqual(['Voix : coupée', 'Voix : coupée', 'speech-off', false, false, true]);
+  });
+
+  test('bruitages : un interrupteur à part, qui dit son état et ne touche ni à la voix ni au volume', async () => {
+    Storage.saveVoiceEnabled(true);
+    AudioManager.setVolume(0.6);
+    AudioManager.setEffectsEnabled(true);
+    TopBar.init();
+    const btn = document.querySelector('#slide7 .effects-toggle');
+    const state = () => [
+      btn.getAttribute('aria-label'),
+      btn.title,
+      btn.querySelector('.icon-btn-label').textContent,
+      btn.querySelector('svg').getAttribute('data-icon'),
+      btn.hasAttribute('data-effects-on'),
+      btn.hasAttribute('data-cut'),
+      btn.hasAttribute('data-sound-muted'),
+    ];
+    TopBar.updateVolumeControls();
+    expect(state()).toEqual([...Array(3).fill('Bruitages : activés'), 'note', true, false, false]);
+    // Le mot sous l'icône (grand écran) reste contenu dans le nom du bouton (WCAG 2.5.3)
+    expect(btn.getAttribute('aria-label').toLowerCase()).toContain(
+      btn.querySelector('.icon-btn-caption').textContent.toLowerCase()
+    );
+
+    btn.click();
+    expect(AudioManager.areEffectsEnabled()).toBe(false);
+    expect(Storage.loadSoundEffectsEnabled()).toBe(false);
+    expect(state()).toEqual([
+      ...Array(3).fill('Bruitages : coupés'),
+      'note-off',
+      false,
+      true,
+      false,
+    ]);
+    // La voix et le volume général n'ont pas bougé
+    expect(Storage.loadVoiceEnabled()).toBe(true);
+    expect(AudioManager.getVolume()).toBeCloseTo(0.6);
+    expect(document.querySelector('#slide7 .voice-toggle').hasAttribute('data-voice-on')).toBe(
+      true
+    );
+    // Les interrupteurs des autres écrans suivent
+    expect(document.querySelector('#slide1 .effects-toggle').getAttribute('aria-label')).toBe(
+      'Bruitages : coupés'
+    );
+
+    // Une seule bascule par geste (singleActivation) : le geste suivant vient après
+    await new Promise(resolve => setTimeout(resolve, 5));
+    btn.click();
+    expect(AudioManager.areEffectsEnabled()).toBe(true);
+    expect(state()[0]).toBe('Bruitages : activés');
+  });
+
+  test('bruitages : son coupé, « coupés avec le son » ; les toucher rend le son sans changer leur réglage', () => {
+    AudioManager.setVolume(0.6);
+    AudioManager.setEffectsEnabled(true);
+    TopBar.init();
+    const btn = document.querySelector('#slide7 .effects-toggle');
+    AudioManager.setVolume(0);
+    TopBar.updateVolumeControls();
+    expect(btn.getAttribute('aria-label')).toBe('Bruitages : coupés avec le son');
+    expect(btn.querySelector('svg').getAttribute('data-icon')).toBe('note-off');
+    expect(btn.hasAttribute('data-sound-muted')).toBe(true);
+    expect(btn.hasAttribute('data-cut')).toBe(false);
+
+    btn.click();
+    expect(AudioManager.getVolume()).toBeCloseTo(0.6);
+    expect(AudioManager.areEffectsEnabled()).toBe(true);
+    TopBar.updateVolumeControls();
+    expect(btn.getAttribute('aria-label')).toBe('Bruitages : activés');
+  });
+
+  test('touche « Son » de la barre : bruitages ou voix coupés par le joueur, elle le montre et le dit ; elle ne dit plus « Son : activé » sans plus', () => {
+    Storage.saveVoiceEnabled(true);
+    AudioManager.setVolume(0.6);
+    TopBar.init();
+    const quick = document.querySelector('#slide7 .mute-btn-quick');
+    const said = () => [
+      quick.hasAttribute('data-partial'),
+      quick.getAttribute('aria-label'),
+      quick.title,
+    ];
+    TopBar.updateVolumeControls();
+    expect(said()).toEqual([false, 'Son : activé', 'Son : activé']);
+    expect(quick.dataset.translateAriaLabel).toBe('sound_state_on');
+
+    // Les bruitages coupés : le son reste allumé, la touche porte la pastille et dit les trois
+    document.querySelector('#slide7 .effects-toggle').click();
+    const partial = 'Son : activé. Bruitages : coupés. Voix : activée.';
+    expect(said()).toEqual([true, partial, partial]);
+    // Nom composé : aucune clé ne le ferait remplacer par « Son : activé » seul…
+    expect(quick.dataset.translateAriaLabel).toBeUndefined();
+    expect(quick.dataset.translateTitle).toBeUndefined();
+    // … et un changement de langue le recompose
+    TopBar.updateTranslations();
+    expect(said()).toEqual([true, partial, partial]);
+    // Le mot sous l'icône reste contenu dans le nom du bouton (WCAG 2.5.3)
+    expect(quick.getAttribute('aria-label')).toContain(
+      quick.querySelector('.icon-btn-caption').textContent
+    );
+    // La touche « Son » du menu, à côté des deux interrupteurs, n'a pas besoin de pastille
+    expect(
+      document.querySelector('#slide7 .top-bar-nav .mute-btn').hasAttribute('data-partial')
+    ).toBe(false);
+
+    // La voix coupée aussi : le jeu est muet, la touche le dit
+    Storage.saveVoiceEnabled(false);
+    TopBar.updateVoiceToggleUI(false);
+    expect(said()[1]).toBe('Son : activé. Bruitages : coupés. Voix : coupée.');
+
+    // Le son coupé : c'est lui qui parle, sans pastille
+    AudioManager.setVolume(0);
+    TopBar.updateVolumeControls();
+    expect(said()).toEqual([false, 'Son : coupé', 'Son : coupé']);
+
+    // Tout rallumé : retour au nom simple, avec sa clé
+    AudioManager.setVolume(0.6);
+    AudioManager.setEffectsEnabled(true);
+    Storage.saveVoiceEnabled(true);
+    TopBar.updateVoiceToggleUI(true);
+    TopBar.updateEffectsToggleUI();
+    expect(said()).toEqual([false, 'Son : activé', 'Son : activé']);
+    expect(quick.dataset.translateAriaLabel).toBe('sound_state_on');
+  });
+
+  test('voix éteinte par défaut (jamais réglée) : ni teinte d’alerte ni pastille ; coupée par le joueur : les deux', () => {
+    localStorage.removeItem('voiceEnabled');
+    AudioManager.setVolume(0.6);
+    TopBar.init();
+    const voice = document.querySelector('#slide7 .voice-toggle');
+    const quick = document.querySelector('#slide7 .mute-btn-quick');
+    TopBar.updateVolumeControls();
+    expect(voice.getAttribute('aria-label')).toBe('Voix : coupée');
+    expect([voice.hasAttribute('data-cut'), quick.hasAttribute('data-partial')]).toEqual([
+      false,
+      false,
+    ]);
+
+    // Le joueur la règle lui-même sur « coupée » : l'alerte dit « tu l'as coupée »
+    Storage.saveVoiceEnabled(false);
+    TopBar.updateVoiceToggleUI(false);
+    expect([voice.hasAttribute('data-cut'), quick.hasAttribute('data-partial')]).toEqual([
+      true,
+      true,
+    ]);
+
+    // Bruitages coupés, voix éteinte par défaut : le jeu est muet, la pastille le dit quand même
+    localStorage.removeItem('voiceEnabled');
+    AudioManager.setEffectsEnabled(false);
+    TopBar.updateVoiceToggleUI(false);
+    TopBar.updateEffectsToggleUI();
+    expect(voice.hasAttribute('data-cut')).toBe(false);
+    expect(quick.getAttribute('aria-label')).toBe(
+      'Son : activé. Bruitages : coupés. Voix : coupée.'
+    );
+  });
+
+  test('menu du téléphone : le curseur porte son nom, « Bruitages » puis « Voix » le suivent', () => {
+    const nav = TopBar.buildTopBarElement('slide1').querySelector('.top-bar-nav');
+    const volume = nav.querySelector('.global-volume-controls');
+    expect([...volume.children].map(el => el.className.split(' ').pop())).toEqual([
+      'mute-btn',
+      'volume-caption',
+      'volume-slider',
+    ]);
+    expect(volume.querySelector('.volume-caption').dataset.translate).toBe('volume_label');
+    const order = [...nav.children].map(el => el.className.split(' ')[0]);
+    expect(order.indexOf('effects-toggle-controls')).toBe(
+      order.indexOf('global-volume-controls') + 1
+    );
+    expect(order.indexOf('voice-toggle-controls')).toBe(
+      order.indexOf('effects-toggle-controls') + 1
+    );
+    // Feuille de style : la touche « Son » du menu s'efface sous 993 px (elle est dans la barre)
+    const css = fs.readFileSync('css/topbar.css', 'utf8');
+    expect(css).toMatch(/\.top-bar-nav \.global-volume-controls \.mute-btn \{\s*display: none;/);
   });
 
   test('voix : désactivée tant que le joueur ne l’a pas demandée', () => {

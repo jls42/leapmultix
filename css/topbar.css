@@ -89,10 +89,10 @@
   block-size: 20px;
 }
 
-/* Entre le menu (jusqu'à 992 px) et les mots sous les icônes (dès 1200 px) : « Changer de
+/* Entre le menu (jusqu'à 992 px) et les mots sous les icônes (dès 1240 px) : « Changer de
    joueur » écrit en entier faisait passer la barre sur deux rangées vers 1000 px (tablette
    tournée). Icône seule, comme les autres touches ; la phrase reste son nom et son infobulle */
-@media (min-width: 993px) and (max-width: 1199px) {
+@media (min-width: 993px) and (max-width: 1239.98px) {
   .top-bar .change-user-btn {
     inline-size: 44px;
     min-inline-size: 44px;
@@ -120,7 +120,7 @@
   display: none;
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1240px) {
   .top-bar .icon-btn:has(> .icon-btn-caption) {
     flex-direction: column;
     gap: 2px;
@@ -164,9 +164,9 @@
   }
 }
 
-/* Son coupé : la touche prend la teinte d'alerte. L'icône barrée seule ne suffisait pas à
-   dire, d'un coup d'œil, pourquoi le jeu est muet */
-.top-bar .mute-btn[data-sound-off] {
+/* Coupé par le joueur (le son, ou les bruitages, ou la voix) : la touche prend la teinte
+   d'alerte. L'icône barrée seule ne suffisait pas à dire, d'un coup d'œil, ce qui est muet */
+.top-bar :is(.mute-btn[data-sound-off], [data-cut]) {
   color: var(--color-warning-ink);
   background: var(--color-warning-tint);
   box-shadow:
@@ -174,17 +174,16 @@
     0 var(--key-edge) 0 var(--color-warning-edge);
 }
 
-.top-bar .mute-btn[data-sound-off]:active {
+.top-bar :is(.mute-btn[data-sound-off], [data-cut]):active {
   box-shadow:
     inset 0 0 0 2px var(--color-warning-edge),
     0 0 0 var(--color-warning-edge);
 }
 
-/* Son coupé : la voix se tait avec lui. Son bouton s'efface (il n'agit pas, topBar.js) et dit
-   « Voix : coupée avec le son » */
-.top-bar .voice-toggle[aria-disabled='true'] {
+/* Son coupé : les bruitages et la voix se taisent avec lui. Leur bouton s'efface et dit
+   « coupés avec le son » ; le toucher rend le son (topBar.js) */
+.top-bar [data-sound-muted] {
   color: var(--color-ink-muted);
-  cursor: default;
 }
 
 /* Première visite : état de la voix pas encore décidé (js/voice-clips.js) */
@@ -192,15 +191,27 @@
   visibility: hidden;
 }
 
-/* Voix active : bouton enfoncé (fond teinté, contour d'action) */
-.top-bar .voice-toggle[data-voice-on] {
+/* Allumé (voix, bruitages, et « Son » quand il est avec eux dans la barre du grand écran) :
+   bouton enfoncé, fond teinté, contour d'action. Sans cela, « Son » allumé avait le fond
+   neutre de ses voisins coupés avec le son */
+.top-bar
+  :is(
+    .voice-toggle[data-voice-on],
+    .effects-toggle[data-effects-on],
+    .top-bar-nav .mute-btn:not([data-sound-off])
+  ) {
   background: var(--color-action-tint);
   box-shadow:
     inset 0 0 0 2px var(--color-action),
     0 var(--key-edge) 0 var(--color-action-edge);
 }
 
-.top-bar .voice-toggle[data-voice-on]:active {
+.top-bar
+  :is(
+    .voice-toggle[data-voice-on],
+    .effects-toggle[data-effects-on],
+    .top-bar-nav .mute-btn:not([data-sound-off])
+  ):active {
   box-shadow:
     inset 0 0 0 2px var(--color-action),
     0 0 0 var(--color-action-edge);
@@ -358,9 +369,25 @@
   }
 }
 
+/* Son allumé, mais bruitages ou voix coupés par le joueur : une pastille d'alerte sur la touche
+   « Son » de la barre (placée par rapport à la touche, règle suivante). Menu fermé, c'est le
+   seul témoin : il ne dit pas « tout va bien » */
+.top-bar .mute-btn-quick[data-partial]::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 3px;
+  inset-inline-end: 3px;
+  inline-size: 12px;
+  block-size: 12px;
+  background: var(--color-warning-edge);
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-pill);
+}
+
 /* À droite de la barre : les pièces, la touche « Son », le menu. Seul le premier de ce groupe
    prend la marge qui le pousse à droite (sur « Qui joue ? », sans pièces, c'est « Son ») */
 .top-bar .mute-btn-quick {
+  position: relative;
   margin-inline-start: auto;
 }
 
@@ -375,10 +402,33 @@
   gap: var(--space-2);
 }
 
+/* « Volume » en toutes lettres : seulement dans le menu du téléphone (plus bas) */
+.top-bar .volume-caption {
+  display: none;
+}
+
 @media (min-width: 993px) {
   /* Grand écran : la touche « Son » est déjà dans la rangée, avec son curseur */
   .top-bar .mute-btn-quick {
     display: none;
+  }
+
+  /* Grand écran : une seule rangée, toujours. Quand les mots prennent plus de place (grand
+     texte, espagnol, beaucoup de pièces), c'est le curseur du volume qui cède, jusqu'à 44 px :
+     avec la touche « Bruitages » en plus, la barre passait sinon sur deux rangées */
+  .top-bar {
+    flex-wrap: nowrap;
+  }
+
+  .top-bar-nav,
+  .top-bar-nav .global-volume-controls {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+  }
+
+  .top-bar-nav .volume-slider {
+    flex: 0 1 96px;
+    min-inline-size: 44px;
   }
 
   .top-bar-nav .language-selector {
@@ -429,10 +479,14 @@
   }
 
   /* Dans le menu, chaque bouton montre son icône et son libellé */
+  /* Un libellé long (« … coupés avec le son », en trois langues) passe sur deux ou trois
+     lignes : la touche grandit avec lui au lieu de le laisser dépasser */
   .top-bar-nav .icon-btn {
     inline-size: 100%;
+    block-size: auto;
+    min-block-size: 44px;
     justify-content: flex-start;
-    padding: 0 var(--space-3);
+    padding: var(--space-1) var(--space-3);
     text-align: start;
   }
 
@@ -445,40 +499,55 @@
     clip-path: none;
   }
 
-  /* Son : la touche et son interrupteur sur toute la largeur, le curseur du volume dessous */
+  /* Volume : la touche « Son », qui coupe tout, est déjà dans la barre. Le menu garde le
+     curseur, nommé en toutes lettres, puis les deux interrupteurs (bruitages, voix) */
   .top-bar-nav .global-volume-controls {
-    flex-wrap: wrap;
+    gap: var(--space-3);
+    min-block-size: 44px;
+    /* « Volume » s'aligne sur les libellés des lignes voisines, après la colonne des icônes */
+    padding-inline: calc(var(--space-3) + 24px + var(--space-3)) var(--space-3);
   }
 
-  .top-bar-nav .global-volume-controls .icon-btn {
-    flex: 1 1 100%;
-    inline-size: auto;
+  .top-bar-nav .global-volume-controls .mute-btn {
+    display: none;
+  }
+
+  .top-bar-nav .volume-caption {
+    display: inline;
+    flex: none;
+    font-weight: 700;
   }
 
   .top-bar-nav .volume-slider {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     inline-size: auto;
+    min-inline-size: 0;
   }
 
   /* Interrupteur dessiné au bout des trois réglages à deux états (sombre, son, voix) : on
      voit d'un coup d'œil ce qui est allumé, sans avoir à interpréter une couleur de fond.
      Éteint : piste grise, curseur à gauche. Allumé : piste de la couleur d'action, curseur à
      droite. Le libellé le dit en toutes lettres (« Son : coupé », topBar.js). */
-  .top-bar-nav :is(.theme-mode-btn, .mute-btn, .voice-toggle)::after {
+  .top-bar-nav :is(.theme-mode-btn, .effects-toggle, .voice-toggle)::after {
     content: '';
     flex: none;
     inline-size: 40px;
     block-size: 22px;
     margin-inline-start: auto;
     background: radial-gradient(circle at 11px 50%, var(--color-surface) 8px, transparent 9px)
-      var(--color-border-strong);
+      var(--switch-track, var(--color-border-strong));
     border-radius: var(--radius-pill);
+  }
+
+  /* Coupé par le joueur : sur le fond d'alerte, la piste grise se voyait trop peu (2,97) */
+  .top-bar-nav [data-cut] {
+    --switch-track: var(--color-warning-ink);
   }
 
   .top-bar-nav
     :is(
       .theme-mode-btn[aria-checked='true'],
-      .mute-btn:not([data-sound-off]),
+      .effects-toggle[data-effects-on],
       .voice-toggle[data-voice-on]
     )::after {
     background: radial-gradient(

@@ -16,6 +16,7 @@ jest.unstable_mockModule('../../js/speech.js', () => ({
   speak,
   preloadSpeech: () => {},
   isVoiceEnabled: () => true,
+  willSpeak: () => true,
   updateSpeechVoice: () => {},
   cancelSpeech: () => {},
   whenSpeechEnds: () => Promise.resolve(),

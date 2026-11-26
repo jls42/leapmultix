@@ -10,10 +10,18 @@ import { gameState } from '../game.js';
 import { eventBus } from './eventBus.js';
 
 /**
- * Part du volume général donnée au son d'erreur : il est adouci, dans tous les modes, pour ne pas
- * faire sursauter l'enfant à chaque réponse fausse (valeur du Chrono depuis la PR #78)
+ * Part du volume général donnée au son de la bonne réponse. Son fichier est le plus fort du
+ * catalogue (niveau moyen de -12,6 dB, les autres de -17 à -28) : joué à plein volume, il
+ * sortait 14 dB au-dessus du son d'erreur et couvrait tout sur un téléphone. À 0,4, il rejoint
+ * le tir de l'Aventure (-20 dB en jeu) et reste le son le plus présent.
  */
-const ERROR_SOUND_VOLUME = 0.35;
+const GOOD_SOUND_VOLUME = 0.4;
+/**
+ * Part du volume général donnée au son d'erreur : adouci, dans tous les modes, pour ne pas
+ * faire sursauter l'enfant à chaque réponse fausse. Il reste 3 dB sous la bonne réponse
+ * (-23,5 dB en jeu) ; à 0,35 il passait presque inaperçu à côté d'elle.
+ */
+const ERROR_SOUND_VOLUME = 0.5;
 // Le maillet sonne avec le son de la réponse : un peu en dessous, sans le couvrir
 const MALLET_SOUND_VOLUME = 0.7;
 // Les bruitages de l'Arcade (ElevenLabs, choisis par le propriétaire le 16/11/2026) : la
@@ -27,6 +35,16 @@ const SHOT_SOUND_VOLUME = 0.5;
 // le tic-tac revient chaque seconde, il reste le plus discret
 const MOMENT_SOUND_VOLUME = 0.6;
 const TICK_SOUND_VOLUME = 0.35;
+
+/** Réglage « Bruitages » enregistré */
+function readEffectsChoice() {
+  try {
+    return Storage.loadSoundEffectsEnabled();
+  } catch {
+    // Stockage illisible : les bruitages restent allumés, comme à la première visite
+    return true;
+  }
+}
 
 /**
  * API audio centralisée
@@ -72,6 +90,7 @@ const AudioManager = {
 
   // Volume propre à un son, en part du volume général (sinon tout le volume)
   soundVolumes: new Map([
+    ['good', GOOD_SOUND_VOLUME],
     ['bad', ERROR_SOUND_VOLUME],
     ['mallet', MALLET_SOUND_VOLUME],
     ['munch', MUNCH_SOUND_VOLUME],
@@ -91,6 +110,8 @@ const AudioManager = {
   _volume: 1,
   _muted: false,
   _lastVolume: 1,
+  // Bruitages voulus par le joueur (la voix a son propre réglage, js/speech.js)
+  _effectsEnabled: true,
   _gameState: null, // Référence vers gameState global
   activeSounds: new Set(),
 
@@ -139,6 +160,7 @@ const AudioManager = {
     }
 
     this._muted = this._volume === 0;
+    this._effectsEnabled = readEffectsChoice();
 
     // Initialize _lastVolume with the loaded volume if it's not 0
     if (this._volume > 0) {
@@ -229,6 +251,29 @@ const AudioManager = {
   },
 
   /**
+   * Les bruitages sont-ils voulus ? (réglage « Bruitages », à part du son général et de la voix)
+   * @returns {boolean}
+   */
+  areEffectsEnabled() {
+    return this._effectsEnabled;
+  },
+
+  /**
+   * Allumer ou couper les bruitages : la voix n'est pas touchée, le volume général non plus
+   * @param {boolean} enabled
+   */
+  setEffectsEnabled(enabled) {
+    this._effectsEnabled = Boolean(enabled);
+    if (!this._effectsEnabled) this.stopAll();
+    try {
+      Storage.saveSoundEffectsEnabled(this._effectsEnabled);
+    } catch {
+      // Stockage refusé (navigation privée) : le réglage vaut pour cette visite
+    }
+    eventBus.emit('soundEffectsChanged', { enabled: this._effectsEnabled });
+  },
+
+  /**
    * État muet
    * @returns {boolean} True si muet
    */
@@ -253,8 +298,8 @@ const AudioManager = {
    * @param {Object} options - Options { volume: 0-1, loop: false }
    */
   playSound(name, options = {}) {
-    // Vérifier si audio est désactivé
-    if (this.isMuted()) return;
+    // Son coupé, ou bruitages coupés par le joueur
+    if (this.isMuted() || !this._effectsEnabled) return;
 
     // Vérifier si le son existe
     if (typeof name !== 'string' || !/^[a-z0-9_-]+$/i.test(name)) return;

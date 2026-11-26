@@ -174,7 +174,7 @@ describe('Menu de la barre du haut pendant une partie (E2E)', () => {
     });
     expect(after).toEqual({ menuOpen: false, expanded: 'false', veil: false, visible: true });
   }, 60000);
-  test('son coupé par la touche de la barre, rallumé par le menu : chaque ligne dit son état, la voix suit le son', async () => {
+  test('la touche de la barre coupe tout ; dans le menu, bruitages et voix disent leur état, et les toucher rend le son', async () => {
     page = await chrome.newPage();
     await page.setViewport(PHONE);
     // La voix est allumée par le joueur
@@ -187,8 +187,9 @@ describe('Menu de la barre du haut pendant une partie (E2E)', () => {
     /** Ce qu'on lit dans le menu : libellé de chaque réglage, et son interrupteur dessiné */
     const menu = () =>
       page.evaluate(() => {
+        const nav = document.querySelector('#slide4 .top-bar-nav');
         const row = selector => {
-          const key = document.querySelector(`#slide4 .top-bar-nav ${selector}`);
+          const key = nav.querySelector(selector);
           const knob = getComputedStyle(key, '::after');
           return {
             label: key.querySelector('.icon-btn-label').textContent,
@@ -196,40 +197,164 @@ describe('Menu de la barre du haut pendant une partie (E2E)', () => {
             // Interrupteur : sa piste (couleur de fond) et la place du curseur
             switch: `${knob.width} ${knob.backgroundColor}`,
             knobAtEnd: knob.backgroundImage.includes('calc(100%'),
+            cut: key.hasAttribute('data-cut'),
           };
         };
-        return { sound: row('.mute-btn'), voice: row('.voice-toggle') };
+        const seen = el => el.getBoundingClientRect().width > 1;
+        return {
+          effects: row('.effects-toggle'),
+          voice: row('.voice-toggle'),
+          // « Son », qui coupe tout, est dans la barre : le menu garde le curseur et son nom
+          soundKeyInMenu: seen(nav.querySelector('.mute-btn')),
+          volume: seen(nav.querySelector('.volume-slider'))
+            ? nav.querySelector('.volume-caption').textContent
+            : null,
+        };
       });
     const openMenu = async () => {
+      if (await page.$('#slide4 .top-bar-nav.is-open')) return;
       await page.tap('#slide4 .burger-menu-btn');
       await page.waitForSelector('#slide4 .top-bar-nav.is-open', { visible: true });
     };
+    const soundBack = () =>
+      page.waitForFunction(
+        () => !document.querySelector('#slide4 .mute-btn-quick').hasAttribute('data-sound-off')
+      );
 
     await openMenu();
     const on = await menu();
-    expect([on.sound.label, on.voice.label]).toEqual(['Son : activé', 'Voix : activée']);
-    expect([on.sound.shown, on.voice.shown]).toEqual([true, true]);
-    expect([on.sound.knobAtEnd, on.voice.knobAtEnd]).toEqual([true, true]);
-    expect(on.sound.switch.startsWith('40px')).toBe(true);
+    expect([on.effects.label, on.voice.label]).toEqual(['Bruitages : activés', 'Voix : activée']);
+    expect([on.effects.shown, on.voice.shown]).toEqual([true, true]);
+    expect([on.effects.knobAtEnd, on.voice.knobAtEnd]).toEqual([true, true]);
+    expect(on.effects.switch.startsWith('40px')).toBe(true);
+    expect([on.soundKeyInMenu, on.volume]).toEqual([false, 'Volume']);
     await page.keyboard.press('Escape');
 
     // La touche « Son » de la barre coupe tout
     await page.tap('#slide4 .mute-btn-quick');
     await openMenu();
     const off = await menu();
-    expect([off.sound.label, off.voice.label]).toEqual([
-      'Son : coupé',
+    expect([off.effects.label, off.voice.label]).toEqual([
+      'Bruitages : coupés avec le son',
       'Voix : coupée avec le son',
     ]);
-    expect([off.sound.knobAtEnd, off.voice.knobAtEnd]).toEqual([false, false]);
-    expect(off.sound.switch).not.toBe(on.sound.switch);
+    expect([off.effects.knobAtEnd, off.voice.knobAtEnd]).toEqual([false, false]);
+    expect(off.effects.switch).not.toBe(on.effects.switch);
     expect(off.voice.switch).not.toBe(on.voice.switch);
+    // Ce n'est pas leur réglage qui est coupé : pas de teinte d'alerte
+    expect([off.effects.cut, off.voice.cut]).toEqual([false, false]);
 
-    // Le son rallumé dans le menu : la voix, restée réglée sur « activée », revient avec lui
-    await page.tap('#slide4 .top-bar-nav .mute-btn');
-    await page.waitForFunction(
-      () => !document.querySelector('#slide4 .mute-btn-quick').hasAttribute('data-sound-off')
-    );
+    // Le chemin du retour passe par le menu : toucher « Voix » rend le son, et les deux
+    // réglages, restés allumés, reviennent avec lui
+    await page.tap('#slide4 .top-bar-nav .voice-toggle');
+    await soundBack();
+    await openMenu();
     expect(await menu()).toEqual(on);
+
+    // Les bruitages se coupent seuls : la voix reste allumée
+    await page.tap('#slide4 .top-bar-nav .effects-toggle');
+    await page.waitForFunction(() =>
+      document.querySelector('#slide4 .top-bar-nav .effects-toggle').hasAttribute('data-cut')
+    );
+    await openMenu();
+    const effectsOff = await menu();
+    expect([effectsOff.effects.label, effectsOff.effects.knobAtEnd]).toEqual([
+      'Bruitages : coupés',
+      false,
+    ]);
+    expect(effectsOff.voice).toEqual(on.voice);
+    expect(
+      await page.$eval('#slide4 .mute-btn-quick', key => key.hasAttribute('data-sound-off'))
+    ).toBe(false);
   }, 60000);
+
+  test('téléphone tourné : le menu tient à l’écran sans défiler, « Changer de joueur » compris, même tout coupé', async () => {
+    page = await chrome.newPage();
+    await page.setViewport({
+      width: 844,
+      height: 390,
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+    });
+    await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
+    await createUserAndSkipIntro(page);
+    const menu = async () => {
+      if (!(await page.$('#slide1 .top-bar-nav.is-open'))) {
+        await page.tap('#slide1 .burger-menu-btn');
+        await page.waitForSelector('#slide1 .top-bar-nav.is-open', { visible: true });
+      }
+      return page.evaluate(() => {
+        const nav = document.querySelector('#slide1 .top-bar-nav');
+        const last = nav.querySelector('.change-user-btn').getBoundingClientRect();
+        return {
+          scrolls: nav.scrollHeight > nav.clientHeight + 1,
+          lastKeyOnScreen: last.bottom <= innerHeight,
+          // Aucun libellé ne dépasse de sa touche
+          overflowing: [...nav.querySelectorAll('.icon-btn')].filter(key => {
+            const label = key.querySelector('.icon-btn-label').getBoundingClientRect();
+            const box = key.getBoundingClientRect();
+            return label.top < box.top - 1 || label.bottom > box.bottom + 1;
+          }).length,
+        };
+      });
+    };
+    expect(await menu()).toEqual({ scrolls: false, lastKeyOnScreen: true, overflowing: 0 });
+
+    // Tout coupé : les libellés « … coupés avec le son » passent sur deux lignes
+    await page.keyboard.press('Escape');
+    await page.tap('#slide1 .mute-btn-quick');
+    expect(await menu()).toEqual({ scrolls: false, lastKeyOnScreen: true, overflowing: 0 });
+
+    // En espagnol, « Efectos: desactivados con el sonido » en prend trois : la touche grandit
+    // avec son libellé (le menu défile alors, mais rien ne sort de sa touche)
+    await page.tap('#slide1 .top-bar-nav .lang-btn[data-lang="es"]');
+    await page.waitForFunction(() =>
+      document
+        .querySelector('#slide1 .effects-toggle')
+        .getAttribute('aria-label')
+        .startsWith('Efectos')
+    );
+    expect((await menu()).overflowing).toBe(0);
+  }, 60000);
+
+  test('grand écran : une seule rangée dans les trois langues, en grand texte, avec beaucoup de pièces', async () => {
+    page = await chrome.newPage();
+    await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
+    await page.goto(`${chrome.server.url}?saison=${NO_SEASON}`, chrome.server.gotoOptions);
+    await createUserAndSkipIntro(page);
+    const rows = [];
+    for (const lang of ['fr', 'en', 'es']) {
+      await page.click(`#slide1 .lang-btn[data-lang="${lang}"]`);
+      await page.waitForFunction(
+        expected => document.querySelector('#slide1 .lang-btn.active')?.dataset.lang === expected,
+        {},
+        lang
+      );
+      for (const width of [1000, 1200, 1240, 1280]) {
+        await page.setViewport({ width, height: 800, deviceScaleFactor: 1 });
+        rows.push(
+          await page.evaluate(() => {
+            document.body.classList.remove('font-size-small', 'font-size-medium');
+            document.body.classList.add('font-size-large');
+            const bar = document.querySelector('#slide1 .top-bar');
+            bar.querySelector('.coin-count').textContent = '99999';
+            // Les touches (toutes de la même hauteur) : une rangée = un seul haut
+            const keys = [...bar.querySelectorAll('button.icon-btn, .change-user-btn')].filter(
+              key => key.offsetParent
+            );
+            const tops = new Set(keys.map(key => Math.round(key.getBoundingClientRect().top)));
+            const slider = bar.querySelector('.volume-slider').getBoundingClientRect();
+            return {
+              oneRow: tops.size === 1,
+              overflow: bar.scrollWidth - bar.clientWidth,
+              // Le curseur cède de la place, sans descendre sous une cible de 44 px
+              sliderOk: slider.width >= 44,
+            };
+          })
+        );
+      }
+    }
+    expect(rows).toEqual(Array(12).fill({ oneRow: true, overflow: 0, sliderOk: true }));
+  }, 90000);
 });

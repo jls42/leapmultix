@@ -16,7 +16,7 @@ import {
 import { AudioManager } from '../core/audio.js';
 import { cancelSpeech, isSpeechDecisionPending, unlockSpeech, whenSpeechEnds } from '../speech.js';
 import { goToSlide } from '../slides.js';
-import Storage from '../core/storage.js';
+import Storage, { STORAGE_KEYS } from '../core/storage.js';
 import { eventBus } from '../core/eventBus.js';
 import UserManager from '../userManager.js';
 import { UserState } from '../core/userState.js';
@@ -45,9 +45,11 @@ const MUTE_STATES = {
 };
 
 /**
- * La voix suit le son : son coupé, elle se tait quel que soit son réglage. Le bouton le dit
- * (« Voix : coupée avec le son ») et n'agit plus, au lieu d'afficher « activée » pendant que
- * le jeu est muet.
+ * Trois réglages : « Son » coupe tout (touche de la barre, curseur du volume) ; « Bruitages »
+ * et « Voix » se règlent à part, l'un sans l'autre. Tous deux suivent le son : son coupé, ils
+ * se taisent quel que soit leur réglage, et leur bouton le dit (« Voix : coupée avec le
+ * son ») au lieu d'afficher « activée » pendant que le jeu est muet. Un toucher sur ce bouton
+ * rend alors le son : ce n'est jamais une impasse.
  */
 const VOICE_STATES = {
   on: { icon: 'speech', key: 'voice_state_on', fallback: 'Voix : activée' },
@@ -59,6 +61,16 @@ const VOICE_STATES = {
   },
 };
 
+const EFFECTS_STATES = {
+  on: { icon: 'note', key: 'effects_state_on', fallback: 'Bruitages : activés' },
+  off: { icon: 'note-off', key: 'effects_state_off', fallback: 'Bruitages : coupés' },
+  soundOff: {
+    icon: 'note-off',
+    key: 'effects_state_sound_off',
+    fallback: 'Bruitages : coupés avec le son',
+  },
+};
+
 /**
  * Mots courts affichés sous les icônes sur grand écran (css/topbar.css). Chacun est contenu
  * dans le nom accessible de son bouton (WCAG 2.5.3) : « Son » dans « Couper le son »…
@@ -66,6 +78,7 @@ const VOICE_STATES = {
 const CAPTIONS = Object.freeze({
   mute: { key: 'mute_button_caption', fallback: 'Son' },
   voice: { key: 'voice_toggle_caption', fallback: 'Voix' },
+  effects: { key: 'effects_toggle_caption', fallback: 'Bruitages' },
   tables: { key: 'table_settings_caption', fallback: 'Tables' },
   mode: { key: 'theme_mode_caption', fallback: 'Sombre' },
   player: { key: 'change_user_caption', fallback: 'Joueur' },
@@ -101,6 +114,26 @@ function readLanguage() {
     return Storage.loadLanguage?.() || 'fr';
   } catch {
     return 'fr';
+  }
+}
+
+/** Le joueur a-t-il réglé la voix lui-même ? (sinon elle suit sa valeur par défaut) */
+function isVoiceChosen() {
+  try {
+    return Storage.get(STORAGE_KEYS.VOICE_ENABLED, null) !== null;
+  } catch {
+    // Stockage illisible : aucun choix connu
+    return false;
+  }
+}
+
+/** Réglage « Bruitages » du joueur (allumés si le gestionnaire audio ne répond pas) */
+function readEffectsEnabled() {
+  try {
+    return AudioManager.areEffectsEnabled?.() !== false;
+  } catch {
+    // Gestionnaire audio indisponible : rien n'est coupé
+    return true;
   }
 }
 
@@ -208,29 +241,84 @@ function applyMuteState(button, soundOn) {
   setButtonLabel(button, state.key, state.fallback);
 }
 
+/**
+ * Touche « Son » de la barre du téléphone, seule visible quand le menu est fermé : elle ne
+ * doit pas dire « Son : activé » sans plus quand le joueur a coupé les bruitages ou la voix
+ * (les deux coupés, le jeu est muet). Elle porte alors une pastille (css/topbar.css) et son
+ * nom dit les trois états, avec les libellés du menu : « Son : activé. Bruitages : coupés.
+ * Voix : coupée. »
+ * @param {HTMLButtonElement} button
+ * @param {boolean} [soundOn]
+ */
+function applyQuickMuteState(button, soundOn = isSoundOn()) {
+  applyMuteState(button, soundOn);
+  const effects = readEffectsEnabled();
+  const voice = readVoiceEnabled();
+  const partial = soundOn && (!effects || (!voice && isVoiceChosen()));
+  button.toggleAttribute('data-partial', partial);
+  if (!partial) return;
+  const said = [
+    MUTE_STATES.on,
+    effects ? EFFECTS_STATES.on : EFFECTS_STATES.off,
+    voice ? VOICE_STATES.on : VOICE_STATES.off,
+  ].map(({ key, fallback }) => `${tr(key, fallback)}.`);
+  const text = said.join(' ');
+  button.setAttribute('aria-label', text);
+  button.title = text;
+  // Nom composé : la traduction statique ne doit pas le remplacer par « Son : activé » seul
+  // (updateTranslations le recompose à chaque changement de langue)
+  delete button.dataset.translateAriaLabel;
+  delete button.dataset.translateTitle;
+}
+
 /** Le son est-il audible ? (volume au-dessus de zéro, pas en sourdine) */
 function isSoundOn() {
   return readVolume() > 0 && !readMuted();
 }
 
-/** État affiché de la voix : coupée avec le son, sinon son propre réglage */
-function voiceState(enabled, soundOn) {
-  if (!soundOn) return VOICE_STATES.soundOff;
-  return enabled ? VOICE_STATES.on : VOICE_STATES.off;
+/**
+ * Son coupé : le rend (au dernier volume choisi) et répond true. Les boutons « Voix » et
+ * « Bruitages » s'en servent : touchés pendant que le jeu est muet, ils rallument le son
+ * plutôt que de changer un réglage qu'on n'entendrait pas.
+ * @returns {boolean} true si le son était coupé
+ */
+function restoreSound() {
+  if (isSoundOn()) return false;
+  AudioManager.toggleMute();
+  return true;
+}
+
+/**
+ * État d'un réglage qui suit le son (voix, bruitages) : coupé avec le son, sinon son propre
+ * réglage. Le bouton porte data-<nom>-on quand il s'entend pour de bon, data-cut quand le
+ * joueur l'a coupé lui-même, data-sound-muted quand c'est le son qui le fait taire.
+ * @param {HTMLButtonElement} button
+ * @param {{on: object, off: object, soundOff: object}} states
+ * @param {string} onAttribute - « data-voice-on » ou « data-effects-on »
+ * @param {boolean} enabled - Réglage en vigueur
+ * @param {boolean} soundOn - Le son général est-il audible ?
+ * @param {boolean} [chosen] - Est-ce le joueur qui l'a réglé ainsi ? (faux : valeur par défaut)
+ */
+function applyFollowerState(button, states, onAttribute, enabled, soundOn, chosen = true) {
+  button.toggleAttribute(onAttribute, enabled && soundOn);
+  // La teinte d'alerte dit « tu l'as coupé » : jamais pour une voix éteinte par défaut
+  button.toggleAttribute('data-cut', !enabled && soundOn && chosen);
+  button.toggleAttribute('data-sound-muted', !soundOn);
+  let state = states.soundOff;
+  if (soundOn) state = enabled ? states.on : states.off;
+  renderIconButton(button, state.icon);
+  setButtonLabel(button, state.key, state.fallback);
 }
 
 function applyVoiceState(button, enabled, soundOn = isSoundOn()) {
   // Première visite : l'état attend l'index de la voix enregistrée (au plus 1,5 s) ; le
   // bouton reste masqué, à sa place, plutôt que d'afficher un état qui changerait aussitôt
   button.toggleAttribute('data-voice-pending', isSpeechDecisionPending());
-  // Allumée pour de bon : son réglage, et un son pour la porter
-  button.toggleAttribute('data-voice-on', enabled && soundOn);
-  // Son coupé : le bouton n'agit pas (attachVoiceToggles), il reprendra avec le son
-  if (soundOn) button.removeAttribute('aria-disabled');
-  else button.setAttribute('aria-disabled', 'true');
-  const state = voiceState(enabled, soundOn);
-  renderIconButton(button, state.icon);
-  setButtonLabel(button, state.key, state.fallback);
+  applyFollowerState(button, VOICE_STATES, 'data-voice-on', enabled, soundOn, isVoiceChosen());
+}
+
+function applyEffectsState(button, enabled = readEffectsEnabled(), soundOn = isSoundOn()) {
+  applyFollowerState(button, EFFECTS_STATES, 'data-effects-on', enabled, soundOn);
 }
 
 function applyLanguageState(button, activeLang) {
@@ -426,6 +514,7 @@ export const TopBar = {
 
     navContainer.appendChild(this._buildThemeModeSwitch());
     navContainer.appendChild(this._buildVolumeControls(slideId));
+    navContainer.appendChild(this._buildEffectsToggle(slideId));
 
     const voiceWrap = document.createElement('div');
     voiceWrap.className = 'voice-toggle-controls';
@@ -557,7 +646,7 @@ export const TopBar = {
       labelFallback: MUTE_STATES.on.fallback,
       caption: CAPTIONS.mute,
     });
-    applyMuteState(mute, readVolume() > 0 && !readMuted());
+    applyQuickMuteState(mute, readVolume() > 0 && !readMuted());
     return mute;
   },
 
@@ -585,9 +674,32 @@ export const TopBar = {
     slider.className = 'volume-slider';
     slider.setAttribute('aria-label', tr('volume_label', 'Volume'));
     slider.dataset.translateAriaLabel = 'volume_label';
-    volWrap.appendChild(mute);
-    volWrap.appendChild(slider);
+    // Dans le menu du téléphone, la touche « Son » est déjà dans la barre : le curseur y
+    // porte son nom en toutes lettres (css/topbar.css)
+    const name = document.createElement('span');
+    name.className = 'volume-caption';
+    name.setAttribute('aria-hidden', 'true');
+    name.dataset.translate = 'volume_label';
+    name.textContent = tr('volume_label', 'Volume');
+    volWrap.append(mute, name, slider);
     return volWrap;
+  },
+
+  /** Interrupteur « Bruitages » : les bips et les sons des jeux, à part de la voix */
+  _buildEffectsToggle(slideId) {
+    const wrap = document.createElement('div');
+    wrap.className = 'effects-toggle-controls';
+    const button = createIconButton({
+      id: `effects-toggle-${slideId}`,
+      className: 'btn btn-sm btn-secondary icon-btn effects-toggle',
+      icon: EFFECTS_STATES.on.icon,
+      labelKey: EFFECTS_STATES.on.key,
+      labelFallback: EFFECTS_STATES.on.fallback,
+      caption: CAPTIONS.effects,
+    });
+    applyEffectsState(button);
+    wrap.appendChild(button);
+    return wrap;
   },
 
   /**
@@ -618,6 +730,7 @@ export const TopBar = {
     this.attachLanguageButtons();
     this.attachVolumeControls();
     this.attachVoiceToggles();
+    this.attachEffectsToggles();
     this.attachThemeModeSwitches();
     this.attachTableSettingsButtons();
     this.attachBurgerMenus();
@@ -719,8 +832,8 @@ export const TopBar = {
     for (const btn of document.querySelectorAll('.voice-toggle')) {
       if (!btn.dataset.topBarListenerAttached) {
         const toggleVoice = singleActivation(() => {
-          // Son coupé : la voix se tait déjà, son réglage ne se change pas à l'aveugle
-          if (btn.getAttribute('aria-disabled') === 'true') return;
+          // Son coupé : le toucher rend le son, la voix retrouve alors son propre réglage
+          if (restoreSound()) return;
           try {
             // Le bouton bascule l'état effectif, puis l'enregistre comme choix du joueur
             if (readVoiceEnabled()) this._turnVoiceOff();
@@ -732,6 +845,35 @@ export const TopBar = {
         btn.addEventListener('click', toggleVoice);
         btn.dataset.topBarListenerAttached = 'true';
       }
+    }
+  },
+
+  attachEffectsToggles() {
+    for (const btn of document.querySelectorAll('.effects-toggle')) {
+      if (btn.dataset.topBarListenerAttached) continue;
+      btn.addEventListener(
+        'click',
+        singleActivation(() => {
+          // Son coupé : le toucher rend le son, les bruitages retrouvent leur propre réglage
+          if (restoreSound()) return;
+          AudioManager.setEffectsEnabled(!readEffectsEnabled());
+          this.updateEffectsToggleUI();
+        })
+      );
+      btn.dataset.topBarListenerAttached = 'true';
+    }
+  },
+
+  /** Mettre à jour l'affichage des interrupteurs « Bruitages » */
+  updateEffectsToggleUI() {
+    for (const btn of document.querySelectorAll('.effects-toggle')) applyEffectsState(btn);
+    this.updateQuickMute();
+  },
+
+  /** La touche « Son » de la barre redit ce qui s'entend (son, bruitages, voix) */
+  updateQuickMute(soundOn = isSoundOn()) {
+    for (const btn of document.querySelectorAll('.mute-btn-quick')) {
+      applyQuickMuteState(btn, soundOn);
     }
   },
 
@@ -969,6 +1111,7 @@ export const TopBar = {
     document.querySelectorAll('.voice-toggle').forEach(btn => {
       applyVoiceState(btn, enabled);
     });
+    this.updateQuickMute();
   },
 
   /**
@@ -996,10 +1139,15 @@ export const TopBar = {
     document.querySelectorAll('.mute-btn').forEach(btn => {
       applyMuteState(btn, soundOn);
     });
-    // La voix suit le son : son bouton dit « coupée avec le son », puis reprend son état
+    this.updateQuickMute(soundOn);
+    // La voix et les bruitages suivent le son : « coupés avec le son », puis leur propre état
     const voiceEnabled = readVoiceEnabled();
     document.querySelectorAll('.voice-toggle').forEach(btn => {
       applyVoiceState(btn, voiceEnabled, soundOn);
+    });
+    const effectsEnabled = readEffectsEnabled();
+    document.querySelectorAll('.effects-toggle').forEach(btn => {
+      applyEffectsState(btn, effectsEnabled, soundOn);
     });
 
     document.querySelectorAll('.volume-slider').forEach(slider => {

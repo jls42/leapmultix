@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
   LANGUAGE: 'language',
   COLOR_THEME: 'colorTheme',
   VOICE_ENABLED: 'voiceEnabled',
+  SOUND_EFFECTS_ENABLED: 'soundEffectsEnabled',
   VOLUME: 'volume',
   HIGH_CONTRAST: 'highContrastEnabled',
   FONT_SIZE: 'fontSize',
@@ -179,6 +180,18 @@ const Storage = {
    */
   saveVoiceEnabled(enabled) {
     return this.set(STORAGE_KEYS.VOICE_ENABLED, enabled);
+  },
+
+  /**
+   * Les bruitages (bips, sons des jeux) sont-ils voulus ? Oui tant que le joueur ne les a pas
+   * coupés ; la voix a son propre réglage (loadVoiceEnabled)
+   */
+  loadSoundEffectsEnabled() {
+    return this.get(STORAGE_KEYS.SOUND_EFFECTS_ENABLED, true) !== false;
+  },
+
+  saveSoundEffectsEnabled(enabled) {
+    return this.set(STORAGE_KEYS.SOUND_EFFECTS_ENABLED, Boolean(enabled));
   },
 
   /**

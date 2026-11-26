@@ -210,6 +210,7 @@ export function mockSpeechOff(jestApi, root) {
       speak: jestApi.fn(),
       preloadSpeech: jestApi.fn(),
       isVoiceEnabled: () => false,
+      willSpeak: () => false,
       updateSpeechVoice: noop,
       cancelSpeech: noop,
       whenSpeechEnds: () => Promise.resolve(),

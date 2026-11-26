@@ -18,6 +18,7 @@ const preloadSpeech = jest.fn();
 jest.unstable_mockModule('../../js/speech.js', () => ({
   speak,
   isVoiceEnabled: () => true,
+  willSpeak: () => true,
   updateSpeechVoice: () => {},
   cancelSpeech: () => {},
   preloadSpeech,
