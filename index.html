@@ -426,12 +426,11 @@
           </div>
 
           <!-- Profils existants : tuiles générées par js/userManager.js (refreshUserList),
-               triées par prénom. La ligne « Aucun joueur » est écrite d'avance : c'est ce que
-               voit un nouveau visiteur, et sa place ne bouge pas quand la liste arrive -->
+               triées par prénom. Une ligne vide tient la place de « Aucun joueur pour
+               l'instant. » : rien ne bouge quand cette phrase arrive chez un nouveau visiteur.
+               Elle n'est pas écrite d'avance : un visiteur qui a ses joueurs la lirait à tort -->
           <div class="user-list" id="user-list">
-            <p class="user-list-empty" data-translate="no_existing_users">
-              Aucun joueur pour l’instant.
-            </p>
+            <p class="user-list-empty" aria-hidden="true">&nbsp;</p>
           </div>
 
           <section class="new-player" aria-labelledby="new-player-title">

@@ -35,6 +35,8 @@ function watchFirstPaint() {
   };
   document.addEventListener('DOMContentLoaded', () => {
     globalThis.__before = globalThis.__layout();
+    // Ce qui se lit dans la liste des joueurs avant qu'on sache s'il y en a
+    globalThis.__listBefore = document.getElementById('user-list').textContent.trim();
   });
 }
 
@@ -49,6 +51,10 @@ describe('Premier affichage de « Qui joue ? » (E2E)', () => {
     [
       'petit téléphone',
       { width: 360, height: 640, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+    ],
+    [
+      'téléphone tourné',
+      { width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
     ],
     ['tablette tournée', { width: 1024, height: 768, deviceScaleFactor: 1 }],
     ['ordinateur', { width: 1280, height: 800, deviceScaleFactor: 1 }],
@@ -76,6 +82,7 @@ describe('Premier affichage de « Qui joue ? » (E2E)', () => {
       );
       const seen = await page.evaluate(() => ({
         before: globalThis.__before,
+        listBefore: globalThis.__listBefore,
         after: globalThis.__layout(),
         bars: document.querySelectorAll('#slide0 > .top-bar').length,
         placeholderLeft: document.querySelectorAll('[data-top-bar-placeholder]').length,
@@ -86,6 +93,9 @@ describe('Premier affichage de « Qui joue ? » (E2E)', () => {
       // Tout est à la même place qu'avant l'arrivée des scripts : la barre a la hauteur
       // réservée, la carte, le formulaire et les boutons de sauvegarde n'ont pas bougé
       expect(seen.after).toEqual({ ...seen.before, placeholder: false });
+      // La place de la phrase est tenue par une ligne vide : la phrase elle-même n'arrive
+      // qu'avec la liste (écrite d'avance, un visiteur qui a ses joueurs la lirait à tort)
+      expect(seen.listBefore).toBe('');
       expect(seen.empty).toBe('Aucun joueur pour l’instant.');
     },
     60000
